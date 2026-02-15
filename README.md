@@ -115,7 +115,9 @@ docker compose up -d
 |-----------|------------------------|
 | Windows   | `.\launcher\start.ps1` |
 | Windows (перезапуск) | `.\launcher\restart.ps1` |
+| Windows (тесты) | `.\launcher\test.ps1` |
 | macOS/Linux | `./launcher/start.sh` |
+| macOS/Linux (тесты) | `./launcher/test.sh` |
 
 Подробнее: [launcher/README.md](launcher/README.md)
 

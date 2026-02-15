@@ -31,8 +31,16 @@
 ```powershell
 .\launcher\restart.ps1
 ```
-****
+
 Скрипт завершит сервер на порту 8080 и заново запустит оба окна (сервер и клиент). Старые окна закройте вручную. Для клиента можно также использовать **Hot Restart** — в окне с Flutter нажать **R**.
+
+**Запуск тестов (Go + Flutter):**
+
+```powershell
+.\launcher\test.ps1
+```
+
+Выполняются `go test ./...` в server и `flutter test` в client (если есть папка `test`). При ошибке в любом из шагов скрипт завершится с кодом 1.
 
 Если выполнение скриптов запрещено политикой:
 
@@ -52,6 +60,13 @@ chmod +x launcher/start.sh
 ```
 
 Сервер и клиент запустятся в **текущем терминале** (сервер в фоне, клиент в фоне). Остановка: **Ctrl+C** (остановит оба процесса).
+
+**Запуск тестов:**
+
+```bash
+chmod +x launcher/test.sh
+./launcher/test.sh
+```
 
 ---
 
@@ -74,9 +89,15 @@ chmod +x launcher/start.sh
 
 ```
 launcher/
+
+Windows
 ├── start.ps1   # Windows — запуск
 ├── restart.ps1 # Windows — перезапуск (применить изменения)
+├── test.ps1    # Windows — тесты Go + Flutter
+
+macOS / Linux
 ├── start.sh    # macOS / Linux
+├── test.sh     # macOS / Linux — тесты
 └── README.md   # этот файл
 ```
 
