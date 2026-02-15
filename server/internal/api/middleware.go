@@ -6,8 +6,10 @@ import (
 	"strings"
 
 	"multigames/server/internal/auth"
+	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type contextKey string
@@ -57,4 +59,25 @@ func RequireAuth(secret []byte, next http.Handler) http.Handler {
 func GetUserID(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(UserIDKey).(uuid.UUID)
 	return id, ok
+}
+
+// RequireAdmin проверяет, что текущий пользователь — админ. Использовать после RequireAuth.
+func RequireAdmin(pool *pgxpool.Pool, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := GetUserID(r.Context())
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		u, err := store.GetUserByID(r.Context(), pool, userID)
+		if err != nil || u == nil {
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+		if !u.IsAdmin {
+			http.Error(w, "admin only", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

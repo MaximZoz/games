@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/login_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
@@ -23,6 +24,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/register',
             builder: (context, state) => const RegisterScreen(),
+          ),
+          GoRoute(
+            path: '/admin',
+            builder: (context, state) => const AdminScreen(),
           ),
         ],
       ),

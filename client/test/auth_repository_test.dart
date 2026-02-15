@@ -12,11 +12,13 @@ void main() {
         'id': '550e8400-e29b-41d4-a716-446655440000',
         'email': 'user@test.com',
         'display_name': 'Test User',
+        'is_admin': true,
       };
       final user = AuthUser.fromJson(json);
       expect(user.id, json['id']);
       expect(user.email, json['email']);
       expect(user.displayName, 'Test User');
+      expect(user.isAdmin, true);
     });
 
     test('fromJson parses user without display_name', () {

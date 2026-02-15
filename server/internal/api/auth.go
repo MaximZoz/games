@@ -45,6 +45,7 @@ type UserResponse struct {
 	ID          string  `json:"id"`
 	Email       string  `json:"email"`
 	DisplayName *string `json:"display_name,omitempty"`
+	IsAdmin     bool    `json:"is_admin,omitempty"`
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -94,13 +95,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
-	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
-	if req.Email == "" || req.Password == "" {
-		http.Error(w, "email and password required", http.StatusBadRequest)
+	login := strings.TrimSpace(req.Email)
+	if login == "" || req.Password == "" {
+		http.Error(w, "email or login and password required", http.StatusBadRequest)
 		return
 	}
 
-	u, err := store.GetUserByEmail(r.Context(), h.Pool, req.Email)
+	u, err := store.GetUserByEmailOrDisplayName(r.Context(), h.Pool, login)
 	if err != nil {
 		http.Error(w, "invalid email or password", http.StatusUnauthorized)
 		return
@@ -127,6 +128,7 @@ func writeTokenResponse(w http.ResponseWriter, accessToken, refreshToken string,
 			ID:          u.ID.String(),
 			Email:       u.Email,
 			DisplayName: u.DisplayName,
+			IsAdmin:     u.IsAdmin,
 		},
 	})
 }

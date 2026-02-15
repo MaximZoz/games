@@ -27,5 +27,6 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		ID:          u.ID.String(),
 		Email:       u.Email,
 		DisplayName: u.DisplayName,
+		IsAdmin:     u.IsAdmin,
 	})
 }
