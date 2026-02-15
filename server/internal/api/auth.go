@@ -1,0 +1,136 @@
+package api
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+	"time"
+
+	"multigames/server/internal/auth"
+	"multigames/server/internal/store"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+const (
+	accessTokenExpire  = 15 * time.Minute
+	refreshTokenExpire = 7 * 24 * time.Hour
+)
+
+type AuthHandler struct {
+	Pool      *pgxpool.Pool
+	JWTSecret []byte
+}
+
+type RegisterRequest struct {
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	DisplayName string `json:"display_name"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type TokenResponse struct {
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
+	ExpiresIn    int          `json:"expires_in"`
+	User         UserResponse `json:"user"`
+}
+
+type UserResponse struct {
+	ID          string  `json:"id"`
+	Email       string  `json:"email"`
+	DisplayName *string `json:"display_name,omitempty"`
+}
+
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Email == "" || len(req.Password) < 6 {
+		http.Error(w, "email required, password at least 6 characters", http.StatusBadRequest)
+		return
+	}
+
+	hash, err := auth.HashPassword(req.Password)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique") {
+			http.Error(w, "email already registered", http.StatusConflict)
+			return
+		}
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+
+	accessToken, _ := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire)
+	refreshToken, _ := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire)
+
+	writeTokenResponse(w, accessToken, refreshToken, int(accessTokenExpire.Seconds()), u)
+}
+
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Email == "" || req.Password == "" {
+		http.Error(w, "email and password required", http.StatusBadRequest)
+		return
+	}
+
+	u, err := store.GetUserByEmail(r.Context(), h.Pool, req.Email)
+	if err != nil {
+		http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		return
+	}
+	if !auth.CheckPassword(req.Password, u.PasswordHash) {
+		http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	accessToken, _ := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire)
+	refreshToken, _ := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire)
+
+	writeTokenResponse(w, accessToken, refreshToken, int(accessTokenExpire.Seconds()), u)
+}
+
+func writeTokenResponse(w http.ResponseWriter, accessToken, refreshToken string, expiresIn int, u *store.User) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresIn:    expiresIn,
+		User: UserResponse{
+			ID:          u.ID.String(),
+			Email:       u.Email,
+			DisplayName: u.DisplayName,
+		},
+	})
+}
+
+func UserFromClaims(claims *auth.Claims) (userID uuid.UUID, err error) {
+	return uuid.Parse(claims.UserID)
+}

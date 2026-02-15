@@ -61,8 +61,9 @@ myProject/
 │
 ├── docs/                   # Документация
 │   ├── ARCHITECTURE.md
-│   ├── GITHUB_PLAN.md
-│   └── API.md
+│   ├── API.md              # REST API (авторизация и др.)
+│   ├── DATABASE.md         # PostgreSQL и Redis: как смотреть таблицы и ключи
+│   └── GITHUB_PLAN.md
 │
 ├── .github/                # GitHub Actions, Issue templates
 │   └── workflows/
@@ -103,9 +104,18 @@ go run ./cmd/server
 
 ### База данных (Docker)
 
+В корне проекта есть `docker-compose.yml` с **PostgreSQL** и **Redis**. Поднять контейнеры:
+
 ```bash
 docker compose up -d
 ```
+
+- **Postgres**: порт `5432`, пользователь/БД `multigames`, пароль `multigames`
+- **Redis**: порт `6379`
+
+Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и измените `DATABASE_URL`, `REDIS_URL` и при необходимости `JWT_SECRET`.
+
+**Как посмотреть таблицы и данные:** см. [docs/DATABASE.md](docs/DATABASE.md) — подключение через `psql`/redis-cli в контейнерах и параметры для GUI.
 
 ### Лаунчер (клиент + сервер одной командой)
 
@@ -121,19 +131,36 @@ docker compose up -d
 
 Подробнее: [launcher/README.md](launcher/README.md)
 
+### Запуск из IDE (Cursor / VS Code)
+
+В `.vscode/` настроены:
+
+- **Задача «Docker: Compose Up»** — поднимает Postgres и Redis (`docker compose up -d`).
+- **Конфигурация «Go: Server»** — перед отладкой сервера автоматически запускает Docker.
+- **«MultiGames: Server + Client»** — compound: сначала Docker, затем Go-сервер и Flutter Web.
+
+Выбери нужную конфигурацию в списке Run and Debug и нажми Run.
+
 ---
 
-## 🎯 План интеграции с GitHub
+## ✅ Реализовано
+
+- **Docker Compose** — PostgreSQL 16 и Redis 7 с healthcheck и томами.
+- **Миграции БД** — таблицы `users` и `sessions` (применяются при старте сервера).
+- **Авторизация** — регистрация, вход, JWT (access + refresh), эндпоинт `GET /api/me`.
+- **Клиент (Flutter)** — экраны входа и регистрации, Riverpod, go_router, сохранение токена в SharedPreferences.
+- **Документация** — [API](docs/API.md), [базы данных (таблицы, Redis)](docs/DATABASE.md).
+- **Тесты** — Go: `cd server && go test ./...`; Flutter: `cd client && flutter test`.
+
+---
+
+## 🎯 План
 
 | Этап | Действие |
 |------|----------|
-| 1 | Создать репозиторий на GitHub (публичный или приватный) |
-| 2 | `git init` в корне проекта, добавить remote |
-| 3 | Первый коммит: каркас + README |
-| 4 | Настроить ветки: `main` (prod), `develop` (dev), `feature/*` |
-| 5 | Добавить GitHub Actions: CI для Flutter и Go |
-| 6 | Включить Issues, Projects для трекинга |
-| 7 | (Опционально) GitHub Discussions для обсуждений |
+| 1 | Развернуть Go на Railway (или Fly.io) и Postgres там же |
+| 2 | Задеплоить Flutter Web на Vercel и настроить URL API |
+| 3 | Сделать админку: смена паролей и удаление пользователей |
 
 ### Схема веток
 
@@ -173,5 +200,7 @@ MIT (или указать свою)
 ## 🔗 Ссылки
 
 - [Документация](docs/)
+- [API (авторизация)](docs/API.md)
+- [Базы данных: таблицы и Redis](docs/DATABASE.md)
 - [План GitHub](docs/GITHUB_PLAN.md)
 - [Лаунчер (клиент + сервер)](launcher/README.md)

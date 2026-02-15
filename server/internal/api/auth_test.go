@@ -1,0 +1,112 @@
+package api
+
+import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+func authHandlerForValidation(t *testing.T) *AuthHandler {
+	return &AuthHandler{
+		Pool:      (*pgxpool.Pool)(nil),
+		JWTSecret: []byte("test-secret"),
+	}
+}
+
+func TestRegister_MethodNotAllowed(t *testing.T) {
+	h := authHandlerForValidation(t)
+	body := []byte(`{"email":"a@b.c","password":"123456"}`)
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/register", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Register(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestRegister_InvalidJSON(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewReader([]byte("not json")))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Register(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestRegister_EmptyEmail(t *testing.T) {
+	h := authHandlerForValidation(t)
+	body := []byte(`{"email":"","password":"123456"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Register(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestRegister_ShortPassword(t *testing.T) {
+	h := authHandlerForValidation(t)
+	body := []byte(`{"email":"a@b.c","password":"12345"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Register(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestLogin_MethodNotAllowed(t *testing.T) {
+	h := authHandlerForValidation(t)
+	body := []byte(`{"email":"a@b.c","password":"secret"}`)
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Login(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestLogin_InvalidJSON(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewReader([]byte("{")))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Login(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestLogin_EmptyCredentials(t *testing.T) {
+	h := authHandlerForValidation(t)
+	for _, body := range []string{`{"email":"","password":"x"}`, `{"email":"a@b.c","password":""}`} {
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewReader([]byte(body)))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		h.Login(rec, req)
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("body %q: status = %d, want %d", body, rec.Code, http.StatusBadRequest)
+		}
+	}
+}

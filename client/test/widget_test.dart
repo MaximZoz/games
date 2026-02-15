@@ -1,32 +1,46 @@
-// Basic Flutter widget tests for MultiGames client.
+// Базовые виджет-тесты клиента MultiGames.
+// Не используем pumpAndSettle: на главной есть сетевой запрос и async auth — они не завершаются в тесте.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:multigames_client/main.dart';
 
 void main() {
-  testWidgets('App shows MultiGames start title', (WidgetTester tester) async {
-    await tester.pumpWidget(const MultiGamesApp());
+  testWidgets('App shows MultiGames title', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('MultiGames start'), findsOneWidget);
+    expect(find.text('MultiGames'), findsWidgets);
   });
 
-  testWidgets('App shows loading or content on first frame', (WidgetTester tester) async {
-    await tester.pumpWidget(const MultiGamesApp());
-    await tester.pump();
-
-    final hasTitle = find.text('MultiGames start').evaluate().isNotEmpty;
-    final hasLoading = find.byType(CircularProgressIndicator).evaluate().isNotEmpty;
-    expect(hasTitle || hasLoading, isTrue);
-  });
-
-  testWidgets('App uses Material and Scaffold', (WidgetTester tester) async {
-    await tester.pumpWidget(const MultiGamesApp());
+  testWidgets('App uses MaterialApp.router', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
     await tester.pump();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.byType(Scaffold), findsOneWidget);
+  });
+
+  testWidgets('Home shows MultiGames and has scaffold', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('MultiGames'), findsWidgets);
+    expect(find.byType(Scaffold), findsWidgets);
   });
 }
