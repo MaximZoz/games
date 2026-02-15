@@ -10,6 +10,7 @@ import (
 	"multigames/server/internal/api"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/joho/godotenv"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -53,6 +54,9 @@ func handleStart(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	_ = godotenv.Load(".env")
+	_ = godotenv.Load("../.env")
+
 	ctx := context.Background()
 
 	dbURL := getEnv("DATABASE_URL", "postgres://multigames:multigames@localhost:5432/multigames?sslmode=disable")
@@ -89,12 +93,24 @@ func main() {
 	}
 
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
+	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
+	adminHandler := &api.AdminHandler{Pool: pool, JWTSecret: []byte(jwtSecret), InitSecret: adminInitSecret}
+
+	adminAuth := func(next http.HandlerFunc) http.Handler {
+		return api.RequireAuth([]byte(jwtSecret), api.RequireAdmin(pool, next))
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/start", handleStart)
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
+
+	mux.HandleFunc("/api/admin/init", adminHandler.Init)
+	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
+	mux.Handle("/api/admin/users/set-admin", adminAuth(http.HandlerFunc(adminHandler.SetAdmin)))
+	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
+	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
 
 	handler := api.CORS(mux)
 

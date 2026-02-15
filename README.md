@@ -115,7 +115,7 @@ docker compose up -d
 - **Postgres**: порт `5432`, пользователь/БД `multigames`, пароль `multigames`
 - **Redis**: порт `6379`
 
-Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и измените `DATABASE_URL`, `REDIS_URL` и при необходимости `JWT_SECRET`.
+Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`).
 
 **Как посмотреть таблицы и данные:** см. [docs/DATABASE.md](docs/DATABASE.md) — подключение через `psql`/redis-cli в контейнерах и параметры для GUI.
 
@@ -148,10 +148,15 @@ docker compose up -d
 ## ✅ Реализовано
 
 - **Docker Compose** — PostgreSQL 16 и Redis 7 с healthcheck и томами.
-- **Миграции БД** — таблицы `users` и `sessions` (применяются при старте сервера).
-- **Авторизация** — регистрация, вход, JWT (access + refresh), эндпоинт `GET /api/me`.
-- **Клиент (Flutter)** — экраны входа и регистрации, Riverpod, go_router, сохранение токена в SharedPreferences.
-- **Документация** — [API](docs/API.md), [базы данных (таблицы, Redis)](docs/DATABASE.md).
+- **Миграции БД** — при старте сервера применяются:
+  - `001` — таблицы `users` (email, password_hash, display_name) и `sessions`;
+  - `002` — колонка `is_admin` у пользователей;
+  - `003` — уникальный `display_name` для входа по логину или по почте.
+- **Авторизация (бэкенд)** — POST `/api/auth/register`, POST `/api/auth/login`, GET `/api/me` (Bearer). Вход по **email или по логину** (display_name). JWT: access (15 мин) и refresh (7 дней).
+- **Первый админ** — POST `/api/admin/init` с заголовком `X-Admin-Init-Secret` (значение из `ADMIN_INIT_SECRET` в `.env`). Создаёт первого пользователя-админа.
+- **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
+- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: список пользователей, кнопки «Сделать/убрать админа», «Сбросить пароль», «Удалить», обновление списка. Riverpod, go_router, SharedPreferences для токена и пользователя.
+- **Документация** — [API](docs/API.md), [базы данных](docs/DATABASE.md).
 - **Тесты** — Go: `cd server && go test ./...`; Flutter: `cd client && flutter test`.
 
 ---
@@ -162,7 +167,7 @@ docker compose up -d
 |------|----------|
 | 1 | Развернуть Go на Railway (или Fly.io) и Postgres там же |
 | 2 | Задеплоить Flutter Web на Vercel и настроить URL API |
-| 3 | Сделать админку: смена паролей и удаление пользователей |
+| 3 | ~~Сделать админку: смена паролей и удаление пользователей~~ ✅ Готово |
 
 ### Схема веток
 

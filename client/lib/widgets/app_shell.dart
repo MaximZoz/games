@@ -35,6 +35,12 @@ class AppShell extends ConsumerWidget {
                   return Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (user.isAdmin)
+                        IconButton(
+                          icon: const Icon(Icons.admin_panel_settings),
+                          onPressed: () => context.push('/admin'),
+                          tooltip: 'Админка',
+                        ),
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
