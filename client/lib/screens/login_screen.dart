@@ -76,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Введите email и пароль',
+                      'Введите email или логин и пароль',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -85,17 +85,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 32),
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'you@example.com',
+                        labelText: 'Email или логин',
+                        hintText: 'you@example.com или имя',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email_outlined),
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Введите email';
-                        if (!v.contains('@')) return 'Некорректный email';
+                        if (v == null || v.trim().isEmpty) return 'Введите email или логин';
                         return null;
                       },
                     ),

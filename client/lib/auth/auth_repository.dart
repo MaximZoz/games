@@ -12,11 +12,13 @@ class AuthUser {
   final String id;
   final String email;
   final String? displayName;
+  final bool isAdmin;
 
   AuthUser({
     required this.id,
     required this.email,
     this.displayName,
+    this.isAdmin = false,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class AuthUser {
       id: json['id'] as String,
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
+      isAdmin: json['is_admin'] as bool? ?? false,
     );
   }
 }
@@ -81,7 +84,7 @@ class AuthRepository {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'email': email.trim().toLowerCase(),
+        'email': email.trim(),
         'password': password,
       }),
     );
@@ -109,6 +112,7 @@ class AuthRepository {
       'id': user.id,
       'email': user.email,
       'display_name': user.displayName,
+      'is_admin': user.isAdmin,
     }));
     return AuthResult(
       accessToken: accessToken,
