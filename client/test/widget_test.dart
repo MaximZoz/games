@@ -4,10 +4,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:multigames_client/main.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
   testWidgets('App shows MultiGames title', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
@@ -42,5 +46,61 @@ void main() {
 
     expect(find.text('MultiGames'), findsWidgets);
     expect(find.byType(Scaffold), findsWidgets);
+  });
+
+  testWidgets('On home, toolbar has login or loading', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final hasLogin = find.byTooltip('Войти').evaluate().isNotEmpty;
+    final hasLoading = find.byType(CircularProgressIndicator).evaluate().isNotEmpty;
+    expect(hasLogin || hasLoading, isTrue);
+  });
+
+  testWidgets('On login page, toolbar shows home icon', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(find.byTooltip('Войти'), findsOneWidget);
+    await tester.tap(find.byTooltip('Войти'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byTooltip('На главную'), findsOneWidget);
+    expect(find.text('Вход'), findsOneWidget);
+  });
+
+  testWidgets('On login page, MultiGames title in toolbar is tappable', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    await tester.tap(find.byTooltip('Войти'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Вход'), findsOneWidget);
+
+    final titleInAppBar = find.descendant(
+      of: find.byType(AppBar),
+      matching: find.text('MultiGames'),
+    );
+    expect(titleInAppBar, findsOneWidget);
+    await tester.tap(titleInAppBar, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   });
 }

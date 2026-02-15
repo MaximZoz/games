@@ -94,6 +94,8 @@ flutter run -d windows    # Desktop
 flutter run               # Подключённое устройство
 ```
 
+Если на Web иконки (Material Icons) не отображаются — шрифт подключён в `client/web/assets/fonts/` и в `pubspec.yaml`. Для продакшен-сборки при необходимости: `flutter build web --no-tree-shake-icons`.
+
 ### Сервер (Go)
 
 ```bash
