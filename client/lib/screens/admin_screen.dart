@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
@@ -115,6 +116,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(adminUsersProvider);
     final repo = ref.read(adminRepositoryProvider);
+    final authState = ref.watch(authStateProvider);
+    final currentUserId = authState.valueOrNull?.id;
 
     return Scaffold(
       body: SafeArea(
@@ -234,9 +237,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 spacing: 8,
                                 runSpacing: 8,
                                 children: [
-                                  FilledButton.tonal(
-                                    onPressed: () => _setAdmin(repo, u.id, !u.isAdmin),
-                                    child: Text(u.isAdmin ? 'Убрать админа' : 'Сделать админом'),
+                                  Builder(
+                                    builder: (context) {
+                                      final isSelf = u.isAdmin && u.id == currentUserId;
+                                      final button = FilledButton.tonal(
+                                        onPressed: isSelf ? null : () => _setAdmin(repo, u.id, !u.isAdmin),
+                                        child: Text(u.isAdmin ? 'Убрать админа' : 'Сделать админом'),
+                                      );
+                                      return isSelf
+                                          ? Tooltip(
+                                              message: 'Нельзя снять права у себя',
+                                              child: button,
+                                            )
+                                          : button;
+                                    },
                                   ),
                                   OutlinedButton(
                                     onPressed: () => _resetPassword(repo, u),
