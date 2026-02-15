@@ -111,7 +111,25 @@ jobs:
 
 ---
 
-## 6. Структура Issues и Projects
+## 6. Связь PR с issue
+
+Чтобы PR подхватывал issue (отображался в нём и закрывал при мерже):
+
+1. **В описании PR** укажи одну из фраз:
+   - `Fixes #1` — исправляет issue №1 (то же: Closes, Resolves)
+   - Для issue в другом репо: `Fixes owner/repo#1`
+
+2. **Ветка** может называться по номеру issue, например:
+   - `issue/1` или `issue/1-short-description`
+   - `feature/issue-1`
+
+После пуша в такую ветку и создания PR GitHub покажет связь «linked pull request» в issue, а при мерже PR закроет issue автоматически.
+
+Шаблон описания PR: [.github/PULL_REQUEST_TEMPLATE.md](../.github/PULL_REQUEST_TEMPLATE.md) — при создании PR он подставится, останется вписать номер вместо `#1`.
+
+---
+
+## 7. Структура Issues и Projects
 
 ### Labels
 
@@ -132,7 +150,7 @@ jobs:
 
 ---
 
-## 7. Чек-лист перед первым пушем
+## 8. Чек-лист перед первым пушем
 
 - [ ] Создан репозиторий на GitHub
 - [ ] `.gitignore` настроен
@@ -144,7 +162,7 @@ jobs:
 
 ---
 
-## 8. Дальнейшие шаги
+## 9. Дальнейшие шаги
 
 1. Создать `develop` ветку
 2. Добавить `.github/workflows/ci.yml`
