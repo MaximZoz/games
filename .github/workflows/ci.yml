@@ -26,7 +26,12 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Test
-        run: flutter test --no-pub
+        run: |
+          if [ -d test ]; then
+            flutter test --no-pub
+          else
+            echo "No test directory, skipping tests"
+          fi
 
   go:
     runs-on: ubuntu-latest

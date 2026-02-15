@@ -54,6 +54,11 @@ myProject/
 │   ├── pkg/
 │   └── go.mod
 │
+├── launcher/               # Запуск клиента и сервера одной командой
+│   ├── start.ps1           # Windows
+│   ├── start.sh            # macOS / Linux
+│   └── README.md
+│
 ├── docs/                   # Документация
 │   ├── ARCHITECTURE.md
 │   ├── GITHUB_PLAN.md
@@ -101,6 +106,20 @@ go run ./cmd/server
 ```bash
 docker compose up -d
 ```
+
+### Лаунчер (клиент + сервер одной командой)
+
+Из корня проекта можно запустить и клиент, и сервер сразу:
+
+| ОС        | Команда                |
+|-----------|------------------------|
+| Windows   | `.\launcher\start.ps1` |
+| Windows (перезапуск) | `.\launcher\restart.ps1` |
+| Windows (тесты) | `.\launcher\test.ps1` |
+| macOS/Linux | `./launcher/start.sh` |
+| macOS/Linux (тесты) | `./launcher/test.sh` |
+
+Подробнее: [launcher/README.md](launcher/README.md)
 
 ---
 
@@ -155,3 +174,4 @@ MIT (или указать свою)
 
 - [Документация](docs/)
 - [План GitHub](docs/GITHUB_PLAN.md)
+- [Лаунчер (клиент + сервер)](launcher/README.md)
