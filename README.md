@@ -116,6 +116,20 @@ docker compose up -d
 | 6 | Включить Issues, Projects для трекинга |
 | 7 | (Опционально) GitHub Discussions для обсуждений |
 
+### Схема веток
+
+```
+main     ──●────────────────────●──────────────
+            \                  /
+develop ────●──●──●──●──●──●──●
+                 \      /
+feature/xxx ──────●──●──●
+```
+
+- **main** — продакшен, релизы
+- **develop** — активная разработка
+- **feature/\*** — отдельные фичи, вливаются в develop через PR
+
 Подробнее: [docs/GITHUB_PLAN.md](docs/GITHUB_PLAN.md)
 
 ---
