@@ -1,0 +1,64 @@
+# =========================
+# Flutter / Dart
+# =========================
+client/.dart_tool/
+client/.packages
+client/build/
+client/.flutter-plugins
+client/.flutter-plugins-dependencies
+client/pubspec.lock
+client/*.iml
+client/.idea/
+client/.metadata
+client/ios/Pods/
+client/ios/.symlinks/
+client/ios/Flutter/Flutter.framework
+client/ios/Flutter/Flutter.podspec
+client/android/.gradle/
+client/android/app/debug/
+client/android/app/profile/
+client/android/app/release/
+client/android/local.properties
+client/android/**/GeneratedPluginRegistrant.java
+client/windows/flutter/generated_plugin_registrant.cc
+client/windows/flutter/generated_plugin_registrant.h
+client/windows/flutter/generated_plugins.cmake
+client/linux/flutter/generated_plugin_registrant.cc
+client/linux/flutter/generated_plugin_registrant.h
+client/linux/flutter/generated_plugins.cmake
+client/macos/Flutter/ephemeral/
+client/web/.dart_tool/
+
+# =========================
+# Go
+# =========================
+server/bin/
+server/*.exe
+server/*.test
+server/vendor/
+server/.env
+server/.env.local
+server/*.db
+
+# =========================
+# IDE / Editors
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Misc
+# =========================
+*.log
+.env
+.env.*
+!.env.example
