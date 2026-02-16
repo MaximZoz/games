@@ -1,0 +1,28 @@
+# Git и IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.md
+!README.md
+
+# Локальная среда
+.env
+.env.*
+!.env.example
+
+# Клиент: не копировать лишнее (Dockerfile копирует client/)
+client/.dart_tool
+client/build
+client/.packages
+
+# Сервер: тесты и кэш
+server/*.test
+server/.cache
+
+# Лаунчер и прочее
+launcher
+.github
+docs
+*.png
+*.jpg
