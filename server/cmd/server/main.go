@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"multigames/server/internal/api"
 
@@ -16,6 +20,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
+
+//go:embed web
+var webFS embed.FS
 
 const serverMessage = "go start"
 
@@ -53,6 +60,73 @@ func handleStart(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, serverMessage)
 }
 
+// spaHandler serves embedded Flutter web build; unknown paths return index.html (no redirects).
+func spaHandler(webRoot fs.FS) http.Handler {
+	sub, err := fs.Sub(webRoot, "web")
+	if err != nil {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "web assets not available", http.StatusInternalServerError)
+		})
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if path == "" || path == "/" {
+			path = "/index.html"
+		}
+		fsPath := path[1:]
+		if fsPath == "" {
+			fsPath = "index.html"
+		}
+		f, err := sub.Open(fsPath)
+		if err != nil {
+			// SPA fallback: любой неизвестный путь — index.html
+			index, _ := sub.Open("index.html")
+			if index != nil {
+				defer index.Close()
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Header().Set("Cache-Control", "no-cache")
+				io.Copy(w, index)
+				return
+			}
+			http.NotFound(w, r)
+			return
+		}
+		defer f.Close()
+		stat, err := f.Stat()
+		if err != nil || stat.IsDir() {
+			index, _ := sub.Open("index.html")
+			if index != nil {
+				defer index.Close()
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				io.Copy(w, index)
+				return
+			}
+			http.NotFound(w, r)
+			return
+		}
+		// Раздаём файл без редиректов
+		contentType := "application/octet-stream"
+		switch {
+		case strings.HasSuffix(fsPath, ".html"):
+			contentType = "text/html; charset=utf-8"
+		case strings.HasSuffix(fsPath, ".js"):
+			contentType = "application/javascript; charset=utf-8"
+		case strings.HasSuffix(fsPath, ".css"):
+			contentType = "text/css; charset=utf-8"
+		case strings.HasSuffix(fsPath, ".json"):
+			contentType = "application/json"
+		case strings.HasSuffix(fsPath, ".png"):
+			contentType = "image/png"
+		case strings.HasSuffix(fsPath, ".ico"):
+			contentType = "image/x-icon"
+		case strings.HasSuffix(fsPath, ".woff2"):
+			contentType = "font/woff2"
+		}
+		w.Header().Set("Content-Type", contentType)
+		io.Copy(w, f)
+	})
+}
+
 func main() {
 	_ = godotenv.Load(".env")
 	_ = godotenv.Load("../.env")
@@ -75,17 +149,23 @@ func main() {
 	}
 	log.Println("Postgres: connected")
 
-	redisURL := getEnv("REDIS_URL", "redis://localhost:6379/0")
-	redisOpt, err := redis.ParseURL(redisURL)
-	if err != nil {
-		log.Fatalf("Redis parse URL: %v", err)
+	redisURL := getEnv("REDIS_URL", "")
+	var rdb *redis.Client
+	if redisURL != "" {
+		redisOpt, err := redis.ParseURL(redisURL)
+		if err != nil {
+			log.Printf("Redis parse URL: %v (Redis disabled)", err)
+		} else {
+			rdb = redis.NewClient(redisOpt)
+			defer rdb.Close()
+			if err := rdb.Ping(ctx).Err(); err != nil {
+				log.Printf("Redis ping failed: %v (Redis disabled)", err)
+				rdb = nil
+			} else {
+				log.Println("Redis: connected")
+			}
+		}
 	}
-	rdb := redis.NewClient(redisOpt)
-	defer rdb.Close()
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Redis ping: %v", err)
-	}
-	log.Println("Redis: connected")
 
 	jwtSecret := getEnv("JWT_SECRET", "dev-secret-change-in-production")
 	if jwtSecret == "dev-secret-change-in-production" {
@@ -112,14 +192,28 @@ func main() {
 	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
 	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
 
-	handler := api.CORS(mux)
+	corsHandler := api.CORS(mux)
+	var finalHandler http.Handler = corsHandler
+	if _, err := webFS.Open("web/index.html"); err == nil {
+		finalHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
+				corsHandler.ServeHTTP(w, r)
+				return
+			}
+			spaHandler(webFS).ServeHTTP(w, r)
+		})
+		log.Println("Serving API at /api/* and static SPA at /*")
+	}
 
-	port := ":8080"
+	port := getEnv("PORT", "8080")
+	if port != "" && port[0] != ':' {
+		port = ":" + port
+	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
 	log.Printf("POST /api/auth/register, POST /api/auth/login, GET /api/me (Bearer)")
 	_ = rdb
-	if err := http.ListenAndServe(port, handler); err != nil {
+	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)
 	}
 }
