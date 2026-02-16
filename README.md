@@ -133,6 +133,33 @@ docker compose up -d
 
 Подробнее: [launcher/README.md](launcher/README.md)
 
+### Деплой на Fly.io
+
+API и статика Flutter Web — один сервис на Fly.io. Postgres — Fly Postgres; Redis опционален.
+
+**Команды** (из корня проекта, подставь своё имя приложения вместо `APP`):
+
+```bash
+# 1. Создать приложение (если ещё нет)
+fly launch --no-deploy
+
+# 2. Postgres: создать и привязать
+fly postgres create --name multigames-db --region arn
+fly postgres attach multigames-db --app APP
+
+# 3. Секреты
+fly secrets set JWT_SECRET="длинная-случайная-строка-32-символа" --app APP
+fly secrets set ADMIN_INIT_SECRET="секрет-для-первого-админа" --app APP
+
+# 4. Деплой
+fly deploy --app APP
+```
+
+После деплоя — https://APP.fly.dev. Первого админа создаёшь запросом `POST /api/admin/init` с заголовком `X-Admin-Init-Secret` (см. [DEPLOY.md](DEPLOY.md)).
+
+- **Подробно:** [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)
+- **Не открывается сайт:** [docs/DEPLOY_FLY_TROUBLESHOOTING.md](docs/DEPLOY_FLY_TROUBLESHOOTING.md)
+
 ### Запуск из IDE (Cursor / VS Code)
 
 В `.vscode/` настроены:
@@ -165,9 +192,8 @@ docker compose up -d
 
 | Этап | Действие |
 |------|----------|
-| 1 | Развернуть Go на Railway (или Fly.io) и Postgres там же |
-| 2 | Задеплоить Flutter Web на Vercel и настроить URL API |
-| 3 | ~~Сделать админку: смена паролей и удаление пользователей~~ ✅ Готово |
+| 1 | Развернуть всё на **Fly.io**: Go-API, Postgres (Fly Postgres), статика Flutter Web (тот же сервис или отдельное приложение) |
+| 2 | ~~Сделать админку: смена паролей и удаление пользователей~~ ✅ Готово |
 
 ### Схема веток
 
@@ -209,5 +235,6 @@ MIT (или указать свою)
 - [Документация](docs/)
 - [API (авторизация)](docs/API.md)
 - [Базы данных: таблицы и Redis](docs/DATABASE.md)
+- [Деплой на Fly.io](DEPLOY.md) · [подробная инструкция](docs/DEPLOY_FLY.md)
 - [План GitHub](docs/GITHUB_PLAN.md)
 - [Лаунчер (клиент + сервер)](launcher/README.md)
