@@ -136,6 +136,146 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     }
   }
 
+  Widget _buildUserCard(
+    BuildContext context,
+    AdminUserItem u,
+    AdminRepository repo,
+    String? currentUserId,
+  ) {
+    final nameOrEmail = (u.displayName != null && u.displayName!.isNotEmpty
+            ? u.displayName!
+            : u.email)
+        .trim();
+    final initial =
+        nameOrEmail.isNotEmpty ? nameOrEmail.substring(0, 1).toUpperCase() : '?';
+    return GradientCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
+      animate: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.textSecondary.withOpacity(0.3),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      u.email,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (u.displayName != null && u.displayName!.isNotEmpty)
+                      Text(
+                        u.displayName!,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              if (u.isAdmin)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    borderRadius:
+                        BorderRadius.circular(AppRadius.badge),
+                    border: Border.all(color: AppColors.textSecondary),
+                  ),
+                  child: const Text(
+                    'Админ',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              IconButton(
+                onPressed: () => _deleteUser(repo, u),
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red.shade700,
+                  size: 24,
+                ),
+                tooltip: 'Удалить',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Builder(
+                builder: (context) {
+                  final isSelf =
+                      u.isAdmin && u.id == currentUserId;
+                  final button = AppButton(
+                    onPressed: isSelf
+                        ? null
+                        : () => _setAdmin(repo, u.id, !u.isAdmin),
+                    label:
+                        u.isAdmin ? 'Убрать админа' : 'Сделать админом',
+                  );
+                  return isSelf
+                      ? Tooltip(
+                          message: 'Нельзя снять права у себя',
+                          child: button,
+                        )
+                      : button;
+                },
+              ),
+              AppButton(
+                onPressed: () => _resetPassword(repo, u),
+                label: 'Сбросить пароль',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(adminUsersProvider);
@@ -155,7 +295,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Управление пользователями',
+                        'Пользователи',
                         style:
                             Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -195,162 +335,31 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         ),
                       );
                     }
-                    final crossAxisCount =
-                        MediaQuery.of(context).size.width > 700 ? 2 : 1;
-                    return GridView.builder(
+                    final width = MediaQuery.of(context).size.width;
+                    final useGrid = width > 700;
+                    if (useGrid) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 500,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 1.15,
+                        ),
+                        itemCount: users.length,
+                        itemBuilder: (context, index) =>
+                            _buildUserCard(context, users[index], repo, currentUserId),
+                      );
+                    }
+                    return ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 14,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: crossAxisCount == 1 ? 3.2 : 2.4,
-                      ),
                       itemCount: users.length,
                       itemBuilder: (context, index) {
                         final u = users[index];
-                        final nameOrEmail = (u.displayName != null &&
-                                    u.displayName!.isNotEmpty
-                                ? u.displayName!
-                                : u.email)
-                            .trim();
-                        final initial = nameOrEmail.isNotEmpty
-                            ? nameOrEmail.substring(0, 1).toUpperCase()
-                            : '?';
-                        return GradientCard(
-                          margin: EdgeInsets.zero,
-                          padding: const EdgeInsets.all(16),
-                          animate: false,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.accentSoft,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: AppColors.textSecondary
-                                            .withOpacity(0.3),
-                                      ),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      initial,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          u.email,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        if (u.displayName != null &&
-                                            u.displayName!.isNotEmpty)
-                                          Text(
-                                            u.displayName!,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 13,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (u.isAdmin)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      margin: const EdgeInsets.only(right: 8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceCard,
-                                        borderRadius:
-                                            BorderRadius.circular(
-                                                AppRadius.badge),
-                                        border: Border.all(
-                                            color:
-                                                AppColors.textSecondary),
-                                      ),
-                                      child: const Text(
-                                        'Админ',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.textPrimary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  IconButton(
-                                    onPressed: () => _deleteUser(repo, u),
-                                    icon: Icon(
-                                      Icons.delete_outline_rounded,
-                                      color: Colors.red.shade700,
-                                      size: 24,
-                                    ),
-                                    tooltip: 'Удалить',
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                      minWidth: 36,
-                                      minHeight: 36,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  Builder(
-                                    builder: (context) {
-                                      final isSelf = u.isAdmin &&
-                                          u.id == currentUserId;
-                                      final button = AppButton(
-                                        onPressed: isSelf
-                                            ? null
-                                            : () => _setAdmin(repo,
-                                                u.id, !u.isAdmin),
-                                        label: u.isAdmin
-                                            ? 'Убрать админа'
-                                            : 'Сделать админом',
-                                      );
-                                      return isSelf
-                                          ? Tooltip(
-                                              message:
-                                                  'Нельзя снять права у себя',
-                                              child: button,
-                                            )
-                                          : button;
-                                    },
-                                  ),
-                                  AppButton(
-                                    onPressed: () =>
-                                        _resetPassword(repo, u),
-                                    label: 'Сбросить пароль',
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _buildUserCard(context, u, repo, currentUserId),
                         );
                       },
                     );
