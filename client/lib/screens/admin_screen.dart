@@ -234,7 +234,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: AppColors.textSecondary
-                                            .withValues(alpha: 0.3),
+                                            .withOpacity(0.3),
                                       ),
                                     ),
                                     alignment: Alignment.center,

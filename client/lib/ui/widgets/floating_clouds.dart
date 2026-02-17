@@ -81,8 +81,8 @@ class _CloudsPainter extends CustomPainter {
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            Colors.white.withValues(alpha: alpha),
-            Colors.white.withValues(alpha: 0),
+            Colors.white.withOpacity(alpha),
+            Colors.white.withOpacity(0),
           ],
         ).createShader(rect);
       canvas.drawOval(rect, paint);
