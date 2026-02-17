@@ -22,8 +22,10 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
 
-    return Center(
-      child: SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: GradientCard(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
@@ -107,6 +109,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
     );
   }
 }

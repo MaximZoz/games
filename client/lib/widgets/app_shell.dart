@@ -43,6 +43,7 @@ class AppShell extends ConsumerWidget {
                     GestureDetector(
                       onTap: () => context.go('/'),
                       child: const Padding(
+                        key: Key('toolbar_title'),
                         padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'MultiGames',
