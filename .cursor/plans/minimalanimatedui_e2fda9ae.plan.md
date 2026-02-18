@@ -4,34 +4,34 @@ overview: "Построить минималистичный, анимирова
 todos:
   - id: ui-tokens-theme
     content: "Расширить дизайн-систему: семантические цвета + light/dark ThemeData + переключатель темы (system/light/dark)."
-    status: in_progress
+    status: cancelled
   - id: responsive-shell
     content: "Сделать адаптивный AppShell: mobile bottom nav, desktop navigation rail/sidebar, общие topbar/лейауты."
-    status: pending
+    status: completed
   - id: profile-ui
     content: Реализовать UI профиля (просмотр/редактирование) + состояния loading/empty/error + микро-анимации.
-    status: pending
+    status: in_progress
   - id: friends-ui
     content: "Реализовать UI друзей: список/поиск/заявки + адаптивные карточки."
-    status: pending
+    status: in_progress
   - id: tournaments-ui
     content: "Реализовать UI турниров: листинг + детальная + таблица (UI)."
-    status: pending
+    status: in_progress
   - id: inventory-ui
     content: "Реализовать UI инвентаря: grid/list adaptive + детальная предмета."
-    status: pending
+    status: in_progress
   - id: achievements-ui
     content: "Реализовать UI достижений: каталог + прогресс + анимация получения."
-    status: pending
+    status: in_progress
   - id: settings-ui
     content: "Реализовать UI настроек: тема/язык/уведомления/аккаунт."
-    status: pending
+    status: in_progress
   - id: games-ui
     content: Реализовать UI каталога игр + запуск + экран результата (UI).
-    status: pending
+    status: in_progress
   - id: coins-store-ui
     content: Реализовать UI монет/магазина (без привязки к платежному провайдеру) + баланс-компоненты.
-    status: pending
+    status: in_progress
   - id: tests
     content: Обновить/добавить widget-тесты на навигацию, темы, ключевые экраны и брейкпоинты.
     status: pending
@@ -39,6 +39,12 @@ isProject: false
 ---
 
 # План: Minimalist Animated UI (Flutter, multi-platform)
+
+## Что уже сделано
+
+- **Адаптивный AppShell (done):** `lib/ui/responsive.dart` (брейкпоинт 700px), на узких экранах — нижняя навигация (`NavigationBar`), на широких — боковой `NavigationRail`, общий тулбар и градиентный фон. Плавный переход между экранами (fade-out старого → fade-in нового).
+- **Маршруты и заглушки экранов:** профиль, друзья, турниры, игры, инвентарь, достижения, настройки, монеты — экраны-заглушки и пункты в навигации (в т.ч. Достижения и Монеты).
+- **Дизайн-токены:** `AppColors`, `AppRadius`, `AppSpacing`, `AppDurations` в `app_theme.dart`. Тема (light/dark) откатили — пока не делаем.
 
 ## Цели
 

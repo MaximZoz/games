@@ -37,7 +37,7 @@ class AppGradients {
   AppGradients._();
 
   static LinearGradient borderAt(double t) {
-    final colors = AppColors.borderCycle;
+    const colors = AppColors.borderCycle;
     final i = (t * (colors.length - 1)).floor().clamp(0, colors.length - 2);
     return LinearGradient(
       begin: Alignment.topLeft,
@@ -56,6 +56,17 @@ class AppRadius {
   static const double input = 12;
   static const double button = 12;
   static const double badge = 8;
+}
+
+/// Отступы.
+class AppSpacing {
+  AppSpacing._();
+
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 16;
+  static const double lg = 24;
+  static const double xl = 32;
 }
 
 /// Длительности анимаций.

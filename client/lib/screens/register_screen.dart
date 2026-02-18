@@ -89,7 +89,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         const SizedBox(height: 8),
                         Text(
                           'Создайте аккаунт для игры',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 14,
                           ),
@@ -115,9 +115,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             prefixIcon: Icon(Icons.email_outlined),
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty)
+                            if (v == null || v.trim().isEmpty) {
                               return 'Введите email';
-                            if (!v.contains('@')) return 'Некорректный email';
+                            }
+                            if (!v.contains('@')) {
+                              return 'Некорректный email';
+                            }
                             return null;
                           },
                         ),
@@ -142,9 +145,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                           ),
                           validator: (v) {
-                            if (v == null || v.isEmpty) return 'Введите пароль';
-                            if (v.length < 6)
+                            if (v == null || v.isEmpty) {
+                              return 'Введите пароль';
+                            }
+                            if (v.length < 6) {
                               return 'Пароль не менее 6 символов';
+                            }
                             return null;
                           },
                         ),

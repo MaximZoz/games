@@ -74,7 +74,8 @@ void main() {
     expect(find.byTooltip('Войти'), findsOneWidget);
     await tester.tap(find.byTooltip('Войти'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    // Переход между роутами анимирован в AppShell
+    await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byTooltip('На главную'), findsOneWidget);
     expect(find.text('Вход'), findsOneWidget);
@@ -91,7 +92,8 @@ void main() {
 
     await tester.tap(find.byTooltip('Войти'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    // Переход между роутами анимирован в AppShell
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Вход'), findsOneWidget);
 
     // Тулбар без AppBar: заголовок в оболочке с ключом toolbar_title

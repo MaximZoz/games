@@ -30,9 +30,9 @@ class HomeScreen extends ConsumerWidget {
           child: GradientCard(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
                   'MultiGames',
                   style: TextStyle(
                     fontSize: 32,
@@ -41,9 +41,9 @@ class HomeScreen extends ConsumerWidget {
                     letterSpacing: -0.5,
                     decoration: TextDecoration.none,
                   ),
-                ),
-                const SizedBox(height: 24),
-                FutureBuilder<String>(
+                  ),
+                  const SizedBox(height: 24),
+                  FutureBuilder<String>(
                   future: _fetchServerStart(),
                   builder: (context, snapshot) {
                     final hasData = snapshot.hasData;
@@ -84,8 +84,8 @@ class HomeScreen extends ConsumerWidget {
                     }
                     return const SizedBox.shrink();
                   },
-                ),
-                authState.when(
+                  ),
+                  authState.when(
                   data: (user) {
                     if (user != null) {
                       return Padding(
@@ -104,12 +104,12 @@ class HomeScreen extends ConsumerWidget {
                   },
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
     );
   }
 }
