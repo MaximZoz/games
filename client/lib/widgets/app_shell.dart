@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
-/// Одна анимация 0→1: сначала исчезает старый контент, потом появляется новый.
+/// Старый экран убирается сразу, новый появляется через 100 ms.
 class _RouteTransitionWrapper extends StatefulWidget {
   const _RouteTransitionWrapper({
     required this.child,
@@ -20,32 +22,22 @@ class _RouteTransitionWrapper extends StatefulWidget {
   State<_RouteTransitionWrapper> createState() => _RouteTransitionWrapperState();
 }
 
-class _RouteTransitionWrapperState extends State<_RouteTransitionWrapper>
-    with SingleTickerProviderStateMixin {
-  static const _duration = Duration(milliseconds: 400);
+class _RouteTransitionWrapperState extends State<_RouteTransitionWrapper> {
+  static const _delay = Duration(milliseconds: 100);
 
-  late AnimationController _controller;
   Widget _displayedChild = const SizedBox.shrink();
-  Widget? _outgoingChild;
+  bool _isTransitioning = false;
+  Timer? _delayTimer;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: _duration, vsync: this);
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        setState(() {
-          _displayedChild = widget.child;
-          _outgoingChild = null;
-        });
-      }
-    });
     _displayedChild = widget.child;
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _delayTimer?.cancel();
     super.dispose();
   }
 
@@ -53,38 +45,26 @@ class _RouteTransitionWrapperState extends State<_RouteTransitionWrapper>
   void didUpdateWidget(covariant _RouteTransitionWrapper oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_normalizePath(oldWidget.path) != _normalizePath(widget.path)) {
-      setState(() => _outgoingChild = _displayedChild);
-      _controller.forward(from: 0);
-    } else if (_outgoingChild == null && !_controller.isAnimating) {
+      _delayTimer?.cancel();
+      setState(() => _isTransitioning = true);
+      _delayTimer = Timer(_delay, () {
+        _delayTimer = null;
+        if (mounted) {
+          setState(() {
+            _displayedChild = widget.child;
+            _isTransitioning = false;
+          });
+        }
+      });
+    } else if (!_isTransitioning) {
       _displayedChild = widget.child;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_outgoingChild == null) {
-      return _displayedChild;
-    }
-    final t = _controller.value;
-    final outOpacity = t <= 0.5 ? 1.0 - (t * 2) : 0.0;
-    final inOpacity = t <= 0.5 ? 0.0 : (t - 0.5) * 2;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned.fill(
-          child: Opacity(
-            opacity: outOpacity.clamp(0.0, 1.0),
-            child: _outgoingChild,
-          ),
-        ),
-        Positioned.fill(
-          child: Opacity(
-            opacity: inOpacity.clamp(0.0, 1.0),
-            child: widget.child,
-          ),
-        ),
-      ],
-    );
+    if (!_isTransitioning) return _displayedChild;
+    return const SizedBox.shrink();
   }
 }
 
@@ -234,7 +214,9 @@ class AppShell extends ConsumerWidget {
             ),
             Expanded(
               child: narrow
-                  ? _RouteTransitionWrapper(child: child, path: path)
+                  ? SizedBox.expand(
+                      child: _RouteTransitionWrapper(path: path, child: child),
+                    )
                   : Row(
                       children: [
                         NavigationRail(
@@ -252,7 +234,9 @@ class AppShell extends ConsumerWidget {
                               .toList(),
                         ),
                         Expanded(
-                          child: _RouteTransitionWrapper(child: child, path: path),
+                          child: SizedBox.expand(
+                            child: _RouteTransitionWrapper(path: path, child: child),
+                          ),
                         ),
                       ],
                     ),

@@ -56,12 +56,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final bottomInset = media.viewInsets.bottom;
+    // На веб/iOS viewInsets при клавиатуре часто 0 — даём запас снизу на малых экранах.
+    final viewportHeight = media.size.height;
+    final extraBottom = viewportHeight < 450 ? 280.0 : 0.0;
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomInset + extraBottom),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: GradientCard(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -62,30 +63,26 @@ class _ProfileLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(AppRadius.card),
+    return AnimatedBorderBox(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.accentStart, size: 24),
-              const SizedBox(width: 16),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.accentStart, size: 24),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
-              const Spacer(),
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-            ],
-          ),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+          ],
         ),
       ),
     );
