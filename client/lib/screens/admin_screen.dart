@@ -28,10 +28,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     });
     if (error != null || success != null) {
       _messageTimer = Timer(const Duration(seconds: 4), () {
-        if (mounted) setState(() {
-          _error = null;
-          _success = null;
-        });
+        if (mounted) {
+          setState(() {
+            _error = null;
+            _success = null;
+          });
+        }
       });
     }
   }
@@ -365,7 +367,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     );
                   },
                   loading: () => Center(
-                    child: CircularProgressIndicator(
+                    child: const CircularProgressIndicator(
                       color: AppColors.accentStart,
                     ),
                   ),

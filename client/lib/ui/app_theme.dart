@@ -37,7 +37,7 @@ class AppGradients {
   AppGradients._();
 
   static LinearGradient borderAt(double t) {
-    final colors = AppColors.borderCycle;
+    const colors = AppColors.borderCycle;
     final i = (t * (colors.length - 1)).floor().clamp(0, colors.length - 2);
     return LinearGradient(
       begin: Alignment.topLeft,

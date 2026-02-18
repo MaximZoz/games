@@ -83,7 +83,7 @@ class MultiGamesApp extends ConsumerWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.input)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.input),
-            borderSide: BorderSide(color: AppColors.accentSoft),
+            borderSide: const BorderSide(color: AppColors.accentSoft),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.input),
