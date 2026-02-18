@@ -74,7 +74,8 @@ void main() {
     expect(find.byTooltip('Войти'), findsOneWidget);
     await tester.tap(find.byTooltip('Войти'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    // Переход между роутами анимирован в AppShell
+    await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byTooltip('На главную'), findsOneWidget);
     expect(find.text('Вход'), findsOneWidget);
@@ -91,15 +92,14 @@ void main() {
 
     await tester.tap(find.byTooltip('Войти'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    // Переход между роутами анимирован в AppShell
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Вход'), findsOneWidget);
 
-    final titleInAppBar = find.descendant(
-      of: find.byType(AppBar),
-      matching: find.text('MultiGames'),
-    );
-    expect(titleInAppBar, findsOneWidget);
-    await tester.tap(titleInAppBar, warnIfMissed: false);
+    // Тулбар без AppBar: заголовок в оболочке с ключом toolbar_title
+    final titleInToolbar = find.byKey(const Key('toolbar_title'));
+    expect(titleInToolbar, findsOneWidget);
+    await tester.tap(titleInToolbar, warnIfMissed: false);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
   });
