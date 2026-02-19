@@ -13,12 +13,22 @@ class AuthUser {
   final String email;
   final String? displayName;
   final bool isAdmin;
+  final int? age;
+  final String? gender;
+  final String? about;
+  final String avatarKind;
+  final String? avatarValue;
 
   AuthUser({
     required this.id,
     required this.email,
     this.displayName,
     this.isAdmin = false,
+    this.age,
+    this.gender,
+    this.about,
+    this.avatarKind = 'letter',
+    this.avatarValue,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -27,8 +37,25 @@ class AuthUser {
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
       isAdmin: json['is_admin'] as bool? ?? false,
+      age: json['age'] as int?,
+      gender: json['gender'] as String?,
+      about: json['about'] as String?,
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'email': email,
+        'display_name': displayName,
+        'is_admin': isAdmin,
+        'age': age,
+        'gender': gender,
+        'about': about,
+        'avatar_kind': avatarKind,
+        'avatar_value': avatarValue,
+      };
 }
 
 class AuthResult {
@@ -108,12 +135,7 @@ class AuthRepository {
 
     await prefs.setString(_keyAccessToken, accessToken);
     await prefs.setString(_keyRefreshToken, refreshToken);
-    await prefs.setString(_keyUser, jsonEncode({
-      'id': user.id,
-      'email': user.email,
-      'display_name': user.displayName,
-      'is_admin': user.isAdmin,
-    }));
+    await _saveUser(user);
     return AuthResult(
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -139,6 +161,71 @@ class AuthRepository {
     await prefs.remove(_keyAccessToken);
     await prefs.remove(_keyRefreshToken);
     await prefs.remove(_keyUser);
+  }
+
+  /// Обновляет профиль пользователя на бэкенде и сохраняет результат локально.
+  Future<AuthUser> updateProfile({
+    required String? displayName,
+    int? age,
+    String? gender,
+    String? about,
+    String? avatarKind,
+    String? avatarValue,
+  }) async {
+    await init();
+    final current = await getStoredUser();
+    if (current == null) throw AuthException(401, 'Не авторизован');
+    final token = await getAccessToken();
+    if (token == null) throw AuthException(401, 'Не авторизован');
+
+    final name = displayName?.trim().isEmpty == true ? null : displayName?.trim();
+
+    final uri = Uri.parse('$apiBaseUrl/api/profile');
+    final response = await http.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'display_name': name,
+        'age': age,
+        'gender': gender,
+        'about': about,
+        'avatar_kind': avatarKind,
+        'avatar_value': avatarValue,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      String msg = response.body;
+      try {
+        final body = jsonDecode(response.body);
+        if (body is Map) msg = (body['message'] ?? body['error'] ?? msg).toString();
+      } catch (_) {}
+      throw AuthException(response.statusCode, msg);
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final user = body['user'] != null
+        ? AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map))
+        : AuthUser(
+            id: current.id,
+            email: current.email,
+            displayName: name,
+            isAdmin: current.isAdmin,
+            age: age,
+            gender: gender,
+            about: about,
+            avatarKind: avatarKind ?? 'letter',
+            avatarValue: avatarValue,
+          );
+    await _saveUser(user);
+    return user;
+  }
+
+  Future<void> _saveUser(AuthUser user) async {
+    await prefs.setString(_keyUser, jsonEncode(user.toJson()));
   }
 }
 

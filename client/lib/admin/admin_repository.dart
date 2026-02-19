@@ -10,6 +10,11 @@ class AdminUserItem {
   final String? displayName;
   final bool isAdmin;
   final String createdAt;
+  final int? age;
+  final String? gender;
+  final String? about;
+  final String avatarKind;
+  final String? avatarValue;
 
   AdminUserItem({
     required this.id,
@@ -17,6 +22,11 @@ class AdminUserItem {
     this.displayName,
     required this.isAdmin,
     required this.createdAt,
+    this.age,
+    this.gender,
+    this.about,
+    this.avatarKind = 'letter',
+    this.avatarValue,
   });
 
   factory AdminUserItem.fromJson(Map<String, dynamic> json) {
@@ -26,6 +36,11 @@ class AdminUserItem {
       displayName: json['display_name'] as String?,
       isAdmin: json['is_admin'] as bool? ?? false,
       createdAt: json['created_at'] as String? ?? '',
+      age: json['age'] as int?,
+      gender: json['gender'] as String?,
+      about: json['about'] as String?,
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
     );
   }
 }

@@ -72,8 +72,11 @@ class HomeScreen extends ConsumerWidget {
                       );
                     }
                     if (error != null) {
+                      final message = error is http.ClientException
+                          ? 'Не удалось подключиться к серверу. Проверьте интернет или что сервер запущен.'
+                          : 'Ошибка: $error';
                       return Text(
-                        'Server: $error',
+                        message,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.red.shade700,

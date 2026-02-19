@@ -30,6 +30,11 @@ type AdminUserItem struct {
 	DisplayName *string `json:"display_name,omitempty"`
 	IsAdmin     bool    `json:"is_admin"`
 	CreatedAt   string  `json:"created_at"`
+	Age         *int    `json:"age,omitempty"`
+	Gender      *string `json:"gender,omitempty"`
+	About       *string `json:"about,omitempty"`
+	AvatarKind  string  `json:"avatar_kind,omitempty"`
+	AvatarValue *string `json:"avatar_value,omitempty"`
 }
 
 type SetAdminRequest struct {
@@ -119,8 +124,16 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	items := make([]AdminUserItem, 0, len(list))
 	for _, u := range list {
 		items = append(items, AdminUserItem{
-			ID: u.ID.String(), Email: u.Email, DisplayName: u.DisplayName,
-			IsAdmin: u.IsAdmin, CreatedAt: u.CreatedAt,
+			ID:          u.ID.String(),
+			Email:       u.Email,
+			DisplayName: u.DisplayName,
+			IsAdmin:     u.IsAdmin,
+			CreatedAt:   u.CreatedAt,
+			Age:         u.Age,
+			Gender:      u.Gender,
+			About:       u.About,
+			AvatarKind:  u.AvatarKind,
+			AvatarValue: u.AvatarValue,
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")

@@ -107,7 +107,6 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
-    final isHome = path == '/' || path.isEmpty;
     final padding = MediaQuery.of(context).padding;
     final narrow = isNarrow(context);
     final selectedIndex = _selectedIndexForPath(path);
@@ -148,66 +147,59 @@ class AppShell extends ConsumerWidget {
                       ),
                     ),
                     const Spacer(),
-                    if (isHome)
-                      authState.when(
-                        data: (user) {
-                          if (user != null) {
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (user.isAdmin)
-                                  IconButton(
-                                    icon: const Icon(Icons.admin_panel_settings),
-                                    onPressed: () => context.push('/admin'),
-                                    tooltip: 'Админка',
-                                  ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: Text(
-                                    user.displayName ?? user.email,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textPrimary,
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ),
+                    authState.when(
+                      data: (user) {
+                        if (user != null) {
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (user.isAdmin)
                                 IconButton(
-                                  icon: const Icon(Icons.logout),
-                                  onPressed: () async {
-                                    await ref.read(authStateProvider.notifier).logout();
-                                  },
-                                  tooltip: 'Выйти',
+                                  icon: const Icon(Icons.admin_panel_settings),
+                                  onPressed: () => context.push('/admin'),
+                                  tooltip: 'Админка',
                                 ),
-                              ],
-                            );
-                          }
-                          return IconButton(
-                            icon: const Icon(Icons.login),
-                            onPressed: () => context.push('/login'),
-                            tooltip: 'Войти',
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Text(
+                                  user.displayName ?? user.email,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textPrimary,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.logout),
+                                onPressed: () async {
+                                  await ref.read(authStateProvider.notifier).logout();
+                                },
+                                tooltip: 'Выйти',
+                              ),
+                            ],
                           );
-                        },
-                        loading: () => const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                        error: (_, __) => IconButton(
+                        }
+                        return IconButton(
                           icon: const Icon(Icons.login),
                           onPressed: () => context.push('/login'),
                           tooltip: 'Войти',
+                        );
+                      },
+                      loading: () => const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                      )
-                    else
-                      IconButton(
-                        icon: const Icon(Icons.home),
-                        onPressed: () => context.go('/'),
-                        tooltip: 'На главную',
                       ),
+                      error: (_, __) => IconButton(
+                        icon: const Icon(Icons.login),
+                        onPressed: () => context.push('/login'),
+                        tooltip: 'Войти',
+                      ),
+                    ),
                   ],
                 ),
               ),

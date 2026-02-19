@@ -1,0 +1,6 @@
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS age         INTEGER,
+    ADD COLUMN IF NOT EXISTS gender      TEXT,
+    ADD COLUMN IF NOT EXISTS about       TEXT,
+    ADD COLUMN IF NOT EXISTS avatar_kind TEXT NOT NULL DEFAULT 'letter',
+    ADD COLUMN IF NOT EXISTS avatar_value TEXT;

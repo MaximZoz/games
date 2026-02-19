@@ -185,6 +185,7 @@ func main() {
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
+	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

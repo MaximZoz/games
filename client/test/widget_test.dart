@@ -62,7 +62,7 @@ void main() {
     expect(hasLogin || hasLoading, isTrue);
   });
 
-  testWidgets('On login page, toolbar shows home icon', (WidgetTester tester) async {
+  testWidgets('On login page, toolbar shows login button and title', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -77,7 +77,9 @@ void main() {
     // Переход между роутами анимирован в AppShell
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byTooltip('На главную'), findsOneWidget);
+    // Кнопка «На главную» удалена — тулбар всегда показывает «Войти»/«Выйти»
+    expect(find.byTooltip('На главную'), findsNothing);
+    expect(find.byKey(const Key('toolbar_title')), findsOneWidget);
     expect(find.text('Вход'), findsOneWidget);
   });
 

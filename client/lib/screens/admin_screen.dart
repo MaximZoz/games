@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -138,18 +139,139 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     }
   }
 
-  Widget _buildUserCard(
-    BuildContext context,
-    AdminUserItem u,
-    AdminRepository repo,
-    String? currentUserId,
-  ) {
+  static const List<IconData> _presetAvatarIcons = [
+    Icons.face_rounded,
+    Icons.face_2_rounded,
+    Icons.face_3_rounded,
+    Icons.face_4_rounded,
+    Icons.face_5_rounded,
+    Icons.face_6_rounded,
+    Icons.man_rounded,
+    Icons.woman_rounded,
+    Icons.elderly_rounded,
+    Icons.elderly_woman_rounded,
+    Icons.person_rounded,
+    Icons.child_care_rounded,
+  ];
+
+  Widget _buildAvatar(AdminUserItem u) {
     final nameOrEmail = (u.displayName != null && u.displayName!.isNotEmpty
             ? u.displayName!
             : u.email)
         .trim();
     final initial =
         nameOrEmail.isNotEmpty ? nameOrEmail.substring(0, 1).toUpperCase() : '?';
+
+    // Загруженное фото хранится с avatarKind = 'file'.
+    // На web значение имеет вид 'base64,<данные>', на мобильном — путь к файлу.
+    if (u.avatarKind == 'file' && u.avatarValue != null && u.avatarValue!.isNotEmpty) {
+      String raw = u.avatarValue!;
+      if (raw.startsWith('base64,')) raw = raw.substring(7);
+      try {
+        final bytes = base64Decode(raw);
+        return CircleAvatar(
+          radius: 22,
+          backgroundImage: MemoryImage(bytes),
+        );
+      } catch (_) {}
+    }
+
+    // Пресет — индекс иконки
+    if (u.avatarKind == 'preset' && u.avatarValue != null) {
+      final index = int.tryParse(u.avatarValue!);
+      if (index != null && index >= 0 && index < _presetAvatarIcons.length) {
+        return CircleAvatar(
+          radius: 22,
+          backgroundColor: AppColors.accentSoft,
+          child: Icon(_presetAvatarIcons[index], size: 22, color: AppColors.accentStart),
+        );
+      }
+    }
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.accentSoft,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.textSecondary.withOpacity(0.3)),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+
+  String _ageLabel(int n) {
+    final mod10 = n % 10;
+    final mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 14) return '$n лет';
+    if (mod10 == 1) return '$n год';
+    if (mod10 >= 2 && mod10 <= 4) return '$n года';
+    return '$n лет';
+  }
+
+  Widget _buildProfileInfo(AdminUserItem u) {
+    final chips = <Widget>[];
+
+    if (u.age != null) {
+      chips.add(_InfoChip(
+        icon: Icons.cake_outlined,
+        label: _ageLabel(u.age!),
+      ));
+    }
+
+    if (u.gender != null && u.gender!.isNotEmpty) {
+      final isMale = u.gender == 'Мужской';
+      chips.add(_InfoChip(
+        icon: isMale ? Icons.male_rounded : Icons.female_rounded,
+        label: u.gender!,
+        color: isMale ? Colors.blue.shade700 : Colors.pink.shade600,
+      ));
+    }
+
+    if (chips.isEmpty && (u.about == null || u.about!.isEmpty)) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (chips.isNotEmpty) ...[
+          Wrap(spacing: 8, runSpacing: 4, children: chips),
+          const SizedBox(height: 4),
+        ],
+        if (u.about != null && u.about!.isNotEmpty)
+          Text(
+            u.about!,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildUserCard(
+    BuildContext context,
+    AdminUserItem u,
+    AdminRepository repo,
+    String? currentUserId,
+  ) {
+    final profileInfo = _buildProfileInfo(u);
+    final hasProfile = u.age != null ||
+        (u.gender != null && u.gender!.isNotEmpty) ||
+        (u.about != null && u.about!.isNotEmpty);
+
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
@@ -160,26 +282,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.textSecondary.withOpacity(0.3),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
+              _buildAvatar(u),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -243,6 +346,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
             ],
           ),
+          if (hasProfile) ...[
+            const SizedBox(height: 10),
+            profileInfo,
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -366,8 +473,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       },
                     );
                   },
-                  loading: () => Center(
-                    child: const CircularProgressIndicator(
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
                       color: AppColors.accentStart,
                     ),
                   ),
@@ -394,6 +501,34 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ],
           ),
         ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.textSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: c),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: c),
+        ),
+      ],
     );
   }
 }
