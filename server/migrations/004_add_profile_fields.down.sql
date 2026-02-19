@@ -1,0 +1,6 @@
+ALTER TABLE users
+    DROP COLUMN IF EXISTS age,
+    DROP COLUMN IF EXISTS gender,
+    DROP COLUMN IF EXISTS about,
+    DROP COLUMN IF EXISTS avatar_kind,
+    DROP COLUMN IF EXISTS avatar_value;

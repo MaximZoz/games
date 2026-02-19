@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -46,7 +47,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e is AuthException ? e.message : e.toString();
+          if (e is AuthException) {
+            _errorMessage = e.message;
+          } else if (e is http.ClientException) {
+            _errorMessage = 'Не удалось подключиться к серверу.';
+          } else {
+            _errorMessage = e.toString();
+          }
           _isLoading = false;
         });
       }
@@ -86,9 +93,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Введите email или логин и пароль',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 14,
                           ),

@@ -23,10 +23,5 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(UserResponse{
-		ID:          u.ID.String(),
-		Email:       u.Email,
-		DisplayName: u.DisplayName,
-		IsAdmin:     u.IsAdmin,
-	})
+	_ = json.NewEncoder(w).Encode(userToResponse(u))
 }

@@ -46,6 +46,25 @@ type UserResponse struct {
 	Email       string  `json:"email"`
 	DisplayName *string `json:"display_name,omitempty"`
 	IsAdmin     bool    `json:"is_admin,omitempty"`
+	Age         *int    `json:"age,omitempty"`
+	Gender      *string `json:"gender,omitempty"`
+	About       *string `json:"about,omitempty"`
+	AvatarKind  string  `json:"avatar_kind,omitempty"`
+	AvatarValue *string `json:"avatar_value,omitempty"`
+}
+
+func userToResponse(u *store.User) UserResponse {
+	return UserResponse{
+		ID:          u.ID.String(),
+		Email:       u.Email,
+		DisplayName: u.DisplayName,
+		IsAdmin:     u.IsAdmin,
+		Age:         u.Age,
+		Gender:      u.Gender,
+		About:       u.About,
+		AvatarKind:  u.AvatarKind,
+		AvatarValue: u.AvatarValue,
+	}
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -124,12 +143,7 @@ func writeTokenResponse(w http.ResponseWriter, accessToken, refreshToken string,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresIn:    expiresIn,
-		User: UserResponse{
-			ID:          u.ID.String(),
-			Email:       u.Email,
-			DisplayName: u.DisplayName,
-			IsAdmin:     u.IsAdmin,
-		},
+		User:         userToResponse(u),
 	})
 }
 

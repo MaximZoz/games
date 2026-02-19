@@ -87,9 +87,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Создайте аккаунт для игры',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 14,
                           ),
