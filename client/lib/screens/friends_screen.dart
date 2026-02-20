@@ -830,10 +830,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 controller: _searchController,
                 focusNode: _searchFocusNode,
                 textInputAction: TextInputAction.search,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Поиск по нику',
-                  prefixIcon: Icon(Icons.search_rounded),
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Очистить поиск',
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchResults = const [];
+                              _isSearching = false;
+                            });
+                            _searchFocusNode.requestFocus();
+                          },
+                          icon: const Icon(Icons.close_rounded, color: Colors.red),
+                        ),
                 ),
+                onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => _performSearch(),
               ),
             ),
@@ -843,12 +858,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               tooltip: 'Найти',
               onPressed: _isSearching ? null : _performSearch,
               loading: _isSearching,
-            ),
-            const SizedBox(width: 4),
-            _buildCompactIconButton(
-              icon: Icons.close_rounded,
-              tooltip: 'Закрыть поиск',
-              onPressed: _toggleSearch,
             ),
           ],
         ),
