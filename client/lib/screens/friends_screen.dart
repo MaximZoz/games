@@ -93,6 +93,39 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         '${two(local.hour)}:${two(local.minute)}';
   }
 
+  Future<void> _showRequestInfoDialog({
+    required FriendUserItem user,
+    required bool incoming,
+  }) async {
+    final name = _displayName(user);
+    final roleText = incoming ? 'Отправитель заявки' : 'Получатель заявки';
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Информация о пользователе'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$roleText: $name'),
+              const SizedBox(height: 8),
+              Text('Email: ${user.email}'),
+              const SizedBox(height: 8),
+              Text('ID: ${user.id}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Закрыть'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildAvatar(FriendUserItem user) {
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
@@ -245,6 +278,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required FriendUserItem user,
     required String subtitle,
     required List<Widget> actions,
+    Widget? trailing,
   }) {
     return GradientCard(
       margin: EdgeInsets.zero,
@@ -283,6 +317,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   ],
                 ),
               ),
+              if (trailing != null) ...[
+                const SizedBox(width: 4),
+                trailing,
+              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -375,6 +413,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
+          trailing: IconButton(
+            tooltip: 'Информация о пользователе',
+            onPressed: () => _showRequestInfoDialog(user: item.user, incoming: true),
+            icon: const Icon(Icons.info_outline_rounded),
+          ),
           actions: [
             AppButton(
               onPressed: _busy(acceptKey)
@@ -414,6 +457,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
+          trailing: IconButton(
+            tooltip: 'Информация о пользователе',
+            onPressed: () => _showRequestInfoDialog(user: item.user, incoming: false),
+            icon: const Icon(Icons.info_outline_rounded),
+          ),
           actions: [
             AppButton(
               onPressed: _busy(cancelKey)
@@ -720,19 +768,21 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               ),
             _buildSearchResults(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: TabBar(
                 controller: _tabController,
                 isScrollable: compact,
+                tabAlignment: compact ? TabAlignment.start : TabAlignment.fill,
+                padding: compact ? const EdgeInsets.symmetric(horizontal: 2) : EdgeInsets.zero,
                 labelPadding: compact
-                    ? const EdgeInsets.symmetric(horizontal: 12)
-                    : const EdgeInsets.symmetric(horizontal: 20),
+                    ? const EdgeInsets.symmetric(horizontal: 8)
+                    : const EdgeInsets.symmetric(horizontal: 14),
                 labelStyle: TextStyle(
-                  fontSize: compact ? 14 : 16,
+                  fontSize: compact ? 13 : 16,
                   fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: compact ? 14 : 16,
+                  fontSize: compact ? 13 : 16,
                   fontWeight: FontWeight.w500,
                 ),
                 tabs: [
