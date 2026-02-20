@@ -118,11 +118,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Future<void> _showRequestInfoDialog({
     required FriendUserItem user,
-    required bool incoming,
-    required String createdAt,
   }) async {
     final name = _displayName(user);
-    final roleText = incoming ? 'Отправил(а) вам заявку в друзья' : 'Вы отправили заявку в друзья';
     final about = user.about?.trim();
     final gender = _genderLabel(user.gender);
     final chips = <String>[
@@ -183,24 +180,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  roleText,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Дата заявки: ${_formatDateTime(createdAt)}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
                 if (chips.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -543,11 +524,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: IconButton(
             tooltip: 'Информация о пользователе',
-            onPressed: () => _showRequestInfoDialog(
-              user: item.user,
-              incoming: true,
-              createdAt: item.createdAt,
-            ),
+            onPressed: () => _showRequestInfoDialog(user: item.user),
             icon: const Icon(Icons.info_outline_rounded),
           ),
           actions: [
@@ -591,11 +568,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: IconButton(
             tooltip: 'Информация о пользователе',
-            onPressed: () => _showRequestInfoDialog(
-              user: item.user,
-              incoming: false,
-              createdAt: item.createdAt,
-            ),
+            onPressed: () => _showRequestInfoDialog(user: item.user),
             icon: const Icon(Icons.info_outline_rounded),
           ),
           actions: [
@@ -689,10 +662,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   Widget _buildSearchResults() {
-    if (!_isSearchExpanded) return const SizedBox.shrink();
-
     final query = _searchController.text.trim();
-    if (query.isEmpty) return const SizedBox.shrink();
+    if (query.isEmpty) {
+      return const Center(
+        child: Text(
+          'Введите запрос и нажмите "Найти"',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -712,9 +690,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             ),
             const SizedBox(height: 8),
             if (_isSearching)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(10),
+              const Expanded(
+                child: Center(
                   child: SizedBox(
                     width: 24,
                     height: 24,
@@ -726,18 +703,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 ),
               )
             else if (_searchResults.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
-                child: Text(
-                  'Ничего не найдено',
-                  style: TextStyle(color: AppColors.textSecondary),
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'Ничего не найдено',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
               )
             else
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 290),
+              Expanded(
                 child: ListView.separated(
-                  shrinkWrap: true,
                   itemCount: _searchResults.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
@@ -902,92 +878,95 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: MessageBanner(message: _success!, type: BannerType.success),
               ),
-            _buildSearchResults(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: false,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                indicatorSize: TabBarIndicatorSize.tab,
-                labelStyle: TextStyle(
-                  fontSize: compact ? 12 : 15,
-                  fontWeight: FontWeight.w600,
+            if (_isSearchExpanded)
+              Expanded(child: _buildSearchResults())
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: TabBar(
+                  controller: _tabController,
+                  isScrollable: false,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelStyle: TextStyle(
+                    fontSize: compact ? 12 : 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelStyle: TextStyle(
+                    fontSize: compact ? 12 : 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  tabs: [
+                    Tab(
+                      child: Text(
+                        friendsAsync.valueOrNull == null
+                            ? 'Друзья'
+                            : 'Друзья (${friendsAsync.valueOrNull!.friends.length})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        friendsAsync.valueOrNull == null
+                            ? 'Входящие'
+                            : 'Входящие (${friendsAsync.valueOrNull!.incoming.length})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        friendsAsync.valueOrNull == null
+                            ? 'Исходящие'
+                            : 'Исходящие (${friendsAsync.valueOrNull!.outgoing.length})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
-                unselectedLabelStyle: TextStyle(
-                  fontSize: compact ? 12 : 15,
-                  fontWeight: FontWeight.w500,
-                ),
-                tabs: [
-                  Tab(
-                    child: Text(
-                      friendsAsync.valueOrNull == null
-                          ? 'Друзья'
-                          : 'Друзья (${friendsAsync.valueOrNull!.friends.length})',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Tab(
-                    child: Text(
-                      friendsAsync.valueOrNull == null
-                          ? 'Входящие'
-                          : 'Входящие (${friendsAsync.valueOrNull!.incoming.length})',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Tab(
-                    child: Text(
-                      friendsAsync.valueOrNull == null
-                          ? 'Исходящие'
-                          : 'Исходящие (${friendsAsync.valueOrNull!.outgoing.length})',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
               ),
-            ),
-            Expanded(
-              child: friendsAsync.when(
-                data: (snapshot) {
-                  return TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildFriendsTab(snapshot),
-                      _buildIncomingTab(snapshot),
-                      _buildOutgoingTab(snapshot),
-                    ],
-                  );
-                },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.accentStart,
-                  ),
-                ),
-                error: (err, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+              Expanded(
+                child: friendsAsync.when(
+                  data: (snapshot) {
+                    return TabBarView(
+                      controller: _tabController,
                       children: [
-                        Icon(Icons.error_outline_rounded, size: 46, color: Colors.red.shade700),
-                        const SizedBox(height: 12),
-                        Text(
-                          err.toString(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.red.shade700),
-                        ),
+                        _buildFriendsTab(snapshot),
+                        _buildIncomingTab(snapshot),
+                        _buildOutgoingTab(snapshot),
                       ],
+                    );
+                  },
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.accentStart,
+                    ),
+                  ),
+                  error: (err, _) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.error_outline_rounded, size: 46, color: Colors.red.shade700),
+                          const SizedBox(height: 12),
+                          Text(
+                            err.toString(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.red.shade700),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
