@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -17,8 +16,9 @@ class FriendsScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-class _FriendsScreenState extends ConsumerState<FriendsScreen>
-    with SingleTickerProviderStateMixin {
+enum _FriendsTabKind { friends, incoming, outgoing }
+
+class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   static const List<IconData> _presetAvatarIcons = [
     Icons.face_rounded,
     Icons.face_2_rounded,
@@ -37,46 +37,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
-  late final TabController _tabController;
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
   bool _isSearchExpanded = false;
-  String? _error;
-  String? _success;
-  Timer? _messageTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
 
   @override
   void dispose() {
-    _messageTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
-  void _showMessage(String? error, String? success) {
-    _messageTimer?.cancel();
-    setState(() {
-      _error = error;
-      _success = success;
-    });
-    if (error != null || success != null) {
-      _messageTimer = Timer(const Duration(seconds: 4), () {
-        if (!mounted) return;
-        setState(() {
-          _error = null;
-          _success = null;
-        });
-      });
-    }
-  }
+  void _showMessage(String? error, String? success) {}
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -555,36 +528,34 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
-          trailing: IconButton(
-            tooltip: 'Информация о пользователе',
-            onPressed: () => _showRequestInfoDialog(user: item.user),
-            icon: const Icon(Icons.info_outline_rounded),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactIconButton(
+                icon: Icons.info_outline_rounded,
+                tooltip: 'Информация о пользователе',
+                onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: acceptKey,
+                icon: Icons.check_rounded,
+                tooltip: 'Принять заявку',
+                call: (repo) => repo.acceptRequest(item.requestId),
+                success: 'Заявка принята',
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: rejectKey,
+                icon: Icons.close_rounded,
+                tooltip: 'Отклонить заявку',
+                call: (repo) => repo.rejectRequest(item.requestId),
+                success: 'Заявка отклонена',
+                danger: true,
+              ),
+            ],
           ),
-          actions: [
-            AppButton(
-              onPressed: _busy(acceptKey)
-                  ? null
-                  : () => _runAction(
-                        key: acceptKey,
-                        call: (repo) => repo.acceptRequest(item.requestId),
-                        success: 'Заявка принята',
-                      ),
-              label: 'Принять',
-              isLoading: _busy(acceptKey),
-            ),
-            AppButton(
-              onPressed: _busy(rejectKey)
-                  ? null
-                  : () => _runAction(
-                        key: rejectKey,
-                        call: (repo) => repo.rejectRequest(item.requestId),
-                        success: 'Заявка отклонена',
-                      ),
-              label: 'Отклонить',
-              style: AppButtonStyle.danger,
-              isLoading: _busy(rejectKey),
-            ),
-          ],
+          actions: const [],
         );
       },
     );
@@ -935,9 +906,50 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
+  List<_FriendsTabKind> _visibleTabs(FriendsSnapshot? snapshot) {
+    if (snapshot == null) {
+      return const [
+        _FriendsTabKind.friends,
+        _FriendsTabKind.incoming,
+        _FriendsTabKind.outgoing,
+      ];
+    }
+
+    final result = <_FriendsTabKind>[_FriendsTabKind.friends];
+    if (snapshot.incoming.isNotEmpty) result.add(_FriendsTabKind.incoming);
+    if (snapshot.outgoing.isNotEmpty) result.add(_FriendsTabKind.outgoing);
+    return result;
+  }
+
+  String _tabTitle(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        if (snapshot == null) return 'Друзья';
+        return 'Друзья (${snapshot.friends.length})';
+      case _FriendsTabKind.incoming:
+        if (snapshot == null) return 'Входящие';
+        return 'Входящие (${snapshot.incoming.length})';
+      case _FriendsTabKind.outgoing:
+        if (snapshot == null) return 'Исходящие';
+        return 'Исходящие (${snapshot.outgoing.length})';
+    }
+  }
+
+  Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot) {
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        return _buildFriendsTab(snapshot);
+      case _FriendsTabKind.incoming:
+        return _buildIncomingTab(snapshot);
+      case _FriendsTabKind.outgoing:
+        return _buildOutgoingTab(snapshot);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsSnapshotProvider);
+    final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -983,101 +995,80 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       key: ValueKey('friends-search-collapsed'),
                     ),
             ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: MessageBanner(message: _error!, type: BannerType.error),
-              ),
-            if (_success != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: MessageBanner(message: _success!, type: BannerType.success),
-              ),
             if (_isSearchExpanded)
               Expanded(child: _buildSearchResults())
             else ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: false,
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelStyle: TextStyle(
-                    fontSize: compact ? 12 : 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: TextStyle(
-                    fontSize: compact ? 12 : 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  tabs: [
-                    Tab(
-                      child: Text(
-                        friendsAsync.valueOrNull == null
-                            ? 'Друзья'
-                            : 'Друзья (${friendsAsync.valueOrNull!.friends.length})',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Tab(
-                      child: Text(
-                        friendsAsync.valueOrNull == null
-                            ? 'Входящие'
-                            : 'Входящие (${friendsAsync.valueOrNull!.incoming.length})',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Tab(
-                      child: Text(
-                        friendsAsync.valueOrNull == null
-                            ? 'Исходящие'
-                            : 'Исходящие (${friendsAsync.valueOrNull!.outgoing.length})',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Expanded(
-                child: friendsAsync.when(
-                  data: (snapshot) {
-                    return TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildFriendsTab(snapshot),
-                        _buildIncomingTab(snapshot),
-                        _buildOutgoingTab(snapshot),
-                      ],
-                    );
-                  },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accentStart,
-                    ),
-                  ),
-                  error: (err, _) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.error_outline_rounded, size: 46, color: Colors.red.shade700),
-                          const SizedBox(height: 12),
-                          Text(
-                            err.toString(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red.shade700),
+                child: DefaultTabController(
+                  key: ValueKey('friends-tabs-${tabs.map((e) => e.name).join("_")}'),
+                  length: tabs.length,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: TabBar(
+                          isScrollable: false,
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          labelStyle: TextStyle(
+                            fontSize: compact ? 12 : 15,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
+                          unselectedLabelStyle: TextStyle(
+                            fontSize: compact ? 12 : 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          tabs: [
+                            for (final tab in tabs)
+                              Tab(
+                                child: Text(
+                                  _tabTitle(tab, friendsAsync.valueOrNull),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: friendsAsync.when(
+                          data: (snapshot) {
+                            return TabBarView(
+                              children: [
+                                for (final tab in tabs) _tabContent(tab, snapshot),
+                              ],
+                            );
+                          },
+                          loading: () => const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.accentStart,
+                            ),
+                          ),
+                          error: (err, _) => Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline_rounded,
+                                    size: 46,
+                                    color: Colors.red.shade700,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    err.toString(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.red.shade700),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
