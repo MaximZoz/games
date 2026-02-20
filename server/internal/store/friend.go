@@ -219,10 +219,7 @@ func SearchUsersWithFriendRelation(
 		)
 		WHERE
 			u.id <> $1
-			AND (
-				u.email ILIKE $2
-				OR COALESCE(u.display_name, '') ILIKE $2
-			)
+			AND COALESCE(u.display_name, '') ILIKE $2
 		ORDER BY
 			CASE WHEN u.display_name IS NULL OR u.display_name = '' THEN 1 ELSE 0 END ASC,
 			COALESCE(u.display_name, u.email) ASC

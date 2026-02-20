@@ -20,7 +20,7 @@ type FriendsHandler struct {
 
 type FriendUserItem struct {
 	ID          string  `json:"id"`
-	Email       string  `json:"email"`
+	Email       string  `json:"email,omitempty"`
 	DisplayName *string `json:"display_name,omitempty"`
 	AvatarKind  string  `json:"avatar_kind,omitempty"`
 	AvatarValue *string `json:"avatar_value,omitempty"`
@@ -61,7 +61,6 @@ type RemoveFriendBody struct {
 func friendUserToItem(u store.FriendUser) FriendUserItem {
 	return FriendUserItem{
 		ID:          u.ID.String(),
-		Email:       u.Email,
 		DisplayName: u.DisplayName,
 		AvatarKind:  u.AvatarKind,
 		AvatarValue: u.AvatarValue,
