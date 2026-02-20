@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -89,7 +90,7 @@ class AuthRepository {
   }) async {
     await init();
     final uri = Uri.parse('$apiBaseUrl/api/auth/register');
-    final response = await http.post(
+    final response = await ApiClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -97,6 +98,7 @@ class AuthRepository {
         'password': password,
         if (displayName.isNotEmpty) 'display_name': displayName,
       }),
+      operation: 'AuthRepository.register',
     );
     return _handleAuthResponse(response);
   }
@@ -107,13 +109,14 @@ class AuthRepository {
   }) async {
     await init();
     final uri = Uri.parse('$apiBaseUrl/api/auth/login');
-    final response = await http.post(
+    final response = await ApiClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email.trim(),
         'password': password,
       }),
+      operation: 'AuthRepository.login',
     );
     return _handleAuthResponse(response);
   }
@@ -181,7 +184,7 @@ class AuthRepository {
     final name = displayName?.trim().isEmpty == true ? null : displayName?.trim();
 
     final uri = Uri.parse('$apiBaseUrl/api/profile');
-    final response = await http.put(
+    final response = await ApiClient.put(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -195,6 +198,7 @@ class AuthRepository {
         'avatar_kind': avatarKind,
         'avatar_value': avatarValue,
       }),
+      operation: 'AuthRepository.updateProfile',
     );
 
     if (response.statusCode != 200) {

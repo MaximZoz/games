@@ -115,7 +115,7 @@ docker compose up -d
 - **Postgres**: порт `5432`, пользователь/БД `multigames`, пароль `multigames`
 - **Redis**: порт `6379`
 
-Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`).
+Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`), `APP_LOG_FILE`, `APP_LOG_STATE_FILE`, `APP_LOG_SYNC_INTERVAL_SECONDS`.
 
 **Как посмотреть таблицы и данные:** см. [docs/DATABASE.md](docs/DATABASE.md) — подключение через `psql`/redis-cli в контейнерах и параметры для GUI.
 
@@ -179,10 +179,11 @@ fly deploy --app APP
   - `001` — таблицы `users` (email, password_hash, display_name) и `sessions`;
   - `002` — колонка `is_admin` у пользователей;
   - `003` — уникальный `display_name` для входа по логину или по почте.
+  - `005` — таблица `app_logs` для логов фронта/бэка (через импорт из файла).
 - **Авторизация (бэкенд)** — POST `/api/auth/register`, POST `/api/auth/login`, GET `/api/me` (Bearer). Вход по **email или по логину** (display_name). JWT: access (15 мин) и refresh (7 дней).
 - **Первый админ** — POST `/api/admin/init` с заголовком `X-Admin-Init-Secret` (значение из `ADMIN_INIT_SECRET` в `.env`). Создаёт первого пользователя-админа.
-- **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
-- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: список пользователей, кнопки «Сделать/убрать админа», «Сбросить пароль», «Удалить», обновление списка. Riverpod, go_router, SharedPreferences для токена и пользователя.
+- **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, GET `/api/admin/logs`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
+- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: вкладки «Пользователи» и «Логи», управление пользователями, просмотр логов методов фронта/бэка. Riverpod, go_router, SharedPreferences для токена и пользователя.
 - **Документация** — [API](docs/API.md), [базы данных](docs/DATABASE.md).
 - **Тесты** — Go: `cd server && go test ./...`; Flutter: `cd client && flutter test`.
 

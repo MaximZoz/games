@@ -16,10 +16,18 @@ class AdminScreen extends ConsumerStatefulWidget {
   ConsumerState<AdminScreen> createState() => _AdminScreenState();
 }
 
-class _AdminScreenState extends ConsumerState<AdminScreen> {
+class _AdminScreenState extends ConsumerState<AdminScreen>
+    with SingleTickerProviderStateMixin {
   String? _error;
   String? _success;
   Timer? _messageTimer;
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   void _showMessage(String? error, String? success) {
     _messageTimer?.cancel();
@@ -42,7 +50,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   @override
   void dispose() {
     _messageTimer?.cancel();
+    _tabController.dispose();
     super.dispose();
+  }
+
+  void _refreshCurrentTab() {
+    if (_tabController.index == 0) {
+      ref.invalidate(adminUsersProvider);
+    } else {
+      ref.invalidate(adminLogsProvider);
+    }
   }
 
   Future<void> _setAdmin(
@@ -385,9 +402,252 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
+  String _formatEventTime(String value) {
+    final dt = DateTime.tryParse(value);
+    if (dt == null) return value;
+    final local = dt.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${local.year}-${two(local.month)}-${two(local.day)} '
+        '${two(local.hour)}:${two(local.minute)}:${two(local.second)}';
+  }
+
+  Color _statusColor(int? statusCode) {
+    if (statusCode == null) return AppColors.textSecondary;
+    if (statusCode >= 500) return Colors.red.shade700;
+    if (statusCode >= 400) return Colors.orange.shade800;
+    return Colors.green.shade700;
+  }
+
+  Widget _buildLogCard(AdminLogItem log) {
+    final statusText = log.statusCode?.toString() ?? 'n/a';
+    final methodLine = [
+      if (log.httpMethod != null && log.httpMethod!.isNotEmpty) log.httpMethod!,
+      if (log.path != null && log.path!.isNotEmpty) log.path!,
+    ].join(' ');
+    final metadataText = (log.metadata == null || log.metadata!.isEmpty)
+        ? null
+        : jsonEncode(log.metadata);
+
+    return GradientCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(14),
+      animate: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceCard,
+                  borderRadius: BorderRadius.circular(AppRadius.badge),
+                  border: Border.all(color: AppColors.textSecondary),
+                ),
+                child: Text(
+                  log.source.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                _formatEventTime(log.eventTime),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            log.methodName,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          if (methodLine.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              methodLine,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _InfoChip(
+                icon: Icons.flag_rounded,
+                label: statusText,
+                color: _statusColor(log.statusCode),
+              ),
+              if (log.durationMs != null)
+                _InfoChip(
+                  icon: Icons.timer_outlined,
+                  label: '${log.durationMs} ms',
+                ),
+              if (log.userId != null && log.userId!.isNotEmpty)
+                _InfoChip(
+                  icon: Icons.person_outline_rounded,
+                  label: log.userId!,
+                ),
+            ],
+          ),
+          if (log.message != null && log.message!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              log.message!,
+              style: TextStyle(
+                fontSize: 13,
+                color: log.level == 'error'
+                    ? Colors.red.shade700
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+          if (metadataText != null && metadataText.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SelectableText(
+              metadataText,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+              maxLines: 4,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUsersTab(
+    BuildContext context,
+    AdminRepository repo,
+    String? currentUserId,
+    AsyncValue<List<AdminUserItem>> usersAsync,
+  ) {
+    return usersAsync.when(
+      data: (users) {
+        if (users.isEmpty) {
+          return const Center(
+            child: Text(
+              'Нет пользователей',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+        }
+        final width = MediaQuery.of(context).size.width;
+        final useGrid = width > 700;
+        if (useGrid) {
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 500,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 1.15,
+            ),
+            itemCount: users.length,
+            itemBuilder: (context, index) =>
+                _buildUserCard(context, users[index], repo, currentUserId),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final u = users[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _buildUserCard(context, u, repo, currentUserId),
+            );
+          },
+        );
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.accentStart,
+        ),
+      ),
+      error: (err, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 48, color: Colors.red.shade700),
+              const SizedBox(height: 16),
+              Text(
+                err.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red.shade700),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogsTab(AsyncValue<List<AdminLogItem>> logsAsync) {
+    return logsAsync.when(
+      data: (logs) {
+        if (logs.isEmpty) {
+          return const Center(
+            child: Text(
+              'Логи пока пустые',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemBuilder: (context, index) => _buildLogCard(logs[index]),
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemCount: logs.length,
+        );
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.accentStart,
+        ),
+      ),
+      error: (err, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 48, color: Colors.red.shade700),
+              const SizedBox(height: 16),
+              Text(
+                err.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red.shade700),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(adminUsersProvider);
+    final logsAsync = ref.watch(adminLogsProvider);
     final repo = ref.read(adminRepositoryProvider);
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.valueOrNull?.id;
@@ -395,112 +655,62 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Пользователи',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh_rounded),
-                      tooltip: 'Обновить список',
-                      onPressed: () => ref.invalidate(adminUsersProvider),
-                    ),
-                  ],
-                ),
-              ),
-              if (_error != null)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                  child:
-                      MessageBanner(message: _error!, type: BannerType.error),
-                ),
-              if (_success != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: MessageBanner(
-                      message: _success!, type: BannerType.success),
-                ),
-              Expanded(
-                child: usersAsync.when(
-                  data: (users) {
-                    if (users.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'Нет пользователей',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      );
-                    }
-                    final width = MediaQuery.of(context).size.width;
-                    final useGrid = width > 700;
-                    if (useGrid) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 500,
-                          mainAxisSpacing: 14,
-                          crossAxisSpacing: 14,
-                          childAspectRatio: 1.15,
-                        ),
-                        itemCount: users.length,
-                        itemBuilder: (context, index) =>
-                            _buildUserCard(context, users[index], repo, currentUserId),
-                      );
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: users.length,
-                      itemBuilder: (context, index) {
-                        final u = users[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: _buildUserCard(context, u, repo, currentUserId),
-                        );
-                      },
-                    );
-                  },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accentStart,
-                    ),
-                  ),
-                  error: (err, _) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.error_outline_rounded,
-                              size: 48, color: Colors.red.shade700),
-                          const SizedBox(height: 16),
-                          Text(
-                            err.toString(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red.shade700),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Админка',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
                           ),
-                        ],
-                      ),
                     ),
                   ),
-                ), // when
-              ), // Expanded
-            ],
-          ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'Обновить текущую вкладку',
+                    onPressed: _refreshCurrentTab,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Пользователи'),
+                  Tab(text: 'Логи'),
+                ],
+              ),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: MessageBanner(message: _error!, type: BannerType.error),
+              ),
+            if (_success != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: MessageBanner(message: _success!, type: BannerType.success),
+              ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildUsersTab(context, repo, currentUserId, usersAsync),
+                  _buildLogsTab(logsAsync),
+                ],
+              ),
+            ),
+          ],
         ),
+      ),
     );
   }
 }

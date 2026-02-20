@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 
 class AdminUserItem {
@@ -45,6 +45,61 @@ class AdminUserItem {
   }
 }
 
+class AdminLogItem {
+  final String eventId;
+  final String eventTime;
+  final String source;
+  final String methodName;
+  final String? httpMethod;
+  final String? path;
+  final int? statusCode;
+  final int? durationMs;
+  final String? userId;
+  final String? ip;
+  final String? userAgent;
+  final String level;
+  final String? message;
+  final Map<String, dynamic>? metadata;
+
+  AdminLogItem({
+    required this.eventId,
+    required this.eventTime,
+    required this.source,
+    required this.methodName,
+    this.httpMethod,
+    this.path,
+    this.statusCode,
+    this.durationMs,
+    this.userId,
+    this.ip,
+    this.userAgent,
+    required this.level,
+    this.message,
+    this.metadata,
+  });
+
+  factory AdminLogItem.fromJson(Map<String, dynamic> json) {
+    return AdminLogItem(
+      eventId: json['event_id'] as String? ?? '',
+      eventTime: json['event_time'] as String? ?? '',
+      source: json['source'] as String? ?? '',
+      methodName: json['method_name'] as String? ?? '',
+      httpMethod: json['http_method'] as String?,
+      path: json['path'] as String?,
+      statusCode: json['status_code'] as int?,
+      durationMs: json['duration_ms'] as int?,
+      userId: json['user_id'] as String?,
+      ip: json['ip'] as String?,
+      userAgent: json['user_agent'] as String?,
+      level: json['level'] as String? ?? 'info',
+      message: json['message'] as String?,
+      metadata: json['metadata'] == null
+          ? null
+          : Map<String, dynamic>.from(json['metadata'] as Map),
+    );
+  }
+}
+
 class AdminRepository {
   AdminRepository({required AuthRepository authRepository})
       : _auth = authRepository;
@@ -59,9 +114,10 @@ class AdminRepository {
   Future<List<AdminUserItem>> listUsers() async {
     final token = await _token();
     if (token == null) throw AdminException(401, 'Not authenticated');
-    final response = await http.get(
+    final response = await ApiClient.get(
       Uri.parse('$apiBaseUrl/api/admin/users'),
       headers: {'Authorization': 'Bearer $token'},
+      operation: 'AdminRepository.listUsers',
     );
     if (response.statusCode != 200) {
       throw AdminException(response.statusCode, response.body);
@@ -76,13 +132,14 @@ class AdminRepository {
   Future<void> setAdmin(String userId, bool isAdmin) async {
     final token = await _token();
     if (token == null) throw AdminException(401, 'Not authenticated');
-    final response = await http.post(
+    final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/admin/users/set-admin'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({'user_id': userId, 'is_admin': isAdmin}),
+      operation: 'AdminRepository.setAdmin',
     );
     if (response.statusCode != 204) {
       throw AdminException(response.statusCode, response.body);
@@ -92,13 +149,14 @@ class AdminRepository {
   Future<void> resetPassword(String userId, String newPassword) async {
     final token = await _token();
     if (token == null) throw AdminException(401, 'Not authenticated');
-    final response = await http.post(
+    final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/admin/users/reset-password'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({'user_id': userId, 'new_password': newPassword}),
+      operation: 'AdminRepository.resetPassword',
     );
     if (response.statusCode != 204) {
       throw AdminException(response.statusCode, response.body);
@@ -108,17 +166,36 @@ class AdminRepository {
   Future<void> deleteUser(String userId) async {
     final token = await _token();
     if (token == null) throw AdminException(401, 'Not authenticated');
-    final response = await http.post(
+    final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/admin/users/delete'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({'user_id': userId}),
+      operation: 'AdminRepository.deleteUser',
     );
     if (response.statusCode != 204) {
       throw AdminException(response.statusCode, response.body);
     }
+  }
+
+  Future<List<AdminLogItem>> listLogs({int limit = 100, int offset = 0}) async {
+    final token = await _token();
+    if (token == null) throw AdminException(401, 'Not authenticated');
+    final response = await ApiClient.get(
+      Uri.parse('$apiBaseUrl/api/admin/logs?limit=$limit&offset=$offset'),
+      headers: {'Authorization': 'Bearer $token'},
+      operation: 'AdminRepository.listLogs',
+    );
+    if (response.statusCode != 200) {
+      throw AdminException(response.statusCode, response.body);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['logs'] as List<dynamic>? ?? const [];
+    return list
+        .map((e) => AdminLogItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 }
 

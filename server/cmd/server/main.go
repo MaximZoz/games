@@ -9,15 +9,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"multigames/server/internal/api"
+	"multigames/server/internal/applog"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/joho/godotenv"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -172,9 +175,42 @@ func main() {
 		log.Println("JWT_SECRET: using default (dev only)")
 	}
 
+	appLogFilePath := getEnv("APP_LOG_FILE", "logs/app_events.jsonl")
+	appLogStatePath := getEnv("APP_LOG_STATE_FILE", "logs/app_events.offset")
+	syncIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_SYNC_INTERVAL_SECONDS", "5"))
+	if err != nil || syncIntervalSeconds <= 0 {
+		syncIntervalSeconds = 5
+	}
+
+	logWriter, err := applog.NewFileWriter(appLogFilePath)
+	if err != nil {
+		log.Fatalf("App logs file: %v", err)
+	}
+	defer logWriter.Close()
+
+	logImporter := applog.NewImporter(
+		pool,
+		appLogFilePath,
+		appLogStatePath,
+		time.Duration(syncIntervalSeconds)*time.Second,
+	)
+	logImporter.Start(ctx)
+	if err := logImporter.SyncNow(ctx); err != nil {
+		log.Printf("App logs initial sync failed: %v", err)
+	}
+
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
-	adminHandler := &api.AdminHandler{Pool: pool, JWTSecret: []byte(jwtSecret), InitSecret: adminInitSecret}
+	adminHandler := &api.AdminHandler{
+		Pool:        pool,
+		JWTSecret:   []byte(jwtSecret),
+		InitSecret:  adminInitSecret,
+		LogImporter: logImporter,
+	}
+	frontendLogHandler := &api.FrontendLogHandler{
+		Writer:    logWriter,
+		JWTSecret: []byte(jwtSecret),
+	}
 
 	adminAuth := func(next http.HandlerFunc) http.Handler {
 		return api.RequireAuth([]byte(jwtSecret), api.RequireAdmin(pool, next))
@@ -184,16 +220,18 @@ func main() {
 	mux.HandleFunc("/api/start", handleStart)
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
+	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
+	mux.Handle("/api/admin/logs", adminAuth(http.HandlerFunc(adminHandler.ListLogs)))
 	mux.Handle("/api/admin/users/set-admin", adminAuth(http.HandlerFunc(adminHandler.SetAdmin)))
 	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
 	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
 
-	corsHandler := api.CORS(mux)
+	corsHandler := api.CORS(api.RequestLogger([]byte(jwtSecret), logWriter, mux))
 	var finalHandler http.Handler = corsHandler
 	if _, err := webFS.Open("web/index.html"); err == nil {
 		finalHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
