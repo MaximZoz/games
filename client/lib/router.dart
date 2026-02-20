@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -28,11 +31,29 @@ const _authRequiredPaths = <String>{
   '/admin',
 };
 
+class _AuthRefreshListenable extends ChangeNotifier {
+  _AuthRefreshListenable(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) {
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
+  final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
+  ref.onDispose(refreshListenable.dispose);
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: GoRouterRefreshStream(authNotifier.stream),
+    refreshListenable: refreshListenable,
     redirect: (context, state) async {
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);
