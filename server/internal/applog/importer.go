@@ -20,23 +20,35 @@ import (
 
 // Importer переносит события из файла в PostgreSQL.
 type Importer struct {
-	pool      *pgxpool.Pool
-	logPath   string
-	statePath string
-	interval  time.Duration
+	pool            *pgxpool.Pool
+	logPath         string
+	statePath       string
+	interval        time.Duration
+	retention       time.Duration
+	cleanupInterval time.Duration
+	lastCleanupAt   time.Time
 
 	mu sync.Mutex
 }
 
-func NewImporter(pool *pgxpool.Pool, logPath, statePath string, interval time.Duration) *Importer {
+func NewImporter(
+	pool *pgxpool.Pool,
+	logPath, statePath string,
+	interval, retention, cleanupInterval time.Duration,
+) *Importer {
 	if interval <= 0 {
 		interval = 5 * time.Second
 	}
+	if cleanupInterval <= 0 {
+		cleanupInterval = time.Hour
+	}
 	return &Importer{
-		pool:      pool,
-		logPath:   logPath,
-		statePath: statePath,
-		interval:  interval,
+		pool:            pool,
+		logPath:         logPath,
+		statePath:       statePath,
+		interval:        interval,
+		retention:       retention,
+		cleanupInterval: cleanupInterval,
 	}
 }
 
@@ -117,7 +129,11 @@ func (i *Importer) SyncNow(ctx context.Context) error {
 		}
 	}
 
-	return i.writeOffset(current)
+	if err := i.writeOffset(current); err != nil {
+		return err
+	}
+
+	return i.cleanupOldLogsIfNeeded(ctx)
 }
 
 func (i *Importer) persistLine(ctx context.Context, line []byte) (bool, error) {
@@ -234,4 +250,22 @@ func (i *Importer) writeOffset(offset int64) error {
 		return err
 	}
 	return os.WriteFile(i.statePath, []byte(strconv.FormatInt(offset, 10)), 0o644)
+}
+
+func (i *Importer) cleanupOldLogsIfNeeded(ctx context.Context) error {
+	if i.retention <= 0 {
+		return nil
+	}
+
+	now := time.Now().UTC()
+	if !i.lastCleanupAt.IsZero() && now.Sub(i.lastCleanupAt) < i.cleanupInterval {
+		return nil
+	}
+
+	threshold := now.Add(-i.retention)
+	if _, err := i.pool.Exec(ctx, `DELETE FROM app_logs WHERE event_time < $1`, threshold); err != nil {
+		return err
+	}
+	i.lastCleanupAt = now
+	return nil
 }

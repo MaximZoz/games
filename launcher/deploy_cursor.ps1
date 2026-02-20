@@ -52,7 +52,14 @@ $secretArgs = @(
     "ADMIN_INIT_SECRET=$env:ADMIN_INIT_SECRET"
 )
 
-$optionalVars = @("REDIS_URL", "APP_LOG_FILE", "APP_LOG_STATE_FILE", "APP_LOG_SYNC_INTERVAL_SECONDS")
+$optionalVars = @(
+    "REDIS_URL",
+    "APP_LOG_FILE",
+    "APP_LOG_STATE_FILE",
+    "APP_LOG_SYNC_INTERVAL_SECONDS",
+    "APP_LOG_RETENTION_DAYS",
+    "APP_LOG_CLEANUP_INTERVAL_SECONDS"
+)
 foreach ($varName in $optionalVars) {
     $value = [Environment]::GetEnvironmentVariable($varName, "Process")
     if (-not [string]::IsNullOrWhiteSpace($value)) {

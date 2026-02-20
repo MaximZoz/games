@@ -181,6 +181,25 @@ func main() {
 	if err != nil || syncIntervalSeconds <= 0 {
 		syncIntervalSeconds = 5
 	}
+	retentionDays, err := strconv.Atoi(getEnv("APP_LOG_RETENTION_DAYS", "30"))
+	if err != nil || retentionDays < 0 {
+		retentionDays = 30
+	}
+	cleanupIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_CLEANUP_INTERVAL_SECONDS", "3600"))
+	if err != nil || cleanupIntervalSeconds <= 0 {
+		cleanupIntervalSeconds = 3600
+	}
+	retentionDuration := time.Duration(retentionDays) * 24 * time.Hour
+	cleanupIntervalDuration := time.Duration(cleanupIntervalSeconds) * time.Second
+	if retentionDuration > 0 {
+		log.Printf(
+			"App logs retention: delete older than %d days (every %s)",
+			retentionDays,
+			cleanupIntervalDuration,
+		)
+	} else {
+		log.Printf("App logs retention: disabled")
+	}
 
 	logWriter, err := applog.NewFileWriter(appLogFilePath)
 	if err != nil {
@@ -193,6 +212,8 @@ func main() {
 		appLogFilePath,
 		appLogStatePath,
 		time.Duration(syncIntervalSeconds)*time.Second,
+		retentionDuration,
+		cleanupIntervalDuration,
 	)
 	logImporter.Start(ctx)
 	if err := logImporter.SyncNow(ctx); err != nil {

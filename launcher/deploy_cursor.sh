@@ -44,7 +44,14 @@ secret_args=(
   "ADMIN_INIT_SECRET=$ADMIN_INIT_SECRET"
 )
 
-optional_vars=("REDIS_URL" "APP_LOG_FILE" "APP_LOG_STATE_FILE" "APP_LOG_SYNC_INTERVAL_SECONDS")
+optional_vars=(
+  "REDIS_URL"
+  "APP_LOG_FILE"
+  "APP_LOG_STATE_FILE"
+  "APP_LOG_SYNC_INTERVAL_SECONDS"
+  "APP_LOG_RETENTION_DAYS"
+  "APP_LOG_CLEANUP_INTERVAL_SECONDS"
+)
 for var_name in "${optional_vars[@]}"; do
   value="${!var_name:-}"
   if [[ -n "$value" ]]; then

@@ -25,6 +25,7 @@ cp deploy.cursor.env.example deploy.cursor.env
 - `FLY_APP_NAME`
 - `JWT_SECRET`
 - `ADMIN_INIT_SECRET`
+- опционально для очистки логов: `APP_LOG_RETENTION_DAYS`, `APP_LOG_CLEANUP_INTERVAL_SECONDS`
 
 Файл `deploy.cursor.env` не коммитится (он в `.gitignore`).
 

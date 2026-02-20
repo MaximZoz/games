@@ -115,7 +115,7 @@ docker compose up -d
 - **Postgres**: порт `5432`, пользователь/БД `multigames`, пароль `multigames`
 - **Redis**: порт `6379`
 
-Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`), `APP_LOG_FILE`, `APP_LOG_STATE_FILE`, `APP_LOG_SYNC_INTERVAL_SECONDS`.
+Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`), `APP_LOG_FILE`, `APP_LOG_STATE_FILE`, `APP_LOG_SYNC_INTERVAL_SECONDS`, `APP_LOG_RETENTION_DAYS` (через сколько дней удалять старые логи из БД) и `APP_LOG_CLEANUP_INTERVAL_SECONDS` (как часто запускать очистку).
 
 **Как посмотреть таблицы и данные:** см. [docs/DATABASE.md](docs/DATABASE.md) — подключение через `psql`/redis-cli в контейнерах и параметры для GUI.
 
