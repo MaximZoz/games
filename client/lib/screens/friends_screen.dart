@@ -144,7 +144,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
-      await ref.refresh(friendsSnapshotProvider.future);
+      ref.invalidate(friendsSnapshotProvider);
+      await ref.read(friendsSnapshotProvider.future);
       if (refreshSearch && _searchController.text.trim().isNotEmpty) {
         await _performSearch();
       }
