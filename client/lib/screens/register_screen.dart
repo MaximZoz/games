@@ -59,12 +59,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final bottomInset = media.viewInsets.bottom;
+    final keyboardLikelyVisible = bottomInset > 0 || media.size.height < 500;
+    final bottomPadding = 24.0 + bottomInset;
+    final topPadding = keyboardLikelyVisible ? 12.0 : 0.0;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment:
+                keyboardLikelyVisible ? Alignment.topCenter : Alignment.center,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(24, topPadding, 24, bottomPadding),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: GradientCard(

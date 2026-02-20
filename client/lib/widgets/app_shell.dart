@@ -107,8 +107,11 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
-    final padding = MediaQuery.of(context).padding;
+    final media = MediaQuery.of(context);
+    final padding = media.padding;
     final narrow = isNarrow(context);
+    final keyboardLikelyVisible =
+        narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = _selectedIndexForPath(path);
 
     return Stack(
@@ -233,7 +236,7 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow)
+            if (narrow && !keyboardLikelyVisible)
               SafeArea(
                 top: false,
                 child: Material(
