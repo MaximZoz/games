@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -17,8 +16,9 @@ class FriendsScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-class _FriendsScreenState extends ConsumerState<FriendsScreen>
-    with SingleTickerProviderStateMixin {
+enum _FriendsTabKind { friends, incoming, outgoing }
+
+class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   static const List<IconData> _presetAvatarIcons = [
     Icons.face_rounded,
     Icons.face_2_rounded,
@@ -37,51 +37,24 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
-  late final TabController _tabController;
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
   bool _isSearchExpanded = false;
-  String? _error;
-  String? _success;
-  Timer? _messageTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
 
   @override
   void dispose() {
-    _messageTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
-  void _showMessage(String? error, String? success) {
-    _messageTimer?.cancel();
-    setState(() {
-      _error = error;
-      _success = success;
-    });
-    if (error != null || success != null) {
-      _messageTimer = Timer(const Duration(seconds: 4), () {
-        if (!mounted) return;
-        setState(() {
-          _error = null;
-          _success = null;
-        });
-      });
-    }
-  }
+  void _showMessage(String? error, String? success) {}
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
     if (name != null && name.isNotEmpty) return name;
-    return user.email;
+    return 'Пользователь';
   }
 
   String _formatDateTime(String raw) {
@@ -91,6 +64,178 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     String two(int n) => n.toString().padLeft(2, '0');
     return '${two(local.day)}.${two(local.month)}.${local.year} '
         '${two(local.hour)}:${two(local.minute)}';
+  }
+
+  IconData? _genderIcon(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    switch (normalized) {
+      case 'male':
+      case 'm':
+      case 'man':
+      case 'м':
+      case 'муж':
+      case 'мужской':
+        return Icons.male_rounded;
+      case 'female':
+      case 'f':
+      case 'woman':
+      case 'ж':
+      case 'жен':
+      case 'женский':
+        return Icons.female_rounded;
+      default:
+        return null;
+    }
+  }
+
+  bool _isFemaleGender(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    return normalized == 'female' ||
+        normalized == 'f' ||
+        normalized == 'woman' ||
+        normalized == 'ж' ||
+        normalized == 'жен' ||
+        normalized == 'женский';
+  }
+
+  Widget _buildInfoPill({
+    String? text,
+    IconData? icon,
+    Color? backgroundColor,
+    Color? foregroundColor,
+    double? minWidth,
+  }) {
+    final bg = backgroundColor ?? AppColors.accentSoft;
+    final fg = foregroundColor ?? AppColors.textPrimary;
+    return Container(
+      constraints: BoxConstraints(minWidth: minWidth ?? 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: fg),
+            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
+          ],
+          if (text != null && text.isNotEmpty)
+            Text(
+              text,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showRequestInfoDialog({
+    required FriendUserItem user,
+  }) async {
+    final name = _displayName(user);
+    final about = user.about?.trim();
+    final genderIcon = _genderIcon(user.gender);
+    final female = _isFemaleGender(user.gender);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          backgroundColor: Colors.transparent,
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAvatar(user),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
+                ),
+                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (user.age != null && user.age! > 0)
+                        _buildInfoPill(
+                          text: '${user.age} лет',
+                          minWidth: 72,
+                        ),
+                      if (genderIcon != null)
+                        _buildInfoPill(
+                          icon: genderIcon,
+                          minWidth: 46,
+                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
+                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
+                        ),
+                    ],
+                  ),
+                ],
+                if (about != null && about.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'О себе',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    about,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildAvatar(FriendUserItem user) {
@@ -245,6 +390,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required FriendUserItem user,
     required String subtitle,
     required List<Widget> actions,
+    Widget? trailing,
+    bool alignActionsRight = false,
   }) {
     return GradientCard(
       margin: EdgeInsets.zero,
@@ -271,18 +418,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      user.email,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                   ],
                 ),
               ),
+              if (trailing != null) ...[
+                const SizedBox(width: 4),
+                trailing,
+              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -290,8 +432,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             subtitle,
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
-          const SizedBox(height: 10),
-          Wrap(spacing: 8, runSpacing: 8, children: actions),
+          if (actions.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: alignActionsRight ? Alignment.centerRight : Alignment.centerLeft,
+              child: Wrap(spacing: 8, runSpacing: 8, children: actions),
+            ),
+          ],
         ],
       ),
     );
@@ -346,20 +493,26 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
-          actions: [
-            AppButton(
-              onPressed: _busy(key)
-                  ? null
-                  : () => _runAction(
-                        key: key,
-                        call: (repo) => repo.removeFriend(item.user.id),
-                        success: 'Пользователь удалён из друзей',
-                      ),
-              label: 'Удалить из друзей',
-              style: AppButtonStyle.danger,
-              isLoading: _busy(key),
-            ),
-          ],
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactIconButton(
+                icon: Icons.info_outline_rounded,
+                tooltip: 'Информация о пользователе',
+                onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: key,
+                icon: Icons.person_remove_alt_1_rounded,
+                tooltip: 'Удалить из друзей',
+                call: (repo) => repo.removeFriend(item.user.id),
+                success: 'Пользователь удалён из друзей',
+                danger: true,
+              ),
+            ],
+          ),
+          actions: const [],
         );
       },
     );
@@ -375,31 +528,34 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
-          actions: [
-            AppButton(
-              onPressed: _busy(acceptKey)
-                  ? null
-                  : () => _runAction(
-                        key: acceptKey,
-                        call: (repo) => repo.acceptRequest(item.requestId),
-                        success: 'Заявка принята',
-                      ),
-              label: 'Принять',
-              isLoading: _busy(acceptKey),
-            ),
-            AppButton(
-              onPressed: _busy(rejectKey)
-                  ? null
-                  : () => _runAction(
-                        key: rejectKey,
-                        call: (repo) => repo.rejectRequest(item.requestId),
-                        success: 'Заявка отклонена',
-                      ),
-              label: 'Отклонить',
-              style: AppButtonStyle.danger,
-              isLoading: _busy(rejectKey),
-            ),
-          ],
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactIconButton(
+                icon: Icons.info_outline_rounded,
+                tooltip: 'Информация о пользователе',
+                onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: acceptKey,
+                icon: Icons.check_rounded,
+                tooltip: 'Принять заявку',
+                call: (repo) => repo.acceptRequest(item.requestId),
+                success: 'Заявка принята',
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: rejectKey,
+                icon: Icons.close_rounded,
+                tooltip: 'Отклонить заявку',
+                call: (repo) => repo.rejectRequest(item.requestId),
+                success: 'Заявка отклонена',
+                danger: true,
+              ),
+            ],
+          ),
+          actions: const [],
         );
       },
     );
@@ -414,22 +570,252 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
-          actions: [
-            AppButton(
-              onPressed: _busy(cancelKey)
-                  ? null
-                  : () => _runAction(
-                        key: cancelKey,
-                        call: (repo) => repo.cancelRequest(item.requestId),
-                        success: 'Заявка отменена',
-                      ),
-              label: 'Отменить заявку',
-              style: AppButtonStyle.danger,
-              isLoading: _busy(cancelKey),
-            ),
-          ],
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactIconButton(
+                icon: Icons.info_outline_rounded,
+                tooltip: 'Информация о пользователе',
+                onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: cancelKey,
+                icon: Icons.close_rounded,
+                tooltip: 'Отменить заявку',
+                call: (repo) => repo.cancelRequest(item.requestId),
+                success: 'Заявка отменена',
+                danger: true,
+              ),
+            ],
+          ),
+          actions: const [],
         );
       },
+    );
+  }
+
+  Widget _buildCompactIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    bool danger = false,
+    bool loading = false,
+  }) {
+    final enabled = onPressed != null && !loading;
+    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withOpacity(0.55);
+    final iconColor = danger ? Colors.red.shade700 : AppColors.textPrimary;
+    return Tooltip(
+      message: tooltip,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.6,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: borderColor, width: 1.5),
+              ),
+              child: Center(
+                child: loading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.textPrimary,
+                        ),
+                      )
+                    : Icon(icon, size: 18, color: iconColor),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionIcon({
+    required String key,
+    required IconData icon,
+    required String tooltip,
+    required Future<void> Function(FriendsRepository repo) call,
+    required String success,
+    bool danger = false,
+  }) {
+    final busy = _busy(key);
+    return _buildCompactIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      danger: danger,
+      loading: busy,
+      onPressed: busy
+          ? null
+          : () => _runAction(
+                key: key,
+                call: call,
+                success: success,
+              ),
+    );
+  }
+
+  Widget _buildGradientHeaderIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    final gradient = AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: 40,
+        height: 40,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchResultCard(FriendSearchItem item) {
+    final relation = item.relationStatus;
+    final sendKey = 'send_${item.user.id}';
+    final cancelKey = 'cancel_search_${item.requestId ?? item.user.id}';
+    final acceptKey = 'accept_search_${item.requestId ?? item.user.id}';
+    final rejectKey = 'reject_search_${item.requestId ?? item.user.id}';
+    final removeKey = 'remove_search_${item.user.id}';
+
+    final controls = <Widget>[
+      _buildCompactIconButton(
+        icon: Icons.info_outline_rounded,
+        tooltip: 'Информация о пользователе',
+        onPressed: () => _showRequestInfoDialog(user: item.user),
+      ),
+    ];
+    if (relation == 'none') {
+      controls.add(
+        _buildActionIcon(
+          key: sendKey,
+          icon: Icons.person_add_alt_1_rounded,
+          tooltip: 'Добавить в друзья',
+          call: (repo) => repo.sendRequest(item.user.id),
+          success: 'Заявка отправлена',
+        ),
+      );
+    } else if (relation == 'outgoing' && item.requestId != null) {
+      controls.add(
+        _buildActionIcon(
+          key: cancelKey,
+          icon: Icons.close_rounded,
+          tooltip: 'Отменить заявку',
+          call: (repo) => repo.cancelRequest(item.requestId!),
+          success: 'Заявка отменена',
+          danger: true,
+        ),
+      );
+    } else if (relation == 'incoming' && item.requestId != null) {
+      controls.addAll([
+        _buildActionIcon(
+          key: acceptKey,
+          icon: Icons.check_rounded,
+          tooltip: 'Принять заявку',
+          call: (repo) => repo.acceptRequest(item.requestId!),
+          success: 'Заявка принята',
+        ),
+        _buildActionIcon(
+          key: rejectKey,
+          icon: Icons.close_rounded,
+          tooltip: 'Отклонить заявку',
+          call: (repo) => repo.rejectRequest(item.requestId!),
+          success: 'Заявка отклонена',
+          danger: true,
+        ),
+      ]);
+    } else if (relation == 'friend') {
+      controls.add(
+        _buildActionIcon(
+          key: removeKey,
+          icon: Icons.person_remove_alt_1_rounded,
+          tooltip: 'Удалить из друзей',
+          call: (repo) => repo.removeFriend(item.user.id),
+          success: 'Пользователь удалён из друзей',
+          danger: true,
+        ),
+      );
+    }
+
+    final relationLabel = switch (relation) {
+      'friend' => 'Уже в друзьях',
+      'incoming' => 'Входящая заявка',
+      'outgoing' => 'Исходящая заявка',
+      _ => 'Не в друзьях',
+    };
+
+    final controlRow = <Widget>[];
+    for (var i = 0; i < controls.length; i++) {
+      if (i > 0) {
+        controlRow.add(const SizedBox(width: 4));
+      }
+      controlRow.add(controls[i]);
+    }
+
+    return GradientCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(10),
+      animate: false,
+      child: Row(
+        children: [
+          _buildAvatar(item.user),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _displayName(item.user),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  relationLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(mainAxisSize: MainAxisSize.min, children: controlRow),
+        ],
+      ),
     );
   }
 
@@ -438,230 +824,132 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: GradientCard(
         margin: EdgeInsets.zero,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(10),
         animate: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final compact = constraints.maxWidth < 430;
-            final textField = TextField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                labelText: 'Поиск по email или нику',
-                prefixIcon: Icon(Icons.search_rounded),
-              ),
-              onSubmitted: (_) => _performSearch(),
-            );
-
-            if (compact) {
-              return Column(
-                children: [
-                  textField,
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          onPressed: _isSearching ? null : _performSearch,
-                          label: 'Найти',
-                          isLoading: _isSearching,
-                          expanded: true,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        tooltip: 'Закрыть поиск',
-                        onPressed: _toggleSearch,
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            }
-
-            return Row(
-              children: [
-                Expanded(child: textField),
-                const SizedBox(width: 10),
-                AppButton(
-                  onPressed: _isSearching ? null : _performSearch,
-                  label: 'Найти',
-                  isLoading: _isSearching,
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'Закрыть поиск',
-                  onPressed: _toggleSearch,
-                  icon: const Icon(Icons.close_rounded),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchResults() {
-    if (!_isSearchExpanded) return const SizedBox.shrink();
-
-    final query = _searchController.text.trim();
-    if (query.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: GradientCard(
-        margin: EdgeInsets.zero,
-        padding: const EdgeInsets.all(14),
-        animate: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              'Результаты поиска: "$query"',
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Поиск по нику',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Очистить поиск',
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchResults = const [];
+                              _isSearching = false;
+                            });
+                            _searchFocusNode.requestFocus();
+                          },
+                          icon: const Icon(Icons.close_rounded, color: Colors.red),
+                        ),
+                ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _performSearch(),
               ),
             ),
-            const SizedBox(height: 8),
-            if (_isSearching)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(10),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.accentStart,
-                    ),
-                  ),
-                ),
-              )
-            else if (_searchResults.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
-                child: Text(
-                  'Ничего не найдено',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-              )
-            else
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 290),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: _searchResults.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final item = _searchResults[index];
-                    final sendKey = 'send_${item.user.id}';
-                    final cancelKey = 'cancel_search_${item.requestId ?? item.user.id}';
-                    final acceptKey = 'accept_search_${item.requestId ?? item.user.id}';
-                    final rejectKey = 'reject_search_${item.requestId ?? item.user.id}';
-                    final removeKey = 'remove_search_${item.user.id}';
-
-                    final relation = item.relationStatus;
-                    final actions = <Widget>[];
-                    if (relation == 'none') {
-                      actions.add(
-                        AppButton(
-                          onPressed: _busy(sendKey)
-                              ? null
-                              : () => _runAction(
-                                    key: sendKey,
-                                    call: (repo) => repo.sendRequest(item.user.id),
-                                    success: 'Заявка отправлена',
-                                  ),
-                          label: 'Добавить',
-                          isLoading: _busy(sendKey),
-                        ),
-                      );
-                    } else if (relation == 'outgoing' && item.requestId != null) {
-                      actions.add(
-                        AppButton(
-                          onPressed: _busy(cancelKey)
-                              ? null
-                              : () => _runAction(
-                                    key: cancelKey,
-                                    call: (repo) => repo.cancelRequest(item.requestId!),
-                                    success: 'Заявка отменена',
-                                  ),
-                          label: 'Отменить заявку',
-                          style: AppButtonStyle.danger,
-                          isLoading: _busy(cancelKey),
-                        ),
-                      );
-                    } else if (relation == 'incoming' && item.requestId != null) {
-                      actions.addAll([
-                        AppButton(
-                          onPressed: _busy(acceptKey)
-                              ? null
-                              : () => _runAction(
-                                    key: acceptKey,
-                                    call: (repo) => repo.acceptRequest(item.requestId!),
-                                    success: 'Заявка принята',
-                                  ),
-                          label: 'Принять',
-                          isLoading: _busy(acceptKey),
-                        ),
-                        AppButton(
-                          onPressed: _busy(rejectKey)
-                              ? null
-                              : () => _runAction(
-                                    key: rejectKey,
-                                    call: (repo) => repo.rejectRequest(item.requestId!),
-                                    success: 'Заявка отклонена',
-                                  ),
-                          label: 'Отклонить',
-                          style: AppButtonStyle.danger,
-                          isLoading: _busy(rejectKey),
-                        ),
-                      ]);
-                    } else if (relation == 'friend') {
-                      actions.add(
-                        AppButton(
-                          onPressed: _busy(removeKey)
-                              ? null
-                              : () => _runAction(
-                                    key: removeKey,
-                                    call: (repo) => repo.removeFriend(item.user.id),
-                                    success: 'Пользователь удалён из друзей',
-                                  ),
-                          label: 'Удалить из друзей',
-                          style: AppButtonStyle.danger,
-                          isLoading: _busy(removeKey),
-                        ),
-                      );
-                    }
-
-                    final relationLabel = switch (relation) {
-                      'friend' => 'Уже в друзьях',
-                      'incoming' => 'Входящая заявка',
-                      'outgoing' => 'Исходящая заявка',
-                      _ => 'Не в друзьях',
-                    };
-
-                    return _buildUserCard(
-                      user: item.user,
-                      subtitle: relationLabel,
-                      actions: actions,
-                    );
-                  },
-                ),
-              ),
+            const SizedBox(width: 8),
+            _buildCompactIconButton(
+              icon: Icons.arrow_forward_rounded,
+              tooltip: 'Найти',
+              onPressed: _isSearching ? null : _performSearch,
+              loading: _isSearching,
+            ),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildSearchResults() {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      return const Center(
+        child: Text(
+          'Введите запрос и нажмите "Найти"',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+    if (_isSearching) {
+      return const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accentStart,
+          ),
+        ),
+      );
+    }
+    if (_searchResults.isEmpty) {
+      return const Center(
+        child: Text(
+          'Ничего не найдено',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      itemCount: _searchResults.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) => _buildSearchResultCard(_searchResults[index]),
+    );
+  }
+
+  List<_FriendsTabKind> _visibleTabs(FriendsSnapshot? snapshot) {
+    if (snapshot == null) {
+      return const [
+        _FriendsTabKind.friends,
+        _FriendsTabKind.incoming,
+        _FriendsTabKind.outgoing,
+      ];
+    }
+
+    final result = <_FriendsTabKind>[_FriendsTabKind.friends];
+    if (snapshot.incoming.isNotEmpty) result.add(_FriendsTabKind.incoming);
+    if (snapshot.outgoing.isNotEmpty) result.add(_FriendsTabKind.outgoing);
+    return result;
+  }
+
+  String _tabTitle(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        if (snapshot == null) return 'Друзья';
+        return 'Друзья (${snapshot.friends.length})';
+      case _FriendsTabKind.incoming:
+        if (snapshot == null) return 'Входящие';
+        return 'Входящие (${snapshot.incoming.length})';
+      case _FriendsTabKind.outgoing:
+        if (snapshot == null) return 'Исходящие';
+        return 'Исходящие (${snapshot.outgoing.length})';
+    }
+  }
+
+  Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot) {
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        return _buildFriendsTab(snapshot);
+      case _FriendsTabKind.incoming:
+        return _buildIncomingTab(snapshot);
+      case _FriendsTabKind.outgoing:
+        return _buildOutgoingTab(snapshot);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsSnapshotProvider);
+    final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -683,16 +971,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 2),
-                  IconButton(
-                    onPressed: _toggleSearch,
-                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
-                    icon: Icon(
-                      _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
-                    ),
-                  ),
                   const Spacer(),
+                  _buildGradientHeaderIconButton(
+                    icon: _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
+                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
+                    onPressed: _toggleSearch,
+                  ),
+                  const SizedBox(width: 4),
                   IconButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () => _refreshSnapshot(refreshSearch: true),
                     tooltip: 'Обновить',
                     icon: const Icon(Icons.refresh_rounded),
@@ -708,88 +995,84 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       key: ValueKey('friends-search-collapsed'),
                     ),
             ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: MessageBanner(message: _error!, type: BannerType.error),
-              ),
-            if (_success != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: MessageBanner(message: _success!, type: BannerType.success),
-              ),
-            _buildSearchResults(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: compact,
-                labelPadding: compact
-                    ? const EdgeInsets.symmetric(horizontal: 12)
-                    : const EdgeInsets.symmetric(horizontal: 20),
-                labelStyle: TextStyle(
-                  fontSize: compact ? 14 : 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                unselectedLabelStyle: TextStyle(
-                  fontSize: compact ? 14 : 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                tabs: [
-                  Tab(
-                    text: friendsAsync.valueOrNull == null
-                        ? 'Друзья'
-                        : 'Друзья (${friendsAsync.valueOrNull!.friends.length})',
-                  ),
-                  Tab(
-                    text: friendsAsync.valueOrNull == null
-                        ? 'Входящие'
-                        : 'Входящие (${friendsAsync.valueOrNull!.incoming.length})',
-                  ),
-                  Tab(
-                    text: friendsAsync.valueOrNull == null
-                        ? 'Исходящие'
-                        : 'Исходящие (${friendsAsync.valueOrNull!.outgoing.length})',
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: friendsAsync.when(
-                data: (snapshot) {
-                  return TabBarView(
-                    controller: _tabController,
+            if (_isSearchExpanded)
+              Expanded(child: _buildSearchResults())
+            else ...[
+              Expanded(
+                child: DefaultTabController(
+                  key: ValueKey('friends-tabs-${tabs.map((e) => e.name).join("_")}'),
+                  length: tabs.length,
+                  child: Column(
                     children: [
-                      _buildFriendsTab(snapshot),
-                      _buildIncomingTab(snapshot),
-                      _buildOutgoingTab(snapshot),
-                    ],
-                  );
-                },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.accentStart,
-                  ),
-                ),
-                error: (err, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline_rounded, size: 46, color: Colors.red.shade700),
-                        const SizedBox(height: 12),
-                        Text(
-                          err.toString(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.red.shade700),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: TabBar(
+                          isScrollable: false,
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          labelStyle: TextStyle(
+                            fontSize: compact ? 12 : 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          unselectedLabelStyle: TextStyle(
+                            fontSize: compact ? 12 : 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          tabs: [
+                            for (final tab in tabs)
+                              Tab(
+                                child: Text(
+                                  _tabTitle(tab, friendsAsync.valueOrNull),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Expanded(
+                        child: friendsAsync.when(
+                          data: (snapshot) {
+                            return TabBarView(
+                              children: [
+                                for (final tab in tabs) _tabContent(tab, snapshot),
+                              ],
+                            );
+                          },
+                          loading: () => const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.accentStart,
+                            ),
+                          ),
+                          error: (err, _) => Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline_rounded,
+                                    size: 46,
+                                    color: Colors.red.shade700,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    err.toString(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.red.shade700),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),

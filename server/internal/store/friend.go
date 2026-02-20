@@ -27,6 +27,9 @@ type FriendUser struct {
 	DisplayName *string
 	AvatarKind  string
 	AvatarValue *string
+	Age         *int
+	Gender      *string
+	About       *string
 }
 
 type Friendship struct {
@@ -58,7 +61,7 @@ func orderedUserPair(a, b uuid.UUID) (uuid.UUID, uuid.UUID) {
 func ListFriendships(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]Friendship, error) {
 	rows, err := pool.Query(ctx, `
 		SELECT
-			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value,
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
 			f.created_at
 		FROM friendships f
 		JOIN users u ON u.id = CASE
@@ -82,6 +85,9 @@ func ListFriendships(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 			&item.User.DisplayName,
 			&item.User.AvatarKind,
 			&item.User.AvatarValue,
+			&item.User.Age,
+			&item.User.Gender,
+			&item.User.About,
 			&item.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -95,7 +101,7 @@ func ListIncomingFriendRequests(ctx context.Context, pool *pgxpool.Pool, userID 
 	rows, err := pool.Query(ctx, `
 		SELECT
 			fr.id, fr.sender_user_id, fr.receiver_user_id, fr.created_at,
-			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about
 		FROM friend_requests fr
 		JOIN users u ON u.id = fr.sender_user_id
 		WHERE fr.receiver_user_id = $1
@@ -119,6 +125,9 @@ func ListIncomingFriendRequests(ctx context.Context, pool *pgxpool.Pool, userID 
 			&item.User.DisplayName,
 			&item.User.AvatarKind,
 			&item.User.AvatarValue,
+			&item.User.Age,
+			&item.User.Gender,
+			&item.User.About,
 		); err != nil {
 			return nil, err
 		}
@@ -131,7 +140,7 @@ func ListOutgoingFriendRequests(ctx context.Context, pool *pgxpool.Pool, userID 
 	rows, err := pool.Query(ctx, `
 		SELECT
 			fr.id, fr.sender_user_id, fr.receiver_user_id, fr.created_at,
-			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about
 		FROM friend_requests fr
 		JOIN users u ON u.id = fr.receiver_user_id
 		WHERE fr.sender_user_id = $1
@@ -155,6 +164,9 @@ func ListOutgoingFriendRequests(ctx context.Context, pool *pgxpool.Pool, userID 
 			&item.User.DisplayName,
 			&item.User.AvatarKind,
 			&item.User.AvatarValue,
+			&item.User.Age,
+			&item.User.Gender,
+			&item.User.About,
 		); err != nil {
 			return nil, err
 		}
@@ -185,7 +197,7 @@ func SearchUsersWithFriendRelation(
 	pattern := "%" + query + "%"
 	rows, err := pool.Query(ctx, `
 		SELECT
-			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value,
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
 			CASE
 				WHEN f.user_low IS NOT NULL THEN 'friend'
 				WHEN fr_out.id IS NOT NULL THEN 'outgoing'
@@ -207,10 +219,7 @@ func SearchUsersWithFriendRelation(
 		)
 		WHERE
 			u.id <> $1
-			AND (
-				u.email ILIKE $2
-				OR COALESCE(u.display_name, '') ILIKE $2
-			)
+			AND COALESCE(u.display_name, '') ILIKE $2
 		ORDER BY
 			CASE WHEN u.display_name IS NULL OR u.display_name = '' THEN 1 ELSE 0 END ASC,
 			COALESCE(u.display_name, u.email) ASC
@@ -231,6 +240,9 @@ func SearchUsersWithFriendRelation(
 			&item.User.DisplayName,
 			&item.User.AvatarKind,
 			&item.User.AvatarValue,
+			&item.User.Age,
+			&item.User.Gender,
+			&item.User.About,
 			&item.RelationStatus,
 			&requestIDRaw,
 		); err != nil {
