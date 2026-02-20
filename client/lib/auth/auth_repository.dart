@@ -77,10 +77,26 @@ class AuthRepository {
   AuthRepository({SharedPreferences? prefs}) : _prefs = prefs;
 
   SharedPreferences? _prefs;
-  SharedPreferences get prefs => _prefs!;
+  bool _prefsUnavailable = false;
+  String? _memoryAccessToken;
+  AuthUser? _memoryUser;
+
+  SharedPreferences get prefs {
+    final p = _prefs;
+    if (p == null) {
+      throw StateError('SharedPreferences is not available');
+    }
+    return p;
+  }
 
   Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
+    if (_prefs != null || _prefsUnavailable) return;
+    try {
+      _prefs = await SharedPreferences.getInstance();
+    } catch (_) {
+      _prefsUnavailable = true;
+      _prefs = null;
+    }
   }
 
   Future<AuthResult> register({
@@ -136,9 +152,15 @@ class AuthRepository {
     final expiresIn = body['expires_in'] as int? ?? 900;
     final user = AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map));
 
-    await prefs.setString(_keyAccessToken, accessToken);
-    await prefs.setString(_keyRefreshToken, refreshToken);
-    await _saveUser(user);
+    _memoryAccessToken = accessToken;
+    _memoryUser = user;
+
+    await _safePersistSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: user,
+    );
+
     return AuthResult(
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -148,22 +170,67 @@ class AuthRepository {
   }
 
   Future<String?> getAccessToken() async {
+    if (_memoryAccessToken != null && _memoryAccessToken!.isNotEmpty) {
+      if (_isJwtExpired(_memoryAccessToken!)) {
+        await logout();
+        return null;
+      }
+      return _memoryAccessToken;
+    }
+
     await init();
-    return prefs.getString(_keyAccessToken);
+    String? token;
+    if (_prefs != null) {
+      try {
+        token = _prefs!.getString(_keyAccessToken);
+      } catch (_) {
+        token = null;
+      }
+    }
+
+    if (token != null && token.isNotEmpty) {
+      if (_isJwtExpired(token)) {
+        await logout();
+        return null;
+      }
+      _memoryAccessToken = token;
+    }
+    return token;
   }
 
   Future<AuthUser?> getStoredUser() async {
+    if (_memoryUser != null) return _memoryUser;
+
     await init();
-    final jsonStr = prefs.getString(_keyUser);
+    if (_prefs == null) return null;
+
+    String? jsonStr;
+    try {
+      jsonStr = _prefs!.getString(_keyUser);
+    } catch (_) {
+      jsonStr = null;
+    }
     if (jsonStr == null) return null;
-    return AuthUser.fromJson(Map<String, dynamic>.from(jsonDecode(jsonStr) as Map));
+    try {
+      final user = AuthUser.fromJson(Map<String, dynamic>.from(jsonDecode(jsonStr) as Map));
+      _memoryUser = user;
+      return user;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> logout() async {
+    _memoryAccessToken = null;
+    _memoryUser = null;
+
     await init();
-    await prefs.remove(_keyAccessToken);
-    await prefs.remove(_keyRefreshToken);
-    await prefs.remove(_keyUser);
+    if (_prefs == null) return;
+    try {
+      await _prefs!.remove(_keyAccessToken);
+      await _prefs!.remove(_keyRefreshToken);
+      await _prefs!.remove(_keyUser);
+    } catch (_) {}
   }
 
   /// Обновляет профиль пользователя на бэкенде и сохраняет результат локально.
@@ -229,7 +296,46 @@ class AuthRepository {
   }
 
   Future<void> _saveUser(AuthUser user) async {
-    await prefs.setString(_keyUser, jsonEncode(user.toJson()));
+    _memoryUser = user;
+    await init();
+    if (_prefs == null) return;
+    try {
+      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+    } catch (_) {}
+  }
+
+  Future<void> _safePersistSession({
+    required String accessToken,
+    required String refreshToken,
+    required AuthUser user,
+  }) async {
+    await init();
+    if (_prefs == null) return;
+    try {
+      await _prefs!.setString(_keyAccessToken, accessToken);
+      await _prefs!.setString(_keyRefreshToken, refreshToken);
+      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+    } catch (_) {
+      // На Web в private mode может быть QuotaExceededError.
+      // Сессию оставляем в памяти, чтобы вход работал в текущей вкладке.
+    }
+  }
+
+  bool _isJwtExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length < 2) return false;
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final body = jsonDecode(decoded) as Map<String, dynamic>;
+      final exp = body['exp'];
+      if (exp is! num) return false;
+      final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      return nowSec >= exp.toInt();
+    } catch (_) {
+      return false;
+    }
   }
 }
 

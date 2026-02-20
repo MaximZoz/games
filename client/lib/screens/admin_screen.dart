@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -104,6 +105,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         _logsState = AsyncValue.data(logs);
       });
     } catch (e, st) {
+      if (e is AdminException && e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) {
+          _showMessage('Сессия истекла. Войдите заново.', null);
+          context.go('/login');
+        }
+        return;
+      }
       if (!mounted || requestID != _logRequestID) return;
       setState(() {
         _logsState = AsyncValue.error(e, st);
@@ -122,7 +131,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       }
     } catch (e) {
       if (mounted) {
-        _showMessage(e is AdminException ? e.message : e.toString(), null);
+        if (e is AdminException) {
+          await _handleAdminException(e);
+        } else {
+          _showMessage(e.toString(), null);
+        }
       }
     }
   }
@@ -165,7 +178,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       if (mounted) _showMessage(null, 'Пароль обновлён');
     } catch (e) {
       if (mounted) {
-        _showMessage(e is AdminException ? e.message : e.toString(), null);
+        if (e is AdminException) {
+          await _handleAdminException(e);
+        } else {
+          _showMessage(e.toString(), null);
+        }
       }
     }
   }
@@ -200,9 +217,24 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       }
     } catch (e) {
       if (mounted) {
-        _showMessage(e is AdminException ? e.message : e.toString(), null);
+        if (e is AdminException) {
+          await _handleAdminException(e);
+        } else {
+          _showMessage(e.toString(), null);
+        }
       }
     }
+  }
+
+  Future<void> _handleAdminException(AdminException e) async {
+    if (e.statusCode == 401) {
+      await ref.read(authStateProvider.notifier).logout();
+      if (!mounted) return;
+      _showMessage('Сессия истекла. Войдите заново.', null);
+      context.go('/login');
+      return;
+    }
+    _showMessage(e.message, null);
   }
 
   static const List<IconData> _presetAvatarIcons = [

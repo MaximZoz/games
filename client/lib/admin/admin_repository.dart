@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -106,21 +107,42 @@ class AdminRepository {
 
   final AuthRepository _auth;
 
-  Future<String?> _token() async {
+  Future<String> _token() async {
     await _auth.init();
-    return _auth.getAccessToken();
+    final token = await _auth.getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw AdminException(401, 'Сессия истекла. Войдите заново.');
+    }
+    return token;
+  }
+
+  Never _throwForErrorResponse(http.Response response) {
+    var message = response.body.trim();
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        message = (body['message'] ?? body['error'] ?? message).toString();
+      }
+    } catch (_) {}
+
+    if (response.statusCode == 401) {
+      throw AdminException(401, 'Сессия истекла. Войдите заново.');
+    }
+    if (response.statusCode == 403 && message.isEmpty) {
+      throw AdminException(403, 'Недостаточно прав для этого действия.');
+    }
+    throw AdminException(response.statusCode, message.isEmpty ? 'Ошибка сервера' : message);
   }
 
   Future<List<AdminUserItem>> listUsers() async {
     final token = await _token();
-    if (token == null) throw AdminException(401, 'Not authenticated');
     final response = await ApiClient.get(
       Uri.parse('$apiBaseUrl/api/admin/users'),
       headers: {'Authorization': 'Bearer $token'},
       operation: 'AdminRepository.listUsers',
     );
     if (response.statusCode != 200) {
-      throw AdminException(response.statusCode, response.body);
+      _throwForErrorResponse(response);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final list = body['users'] as List<dynamic>;
@@ -131,7 +153,6 @@ class AdminRepository {
 
   Future<void> setAdmin(String userId, bool isAdmin) async {
     final token = await _token();
-    if (token == null) throw AdminException(401, 'Not authenticated');
     final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/admin/users/set-admin'),
       headers: {
@@ -142,13 +163,12 @@ class AdminRepository {
       operation: 'AdminRepository.setAdmin',
     );
     if (response.statusCode != 204) {
-      throw AdminException(response.statusCode, response.body);
+      _throwForErrorResponse(response);
     }
   }
 
   Future<void> resetPassword(String userId, String newPassword) async {
     final token = await _token();
-    if (token == null) throw AdminException(401, 'Not authenticated');
     final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/admin/users/reset-password'),
       headers: {
@@ -159,13 +179,12 @@ class AdminRepository {
       operation: 'AdminRepository.resetPassword',
     );
     if (response.statusCode != 204) {
-      throw AdminException(response.statusCode, response.body);
+      _throwForErrorResponse(response);
     }
   }
 
   Future<void> deleteUser(String userId) async {
     final token = await _token();
-    if (token == null) throw AdminException(401, 'Not authenticated');
     final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/admin/users/delete'),
       headers: {
@@ -176,7 +195,7 @@ class AdminRepository {
       operation: 'AdminRepository.deleteUser',
     );
     if (response.statusCode != 204) {
-      throw AdminException(response.statusCode, response.body);
+      _throwForErrorResponse(response);
     }
   }
 
@@ -189,7 +208,6 @@ class AdminRepository {
     DateTime? to,
   }) async {
     final token = await _token();
-    if (token == null) throw AdminException(401, 'Not authenticated');
     final query = <String, String>{
       'limit': '$limit',
       'offset': '$offset',
@@ -204,7 +222,7 @@ class AdminRepository {
       operation: 'AdminRepository.listLogs',
     );
     if (response.statusCode != 200) {
-      throw AdminException(response.statusCode, response.body);
+      _throwForErrorResponse(response);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final list = body['logs'] as List<dynamic>? ?? const [];
