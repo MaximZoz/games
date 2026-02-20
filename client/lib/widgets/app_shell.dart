@@ -115,6 +115,13 @@ class AppShell extends ConsumerWidget {
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = _selectedIndexForPath(path);
+    final normalizedPath = _normalizePath(path);
+    final isOnAdmin = normalizedPath == '/admin';
+
+    void goIfNeeded(String targetPath) {
+      if (normalizedPath == _normalizePath(targetPath)) return;
+      context.go(targetPath);
+    }
 
     Widget navIcon(_NavItem item) {
       final icon = Icon(item.icon);
@@ -146,7 +153,7 @@ class AppShell extends ConsumerWidget {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => context.go('/'),
+                      onTap: () => goIfNeeded('/'),
                       child: const Padding(
                         key: Key('toolbar_title'),
                         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -172,7 +179,7 @@ class AppShell extends ConsumerWidget {
                               if (user.isAdmin)
                                 IconButton(
                                   icon: const Icon(Icons.admin_panel_settings),
-                                  onPressed: () => context.push('/admin'),
+                                  onPressed: isOnAdmin ? null : () => goIfNeeded('/admin'),
                                   tooltip: 'Админка',
                                 ),
                               Padding(
@@ -196,11 +203,7 @@ class AppShell extends ConsumerWidget {
                             ],
                           );
                         }
-                        return IconButton(
-                          icon: const Icon(Icons.login),
-                          onPressed: () => context.push('/login'),
-                          tooltip: 'Войти',
-                        );
+                        return const SizedBox.shrink();
                       },
                       loading: () => const Padding(
                         padding: EdgeInsets.all(16),
@@ -210,11 +213,7 @@ class AppShell extends ConsumerWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                      error: (_, __) => IconButton(
-                        icon: const Icon(Icons.login),
-                        onPressed: () => context.push('/login'),
-                        tooltip: 'Войти',
-                      ),
+                      error: (_, __) => const SizedBox.shrink(),
                     ),
                   ],
                 ),
@@ -229,7 +228,7 @@ class AppShell extends ConsumerWidget {
                       children: [
                         NavigationRail(
                           selectedIndex: selectedIndex,
-                          onDestinationSelected: (i) => context.go(_navItems[i].path),
+                          onDestinationSelected: (i) => goIfNeeded(_navItems[i].path),
                           backgroundColor: Colors.transparent,
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
@@ -257,7 +256,7 @@ class AppShell extends ConsumerWidget {
                   type: MaterialType.transparency,
                   child: NavigationBar(
                     selectedIndex: selectedIndex,
-                    onDestinationSelected: (i) => context.go(_navItems[i].path),
+                    onDestinationSelected: (i) => goIfNeeded(_navItems[i].path),
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     destinations: _navItems
