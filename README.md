@@ -228,8 +228,11 @@ fly deploy --app "$env:FLY_APP_NAME" --remote-only --yes
   - `001` — таблицы `users` (email, password_hash, display_name) и `sessions`;
   - `002` — колонка `is_admin` у пользователей;
   - `003` — уникальный `display_name` для входа по логину или по почте.
+  - `004` — поля профиля пользователя (`age`, `gender`, `about`, `avatar_*`).
   - `005` — таблица `app_logs` для логов фронта/бэка (через импорт из файла).
-- **Авторизация (бэкенд)** — POST `/api/auth/register`, POST `/api/auth/login`, GET `/api/me` (Bearer). Вход по **email или по логину** (display_name). JWT: access (15 мин) и refresh (7 дней).
+  - `006` — таблицы `friendships` и `friend_requests` для модуля «Друзья».
+- **Авторизация (бэкенд)** — POST `/api/auth/register`, POST `/api/auth/login`, POST `/api/auth/refresh`, GET `/api/me` (Bearer). Вход по **email или по логину** (display_name). JWT: access (15 мин) и refresh (7 дней).
+- **Друзья (бэкенд + клиент)** — API: GET `/api/friends`, GET `/api/friends/search`, POST `/api/friends/request|accept|reject|cancel|remove`. В UI: список друзей, входящие/исходящие заявки, поиск пользователей и действия в один клик.
 - **Первый админ** — POST `/api/admin/init` с заголовком `X-Admin-Init-Secret` (значение из `ADMIN_INIT_SECRET` в `.env`). Создаёт первого пользователя-админа.
 - **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, GET `/api/admin/logs`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
 - **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: вкладки «Пользователи» и «Логи», где логи разбиты по временным окнам, фильтруются по пользователю и источнику (frontend/backend), есть копирование окна и «Скопировать всё», плюс переключатель лимита копирования (120/500/1000/все). Riverpod, go_router, SharedPreferences для токена и пользователя.
