@@ -387,6 +387,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required String subtitle,
     required List<Widget> actions,
     Widget? trailing,
+    bool alignActionsRight = false,
   }) {
     return GradientCard(
       margin: EdgeInsets.zero,
@@ -427,8 +428,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             subtitle,
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
-          const SizedBox(height: 10),
-          Wrap(spacing: 8, runSpacing: 8, children: actions),
+          if (actions.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: alignActionsRight ? Alignment.centerRight : Alignment.centerLeft,
+              child: Wrap(spacing: 8, runSpacing: 8, children: actions),
+            ),
+          ],
         ],
       ),
     );
@@ -483,20 +489,26 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
-          actions: [
-            AppButton(
-              onPressed: _busy(key)
-                  ? null
-                  : () => _runAction(
-                        key: key,
-                        call: (repo) => repo.removeFriend(item.user.id),
-                        success: 'Пользователь удалён из друзей',
-                      ),
-              label: 'Удалить из друзей',
-              style: AppButtonStyle.danger,
-              isLoading: _busy(key),
-            ),
-          ],
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactIconButton(
+                icon: Icons.info_outline_rounded,
+                tooltip: 'Информация о пользователе',
+                onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: key,
+                icon: Icons.person_remove_alt_1_rounded,
+                tooltip: 'Удалить из друзей',
+                call: (repo) => repo.removeFriend(item.user.id),
+                success: 'Пользователь удалён из друзей',
+                danger: true,
+              ),
+            ],
+          ),
+          actions: const [],
         );
       },
     );
@@ -627,7 +639,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
-  Widget _buildSearchActionIcon({
+  Widget _buildActionIcon({
     required String key,
     required IconData icon,
     required String tooltip,
@@ -651,6 +663,35 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
+  Widget _buildGradientHeaderIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    final gradient = AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: 40,
+        height: 40,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchResultCard(FriendSearchItem item) {
     final relation = item.relationStatus;
     final sendKey = 'send_${item.user.id}';
@@ -668,7 +709,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     ];
     if (relation == 'none') {
       controls.add(
-        _buildSearchActionIcon(
+        _buildActionIcon(
           key: sendKey,
           icon: Icons.person_add_alt_1_rounded,
           tooltip: 'Добавить в друзья',
@@ -678,7 +719,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       );
     } else if (relation == 'outgoing' && item.requestId != null) {
       controls.add(
-        _buildSearchActionIcon(
+        _buildActionIcon(
           key: cancelKey,
           icon: Icons.close_rounded,
           tooltip: 'Отменить заявку',
@@ -689,14 +730,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       );
     } else if (relation == 'incoming' && item.requestId != null) {
       controls.addAll([
-        _buildSearchActionIcon(
+        _buildActionIcon(
           key: acceptKey,
           icon: Icons.check_rounded,
           tooltip: 'Принять заявку',
           call: (repo) => repo.acceptRequest(item.requestId!),
           success: 'Заявка принята',
         ),
-        _buildSearchActionIcon(
+        _buildActionIcon(
           key: rejectKey,
           icon: Icons.close_rounded,
           tooltip: 'Отклонить заявку',
@@ -707,7 +748,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       ]);
     } else if (relation == 'friend') {
       controls.add(
-        _buildSearchActionIcon(
+        _buildActionIcon(
           key: removeKey,
           icon: Icons.person_remove_alt_1_rounded,
           tooltip: 'Удалить из друзей',
@@ -877,16 +918,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 2),
-                  IconButton(
-                    onPressed: _toggleSearch,
-                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
-                    icon: Icon(
-                      _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
-                    ),
-                  ),
                   const Spacer(),
+                  _buildGradientHeaderIconButton(
+                    icon: _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
+                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
+                    onPressed: _toggleSearch,
+                  ),
+                  const SizedBox(width: 4),
                   IconButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () => _refreshSnapshot(refreshSearch: true),
                     tooltip: 'Обновить',
                     icon: const Icon(Icons.refresh_rounded),
