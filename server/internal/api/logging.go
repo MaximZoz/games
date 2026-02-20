@@ -1,0 +1,172 @@
+package api
+
+import (
+	"encoding/json"
+	"net"
+	"net/http"
+	"strings"
+	"time"
+
+	"multigames/server/internal/applog"
+	"multigames/server/internal/auth"
+
+	"github.com/google/uuid"
+)
+
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *statusRecorder) WriteHeader(code int) {
+	w.statusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+// RequestLogger логирует все HTTP-запросы бэкенда в файл.
+func RequestLogger(secret []byte, writer *applog.FileWriter, next http.Handler) http.Handler {
+	if writer == nil {
+		return next
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		started := time.Now().UTC()
+		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+
+		next.ServeHTTP(rec, r)
+
+		status := rec.statusCode
+		duration := time.Since(started).Milliseconds()
+
+		metadata := map[string]interface{}{}
+		if r.URL.RawQuery != "" {
+			metadata["query"] = r.URL.RawQuery
+		}
+
+		event := applog.Event{
+			Source:     "backend",
+			MethodName: "http.request",
+			HTTPMethod: r.Method,
+			Path:       r.URL.Path,
+			StatusCode: &status,
+			DurationMS: &duration,
+			IP:         clientIP(r),
+			UserAgent:  r.UserAgent(),
+			Metadata:   metadata,
+		}
+		if userID := userIDFromBearer(secret, r.Header.Get("Authorization")); userID != "" {
+			event.UserID = userID
+		}
+
+		_ = writer.Append(event)
+	})
+}
+
+type FrontendLogHandler struct {
+	Writer    *applog.FileWriter
+	JWTSecret []byte
+}
+
+type frontendLogRequest struct {
+	EventID    string                 `json:"event_id"`
+	EventTime  string                 `json:"event_time"`
+	MethodName string                 `json:"method_name"`
+	HTTPMethod string                 `json:"http_method"`
+	Path       string                 `json:"path"`
+	StatusCode *int                   `json:"status_code"`
+	DurationMS *int64                 `json:"duration_ms"`
+	Level      string                 `json:"level"`
+	Message    string                 `json:"message"`
+	Metadata   map[string]interface{} `json:"metadata"`
+}
+
+// Ingest принимает frontend-события и пишет их в файл.
+func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if h.Writer == nil {
+		http.Error(w, "log writer is not configured", http.StatusServiceUnavailable)
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+	var req frontendLogRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if req.MethodName == "" {
+		req.MethodName = "frontend.request"
+	}
+
+	event := applog.Event{
+		EventID:    req.EventID,
+		EventTime:  req.EventTime,
+		Source:     "frontend",
+		MethodName: req.MethodName,
+		HTTPMethod: req.HTTPMethod,
+		Path:       req.Path,
+		StatusCode: req.StatusCode,
+		DurationMS: req.DurationMS,
+		Level:      req.Level,
+		Message:    req.Message,
+		Metadata:   req.Metadata,
+		IP:         clientIP(r),
+		UserAgent:  r.UserAgent(),
+	}
+
+	if userID := userIDFromBearer(h.JWTSecret, r.Header.Get("Authorization")); userID != "" {
+		event.UserID = userID
+	}
+	if event.UserID == "" && req.Metadata != nil {
+		if v, ok := req.Metadata["user_id"].(string); ok {
+			if _, err := uuid.Parse(v); err == nil {
+				event.UserID = v
+			}
+		}
+	}
+
+	if err := h.Writer.Append(event); err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func userIDFromBearer(secret []byte, header string) string {
+	if len(secret) == 0 || strings.TrimSpace(header) == "" {
+		return ""
+	}
+	parts := strings.SplitN(header, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return ""
+	}
+	claims, err := auth.ParseJWT(secret, parts[1])
+	if err != nil {
+		return ""
+	}
+	if _, err := uuid.Parse(claims.UserID); err != nil {
+		return ""
+	}
+	return claims.UserID
+}
+
+func clientIP(r *http.Request) string {
+	if forwarded := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); forwarded != "" {
+		parts := strings.Split(forwarded, ",")
+		if len(parts) > 0 {
+			return strings.TrimSpace(parts[0])
+		}
+	}
+	if realIP := strings.TrimSpace(r.Header.Get("X-Real-IP")); realIP != "" {
+		return realIP
+	}
+	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
+	if err == nil {
+		return host
+	}
+	return strings.TrimSpace(r.RemoteAddr)
+}

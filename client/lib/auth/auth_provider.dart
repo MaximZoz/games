@@ -87,15 +87,21 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     final repo = _ref.read(authRepositoryProvider);
     final user = state.valueOrNull;
     if (user == null) return;
-
-    final updated = await repo.updateProfile(
-      displayName: displayName ?? user.displayName,
-      age: extra?.age,
-      gender: extra?.gender,
-      about: extra?.about,
-      avatarKind: extra?.avatarKind.name,
-      avatarValue: extra?.avatarValue,
-    );
-    state = AsyncValue.data(updated);
+    try {
+      final updated = await repo.updateProfile(
+        displayName: displayName ?? user.displayName,
+        age: extra?.age,
+        gender: extra?.gender,
+        about: extra?.about,
+        avatarKind: extra?.avatarKind.name,
+        avatarValue: extra?.avatarValue,
+      );
+      state = AsyncValue.data(updated);
+    } on AuthException catch (e) {
+      if (e.statusCode == 401) {
+        state = const AsyncValue.data(null);
+      }
+      rethrow;
+    }
   }
 }

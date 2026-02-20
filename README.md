@@ -115,7 +115,7 @@ docker compose up -d
 - **Postgres**: порт `5432`, пользователь/БД `multigames`, пароль `multigames`
 - **Redis**: порт `6379`
 
-Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`).
+Сервер подключается к ним по умолчанию (`localhost:5432`, `localhost:6379`). Чтобы задать свои URL — скопируйте `.env.example` в `.env` и при необходимости измените `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET` (секрет для однократного создания первого админа через POST `/api/admin/init`), `APP_LOG_FILE`, `APP_LOG_STATE_FILE`, `APP_LOG_SYNC_INTERVAL_SECONDS`.
 
 **Как посмотреть таблицы и данные:** см. [docs/DATABASE.md](docs/DATABASE.md) — подключение через `psql`/redis-cli в контейнерах и параметры для GUI.
 
@@ -155,6 +155,55 @@ fly secrets set ADMIN_INIT_SECRET="секрет-для-первого-админ
 fly deploy --app APP
 ```
 
+#### Быстрый деплой из Cursor через конфиг
+
+Чтобы каждый раз не вводить токены вручную, используй шаблон:
+
+```bash
+cp deploy.cursor.env.example deploy.cursor.env
+```
+
+Заполни `deploy.cursor.env` своими значениями (`FLY_API_TOKEN`, `JWT_SECRET`, `ADMIN_INIT_SECRET`).
+
+> `deploy.cursor.env` уже добавлен в `.gitignore`, поэтому реальные токены в git не уйдут.
+
+**Самый простой запуск:**
+
+```bash
+./launcher/deploy_cursor.sh
+```
+
+```powershell
+.\launcher\deploy_cursor.ps1
+```
+
+Скрипты сами подхватывают `deploy.cursor.env`, обновляют секреты и запускают deploy.
+
+**Linux/macOS/Cursor shell:**
+
+```bash
+set -a
+source deploy.cursor.env
+set +a
+
+fly secrets set JWT_SECRET="$JWT_SECRET" ADMIN_INIT_SECRET="$ADMIN_INIT_SECRET" --app "$FLY_APP_NAME"
+fly deploy --app "$FLY_APP_NAME" --remote-only --yes
+```
+
+**PowerShell (Windows):**
+
+```powershell
+Get-Content .\deploy.cursor.env | ForEach-Object {
+  if ($_ -and -not $_.StartsWith("#")) {
+    $name, $value = $_ -split "=", 2
+    Set-Item -Path "Env:$name" -Value $value
+  }
+}
+
+fly secrets set JWT_SECRET="$env:JWT_SECRET" ADMIN_INIT_SECRET="$env:ADMIN_INIT_SECRET" --app "$env:FLY_APP_NAME"
+fly deploy --app "$env:FLY_APP_NAME" --remote-only --yes
+```
+
 После деплоя — https://APP.fly.dev. Первого админа создаёшь запросом `POST /api/admin/init` с заголовком `X-Admin-Init-Secret` (см. [DEPLOY.md](DEPLOY.md)).
 
 - **Подробно:** [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)
@@ -179,10 +228,11 @@ fly deploy --app APP
   - `001` — таблицы `users` (email, password_hash, display_name) и `sessions`;
   - `002` — колонка `is_admin` у пользователей;
   - `003` — уникальный `display_name` для входа по логину или по почте.
+  - `005` — таблица `app_logs` для логов фронта/бэка (через импорт из файла).
 - **Авторизация (бэкенд)** — POST `/api/auth/register`, POST `/api/auth/login`, GET `/api/me` (Bearer). Вход по **email или по логину** (display_name). JWT: access (15 мин) и refresh (7 дней).
 - **Первый админ** — POST `/api/admin/init` с заголовком `X-Admin-Init-Secret` (значение из `ADMIN_INIT_SECRET` в `.env`). Создаёт первого пользователя-админа.
-- **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
-- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: список пользователей, кнопки «Сделать/убрать админа», «Сбросить пароль», «Удалить», обновление списка. Riverpod, go_router, SharedPreferences для токена и пользователя.
+- **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, GET `/api/admin/logs`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
+- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: вкладки «Пользователи» и «Логи», где логи разбиты по временным окнам, фильтруются по пользователю и источнику (frontend/backend), есть копирование окна и «Скопировать всё», плюс переключатель лимита копирования (120/500/1000/все). Riverpod, go_router, SharedPreferences для токена и пользователя.
 - **Документация** — [API](docs/API.md), [базы данных](docs/DATABASE.md).
 - **Тесты** — Go: `cd server && go test ./...`; Flutter: `cd client && flutter test`.
 

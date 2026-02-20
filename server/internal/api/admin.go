@@ -3,8 +3,11 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
+	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
 	"multigames/server/internal/store"
 
@@ -14,9 +17,10 @@ import (
 
 // AdminHandler обрабатывает запросы админки.
 type AdminHandler struct {
-	Pool         *pgxpool.Pool
-	JWTSecret    []byte
-	InitSecret   string // секрет для однократного создания первого админа
+	Pool        *pgxpool.Pool
+	JWTSecret   []byte
+	InitSecret  string // секрет для однократного создания первого админа
+	LogImporter *applog.Importer
 }
 
 type AdminInitRequest struct {
@@ -49,6 +53,23 @@ type ResetPasswordRequest struct {
 
 type DeleteUserRequest struct {
 	UserID string `json:"user_id"`
+}
+
+type AdminLogItem struct {
+	EventID    string                 `json:"event_id"`
+	EventTime  string                 `json:"event_time"`
+	Source     string                 `json:"source"`
+	MethodName string                 `json:"method_name"`
+	HTTPMethod *string                `json:"http_method,omitempty"`
+	Path       *string                `json:"path,omitempty"`
+	StatusCode *int                   `json:"status_code,omitempty"`
+	DurationMS *int64                 `json:"duration_ms,omitempty"`
+	UserID     *string                `json:"user_id,omitempty"`
+	IP         *string                `json:"ip,omitempty"`
+	UserAgent  *string                `json:"user_agent,omitempty"`
+	Level      string                 `json:"level"`
+	Message    *string                `json:"message,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Init создаёт первого админа. Заголовок X-Admin-Init-Secret должен совпадать с ADMIN_INIT_SECRET.
@@ -221,4 +242,125 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ListLogs возвращает логи, загруженные в БД из файла.
+func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	limit := 100
+	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n <= 0 {
+			http.Error(w, "invalid limit", http.StatusBadRequest)
+			return
+		}
+		if n > 2000 {
+			n = 2000
+		}
+		limit = n
+	}
+
+	offset := 0
+	if raw := strings.TrimSpace(r.URL.Query().Get("offset")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 {
+			http.Error(w, "invalid offset", http.StatusBadRequest)
+			return
+		}
+		offset = n
+	}
+
+	var userID *uuid.UUID
+	if raw := strings.TrimSpace(r.URL.Query().Get("user_id")); raw != "" {
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			http.Error(w, "invalid user_id", http.StatusBadRequest)
+			return
+		}
+		userID = &id
+	}
+
+	var source *string
+	if raw := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source"))); raw != "" {
+		if raw != "frontend" && raw != "backend" {
+			http.Error(w, "invalid source", http.StatusBadRequest)
+			return
+		}
+		source = &raw
+	}
+
+	var from *time.Time
+	if raw := strings.TrimSpace(r.URL.Query().Get("from")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			http.Error(w, "invalid from", http.StatusBadRequest)
+			return
+		}
+		utc := t.UTC()
+		from = &utc
+	}
+
+	var to *time.Time
+	if raw := strings.TrimSpace(r.URL.Query().Get("to")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			http.Error(w, "invalid to", http.StatusBadRequest)
+			return
+		}
+		utc := t.UTC()
+		to = &utc
+	}
+
+	if h.LogImporter != nil {
+		_ = h.LogImporter.SyncNow(r.Context())
+	}
+
+	logs, err := store.ListAppLogs(r.Context(), h.Pool, store.ListAppLogsParams{
+		Limit:  limit,
+		Offset: offset,
+		UserID: userID,
+		Source: source,
+		From:   from,
+		To:     to,
+	})
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+
+	items := make([]AdminLogItem, 0, len(logs))
+	for _, item := range logs {
+		var metadata map[string]interface{}
+		if len(item.Metadata) > 0 {
+			_ = json.Unmarshal(item.Metadata, &metadata)
+		}
+
+		items = append(items, AdminLogItem{
+			EventID:    item.EventID,
+			EventTime:  item.EventTime,
+			Source:     item.Source,
+			MethodName: item.MethodName,
+			HTTPMethod: item.HTTPMethod,
+			Path:       item.Path,
+			StatusCode: item.StatusCode,
+			DurationMS: item.DurationMS,
+			UserID:     item.UserID,
+			IP:         item.IP,
+			UserAgent:  item.UserAgent,
+			Level:      item.Level,
+			Message:    item.Message,
+			Metadata:   metadata,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"logs":   items,
+		"limit":  limit,
+		"offset": offset,
+	})
 }

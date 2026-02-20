@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
@@ -14,9 +18,69 @@ import 'package:multigames_client/screens/settings_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
+const _publicPaths = <String>{'/login', '/register'};
+const _authRequiredPaths = <String>{
+  '/profile',
+  '/friends',
+  '/tournaments',
+  '/games',
+  '/inventory',
+  '/achievements',
+  '/settings',
+  '/coins',
+  '/admin',
+};
+
+class _AuthRefreshListenable extends ChangeNotifier {
+  _AuthRefreshListenable(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) {
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
+  final authNotifier = ref.watch(authStateProvider.notifier);
+  final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
+  ref.onDispose(refreshListenable.dispose);
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: refreshListenable,
+    redirect: (context, state) async {
+      final path = state.uri.path;
+      final isPublic = _publicPaths.contains(path);
+      final needsAuth = _authRequiredPaths.contains(path);
+      final isAdminRoute = path == '/admin';
+
+      final authState = ref.read(authStateProvider);
+      if (authState.isLoading) return null;
+
+      var user = authState.valueOrNull;
+      if (needsAuth) {
+        final repo = ref.read(authRepositoryProvider);
+        final token = await repo.getAccessToken();
+        if (token == null || token.isEmpty) {
+          if (authState.valueOrNull != null) {
+            await ref.read(authStateProvider.notifier).logout();
+          }
+          return '/login';
+        }
+        user ??= await repo.getStoredUser();
+      }
+
+      if (isPublic && user != null) return '/';
+      if (needsAuth && user == null) return '/login';
+      if (isAdminRoute && user != null && !user.isAdmin) return '/';
+      return null;
+    },
     routes: [
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),

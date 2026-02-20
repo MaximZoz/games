@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
@@ -419,9 +418,9 @@ class _ProfileEmptyState extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Чтобы видеть профиль и достижения',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14,
               ),
