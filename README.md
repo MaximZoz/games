@@ -155,6 +155,43 @@ fly secrets set ADMIN_INIT_SECRET="секрет-для-первого-админ
 fly deploy --app APP
 ```
 
+#### Быстрый деплой из Cursor через конфиг
+
+Чтобы каждый раз не вводить токены вручную, используй шаблон:
+
+```bash
+cp deploy.cursor.env.example deploy.cursor.env
+```
+
+Заполни `deploy.cursor.env` своими значениями (`FLY_API_TOKEN`, `JWT_SECRET`, `ADMIN_INIT_SECRET`).
+
+> `deploy.cursor.env` уже добавлен в `.gitignore`, поэтому реальные токены в git не уйдут.
+
+**Linux/macOS/Cursor shell:**
+
+```bash
+set -a
+source deploy.cursor.env
+set +a
+
+fly secrets set JWT_SECRET="$JWT_SECRET" ADMIN_INIT_SECRET="$ADMIN_INIT_SECRET" --app "$FLY_APP_NAME"
+fly deploy --app "$FLY_APP_NAME" --remote-only --yes
+```
+
+**PowerShell (Windows):**
+
+```powershell
+Get-Content .\deploy.cursor.env | ForEach-Object {
+  if ($_ -and -not $_.StartsWith("#")) {
+    $name, $value = $_ -split "=", 2
+    Set-Item -Path "Env:$name" -Value $value
+  }
+}
+
+fly secrets set JWT_SECRET="$env:JWT_SECRET" ADMIN_INIT_SECRET="$env:ADMIN_INIT_SECRET" --app "$env:FLY_APP_NAME"
+fly deploy --app "$env:FLY_APP_NAME" --remote-only --yes
+```
+
 После деплоя — https://APP.fly.dev. Первого админа создаёшь запросом `POST /api/admin/init` с заголовком `X-Admin-Init-Secret` (см. [DEPLOY.md](DEPLOY.md)).
 
 - **Подробно:** [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)
