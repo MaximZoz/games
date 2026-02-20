@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
@@ -107,12 +108,24 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
+    final incomingRequests = ref.watch(friendsIncomingCountProvider).valueOrNull ?? 0;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = _selectedIndexForPath(path);
+
+    Widget navIcon(_NavItem item) {
+      final icon = Icon(item.icon);
+      if (item.path != '/friends' || incomingRequests <= 0) return icon;
+
+      final label = incomingRequests > 99 ? '99+' : '$incomingRequests';
+      return Badge(
+        label: Text(label),
+        child: icon,
+      );
+    }
 
     return Stack(
       fit: StackFit.expand,
@@ -223,7 +236,8 @@ class AppShell extends ConsumerWidget {
                           labelType: NavigationRailLabelType.all,
                           destinations: _navItems
                               .map((e) => NavigationRailDestination(
-                                    icon: Icon(e.icon),
+                                    icon: navIcon(e),
+                                    selectedIcon: navIcon(e),
                                     label: Text(e.label),
                                   ))
                               .toList(),
@@ -248,7 +262,8 @@ class AppShell extends ConsumerWidget {
                     elevation: 0,
                     destinations: _navItems
                         .map((e) => NavigationDestination(
-                              icon: Icon(e.icon),
+                              icon: navIcon(e),
+                              selectedIcon: navIcon(e),
                               label: e.label,
                             ))
                         .toList(),

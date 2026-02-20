@@ -35,11 +35,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   ];
 
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
   late final TabController _tabController;
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
+  bool _isSearchExpanded = false;
   String? _error;
   String? _success;
   Timer? _messageTimer;
@@ -54,6 +56,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   void dispose() {
     _messageTimer?.cancel();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -142,9 +145,28 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _showMessage(e.message, null);
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _isSearchExpanded = !_isSearchExpanded;
+      if (!_isSearchExpanded) {
+        _searchController.clear();
+        _searchResults = const [];
+      }
+    });
+
+    if (_isSearchExpanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    } else {
+      _searchFocusNode.unfocus();
+    }
+  }
+
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
       ref.invalidate(friendsSnapshotProvider);
+      ref.invalidate(friendsIncomingCountProvider);
       await ref.read(friendsSnapshotProvider.future);
       if (refreshSearch && _searchController.text.trim().isNotEmpty) {
         await _performSearch();
@@ -411,7 +433,80 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
+  Widget _buildSearchPanel() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: GradientCard(
+        margin: EdgeInsets.zero,
+        padding: const EdgeInsets.all(14),
+        animate: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 430;
+            final textField = TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                labelText: 'Поиск по email или нику',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+              onSubmitted: (_) => _performSearch(),
+            );
+
+            if (compact) {
+              return Column(
+                children: [
+                  textField,
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppButton(
+                          onPressed: _isSearching ? null : _performSearch,
+                          label: 'Найти',
+                          isLoading: _isSearching,
+                          expanded: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        tooltip: 'Закрыть поиск',
+                        onPressed: _toggleSearch,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(child: textField),
+                const SizedBox(width: 10),
+                AppButton(
+                  onPressed: _isSearching ? null : _performSearch,
+                  label: 'Найти',
+                  isLoading: _isSearching,
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'Закрыть поиск',
+                  onPressed: _toggleSearch,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchResults() {
+    if (!_isSearchExpanded) return const SizedBox.shrink();
+
     final query = _searchController.text.trim();
     if (query.isEmpty) return const SizedBox.shrink();
 
@@ -567,6 +662,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsSnapshotProvider);
+    final compact = MediaQuery.sizeOf(context).width < 430;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -577,15 +673,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      'Друзья',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  Text(
+                    'Друзья',
+                    style: (compact
+                            ? Theme.of(context).textTheme.headlineMedium
+                            : Theme.of(context).textTheme.headlineSmall)
+                        ?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(width: 2),
+                  IconButton(
+                    onPressed: _toggleSearch,
+                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
+                    icon: Icon(
+                      _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
+                    ),
+                  ),
+                  const Spacer(),
                   IconButton(
                     onPressed: () => _refreshSnapshot(refreshSearch: true),
                     tooltip: 'Обновить',
@@ -594,42 +700,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-              child: GradientCard(
-                margin: EdgeInsets.zero,
-                padding: const EdgeInsets.all(14),
-                animate: false,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: const InputDecoration(
-                          labelText: 'Поиск по email или нику',
-                          prefixIcon: Icon(Icons.search_rounded),
-                        ),
-                        onSubmitted: (_) => _performSearch(),
-                      ),
+            AnimatedSwitcher(
+              duration: AppDurations.short,
+              child: _isSearchExpanded
+                  ? _buildSearchPanel()
+                  : const SizedBox(
+                      key: ValueKey('friends-search-collapsed'),
                     ),
-                    const SizedBox(width: 10),
-                    AppButton(
-                      onPressed: _isSearching ? null : _performSearch,
-                      label: 'Найти',
-                      isLoading: _isSearching,
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: 'Очистить',
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchResults = const []);
-                      },
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-              ),
             ),
             if (_error != null)
               Padding(
@@ -646,6 +723,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TabBar(
                 controller: _tabController,
+                isScrollable: compact,
+                labelPadding: compact
+                    ? const EdgeInsets.symmetric(horizontal: 12)
+                    : const EdgeInsets.symmetric(horizontal: 20),
+                labelStyle: TextStyle(
+                  fontSize: compact ? 14 : 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: TextStyle(
+                  fontSize: compact ? 14 : 16,
+                  fontWeight: FontWeight.w500,
+                ),
                 tabs: [
                   Tab(
                     text: friendsAsync.valueOrNull == null
