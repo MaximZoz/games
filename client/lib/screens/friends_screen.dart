@@ -112,29 +112,49 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       case 'женский':
         return Icons.female_rounded;
       default:
-        return Icons.person_rounded;
+        return null;
     }
   }
 
-  Widget _buildInfoPill({String? text, IconData? icon}) {
+  bool _isFemaleGender(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    return normalized == 'female' ||
+        normalized == 'f' ||
+        normalized == 'woman' ||
+        normalized == 'ж' ||
+        normalized == 'жен' ||
+        normalized == 'женский';
+  }
+
+  Widget _buildInfoPill({
+    String? text,
+    IconData? icon,
+    Color? backgroundColor,
+    Color? foregroundColor,
+    double? minWidth,
+  }) {
+    final bg = backgroundColor ?? AppColors.accentSoft;
+    final fg = foregroundColor ?? AppColors.textPrimary;
     return Container(
+      constraints: BoxConstraints(minWidth: minWidth ?? 0),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.accentSoft,
+        color: bg,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: AppColors.textPrimary),
+            Icon(icon, size: 14, color: fg),
             if (text != null && text.isNotEmpty) const SizedBox(width: 4),
           ],
           if (text != null && text.isNotEmpty)
             Text(
               text,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: fg,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -150,6 +170,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final name = _displayName(user);
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
+    final female = _isFemaleGender(user.gender);
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -200,8 +221,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      if (user.age != null && user.age! > 0) _buildInfoPill(text: '${user.age} лет'),
-                      if (genderIcon != null) _buildInfoPill(icon: genderIcon),
+                      if (user.age != null && user.age! > 0)
+                        _buildInfoPill(
+                          text: '${user.age} лет',
+                          minWidth: 72,
+                        ),
+                      if (genderIcon != null)
+                        _buildInfoPill(
+                          icon: genderIcon,
+                          minWidth: 46,
+                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
+                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
+                        ),
                     ],
                   ),
                 ],
@@ -568,25 +599,26 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         return _buildUserCard(
           user: item.user,
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
-          trailing: IconButton(
-            tooltip: 'Информация о пользователе',
-            onPressed: () => _showRequestInfoDialog(user: item.user),
-            icon: const Icon(Icons.info_outline_rounded),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactIconButton(
+                icon: Icons.info_outline_rounded,
+                tooltip: 'Информация о пользователе',
+                onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildActionIcon(
+                key: cancelKey,
+                icon: Icons.close_rounded,
+                tooltip: 'Отменить заявку',
+                call: (repo) => repo.cancelRequest(item.requestId),
+                success: 'Заявка отменена',
+                danger: true,
+              ),
+            ],
           ),
-          actions: [
-            AppButton(
-              onPressed: _busy(cancelKey)
-                  ? null
-                  : () => _runAction(
-                        key: cancelKey,
-                        call: (repo) => repo.cancelRequest(item.requestId),
-                        success: 'Заявка отменена',
-                      ),
-              label: 'Отменить заявку',
-              style: AppButtonStyle.danger,
-              isLoading: _busy(cancelKey),
-            ),
-          ],
+          actions: const [],
         );
       },
     );
