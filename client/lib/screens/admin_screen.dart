@@ -19,6 +19,7 @@ class AdminScreen extends ConsumerStatefulWidget {
 
 class _AdminScreenState extends ConsumerState<AdminScreen>
     with SingleTickerProviderStateMixin {
+  static const String _sourceAll = '__all__';
   static const List<_LogWindowSpec> _logWindows = [
     _LogWindowSpec(title: 'Последние 5 минут', duration: Duration(minutes: 5)),
     _LogWindowSpec(title: 'Последние 15 минут', duration: Duration(minutes: 15)),
@@ -31,6 +32,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
   Timer? _messageTimer;
   late final TabController _tabController;
   String? _selectedLogUserId;
+  String _selectedLogSource = _sourceAll;
   AsyncValue<List<AdminLogItem>> _logsState = const AsyncValue.loading();
   int _logRequestID = 0;
 
@@ -86,6 +88,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       final logs = await repo.listLogs(
         limit: 2000,
         userId: _selectedLogUserId,
+        source: _selectedLogSource == _sourceAll ? null : _selectedLogSource,
         from: now.subtract(const Duration(hours: 24)),
         to: now,
       );
@@ -479,6 +482,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     return user.email;
   }
 
+  String _activeLogSourceLabel() {
+    switch (_selectedLogSource) {
+      case 'frontend':
+        return 'Только frontend';
+      case 'backend':
+        return 'Только backend';
+      default:
+        return 'Все источники';
+    }
+  }
+
   List<AdminLogItem> _logsForWindow(
       List<AdminLogItem> logs, Duration duration, DateTime nowUtc) {
     final threshold = nowUtc.subtract(duration);
@@ -516,6 +530,51 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     await Clipboard.setData(ClipboardData(text: sb.toString()));
     if (!mounted) return;
     _showMessage(null, 'Скопировано ${capped.length} логов из "$windowTitle"');
+  }
+
+  Future<void> _copyAllWindows({
+    required List<AdminLogItem> logs,
+    required String userLabel,
+    required String sourceLabel,
+  }) async {
+    final nowUtc = DateTime.now().toUtc();
+    final sb = StringBuffer()
+      ..writeln('Окна логов (все):')
+      ..writeln('Пользователь: $userLabel')
+      ..writeln('Источник: $sourceLabel')
+      ..writeln('UTC: ${nowUtc.toIso8601String()}')
+      ..writeln('---');
+
+    int totalCopied = 0;
+    for (final window in _logWindows) {
+      final windowLogs = _logsForWindow(logs, window.duration, nowUtc);
+      final capped = windowLogs.take(120).toList();
+      totalCopied += capped.length;
+
+      sb.writeln();
+      sb.writeln('### ${window.title} | ${windowLogs.length} шт');
+      if (capped.isEmpty) {
+        sb.writeln('нет записей');
+        continue;
+      }
+      for (final log in capped) {
+        sb.writeln(_logPreviewLine(log));
+        if (log.message != null && log.message!.isNotEmpty) {
+          sb.writeln('message: ${_sanitizeOneLine(log.message!)}');
+        }
+        if (log.metadata != null && log.metadata!.isNotEmpty) {
+          sb.writeln('metadata: ${jsonEncode(log.metadata)}');
+        }
+        sb.writeln('');
+      }
+      if (windowLogs.length > capped.length) {
+        sb.writeln('... обрезано: ещё ${windowLogs.length - capped.length} записей');
+      }
+    }
+
+    await Clipboard.setData(ClipboardData(text: sb.toString()));
+    if (!mounted) return;
+    _showMessage(null, 'Скопировано все окна: $totalCopied логов');
   }
 
   Widget _buildLogWindowCard({
@@ -680,7 +739,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
             users.any((u) => u.id == _selectedLogUserId))
         ? _selectedLogUserId!
         : '__all__';
+    final sourceValue = (_selectedLogSource == 'frontend' ||
+            _selectedLogSource == 'backend')
+        ? _selectedLogSource
+        : _sourceAll;
     final userLabel = _activeLogUserLabel(users);
+    final sourceLabel = _activeLogSourceLabel();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -733,16 +797,74 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                 },
               ),
               const SizedBox(height: 8),
-              Row(
+              DropdownButtonFormField<String>(
+                value: sourceValue,
+                decoration: const InputDecoration(
+                  labelText: 'Источник',
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: _sourceAll,
+                    child: Text('Все источники'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'frontend',
+                    child: Text('Frontend'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'backend',
+                    child: Text('Backend'),
+                  ),
+                ],
+                onChanged: (value) {
+                  final nextSource = value ?? _sourceAll;
+                  if (nextSource == _selectedLogSource) return;
+                  setState(() {
+                    _selectedLogSource = nextSource;
+                  });
+                  _loadLogs();
+                },
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const Icon(Icons.person_outline_rounded,
-                      size: 16, color: AppColors.textSecondary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Активный фильтр: $userLabel',
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.person_outline_rounded,
+                          size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        userLabel,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.source_outlined,
+                          size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        sourceLabel,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                  AppButton(
+                    onPressed: _logsState.valueOrNull == null ||
+                            _logsState.valueOrNull!.isEmpty
+                        ? null
+                        : () => _copyAllWindows(
+                              logs: _logsState.valueOrNull!,
+                              userLabel: userLabel,
+                              sourceLabel: sourceLabel,
+                            ),
+                    label: 'Скопировать всё',
                   ),
                   IconButton(
                     onPressed: _loadLogs,

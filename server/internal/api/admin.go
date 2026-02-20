@@ -284,6 +284,15 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		userID = &id
 	}
 
+	var source *string
+	if raw := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source"))); raw != "" {
+		if raw != "frontend" && raw != "backend" {
+			http.Error(w, "invalid source", http.StatusBadRequest)
+			return
+		}
+		source = &raw
+	}
+
 	var from *time.Time
 	if raw := strings.TrimSpace(r.URL.Query().Get("from")); raw != "" {
 		t, err := time.Parse(time.RFC3339, raw)
@@ -314,6 +323,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		Limit:  limit,
 		Offset: offset,
 		UserID: userID,
+		Source: source,
 		From:   from,
 		To:     to,
 	})

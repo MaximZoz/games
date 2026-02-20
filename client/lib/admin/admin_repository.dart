@@ -184,6 +184,7 @@ class AdminRepository {
     int limit = 100,
     int offset = 0,
     String? userId,
+    String? source,
     DateTime? from,
     DateTime? to,
   }) async {
@@ -193,6 +194,7 @@ class AdminRepository {
       'limit': '$limit',
       'offset': '$offset',
       if (userId != null && userId.isNotEmpty) 'user_id': userId,
+      if (source != null && source.isNotEmpty) 'source': source,
       if (from != null) 'from': from.toUtc().toIso8601String(),
       if (to != null) 'to': to.toUtc().toIso8601String(),
     };

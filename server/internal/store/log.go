@@ -32,6 +32,7 @@ type ListAppLogsParams struct {
 	Limit  int
 	Offset int
 	UserID *uuid.UUID
+	Source *string
 	From   *time.Time
 	To     *time.Time
 }
@@ -65,12 +66,16 @@ func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, p ListAppLogsParams) (
 			metadata
 		FROM app_logs
 	`
-	args := make([]any, 0, 4)
-	conds := make([]string, 0, 3)
+	args := make([]any, 0, 5)
+	conds := make([]string, 0, 4)
 
 	if p.UserID != nil {
 		args = append(args, *p.UserID)
 		conds = append(conds, fmt.Sprintf("user_id = $%d", len(args)))
+	}
+	if p.Source != nil && strings.TrimSpace(*p.Source) != "" {
+		args = append(args, strings.TrimSpace(*p.Source))
+		conds = append(conds, fmt.Sprintf("source = $%d", len(args)))
 	}
 	if p.From != nil {
 		args = append(args, p.From.UTC())

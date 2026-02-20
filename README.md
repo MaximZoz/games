@@ -232,7 +232,7 @@ fly deploy --app "$env:FLY_APP_NAME" --remote-only --yes
 - **Авторизация (бэкенд)** — POST `/api/auth/register`, POST `/api/auth/login`, GET `/api/me` (Bearer). Вход по **email или по логину** (display_name). JWT: access (15 мин) и refresh (7 дней).
 - **Первый админ** — POST `/api/admin/init` с заголовком `X-Admin-Init-Secret` (значение из `ADMIN_INIT_SECRET` в `.env`). Создаёт первого пользователя-админа.
 - **Админ-API** — только для пользователей с `is_admin = true`: GET `/api/admin/users`, GET `/api/admin/logs`, POST `/api/admin/users/set-admin`, `reset-password`, `delete`. Цепочка middleware: RequireAuth → RequireAdmin.
-- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: вкладки «Пользователи» и «Логи», где логи разбиты по временным окнам и фильтруются по пользователю, с копированием в буфер в один клик. Riverpod, go_router, SharedPreferences для токена и пользователя.
+- **Клиент (Flutter)** — общий Shell с тулбаром (логотип, вход/имя+щит+выход), маршруты `/`, `/login`, `/register`, `/admin`. Экраны входа (email или логин + пароль) и регистрации. Админка: вкладки «Пользователи» и «Логи», где логи разбиты по временным окнам, фильтруются по пользователю и источнику (frontend/backend), есть копирование окна и «Скопировать всё». Riverpod, go_router, SharedPreferences для токена и пользователя.
 - **Документация** — [API](docs/API.md), [базы данных](docs/DATABASE.md).
 - **Тесты** — Go: `cd server && go test ./...`; Flutter: `cd client && flutter test`.
 
