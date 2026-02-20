@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
@@ -257,8 +258,8 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid limit", http.StatusBadRequest)
 			return
 		}
-		if n > 500 {
-			n = 500
+		if n > 2000 {
+			n = 2000
 		}
 		limit = n
 	}
@@ -273,11 +274,49 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		offset = n
 	}
 
+	var userID *uuid.UUID
+	if raw := strings.TrimSpace(r.URL.Query().Get("user_id")); raw != "" {
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			http.Error(w, "invalid user_id", http.StatusBadRequest)
+			return
+		}
+		userID = &id
+	}
+
+	var from *time.Time
+	if raw := strings.TrimSpace(r.URL.Query().Get("from")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			http.Error(w, "invalid from", http.StatusBadRequest)
+			return
+		}
+		utc := t.UTC()
+		from = &utc
+	}
+
+	var to *time.Time
+	if raw := strings.TrimSpace(r.URL.Query().Get("to")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			http.Error(w, "invalid to", http.StatusBadRequest)
+			return
+		}
+		utc := t.UTC()
+		to = &utc
+	}
+
 	if h.LogImporter != nil {
 		_ = h.LogImporter.SyncNow(r.Context())
 	}
 
-	logs, err := store.ListAppLogs(r.Context(), h.Pool, limit, offset)
+	logs, err := store.ListAppLogs(r.Context(), h.Pool, store.ListAppLogsParams{
+		Limit:  limit,
+		Offset: offset,
+		UserID: userID,
+		From:   from,
+		To:     to,
+	})
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return

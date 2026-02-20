@@ -3,8 +3,11 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -25,8 +28,26 @@ type AppLog struct {
 	Metadata   []byte
 }
 
-func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, limit, offset int) ([]AppLog, error) {
-	rows, err := pool.Query(ctx, `
+type ListAppLogsParams struct {
+	Limit  int
+	Offset int
+	UserID *uuid.UUID
+	From   *time.Time
+	To     *time.Time
+}
+
+func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, p ListAppLogsParams) ([]AppLog, error) {
+	if p.Limit <= 0 {
+		p.Limit = 100
+	}
+	if p.Limit > 2000 {
+		p.Limit = 2000
+	}
+	if p.Offset < 0 {
+		p.Offset = 0
+	}
+
+	query := `
 		SELECT
 			event_id,
 			event_time,
@@ -43,15 +64,39 @@ func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, limit, offset int) ([]
 			message,
 			metadata
 		FROM app_logs
-		ORDER BY event_time DESC
-		LIMIT $1 OFFSET $2
-	`, limit, offset)
+	`
+	args := make([]any, 0, 4)
+	conds := make([]string, 0, 3)
+
+	if p.UserID != nil {
+		args = append(args, *p.UserID)
+		conds = append(conds, fmt.Sprintf("user_id = $%d", len(args)))
+	}
+	if p.From != nil {
+		args = append(args, p.From.UTC())
+		conds = append(conds, fmt.Sprintf("event_time >= $%d", len(args)))
+	}
+	if p.To != nil {
+		args = append(args, p.To.UTC())
+		conds = append(conds, fmt.Sprintf("event_time <= $%d", len(args)))
+	}
+	if len(conds) > 0 {
+		query += " WHERE " + strings.Join(conds, " AND ")
+	}
+
+	args = append(args, p.Limit)
+	limitPos := len(args)
+	args = append(args, p.Offset)
+	offsetPos := len(args)
+	query += fmt.Sprintf(" ORDER BY event_time DESC LIMIT $%d OFFSET $%d", limitPos, offsetPos)
+
+	rows, err := pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	result := make([]AppLog, 0, limit)
+	result := make([]AppLog, 0, p.Limit)
 	for rows.Next() {
 		var item AppLog
 		var eventTime time.Time

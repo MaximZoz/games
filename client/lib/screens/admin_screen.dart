@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
@@ -18,15 +19,26 @@ class AdminScreen extends ConsumerStatefulWidget {
 
 class _AdminScreenState extends ConsumerState<AdminScreen>
     with SingleTickerProviderStateMixin {
+  static const List<_LogWindowSpec> _logWindows = [
+    _LogWindowSpec(title: 'Последние 5 минут', duration: Duration(minutes: 5)),
+    _LogWindowSpec(title: 'Последние 15 минут', duration: Duration(minutes: 15)),
+    _LogWindowSpec(title: 'Последний 1 час', duration: Duration(hours: 1)),
+    _LogWindowSpec(title: 'Последние 24 часа', duration: Duration(hours: 24)),
+  ];
+
   String? _error;
   String? _success;
   Timer? _messageTimer;
   late final TabController _tabController;
+  String? _selectedLogUserId;
+  AsyncValue<List<AdminLogItem>> _logsState = const AsyncValue.loading();
+  int _logRequestID = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadLogs();
   }
 
   void _showMessage(String? error, String? success) {
@@ -58,7 +70,34 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     if (_tabController.index == 0) {
       ref.invalidate(adminUsersProvider);
     } else {
-      ref.invalidate(adminLogsProvider);
+      _loadLogs();
+    }
+  }
+
+  Future<void> _loadLogs() async {
+    final requestID = ++_logRequestID;
+    setState(() {
+      _logsState = const AsyncValue.loading();
+    });
+
+    final repo = ref.read(adminRepositoryProvider);
+    try {
+      final now = DateTime.now().toUtc();
+      final logs = await repo.listLogs(
+        limit: 2000,
+        userId: _selectedLogUserId,
+        from: now.subtract(const Duration(hours: 24)),
+        to: now,
+      );
+      if (!mounted || requestID != _logRequestID) return;
+      setState(() {
+        _logsState = AsyncValue.data(logs);
+      });
+    } catch (e, st) {
+      if (!mounted || requestID != _logRequestID) return;
+      setState(() {
+        _logsState = AsyncValue.error(e, st);
+      });
     }
   }
 
@@ -411,23 +450,80 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         '${two(local.hour)}:${two(local.minute)}:${two(local.second)}';
   }
 
-  Color _statusColor(int? statusCode) {
-    if (statusCode == null) return AppColors.textSecondary;
-    if (statusCode >= 500) return Colors.red.shade700;
-    if (statusCode >= 400) return Colors.orange.shade800;
-    return Colors.green.shade700;
+  String _sanitizeOneLine(String value) {
+    return value.replaceAll(RegExp(r'[\r\n]+'), ' ').trim();
   }
 
-  Widget _buildLogCard(AdminLogItem log) {
-    final statusText = log.statusCode?.toString() ?? 'n/a';
-    final methodLine = [
+  String _logPreviewLine(AdminLogItem log) {
+    final method = [
       if (log.httpMethod != null && log.httpMethod!.isNotEmpty) log.httpMethod!,
       if (log.path != null && log.path!.isNotEmpty) log.path!,
     ].join(' ');
-    final metadataText = (log.metadata == null || log.metadata!.isEmpty)
-        ? null
-        : jsonEncode(log.metadata);
+    final status = log.statusCode?.toString() ?? 'n/a';
+    final duration = log.durationMs != null ? '${log.durationMs}ms' : '-';
+    return '[${_formatEventTime(log.eventTime)}] '
+        '${log.source.toUpperCase()} '
+        '$status $duration '
+        '${_sanitizeOneLine(log.methodName)}'
+        '${method.isEmpty ? '' : ' ($method)'}';
+  }
 
+  String _activeLogUserLabel(List<AdminUserItem> users) {
+    if (_selectedLogUserId == null) return 'Все пользователи';
+    final selected = users.where((u) => u.id == _selectedLogUserId).toList();
+    if (selected.isEmpty) return _selectedLogUserId!;
+    final user = selected.first;
+    if (user.displayName != null && user.displayName!.isNotEmpty) {
+      return '${user.displayName} (${user.email})';
+    }
+    return user.email;
+  }
+
+  List<AdminLogItem> _logsForWindow(
+      List<AdminLogItem> logs, Duration duration, DateTime nowUtc) {
+    final threshold = nowUtc.subtract(duration);
+    return logs.where((log) {
+      final dt = DateTime.tryParse(log.eventTime)?.toUtc();
+      if (dt == null) return false;
+      return !dt.isBefore(threshold);
+    }).toList();
+  }
+
+  Future<void> _copyLogsWindow({
+    required String windowTitle,
+    required String userLabel,
+    required List<AdminLogItem> logs,
+  }) async {
+    final capped = logs.take(120).toList();
+    final sb = StringBuffer()
+      ..writeln('Окно: $windowTitle')
+      ..writeln('Пользователь: $userLabel')
+      ..writeln(
+          'Скопировано: ${capped.length} из ${logs.length} (время UTC: ${DateTime.now().toUtc().toIso8601String()})')
+      ..writeln('---');
+
+    for (final log in capped) {
+      sb.writeln(_logPreviewLine(log));
+      if (log.message != null && log.message!.isNotEmpty) {
+        sb.writeln('message: ${_sanitizeOneLine(log.message!)}');
+      }
+      if (log.metadata != null && log.metadata!.isNotEmpty) {
+        sb.writeln('metadata: ${jsonEncode(log.metadata)}');
+      }
+      sb.writeln('');
+    }
+
+    await Clipboard.setData(ClipboardData(text: sb.toString()));
+    if (!mounted) return;
+    _showMessage(null, 'Скопировано ${capped.length} логов из "$windowTitle"');
+  }
+
+  Widget _buildLogWindowCard({
+    required _LogWindowSpec window,
+    required List<AdminLogItem> logs,
+    required String userLabel,
+  }) {
+    final previewLogs = logs.take(window.previewLimit).toList();
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),
@@ -437,6 +533,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         children: [
           Row(
             children: [
+              Expanded(
+                child: Text(
+                  window.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -445,87 +551,54 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                   border: Border.all(color: AppColors.textSecondary),
                 ),
                 child: Text(
-                  log.source.toUpperCase(),
+                  '${logs.length}',
                   style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
                     color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 6),
+              IconButton(
+                onPressed: logs.isEmpty
+                    ? null
+                    : () => _copyLogsWindow(
+                          windowTitle: window.title,
+                          userLabel: userLabel,
+                          logs: logs,
+                        ),
+                icon: const Icon(Icons.copy_rounded),
+                tooltip: 'Скопировать логи этого окна',
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (logs.isEmpty)
+            const Text(
+              'Нет записей в этом промежутке',
+              style: TextStyle(color: AppColors.textSecondary),
+            )
+          else ...[
+            for (final log in previewLogs)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: SelectableText(
+                  _logPreviewLine(log),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            if (logs.length > previewLogs.length)
               Text(
-                _formatEventTime(log.eventTime),
+                '... ещё ${logs.length - previewLogs.length} записей',
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            log.methodName,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          if (methodLine.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              methodLine,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _InfoChip(
-                icon: Icons.flag_rounded,
-                label: statusText,
-                color: _statusColor(log.statusCode),
-              ),
-              if (log.durationMs != null)
-                _InfoChip(
-                  icon: Icons.timer_outlined,
-                  label: '${log.durationMs} ms',
-                ),
-              if (log.userId != null && log.userId!.isNotEmpty)
-                _InfoChip(
-                  icon: Icons.person_outline_rounded,
-                  label: log.userId!,
-                ),
-            ],
-          ),
-          if (log.message != null && log.message!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              log.message!,
-              style: TextStyle(
-                fontSize: 13,
-                color: log.level == 'error'
-                    ? Colors.red.shade700
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ],
-          if (metadataText != null && metadataText.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            SelectableText(
-              metadataText,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 4,
-            ),
           ],
         ],
       ),
@@ -601,53 +674,152 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     );
   }
 
-  Widget _buildLogsTab(AsyncValue<List<AdminLogItem>> logsAsync) {
-    return logsAsync.when(
-      data: (logs) {
-        if (logs.isEmpty) {
-          return const Center(
-            child: Text(
-              'Логи пока пустые',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemBuilder: (context, index) => _buildLogCard(logs[index]),
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemCount: logs.length,
-        );
-      },
-      loading: () => const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.accentStart,
-        ),
-      ),
-      error: (err, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+  Widget _buildLogsTab(AsyncValue<List<AdminUserItem>> usersAsync) {
+    final users = usersAsync.valueOrNull ?? const <AdminUserItem>[];
+    final selectedValue = (_selectedLogUserId != null &&
+            users.any((u) => u.id == _selectedLogUserId))
+        ? _selectedLogUserId!
+        : '__all__';
+    final userLabel = _activeLogUserLabel(users);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        GradientCard(
+          margin: EdgeInsets.zero,
+          padding: const EdgeInsets.all(14),
+          animate: false,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.error_outline_rounded, size: 48, color: Colors.red.shade700),
-              const SizedBox(height: 16),
-              Text(
-                err.toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.red.shade700),
+              const Text(
+                'Логи по пользователю и промежуткам',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
               ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: selectedValue,
+                decoration: const InputDecoration(
+                  labelText: 'Пользователь',
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: '__all__',
+                    child: Text('Все пользователи'),
+                  ),
+                  ...users.map(
+                    (u) => DropdownMenuItem(
+                      value: u.id,
+                      child: Text(
+                        (u.displayName != null && u.displayName!.isNotEmpty)
+                            ? '${u.displayName} (${u.email})'
+                            : u.email,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  final nextUserID = value == '__all__' ? null : value;
+                  if (nextUserID == _selectedLogUserId) return;
+                  setState(() {
+                    _selectedLogUserId = nextUserID;
+                  });
+                  _loadLogs();
+                },
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.person_outline_rounded,
+                      size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Активный фильтр: $userLabel',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _loadLogs,
+                    tooltip: 'Обновить логи',
+                    icon: const Icon(Icons.refresh_rounded),
+                  ),
+                ],
+              ),
+              if (usersAsync.hasError)
+                Text(
+                  'Не удалось подгрузить список пользователей: ${usersAsync.error}',
+                  style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        _logsState.when(
+          data: (logs) {
+            final nowUtc = DateTime.now().toUtc();
+            if (logs.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'Логи не найдены для выбранного фильтра',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              );
+            }
+
+            return Column(
+              children: [
+                for (final window in _logWindows) ...[
+                  _buildLogWindowCard(
+                    window: window,
+                    logs: _logsForWindow(logs, window.duration, nowUtc),
+                    userLabel: userLabel,
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            );
+          },
+          loading: () => const Padding(
+            padding: EdgeInsets.only(top: 24),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accentStart,
+              ),
+            ),
+          ),
+          error: (err, _) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline_rounded,
+                    size: 48, color: Colors.red.shade700),
+                const SizedBox(height: 16),
+                Text(
+                  err.toString(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.red.shade700),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(adminUsersProvider);
-    final logsAsync = ref.watch(adminLogsProvider);
     final repo = ref.read(adminRepositoryProvider);
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.valueOrNull?.id;
@@ -704,7 +876,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                 controller: _tabController,
                 children: [
                   _buildUsersTab(context, repo, currentUserId, usersAsync),
-                  _buildLogsTab(logsAsync),
+                  _buildLogsTab(usersAsync),
                 ],
               ),
             ),
@@ -741,4 +913,16 @@ class _InfoChip extends StatelessWidget {
       ],
     );
   }
+}
+
+class _LogWindowSpec {
+  const _LogWindowSpec({
+    required this.title,
+    required this.duration,
+    this.previewLimit = 8,
+  });
+
+  final String title;
+  final Duration duration;
+  final int previewLimit;
 }

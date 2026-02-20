@@ -180,11 +180,24 @@ class AdminRepository {
     }
   }
 
-  Future<List<AdminLogItem>> listLogs({int limit = 100, int offset = 0}) async {
+  Future<List<AdminLogItem>> listLogs({
+    int limit = 100,
+    int offset = 0,
+    String? userId,
+    DateTime? from,
+    DateTime? to,
+  }) async {
     final token = await _token();
     if (token == null) throw AdminException(401, 'Not authenticated');
+    final query = <String, String>{
+      'limit': '$limit',
+      'offset': '$offset',
+      if (userId != null && userId.isNotEmpty) 'user_id': userId,
+      if (from != null) 'from': from.toUtc().toIso8601String(),
+      if (to != null) 'to': to.toUtc().toIso8601String(),
+    };
     final response = await ApiClient.get(
-      Uri.parse('$apiBaseUrl/api/admin/logs?limit=$limit&offset=$offset'),
+      Uri.parse('$apiBaseUrl/api/admin/logs').replace(queryParameters: query),
       headers: {'Authorization': 'Bearer $token'},
       operation: 'AdminRepository.listLogs',
     );

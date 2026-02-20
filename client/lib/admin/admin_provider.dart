@@ -10,8 +10,3 @@ final adminUsersProvider = FutureProvider.autoDispose<List<AdminUserItem>>((ref)
   final repo = ref.watch(adminRepositoryProvider);
   return repo.listUsers();
 });
-
-final adminLogsProvider = FutureProvider.autoDispose<List<AdminLogItem>>((ref) async {
-  final repo = ref.watch(adminRepositoryProvider);
-  return repo.listLogs();
-});

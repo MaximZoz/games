@@ -99,9 +99,12 @@ Authorization: Bearer <access_token>
 Логи сначала пишутся в файл (`APP_LOG_FILE`), затем импортируются в БД и читаются этим endpoint.
 
 ```
-GET /api/admin/logs?limit=100&offset=0
+GET /api/admin/logs?limit=100&offset=0&user_id=<uuid>&from=<RFC3339>&to=<RFC3339>
 Authorization: Bearer <access_token>
 ```
+
+Параметры `user_id`, `from`, `to` опциональны.  
+Пример: `from=2026-02-20T09:00:00Z`.
 
 Ответ `200 OK`:
 
