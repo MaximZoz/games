@@ -221,6 +221,7 @@ func main() {
 	}
 
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
+	friendsHandler := &api.FriendsHandler{Pool: pool}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{
 		Pool:        pool,
@@ -245,6 +246,13 @@ func main() {
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
+	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
+	mux.Handle("/api/friends/search", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.Search)))
+	mux.Handle("/api/friends/request", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.SendRequest)))
+	mux.Handle("/api/friends/accept", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.AcceptRequest)))
+	mux.Handle("/api/friends/reject", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RejectRequest)))
+	mux.Handle("/api/friends/cancel", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.CancelRequest)))
+	mux.Handle("/api/friends/remove", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RemoveFriend)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
@@ -272,7 +280,8 @@ func main() {
 	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
-	log.Printf("POST /api/auth/register, POST /api/auth/login, GET /api/me (Bearer)")
+	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
+	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
 	_ = rdb
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)
