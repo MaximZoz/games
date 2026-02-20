@@ -107,13 +107,17 @@ class AdminRepository {
 
   final AuthRepository _auth;
 
-  Future<String> _token() async {
-    await _auth.init();
-    final token = await _auth.getAccessToken();
-    if (token == null || token.isEmpty) {
-      throw AdminException(401, 'Сессия истекла. Войдите заново.');
+  Future<http.Response> _authorizedRequest(
+    Future<http.Response> Function(String token) request,
+  ) async {
+    try {
+      return await _auth.sendAuthorized(request);
+    } on AuthException catch (e) {
+      throw AdminException(
+        e.statusCode,
+        e.statusCode == 401 ? 'Сессия истекла. Войдите заново.' : e.message,
+      );
     }
-    return token;
   }
 
   Never _throwForErrorResponse(http.Response response) {
@@ -135,11 +139,12 @@ class AdminRepository {
   }
 
   Future<List<AdminUserItem>> listUsers() async {
-    final token = await _token();
-    final response = await ApiClient.get(
-      Uri.parse('$apiBaseUrl/api/admin/users'),
-      headers: {'Authorization': 'Bearer $token'},
-      operation: 'AdminRepository.listUsers',
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/admin/users'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AdminRepository.listUsers',
+      ),
     );
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
@@ -152,15 +157,16 @@ class AdminRepository {
   }
 
   Future<void> setAdmin(String userId, bool isAdmin) async {
-    final token = await _token();
-    final response = await ApiClient.post(
-      Uri.parse('$apiBaseUrl/api/admin/users/set-admin'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'user_id': userId, 'is_admin': isAdmin}),
-      operation: 'AdminRepository.setAdmin',
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/admin/users/set-admin'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'user_id': userId, 'is_admin': isAdmin}),
+        operation: 'AdminRepository.setAdmin',
+      ),
     );
     if (response.statusCode != 204) {
       _throwForErrorResponse(response);
@@ -168,15 +174,16 @@ class AdminRepository {
   }
 
   Future<void> resetPassword(String userId, String newPassword) async {
-    final token = await _token();
-    final response = await ApiClient.post(
-      Uri.parse('$apiBaseUrl/api/admin/users/reset-password'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'user_id': userId, 'new_password': newPassword}),
-      operation: 'AdminRepository.resetPassword',
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/admin/users/reset-password'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'user_id': userId, 'new_password': newPassword}),
+        operation: 'AdminRepository.resetPassword',
+      ),
     );
     if (response.statusCode != 204) {
       _throwForErrorResponse(response);
@@ -184,15 +191,16 @@ class AdminRepository {
   }
 
   Future<void> deleteUser(String userId) async {
-    final token = await _token();
-    final response = await ApiClient.post(
-      Uri.parse('$apiBaseUrl/api/admin/users/delete'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'user_id': userId}),
-      operation: 'AdminRepository.deleteUser',
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/admin/users/delete'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'user_id': userId}),
+        operation: 'AdminRepository.deleteUser',
+      ),
     );
     if (response.statusCode != 204) {
       _throwForErrorResponse(response);
@@ -207,7 +215,6 @@ class AdminRepository {
     DateTime? from,
     DateTime? to,
   }) async {
-    final token = await _token();
     final query = <String, String>{
       'limit': '$limit',
       'offset': '$offset',
@@ -216,10 +223,12 @@ class AdminRepository {
       if (from != null) 'from': from.toUtc().toIso8601String(),
       if (to != null) 'to': to.toUtc().toIso8601String(),
     };
-    final response = await ApiClient.get(
-      Uri.parse('$apiBaseUrl/api/admin/logs').replace(queryParameters: query),
-      headers: {'Authorization': 'Bearer $token'},
-      operation: 'AdminRepository.listLogs',
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/admin/logs').replace(queryParameters: query),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AdminRepository.listLogs',
+      ),
     );
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);

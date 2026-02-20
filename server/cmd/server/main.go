@@ -220,6 +220,7 @@ func main() {
 	mux.HandleFunc("/api/start", handleStart)
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
+	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
