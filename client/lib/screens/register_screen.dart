@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -64,6 +65,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final keyboardLikelyVisible = bottomInset > 0 || media.size.height < 500;
     final bottomPadding = 24.0 + bottomInset;
     final topPadding = keyboardLikelyVisible ? 12.0 : 0.0;
+    final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -76,7 +78,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.fromLTRB(24, topPadding, 24, bottomPadding),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+                constraints: BoxConstraints(maxWidth: formMaxWidth),
                 child: GradientCard(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 28, vertical: 32),

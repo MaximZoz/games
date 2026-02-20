@@ -8,9 +8,12 @@ class Breakpoints {
 }
 
 bool isNarrow(BuildContext context) {
-  return MediaQuery.sizeOf(context).width < Breakpoints.mobile;
+  final size = MediaQuery.sizeOf(context);
+  // На iPhone в landscape width часто > 700, но это всё ещё мобильный сценарий.
+  final isLandscapePhone = size.height < 500 && size.shortestSide < Breakpoints.mobile;
+  return size.width < Breakpoints.mobile || isLandscapePhone;
 }
 
 bool isWide(BuildContext context) {
-  return MediaQuery.sizeOf(context).width >= Breakpoints.mobile;
+  return !isNarrow(context);
 }
