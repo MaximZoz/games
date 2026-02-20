@@ -93,34 +93,162 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         '${two(local.hour)}:${two(local.minute)}';
   }
 
+  String? _genderLabel(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    switch (normalized) {
+      case 'male':
+      case 'm':
+      case 'man':
+      case 'м':
+      case 'муж':
+      case 'мужской':
+        return 'Мужской';
+      case 'female':
+      case 'f':
+      case 'woman':
+      case 'ж':
+      case 'жен':
+      case 'женский':
+        return 'Женский';
+      default:
+        return value;
+    }
+  }
+
   Future<void> _showRequestInfoDialog({
     required FriendUserItem user,
     required bool incoming,
+    required String createdAt,
   }) async {
     final name = _displayName(user);
-    final roleText = incoming ? 'Отправитель заявки' : 'Получатель заявки';
+    final roleText = incoming ? 'Отправил(а) вам заявку в друзья' : 'Вы отправили заявку в друзья';
+    final about = user.about?.trim();
+    final gender = _genderLabel(user.gender);
+    final chips = <String>[
+      if (user.age != null && user.age! > 0) '${user.age} лет',
+      if (gender != null && gender.isNotEmpty) gender,
+    ];
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Информация о пользователе'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$roleText: $name'),
-              const SizedBox(height: 8),
-              Text('Email: ${user.email}'),
-              const SizedBox(height: 8),
-              Text('ID: ${user.id}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Закрыть'),
+        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          backgroundColor: Colors.transparent,
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAvatar(user),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user.email,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  roleText,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Дата заявки: ${_formatDateTime(createdAt)}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                if (chips.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: chips
+                        .map(
+                          (chip) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentSoft,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              chip,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+                if (about != null && about.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'О себе',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    about,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -415,7 +543,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: IconButton(
             tooltip: 'Информация о пользователе',
-            onPressed: () => _showRequestInfoDialog(user: item.user, incoming: true),
+            onPressed: () => _showRequestInfoDialog(
+              user: item.user,
+              incoming: true,
+              createdAt: item.createdAt,
+            ),
             icon: const Icon(Icons.info_outline_rounded),
           ),
           actions: [
@@ -459,7 +591,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: IconButton(
             tooltip: 'Информация о пользователе',
-            onPressed: () => _showRequestInfoDialog(user: item.user, incoming: false),
+            onPressed: () => _showRequestInfoDialog(
+              user: item.user,
+              incoming: false,
+              createdAt: item.createdAt,
+            ),
             icon: const Icon(Icons.info_outline_rounded),
           ),
           actions: [
@@ -768,38 +904,50 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               ),
             _buildSearchResults(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
               child: TabBar(
                 controller: _tabController,
-                isScrollable: compact,
-                tabAlignment: compact ? TabAlignment.start : TabAlignment.fill,
-                padding: compact ? const EdgeInsets.symmetric(horizontal: 2) : EdgeInsets.zero,
-                labelPadding: compact
-                    ? const EdgeInsets.symmetric(horizontal: 8)
-                    : const EdgeInsets.symmetric(horizontal: 14),
+                isScrollable: false,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                indicatorSize: TabBarIndicatorSize.tab,
                 labelStyle: TextStyle(
-                  fontSize: compact ? 13 : 16,
+                  fontSize: compact ? 12 : 15,
                   fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: compact ? 13 : 16,
+                  fontSize: compact ? 12 : 15,
                   fontWeight: FontWeight.w500,
                 ),
                 tabs: [
                   Tab(
-                    text: friendsAsync.valueOrNull == null
-                        ? 'Друзья'
-                        : 'Друзья (${friendsAsync.valueOrNull!.friends.length})',
+                    child: Text(
+                      friendsAsync.valueOrNull == null
+                          ? 'Друзья'
+                          : 'Друзья (${friendsAsync.valueOrNull!.friends.length})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   Tab(
-                    text: friendsAsync.valueOrNull == null
-                        ? 'Входящие'
-                        : 'Входящие (${friendsAsync.valueOrNull!.incoming.length})',
+                    child: Text(
+                      friendsAsync.valueOrNull == null
+                          ? 'Входящие'
+                          : 'Входящие (${friendsAsync.valueOrNull!.incoming.length})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   Tab(
-                    text: friendsAsync.valueOrNull == null
-                        ? 'Исходящие'
-                        : 'Исходящие (${friendsAsync.valueOrNull!.outgoing.length})',
+                    child: Text(
+                      friendsAsync.valueOrNull == null
+                          ? 'Исходящие'
+                          : 'Исходящие (${friendsAsync.valueOrNull!.outgoing.length})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),

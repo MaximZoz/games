@@ -24,6 +24,9 @@ type FriendUserItem struct {
 	DisplayName *string `json:"display_name,omitempty"`
 	AvatarKind  string  `json:"avatar_kind,omitempty"`
 	AvatarValue *string `json:"avatar_value,omitempty"`
+	Age         *int    `json:"age,omitempty"`
+	Gender      *string `json:"gender,omitempty"`
+	About       *string `json:"about,omitempty"`
 }
 
 type FriendItem struct {
@@ -62,6 +65,9 @@ func friendUserToItem(u store.FriendUser) FriendUserItem {
 		DisplayName: u.DisplayName,
 		AvatarKind:  u.AvatarKind,
 		AvatarValue: u.AvatarValue,
+		Age:         u.Age,
+		Gender:      u.Gender,
+		About:       u.About,
 	}
 }
 

@@ -11,6 +11,9 @@ class FriendUserItem {
   final String? displayName;
   final String avatarKind;
   final String? avatarValue;
+  final int? age;
+  final String? gender;
+  final String? about;
 
   FriendUserItem({
     required this.id,
@@ -18,6 +21,9 @@ class FriendUserItem {
     this.displayName,
     this.avatarKind = 'letter',
     this.avatarValue,
+    this.age,
+    this.gender,
+    this.about,
   });
 
   factory FriendUserItem.fromJson(Map<String, dynamic> json) {
@@ -27,6 +33,9 @@ class FriendUserItem {
       displayName: json['display_name'] as String?,
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
+      age: json['age'] as int?,
+      gender: json['gender'] as String?,
+      about: json['about'] as String?,
     );
   }
 }
