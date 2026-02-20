@@ -20,6 +20,12 @@ class AdminScreen extends ConsumerStatefulWidget {
 class _AdminScreenState extends ConsumerState<AdminScreen>
     with SingleTickerProviderStateMixin {
   static const String _sourceAll = '__all__';
+  static const List<_CopyLimitSpec> _copyLimitOptions = [
+    _CopyLimitSpec(label: '120', value: 120),
+    _CopyLimitSpec(label: '500', value: 500),
+    _CopyLimitSpec(label: '1000', value: 1000),
+    _CopyLimitSpec(label: 'Все', value: null),
+  ];
   static const List<_LogWindowSpec> _logWindows = [
     _LogWindowSpec(title: 'Последние 5 минут', duration: Duration(minutes: 5)),
     _LogWindowSpec(title: 'Последние 15 минут', duration: Duration(minutes: 15)),
@@ -33,6 +39,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
   late final TabController _tabController;
   String? _selectedLogUserId;
   String _selectedLogSource = _sourceAll;
+  int? _copyLimit = 120;
   AsyncValue<List<AdminLogItem>> _logsState = const AsyncValue.loading();
   int _logRequestID = 0;
 
@@ -493,6 +500,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     }
   }
 
+  String _copyLimitLabel() {
+    if (_copyLimit == null) return 'Все';
+    return '$_copyLimit';
+  }
+
+  List<AdminLogItem> _applyCopyLimit(List<AdminLogItem> logs) {
+    if (_copyLimit == null) return List<AdminLogItem>.from(logs);
+    return logs.take(_copyLimit!).toList();
+  }
+
   List<AdminLogItem> _logsForWindow(
       List<AdminLogItem> logs, Duration duration, DateTime nowUtc) {
     final threshold = nowUtc.subtract(duration);
@@ -508,10 +525,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     required String userLabel,
     required List<AdminLogItem> logs,
   }) async {
-    final capped = logs.take(120).toList();
+    final capped = _applyCopyLimit(logs);
     final sb = StringBuffer()
       ..writeln('Окно: $windowTitle')
       ..writeln('Пользователь: $userLabel')
+      ..writeln('Лимит копирования: ${_copyLimitLabel()}')
       ..writeln(
           'Скопировано: ${capped.length} из ${logs.length} (время UTC: ${DateTime.now().toUtc().toIso8601String()})')
       ..writeln('---');
@@ -529,7 +547,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
 
     await Clipboard.setData(ClipboardData(text: sb.toString()));
     if (!mounted) return;
-    _showMessage(null, 'Скопировано ${capped.length} логов из "$windowTitle"');
+    _showMessage(
+      null,
+      'Скопировано ${capped.length} логов из "$windowTitle" (лимит ${_copyLimitLabel()})',
+    );
   }
 
   Future<void> _copyAllWindows({
@@ -542,13 +563,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       ..writeln('Окна логов (все):')
       ..writeln('Пользователь: $userLabel')
       ..writeln('Источник: $sourceLabel')
+      ..writeln('Лимит копирования: ${_copyLimitLabel()}')
       ..writeln('UTC: ${nowUtc.toIso8601String()}')
       ..writeln('---');
 
     int totalCopied = 0;
     for (final window in _logWindows) {
       final windowLogs = _logsForWindow(logs, window.duration, nowUtc);
-      final capped = windowLogs.take(120).toList();
+      final capped = _applyCopyLimit(windowLogs);
       totalCopied += capped.length;
 
       sb.writeln();
@@ -574,7 +596,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
 
     await Clipboard.setData(ClipboardData(text: sb.toString()));
     if (!mounted) return;
-    _showMessage(null, 'Скопировано все окна: $totalCopied логов');
+    _showMessage(
+      null,
+      'Скопировано все окна: $totalCopied логов (лимит ${_copyLimitLabel()})',
+    );
   }
 
   Widget _buildLogWindowCard({
@@ -767,6 +792,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: selectedValue,
+                dropdownColor: AppColors.surfaceCard,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+                iconEnabledColor: AppColors.textPrimary,
                 decoration: const InputDecoration(
                   labelText: 'Пользователь',
                 ),
@@ -799,6 +830,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: sourceValue,
+                dropdownColor: AppColors.surfaceCard,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+                iconEnabledColor: AppColors.textPrimary,
                 decoration: const InputDecoration(
                   labelText: 'Источник',
                 ),
@@ -827,6 +864,33 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 10),
               Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _copyLimitOptions
+                    .map(
+                      (opt) => ChoiceChip(
+                        label: Text('Копировать: ${opt.label}'),
+                        selected: _copyLimit == opt.value,
+                        selectedColor: AppColors.accentSoft,
+                        checkmarkColor: AppColors.textPrimary,
+                        side: BorderSide(
+                          color: _copyLimit == opt.value
+                              ? AppColors.accentStart
+                              : AppColors.textSecondary.withOpacity(0.4),
+                        ),
+                        labelStyle: const TextStyle(color: AppColors.textPrimary),
+                        onSelected: (_) {
+                          if (_copyLimit == opt.value) return;
+                          setState(() {
+                            _copyLimit = opt.value;
+                          });
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
                 spacing: 10,
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
@@ -851,6 +915,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                       const SizedBox(width: 6),
                       Text(
                         sourceLabel,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.content_copy_rounded,
+                          size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Лимит: ${_copyLimitLabel()}',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
@@ -1047,4 +1123,14 @@ class _LogWindowSpec {
   final String title;
   final Duration duration;
   final int previewLimit;
+}
+
+class _CopyLimitSpec {
+  const _CopyLimitSpec({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final int? value;
 }
