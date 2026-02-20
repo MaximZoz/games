@@ -110,3 +110,41 @@ func TestLogin_EmptyCredentials(t *testing.T) {
 		}
 	}
 }
+
+func TestRefresh_MethodNotAllowed(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/refresh", nil)
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestRefresh_InvalidJSON(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", bytes.NewReader([]byte("{")))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestRefresh_EmptyToken(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", bytes.NewReader([]byte(`{"refresh_token":"  "}`)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}

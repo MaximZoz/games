@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -11,7 +12,10 @@ class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   Future<String> _fetchServerStart() async {
-    final response = await http.get(Uri.parse('$apiBaseUrl/api/start'));
+    final response = await ApiClient.get(
+      Uri.parse('$apiBaseUrl/api/start'),
+      operation: 'HomeScreen.fetchServerStart',
+    );
     if (response.statusCode == 200) {
       return response.body.trim();
     }
@@ -72,8 +76,11 @@ class HomeScreen extends ConsumerWidget {
                       );
                     }
                     if (error != null) {
+                      final message = error is http.ClientException
+                          ? 'Не удалось подключиться к серверу. Проверьте интернет или что сервер запущен.'
+                          : 'Ошибка: $error';
                       return Text(
-                        'Server: $error',
+                        message,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.red.shade700,

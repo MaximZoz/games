@@ -9,15 +9,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"multigames/server/internal/api"
+	"multigames/server/internal/applog"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/joho/godotenv"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -172,9 +175,64 @@ func main() {
 		log.Println("JWT_SECRET: using default (dev only)")
 	}
 
+	appLogFilePath := getEnv("APP_LOG_FILE", "logs/app_events.jsonl")
+	appLogStatePath := getEnv("APP_LOG_STATE_FILE", "logs/app_events.offset")
+	syncIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_SYNC_INTERVAL_SECONDS", "5"))
+	if err != nil || syncIntervalSeconds <= 0 {
+		syncIntervalSeconds = 5
+	}
+	retentionDays, err := strconv.Atoi(getEnv("APP_LOG_RETENTION_DAYS", "30"))
+	if err != nil || retentionDays < 0 {
+		retentionDays = 30
+	}
+	cleanupIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_CLEANUP_INTERVAL_SECONDS", "3600"))
+	if err != nil || cleanupIntervalSeconds <= 0 {
+		cleanupIntervalSeconds = 3600
+	}
+	retentionDuration := time.Duration(retentionDays) * 24 * time.Hour
+	cleanupIntervalDuration := time.Duration(cleanupIntervalSeconds) * time.Second
+	if retentionDuration > 0 {
+		log.Printf(
+			"App logs retention: delete older than %d days (every %s)",
+			retentionDays,
+			cleanupIntervalDuration,
+		)
+	} else {
+		log.Printf("App logs retention: disabled")
+	}
+
+	logWriter, err := applog.NewFileWriter(appLogFilePath)
+	if err != nil {
+		log.Fatalf("App logs file: %v", err)
+	}
+	defer logWriter.Close()
+
+	logImporter := applog.NewImporter(
+		pool,
+		appLogFilePath,
+		appLogStatePath,
+		time.Duration(syncIntervalSeconds)*time.Second,
+		retentionDuration,
+		cleanupIntervalDuration,
+	)
+	logImporter.Start(ctx)
+	if err := logImporter.SyncNow(ctx); err != nil {
+		log.Printf("App logs initial sync failed: %v", err)
+	}
+
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
+	friendsHandler := &api.FriendsHandler{Pool: pool}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
-	adminHandler := &api.AdminHandler{Pool: pool, JWTSecret: []byte(jwtSecret), InitSecret: adminInitSecret}
+	adminHandler := &api.AdminHandler{
+		Pool:        pool,
+		JWTSecret:   []byte(jwtSecret),
+		InitSecret:  adminInitSecret,
+		LogImporter: logImporter,
+	}
+	frontendLogHandler := &api.FrontendLogHandler{
+		Writer:    logWriter,
+		JWTSecret: []byte(jwtSecret),
+	}
 
 	adminAuth := func(next http.HandlerFunc) http.Handler {
 		return api.RequireAuth([]byte(jwtSecret), api.RequireAdmin(pool, next))
@@ -184,15 +242,26 @@ func main() {
 	mux.HandleFunc("/api/start", handleStart)
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
+	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
+	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
+	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
+	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
+	mux.Handle("/api/friends/search", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.Search)))
+	mux.Handle("/api/friends/request", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.SendRequest)))
+	mux.Handle("/api/friends/accept", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.AcceptRequest)))
+	mux.Handle("/api/friends/reject", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RejectRequest)))
+	mux.Handle("/api/friends/cancel", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.CancelRequest)))
+	mux.Handle("/api/friends/remove", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RemoveFriend)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
+	mux.Handle("/api/admin/logs", adminAuth(http.HandlerFunc(adminHandler.ListLogs)))
 	mux.Handle("/api/admin/users/set-admin", adminAuth(http.HandlerFunc(adminHandler.SetAdmin)))
 	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
 	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
 
-	corsHandler := api.CORS(mux)
+	corsHandler := api.CORS(api.RequestLogger([]byte(jwtSecret), logWriter, mux))
 	var finalHandler http.Handler = corsHandler
 	if _, err := webFS.Open("web/index.html"); err == nil {
 		finalHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +280,8 @@ func main() {
 	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
-	log.Printf("POST /api/auth/register, POST /api/auth/login, GET /api/me (Bearer)")
+	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
+	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
 	_ = rdb
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)

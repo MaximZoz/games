@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -46,7 +48,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e is AuthException ? e.message : e.toString();
+          if (e is AuthException) {
+            _errorMessage = e.message;
+          } else if (e is http.ClientException) {
+            _errorMessage = 'Не удалось подключиться к серверу.';
+          } else {
+            _errorMessage = e.toString();
+          }
           _isLoading = false;
         });
       }
@@ -58,18 +66,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final bottomInset = media.viewInsets.bottom;
-    // На веб/iOS viewInsets при клавиатуре часто 0 — даём запас снизу на малых экранах.
-    final viewportHeight = media.size.height;
-    final extraBottom = viewportHeight < 450 ? 280.0 : 0.0;
+    final keyboardLikelyVisible = bottomInset > 0 || media.size.height < 500;
+    final bottomPadding = 24.0 + bottomInset;
+    final topPadding = keyboardLikelyVisible ? 12.0 : 0.0;
+    final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment:
+                keyboardLikelyVisible ? Alignment.topCenter : Alignment.center,
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomInset + extraBottom),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(24, topPadding, 24, bottomPadding),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+                constraints: BoxConstraints(maxWidth: formMaxWidth),
                 child: GradientCard(
                   padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
                   child: Form(
@@ -86,9 +98,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Введите email или логин и пароль',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 14,
                           ),

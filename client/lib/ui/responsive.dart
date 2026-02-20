@@ -8,9 +8,12 @@ class Breakpoints {
 }
 
 bool isNarrow(BuildContext context) {
-  return MediaQuery.sizeOf(context).width < Breakpoints.mobile;
+  final size = MediaQuery.sizeOf(context);
+  // Для телефонов ориентируемся на shortestSide:
+  // в landscape width может быть большой, но shortestSide остаётся "мобильным".
+  return size.shortestSide < Breakpoints.mobile;
 }
 
 bool isWide(BuildContext context) {
-  return MediaQuery.sizeOf(context).width >= Breakpoints.mobile;
+  return !isNarrow(context);
 }

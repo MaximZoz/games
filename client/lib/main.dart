@@ -78,8 +78,7 @@ class MultiGamesApp extends ConsumerWidget {
         ),
         textTheme: _textThemeNoUnderline(ThemeData.light().textTheme),
         inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.surfaceCard,
+          filled: false,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.input)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.input),
@@ -90,8 +89,6 @@ class MultiGamesApp extends ConsumerWidget {
             borderSide: const BorderSide(color: AppColors.accentStart, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          focusColor: AppColors.accentStart,
-          hoverColor: AppColors.accentSoft,
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(

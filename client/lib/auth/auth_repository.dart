@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,12 +14,22 @@ class AuthUser {
   final String email;
   final String? displayName;
   final bool isAdmin;
+  final int? age;
+  final String? gender;
+  final String? about;
+  final String avatarKind;
+  final String? avatarValue;
 
   AuthUser({
     required this.id,
     required this.email,
     this.displayName,
     this.isAdmin = false,
+    this.age,
+    this.gender,
+    this.about,
+    this.avatarKind = 'letter',
+    this.avatarValue,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -27,8 +38,25 @@ class AuthUser {
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
       isAdmin: json['is_admin'] as bool? ?? false,
+      age: json['age'] as int?,
+      gender: json['gender'] as String?,
+      about: json['about'] as String?,
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'email': email,
+        'display_name': displayName,
+        'is_admin': isAdmin,
+        'age': age,
+        'gender': gender,
+        'about': about,
+        'avatar_kind': avatarKind,
+        'avatar_value': avatarValue,
+      };
 }
 
 class AuthResult {
@@ -49,10 +77,28 @@ class AuthRepository {
   AuthRepository({SharedPreferences? prefs}) : _prefs = prefs;
 
   SharedPreferences? _prefs;
-  SharedPreferences get prefs => _prefs!;
+  bool _prefsUnavailable = false;
+  String? _memoryAccessToken;
+  String? _memoryRefreshToken;
+  AuthUser? _memoryUser;
+  Future<String?>? _refreshInFlight;
+
+  SharedPreferences get prefs {
+    final p = _prefs;
+    if (p == null) {
+      throw StateError('SharedPreferences is not available');
+    }
+    return p;
+  }
 
   Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
+    if (_prefs != null || _prefsUnavailable) return;
+    try {
+      _prefs = await SharedPreferences.getInstance();
+    } catch (_) {
+      _prefsUnavailable = true;
+      _prefs = null;
+    }
   }
 
   Future<AuthResult> register({
@@ -62,7 +108,7 @@ class AuthRepository {
   }) async {
     await init();
     final uri = Uri.parse('$apiBaseUrl/api/auth/register');
-    final response = await http.post(
+    final response = await ApiClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -70,6 +116,7 @@ class AuthRepository {
         'password': password,
         if (displayName.isNotEmpty) 'display_name': displayName,
       }),
+      operation: 'AuthRepository.register',
     );
     return _handleAuthResponse(response);
   }
@@ -80,13 +127,14 @@ class AuthRepository {
   }) async {
     await init();
     final uri = Uri.parse('$apiBaseUrl/api/auth/login');
-    final response = await http.post(
+    final response = await ApiClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email.trim(),
         'password': password,
       }),
+      operation: 'AuthRepository.login',
     );
     return _handleAuthResponse(response);
   }
@@ -106,14 +154,16 @@ class AuthRepository {
     final expiresIn = body['expires_in'] as int? ?? 900;
     final user = AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map));
 
-    await prefs.setString(_keyAccessToken, accessToken);
-    await prefs.setString(_keyRefreshToken, refreshToken);
-    await prefs.setString(_keyUser, jsonEncode({
-      'id': user.id,
-      'email': user.email,
-      'display_name': user.displayName,
-      'is_admin': user.isAdmin,
-    }));
+    _memoryAccessToken = accessToken;
+    _memoryRefreshToken = refreshToken;
+    _memoryUser = user;
+
+    await _safePersistSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: user,
+    );
+
     return AuthResult(
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -123,22 +173,258 @@ class AuthRepository {
   }
 
   Future<String?> getAccessToken() async {
-    await init();
-    return prefs.getString(_keyAccessToken);
+    String? token = _memoryAccessToken;
+    if (token == null || token.isEmpty) {
+      await init();
+      if (_prefs != null) {
+        try {
+          token = _prefs!.getString(_keyAccessToken);
+        } catch (_) {
+          token = null;
+        }
+      }
+      if (token != null && token.isNotEmpty) {
+        _memoryAccessToken = token;
+      }
+    }
+
+    if (token == null || token.isEmpty) {
+      return _refreshAccessToken();
+    }
+
+    if (_isJwtExpired(token)) {
+      return _refreshAccessToken();
+    }
+
+    return token;
   }
 
   Future<AuthUser?> getStoredUser() async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) return null;
+
+    if (_memoryUser != null) return _memoryUser;
+
     await init();
-    final jsonStr = prefs.getString(_keyUser);
+    if (_prefs == null) return null;
+
+    String? jsonStr;
+    try {
+      jsonStr = _prefs!.getString(_keyUser);
+    } catch (_) {
+      jsonStr = null;
+    }
     if (jsonStr == null) return null;
-    return AuthUser.fromJson(Map<String, dynamic>.from(jsonDecode(jsonStr) as Map));
+    try {
+      final user = AuthUser.fromJson(Map<String, dynamic>.from(jsonDecode(jsonStr) as Map));
+      _memoryUser = user;
+      return user;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> logout() async {
+    _memoryAccessToken = null;
+    _memoryRefreshToken = null;
+    _memoryUser = null;
+    _refreshInFlight = null;
+
     await init();
-    await prefs.remove(_keyAccessToken);
-    await prefs.remove(_keyRefreshToken);
-    await prefs.remove(_keyUser);
+    if (_prefs == null) return;
+    try {
+      await _prefs!.remove(_keyAccessToken);
+      await _prefs!.remove(_keyRefreshToken);
+      await _prefs!.remove(_keyUser);
+    } catch (_) {}
+  }
+
+  Future<http.Response> sendAuthorized(
+    Future<http.Response> Function(String accessToken) request,
+  ) async {
+    var token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw AuthException(401, 'Сессия истекла. Войдите заново.');
+    }
+
+    var response = await request(token);
+    if (response.statusCode != 401) return response;
+
+    token = await _refreshAccessToken();
+    if (token == null || token.isEmpty) {
+      throw AuthException(401, 'Сессия истекла. Войдите заново.');
+    }
+
+    response = await request(token);
+    if (response.statusCode == 401) {
+      await logout();
+      throw AuthException(401, 'Сессия истекла. Войдите заново.');
+    }
+
+    return response;
+  }
+
+  /// Обновляет профиль пользователя на бэкенде и сохраняет результат локально.
+  Future<AuthUser> updateProfile({
+    required String? displayName,
+    int? age,
+    String? gender,
+    String? about,
+    String? avatarKind,
+    String? avatarValue,
+  }) async {
+    await init();
+    final current = await getStoredUser();
+    if (current == null) throw AuthException(401, 'Не авторизован');
+
+    final name = displayName?.trim().isEmpty == true ? null : displayName?.trim();
+
+    final uri = Uri.parse('$apiBaseUrl/api/profile');
+    final response = await sendAuthorized(
+      (token) => ApiClient.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'display_name': name,
+          'age': age,
+          'gender': gender,
+          'about': about,
+          'avatar_kind': avatarKind,
+          'avatar_value': avatarValue,
+        }),
+        operation: 'AuthRepository.updateProfile',
+      ),
+    );
+
+    if (response.statusCode != 200) {
+      String msg = response.body;
+      try {
+        final body = jsonDecode(response.body);
+        if (body is Map) msg = (body['message'] ?? body['error'] ?? msg).toString();
+      } catch (_) {}
+      throw AuthException(response.statusCode, msg);
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final user = body['user'] != null
+        ? AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map))
+        : AuthUser(
+            id: current.id,
+            email: current.email,
+            displayName: name,
+            isAdmin: current.isAdmin,
+            age: age,
+            gender: gender,
+            about: about,
+            avatarKind: avatarKind ?? 'letter',
+            avatarValue: avatarValue,
+          );
+    await _saveUser(user);
+    return user;
+  }
+
+  Future<void> _saveUser(AuthUser user) async {
+    _memoryUser = user;
+    await init();
+    if (_prefs == null) return;
+    try {
+      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+    } catch (_) {}
+  }
+
+  Future<void> _safePersistSession({
+    required String accessToken,
+    required String refreshToken,
+    required AuthUser user,
+  }) async {
+    await init();
+    if (_prefs == null) return;
+    try {
+      await _prefs!.setString(_keyAccessToken, accessToken);
+      await _prefs!.setString(_keyRefreshToken, refreshToken);
+      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+    } catch (_) {
+      // На Web в private mode может быть QuotaExceededError.
+      // Сессию оставляем в памяти, чтобы вход работал в текущей вкладке.
+    }
+  }
+
+  Future<String?> _refreshAccessToken() async {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null) return inFlight;
+
+    final future = _refreshAccessTokenImpl();
+    _refreshInFlight = future;
+    try {
+      return await future;
+    } finally {
+      _refreshInFlight = null;
+    }
+  }
+
+  Future<String?> _refreshAccessTokenImpl() async {
+    final refreshToken = await _getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      await logout();
+      return null;
+    }
+
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/refresh'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh_token': refreshToken}),
+      operation: 'AuthRepository.refresh',
+    );
+    if (response.statusCode != 200) {
+      await logout();
+      return null;
+    }
+
+    try {
+      final result = await _handleAuthResponse(response);
+      return result.accessToken;
+    } catch (_) {
+      await logout();
+      return null;
+    }
+  }
+
+  Future<String?> _getRefreshToken() async {
+    if (_memoryRefreshToken != null && _memoryRefreshToken!.isNotEmpty) {
+      return _memoryRefreshToken;
+    }
+
+    await init();
+    if (_prefs != null) {
+      try {
+        final stored = _prefs!.getString(_keyRefreshToken);
+        if (stored != null && stored.isNotEmpty) {
+          _memoryRefreshToken = stored;
+          return stored;
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  bool _isJwtExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length < 2) return false;
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final body = jsonDecode(decoded) as Map<String, dynamic>;
+      final exp = body['exp'];
+      if (exp is! num) return false;
+      final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      return nowSec >= exp.toInt();
+    } catch (_) {
+      return false;
+    }
   }
 }
 

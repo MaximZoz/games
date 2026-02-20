@@ -43,6 +43,34 @@ Content-Type: application/json
 
 Формат ответа такой же, как при регистрации.
 
+### Обновление access-токена (refresh flow)
+
+```
+POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "eyJ..."
+}
+```
+
+Ответ `200 OK`:
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "expires_in": 900,
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "display_name": "Игрок",
+    "is_admin": false
+  }
+}
+```
+
+Если refresh-токен невалидный/протух — `401 Unauthorized`.
+
 ### Текущий пользователь (защищённый эндпоинт)
 
 ```
@@ -61,6 +89,110 @@ Authorization: Bearer <access_token>
 ```
 
 При отсутствии или невалидном токене — `401 Unauthorized`.
+
+---
+
+## Друзья
+
+Все эндпоинты ниже требуют:
+`Authorization: Bearer <access_token>`.
+
+### Список друзей и заявок
+
+```
+GET /api/friends
+Authorization: Bearer <access_token>
+```
+
+Ответ `200 OK`:
+```json
+{
+  "friends": [
+    {
+      "user": { "id": "uuid", "email": "a@b.c", "display_name": "Player" },
+      "created_at": "2026-02-20T15:00:00Z"
+    }
+  ],
+  "incoming": [
+    {
+      "request_id": "uuid",
+      "user": { "id": "uuid", "email": "x@y.z" },
+      "created_at": "2026-02-20T15:10:00Z"
+    }
+  ],
+  "outgoing": []
+}
+```
+
+### Поиск пользователей для добавления
+
+```
+GET /api/friends/search?q=nick_or_email&limit=20
+Authorization: Bearer <access_token>
+```
+
+`relation_status` в ответе: `none | friend | incoming | outgoing`.
+
+### Отправить заявку в друзья
+
+```
+POST /api/friends/request
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "target_user_id": "uuid" }
+```
+
+Ответ `201 Created`:
+`{ "request_id": "uuid" }`
+
+### Принять заявку
+
+```
+POST /api/friends/accept
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "request_id": "uuid" }
+```
+
+Ответ `204 No Content`.
+
+### Отклонить заявку
+
+```
+POST /api/friends/reject
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "request_id": "uuid" }
+```
+
+Ответ `204 No Content`.
+
+### Отменить исходящую заявку
+
+```
+POST /api/friends/cancel
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "request_id": "uuid" }
+```
+
+Ответ `204 No Content`.
+
+### Удалить из друзей
+
+```
+POST /api/friends/remove
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "friend_user_id": "uuid" }
+```
+
+Ответ `204 No Content`.
 
 ---
 
@@ -93,6 +225,39 @@ Authorization: Bearer <access_token>
 ```
 
 Ответ `200 OK`: `{ "users": [ { "id", "email", "display_name", "is_admin", "created_at" }, ... ] }`
+
+### Список логов (админка)
+
+Логи сначала пишутся в файл (`APP_LOG_FILE`), затем импортируются в БД и читаются этим endpoint.
+
+```
+GET /api/admin/logs?limit=100&offset=0&user_id=<uuid>&source=frontend|backend&from=<RFC3339>&to=<RFC3339>
+Authorization: Bearer <access_token>
+```
+
+Параметры `user_id`, `source`, `from`, `to` опциональны.  
+Пример: `from=2026-02-20T09:00:00Z`.
+
+Ответ `200 OK`:
+
+```json
+{
+  "logs": [
+    {
+      "event_id": "uuid-or-text",
+      "event_time": "2026-02-20T12:34:56.123Z",
+      "source": "frontend|backend",
+      "method_name": "AuthRepository.login|http.request",
+      "http_method": "GET|POST|PUT",
+      "path": "/api/auth/login",
+      "status_code": 200,
+      "duration_ms": 42
+    }
+  ],
+  "limit": 100,
+  "offset": 0
+}
+```
 
 ### Назначить/снять админа
 
@@ -129,3 +294,28 @@ Content-Type: application/json
 ```
 
 Ответ `204 No Content`. Удалить самого себя нельзя (`400`).
+
+---
+
+## Логирование методов фронтенда
+
+Клиент отправляет события (методы API фронта) в endpoint:
+
+```
+POST /api/logs/frontend
+Content-Type: application/json
+Authorization: Bearer <access_token>   // опционально
+
+{
+  "event_time": "2026-02-20T12:34:56.123Z",
+  "method_name": "AuthRepository.login",
+  "http_method": "POST",
+  "path": "/api/auth/login",
+  "status_code": 200,
+  "duration_ms": 42,
+  "message": "ошибка (если есть)",
+  "metadata": { "url": "http://localhost:8080/api/auth/login" }
+}
+```
+
+События не выдаются напрямую этим endpoint — они попадают в админку через `/api/admin/logs`.

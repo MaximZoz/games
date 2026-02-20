@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/auth/profile_extra.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
@@ -12,6 +13,23 @@ final authUserProvider = FutureProvider<AuthUser?>((ref) async {
 
 final authStateProvider = StateNotifierProvider<AuthStateNotifier, AsyncValue<AuthUser?>>((ref) {
   return AuthStateNotifier(ref);
+});
+
+/// Расширенные данные профиля — берём напрямую из AuthUser (данные уже в БД).
+final profileExtraProvider = Provider<AsyncValue<ProfileExtra?>>((ref) {
+  return ref.watch(authStateProvider).whenData((user) {
+    if (user == null) return null;
+    return ProfileExtra(
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      avatarKind: AvatarKind.values.firstWhere(
+        (e) => e.name == user.avatarKind,
+        orElse: () => AvatarKind.letter,
+      ),
+      avatarValue: user.avatarValue,
+    );
+  });
 });
 
 class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
@@ -55,5 +73,35 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
 
   void refresh() {
     _loadUser();
+  }
+
+  Future<void> updateDisplayName(String displayName) async {
+    await updateProfile(displayName: displayName);
+  }
+
+  /// Обновляет профиль пользователя на бэкенде. Все поля сохраняются в БД.
+  Future<void> updateProfile({
+    String? displayName,
+    ProfileExtra? extra,
+  }) async {
+    final repo = _ref.read(authRepositoryProvider);
+    final user = state.valueOrNull;
+    if (user == null) return;
+    try {
+      final updated = await repo.updateProfile(
+        displayName: displayName ?? user.displayName,
+        age: extra?.age,
+        gender: extra?.gender,
+        about: extra?.about,
+        avatarKind: extra?.avatarKind.name,
+        avatarValue: extra?.avatarValue,
+      );
+      state = AsyncValue.data(updated);
+    } on AuthException catch (e) {
+      if (e.statusCode == 401) {
+        state = const AsyncValue.data(null);
+      }
+      rethrow;
+    }
   }
 }

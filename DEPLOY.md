@@ -12,6 +12,58 @@
 
 ---
 
+## Быстрый режим: конфиг для Cursor
+
+Если деплоишь из Cursor/CLI регулярно, вынеси токены и секреты в локальный файл:
+
+```bash
+cp deploy.cursor.env.example deploy.cursor.env
+```
+
+Заполни `deploy.cursor.env` значениями:
+- `FLY_API_TOKEN` (создать: `fly tokens create deploy -a <APP_NAME> -x 24h -n "cursor-deploy"`)
+- `FLY_APP_NAME`
+- `JWT_SECRET`
+- `ADMIN_INIT_SECRET`
+- опционально для очистки логов: `APP_LOG_RETENTION_DAYS`, `APP_LOG_CLEANUP_INTERVAL_SECONDS`
+
+Файл `deploy.cursor.env` не коммитится (он в `.gitignore`).
+
+**Запуск в 1 команду:**
+
+```bash
+./launcher/deploy_cursor.sh
+```
+
+```powershell
+.\launcher\deploy_cursor.ps1
+```
+
+**Linux/macOS/Cursor shell:**
+
+```bash
+set -a
+source deploy.cursor.env
+set +a
+fly secrets set JWT_SECRET="$JWT_SECRET" ADMIN_INIT_SECRET="$ADMIN_INIT_SECRET" --app "$FLY_APP_NAME"
+fly deploy --app "$FLY_APP_NAME" --remote-only --yes
+```
+
+**PowerShell:**
+
+```powershell
+Get-Content .\deploy.cursor.env | ForEach-Object {
+  if ($_ -and -not $_.StartsWith("#")) {
+    $name, $value = $_ -split "=", 2
+    Set-Item -Path "Env:$name" -Value $value
+  }
+}
+fly secrets set JWT_SECRET="$env:JWT_SECRET" ADMIN_INIT_SECRET="$env:ADMIN_INIT_SECRET" --app "$env:FLY_APP_NAME"
+fly deploy --app "$env:FLY_APP_NAME" --remote-only --yes
+```
+
+---
+
 ## Шаг 1. Создать приложение (если ещё нет)
 
 Из **корня репозитория**:

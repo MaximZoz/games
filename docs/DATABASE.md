@@ -70,6 +70,7 @@ docker exec -it multigames-postgres psql -U multigames -d multigames -c "\dt"
 
 - **users** — пользователи (id, email, password_hash, display_name, created_at, updated_at)
 - **sessions** — сессии/refresh-токены (id, user_id, refresh_token_hash, expires_at, created_at)
+- **app_logs** — журнал методов фронта и бэка после импорта из файла логов (event_id, event_time, source, method_name, http_method, path, status_code, duration_ms, user_id, metadata, raw_payload, created_at)
 
 ---
 
