@@ -113,15 +113,16 @@ class ApiClient {
       headers['Authorization'] = authorizationHeader;
     }
 
-    unawaited(
-      http
-          .post(
-            logUri,
-            headers: headers,
-            body: jsonEncode(payload),
-          )
-          .timeout(const Duration(seconds: 2))
-          .catchError((_) {}),
-    );
+    unawaited(() async {
+      try {
+        await http
+            .post(
+              logUri,
+              headers: headers,
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {}
+    }());
   }
 }

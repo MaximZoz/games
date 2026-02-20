@@ -1149,12 +1149,11 @@ class _LogWindowSpec {
   const _LogWindowSpec({
     required this.title,
     required this.duration,
-    this.previewLimit = 8,
   });
 
   final String title;
   final Duration duration;
-  final int previewLimit;
+  int get previewLimit => 8;
 }
 
 class _CopyLimitSpec {
