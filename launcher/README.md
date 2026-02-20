@@ -42,6 +42,14 @@
 
 Выполняются `go test ./...` в server и `flutter test` в client (если есть папка `test`). При ошибке в любом из шагов скрипт завершится с кодом 1.
 
+**Деплой на Fly из конфига:**
+
+```powershell
+.\launcher\deploy_cursor.ps1
+```
+
+Скрипт читает `deploy.cursor.env` из корня проекта, обновляет секреты и запускает `fly deploy --remote-only --yes`.
+
 Если выполнение скриптов запрещено политикой:
 
 ```powershell
@@ -67,6 +75,15 @@ chmod +x launcher/start.sh
 chmod +x launcher/test.sh
 ./launcher/test.sh
 ```
+
+**Деплой на Fly из конфига:**
+
+```bash
+chmod +x launcher/deploy_cursor.sh
+./launcher/deploy_cursor.sh
+```
+
+Скрипт читает `deploy.cursor.env` из корня проекта, обновляет секреты и запускает `fly deploy --remote-only --yes`.
 
 ---
 
@@ -94,10 +111,12 @@ Windows
 ├── start.ps1   # Windows — запуск
 ├── restart.ps1 # Windows — перезапуск (применить изменения)
 ├── test.ps1    # Windows — тесты Go + Flutter
+├── deploy_cursor.ps1 # Windows — деплой на Fly из deploy.cursor.env
 
 macOS / Linux
 ├── start.sh    # macOS / Linux
 ├── test.sh     # macOS / Linux — тесты
+├── deploy_cursor.sh # macOS / Linux — деплой на Fly из deploy.cursor.env
 └── README.md   # этот файл
 ```
 

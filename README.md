@@ -167,6 +167,18 @@ cp deploy.cursor.env.example deploy.cursor.env
 
 > `deploy.cursor.env` уже добавлен в `.gitignore`, поэтому реальные токены в git не уйдут.
 
+**Самый простой запуск:**
+
+```bash
+./launcher/deploy_cursor.sh
+```
+
+```powershell
+.\launcher\deploy_cursor.ps1
+```
+
+Скрипты сами подхватывают `deploy.cursor.env`, обновляют секреты и запускают deploy.
+
 **Linux/macOS/Cursor shell:**
 
 ```bash

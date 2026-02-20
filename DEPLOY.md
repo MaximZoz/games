@@ -28,6 +28,16 @@ cp deploy.cursor.env.example deploy.cursor.env
 
 Файл `deploy.cursor.env` не коммитится (он в `.gitignore`).
 
+**Запуск в 1 команду:**
+
+```bash
+./launcher/deploy_cursor.sh
+```
+
+```powershell
+.\launcher\deploy_cursor.ps1
+```
+
 **Linux/macOS/Cursor shell:**
 
 ```bash
