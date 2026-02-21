@@ -2,15 +2,22 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func chatsHandlerForValidation() *ChatsHandler {
 	return &ChatsHandler{Pool: (*pgxpool.Pool)(nil)}
+}
+
+func withUserID(req *http.Request) *http.Request {
+	ctx := context.WithValue(req.Context(), UserIDKey, uuid.New())
+	return req.WithContext(ctx)
 }
 
 func TestChats_List_MethodNotAllowed(t *testing.T) {

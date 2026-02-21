@@ -18,9 +18,19 @@ type ChatsHandler struct {
 	Pool *pgxpool.Pool
 }
 
+type ChatUserItem struct {
+	ID          string  `json:"id"`
+	DisplayName *string `json:"display_name,omitempty"`
+	AvatarKind  string  `json:"avatar_kind,omitempty"`
+	AvatarValue *string `json:"avatar_value,omitempty"`
+	Age         *int    `json:"age,omitempty"`
+	Gender      *string `json:"gender,omitempty"`
+	About       *string `json:"about,omitempty"`
+}
+
 type ChatPreviewItem struct {
 	ChatID      string           `json:"chat_id"`
-	User        FriendUserItem   `json:"user"`
+	User        ChatUserItem     `json:"user"`
 	LastMessage *ChatMessageItem `json:"last_message,omitempty"`
 	UnreadCount int              `json:"unread_count"`
 	CreatedAt   string           `json:"created_at"`
@@ -49,6 +59,11 @@ type MarkChatReadBody struct {
 	ChatID string `json:"chat_id"`
 }
 
+func currentUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
+	userID, ok := GetUserID(r.Context())
+	return userID, ok
+}
+
 func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 	var readAt *string
 	if msg.ReadAt != nil {
@@ -65,6 +80,18 @@ func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 	}
 }
 
+func chatUserToItem(u store.ChatUser) ChatUserItem {
+	return ChatUserItem{
+		ID:          u.ID.String(),
+		DisplayName: u.DisplayName,
+		AvatarKind:  u.AvatarKind,
+		AvatarValue: u.AvatarValue,
+		Age:         u.Age,
+		Gender:      u.Gender,
+		About:       u.About,
+	}
+}
+
 func writeChatError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, store.ErrCannotChatWithYourself):
@@ -73,8 +100,6 @@ func writeChatError(w http.ResponseWriter, err error) {
 		http.Error(w, "message is empty", http.StatusBadRequest)
 	case errors.Is(err, store.ErrChatMessageTooLong):
 		http.Error(w, "message is too long", http.StatusBadRequest)
-	case errors.Is(err, store.ErrChatFriendRequired):
-		http.Error(w, "only friends can chat", http.StatusForbidden)
 	case errors.Is(err, store.ErrChatForbidden):
 		http.Error(w, "forbidden", http.StatusForbidden)
 	case errors.Is(err, store.ErrChatNotFound):
@@ -134,7 +159,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 		}
 		items = append(items, ChatPreviewItem{
 			ChatID:      c.ChatID.String(),
-			User:        friendUserToItem(c.Peer),
+			User:        chatUserToItem(c.Peer),
 			LastMessage: lastMessage,
 			UnreadCount: c.UnreadCount,
 			CreatedAt:   c.CreatedAt.UTC().Format(time.RFC3339Nano),

@@ -16,7 +16,6 @@ import (
 var (
 	ErrChatNotFound           = errors.New("chat not found")
 	ErrChatForbidden          = errors.New("chat action forbidden")
-	ErrChatFriendRequired     = errors.New("chat requires friendship")
 	ErrCannotChatWithYourself = errors.New("cannot chat with yourself")
 	ErrChatMessageEmpty       = errors.New("chat message is empty")
 	ErrChatMessageTooLong     = errors.New("chat message is too long")
@@ -31,9 +30,20 @@ type ChatMessage struct {
 	ReadAt       *time.Time
 }
 
+type ChatUser struct {
+	ID          uuid.UUID
+	Email       string
+	DisplayName *string
+	AvatarKind  string
+	AvatarValue *string
+	Age         *int
+	Gender      *string
+	About       *string
+}
+
 type ChatPreview struct {
 	ChatID      uuid.UUID
-	Peer        FriendUser
+	Peer        ChatUser
 	CreatedAt   time.Time
 	LastMessage *ChatMessage
 	UnreadCount int
@@ -65,14 +75,6 @@ func EnsureDirectChat(
 	}
 
 	low, high := orderedChatPair(currentUserID, targetUserID)
-	isFriend, err := hasFriendship(ctx, pool, low, high)
-	if err != nil {
-		return uuid.Nil, err
-	}
-	if !isFriend {
-		return uuid.Nil, ErrChatFriendRequired
-	}
-
 	_, err = pool.Exec(ctx, `
 		INSERT INTO chats (user_low, user_high)
 		VALUES ($1, $2)
@@ -393,26 +395,6 @@ func ensureChatMembership(
 func userExists(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (bool, error) {
 	var exists int
 	err := pool.QueryRow(ctx, `SELECT 1 FROM users WHERE id = $1`, userID).Scan(&exists)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
-}
-
-func hasFriendship(
-	ctx context.Context,
-	pool *pgxpool.Pool,
-	lowUserID, highUserID uuid.UUID,
-) (bool, error) {
-	var exists int
-	err := pool.QueryRow(ctx, `
-		SELECT 1
-		FROM friendships
-		WHERE user_low = $1 AND user_high = $2
-	`, lowUserID, highUserID).Scan(&exists)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return false, nil
