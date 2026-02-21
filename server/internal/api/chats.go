@@ -59,7 +59,7 @@ type MarkChatReadBody struct {
 	ChatID string `json:"chat_id"`
 }
 
-func currentUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
+func currentChatUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
 	userID, ok := GetUserID(r.Context())
 	return userID, ok
 }
@@ -115,7 +115,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := currentUserIDFromContext(r)
+	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -181,7 +181,7 @@ func (h *ChatsHandler) Start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := currentUserIDFromContext(r)
+	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -223,7 +223,7 @@ func (h *ChatsHandler) Messages(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
-	userID, ok := currentUserIDFromContext(r)
+	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -279,7 +279,7 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
-	userID, ok := currentUserIDFromContext(r)
+	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -317,7 +317,7 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := currentUserIDFromContext(r)
+	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
