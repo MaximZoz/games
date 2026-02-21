@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
@@ -72,12 +73,16 @@ const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
   _NavItem(path: '/profile', icon: Icons.person, label: 'Профиль'),
   _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
+  _NavItem(path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
   _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
   _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
 ];
 
 int _selectedIndexForPath(String path) {
   final n = _normalizePath(path);
+  if (n.startsWith('/chats')) {
+    return _navItems.indexWhere((e) => e.path == '/chats');
+  }
   final i = _navItems.indexWhere((e) => e.path == n);
   if (i >= 0) return i;
   if (n == '/achievements' || n == '/coins') return 1;
@@ -107,6 +112,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
+    final unreadChats = ref.watch(chatsUnreadCountProvider).valueOrNull ?? 0;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
@@ -223,7 +229,7 @@ class AppShell extends ConsumerWidget {
                           labelType: NavigationRailLabelType.all,
                           destinations: _navItems
                               .map((e) => NavigationRailDestination(
-                                    icon: Icon(e.icon),
+                                    icon: _navIcon(e, unreadChats),
                                     label: Text(e.label),
                                   ))
                               .toList(),
@@ -248,7 +254,7 @@ class AppShell extends ConsumerWidget {
                     elevation: 0,
                     destinations: _navItems
                         .map((e) => NavigationDestination(
-                              icon: Icon(e.icon),
+                              icon: _navIcon(e, unreadChats),
                               label: e.label,
                             ))
                         .toList(),
@@ -260,4 +266,35 @@ class AppShell extends ConsumerWidget {
       ],
     );
   }
+}
+
+Widget _navIcon(_NavItem item, int unreadChats) {
+  if (item.path != '/chats' || unreadChats <= 0) {
+    return Icon(item.icon);
+  }
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Icon(item.icon),
+      Positioned(
+        right: -10,
+        top: -8,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.red.shade600,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            unreadChats > 99 ? '99+' : '$unreadChats',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }

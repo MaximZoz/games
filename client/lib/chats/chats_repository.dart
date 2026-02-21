@@ -1,0 +1,254 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/api_client.dart';
+import 'package:multigames_client/core/api_config.dart';
+
+class ChatUserItem {
+  final String id;
+  final String? displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final int? age;
+  final String? gender;
+  final String? about;
+
+  ChatUserItem({
+    required this.id,
+    this.displayName,
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.age,
+    this.gender,
+    this.about,
+  });
+
+  factory ChatUserItem.fromJson(Map<String, dynamic> json) {
+    return ChatUserItem(
+      id: json['id'] as String? ?? '',
+      displayName: json['display_name'] as String?,
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
+      age: json['age'] as int?,
+      gender: json['gender'] as String?,
+      about: json['about'] as String?,
+    );
+  }
+}
+
+class ChatMessageItem {
+  final String id;
+  final String chatID;
+  final String senderUserID;
+  final String body;
+  final String createdAt;
+  final String? readAt;
+
+  ChatMessageItem({
+    required this.id,
+    required this.chatID,
+    required this.senderUserID,
+    required this.body,
+    required this.createdAt,
+    this.readAt,
+  });
+
+  factory ChatMessageItem.fromJson(Map<String, dynamic> json) {
+    return ChatMessageItem(
+      id: json['id'] as String? ?? '',
+      chatID: json['chat_id'] as String? ?? '',
+      senderUserID: json['sender_user_id'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      createdAt: json['created_at'] as String? ?? '',
+      readAt: json['read_at'] as String?,
+    );
+  }
+}
+
+class ChatPreviewItem {
+  final String chatID;
+  final ChatUserItem user;
+  final ChatMessageItem? lastMessage;
+  final int unreadCount;
+  final String createdAt;
+  final String updatedAt;
+
+  ChatPreviewItem({
+    required this.chatID,
+    required this.user,
+    required this.lastMessage,
+    required this.unreadCount,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ChatPreviewItem.fromJson(Map<String, dynamic> json) {
+    return ChatPreviewItem(
+      chatID: json['chat_id'] as String? ?? '',
+      user: ChatUserItem.fromJson(Map<String, dynamic>.from((json['user'] ?? const {}) as Map)),
+      lastMessage: json['last_message'] == null
+          ? null
+          : ChatMessageItem.fromJson(
+              Map<String, dynamic>.from((json['last_message'] ?? const {}) as Map),
+            ),
+      unreadCount: json['unread_count'] as int? ?? 0,
+      createdAt: json['created_at'] as String? ?? '',
+      updatedAt: json['updated_at'] as String? ?? '',
+    );
+  }
+}
+
+class ChatsRepository {
+  ChatsRepository({required AuthRepository authRepository})
+      : _auth = authRepository;
+
+  final AuthRepository _auth;
+
+  Future<http.Response> _authorizedRequest(
+    Future<http.Response> Function(String token) request,
+  ) async {
+    try {
+      return await _auth.sendAuthorized(request);
+    } on AuthException catch (e) {
+      throw ChatException(
+        e.statusCode,
+        e.statusCode == 401 ? 'Сессия истекла. Войдите заново.' : e.message,
+      );
+    }
+  }
+
+  Never _throwForErrorResponse(http.Response response) {
+    var message = response.body.trim();
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        message = (body['message'] ?? body['error'] ?? message).toString();
+      }
+    } catch (_) {}
+
+    if (response.statusCode == 401) {
+      throw ChatException(401, 'Сессия истекла. Войдите заново.');
+    }
+    throw ChatException(response.statusCode, message.isEmpty ? 'Ошибка сервера' : message);
+  }
+
+  Future<List<ChatPreviewItem>> listChats({int limit = 100, int offset = 0}) async {
+    final query = <String, String>{
+      'limit': '$limit',
+      'offset': '$offset',
+    };
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/chats').replace(queryParameters: query),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ChatsRepository.listChats',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['chats'] as List<dynamic>? ?? const [];
+    return list
+        .map((e) => ChatPreviewItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<String> startChat(String targetUserID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/start'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'target_user_id': targetUserID}),
+        operation: 'ChatsRepository.startChat',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return body['chat_id'] as String? ?? '';
+  }
+
+  Future<List<ChatMessageItem>> listMessages(
+    String chatID, {
+    int limit = 100,
+    DateTime? before,
+  }) async {
+    final query = <String, String>{
+      'chat_id': chatID,
+      'limit': '$limit',
+      if (before != null) 'before': before.toUtc().toIso8601String(),
+    };
+
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/chats/messages').replace(queryParameters: query),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ChatsRepository.listMessages',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['messages'] as List<dynamic>? ?? const [];
+    return list
+        .map((e) => ChatMessageItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<ChatMessageItem> sendMessage(String chatID, String message) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/messages'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'chat_id': chatID, 'body': message}),
+        operation: 'ChatsRepository.sendMessage',
+      ),
+    );
+    if (response.statusCode != 201) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return ChatMessageItem.fromJson(
+      Map<String, dynamic>.from((body['message'] ?? const {}) as Map),
+    );
+  }
+
+  Future<int> markRead(String chatID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/read'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'chat_id': chatID}),
+        operation: 'ChatsRepository.markRead',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return body['updated'] as int? ?? 0;
+  }
+}
+
+class ChatException implements Exception {
+  final int statusCode;
+  final String message;
+  ChatException(this.statusCode, this.message);
+
+  @override
+  String toString() => message;
+}

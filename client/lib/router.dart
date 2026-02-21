@@ -7,6 +7,8 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
+import 'package:multigames_client/screens/chat_room_screen.dart';
+import 'package:multigames_client/screens/chats_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
@@ -22,6 +24,7 @@ const _publicPaths = <String>{'/login', '/register'};
 const _authRequiredPaths = <String>{
   '/profile',
   '/friends',
+  '/chats',
   '/tournaments',
   '/games',
   '/inventory',
@@ -57,7 +60,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);
-      final needsAuth = _authRequiredPaths.contains(path);
+      final needsAuth = _authRequiredPaths.contains(path) || path.startsWith('/chats/');
       final isAdminRoute = path == '/admin';
 
       final authState = ref.read(authStateProvider);
@@ -88,6 +91,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
           GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
           GoRoute(path: '/friends', builder: (_, __) => const FriendsScreen()),
+          GoRoute(path: '/chats', builder: (_, __) => const ChatsScreen()),
+          GoRoute(
+            path: '/chats/:chatId',
+            builder: (_, state) => ChatRoomScreen(
+              chatID: state.pathParameters['chatId'] ?? '',
+              peerName: state.uri.queryParameters['name'],
+            ),
+          ),
           GoRoute(path: '/tournaments', builder: (_, __) => const TournamentsScreen()),
           GoRoute(path: '/games', builder: (_, __) => const GamesScreen()),
           GoRoute(path: '/inventory', builder: (_, __) => const InventoryScreen()),
