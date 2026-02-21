@@ -31,8 +31,14 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
   final repo = ref.watch(friendsRepositoryProvider);
   yield await _loadIncomingCount(repo);
 
-  while (true) {
-    await Future<void>.delayed(const Duration(seconds: 20));
+  var disposed = false;
+  ref.onDispose(() {
+    disposed = true;
+  });
+
+  while (!disposed) {
+    await Future<void>.delayed(const Duration(seconds: 30));
+    if (disposed) break;
     yield await _loadIncomingCount(repo);
   }
 });

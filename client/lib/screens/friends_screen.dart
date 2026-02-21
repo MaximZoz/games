@@ -37,6 +37,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
+  final Map<int, MemoryImage> _avatarImageCache = <int, MemoryImage>{};
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
@@ -44,12 +45,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   @override
   void dispose() {
+    _avatarImageCache.clear();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _showMessage(String? error, String? success) {}
+
+  static const int _avatarImageCacheLimit = 220;
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -242,15 +246,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.isNotEmpty) {
-      var raw = user.avatarValue!;
-      if (raw.startsWith('base64,')) raw = raw.substring(7);
-      try {
-        final bytes = base64Decode(raw);
+      final provider = _avatarImageProvider(user.avatarValue!);
+      if (provider != null) {
         return CircleAvatar(
           radius: 20,
-          backgroundImage: MemoryImage(bytes),
+          backgroundImage: provider,
         );
-      } catch (_) {}
+      }
     }
 
     if (user.avatarKind == 'preset' && user.avatarValue != null) {
@@ -279,12 +281,34 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
+  MemoryImage? _avatarImageProvider(String rawValue) {
+    var raw = rawValue.trim();
+    if (raw.isEmpty) return null;
+    if (raw.startsWith('base64,')) raw = raw.substring(7);
+
+    final key = Object.hash(raw.hashCode, raw.length);
+    final cached = _avatarImageCache[key];
+    if (cached != null) return cached;
+
+    try {
+      final provider = MemoryImage(base64Decode(raw));
+      _avatarImageCache.remove(key);
+      _avatarImageCache[key] = provider;
+      if (_avatarImageCache.length > _avatarImageCacheLimit) {
+        _avatarImageCache.remove(_avatarImageCache.keys.first);
+      }
+      return provider;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _handleFriendsException(FriendsException e) async {
     if (e.statusCode == 401) {
       await ref.read(authStateProvider.notifier).logout();
       if (!mounted) return;
       _showMessage('Сессия истекла. Войдите заново.', null);
-      context.go('/login');
+      context.go('/profile');
       return;
     }
     _showMessage(e.message, null);
