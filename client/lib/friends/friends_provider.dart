@@ -41,6 +41,7 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
   var loadInFlight = false;
+  late void Function() scheduleReconnect;
 
   Future<void> load() async {
     if (loadInFlight) return;
@@ -90,13 +91,13 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     unawaited(load());
   }
 
-  void scheduleReconnect() {
+  scheduleReconnect = () {
     if (reconnectTimer != null || controller.isClosed) return;
     reconnectTimer = Timer(const Duration(seconds: 2), () {
       reconnectTimer = null;
       unawaited(connect());
     });
-  }
+  };
 
   await load();
   unawaited(connect());

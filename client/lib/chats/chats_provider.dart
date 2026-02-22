@@ -24,6 +24,7 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
   var loadInFlight = false;
+  late void Function() scheduleReconnect;
 
   Future<void> load() async {
     if (loadInFlight) return;
@@ -76,13 +77,13 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
     unawaited(load());
   }
 
-  void scheduleReconnect() {
+  scheduleReconnect = () {
     if (reconnectTimer != null || controller.isClosed) return;
     reconnectTimer = Timer(const Duration(seconds: 2), () {
       reconnectTimer = null;
       unawaited(connect());
     });
-  }
+  };
 
   unawaited(load());
   unawaited(connect());
