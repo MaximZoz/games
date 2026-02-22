@@ -15,23 +15,49 @@ import (
 
 type RealtimeHub struct {
 	mu      sync.RWMutex
-	clients map[uuid.UUID]map[*websocket.Conn]struct{}
+	clients map[uuid.UUID]map[*websocket.Conn]*realtimeClient
+}
+
+type realtimeClient struct {
+	conn    *websocket.Conn
+	writeMu sync.Mutex
+}
+
+func (c *realtimeClient) writeText(raw []byte) error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+
+	_ = c.conn.SetWriteDeadline(time.Now().Add(4 * time.Second))
+	return c.conn.WriteMessage(websocket.TextMessage, raw)
+}
+
+func (c *realtimeClient) writePing() error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+
+	return c.conn.WriteControl(
+		websocket.PingMessage,
+		[]byte("ping"),
+		time.Now().Add(5*time.Second),
+	)
 }
 
 func NewRealtimeHub() *RealtimeHub {
 	return &RealtimeHub{
-		clients: make(map[uuid.UUID]map[*websocket.Conn]struct{}),
+		clients: make(map[uuid.UUID]map[*websocket.Conn]*realtimeClient),
 	}
 }
 
-func (h *RealtimeHub) Register(userID uuid.UUID, conn *websocket.Conn) {
+func (h *RealtimeHub) Register(userID uuid.UUID, conn *websocket.Conn) *realtimeClient {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	if h.clients[userID] == nil {
-		h.clients[userID] = make(map[*websocket.Conn]struct{})
+		h.clients[userID] = make(map[*websocket.Conn]*realtimeClient)
 	}
-	h.clients[userID][conn] = struct{}{}
+	client := &realtimeClient{conn: conn}
+	h.clients[userID][conn] = client
+	return client
 }
 
 func (h *RealtimeHub) Unregister(userID uuid.UUID, conn *websocket.Conn) {
@@ -65,26 +91,28 @@ func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 
 	type delivery struct {
 		userID uuid.UUID
-		conn   *websocket.Conn
+		client *realtimeClient
 	}
 
 	deliveries := make([]delivery, 0, 8)
 	h.mu.RLock()
 	for userID := range uniqueUsers {
-		for conn := range h.clients[userID] {
+		for _, client := range h.clients[userID] {
 			deliveries = append(deliveries, delivery{
 				userID: userID,
-				conn:   conn,
+				client: client,
 			})
 		}
 	}
 	h.mu.RUnlock()
 
 	for _, target := range deliveries {
-		_ = target.conn.SetWriteDeadline(time.Now().Add(4 * time.Second))
-		if err := target.conn.WriteMessage(websocket.TextMessage, raw); err != nil {
-			_ = target.conn.Close()
-			h.Unregister(target.userID, target.conn)
+		if target.client == nil {
+			continue
+		}
+		if err := target.client.writeText(raw); err != nil {
+			_ = target.client.conn.Close()
+			h.Unregister(target.userID, target.client.conn)
 		}
 	}
 }
@@ -144,7 +172,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Hub.Register(userID, conn)
+	client := h.Hub.Register(userID, conn)
 	defer func() {
 		h.Hub.Unregister(userID, conn)
 		_ = conn.Close()
@@ -177,11 +205,13 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case <-done:
 			return
 		case <-ticker.C:
-			if err := conn.WriteControl(
-				websocket.PingMessage,
-				[]byte("ping"),
-				time.Now().Add(5*time.Second),
-			); err != nil {
+			if client != nil {
+				if err := client.writePing(); err != nil {
+					return
+				}
+				continue
+			}
+			if err := conn.WriteControl(websocket.PingMessage, []byte("ping"), time.Now().Add(5*time.Second)); err != nil {
 				return
 			}
 		}

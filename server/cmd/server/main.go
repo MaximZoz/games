@@ -36,6 +36,18 @@ func getEnv(key, defaultVal string) string {
 	return defaultVal
 }
 
+func getEnvBool(key string, defaultVal bool) bool {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return defaultVal
+	}
+	parsed, err := strconv.ParseBool(raw)
+	if err != nil {
+		return defaultVal
+	}
+	return parsed
+}
+
 func runMigrations(dbURL string) error {
 	m, err := migrate.New("file://migrations", dbURL)
 	if err != nil {
@@ -175,49 +187,56 @@ func main() {
 		log.Println("JWT_SECRET: using default (dev only)")
 	}
 
-	appLogFilePath := getEnv("APP_LOG_FILE", "logs/app_events.jsonl")
-	appLogStatePath := getEnv("APP_LOG_STATE_FILE", "logs/app_events.offset")
-	syncIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_SYNC_INTERVAL_SECONDS", "5"))
-	if err != nil || syncIntervalSeconds <= 0 {
-		syncIntervalSeconds = 5
-	}
-	retentionDays, err := strconv.Atoi(getEnv("APP_LOG_RETENTION_DAYS", "30"))
-	if err != nil || retentionDays < 0 {
-		retentionDays = 30
-	}
-	cleanupIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_CLEANUP_INTERVAL_SECONDS", "3600"))
-	if err != nil || cleanupIntervalSeconds <= 0 {
-		cleanupIntervalSeconds = 3600
-	}
-	retentionDuration := time.Duration(retentionDays) * 24 * time.Hour
-	cleanupIntervalDuration := time.Duration(cleanupIntervalSeconds) * time.Second
-	if retentionDuration > 0 {
-		log.Printf(
-			"App logs retention: delete older than %d days (every %s)",
-			retentionDays,
+	appLogEnabled := getEnvBool("APP_LOG_ENABLED", false)
+	var logWriter *applog.FileWriter
+	var logImporter *applog.Importer
+	if appLogEnabled {
+		appLogFilePath := getEnv("APP_LOG_FILE", "logs/app_events.jsonl")
+		appLogStatePath := getEnv("APP_LOG_STATE_FILE", "logs/app_events.offset")
+		syncIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_SYNC_INTERVAL_SECONDS", "5"))
+		if err != nil || syncIntervalSeconds <= 0 {
+			syncIntervalSeconds = 5
+		}
+		retentionDays, err := strconv.Atoi(getEnv("APP_LOG_RETENTION_DAYS", "30"))
+		if err != nil || retentionDays < 0 {
+			retentionDays = 30
+		}
+		cleanupIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_CLEANUP_INTERVAL_SECONDS", "3600"))
+		if err != nil || cleanupIntervalSeconds <= 0 {
+			cleanupIntervalSeconds = 3600
+		}
+		retentionDuration := time.Duration(retentionDays) * 24 * time.Hour
+		cleanupIntervalDuration := time.Duration(cleanupIntervalSeconds) * time.Second
+		if retentionDuration > 0 {
+			log.Printf(
+				"App logs retention: delete older than %d days (every %s)",
+				retentionDays,
+				cleanupIntervalDuration,
+			)
+		} else {
+			log.Printf("App logs retention: disabled")
+		}
+
+		logWriter, err = applog.NewFileWriter(appLogFilePath)
+		if err != nil {
+			log.Fatalf("App logs file: %v", err)
+		}
+		defer logWriter.Close()
+
+		logImporter = applog.NewImporter(
+			pool,
+			appLogFilePath,
+			appLogStatePath,
+			time.Duration(syncIntervalSeconds)*time.Second,
+			retentionDuration,
 			cleanupIntervalDuration,
 		)
+		logImporter.Start(ctx)
+		if err := logImporter.SyncNow(ctx); err != nil {
+			log.Printf("App logs initial sync failed: %v", err)
+		}
 	} else {
-		log.Printf("App logs retention: disabled")
-	}
-
-	logWriter, err := applog.NewFileWriter(appLogFilePath)
-	if err != nil {
-		log.Fatalf("App logs file: %v", err)
-	}
-	defer logWriter.Close()
-
-	logImporter := applog.NewImporter(
-		pool,
-		appLogFilePath,
-		appLogStatePath,
-		time.Duration(syncIntervalSeconds)*time.Second,
-		retentionDuration,
-		cleanupIntervalDuration,
-	)
-	logImporter.Start(ctx)
-	if err := logImporter.SyncNow(ctx); err != nil {
-		log.Printf("App logs initial sync failed: %v", err)
+		log.Printf("App logs: disabled (APP_LOG_ENABLED=false)")
 	}
 
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}

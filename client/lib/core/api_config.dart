@@ -2,6 +2,11 @@
 const String _apiBaseUrlRaw =
     String.fromEnvironment('API_BASE', defaultValue: 'http://localhost:8080');
 
+/// Отправка клиентских логов на /api/logs/frontend (для отладки).
+/// По умолчанию отключено.
+const bool frontendApiLogsEnabled =
+    bool.fromEnvironment('FRONTEND_LOGS_ENABLED', defaultValue: false);
+
 /// Базовый URL API. Если API_BASE пустой (продакшен), на Web используется origin текущей страницы.
 String get apiBaseUrl =>
     _apiBaseUrlRaw.isEmpty ? Uri.base.origin : _apiBaseUrlRaw;
