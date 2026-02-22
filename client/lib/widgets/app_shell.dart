@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
@@ -75,7 +76,7 @@ const List<_NavItem> _navItems = [
   _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
   _NavItem(path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
   _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
-  _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
+  _NavItem(path: '/settings', icon: Icons.settings, label: 'Ещё'),
 ];
 
 int _selectedIndexForPath(String path) {
@@ -113,6 +114,7 @@ class AppShell extends ConsumerWidget {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
     final unreadChats = ref.watch(chatsUnreadCountProvider).valueOrNull ?? 0;
+    final incomingFriends = ref.watch(friendsIncomingCountProvider).valueOrNull ?? 0;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
@@ -215,9 +217,7 @@ class AppShell extends ConsumerWidget {
             ),
             Expanded(
               child: narrow
-                  ? SizedBox.expand(
-                      child: _RouteTransitionWrapper(path: path, child: child),
-                    )
+                  ? SizedBox.expand(child: child)
                   : Row(
                       children: [
                         NavigationRail(
@@ -229,15 +229,13 @@ class AppShell extends ConsumerWidget {
                           labelType: NavigationRailLabelType.all,
                           destinations: _navItems
                               .map((e) => NavigationRailDestination(
-                                    icon: _navIcon(e, unreadChats),
+                                    icon: _navIcon(e, unreadChats, incomingFriends),
                                     label: Text(e.label),
                                   ))
                               .toList(),
                         ),
                         Expanded(
-                          child: SizedBox.expand(
-                            child: _RouteTransitionWrapper(path: path, child: child),
-                          ),
+                          child: SizedBox.expand(child: child),
                         ),
                       ],
                     ),
@@ -256,7 +254,7 @@ class AppShell extends ConsumerWidget {
                     elevation: 0,
                     destinations: _navItems
                         .map((e) => NavigationDestination(
-                              icon: _navIcon(e, unreadChats),
+                              icon: _navIcon(e, unreadChats, incomingFriends),
                               label: e.label,
                             ))
                         .toList(),
@@ -270,8 +268,15 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-Widget _navIcon(_NavItem item, int unreadChats) {
-  if (item.path != '/chats' || unreadChats <= 0) {
+Widget _navIcon(_NavItem item, int unreadChats, int incomingFriends) {
+  var badgeValue = 0;
+  if (item.path == '/chats') {
+    badgeValue = unreadChats;
+  } else if (item.path == '/friends') {
+    badgeValue = incomingFriends;
+  }
+
+  if (badgeValue <= 0) {
     return Icon(item.icon);
   }
   return Stack(
@@ -288,7 +293,7 @@ Widget _navIcon(_NavItem item, int unreadChats) {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            unreadChats > 99 ? '99+' : '$unreadChats',
+            badgeValue > 99 ? '99+' : '$badgeValue',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 10,

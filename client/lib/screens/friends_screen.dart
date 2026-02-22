@@ -628,6 +628,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
         final rejectKey = 'reject_${item.requestId}';
+        final chatKey = 'chat_incoming_${item.user.id}';
         return _buildUserCard(
           user: item.user,
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
@@ -638,6 +639,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
                 onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildCompactIconButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                tooltip: 'Написать сообщение',
+                loading: _busy(chatKey),
+                onPressed: _busy(chatKey)
+                    ? null
+                    : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
@@ -670,6 +680,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       emptyText: 'Нет исходящих заявок',
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
+        final chatKey = 'chat_outgoing_${item.user.id}';
         return _buildUserCard(
           user: item.user,
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
@@ -680,6 +691,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
                 onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildCompactIconButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                tooltip: 'Написать сообщение',
+                loading: _busy(chatKey),
+                onPressed: _busy(chatKey)
+                    ? null
+                    : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
@@ -1066,6 +1086,43 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
   }
 
+  Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    final title = _tabTitle(tab, snapshot);
+    final incomingCount = snapshot?.incoming.length ?? 0;
+    final isIncoming = tab == _FriendsTabKind.incoming;
+    if (!isIncoming || incomingCount <= 0) {
+      return Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('Входящие'),
+        const SizedBox(width: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.red.shade600,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$incomingCount',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot) {
     switch (tab) {
       case _FriendsTabKind.friends:
@@ -1150,12 +1207,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                           tabs: [
                             for (final tab in tabs)
                               Tab(
-                                child: Text(
-                                  _tabTitle(tab, friendsAsync.valueOrNull),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                ),
+                                child: _buildTabLabel(tab, friendsAsync.valueOrNull),
                               ),
                           ],
                         ),

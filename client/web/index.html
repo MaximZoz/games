@@ -39,9 +39,12 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      overflow-x: hidden;
+      overscroll-behavior-x: none;
     }
     body {
       background-color: #F5F5F5;
+      touch-action: pan-y;
     }
     flt-glass-pane, flutter-view {
       display: block;
@@ -65,5 +68,25 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (function () {
+      let startX = 0;
+      let startY = 0;
+      window.addEventListener('touchstart', function (e) {
+        if (!e.touches || e.touches.length === 0) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', function (e) {
+        if (!e.touches || e.touches.length === 0) return;
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > dy) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    })();
+  </script>
 </body>
 </html>
