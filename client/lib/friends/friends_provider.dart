@@ -61,18 +61,22 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
         if (!raw.contains('friends_updated')) return;
         unawaited(load());
       },
-      onError: (_) => scheduleReconnect(),
-      onDone: scheduleReconnect,
+      onError: (_) {
+        if (reconnectTimer != null || controller.isClosed) return;
+        reconnectTimer = Timer(const Duration(seconds: 2), () {
+          reconnectTimer = null;
+          unawaited(connect());
+        });
+      },
+      onDone: () {
+        if (reconnectTimer != null || controller.isClosed) return;
+        reconnectTimer = Timer(const Duration(seconds: 2), () {
+          reconnectTimer = null;
+          unawaited(connect());
+        });
+      },
       cancelOnError: false,
     );
-  }
-
-  void scheduleReconnect() {
-    if (reconnectTimer != null || controller.isClosed) return;
-    reconnectTimer = Timer(const Duration(seconds: 2), () {
-      reconnectTimer = null;
-      unawaited(connect());
-    });
   }
 
   await load();

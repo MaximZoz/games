@@ -57,18 +57,22 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
           }
         } catch (_) {}
       },
-      onError: (_) => scheduleReconnect(),
-      onDone: scheduleReconnect,
+      onError: (_) {
+        if (reconnectTimer != null || controller.isClosed) return;
+        reconnectTimer = Timer(const Duration(seconds: 2), () {
+          reconnectTimer = null;
+          unawaited(connect());
+        });
+      },
+      onDone: () {
+        if (reconnectTimer != null || controller.isClosed) return;
+        reconnectTimer = Timer(const Duration(seconds: 2), () {
+          reconnectTimer = null;
+          unawaited(connect());
+        });
+      },
       cancelOnError: false,
     );
-  }
-
-  void scheduleReconnect() {
-    if (reconnectTimer != null || controller.isClosed) return;
-    reconnectTimer = Timer(const Duration(seconds: 2), () {
-      reconnectTimer = null;
-      unawaited(connect());
-    });
   }
 
   load();
