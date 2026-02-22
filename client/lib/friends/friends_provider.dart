@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -25,8 +27,10 @@ Future<int> _loadIncomingCount(FriendsRepository repo) async {
 }
 
 final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async* {
+  final keepAliveLink = ref.keepAlive();
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
+    keepAliveLink.close();
     yield 0;
     return;
   }
@@ -36,10 +40,17 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
+  var loadInFlight = false;
 
   Future<void> load() async {
-    final count = await _loadIncomingCount(repo);
-    if (!controller.isClosed) controller.add(count);
+    if (loadInFlight) return;
+    loadInFlight = true;
+    try {
+      final count = await _loadIncomingCount(repo);
+      if (!controller.isClosed) controller.add(count);
+    } finally {
+      loadInFlight = false;
+    }
   }
 
   Future<void> connect() async {
@@ -48,7 +59,10 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     socket = null;
 
     final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) return;
+    if (token == null || token.isEmpty) {
+      scheduleReconnect();
+      return;
+    }
 
     final uri = buildWebSocketUri(
       '/api/ws',
@@ -58,35 +72,41 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     socket = nextSocket;
     socketSubscription = nextSocket.messages.listen(
       (raw) {
-        if (!raw.contains('friends_updated')) return;
-        unawaited(load());
+        try {
+          final payload = jsonDecode(raw);
+          if (payload is! Map) return;
+          final type = payload['type']?.toString() ?? '';
+          if (type == 'friends_updated') {
+            unawaited(load());
+          }
+        } catch (_) {}
       },
-      onError: (_) {
-        if (reconnectTimer != null || controller.isClosed) return;
-        reconnectTimer = Timer(const Duration(seconds: 2), () {
-          reconnectTimer = null;
-          unawaited(connect());
-        });
-      },
-      onDone: () {
-        if (reconnectTimer != null || controller.isClosed) return;
-        reconnectTimer = Timer(const Duration(seconds: 2), () {
-          reconnectTimer = null;
-          unawaited(connect());
-        });
-      },
+      onError: (_) => scheduleReconnect(),
+      onDone: scheduleReconnect,
       cancelOnError: false,
     );
+
+    // После реконнекта догружаем актуальное состояние.
+    unawaited(load());
+  }
+
+  void scheduleReconnect() {
+    if (reconnectTimer != null || controller.isClosed) return;
+    reconnectTimer = Timer(const Duration(seconds: 2), () {
+      reconnectTimer = null;
+      unawaited(connect());
+    });
   }
 
   await load();
   unawaited(connect());
 
   ref.onDispose(() {
+    keepAliveLink.close();
     reconnectTimer?.cancel();
     unawaited(socketSubscription?.cancel());
     socket?.close();
-    controller.close();
+    unawaited(controller.close());
   });
 
   yield* controller.stream;

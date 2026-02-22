@@ -111,9 +111,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       final type = payload['type']?.toString() ?? '';
       if (type == 'chat_message' ||
           type == 'chat_list_changed' ||
-          type == 'chat_read' ||
-          type == 'friends_updated') {
+          type == 'chat_read') {
         unawaited(_loadChats());
+        ref.invalidate(chatsUnreadCountProvider);
+      } else if (type == 'friends_updated') {
+        ref.invalidate(friendsIncomingCountProvider);
       }
     } catch (_) {}
   }

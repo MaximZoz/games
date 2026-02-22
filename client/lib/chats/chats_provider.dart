@@ -12,8 +12,10 @@ final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
 });
 
 final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
+  final keepAliveLink = ref.keepAlive();
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
+    keepAliveLink.close();
     return Stream<int>.value(0);
   }
 
@@ -21,14 +23,19 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
+  var loadInFlight = false;
 
   Future<void> load() async {
+    if (loadInFlight) return;
+    loadInFlight = true;
     try {
       final chats = await ref.read(chatsRepositoryProvider).listChats(limit: 100, offset: 0);
       final unread = chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
       if (!controller.isClosed) controller.add(unread);
     } catch (_) {
       if (!controller.isClosed) controller.add(0);
+    } finally {
+      loadInFlight = false;
     }
   }
 
@@ -38,7 +45,10 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
     socket = null;
 
     final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) return;
+    if (token == null || token.isEmpty) {
+      scheduleReconnect();
+      return;
+    }
 
     final uri = buildWebSocketUri(
       '/api/ws',
@@ -57,32 +67,32 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
           }
         } catch (_) {}
       },
-      onError: (_) {
-        if (reconnectTimer != null || controller.isClosed) return;
-        reconnectTimer = Timer(const Duration(seconds: 2), () {
-          reconnectTimer = null;
-          unawaited(connect());
-        });
-      },
-      onDone: () {
-        if (reconnectTimer != null || controller.isClosed) return;
-        reconnectTimer = Timer(const Duration(seconds: 2), () {
-          reconnectTimer = null;
-          unawaited(connect());
-        });
-      },
+      onError: (_) => scheduleReconnect(),
+      onDone: scheduleReconnect,
       cancelOnError: false,
     );
+
+    // На переподключении догружаем состояние, чтобы не пропустить события в оффлайне.
+    unawaited(load());
   }
 
-  load();
+  void scheduleReconnect() {
+    if (reconnectTimer != null || controller.isClosed) return;
+    reconnectTimer = Timer(const Duration(seconds: 2), () {
+      reconnectTimer = null;
+      unawaited(connect());
+    });
+  }
+
+  unawaited(load());
   unawaited(connect());
 
   ref.onDispose(() {
+    keepAliveLink.close();
     reconnectTimer?.cancel();
     unawaited(socketSubscription?.cancel());
     socket?.close();
-    controller.close();
+    unawaited(controller.close());
   });
 
   return controller.stream;

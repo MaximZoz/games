@@ -183,19 +183,25 @@ class AppShell extends ConsumerWidget {
                 top: false,
                 child: Material(
                   type: MaterialType.transparency,
-                  child: NavigationBar(
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: (i) => context.go(_navItems[i].path),
-                    labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                    height: 64,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    destinations: _navItems
-                        .map((e) => NavigationDestination(
-                              icon: _navIcon(e, unreadChats, incomingFriends),
-                              label: e.label,
-                            ))
-                        .toList(),
+                  child: MediaQuery.withNoTextScaling(
+                    child: BottomNavigationBar(
+                      currentIndex: selectedIndex,
+                      onTap: (i) => context.go(_navItems[i].path),
+                      type: BottomNavigationBarType.fixed,
+                      elevation: 0,
+                      backgroundColor: Colors.transparent,
+                      selectedItemColor: AppColors.textPrimary,
+                      unselectedItemColor: AppColors.textSecondary,
+                      selectedFontSize: 10,
+                      unselectedFontSize: 10,
+                      showUnselectedLabels: true,
+                      items: _navItems
+                          .map((e) => BottomNavigationBarItem(
+                                icon: _navIcon(e, unreadChats, incomingFriends),
+                                label: e.label,
+                              ))
+                          .toList(),
+                    ),
                   ),
                 ),
               ),

@@ -9,6 +9,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/realtime_ws.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -86,6 +87,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
       unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
+      ref.invalidate(chatsUnreadCountProvider);
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -163,6 +165,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         if (messageRaw is! Map) return;
         final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
         _upsertMessage(item);
+        ref.invalidate(chatsUnreadCountProvider);
         final meID = ref.read(authStateProvider).valueOrNull?.id;
         if (item.senderUserID != meID) {
           unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
@@ -172,6 +175,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         if (chatID == widget.chatID) {
           unawaited(_loadMessages());
         }
+        ref.invalidate(chatsUnreadCountProvider);
+      } else if (type == 'chat_list_changed') {
+        ref.invalidate(chatsUnreadCountProvider);
+      } else if (type == 'friends_updated') {
+        ref.invalidate(friendsIncomingCountProvider);
       }
     } catch (_) {}
   }
@@ -223,6 +231,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       if (!mounted) return;
       _textController.clear();
       _upsertMessage(sent);
+      ref.invalidate(chatsUnreadCountProvider);
       setState(() {
         _sending = false;
         _error = null;

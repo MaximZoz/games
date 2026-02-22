@@ -99,8 +99,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   void _handleRealtimeMessage(String raw) {
-    if (!raw.contains('friends_updated')) return;
-    unawaited(_refreshSnapshot(refreshSearch: _isSearchExpanded));
+    try {
+      final payload = jsonDecode(raw);
+      if (payload is! Map) return;
+      final type = payload['type']?.toString() ?? '';
+      if (type == 'friends_updated') {
+        ref.invalidate(friendsIncomingCountProvider);
+        unawaited(_refreshSnapshot(refreshSearch: _isSearchExpanded));
+      } else if (type == 'chat_message' || type == 'chat_list_changed' || type == 'chat_read') {
+        ref.invalidate(chatsUnreadCountProvider);
+      }
+    } catch (_) {}
   }
 
   String _displayName(FriendUserItem user) {
