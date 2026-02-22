@@ -42,14 +42,6 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     if (!controller.isClosed) controller.add(count);
   }
 
-  void scheduleReconnect() {
-    if (reconnectTimer != null || controller.isClosed) return;
-    reconnectTimer = Timer(const Duration(seconds: 2), () {
-      reconnectTimer = null;
-      unawaited(connect());
-    });
-  }
-
   Future<void> connect() async {
     await socketSubscription?.cancel();
     socket?.close();
@@ -73,6 +65,14 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
       onDone: scheduleReconnect,
       cancelOnError: false,
     );
+  }
+
+  void scheduleReconnect() {
+    if (reconnectTimer != null || controller.isClosed) return;
+    reconnectTimer = Timer(const Duration(seconds: 2), () {
+      reconnectTimer = null;
+      unawaited(connect());
+    });
   }
 
   await load();
