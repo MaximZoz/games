@@ -250,6 +250,8 @@ class AppShell extends ConsumerWidget {
                   child: NavigationBar(
                     selectedIndex: selectedIndex,
                     onDestinationSelected: (i) => context.go(_navItems[i].path),
+                    labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+                    height: 64,
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     destinations: _navItems

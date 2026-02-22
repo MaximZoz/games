@@ -16,6 +16,7 @@ import (
 
 type ChatsHandler struct {
 	Pool *pgxpool.Pool
+	Hub  *RealtimeHub
 }
 
 type ChatUserItem struct {
@@ -205,6 +206,8 @@ func (h *ChatsHandler) Start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.publishChatListChanged(userID, targetID)
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"chat_id": chatID.String(),
@@ -304,6 +307,11 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	item := chatMessageToItem(msg)
+	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		h.publishChatMessage([]uuid.UUID{lowID, highID}, item)
+		h.publishChatListChanged(lowID, highID)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -341,6 +349,53 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		h.publishChatRead(
+			[]uuid.UUID{lowID, highID},
+			chatID.String(),
+			userID.String(),
+			updated,
+		)
+		h.publishChatListChanged(lowID, highID)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]int{"updated": updated})
+}
+
+func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageItem) {
+	if h == nil || h.Hub == nil {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type":    "chat_message",
+		"chat_id": item.ChatID,
+		"message": item,
+	})
+}
+
+func (h *ChatsHandler) publishChatListChanged(userIDs ...uuid.UUID) {
+	if h == nil || h.Hub == nil || len(userIDs) == 0 {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type": "chat_list_changed",
+	})
+}
+
+func (h *ChatsHandler) publishChatRead(
+	userIDs []uuid.UUID,
+	chatID string,
+	readerUserID string,
+	updated int,
+) {
+	if h == nil || h.Hub == nil {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type":           "chat_read",
+		"chat_id":        chatID,
+		"reader_user_id": readerUserID,
+		"updated":        updated,
+	})
 }

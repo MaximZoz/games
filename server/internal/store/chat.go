@@ -368,11 +368,11 @@ func MarkChatRead(
 	return int(tag.RowsAffected()), nil
 }
 
-func ensureChatMembership(
+func ChatParticipantIDs(
 	ctx context.Context,
 	pool *pgxpool.Pool,
-	chatID, userID uuid.UUID,
-) error {
+	chatID uuid.UUID,
+) (uuid.UUID, uuid.UUID, error) {
 	var low uuid.UUID
 	var high uuid.UUID
 	err := pool.QueryRow(ctx, `
@@ -382,8 +382,20 @@ func ensureChatMembership(
 	`, chatID).Scan(&low, &high)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return ErrChatNotFound
+			return uuid.Nil, uuid.Nil, ErrChatNotFound
 		}
+		return uuid.Nil, uuid.Nil, err
+	}
+	return low, high, nil
+}
+
+func ensureChatMembership(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, userID uuid.UUID,
+) error {
+	low, high, err := ChatParticipantIDs(ctx, pool, chatID)
+	if err != nil {
 		return err
 	}
 	if userID != low && userID != high {

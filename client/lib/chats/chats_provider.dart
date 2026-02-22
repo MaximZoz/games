@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/realtime_ws.dart';
 
 final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
   return ChatsRepository(authRepository: ref.watch(authRepositoryProvider));
@@ -15,7 +18,9 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
   }
 
   final controller = StreamController<int>();
-  Timer? timer;
+  RealtimeSocket? socket;
+  StreamSubscription<String>? socketSubscription;
+  Timer? reconnectTimer;
 
   Future<void> load() async {
     try {
@@ -27,11 +32,52 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
     }
   }
 
+  void scheduleReconnect() {
+    if (reconnectTimer != null || controller.isClosed) return;
+    reconnectTimer = Timer(const Duration(seconds: 2), () {
+      reconnectTimer = null;
+      unawaited(connect());
+    });
+  }
+
+  Future<void> connect() async {
+    await socketSubscription?.cancel();
+    socket?.close();
+    socket = null;
+
+    final token = await ref.read(authRepositoryProvider).getAccessToken();
+    if (token == null || token.isEmpty) return;
+
+    final uri = buildWebSocketUri(
+      '/api/ws',
+      queryParameters: {'access_token': token},
+    );
+    final nextSocket = connectRealtimeSocket(uri);
+    socket = nextSocket;
+    socketSubscription = nextSocket.messages.listen(
+      (raw) {
+        try {
+          final payload = jsonDecode(raw);
+          if (payload is! Map) return;
+          final type = payload['type']?.toString() ?? '';
+          if (type == 'chat_message' || type == 'chat_list_changed' || type == 'chat_read') {
+            unawaited(load());
+          }
+        } catch (_) {}
+      },
+      onError: (_) => scheduleReconnect(),
+      onDone: scheduleReconnect,
+      cancelOnError: false,
+    );
+  }
+
   load();
-  timer = Timer.periodic(const Duration(seconds: 20), (_) => load());
+  unawaited(connect());
 
   ref.onDispose(() {
-    timer?.cancel();
+    reconnectTimer?.cancel();
+    unawaited(socketSubscription?.cancel());
+    socket?.close();
     controller.close();
   });
 

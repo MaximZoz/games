@@ -221,8 +221,13 @@ func main() {
 	}
 
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
-	friendsHandler := &api.FriendsHandler{Pool: pool}
-	chatsHandler := &api.ChatsHandler{Pool: pool}
+	realtimeHub := api.NewRealtimeHub()
+	wsHandler := &api.RealtimeWSHandler{
+		Hub:       realtimeHub,
+		JWTSecret: []byte(jwtSecret),
+	}
+	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub}
+	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{
 		Pool:        pool,
@@ -245,6 +250,7 @@ func main() {
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
+	mux.Handle("/api/ws", http.HandlerFunc(wsHandler.ServeHTTP))
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
@@ -286,6 +292,7 @@ func main() {
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
 	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
+	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
 	log.Printf("Chats API: GET /api/chats, POST /api/chats/start, /api/chats/messages, /api/chats/read (Bearer)")
 	_ = rdb

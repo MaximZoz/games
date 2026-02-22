@@ -1,8 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/realtime_ws.dart';
+import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -18,10 +24,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   String? _error;
   List<ChatPreviewItem> _chats = const [];
 
+  RealtimeSocket? _socket;
+  StreamSubscription<String>? _socketSubscription;
+  Timer? _reconnectTimer;
+
   @override
   void initState() {
     super.initState();
     _loadChats();
+    unawaited(_connectRealtime());
+  }
+
+  @override
+  void dispose() {
+    _reconnectTimer?.cancel();
+    unawaited(_socketSubscription?.cancel());
+    _socket?.close();
+    super.dispose();
   }
 
   Future<void> _loadChats() async {
@@ -34,6 +53,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         _loading = false;
       });
     } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _error = e.message;
@@ -48,90 +72,249 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     }
   }
 
+  Future<void> _connectRealtime() async {
+    await _socketSubscription?.cancel();
+    _socket?.close();
+    _socket = null;
+
+    final token = await ref.read(authRepositoryProvider).getAccessToken();
+    if (token == null || token.isEmpty) return;
+
+    final uri = buildWebSocketUri(
+      '/api/ws',
+      queryParameters: {'access_token': token},
+    );
+    final socket = connectRealtimeSocket(uri);
+    _socket = socket;
+    _socketSubscription = socket.messages.listen(
+      _handleRealtimeMessage,
+      onError: (_) => _scheduleReconnect(),
+      onDone: _scheduleReconnect,
+      cancelOnError: false,
+    );
+  }
+
+  void _scheduleReconnect() {
+    if (!mounted || _reconnectTimer != null) return;
+    _reconnectTimer = Timer(const Duration(seconds: 2), () {
+      _reconnectTimer = null;
+      unawaited(_connectRealtime());
+    });
+  }
+
+  void _handleRealtimeMessage(String raw) {
+    try {
+      final payload = jsonDecode(raw);
+      if (payload is! Map) return;
+      final type = payload['type']?.toString() ?? '';
+      if (type == 'chat_message' ||
+          type == 'chat_list_changed' ||
+          type == 'chat_read' ||
+          type == 'friends_updated') {
+        unawaited(_loadChats());
+      }
+    } catch (_) {}
+  }
+
   Future<void> _openStartChatDialog() async {
-    final controller = TextEditingController();
-    String? localError;
-    var submitting = false;
+    List<FriendItem> friends;
+    try {
+      final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
+      friends = snapshot.friends;
+    } on FriendsException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+      });
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Не удалось загрузить друзей';
+      });
+      return;
+    }
 
-    final startedChatID = await showDialog<String>(
+    if (friends.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Сначала добавьте друзей, потом можно открыть чат')),
+      );
+      return;
+    }
+
+    final pickedUser = await _pickFriendDialog(friends);
+    if (!mounted || pickedUser == null) return;
+
+    try {
+      final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
+      if (!mounted || chatID.isEmpty) return;
+      final name = Uri.encodeQueryComponent(_friendTitle(pickedUser));
+      context.push('/chats/$chatID?name=$name');
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _error = e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Не удалось создать чат');
+    }
+  }
+
+  Future<FriendUserItem?> _pickFriendDialog(List<FriendItem> friends) async {
+    final queryController = TextEditingController();
+    final result = await showModalBottomSheet<FriendUserItem>(
       context: context,
-      builder: (context) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        var query = '';
+
+        List<FriendItem> filtered() {
+          final q = query.trim().toLowerCase();
+          if (q.isEmpty) return friends;
+          return friends.where((item) {
+            final name = _friendTitle(item.user).toLowerCase();
+            return name.contains(q);
+          }).toList();
+        }
+
         return StatefulBuilder(
-          builder: (context, setDialogState) {
-            Future<void> submit() async {
-              final targetUserID = controller.text.trim();
-              if (targetUserID.isEmpty) {
-                setDialogState(() {
-                  localError = 'Введите UUID пользователя';
-                });
-                return;
-              }
-
-              setDialogState(() {
-                submitting = true;
-                localError = null;
-              });
-              try {
-                final chatID = await ref.read(chatsRepositoryProvider).startChat(targetUserID);
-                if (!context.mounted) return;
-                Navigator.of(context).pop(chatID);
-              } on ChatException catch (e) {
-                setDialogState(() {
-                  localError = e.message;
-                  submitting = false;
-                });
-              } catch (_) {
-                setDialogState(() {
-                  localError = 'Не удалось создать чат';
-                  submitting = false;
-                });
-              }
-            }
-
-            return AlertDialog(
-              title: const Text('Новый чат'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      labelText: 'UUID пользователя',
-                      hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+          builder: (context, setSheetState) {
+            final list = filtered();
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 12,
+                  right: 12,
+                  bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
+                ),
+                child: GradientCard(
+                  animate: false,
+                  margin: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(12),
+                  child: SizedBox(
+                    height: 420,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Новый чат',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: queryController,
+                          decoration: const InputDecoration(
+                            hintText: 'Найти друга по нику',
+                            prefixIcon: Icon(Icons.search_rounded),
+                          ),
+                          onChanged: (value) {
+                            setSheetState(() => query = value);
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: list.isEmpty
+                              ? ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(
+                                    parent: ClampingScrollPhysics(),
+                                  ),
+                                  children: const [
+                                    SizedBox(height: 80),
+                                    Center(
+                                      child: Text(
+                                        'Друзья не найдены',
+                                        style: TextStyle(color: AppColors.textSecondary),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : ListView.separated(
+                                  physics: const AlwaysScrollableScrollPhysics(
+                                    parent: ClampingScrollPhysics(),
+                                  ),
+                                  itemCount: list.length,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                  itemBuilder: (_, index) {
+                                    final friend = list[index].user;
+                                    return Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => Navigator.of(sheetContext).pop(friend),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 8,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              _AvatarDot(
+                                                user: ChatUserItem(
+                                                  id: friend.id,
+                                                  displayName: friend.displayName,
+                                                  avatarKind: friend.avatarKind,
+                                                  avatarValue: friend.avatarValue,
+                                                  age: friend.age,
+                                                  gender: friend.gender,
+                                                  about: friend.about,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Text(
+                                                  _friendTitle(friend),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: AppColors.textPrimary,
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
                     ),
-                    onSubmitted: (_) => submit(),
                   ),
-                  if (localError != null) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      localError!,
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
-                  ],
-                ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: submitting ? null : () => Navigator.of(context).pop(),
-                  child: const Text('Отмена'),
-                ),
-                AppButton(
-                  onPressed: submitting ? null : submit,
-                  label: submitting ? 'Создание...' : 'Создать',
-                ),
-              ],
             );
           },
         );
       },
     );
 
-    if (!mounted) return;
-    if (startedChatID == null || startedChatID.isEmpty) return;
+    queryController.dispose();
+    return result;
+  }
 
-    await _loadChats();
-    if (!mounted) return;
-    context.push('/chats/$startedChatID');
+  String _friendTitle(FriendUserItem user) {
+    final value = user.displayName?.trim();
+    if (value == null || value.isEmpty) return 'Пользователь';
+    return value;
   }
 
   String _formatDateTime(String raw) {
@@ -145,9 +328,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
 
   String _peerTitle(ChatUserItem user) {
     final value = user.displayName?.trim();
-    if (value == null || value.isEmpty) {
-      return 'Пользователь';
-    }
+    if (value == null || value.isEmpty) return 'Пользователь';
     return value;
   }
 
@@ -159,6 +340,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         child: RefreshIndicator(
           onRefresh: _loadChats,
           child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics(),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             children: [
               Row(
@@ -171,11 +355,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                         ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    onPressed: _loading ? null : _loadChats,
-                    tooltip: 'Обновить',
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
                   IconButton(
                     onPressed: _openStartChatDialog,
                     tooltip: 'Новый чат',
@@ -205,7 +384,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                 const Padding(
                   padding: EdgeInsets.only(top: 24),
                   child: Text(
-                    'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы начать диалог по UUID пользователя.',
+                    'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textSecondary,

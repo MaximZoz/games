@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/realtime_ws.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -24,12 +26,14 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
-  static const _pollInterval = Duration(seconds: 3);
-
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final Set<String> _messageIDs = <String>{};
 
-  Timer? _pollTimer;
+  RealtimeSocket? _socket;
+  StreamSubscription<String>? _socketSubscription;
+  Timer? _reconnectTimer;
+
   bool _loading = true;
   bool _sending = false;
   String? _error;
@@ -39,12 +43,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   void initState() {
     super.initState();
     _loadMessages(initial: true);
-    _pollTimer = Timer.periodic(_pollInterval, (_) => _loadMessages());
+    unawaited(_connectRealtime());
   }
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
+    _reconnectTimer?.cancel();
+    unawaited(_socketSubscription?.cancel());
+    _socket?.close();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -61,6 +67,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
       setState(() {
         _messages = list;
+        _messageIDs
+          ..clear()
+          ..addAll(list.map((e) => e.id));
         _error = null;
         _loading = false;
       });
@@ -68,9 +77,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       if (hasNewTail || initial) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
-      // Отмечаем как прочитанные в фоне.
       unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
     } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _error = e.message;
@@ -85,6 +98,82 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     }
   }
 
+  Future<void> _connectRealtime() async {
+    await _socketSubscription?.cancel();
+    _socket?.close();
+    _socket = null;
+
+    final token = await ref.read(authRepositoryProvider).getAccessToken();
+    if (token == null || token.isEmpty) return;
+
+    final uri = buildWebSocketUri(
+      '/api/ws',
+      queryParameters: {'access_token': token},
+    );
+    final socket = connectRealtimeSocket(uri);
+    _socket = socket;
+    _socketSubscription = socket.messages.listen(
+      _handleRealtimeMessage,
+      onError: (_) => _scheduleReconnect(),
+      onDone: _scheduleReconnect,
+      cancelOnError: false,
+    );
+  }
+
+  void _scheduleReconnect() {
+    if (!mounted || _reconnectTimer != null) return;
+    _reconnectTimer = Timer(const Duration(seconds: 2), () {
+      _reconnectTimer = null;
+      unawaited(_connectRealtime());
+    });
+  }
+
+  void _handleRealtimeMessage(String raw) {
+    try {
+      final payload = jsonDecode(raw);
+      if (payload is! Map) return;
+      final type = payload['type']?.toString() ?? '';
+      if (type == 'chat_message') {
+        final chatID = payload['chat_id']?.toString() ?? '';
+        if (chatID != widget.chatID) return;
+        final messageRaw = payload['message'];
+        if (messageRaw is! Map) return;
+        final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
+        _upsertMessage(item);
+        final meID = ref.read(authStateProvider).valueOrNull?.id;
+        if (item.senderUserID != meID) {
+          unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
+        }
+      } else if (type == 'chat_read') {
+        final chatID = payload['chat_id']?.toString() ?? '';
+        if (chatID == widget.chatID) {
+          unawaited(_loadMessages());
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _upsertMessage(ChatMessageItem item) {
+    if (!mounted) return;
+
+    final existingIndex = _messages.indexWhere((m) => m.id == item.id);
+    if (existingIndex >= 0) {
+      final updated = List<ChatMessageItem>.of(_messages);
+      updated[existingIndex] = item;
+      setState(() {
+        _messages = updated;
+        _messageIDs.add(item.id);
+      });
+      return;
+    }
+
+    setState(() {
+      _messages = [..._messages, item];
+      _messageIDs.add(item.id);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
     if (text.isEmpty || _sending) return;
@@ -94,13 +183,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
       if (!mounted) return;
       _textController.clear();
+      _upsertMessage(sent);
       setState(() {
-        _messages = [..._messages, sent];
         _sending = false;
         _error = null;
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _error = e.message;
@@ -138,6 +231,93 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final title = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
 
+    Widget messagesWidget;
+    if (_loading) {
+      messagesWidget = const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    } else if (_error != null) {
+      messagesWidget = Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            _error!,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.red.shade700),
+          ),
+        ),
+      );
+    } else {
+      messagesWidget = RefreshIndicator(
+        onRefresh: _loadMessages,
+        child: _messages.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                children: const [
+                  SizedBox(height: 120),
+                  Center(
+                    child: Text(
+                      'Сообщений пока нет.\nНапишите первое сообщение.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  final mine = message.senderUserID == meID;
+                  return Align(
+                    alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: mine ? AppColors.accentSoft : AppColors.surfaceCard,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: mine
+                                ? AppColors.accentStart.withOpacity(0.35)
+                                : Colors.black.withOpacity(0.08),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.body,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatBubbleTime(message.createdAt),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -163,85 +343,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                           ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: _loadMessages,
-                    icon: const Icon(Icons.refresh_rounded),
-                    tooltip: 'Обновить',
-                  ),
                 ],
               ),
             ),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-                  : _error != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              _error!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.red.shade700),
-                            ),
-                          ),
-                        )
-                      : _messages.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Сообщений пока нет.\nНапишите первое сообщение.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: AppColors.textSecondary),
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              itemCount: _messages.length,
-                              itemBuilder: (context, index) {
-                                final message = _messages[index];
-                                final mine = message.senderUserID == meID;
-                                return Align(
-                                  alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 320),
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                                      decoration: BoxDecoration(
-                                        color: mine ? AppColors.accentSoft : AppColors.surfaceCard,
-                                        borderRadius: BorderRadius.circular(14),
-                                        border: Border.all(
-                                          color: mine
-                                              ? AppColors.accentStart.withOpacity(0.35)
-                                              : Colors.black.withOpacity(0.08),
-                                        ),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            message.body,
-                                            style: const TextStyle(
-                                              color: AppColors.textPrimary,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _formatBubbleTime(message.createdAt),
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-            ),
+            Expanded(child: messagesWidget),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
               child: GradientCard(

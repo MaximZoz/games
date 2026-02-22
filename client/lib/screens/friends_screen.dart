@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/realtime_ws.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -39,19 +41,66 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
+  RealtimeSocket? _socket;
+  StreamSubscription<String>? _socketSubscription;
+  Timer? _reconnectTimer;
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
   bool _isSearchExpanded = false;
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_connectRealtime());
+  }
+
+  @override
   void dispose() {
+    _reconnectTimer?.cancel();
+    unawaited(_socketSubscription?.cancel());
+    _socket?.close();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _showMessage(String? error, String? success) {}
+
+  Future<void> _connectRealtime() async {
+    await _socketSubscription?.cancel();
+    _socket?.close();
+    _socket = null;
+
+    final token = await ref.read(authRepositoryProvider).getAccessToken();
+    if (token == null || token.isEmpty) return;
+
+    final uri = buildWebSocketUri(
+      '/api/ws',
+      queryParameters: {'access_token': token},
+    );
+    final socket = connectRealtimeSocket(uri);
+    _socket = socket;
+    _socketSubscription = socket.messages.listen(
+      _handleRealtimeMessage,
+      onError: (_) => _scheduleReconnect(),
+      onDone: _scheduleReconnect,
+      cancelOnError: false,
+    );
+  }
+
+  void _scheduleReconnect() {
+    if (!mounted || _reconnectTimer != null) return;
+    _reconnectTimer = Timer(const Duration(seconds: 2), () {
+      _reconnectTimer = null;
+      unawaited(_connectRealtime());
+    });
+  }
+
+  void _handleRealtimeMessage(String raw) {
+    if (!raw.contains('friends_updated')) return;
+    unawaited(_refreshSnapshot(refreshSearch: _isSearchExpanded));
+  }
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -485,11 +534,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required String emptyText,
   }) {
     if (items.isEmpty) {
-      return Center(
-        child: Text(
-          emptyText,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: [
+          Center(
+            child: Text(
+              emptyText,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       );
     }
 
@@ -498,6 +553,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         if (constraints.maxWidth > 900) {
           return GridView.builder(
             padding: const EdgeInsets.all(16),
+            physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 520,
               mainAxisSpacing: 12,
@@ -511,6 +567,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
           itemCount: items.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, index) => itemBuilder(items[index]),
@@ -925,34 +982,53 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   Widget _buildSearchResults() {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
-      return const Center(
-        child: Text(
-          'Введите запрос и нажмите "Найти"',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: const [
+          Center(
+            child: Text(
+              'Введите запрос и нажмите "Найти"',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       );
     }
     if (_isSearching) {
-      return const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accentStart,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: const [
+          Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
+              ),
+            ),
           ),
-        ),
+        ],
       );
     }
     if (_searchResults.isEmpty) {
-      return const Center(
-        child: Text(
-          'Ничего не найдено',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: const [
+          Center(
+            child: Text(
+              'Ничего не найдено',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       );
     }
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       itemCount: _searchResults.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -1031,13 +1107,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
                     onPressed: _toggleSearch,
                   ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: () => _refreshSnapshot(refreshSearch: true),
-                    tooltip: 'Обновить',
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
                 ],
               ),
             ),
@@ -1050,7 +1119,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     ),
             ),
             if (_isSearchExpanded)
-              Expanded(child: _buildSearchResults())
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => _refreshSnapshot(refreshSearch: true),
+                  child: _buildSearchResults(),
+                ),
+              )
             else ...[
               Expanded(
                 child: DefaultTabController(
@@ -1088,10 +1162,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                       Expanded(
                         child: friendsAsync.when(
                           data: (snapshot) {
-                            return TabBarView(
-                              children: [
-                                for (final tab in tabs) _tabContent(tab, snapshot),
-                              ],
+                            return RefreshIndicator(
+                              onRefresh: () => _refreshSnapshot(refreshSearch: false),
+                              child: TabBarView(
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: [
+                                  for (final tab in tabs) _tabContent(tab, snapshot),
+                                ],
+                              ),
                             );
                           },
                           loading: () => const Center(
