@@ -34,6 +34,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   RealtimeSocket? _socket;
   StreamSubscription<String>? _socketSubscription;
   Timer? _reconnectTimer;
+  Timer? _backgroundSyncTimer;
+  bool _syncInFlight = false;
 
   bool _loading = true;
   bool _sending = false;
@@ -45,10 +47,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     super.initState();
     _loadMessages(initial: true);
     unawaited(_connectRealtime());
+    _startBackgroundSync();
   }
 
   @override
   void dispose() {
+    _backgroundSyncTimer?.cancel();
     _reconnectTimer?.cancel();
     unawaited(_socketSubscription?.cancel());
     _socket?.close();
@@ -57,7 +61,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     super.dispose();
   }
 
-  Future<void> _loadMessages({bool initial = false}) async {
+  Future<void> _loadMessages({bool initial = false, bool surfaceErrors = true}) async {
     try {
       final list = await ref.read(chatsRepositoryProvider).listMessages(widget.chatID, limit: 100);
       if (!mounted) return;
@@ -65,15 +69,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       final previousLastID = _messages.isEmpty ? null : _messages.last.id;
       final nextLastID = list.isEmpty ? null : list.last.id;
       final hasNewTail = previousLastID != nextLastID;
+      final changed = !_areMessagesEqual(_messages, list);
 
-      setState(() {
-        _messages = list;
-        _messageIDs
-          ..clear()
-          ..addAll(list.map((e) => e.id));
-        _error = null;
-        _loading = false;
-      });
+      if (_loading || _error != null || changed) {
+        setState(() {
+          _messages = list;
+          _messageIDs
+            ..clear()
+            ..addAll(list.map((e) => e.id));
+          _error = null;
+          _loading = false;
+        });
+      }
 
       if (hasNewTail || initial) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -85,12 +92,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         if (mounted) context.go('/login');
         return;
       }
+      if (!surfaceErrors) return;
       if (!mounted) return;
       setState(() {
         _error = e.message;
         _loading = false;
       });
     } catch (_) {
+      if (!surfaceErrors) return;
       if (!mounted) return;
       setState(() {
         _error = 'Не удалось загрузить сообщения';
@@ -126,6 +135,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     _reconnectTimer = Timer(const Duration(seconds: 2), () {
       _reconnectTimer = null;
       unawaited(_connectRealtime());
+    });
+  }
+
+  void _startBackgroundSync() {
+    _backgroundSyncTimer?.cancel();
+    _backgroundSyncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted || _syncInFlight || _loading) return;
+      _syncInFlight = true;
+      unawaited(
+        _loadMessages(surfaceErrors: false).whenComplete(() {
+          _syncInFlight = false;
+        }),
+      );
     });
   }
 
@@ -173,6 +195,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       _messageIDs.add(item.id);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  bool _areMessagesEqual(List<ChatMessageItem> a, List<ChatMessageItem> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      final left = a[i];
+      final right = b[i];
+      if (left.id != right.id ||
+          left.senderUserID != right.senderUserID ||
+          left.body != right.body ||
+          left.createdAt != right.createdAt ||
+          left.readAt != right.readAt) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<void> _sendMessage() async {

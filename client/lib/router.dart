@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show Widget;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -50,6 +51,13 @@ class _AuthRefreshListenable extends ChangeNotifier {
   }
 }
 
+NoTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
+  return NoTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+  );
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
@@ -88,26 +96,68 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-          GoRoute(path: '/friends', builder: (_, __) => const FriendsScreen()),
-          GoRoute(path: '/chats', builder: (_, __) => const ChatsScreen()),
+          GoRoute(
+            path: '/',
+            pageBuilder: (_, state) => _noTransitionPage(state, const HomeScreen()),
+          ),
+          GoRoute(
+            path: '/profile',
+            pageBuilder: (_, state) => _noTransitionPage(state, const ProfileScreen()),
+          ),
+          GoRoute(
+            path: '/friends',
+            pageBuilder: (_, state) => _noTransitionPage(state, const FriendsScreen()),
+          ),
+          GoRoute(
+            path: '/chats',
+            pageBuilder: (_, state) => _noTransitionPage(state, const ChatsScreen()),
+          ),
           GoRoute(
             path: '/chats/:chatId',
-            builder: (_, state) => ChatRoomScreen(
-              chatID: state.pathParameters['chatId'] ?? '',
-              peerName: state.uri.queryParameters['name'],
+            pageBuilder: (_, state) => _noTransitionPage(
+              state,
+              ChatRoomScreen(
+                chatID: state.pathParameters['chatId'] ?? '',
+                peerName: state.uri.queryParameters['name'],
+              ),
             ),
           ),
-          GoRoute(path: '/tournaments', builder: (_, __) => const TournamentsScreen()),
-          GoRoute(path: '/games', builder: (_, __) => const GamesScreen()),
-          GoRoute(path: '/inventory', builder: (_, __) => const InventoryScreen()),
-          GoRoute(path: '/achievements', builder: (_, __) => const AchievementsScreen()),
-          GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-          GoRoute(path: '/coins', builder: (_, __) => const CoinsScreen()),
-          GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-          GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-          GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
+          GoRoute(
+            path: '/tournaments',
+            pageBuilder: (_, state) => _noTransitionPage(state, const TournamentsScreen()),
+          ),
+          GoRoute(
+            path: '/games',
+            pageBuilder: (_, state) => _noTransitionPage(state, const GamesScreen()),
+          ),
+          GoRoute(
+            path: '/inventory',
+            pageBuilder: (_, state) => _noTransitionPage(state, const InventoryScreen()),
+          ),
+          GoRoute(
+            path: '/achievements',
+            pageBuilder: (_, state) => _noTransitionPage(state, const AchievementsScreen()),
+          ),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: (_, state) => _noTransitionPage(state, const SettingsScreen()),
+          ),
+          GoRoute(
+            path: '/coins',
+            pageBuilder: (_, state) => _noTransitionPage(state, const CoinsScreen()),
+          ),
+          GoRoute(
+            path: '/login',
+            pageBuilder: (_, state) => _noTransitionPage(state, const LoginScreen()),
+          ),
+          GoRoute(
+            path: '/register',
+            pageBuilder: (_, state) => _noTransitionPage(state, const RegisterScreen()),
+          ),
+          GoRoute(
+            path: '/admin',
+            pageBuilder: (_, state) => _noTransitionPage(state, const AdminScreen()),
+          ),
         ],
       ),
     ],

@@ -40,6 +40,7 @@
       height: 100%;
       overflow: hidden;
       overflow-x: hidden;
+      overscroll-behavior: none;
       overscroll-behavior-x: none;
     }
     body {
@@ -72,20 +73,25 @@
     (function () {
       let startX = 0;
       let startY = 0;
-      window.addEventListener('touchstart', function (e) {
+      document.addEventListener('touchstart', function (e) {
         if (!e.touches || e.touches.length === 0) return;
-        startX = e.touches[0].clientX;
+        const x = e.touches[0].clientX;
+        startX = x;
         startY = e.touches[0].clientY;
-      }, { passive: true });
+        // Блокируем системный свайп "назад/вперёд" от краёв экрана на iOS.
+        if (x <= 24 || x >= window.innerWidth - 24) {
+          e.preventDefault();
+        }
+      }, { passive: false, capture: true });
 
-      window.addEventListener('touchmove', function (e) {
+      document.addEventListener('touchmove', function (e) {
         if (!e.touches || e.touches.length === 0) return;
         const dx = Math.abs(e.touches[0].clientX - startX);
         const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > dy) {
+        if (dx > 8 && dx > dy) {
           e.preventDefault();
         }
-      }, { passive: false });
+      }, { passive: false, capture: true });
     })();
   </script>
 </body>

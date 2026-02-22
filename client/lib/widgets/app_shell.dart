@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,73 +8,13 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
-/// Старый экран убирается сразу, новый появляется через 100 ms.
-class _RouteTransitionWrapper extends StatefulWidget {
-  const _RouteTransitionWrapper({
-    required this.child,
-    required this.path,
-  });
-
-  final Widget child;
-  final String path;
-
-  @override
-  State<_RouteTransitionWrapper> createState() => _RouteTransitionWrapperState();
-}
-
-class _RouteTransitionWrapperState extends State<_RouteTransitionWrapper> {
-  static const _delay = Duration(milliseconds: 100);
-
-  Widget _displayedChild = const SizedBox.shrink();
-  bool _isTransitioning = false;
-  Timer? _delayTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _displayedChild = widget.child;
-  }
-
-  @override
-  void dispose() {
-    _delayTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(covariant _RouteTransitionWrapper oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_normalizePath(oldWidget.path) != _normalizePath(widget.path)) {
-      _delayTimer?.cancel();
-      setState(() => _isTransitioning = true);
-      _delayTimer = Timer(_delay, () {
-        _delayTimer = null;
-        if (mounted) {
-          setState(() {
-            _displayedChild = widget.child;
-            _isTransitioning = false;
-          });
-        }
-      });
-    } else if (!_isTransitioning) {
-      _displayedChild = widget.child;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isTransitioning) return _displayedChild;
-    return const SizedBox.shrink();
-  }
-}
-
 const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
   _NavItem(path: '/profile', icon: Icons.person, label: 'Профиль'),
   _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
   _NavItem(path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
   _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
-  _NavItem(path: '/settings', icon: Icons.settings, label: 'Ещё'),
+  _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
 ];
 
 int _selectedIndexForPath(String path) {
@@ -167,7 +105,7 @@ class AppShell extends ConsumerWidget {
                               if (user.isAdmin)
                                 IconButton(
                                   icon: const Icon(Icons.admin_panel_settings),
-                                  onPressed: () => context.push('/admin'),
+                                  onPressed: () => context.go('/admin'),
                                   tooltip: 'Админка',
                                 ),
                               Padding(
@@ -193,7 +131,7 @@ class AppShell extends ConsumerWidget {
                         }
                         return IconButton(
                           icon: const Icon(Icons.login),
-                          onPressed: () => context.push('/login'),
+                          onPressed: () => context.go('/login'),
                           tooltip: 'Войти',
                         );
                       },
@@ -207,7 +145,7 @@ class AppShell extends ConsumerWidget {
                       ),
                       error: (_, __) => IconButton(
                         icon: const Icon(Icons.login),
-                        onPressed: () => context.push('/login'),
+                        onPressed: () => context.go('/login'),
                         tooltip: 'Войти',
                       ),
                     ),
