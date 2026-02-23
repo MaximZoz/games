@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -355,14 +356,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     }
   }
 
-  Future<void> _clearChat(ChatPreviewItem item) async {
-    final confirmed = await _confirmChatAction(
-      title: 'Очистить чат',
-      message: 'Чат и вся переписка будут удалены для обеих сторон. Продолжить?',
-      confirmLabel: 'Очистить',
-      danger: true,
-    );
-    if (!confirmed) return;
+  Future<void> _clearChat(ChatPreviewItem item, {bool requireConfirmation = true}) async {
+    if (requireConfirmation) {
+      final confirmed = await _confirmChatAction(
+        title: 'Очистить чат',
+        message: 'Чат и вся переписка будут удалены для обеих сторон. Продолжить?',
+        confirmLabel: 'Очистить',
+        danger: true,
+      );
+      if (!confirmed) return;
+    }
 
     await _runChatAction(
       actionKey: 'clear_${item.chatID}',
@@ -375,16 +378,18 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
   }
 
-  Future<void> _blockUserFromChat(ChatPreviewItem item) async {
-    final peerName = _peerTitle(item.user);
-    final confirmed = await _confirmChatAction(
-      title: 'Заблокировать пользователя',
-      message: 'Пользователь "$peerName" будет заблокирован.\n'
-          'Чат с перепиской удалится, и он не сможет писать вам и добавлять в друзья до разблокировки.',
-      confirmLabel: 'Заблокировать',
-      danger: true,
-    );
-    if (!confirmed) return;
+  Future<void> _blockUserFromChat(ChatPreviewItem item, {bool requireConfirmation = true}) async {
+    if (requireConfirmation) {
+      final peerName = _peerTitle(item.user);
+      final confirmed = await _confirmChatAction(
+        title: 'Заблокировать пользователя',
+        message: 'Пользователь "$peerName" будет заблокирован.\n'
+            'Чат с перепиской удалится, и он не сможет писать вам и добавлять в друзья до разблокировки.',
+        confirmLabel: 'Заблокировать',
+        danger: true,
+      );
+      if (!confirmed) return;
+    }
 
     await _runChatAction(
       actionKey: 'block_${item.user.id}',
@@ -398,82 +403,103 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
   }
 
-  Widget _buildSwipeActionsBackground() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: Row(
-        children: [
-          const Spacer(),
-          Container(
-            width: 110,
-            color: const Color(0xFF1E88E5),
-            alignment: Alignment.center,
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.delete_sweep_rounded, color: Colors.white),
-                SizedBox(height: 4),
-                Text(
-                  'Очистить',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 110,
-            color: const Color(0xFFD32F2F),
-            alignment: Alignment.center,
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.block_rounded, color: Colors.white),
-                SizedBox(height: 4),
-                Text(
-                  'Блок',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildSlidableActionContent({
+    required IconData icon,
+    required String label,
+    required bool loading,
+  }) {
+    if (loading) {
+      return const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ],
     );
   }
 
-  Future<_ChatSwipeAction?> _pickSwipeAction(ChatPreviewItem item) async {
-    return showModalBottomSheet<_ChatSwipeAction>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-            child: GradientCard(
-              margin: EdgeInsets.zero,
-              animate: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.delete_sweep_rounded, color: Color(0xFF1E88E5)),
-                    title: const Text('Очистить чат'),
-                    subtitle: const Text('Удалить чат и переписку'),
-                    onTap: () => Navigator.of(sheetContext).pop(_ChatSwipeAction.clear),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.block_rounded, color: Color(0xFFD32F2F)),
-                    title: const Text('Заблокировать'),
-                    subtitle: const Text('Удалить чат и запретить писать/добавлять в друзья'),
-                    onTap: () => Navigator.of(sheetContext).pop(_ChatSwipeAction.block),
-                  ),
-                ],
-              ),
-            ),
+  Future<void> _onSlidableActionPressed(
+    BuildContext actionContext,
+    ChatPreviewItem item,
+    _ChatSwipeAction action,
+  ) async {
+    final clearKey = 'clear_${item.chatID}';
+    final blockKey = 'block_${item.user.id}';
+    final busy = _actionInFlight.contains(clearKey) || _actionInFlight.contains(blockKey);
+    if (busy) return;
+
+    final slidable = Slidable.of(actionContext);
+    if (action == _ChatSwipeAction.clear) {
+      final confirmed = await _confirmChatAction(
+        title: 'Очистить чат',
+        message: 'Чат и вся переписка будут удалены для обеих сторон. Продолжить?',
+        confirmLabel: 'Очистить',
+        danger: true,
+      );
+      if (!confirmed) {
+        slidable?.close();
+        return;
+      }
+      final runAction = _clearChat(item, requireConfirmation: false);
+      slidable?.close();
+      await runAction;
+    } else {
+      final peerName = _peerTitle(item.user);
+      final confirmed = await _confirmChatAction(
+        title: 'Заблокировать пользователя',
+        message: 'Пользователь "$peerName" будет заблокирован.\n'
+            'Чат с перепиской удалится, и он не сможет писать вам и добавлять в друзья до разблокировки.',
+        confirmLabel: 'Заблокировать',
+        danger: true,
+      );
+      if (!confirmed) {
+        slidable?.close();
+        return;
+      }
+      final runAction = _blockUserFromChat(item, requireConfirmation: false);
+      slidable?.close();
+      await runAction;
+    }
+  }
+
+  Widget _buildGradientHeaderIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: 40,
+        height: 40,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          gradient: AppGradients.borderAt(0.38),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Icon(icon, size: 20, color: AppColors.textPrimary),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -731,6 +757,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                       final item = sortedChats[index];
                       final clearKey = 'clear_${item.chatID}';
                       final blockKey = 'block_${item.user.id}';
+                      final clearLoading = _actionInFlight.contains(clearKey);
+                      final blockLoading = _actionInFlight.contains(blockKey);
                       final busy = _actionInFlight.contains(clearKey) || _actionInFlight.contains(blockKey);
                       final lastMessage = item.lastMessage;
                       final unread = item.unreadCount;
@@ -738,23 +766,55 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
 
                       return Padding(
                         padding: EdgeInsets.only(top: index == 0 ? 0 : 10),
-                        child: Dismissible(
+                        child: Slidable(
                           key: ValueKey('chat-${item.chatID}'),
-                          direction: busy ? DismissDirection.none : DismissDirection.endToStart,
-                          dismissThresholds: const {
-                            DismissDirection.endToStart: 0.36,
-                          },
-                          background: const SizedBox.shrink(),
-                          secondaryBackground: _buildSwipeActionsBackground(),
-                          confirmDismiss: (_) async {
-                            final picked = await _pickSwipeAction(item);
-                            if (picked == _ChatSwipeAction.clear) {
-                              await _clearChat(item);
-                            } else if (picked == _ChatSwipeAction.block) {
-                              await _blockUserFromChat(item);
-                            }
-                            return false;
-                          },
+                          enabled: !busy,
+                          endActionPane: ActionPane(
+                            motion: const DrawerMotion(),
+                            extentRatio: 0.56,
+                            children: [
+                              CustomSlidableAction(
+                                onPressed: busy
+                                    ? null
+                                    : (actionContext) {
+                                        unawaited(
+                                          _onSlidableActionPressed(
+                                            actionContext,
+                                            item,
+                                            _ChatSwipeAction.clear,
+                                          ),
+                                        );
+                                      },
+                                backgroundColor: const Color(0xFF1E88E5),
+                                foregroundColor: Colors.white,
+                                child: _buildSlidableActionContent(
+                                  icon: Icons.delete_sweep_rounded,
+                                  label: 'Очистить',
+                                  loading: clearLoading,
+                                ),
+                              ),
+                              CustomSlidableAction(
+                                onPressed: busy
+                                    ? null
+                                    : (actionContext) {
+                                        unawaited(
+                                          _onSlidableActionPressed(
+                                            actionContext,
+                                            item,
+                                            _ChatSwipeAction.block,
+                                          ),
+                                        );
+                                      },
+                                backgroundColor: const Color(0xFFD32F2F),
+                                foregroundColor: Colors.white,
+                                child: _buildSlidableActionContent(
+                                  icon: Icons.block_rounded,
+                                  label: 'Блок',
+                                  loading: blockLoading,
+                                ),
+                              ),
+                            ],
+                          ),
                           child: Opacity(
                             opacity: busy ? 0.65 : 1,
                             child: GradientCard(
@@ -860,15 +920,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                         ),
                   ),
                   const Spacer(),
-                  IconButton(
+                  _buildGradientHeaderIconButton(
                     onPressed: _openBlockedUsersDialog,
                     tooltip: 'Заблокированные пользователи',
-                    icon: const Icon(Icons.block_rounded),
+                    icon: Icons.block_rounded,
                   ),
-                  IconButton(
+                  const SizedBox(width: 8),
+                  _buildGradientHeaderIconButton(
                     onPressed: _openStartChatDialog,
                     tooltip: 'Новый чат',
-                    icon: const Icon(Icons.add_comment_rounded),
+                    icon: Icons.add_comment_rounded,
                   ),
                 ],
               ),
