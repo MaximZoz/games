@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -24,10 +25,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   bool _isOpeningBlockedUsersDialog = false;
   bool _isStartingChat = false;
   bool _isNavigatingToChat = false;
+  bool _hasBlockedUsers = false;
   final Set<String> _chatActionInFlight = <String>{};
   Future<List<FriendItem>>? _friendsLoadInFlight;
   List<FriendItem> _cachedFriends = const [];
   DateTime? _friendsCachedAt;
+  Timer? _navigationLockTimer;
 
   static const Duration _friendsCacheTTL = Duration(minutes: 2);
 
@@ -35,6 +38,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   void initState() {
     super.initState();
     unawaited(_warmUpStartChatData());
+    unawaited(_refreshBlockedUsersPresence());
+  }
+
+  @override
+  void dispose() {
+    _navigationLockTimer?.cancel();
+    super.dispose();
   }
 
   bool get _hasFreshFriendsCache {
@@ -53,6 +63,30 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       await _loadFriendsForStartChat();
     } catch (_) {
       // Тихий прогрев: ошибки покажем только если пользователь откроет диалог.
+    }
+  }
+
+  Future<void> _refreshBlockedUsersPresence({bool silent = true}) async {
+    try {
+      final blocked = await ref.read(chatsRepositoryProvider).listBlockedUsers();
+      if (!mounted) return;
+      final hasBlocked = blocked.isNotEmpty;
+      if (hasBlocked != _hasBlockedUsers) {
+        setState(() => _hasBlockedUsers = hasBlocked);
+      }
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!silent && mounted) {
+        setState(() => _error = e.message);
+      }
+    } catch (_) {
+      if (!silent && mounted) {
+        setState(() => _error = 'Не удалось загрузить список блокировок');
+      }
     }
   }
 
@@ -108,6 +142,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     setState(() => _error = null);
     try {
       await refreshChatsList(ref, force: true);
+      await _refreshBlockedUsersPresence();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -242,6 +277,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                                 }
 
                                 final blocked = snapshot.data ?? const <BlockedChatUserItem>[];
+                                final hasBlockedNow = blocked.isNotEmpty;
+                                if (hasBlockedNow != _hasBlockedUsers) {
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    if (!mounted) return;
+                                    setState(() => _hasBlockedUsers = hasBlockedNow);
+                                  });
+                                }
                                 if (blocked.isEmpty) {
                                   return ListView(
                                     physics: const AlwaysScrollableScrollPhysics(
@@ -328,6 +370,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                                                               .read(chatsRepositoryProvider)
                                                               .listBlockedUsers();
                                                         });
+                                                        unawaited(_refreshBlockedUsersPresence());
                                                       } on ChatException catch (e) {
                                                         if (e.statusCode == 401) {
                                                           await ref
@@ -379,7 +422,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
       if (!mounted || chatID.isEmpty) return;
       unawaited(refreshChatsList(ref));
-      await _openChatRoute(
+      _openChatRoute(
         chatID: chatID,
         peerName: _friendTitle(pickedUser),
       );
@@ -401,20 +444,27 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     }
   }
 
-  Future<void> _openChatRoute({
+  void _openChatRoute({
     required String chatID,
     required String peerName,
-  }) async {
+  }) {
     if (_isNavigatingToChat) return;
     setState(() => _isNavigatingToChat = true);
-    final name = Uri.encodeQueryComponent(peerName);
-    try {
-      await context.push('/chats/$chatID?name=$name');
-    } finally {
+    _navigationLockTimer?.cancel();
+    _navigationLockTimer = Timer(const Duration(milliseconds: 650), () {
       if (mounted) {
         setState(() => _isNavigatingToChat = false);
       }
-    }
+    });
+    final name = Uri.encodeQueryComponent(peerName);
+    unawaited(
+      context.push('/chats/$chatID?name=$name').whenComplete(() {
+        _navigationLockTimer?.cancel();
+        if (mounted) {
+          setState(() => _isNavigatingToChat = false);
+        }
+      }),
+    );
   }
 
   Future<bool> _confirmChatAction({
@@ -490,6 +540,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       await ref.read(chatsRepositoryProvider).blockUser(userID);
       await refreshChatsList(ref, force: true);
       await refreshFriendsSnapshot(ref);
+      await _refreshBlockedUsersPresence();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -503,47 +554,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     } finally {
       if (mounted) setState(() => _chatActionInFlight.remove(item.chatID));
     }
-  }
-
-  Future<void> _openChatActions(ChatPreviewItem item) async {
-    if (_chatActionInFlight.contains(item.chatID)) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-            child: GradientCard(
-              animate: false,
-              margin: EdgeInsets.zero,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
-                    title: const Text('Очистить переписку'),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                      unawaited(_clearChatFromList(item));
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.block_rounded, color: Colors.red),
-                    title: const Text('Заблокировать пользователя'),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                      unawaited(_blockChatUserFromList(item));
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   String _friendLoadErrorText(Object? error) {
@@ -824,11 +834,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                         ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    onPressed: actionBusy ? null : _openBlockedUsersDialog,
-                    tooltip: 'Заблокированные пользователи',
-                    icon: const Icon(Icons.block_rounded),
-                  ),
+                  if (_hasBlockedUsers)
+                    IconButton(
+                      onPressed: actionBusy ? null : _openBlockedUsersDialog,
+                      tooltip: 'Заблокированные пользователи',
+                      icon: const Icon(Icons.block_rounded),
+                    ),
                   IconButton(
                     onPressed: actionBusy ? null : _openStartChatDialog,
                     tooltip: 'Новый чат',
@@ -873,93 +884,117 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                     final unread = item.unreadCount;
                     final subtitle = (lastMessage?.body ?? '').trim();
                     final itemBusy = _chatActionInFlight.contains(item.chatID);
-                    return GradientCard(
-                      margin: const EdgeInsets.only(top: 10),
-                      animate: false,
-                      child: InkWell(
-                        onTap: _isNavigatingToChat || itemBusy
-                            ? null
-                            : () => _openChatRoute(
-                                  chatID: item.chatID,
-                                  peerName: _peerTitle(item.user),
-                                ),
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                        child: Row(
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Slidable(
+                        key: ValueKey('chat_${item.chatID}'),
+                        enabled: !itemBusy,
+                        startActionPane: ActionPane(
+                          motion: const DrawerMotion(),
+                          extentRatio: 0.24,
                           children: [
-                            _AvatarDot(user: item.user),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            SlidableAction(
+                              onPressed: (_) => unawaited(_clearChatFromList(item)),
+                              backgroundColor: const Color(0xFF1E88E5),
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete_sweep_rounded,
+                              label: 'Очистить',
+                            ),
+                          ],
+                        ),
+                        endActionPane: ActionPane(
+                          motion: const DrawerMotion(),
+                          extentRatio: 0.24,
+                          children: [
+                            SlidableAction(
+                              onPressed: (_) => unawaited(_blockChatUserFromList(item)),
+                              backgroundColor: const Color(0xFFD32F2F),
+                              foregroundColor: Colors.white,
+                              icon: Icons.block_rounded,
+                              label: 'Блок',
+                            ),
+                          ],
+                        ),
+                        child: Opacity(
+                          opacity: itemBusy ? 0.65 : 1,
+                          child: GradientCard(
+                            margin: EdgeInsets.zero,
+                            animate: false,
+                            child: InkWell(
+                              onTap: _isNavigatingToChat || itemBusy
+                                  ? null
+                                  : () => _openChatRoute(
+                                        chatID: item.chatID,
+                                        peerName: _peerTitle(item.user),
+                                      ),
+                              borderRadius: BorderRadius.circular(AppRadius.card),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    _peerTitle(item.user),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15,
+                                  _AvatarDot(user: item.user),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _peerTitle(item.user),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          subtitle.isEmpty ? 'Нет сообщений' : subtitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    subtitle.isEmpty ? 'Нет сообщений' : subtitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
-                                    ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (lastMessage != null)
+                                        Text(
+                                          _formatDateTime(lastMessage.createdAt),
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      if (unread > 0) ...[
+                                        const SizedBox(height: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.accentStart,
+                                            borderRadius: BorderRadius.circular(999),
+                                          ),
+                                          child: Text(
+                                            unread > 99 ? '99+' : '$unread',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                if (lastMessage != null)
-                                  Text(
-                                    _formatDateTime(lastMessage.createdAt),
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                const SizedBox(height: 2),
-                                IconButton(
-                                  onPressed: itemBusy ? null : () => unawaited(_openChatActions(item)),
-                                  iconSize: 18,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 28,
-                                    minHeight: 28,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  tooltip: 'Действия с чатом',
-                                  icon: const Icon(Icons.more_horiz_rounded),
-                                ),
-                                if (unread > 0) ...[
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.accentStart,
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: Text(
-                                      unread > 99 ? '99+' : '$unread',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     );

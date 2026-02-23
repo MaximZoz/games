@@ -29,9 +29,11 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
 
 enum _RoomAction { clearChat, blockUser }
 
-class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
+class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _composerFocusNode = FocusNode();
   final Set<String> _messageIDs = <String>{};
 
   RealtimeSocket? _socket;
@@ -50,20 +52,37 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _composerFocusNode.addListener(_onComposerFocusChanged);
     _loadMessages(initial: true);
     unawaited(_connectRealtime());
     _startBackgroundSync();
   }
 
   @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    if (!_composerFocusNode.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _composerFocusNode.removeListener(_onComposerFocusChanged);
     _backgroundSyncTimer?.cancel();
     _reconnectTimer?.cancel();
     unawaited(_socketSubscription?.cancel());
     _socket?.close();
+    _composerFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onComposerFocusChanged() {
+    if (!_composerFocusNode.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _goBackToChats() async {
@@ -616,6 +635,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     Expanded(
                       child: TextField(
                         controller: _textController,
+                        focusNode: _composerFocusNode,
                         minLines: 1,
                         maxLines: 4,
                         decoration: const InputDecoration(
@@ -624,6 +644,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                           isDense: true,
                         ),
                         textInputAction: TextInputAction.send,
+                        onTap: _scrollToBottom,
                         onSubmitted: (_) => _sendMessage(),
                       ),
                     ),
