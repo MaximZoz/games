@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';

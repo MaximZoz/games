@@ -103,7 +103,7 @@ final chatsUnreadCountProvider = Provider<int>((ref) {
   return chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
 });
 
-Future<void> refreshChatsList(Ref ref) async {
+Future<void> refreshChatsList(WidgetRef ref) async {
   ref.invalidate(chatsListProvider);
   await ref.read(chatsListProvider.future);
 }

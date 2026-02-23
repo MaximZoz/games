@@ -111,7 +111,7 @@ final friendsIncomingCountProvider = Provider<int>((ref) {
   return snapshot?.incoming.length ?? 0;
 });
 
-Future<void> refreshFriendsSnapshot(Ref ref) async {
+Future<void> refreshFriendsSnapshot(WidgetRef ref) async {
   ref.invalidate(friendsSnapshotProvider);
   await ref.read(friendsSnapshotProvider.future);
 }
