@@ -272,6 +272,14 @@ func CreateFriendRequest(
 		return uuid.Nil, ErrFriendNotFound
 	}
 
+	blocked, err := IsUsersBlocked(ctx, pool, senderUserID, receiverUserID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if blocked {
+		return uuid.Nil, ErrUserBlocked
+	}
+
 	low, high := orderedUserPair(senderUserID, receiverUserID)
 	var exists int
 	err = pool.QueryRow(ctx,
