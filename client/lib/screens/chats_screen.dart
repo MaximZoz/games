@@ -20,11 +20,92 @@ class ChatsScreen extends ConsumerStatefulWidget {
 
 class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   String? _error;
+  bool _isOpeningStartChatDialog = false;
+  bool _isStartingChat = false;
+  bool _isNavigatingToChat = false;
+  Future<List<FriendItem>>? _friendsLoadInFlight;
+  List<FriendItem> _cachedFriends = const [];
+  DateTime? _friendsCachedAt;
+
+  static const Duration _friendsCacheTTL = Duration(minutes: 2);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_warmUpStartChatData());
+  }
+
+  bool get _hasFreshFriendsCache {
+    final ts = _friendsCachedAt;
+    if (ts == null) return false;
+    return DateTime.now().difference(ts) <= _friendsCacheTTL;
+  }
+
+  void _cacheFriends(List<FriendItem> friends) {
+    _cachedFriends = List<FriendItem>.unmodifiable(friends);
+    _friendsCachedAt = DateTime.now();
+  }
+
+  Future<void> _warmUpStartChatData() async {
+    try {
+      await _loadFriendsForStartChat();
+    } catch (_) {
+      // Тихий прогрев: ошибки покажем только если пользователь откроет диалог.
+    }
+  }
+
+  Future<List<FriendItem>> _loadFriendsForStartChat({
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh && _hasFreshFriendsCache) {
+      return _cachedFriends;
+    }
+    final inFlight = _friendsLoadInFlight;
+    if (!forceRefresh && inFlight != null) {
+      return inFlight;
+    }
+
+    late Future<List<FriendItem>> request;
+    request = () async {
+      try {
+        if (!forceRefresh) {
+          final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+          if (snapshot != null) {
+            _cacheFriends(snapshot.friends);
+            return snapshot.friends;
+          }
+        }
+        final snapshot = await ref.read(friendsSnapshotProvider.future);
+        _cacheFriends(snapshot.friends);
+        return snapshot.friends;
+      } catch (_) {
+        // Если потоковый снимок недоступен, фолбэкаемся на прямой API-запрос.
+        final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
+        _cacheFriends(snapshot.friends);
+        return snapshot.friends;
+      }
+    }();
+
+    _friendsLoadInFlight = request;
+    try {
+      return await request;
+    } on FriendsException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+      }
+      rethrow;
+    } finally {
+      if (identical(_friendsLoadInFlight, request)) {
+        _friendsLoadInFlight = null;
+      }
+    }
+  }
 
   Future<void> _loadChats() async {
     setState(() => _error = null);
     try {
-      await refreshChatsList(ref);
+      await refreshChatsList(ref, force: true);
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -40,46 +121,40 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   }
 
   Future<void> _openStartChatDialog() async {
-    List<FriendItem> friends;
+    if (_isOpeningStartChatDialog || _isStartingChat || _isNavigatingToChat) {
+      return;
+    }
+    setState(() {
+      _isOpeningStartChatDialog = true;
+      _error = null;
+    });
+
+    FriendUserItem? pickedUser;
     try {
-      final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
-      friends = snapshot.friends;
-    } on FriendsException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
+      pickedUser = await _pickFriendDialog();
+    } finally {
+      if (mounted) {
+        setState(() => _isOpeningStartChatDialog = false);
       }
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-      });
-      return;
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось загрузить друзей';
-      });
-      return;
     }
 
-    if (friends.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Сначала добавьте друзей, потом можно открыть чат')),
-      );
-      return;
-    }
+    if (!mounted) return;
+    if (pickedUser == null) return;
 
-    final pickedUser = await _pickFriendDialog(friends);
-    if (!mounted || pickedUser == null) return;
+    await _startChatWithUser(pickedUser);
+  }
 
+  Future<void> _startChatWithUser(FriendUserItem pickedUser) async {
+    if (_isStartingChat || _isNavigatingToChat) return;
+    setState(() => _isStartingChat = true);
     try {
       final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
       if (!mounted || chatID.isEmpty) return;
       unawaited(refreshChatsList(ref));
-      final name = Uri.encodeQueryComponent(_friendTitle(pickedUser));
-      context.push('/chats/$chatID?name=$name');
+      await _openChatRoute(
+        chatID: chatID,
+        peerName: _friendTitle(pickedUser),
+      );
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -91,83 +166,179 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = 'Не удалось создать чат');
+    } finally {
+      if (mounted) {
+        setState(() => _isStartingChat = false);
+      }
     }
   }
 
-  Future<FriendUserItem?> _pickFriendDialog(List<FriendItem> friends) async {
+  Future<void> _openChatRoute({
+    required String chatID,
+    required String peerName,
+  }) async {
+    if (_isNavigatingToChat) return;
+    setState(() => _isNavigatingToChat = true);
+    final name = Uri.encodeQueryComponent(peerName);
+    try {
+      await context.push('/chats/$chatID?name=$name');
+    } finally {
+      if (mounted) {
+        setState(() => _isNavigatingToChat = false);
+      }
+    }
+  }
+
+  String _friendLoadErrorText(Object? error) {
+    if (error is FriendsException) return error.message;
+    return 'Не удалось загрузить друзей';
+  }
+
+  Future<FriendUserItem?> _pickFriendDialog() async {
     final queryController = TextEditingController();
-    final result = await showModalBottomSheet<FriendUserItem>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        var query = '';
+    Future<List<FriendItem>> friendsFuture = _loadFriendsForStartChat();
+    try {
+      return await showModalBottomSheet<FriendUserItem>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          var query = '';
 
-        List<FriendItem> filtered() {
-          final q = query.trim().toLowerCase();
-          if (q.isEmpty) return friends;
-          return friends.where((item) {
-            final name = _friendTitle(item.user).toLowerCase();
-            return name.contains(q);
-          }).toList();
-        }
+          List<FriendItem> filtered(List<FriendItem> source) {
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return source;
+            return source.where((item) {
+              final name = _friendTitle(item.user).toLowerCase();
+              return name.contains(q);
+            }).toList();
+          }
 
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final list = filtered();
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 12,
-                  right: 12,
-                  bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
-                ),
-                child: GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    height: 420,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Новый чат',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              return SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
+                  ),
+                  child: GradientCard(
+                    animate: false,
+                    margin: EdgeInsets.zero,
+                    padding: const EdgeInsets.all(12),
+                    child: SizedBox(
+                      height: 420,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Новый чат',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: queryController,
-                          decoration: const InputDecoration(
-                            hintText: 'Найти друга по нику',
-                            prefixIcon: Icon(Icons.search_rounded),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: queryController,
+                            decoration: const InputDecoration(
+                              hintText: 'Найти друга по нику',
+                              prefixIcon: Icon(Icons.search_rounded),
+                            ),
+                            onChanged: (value) {
+                              setSheetState(() => query = value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setSheetState(() => query = value);
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: list.isEmpty
-                              ? ListView(
-                                  physics: const AlwaysScrollableScrollPhysics(
-                                    parent: ClampingScrollPhysics(),
-                                  ),
-                                  children: const [
-                                    SizedBox(height: 80),
-                                    Center(
-                                      child: Text(
-                                        'Друзья не найдены',
-                                        style: TextStyle(color: AppColors.textSecondary),
-                                      ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            child: FutureBuilder<List<FriendItem>>(
+                              future: friendsFuture,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState != ConnectionState.done) {
+                                  return const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     ),
-                                  ],
-                                )
-                              : ListView.separated(
+                                  );
+                                }
+
+                                if (snapshot.hasError) {
+                                  return ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: [
+                                      const SizedBox(height: 70),
+                                      Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          child: Text(
+                                            _friendLoadErrorText(snapshot.error),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(color: Colors.red.shade700),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Center(
+                                        child: OutlinedButton.icon(
+                                          onPressed: () {
+                                            setSheetState(() {
+                                              friendsFuture = _loadFriendsForStartChat(
+                                                forceRefresh: true,
+                                              );
+                                            });
+                                          },
+                                          icon: const Icon(Icons.refresh_rounded),
+                                          label: const Text('Повторить'),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                final friends = snapshot.data ?? const <FriendItem>[];
+                                if (friends.isEmpty) {
+                                  return ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: const [
+                                      SizedBox(height: 80),
+                                      Center(
+                                        child: Text(
+                                          'Сначала добавьте друзей, потом можно открыть чат.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: AppColors.textSecondary),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                final list = filtered(friends);
+                                if (list.isEmpty) {
+                                  return ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: const [
+                                      SizedBox(height: 80),
+                                      Center(
+                                        child: Text(
+                                          'Друзья не найдены',
+                                          style: TextStyle(color: AppColors.textSecondary),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                return ListView.separated(
                                   physics: const AlwaysScrollableScrollPhysics(
                                     parent: ClampingScrollPhysics(),
                                   ),
@@ -218,21 +389,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                                       ),
                                     );
                                   },
-                                ),
-                        ),
-                      ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    queryController.dispose();
-    return result;
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      queryController.dispose();
+    }
   }
 
   String _friendTitle(FriendUserItem user) {
@@ -268,6 +441,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
     final errorText = _error ?? providerError;
     final loading = chatsAsync.isLoading && chats.isEmpty && errorText == null;
+    final newChatBusy =
+        _isOpeningStartChatDialog || _isStartingChat || _isNavigatingToChat;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -291,9 +466,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                   ),
                   const Spacer(),
                   IconButton(
-                    onPressed: _openStartChatDialog,
+                    onPressed: newChatBusy ? null : _openStartChatDialog,
                     tooltip: 'Новый чат',
-                    icon: const Icon(Icons.add_comment_rounded),
+                    icon: newChatBusy
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add_comment_rounded),
                   ),
                 ],
               ),
@@ -337,10 +518,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                       margin: const EdgeInsets.only(top: 10),
                       animate: false,
                       child: InkWell(
-                        onTap: () {
-                          final name = Uri.encodeQueryComponent(_peerTitle(item.user));
-                          context.push('/chats/${item.chatID}?name=$name');
-                        },
+                        onTap: _isNavigatingToChat
+                            ? null
+                            : () => _openChatRoute(
+                                  chatID: item.chatID,
+                                  peerName: _peerTitle(item.user),
+                                ),
                         borderRadius: BorderRadius.circular(AppRadius.card),
                         child: Row(
                           children: [

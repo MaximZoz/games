@@ -103,7 +103,41 @@ final chatsUnreadCountProvider = Provider<int>((ref) {
   return chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
 });
 
-Future<void> refreshChatsList(WidgetRef ref) async {
-  ref.invalidate(chatsListProvider);
-  await ref.read(chatsListProvider.future);
+Future<void>? _refreshChatsInFlight;
+DateTime? _lastChatsRefreshAt;
+const _minChatsRefreshInterval = Duration(milliseconds: 400);
+
+Future<void> refreshChatsList(
+  WidgetRef ref, {
+  bool force = false,
+}) async {
+  final inFlight = _refreshChatsInFlight;
+  if (inFlight != null) {
+    await inFlight;
+    if (!force) return;
+  }
+
+  final now = DateTime.now();
+  final lastRefreshAt = _lastChatsRefreshAt;
+  if (!force &&
+      lastRefreshAt != null &&
+      now.difference(lastRefreshAt) < _minChatsRefreshInterval) {
+    return;
+  }
+
+  late Future<void> request;
+  request = () async {
+    ref.invalidate(chatsListProvider);
+    await ref.read(chatsListProvider.future);
+    _lastChatsRefreshAt = DateTime.now();
+  }();
+
+  _refreshChatsInFlight = request;
+  try {
+    await request;
+  } finally {
+    if (identical(_refreshChatsInFlight, request)) {
+      _refreshChatsInFlight = null;
+    }
+  }
 }

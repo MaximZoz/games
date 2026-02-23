@@ -27,9 +27,11 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
 }
 
-class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
+class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _composerFocusNode = FocusNode();
   final Set<String> _messageIDs = <String>{};
 
   RealtimeSocket? _socket;
@@ -40,26 +42,56 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
   bool _loading = true;
   bool _sending = false;
+  bool _leavingToChats = false;
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _composerFocusNode.addListener(_onComposerFocusChanged);
     _loadMessages(initial: true);
     unawaited(_connectRealtime());
     _startBackgroundSync();
   }
 
   @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    if (!_composerFocusNode.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _composerFocusNode.removeListener(_onComposerFocusChanged);
     _backgroundSyncTimer?.cancel();
     _reconnectTimer?.cancel();
     unawaited(_socketSubscription?.cancel());
     _socket?.close();
+    _composerFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onComposerFocusChanged() {
+    if (!_composerFocusNode.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  Future<void> _goBackToChats() async {
+    if (_leavingToChats) return;
+    setState(() => _leavingToChats = true);
+    try {
+      await refreshChatsList(ref, force: true);
+    } catch (_) {
+      // Если синхронизация не удалась, всё равно даём вернуться в список.
+    }
+    if (!mounted) return;
+    context.go('/chats');
   }
 
   Future<void> _loadMessages({bool initial = false, bool surfaceErrors = true}) async {
@@ -319,6 +351,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   Widget build(BuildContext context) {
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final title = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
 
     Widget messagesWidget;
     if (_loading) {
@@ -436,69 +470,76 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => context.go('/chats'),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    tooltip: 'Назад к чатам',
-                  ),
-                  Expanded(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(child: messagesWidget),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-              child: GradientCard(
-                animate: false,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        bottom: false,
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        minLines: 1,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText: 'Введите сообщение...',
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
                     IconButton(
-                      onPressed: _sending ? null : _sendMessage,
-                      tooltip: 'Отправить',
-                      icon: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.send_rounded),
+                      onPressed: _leavingToChats ? null : _goBackToChats,
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tooltip: 'Назад к чатам',
+                    ),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              Expanded(child: messagesWidget),
+              Padding(
+                padding: EdgeInsets.fromLTRB(12, 10, 12, bottomSafeInset + 14),
+                child: GradientCard(
+                  animate: false,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _composerFocusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _sending ? null : _sendMessage,
+                        tooltip: 'Отправить',
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
