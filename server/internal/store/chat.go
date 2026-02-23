@@ -19,6 +19,9 @@ var (
 	ErrCannotChatWithYourself = errors.New("cannot chat with yourself")
 	ErrChatMessageEmpty       = errors.New("chat message is empty")
 	ErrChatMessageTooLong     = errors.New("chat message is too long")
+	ErrUserBlocked            = errors.New("user is blocked")
+	ErrCannotBlockYourself    = errors.New("cannot block yourself")
+	ErrUserNotFound           = errors.New("user not found")
 )
 
 type ChatMessage struct {
@@ -50,6 +53,11 @@ type ChatPreview struct {
 	UpdatedAt   time.Time
 }
 
+type ChatBlockedUser struct {
+	User      ChatUser
+	BlockedAt time.Time
+}
+
 func orderedChatPair(a, b uuid.UUID) (uuid.UUID, uuid.UUID) {
 	if strings.Compare(a.String(), b.String()) < 0 {
 		return a, b
@@ -72,6 +80,14 @@ func EnsureDirectChat(
 	}
 	if !targetExists {
 		return uuid.Nil, ErrChatNotFound
+	}
+
+	blocked, err := IsUsersBlocked(ctx, pool, currentUserID, targetUserID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if blocked {
+		return uuid.Nil, ErrUserBlocked
 	}
 
 	low, high := orderedChatPair(currentUserID, targetUserID)
@@ -159,7 +175,9 @@ func ListChatsForUser(
 		JOIN users u ON u.id = mc.peer_id
 		LEFT JOIN last_msg lm ON lm.chat_id = mc.id
 		LEFT JOIN unread un ON un.chat_id = mc.id
-		ORDER BY updated_at DESC
+		ORDER BY
+			CASE WHEN COALESCE(un.unread_count, 0) > 0 THEN 0 ELSE 1 END ASC,
+			updated_at DESC
 		LIMIT $2 OFFSET $3
 	`, userID, limit, offset)
 	if err != nil {
@@ -321,9 +339,25 @@ func SendChatMessage(
 		return ChatMessage{}, err
 	}
 
+	lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+	peerID := highID
+	if senderUserID == highID {
+		peerID = lowID
+	}
+	blocked, err := IsUsersBlocked(ctx, pool, senderUserID, peerID)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+	if blocked {
+		return ChatMessage{}, ErrUserBlocked
+	}
+
 	var msg ChatMessage
 	var readAt sql.NullTime
-	err := pool.QueryRow(ctx, `
+	err = pool.QueryRow(ctx, `
 		INSERT INTO chat_messages (chat_id, sender_user_id, body)
 		VALUES ($1, $2, $3)
 		RETURNING id, chat_id, sender_user_id, body, created_at, read_at
@@ -366,6 +400,188 @@ func MarkChatRead(
 		return 0, err
 	}
 	return int(tag.RowsAffected()), nil
+}
+
+func IsUsersBlocked(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	userA, userB uuid.UUID,
+) (bool, error) {
+	var exists int
+	err := pool.QueryRow(ctx, `
+		SELECT 1
+		FROM user_blocks ub
+		WHERE
+			(ub.blocker_user_id = $1 AND ub.blocked_user_id = $2)
+			OR
+			(ub.blocker_user_id = $2 AND ub.blocked_user_id = $1)
+		LIMIT 1
+	`, userA, userB).Scan(&exists)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func ClearChatForUser(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, currentUserID uuid.UUID,
+) (uuid.UUID, uuid.UUID, error) {
+	lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, err
+	}
+	if currentUserID != lowID && currentUserID != highID {
+		return uuid.Nil, uuid.Nil, ErrChatForbidden
+	}
+
+	tag, err := pool.Exec(ctx, `
+		DELETE FROM chats
+		WHERE id = $1
+	`, chatID)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, err
+	}
+	if tag.RowsAffected() == 0 {
+		return uuid.Nil, uuid.Nil, ErrChatNotFound
+	}
+	return lowID, highID, nil
+}
+
+func BlockUser(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	blockerUserID, blockedUserID uuid.UUID,
+) (bool, error) {
+	if blockerUserID == blockedUserID {
+		return false, ErrCannotBlockYourself
+	}
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback(ctx)
+
+	var exists int
+	err = tx.QueryRow(ctx, `
+		SELECT 1
+		FROM users
+		WHERE id = $1
+	`, blockedUserID).Scan(&exists)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, ErrUserNotFound
+		}
+		return false, err
+	}
+
+	insertTag, err := tx.Exec(ctx, `
+		INSERT INTO user_blocks (blocker_user_id, blocked_user_id)
+		VALUES ($1, $2)
+		ON CONFLICT (blocker_user_id, blocked_user_id) DO NOTHING
+	`, blockerUserID, blockedUserID)
+	if err != nil {
+		return false, err
+	}
+	created := insertTag.RowsAffected() > 0
+
+	_, err = tx.Exec(ctx, `
+		DELETE FROM friend_requests
+		WHERE
+			(sender_user_id = $1 AND receiver_user_id = $2)
+			OR
+			(sender_user_id = $2 AND receiver_user_id = $1)
+	`, blockerUserID, blockedUserID)
+	if err != nil {
+		return false, err
+	}
+
+	friendLow, friendHigh := orderedUserPair(blockerUserID, blockedUserID)
+	_, err = tx.Exec(ctx, `
+		DELETE FROM friendships
+		WHERE user_low = $1 AND user_high = $2
+	`, friendLow, friendHigh)
+	if err != nil {
+		return false, err
+	}
+
+	chatLow, chatHigh := orderedChatPair(blockerUserID, blockedUserID)
+	_, err = tx.Exec(ctx, `
+		DELETE FROM chats
+		WHERE user_low = $1 AND user_high = $2
+	`, chatLow, chatHigh)
+	if err != nil {
+		return false, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return false, err
+	}
+	return created, nil
+}
+
+func UnblockUser(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	blockerUserID, blockedUserID uuid.UUID,
+) error {
+	if blockerUserID == blockedUserID {
+		return ErrCannotBlockYourself
+	}
+
+	_, err := pool.Exec(ctx, `
+		DELETE FROM user_blocks
+		WHERE blocker_user_id = $1 AND blocked_user_id = $2
+	`, blockerUserID, blockedUserID)
+	return err
+}
+
+func ListBlockedUsers(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	blockerUserID uuid.UUID,
+) ([]ChatBlockedUser, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
+			ub.created_at
+		FROM user_blocks ub
+		JOIN users u ON u.id = ub.blocked_user_id
+		WHERE ub.blocker_user_id = $1
+		ORDER BY
+			CASE WHEN u.display_name IS NULL OR u.display_name = '' THEN 1 ELSE 0 END ASC,
+			COALESCE(u.display_name, u.email) ASC
+	`, blockerUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]ChatBlockedUser, 0)
+	for rows.Next() {
+		var item ChatBlockedUser
+		if err := rows.Scan(
+			&item.User.ID,
+			&item.User.Email,
+			&item.User.DisplayName,
+			&item.User.AvatarKind,
+			&item.User.AvatarValue,
+			&item.User.Age,
+			&item.User.Gender,
+			&item.User.About,
+			&item.BlockedAt,
+		); err != nil {
+			return nil, err
+		}
+		item.BlockedAt = item.BlockedAt.UTC()
+		result = append(result, item)
+	}
+	return result, rows.Err()
 }
 
 func ChatParticipantIDs(

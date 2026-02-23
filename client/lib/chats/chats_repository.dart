@@ -99,6 +99,23 @@ class ChatPreviewItem {
   }
 }
 
+class BlockedChatUserItem {
+  final ChatUserItem user;
+  final String blockedAt;
+
+  BlockedChatUserItem({
+    required this.user,
+    required this.blockedAt,
+  });
+
+  factory BlockedChatUserItem.fromJson(Map<String, dynamic> json) {
+    return BlockedChatUserItem(
+      user: ChatUserItem.fromJson(Map<String, dynamic>.from((json['user'] ?? const {}) as Map)),
+      blockedAt: json['blocked_at'] as String? ?? '',
+    );
+  }
+}
+
 class ChatsRepository {
   ChatsRepository({required AuthRepository authRepository})
       : _auth = authRepository;
@@ -173,6 +190,75 @@ class ChatsRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return body['chat_id'] as String? ?? '';
+  }
+
+  Future<void> clearChat(String chatID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/clear'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'chat_id': chatID}),
+        operation: 'ChatsRepository.clearChat',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<void> blockUser(String targetUserID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/block'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'target_user_id': targetUserID}),
+        operation: 'ChatsRepository.blockUser',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<void> unblockUser(String targetUserID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/unblock'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'target_user_id': targetUserID}),
+        operation: 'ChatsRepository.unblockUser',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<List<BlockedChatUserItem>> listBlockedUsers() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/chats/blocked'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ChatsRepository.listBlockedUsers',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['blocked'] as List<dynamic>? ?? const [];
+    return list
+        .map((e) => BlockedChatUserItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   Future<List<ChatMessageItem>> listMessages(
