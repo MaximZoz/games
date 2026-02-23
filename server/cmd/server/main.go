@@ -283,6 +283,10 @@ func main() {
 	mux.Handle("/api/chats/start", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Start)))
 	mux.Handle("/api/chats/messages", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Messages)))
 	mux.Handle("/api/chats/read", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Read)))
+	mux.Handle("/api/chats/clear", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Clear)))
+	mux.Handle("/api/chats/block", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Block)))
+	mux.Handle("/api/chats/unblock", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Unblock)))
+	mux.Handle("/api/chats/blocked", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Blocked)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
@@ -313,7 +317,7 @@ func main() {
 	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
 	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
-	log.Printf("Chats API: GET /api/chats, POST /api/chats/start, /api/chats/messages, /api/chats/read (Bearer)")
+	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
 	_ = rdb
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)

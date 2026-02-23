@@ -38,6 +38,11 @@ type ChatPreviewItem struct {
 	UpdatedAt   string           `json:"updated_at"`
 }
 
+type BlockedChatUserItem struct {
+	User      ChatUserItem `json:"user"`
+	BlockedAt string       `json:"blocked_at"`
+}
+
 type ChatMessageItem struct {
 	ID           string  `json:"id"`
 	ChatID       string  `json:"chat_id"`
@@ -58,6 +63,14 @@ type SendChatMessageBody struct {
 
 type MarkChatReadBody struct {
 	ChatID string `json:"chat_id"`
+}
+
+type ClearChatBody struct {
+	ChatID string `json:"chat_id"`
+}
+
+type ChatUserActionBody struct {
+	TargetUserID string `json:"target_user_id"`
 }
 
 func currentChatUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
@@ -101,8 +114,14 @@ func writeChatError(w http.ResponseWriter, err error) {
 		http.Error(w, "message is empty", http.StatusBadRequest)
 	case errors.Is(err, store.ErrChatMessageTooLong):
 		http.Error(w, "message is too long", http.StatusBadRequest)
+	case errors.Is(err, store.ErrCannotBlockYourself):
+		http.Error(w, "cannot block yourself", http.StatusBadRequest)
 	case errors.Is(err, store.ErrChatForbidden):
 		http.Error(w, "forbidden", http.StatusForbidden)
+	case errors.Is(err, store.ErrUserBlocked):
+		http.Error(w, "user is blocked", http.StatusForbidden)
+	case errors.Is(err, store.ErrUserNotFound):
+		http.Error(w, "user not found", http.StatusNotFound)
 	case errors.Is(err, store.ErrChatNotFound):
 		http.Error(w, "not found", http.StatusNotFound)
 	default:
@@ -363,6 +382,136 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]int{"updated": updated})
 }
 
+func (h *ChatsHandler) Clear(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body ClearChatBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	chatID, err := uuid.Parse(strings.TrimSpace(body.ChatID))
+	if err != nil {
+		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		return
+	}
+
+	lowID, highID, err := store.ClearChatForUser(r.Context(), h.Pool, chatID, userID)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+	h.publishChatListChanged(lowID, highID)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *ChatsHandler) Block(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body ChatUserActionBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	targetID, err := uuid.Parse(strings.TrimSpace(body.TargetUserID))
+	if err != nil {
+		http.Error(w, "invalid target_user_id", http.StatusBadRequest)
+		return
+	}
+
+	_, err = store.BlockUser(r.Context(), h.Pool, userID, targetID)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+	h.publishChatListChanged(userID, targetID)
+	h.publishFriendsUpdated(userID, targetID)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *ChatsHandler) Unblock(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body ChatUserActionBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	targetID, err := uuid.Parse(strings.TrimSpace(body.TargetUserID))
+	if err != nil {
+		http.Error(w, "invalid target_user_id", http.StatusBadRequest)
+		return
+	}
+
+	if err := store.UnblockUser(r.Context(), h.Pool, userID, targetID); err != nil {
+		writeChatError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *ChatsHandler) Blocked(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	blocked, err := store.ListBlockedUsers(r.Context(), h.Pool, userID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+
+	items := make([]BlockedChatUserItem, 0, len(blocked))
+	for _, u := range blocked {
+		items = append(items, BlockedChatUserItem{
+			User:      chatUserToItem(u.User),
+			BlockedAt: u.BlockedAt.UTC().Format(time.RFC3339Nano),
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"blocked": items,
+	})
+}
+
 func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageItem) {
 	if h == nil || h.Hub == nil {
 		return
@@ -397,5 +546,14 @@ func (h *ChatsHandler) publishChatRead(
 		"chat_id":        chatID,
 		"reader_user_id": readerUserID,
 		"updated":        updated,
+	})
+}
+
+func (h *ChatsHandler) publishFriendsUpdated(userIDs ...uuid.UUID) {
+	if h == nil || h.Hub == nil || len(userIDs) == 0 {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type": "friends_updated",
 	})
 }
