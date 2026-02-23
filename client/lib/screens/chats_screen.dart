@@ -21,9 +21,25 @@ class ChatsScreen extends ConsumerStatefulWidget {
 
 enum _ChatSwipeAction { clear, block }
 
-class _ChatsScreenState extends ConsumerState<ChatsScreen> {
+class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProviderStateMixin {
   String? _error;
   final Set<String> _actionInFlight = <String>{};
+  late final AnimationController _borderAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _borderAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _borderAnimationController.dispose();
+    super.dispose();
+  }
 
   Future<void> _loadChats() async {
     setState(() => _error = null);
@@ -405,29 +421,42 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
 
   Widget _buildSlidableActionContent({
     required IconData icon,
-    required String label,
     required bool loading,
+    required Color iconColor,
+    required double phaseShift,
   }) {
-    if (loading) {
-      return const SizedBox(
-        width: 22,
-        height: 22,
-        child: CircularProgressIndicator(
-          strokeWidth: 2.2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      );
-    }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.white),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ],
+    return AnimatedBuilder(
+      animation: _borderAnimationController,
+      builder: (context, _) {
+        final phase = (_borderAnimationController.value + phaseShift) % 1.0;
+        return Container(
+          width: 44,
+          height: 44,
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            gradient: AppGradients.borderAt(phase),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: loading
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                      ),
+                    )
+                  : Icon(icon, color: iconColor, size: 22),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -453,9 +482,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         slidable?.close();
         return;
       }
-      final runAction = _clearChat(item, requireConfirmation: false);
-      slidable?.close();
-      await runAction;
+      await _clearChat(item, requireConfirmation: false);
     } else {
       final peerName = _peerTitle(item.user);
       final confirmed = await _confirmChatAction(
@@ -469,9 +496,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         slidable?.close();
         return;
       }
-      final runAction = _blockUserFromChat(item, requireConfirmation: false);
-      slidable?.close();
-      await runAction;
+      await _blockUserFromChat(item, requireConfirmation: false);
     }
   }
 
@@ -479,26 +504,33 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
+    double phaseShift = 0,
   }) {
     return Tooltip(
       message: tooltip,
-      child: Container(
-        width: 40,
-        height: 40,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          gradient: AppGradients.borderAt(0.38),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(10),
-            child: Icon(icon, size: 20, color: AppColors.textPrimary),
-          ),
-        ),
+      child: AnimatedBuilder(
+        animation: _borderAnimationController,
+        builder: (context, _) {
+          final phase = (_borderAnimationController.value + phaseShift) % 1.0;
+          return Container(
+            width: 40,
+            height: 40,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              gradient: AppGradients.borderAt(phase),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Material(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                onTap: onPressed,
+                borderRadius: BorderRadius.circular(10),
+                child: Icon(icon, size: 20, color: AppColors.textPrimary),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -771,7 +803,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                           enabled: !busy,
                           endActionPane: ActionPane(
                             motion: const DrawerMotion(),
-                            extentRatio: 0.56,
+                            extentRatio: 0.40,
                             children: [
                               CustomSlidableAction(
                                 onPressed: busy
@@ -785,12 +817,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                                           ),
                                         );
                                       },
-                                backgroundColor: const Color(0xFF1E88E5),
-                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                                 child: _buildSlidableActionContent(
                                   icon: Icons.delete_sweep_rounded,
-                                  label: 'Очистить',
                                   loading: clearLoading,
+                                  iconColor: const Color(0xFF1E88E5),
+                                  phaseShift: 0.0,
                                 ),
                               ),
                               CustomSlidableAction(
@@ -805,12 +838,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                                           ),
                                         );
                                       },
-                                backgroundColor: const Color(0xFFD32F2F),
-                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                                 child: _buildSlidableActionContent(
                                   icon: Icons.block_rounded,
-                                  label: 'Блок',
                                   loading: blockLoading,
+                                  iconColor: const Color(0xFFD32F2F),
+                                  phaseShift: 0.5,
                                 ),
                               ),
                             ],
@@ -924,12 +958,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                     onPressed: _openBlockedUsersDialog,
                     tooltip: 'Заблокированные пользователи',
                     icon: Icons.block_rounded,
+                    phaseShift: 0.0,
                   ),
                   const SizedBox(width: 8),
                   _buildGradientHeaderIconButton(
                     onPressed: _openStartChatDialog,
                     tooltip: 'Новый чат',
                     icon: Icons.add_comment_rounded,
+                    phaseShift: 0.45,
                   ),
                 ],
               ),
