@@ -43,6 +43,34 @@ Content-Type: application/json
 
 Формат ответа такой же, как при регистрации.
 
+### Обновление access-токена (refresh flow)
+
+```
+POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "eyJ..."
+}
+```
+
+Ответ `200 OK`:
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "expires_in": 900,
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "display_name": "Игрок",
+    "is_admin": false
+  }
+}
+```
+
+Если refresh-токен невалидный/протух — `401 Unauthorized`.
+
 ### Текущий пользователь (защищённый эндпоинт)
 
 ```
@@ -61,6 +89,110 @@ Authorization: Bearer <access_token>
 ```
 
 При отсутствии или невалидном токене — `401 Unauthorized`.
+
+---
+
+## Друзья
+
+Все эндпоинты ниже требуют:
+`Authorization: Bearer <access_token>`.
+
+### Список друзей и заявок
+
+```
+GET /api/friends
+Authorization: Bearer <access_token>
+```
+
+Ответ `200 OK`:
+```json
+{
+  "friends": [
+    {
+      "user": { "id": "uuid", "email": "a@b.c", "display_name": "Player" },
+      "created_at": "2026-02-20T15:00:00Z"
+    }
+  ],
+  "incoming": [
+    {
+      "request_id": "uuid",
+      "user": { "id": "uuid", "email": "x@y.z" },
+      "created_at": "2026-02-20T15:10:00Z"
+    }
+  ],
+  "outgoing": []
+}
+```
+
+### Поиск пользователей для добавления
+
+```
+GET /api/friends/search?q=nick_or_email&limit=20
+Authorization: Bearer <access_token>
+```
+
+`relation_status` в ответе: `none | friend | incoming | outgoing`.
+
+### Отправить заявку в друзья
+
+```
+POST /api/friends/request
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "target_user_id": "uuid" }
+```
+
+Ответ `201 Created`:
+`{ "request_id": "uuid" }`
+
+### Принять заявку
+
+```
+POST /api/friends/accept
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "request_id": "uuid" }
+```
+
+Ответ `204 No Content`.
+
+### Отклонить заявку
+
+```
+POST /api/friends/reject
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "request_id": "uuid" }
+```
+
+Ответ `204 No Content`.
+
+### Отменить исходящую заявку
+
+```
+POST /api/friends/cancel
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "request_id": "uuid" }
+```
+
+Ответ `204 No Content`.
+
+### Удалить из друзей
+
+```
+POST /api/friends/remove
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "friend_user_id": "uuid" }
+```
+
+Ответ `204 No Content`.
 
 ---
 

@@ -11,6 +11,7 @@ class GradientCard extends StatefulWidget {
     this.margin,
     this.borderWidth = 2,
     this.animate = true,
+    this.animateBorder = false,
   });
 
   final Widget child;
@@ -18,6 +19,8 @@ class GradientCard extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final double borderWidth;
   final bool animate;
+  /// Включает циклическую анимацию рамки. По умолчанию отключена для снижения нагрузки.
+  final bool animateBorder;
 
   @override
   State<GradientCard> createState() => _GradientCardState();
@@ -25,18 +28,17 @@ class GradientCard extends StatefulWidget {
 
 class _GradientCardState extends State<GradientCard>
     with TickerProviderStateMixin {
-  late AnimationController _borderController;
+  AnimationController? _borderController;
   late AnimationController _appearController;
   late Animation<double> _scale;
   late Animation<double> _opacity;
 
+  static const _staticGradientStop = 0.2;
+
   @override
   void initState() {
     super.initState();
-    _borderController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..repeat();
+    _syncBorderAnimation();
     _appearController = AnimationController(
       vsync: this,
       duration: AppDurations.medium,
@@ -51,41 +53,67 @@ class _GradientCardState extends State<GradientCard>
   }
 
   @override
+  void didUpdateWidget(covariant GradientCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animateBorder != widget.animateBorder) {
+      _syncBorderAnimation();
+    }
+  }
+
+  void _syncBorderAnimation() {
+    if (widget.animateBorder) {
+      _borderController ??= AnimationController(
+        vsync: this,
+        duration: const Duration(seconds: 5),
+      )..repeat();
+      return;
+    }
+    _borderController?.dispose();
+    _borderController = null;
+  }
+
+  @override
   void dispose() {
-    _borderController.dispose();
+    _borderController?.dispose();
     _appearController.dispose();
     super.dispose();
   }
 
-  Widget _buildCard() {
+  Widget _cardWithGradient(Gradient gradient) {
     final r = AppRadius.card + widget.borderWidth;
+    return Container(
+      padding: EdgeInsets.all(widget.borderWidth),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentStart.withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: widget.padding ?? const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+
+  Widget _buildCard() {
+    final animated = widget.animateBorder && _borderController != null;
+    if (!animated) {
+      return _cardWithGradient(AppGradients.borderAt(_staticGradientStop));
+    }
     return AnimatedBuilder(
-      animation: _borderController,
-      builder: (context, _) {
-        final gradient = AppGradients.borderAt(_borderController.value);
-        return Container(
-          padding: EdgeInsets.all(widget.borderWidth),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accentStart.withOpacity(0.12),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Container(
-            padding: widget.padding ?? const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-            ),
-            child: widget.child,
-          ),
-        );
-      },
+      animation: _borderController!,
+      builder: (context, _) =>
+          _cardWithGradient(AppGradients.borderAt(_borderController!.value)),
     );
   }
 

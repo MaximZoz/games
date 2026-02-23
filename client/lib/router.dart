@@ -23,7 +23,6 @@ import 'package:multigames_client/widgets/app_shell.dart';
 
 const _publicPaths = <String>{'/login', '/register'};
 const _authRequiredPaths = <String>{
-  '/profile',
   '/friends',
   '/chats',
   '/tournaments',
@@ -82,13 +81,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           if (authState.valueOrNull != null) {
             await ref.read(authStateProvider.notifier).logout();
           }
-          return '/login';
+          return '/profile';
         }
         user ??= await repo.getStoredUser();
       }
 
       if (isPublic && user != null) return '/';
-      if (needsAuth && user == null) return '/login';
+      if (needsAuth && user == null) return '/profile';
       if (isAdminRoute && user != null && !user.isAdmin) return '/';
       return null;
     },

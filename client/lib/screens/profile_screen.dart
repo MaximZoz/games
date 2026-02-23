@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
@@ -52,6 +55,66 @@ String _ageYearsWord(int n) {
 
 final Map<int, Uint8List> _base64AvatarCache = {};
 
+const int _avatarMaxSidePx = 96;
+const int _avatarStorageLimitBytes = 45 * 1024;
+
+Future<Uint8List?> _compactAvatarBytes(Uint8List source) async {
+  ui.Codec? probeCodec;
+  ui.Image? probeImage;
+  try {
+    probeCodec = await ui.instantiateImageCodec(source);
+    final probeFrame = await probeCodec.getNextFrame();
+    probeImage = probeFrame.image;
+
+    final width = probeImage.width;
+    final height = probeImage.height;
+    final longestSide = math.max(width, height);
+    final scale = longestSide > _avatarMaxSidePx
+        ? _avatarMaxSidePx / longestSide
+        : 1.0;
+
+    final targetWidth = math.max(1, (width * scale).round());
+    final targetHeight = math.max(1, (height * scale).round());
+
+    final codec = await ui.instantiateImageCodec(
+      source,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+    );
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    codec.dispose();
+
+    if (bytes == null) return null;
+    return bytes.buffer.asUint8List();
+  } catch (_) {
+    return null;
+  } finally {
+    probeImage?.dispose();
+    probeCodec?.dispose();
+  }
+}
+
+Future<String?> _buildCompactAvatarValue(Uint8List source) async {
+  final compact = await _compactAvatarBytes(source);
+  final bytes = compact ?? source;
+  if (bytes.lengthInBytes > _avatarStorageLimitBytes) {
+    return null;
+  }
+  return 'base64,${base64Encode(bytes)}';
+}
+
+void _putAvatarCache(int key, Uint8List bytes) {
+  _base64AvatarCache.remove(key);
+  _base64AvatarCache[key] = bytes;
+  const maxEntries = 120;
+  if (_base64AvatarCache.length > maxEntries) {
+    _base64AvatarCache.remove(_base64AvatarCache.keys.first);
+  }
+}
+
 /// Аватар с отложенной подгрузкой base64 (без подвисания при открытии/закрытии формы).
 class _AsyncAvatarImage extends StatefulWidget {
   const _AsyncAvatarImage({
@@ -102,7 +165,7 @@ class _AsyncAvatarImageState extends State<_AsyncAvatarImage> {
       if (!mounted) return;
       compute<String, Uint8List>(_decodeBase64Isolate, v.substring(7)).then((bytes) {
         if (!mounted) return;
-        _base64AvatarCache[key] = bytes;
+        _putAvatarCache(key, bytes);
         setState(() => _bytes = bytes);
       });
     });
@@ -237,7 +300,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     if (user == null) {
                       return _ProfileEmptyState(
                         key: const ValueKey('empty'),
-                        onLogin: () => context.push('/login'),
+                        onLogin: () => context.go('/login'),
+                        onRegister: () => context.go('/register'),
                       );
                     }
                     final extraAsync = ref.watch(profileExtraProvider);
@@ -385,9 +449,14 @@ class _ProfileErrorState extends StatelessWidget {
 }
 
 class _ProfileEmptyState extends StatelessWidget {
-  const _ProfileEmptyState({super.key, required this.onLogin});
+  const _ProfileEmptyState({
+    super.key,
+    required this.onLogin,
+    required this.onRegister,
+  });
 
   final VoidCallback onLogin;
+  final VoidCallback onRegister;
 
   @override
   Widget build(BuildContext context) {
@@ -431,6 +500,12 @@ class _ProfileEmptyState extends StatelessWidget {
               onPressed: onLogin,
               label: 'Войти',
               expanded: true,
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: onRegister,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('Регистрация'),
             ),
           ],
         ),
@@ -829,37 +904,37 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Future<void> _pickImage() async {
-    List<int> bytes;
+    Uint8List rawBytes;
     if (kIsWeb) {
       final webBytes = await pickImageBytesWeb();
       if (webBytes == null || !mounted) return;
-      bytes = webBytes;
+      rawBytes = webBytes;
     } else {
       final picker = ImagePicker();
       final xFile = await picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 400,
-        maxHeight: 400,
-        imageQuality: 85,
+        maxWidth: 256,
+        maxHeight: 256,
+        imageQuality: 70,
       );
       if (xFile == null || !mounted) return;
-      bytes = await xFile.readAsBytes();
+      rawBytes = await xFile.readAsBytes();
     }
+
+    final compactAvatarValue = await _buildCompactAvatarValue(rawBytes);
     if (!mounted) return;
-    if (kIsWeb) {
-      setState(() {
+
+    setState(() {
+      if (compactAvatarValue == null) {
+        // Если даже после ресайза аватар всё ещё слишком тяжёлый — используем лёгкую иконку.
+        final presetIndex = widget.user.id.hashCode.abs() % _presetAvatarIcons.length;
+        _avatarKind = AvatarKind.preset;
+        _avatarValue = presetIndex.toString();
+      } else {
         _avatarKind = AvatarKind.file;
-        _avatarValue = 'base64,${base64Encode(bytes)}';
-      });
-    } else {
-      final path = await savePickedImagePath(widget.user.id, bytes);
-      if (path != null && mounted) {
-        setState(() {
-          _avatarKind = AvatarKind.file;
-          _avatarValue = path;
-        });
+        _avatarValue = compactAvatarValue;
       }
-    }
+    });
   }
 
   Future<void> _submit() async {
