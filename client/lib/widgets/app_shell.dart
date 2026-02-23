@@ -58,6 +58,7 @@ class AppShell extends ConsumerWidget {
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
+    final inChatRoom = path.startsWith('/chats/');
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = _selectedIndexForPath(path);
@@ -206,7 +207,7 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow && !keyboardLikelyVisible)
+            if (narrow && !keyboardLikelyVisible && !inChatRoom)
               SafeArea(
                 top: false,
                 child: Material(

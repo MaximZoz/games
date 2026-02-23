@@ -27,11 +27,11 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
 }
 
-class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
-    with WidgetsBindingObserver {
+enum _RoomAction { clearChat, blockUser }
+
+class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final FocusNode _composerFocusNode = FocusNode();
   final Set<String> _messageIDs = <String>{};
 
   RealtimeSocket? _socket;
@@ -43,43 +43,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   bool _loading = true;
   bool _sending = false;
   bool _leavingToChats = false;
+  bool _roomActionInFlight = false;
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _composerFocusNode.addListener(_onComposerFocusChanged);
     _loadMessages(initial: true);
     unawaited(_connectRealtime());
     _startBackgroundSync();
   }
 
   @override
-  void didChangeMetrics() {
-    super.didChangeMetrics();
-    if (!_composerFocusNode.hasFocus) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _composerFocusNode.removeListener(_onComposerFocusChanged);
     _backgroundSyncTimer?.cancel();
     _reconnectTimer?.cancel();
     unawaited(_socketSubscription?.cancel());
     _socket?.close();
-    _composerFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onComposerFocusChanged() {
-    if (!_composerFocusNode.hasFocus) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _goBackToChats() async {
@@ -92,6 +76,107 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
     if (!mounted) return;
     context.go('/chats');
+  }
+
+  Future<bool> _confirmAction({
+    required String title,
+    required String description,
+    required String confirmText,
+    bool destructive = false,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(description),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              style: destructive
+                  ? FilledButton.styleFrom(backgroundColor: Colors.red.shade700)
+                  : null,
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(confirmText),
+            ),
+          ],
+        );
+      },
+    );
+    return result == true;
+  }
+
+  Future<void> _runRoomAction(
+    _RoomAction action, {
+    required String? peerUserID,
+  }) async {
+    if (_roomActionInFlight) return;
+
+    if (action == _RoomAction.blockUser) {
+      final id = (peerUserID ?? '').trim();
+      if (id.isEmpty) return;
+      final confirmed = await _confirmAction(
+        title: 'Заблокировать пользователя?',
+        description:
+            'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.',
+        confirmText: 'Заблокировать',
+        destructive: true,
+      );
+      if (!confirmed) return;
+
+      setState(() => _roomActionInFlight = true);
+      try {
+        await ref.read(chatsRepositoryProvider).blockUser(id);
+        await refreshChatsList(ref, force: true);
+        await refreshFriendsSnapshot(ref);
+        if (!mounted) return;
+        context.go('/chats');
+      } on ChatException catch (e) {
+        if (e.statusCode == 401) {
+          await ref.read(authStateProvider.notifier).logout();
+          if (mounted) context.go('/login');
+          return;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      } finally {
+        if (mounted) setState(() => _roomActionInFlight = false);
+      }
+      return;
+    }
+
+    final confirmed = await _confirmAction(
+      title: 'Очистить переписку?',
+      description: 'Диалог будет удалён без возможности восстановления.',
+      confirmText: 'Очистить',
+      destructive: true,
+    );
+    if (!confirmed) return;
+
+    setState(() => _roomActionInFlight = true);
+    try {
+      await ref.read(chatsRepositoryProvider).clearChat(widget.chatID);
+      await refreshChatsList(ref, force: true);
+      if (!mounted) return;
+      context.go('/chats');
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _roomActionInFlight = false);
+    }
   }
 
   Future<void> _loadMessages({bool initial = false, bool surfaceErrors = true}) async {
@@ -351,8 +436,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Widget build(BuildContext context) {
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final title = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
-    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-    final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
+    final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    ChatUserItem? peerUser;
+    for (final item in chats) {
+      if (item.chatID == widget.chatID) {
+        peerUser = item.user;
+        break;
+      }
+    }
 
     Widget messagesWidget;
     if (_loading) {
@@ -470,76 +561,88 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        bottom: false,
-        child: AnimatedPadding(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: EdgeInsets.only(bottom: keyboardInset),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: _leavingToChats ? null : _goBackToChats,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    tooltip: 'Назад к чатам',
+                  ),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  PopupMenuButton<_RoomAction>(
+                    enabled: !_roomActionInFlight,
+                    tooltip: 'Действия с чатом',
+                    onSelected: (action) {
+                      unawaited(_runRoomAction(action, peerUserID: peerUser?.id));
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem<_RoomAction>(
+                        value: _RoomAction.clearChat,
+                        child: Text('Очистить переписку'),
+                      ),
+                      PopupMenuItem<_RoomAction>(
+                        value: _RoomAction.blockUser,
+                        enabled: (peerUser?.id ?? '').trim().isNotEmpty,
+                        child: const Text('Заблокировать пользователя'),
+                      ),
+                    ],
+                    icon: const Icon(Icons.more_vert_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: messagesWidget),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+              child: GradientCard(
+                animate: false,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 child: Row(
                   children: [
-                    IconButton(
-                      onPressed: _leavingToChats ? null : _goBackToChats,
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      tooltip: 'Назад к чатам',
-                    ),
                     Expanded(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
+                      child: TextField(
+                        controller: _textController,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          hintText: 'Введите сообщение...',
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _sendMessage(),
                       ),
+                    ),
+                    IconButton(
+                      onPressed: _sending ? null : _sendMessage,
+                      tooltip: 'Отправить',
+                      icon: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.send_rounded),
                     ),
                   ],
                 ),
               ),
-              Expanded(child: messagesWidget),
-              Padding(
-                padding: EdgeInsets.fromLTRB(12, 10, 12, bottomSafeInset + 14),
-                child: GradientCard(
-                  animate: false,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _textController,
-                          focusNode: _composerFocusNode,
-                          minLines: 1,
-                          maxLines: 4,
-                          decoration: const InputDecoration(
-                            hintText: 'Введите сообщение...',
-                            border: InputBorder.none,
-                            isDense: true,
-                          ),
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _sending ? null : _sendMessage,
-                        tooltip: 'Отправить',
-                        icon: _sending
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.send_rounded),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

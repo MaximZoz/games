@@ -87,6 +87,8 @@ func writeFriendError(w http.ResponseWriter, err error) {
 		http.Error(w, "friend request already sent", http.StatusConflict)
 	case errors.Is(err, store.ErrFriendRequestAlreadyPending):
 		http.Error(w, "incoming friend request is pending", http.StatusConflict)
+	case errors.Is(err, store.ErrUserBlocked):
+		http.Error(w, "user is blocked", http.StatusForbidden)
 	case errors.Is(err, store.ErrFriendForbidden):
 		http.Error(w, "forbidden", http.StatusForbidden)
 	case errors.Is(err, store.ErrFriendNotFound):
