@@ -4,81 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
-/// Старый экран убирается сразу, новый появляется через 100 ms.
-class _RouteTransitionWrapper extends StatefulWidget {
-  const _RouteTransitionWrapper({
-    required this.child,
-    required this.path,
-  });
-
-  final Widget child;
-  final String path;
-
-  @override
-  State<_RouteTransitionWrapper> createState() => _RouteTransitionWrapperState();
-}
-
-class _RouteTransitionWrapperState extends State<_RouteTransitionWrapper> {
-  static const _delay = Duration(milliseconds: 100);
-
-  Widget _displayedChild = const SizedBox.shrink();
-  bool _isTransitioning = false;
-  Timer? _delayTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _displayedChild = widget.child;
-  }
-
-  @override
-  void dispose() {
-    _delayTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(covariant _RouteTransitionWrapper oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_normalizePath(oldWidget.path) != _normalizePath(widget.path)) {
-      _delayTimer?.cancel();
-      setState(() => _isTransitioning = true);
-      _delayTimer = Timer(_delay, () {
-        _delayTimer = null;
-        if (mounted) {
-          setState(() {
-            _displayedChild = widget.child;
-            _isTransitioning = false;
-          });
-        }
-      });
-    } else if (!_isTransitioning) {
-      _displayedChild = widget.child;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isTransitioning) return _displayedChild;
-    return const SizedBox.shrink();
-  }
-}
-
 const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
   _NavItem(path: '/profile', icon: Icons.person, label: 'Профиль'),
   _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
+  _NavItem(path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
   _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
   _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
 ];
 
 int _selectedIndexForPath(String path) {
   final n = _normalizePath(path);
+  if (n.startsWith('/chats')) {
+    return _navItems.indexWhere((e) => e.path == '/chats');
+  }
   final i = _navItems.indexWhere((e) => e.path == n);
   if (i >= 0) return i;
   if (n == '/achievements' || n == '/coins') return 1;
@@ -108,30 +53,32 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
-    final incomingRequests = ref.watch(friendsIncomingCountProvider).valueOrNull ?? 0;
+    final unreadChats = ref.watch(chatsUnreadCountProvider);
+    final incomingFriends = ref.watch(friendsIncomingCountProvider);
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = _selectedIndexForPath(path);
-    final normalizedPath = _normalizePath(path);
-    final isOnAdmin = normalizedPath == '/admin';
+    final isAuthorized = authState.valueOrNull != null;
 
-    void goIfNeeded(String targetPath) {
-      if (normalizedPath == _normalizePath(targetPath)) return;
-      context.go(targetPath);
-    }
-
-    Widget navIcon(_NavItem item) {
-      final icon = Icon(item.icon);
-      if (item.path != '/friends' || incomingRequests <= 0) return icon;
-
-      final label = incomingRequests > 99 ? '99+' : '$incomingRequests';
-      return Badge(
-        label: Text(label),
-        child: icon,
-      );
+    Future<void> navigateWithPrefetch(int i) async {
+      final target = _navItems[i].path;
+      if (isAuthorized) {
+        if (target == '/chats') {
+          try {
+            await ref.read(chatsListProvider.future);
+          } catch (_) {}
+        } else if (target == '/friends') {
+          try {
+            await ref.read(friendsSnapshotProvider.future);
+          } catch (_) {}
+        }
+      }
+      if (context.mounted) {
+        context.go(target);
+      }
     }
 
     return Stack(
@@ -153,7 +100,7 @@ class AppShell extends ConsumerWidget {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => goIfNeeded('/'),
+                      onTap: () => context.go('/'),
                       child: const Padding(
                         key: Key('toolbar_title'),
                         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -179,7 +126,7 @@ class AppShell extends ConsumerWidget {
                               if (user.isAdmin)
                                 IconButton(
                                   icon: const Icon(Icons.admin_panel_settings),
-                                  onPressed: isOnAdmin ? null : () => goIfNeeded('/admin'),
+                                  onPressed: () => context.go('/admin'),
                                   tooltip: 'Админка',
                                 ),
                               Padding(
@@ -203,7 +150,11 @@ class AppShell extends ConsumerWidget {
                             ],
                           );
                         }
-                        return const SizedBox.shrink();
+                        return IconButton(
+                          icon: const Icon(Icons.login),
+                          onPressed: () => context.go('/login'),
+                          tooltip: 'Войти',
+                        );
                       },
                       loading: () => const Padding(
                         padding: EdgeInsets.all(16),
@@ -213,7 +164,11 @@ class AppShell extends ConsumerWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, __) => IconButton(
+                        icon: const Icon(Icons.login),
+                        onPressed: () => context.go('/login'),
+                        tooltip: 'Войти',
+                      ),
                     ),
                   ],
                 ),
@@ -221,30 +176,32 @@ class AppShell extends ConsumerWidget {
             ),
             Expanded(
               child: narrow
-                  ? SizedBox.expand(
-                      child: _RouteTransitionWrapper(path: path, child: child),
-                    )
+                  ? SizedBox.expand(child: child)
                   : Row(
                       children: [
                         NavigationRail(
                           selectedIndex: selectedIndex,
-                          onDestinationSelected: (i) => goIfNeeded(_navItems[i].path),
+                          onDestinationSelected: (i) => unawaited(navigateWithPrefetch(i)),
                           backgroundColor: Colors.transparent,
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
                           labelType: NavigationRailLabelType.all,
-                          destinations: _navItems
-                              .map((e) => NavigationRailDestination(
-                                    icon: navIcon(e),
-                                    selectedIcon: navIcon(e),
-                                    label: Text(e.label),
-                                  ))
-                              .toList(),
+                          destinations: _navItems.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            return NavigationRailDestination(
+                              icon: _navIcon(
+                                item,
+                                unreadChats,
+                                incomingFriends,
+                                selected: index == selectedIndex,
+                              ),
+                              label: Text(item.label),
+                            );
+                          }).toList(),
                         ),
                         Expanded(
-                          child: SizedBox.expand(
-                            child: _RouteTransitionWrapper(path: path, child: child),
-                          ),
+                          child: SizedBox.expand(child: child),
                         ),
                       ],
                     ),
@@ -254,18 +211,32 @@ class AppShell extends ConsumerWidget {
                 top: false,
                 child: Material(
                   type: MaterialType.transparency,
-                  child: NavigationBar(
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: (i) => goIfNeeded(_navItems[i].path),
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    destinations: _navItems
-                        .map((e) => NavigationDestination(
-                              icon: navIcon(e),
-                              selectedIcon: navIcon(e),
-                              label: e.label,
-                            ))
-                        .toList(),
+                  child: MediaQuery.withNoTextScaling(
+                    child: BottomNavigationBar(
+                      currentIndex: selectedIndex,
+                      onTap: (i) => unawaited(navigateWithPrefetch(i)),
+                      type: BottomNavigationBarType.fixed,
+                      elevation: 0,
+                      backgroundColor: Colors.transparent,
+                      selectedItemColor: AppColors.textPrimary,
+                      unselectedItemColor: AppColors.textSecondary,
+                      selectedFontSize: 10,
+                      unselectedFontSize: 10,
+                      showUnselectedLabels: true,
+                      items: _navItems.asMap().entries.map((entry) {
+                        final item = entry.value;
+                        return BottomNavigationBarItem(
+                          icon: _navIcon(item, unreadChats, incomingFriends),
+                          activeIcon: _navIcon(
+                            item,
+                            unreadChats,
+                            incomingFriends,
+                            selected: true,
+                          ),
+                          label: item.label,
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),
@@ -274,4 +245,61 @@ class AppShell extends ConsumerWidget {
       ],
     );
   }
+}
+
+Widget _navIcon(
+  _NavItem item,
+  int unreadChats,
+  int incomingFriends, {
+  bool selected = false,
+}) {
+  final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
+  final iconSize = selected ? 25.0 : 22.0;
+  final baseIcon = Container(
+    padding: const EdgeInsets.all(5),
+    decoration: selected
+        ? BoxDecoration(
+            color: AppColors.accentSoft.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.accentStart.withOpacity(0.35)),
+          )
+        : null,
+    child: Icon(item.icon, color: iconColor, size: iconSize),
+  );
+
+  var badgeValue = 0;
+  if (item.path == '/chats') {
+    badgeValue = unreadChats;
+  } else if (item.path == '/friends') {
+    badgeValue = incomingFriends;
+  }
+
+  if (badgeValue <= 0) {
+    return baseIcon;
+  }
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      baseIcon,
+      Positioned(
+        right: -10,
+        top: -8,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.red.shade600,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            badgeValue > 99 ? '99+' : '$badgeValue',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }

@@ -87,7 +87,8 @@ func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if h.Writer == nil {
-		http.Error(w, "log writer is not configured", http.StatusServiceUnavailable)
+		// Логирование отключено через конфиг — считаем запрос успешно принятым.
+		w.WriteHeader(http.StatusAccepted)
 		return
 	}
 

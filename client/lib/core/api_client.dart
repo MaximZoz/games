@@ -92,6 +92,7 @@ class ApiClient {
     required String? error,
     required String? authorizationHeader,
   }) {
+    if (!frontendApiLogsEnabled) return;
     if (requestUri.path.endsWith('/api/logs/frontend')) return;
 
     final logUri = Uri.parse('$apiBaseUrl/api/logs/frontend');

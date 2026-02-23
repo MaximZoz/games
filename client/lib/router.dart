@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show Widget;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
+import 'package:multigames_client/screens/chat_room_screen.dart';
+import 'package:multigames_client/screens/chats_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
@@ -21,6 +24,7 @@ import 'package:multigames_client/widgets/app_shell.dart';
 const _publicPaths = <String>{'/login', '/register'};
 const _authRequiredPaths = <String>{
   '/friends',
+  '/chats',
   '/tournaments',
   '/games',
   '/inventory',
@@ -46,6 +50,13 @@ class _AuthRefreshListenable extends ChangeNotifier {
   }
 }
 
+NoTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
+  return NoTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+  );
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
@@ -56,7 +67,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);
-      final needsAuth = _authRequiredPaths.contains(path);
+      final needsAuth = _authRequiredPaths.contains(path) || path.startsWith('/chats/');
       final isAdminRoute = path == '/admin';
 
       final authState = ref.read(authStateProvider);
@@ -84,18 +95,68 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-          GoRoute(path: '/friends', builder: (_, __) => const FriendsScreen()),
-          GoRoute(path: '/tournaments', builder: (_, __) => const TournamentsScreen()),
-          GoRoute(path: '/games', builder: (_, __) => const GamesScreen()),
-          GoRoute(path: '/inventory', builder: (_, __) => const InventoryScreen()),
-          GoRoute(path: '/achievements', builder: (_, __) => const AchievementsScreen()),
-          GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-          GoRoute(path: '/coins', builder: (_, __) => const CoinsScreen()),
-          GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-          GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-          GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
+          GoRoute(
+            path: '/',
+            pageBuilder: (_, state) => _noTransitionPage(state, const HomeScreen()),
+          ),
+          GoRoute(
+            path: '/profile',
+            pageBuilder: (_, state) => _noTransitionPage(state, const ProfileScreen()),
+          ),
+          GoRoute(
+            path: '/friends',
+            pageBuilder: (_, state) => _noTransitionPage(state, const FriendsScreen()),
+          ),
+          GoRoute(
+            path: '/chats',
+            pageBuilder: (_, state) => _noTransitionPage(state, const ChatsScreen()),
+          ),
+          GoRoute(
+            path: '/chats/:chatId',
+            pageBuilder: (_, state) => _noTransitionPage(
+              state,
+              ChatRoomScreen(
+                chatID: state.pathParameters['chatId'] ?? '',
+                peerName: state.uri.queryParameters['name'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/tournaments',
+            pageBuilder: (_, state) => _noTransitionPage(state, const TournamentsScreen()),
+          ),
+          GoRoute(
+            path: '/games',
+            pageBuilder: (_, state) => _noTransitionPage(state, const GamesScreen()),
+          ),
+          GoRoute(
+            path: '/inventory',
+            pageBuilder: (_, state) => _noTransitionPage(state, const InventoryScreen()),
+          ),
+          GoRoute(
+            path: '/achievements',
+            pageBuilder: (_, state) => _noTransitionPage(state, const AchievementsScreen()),
+          ),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: (_, state) => _noTransitionPage(state, const SettingsScreen()),
+          ),
+          GoRoute(
+            path: '/coins',
+            pageBuilder: (_, state) => _noTransitionPage(state, const CoinsScreen()),
+          ),
+          GoRoute(
+            path: '/login',
+            pageBuilder: (_, state) => _noTransitionPage(state, const LoginScreen()),
+          ),
+          GoRoute(
+            path: '/register',
+            pageBuilder: (_, state) => _noTransitionPage(state, const RegisterScreen()),
+          ),
+          GoRoute(
+            path: '/admin',
+            pageBuilder: (_, state) => _noTransitionPage(state, const AdminScreen()),
+          ),
         ],
       ),
     ],

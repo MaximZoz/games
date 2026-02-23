@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -37,23 +40,27 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
-  final Map<int, MemoryImage> _avatarImageCache = <int, MemoryImage>{};
+  Timer? _searchDebounce;
+  int _searchRevision = 0;
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
   bool _isSearchExpanded = false;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
-    _avatarImageCache.clear();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _showMessage(String? error, String? success) {}
-
-  static const int _avatarImageCacheLimit = 220;
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -246,13 +253,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.isNotEmpty) {
-      final provider = _avatarImageProvider(user.avatarValue!);
-      if (provider != null) {
+      var raw = user.avatarValue!;
+      if (raw.startsWith('base64,')) raw = raw.substring(7);
+      try {
+        final bytes = base64Decode(raw);
         return CircleAvatar(
           radius: 20,
-          backgroundImage: provider,
+          backgroundImage: MemoryImage(bytes),
         );
-      }
+      } catch (_) {}
     }
 
     if (user.avatarKind == 'preset' && user.avatarValue != null) {
@@ -281,45 +290,59 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  MemoryImage? _avatarImageProvider(String rawValue) {
-    var raw = rawValue.trim();
-    if (raw.isEmpty) return null;
-    if (raw.startsWith('base64,')) raw = raw.substring(7);
-
-    final key = Object.hash(raw.hashCode, raw.length);
-    final cached = _avatarImageCache[key];
-    if (cached != null) return cached;
-
-    try {
-      final provider = MemoryImage(base64Decode(raw));
-      _avatarImageCache.remove(key);
-      _avatarImageCache[key] = provider;
-      if (_avatarImageCache.length > _avatarImageCacheLimit) {
-        _avatarImageCache.remove(_avatarImageCache.keys.first);
-      }
-      return provider;
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<void> _handleFriendsException(FriendsException e) async {
     if (e.statusCode == 401) {
       await ref.read(authStateProvider.notifier).logout();
       if (!mounted) return;
       _showMessage('Сессия истекла. Войдите заново.', null);
-      context.go('/profile');
+      context.go('/login');
       return;
     }
     _showMessage(e.message, null);
+  }
+
+  Future<void> _handleChatException(ChatException e) async {
+    if (e.statusCode == 401) {
+      await ref.read(authStateProvider.notifier).logout();
+      if (!mounted) return;
+      context.go('/login');
+    }
+  }
+
+  Future<void> _openChatWithUser(
+    FriendUserItem user, {
+    String? actionKey,
+  }) async {
+    final key = actionKey ?? 'chat_${user.id}';
+    if (_actionsInProgress.contains(key)) return;
+    setState(() => _actionsInProgress.add(key));
+
+    try {
+      final chatID = await ref.read(chatsRepositoryProvider).startChat(user.id);
+      if (!mounted) return;
+      if (chatID.isEmpty) return;
+      final name = Uri.encodeQueryComponent(_displayName(user));
+      context.push('/chats/$chatID?name=$name');
+    } catch (e) {
+      if (e is ChatException) {
+        await _handleChatException(e);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _actionsInProgress.remove(key));
+      }
+    }
   }
 
   void _toggleSearch() {
     setState(() {
       _isSearchExpanded = !_isSearchExpanded;
       if (!_isSearchExpanded) {
+        _searchDebounce?.cancel();
+        _searchRevision++;
         _searchController.clear();
         _searchResults = const [];
+        _isSearching = false;
       }
     });
 
@@ -327,6 +350,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _searchFocusNode.requestFocus();
       });
+      _scheduleSearch(immediate: true);
     } else {
       _searchFocusNode.unfocus();
     }
@@ -334,11 +358,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
-      ref.invalidate(friendsSnapshotProvider);
-      ref.invalidate(friendsIncomingCountProvider);
-      await ref.read(friendsSnapshotProvider.future);
+      await refreshFriendsSnapshot(ref);
       if (refreshSearch && _searchController.text.trim().isNotEmpty) {
-        await _performSearch();
+        await _performSearch(query: _searchController.text.trim());
       }
     } catch (e) {
       if (e is FriendsException) {
@@ -349,9 +371,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
   }
 
-  Future<void> _performSearch() async {
+  void _onSearchTextChanged(String _) {
+    setState(() {});
+    _scheduleSearch();
+  }
+
+  void _scheduleSearch({bool immediate = false}) {
+    _searchDebounce?.cancel();
     final query = _searchController.text.trim();
     if (query.isEmpty) {
+      _searchRevision++;
+      if (!mounted) return;
       setState(() {
         _searchResults = const [];
         _isSearching = false;
@@ -359,16 +389,87 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       return;
     }
 
+    final requestID = ++_searchRevision;
+    final delay = immediate ? Duration.zero : const Duration(milliseconds: 220);
+    _searchDebounce = Timer(delay, () {
+      unawaited(_performSearch(query: query, requestID: requestID));
+    });
+  }
+
+  Future<void> _performSearch({String? query, int? requestID}) async {
+    final q = (query ?? _searchController.text).trim();
+    final currentRequestID = requestID ?? ++_searchRevision;
+    if (q.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _searchResults = const [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    if (!mounted) return;
     setState(() => _isSearching = true);
     final repo = ref.read(friendsRepositoryProvider);
     try {
-      final result = await repo.searchUsers(query, limit: 30);
-      if (!mounted) return;
+      final result = await repo.searchUsers(q, limit: 30);
+      if (!mounted || currentRequestID != _searchRevision) return;
       setState(() {
         _searchResults = result;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || currentRequestID != _searchRevision) return;
+      if (e is FriendsException) {
+        await _handleFriendsException(e);
+      } else {
+        _showMessage(e.toString(), null);
+      }
+    } finally {
+      if (mounted && currentRequestID == _searchRevision) {
+        setState(() => _isSearching = false);
+      }
+    }
+  }
+
+  void _updateSearchRelation(
+    String userID, {
+    required String relationStatus,
+    String? requestID,
+  }) {
+    if (!mounted) return;
+    setState(() {
+      _searchResults = _searchResults.map((entry) {
+        if (entry.user.id != userID) return entry;
+        return FriendSearchItem(
+          user: entry.user,
+          relationStatus: relationStatus,
+          requestId: requestID,
+        );
+      }).toList();
+    });
+  }
+
+  Future<void> _runSearchAction({
+    required String key,
+    required Future<void> Function(FriendsRepository repo) call,
+    required String success,
+    required String userID,
+    required String nextRelationStatus,
+    String? nextRequestID,
+  }) async {
+    if (_actionsInProgress.contains(key)) return;
+    setState(() => _actionsInProgress.add(key));
+
+    final repo = ref.read(friendsRepositoryProvider);
+    try {
+      await call(repo);
+      _showMessage(null, success);
+      _updateSearchRelation(
+        userID,
+        relationStatus: nextRelationStatus,
+        requestID: nextRequestID,
+      );
+    } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
       } else {
@@ -376,7 +477,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isSearching = false);
+        setState(() => _actionsInProgress.remove(key));
       }
     }
   }
@@ -474,11 +575,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required String emptyText,
   }) {
     if (items.isEmpty) {
-      return Center(
-        child: Text(
-          emptyText,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: [
+          Center(
+            child: Text(
+              emptyText,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       );
     }
 
@@ -487,6 +594,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         if (constraints.maxWidth > 900) {
           return GridView.builder(
             padding: const EdgeInsets.all(16),
+            physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 520,
               mainAxisSpacing: 12,
@@ -500,6 +608,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
           itemCount: items.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, index) => itemBuilder(items[index]),
@@ -514,6 +623,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       emptyText: 'У вас пока нет друзей',
       itemBuilder: (item) {
         final key = 'remove_${item.user.id}';
+        final chatKey = 'chat_${item.user.id}';
         return _buildUserCard(
           user: item.user,
           subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
@@ -524,6 +634,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
                 onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildCompactIconButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                tooltip: 'Написать сообщение',
+                loading: _busy(chatKey),
+                onPressed: _busy(chatKey)
+                    ? null
+                    : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
@@ -549,6 +668,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
         final rejectKey = 'reject_${item.requestId}';
+        final chatKey = 'chat_incoming_${item.user.id}';
         return _buildUserCard(
           user: item.user,
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
@@ -559,6 +679,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
                 onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildCompactIconButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                tooltip: 'Написать сообщение',
+                loading: _busy(chatKey),
+                onPressed: _busy(chatKey)
+                    ? null
+                    : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
@@ -591,6 +720,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       emptyText: 'Нет исходящих заявок',
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
+        final chatKey = 'chat_outgoing_${item.user.id}';
         return _buildUserCard(
           user: item.user,
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
@@ -601,6 +731,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
                 onPressed: () => _showRequestInfoDialog(user: item.user),
+              ),
+              const SizedBox(width: 4),
+              _buildCompactIconButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                tooltip: 'Написать сообщение',
+                loading: _busy(chatKey),
+                onPressed: _busy(chatKey)
+                    ? null
+                    : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
@@ -694,8 +833,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
+    bool redFrame = false,
   }) {
-    final gradient = AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    final gradient = redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    final redBorderColor = Colors.red.shade400;
+    final iconColor = redFrame ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,
       child: Container(
@@ -704,6 +846,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           gradient: gradient,
+          border: redFrame ? Border.all(color: redBorderColor, width: 2) : null,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Material(
@@ -712,7 +855,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           child: InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(10),
-            child: Icon(icon, size: 20, color: AppColors.textPrimary),
+            child: Icon(icon, size: 20, color: iconColor),
           ),
         ),
       ),
@@ -726,6 +869,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final acceptKey = 'accept_search_${item.requestId ?? item.user.id}';
     final rejectKey = 'reject_search_${item.requestId ?? item.user.id}';
     final removeKey = 'remove_search_${item.user.id}';
+    final chatKey = 'chat_search_${item.user.id}';
 
     final controls = <Widget>[
       _buildCompactIconButton(
@@ -735,55 +879,104 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       ),
     ];
     if (relation == 'none') {
+      final busy = _busy(sendKey);
       controls.add(
-        _buildActionIcon(
-          key: sendKey,
+        _buildCompactIconButton(
           icon: Icons.person_add_alt_1_rounded,
           tooltip: 'Добавить в друзья',
-          call: (repo) => repo.sendRequest(item.user.id),
-          success: 'Заявка отправлена',
+          loading: busy,
+          onPressed: busy
+              ? null
+              : () => _runSearchAction(
+                    key: sendKey,
+                    call: (repo) => repo.sendRequest(item.user.id),
+                    success: 'Заявка отправлена',
+                    userID: item.user.id,
+                    nextRelationStatus: 'outgoing',
+                    nextRequestID: item.requestId,
+                  ),
         ),
       );
     } else if (relation == 'outgoing' && item.requestId != null) {
+      final busy = _busy(cancelKey);
       controls.add(
-        _buildActionIcon(
-          key: cancelKey,
+        _buildCompactIconButton(
           icon: Icons.close_rounded,
           tooltip: 'Отменить заявку',
-          call: (repo) => repo.cancelRequest(item.requestId!),
-          success: 'Заявка отменена',
           danger: true,
+          loading: busy,
+          onPressed: busy
+              ? null
+              : () => _runSearchAction(
+                    key: cancelKey,
+                    call: (repo) => repo.cancelRequest(item.requestId!),
+                    success: 'Заявка отменена',
+                    userID: item.user.id,
+                    nextRelationStatus: 'none',
+                  ),
         ),
       );
     } else if (relation == 'incoming' && item.requestId != null) {
+      final acceptBusy = _busy(acceptKey);
+      final rejectBusy = _busy(rejectKey);
       controls.addAll([
-        _buildActionIcon(
-          key: acceptKey,
+        _buildCompactIconButton(
           icon: Icons.check_rounded,
           tooltip: 'Принять заявку',
-          call: (repo) => repo.acceptRequest(item.requestId!),
-          success: 'Заявка принята',
+          loading: acceptBusy,
+          onPressed: acceptBusy
+              ? null
+              : () => _runSearchAction(
+                    key: acceptKey,
+                    call: (repo) => repo.acceptRequest(item.requestId!),
+                    success: 'Заявка принята',
+                    userID: item.user.id,
+                    nextRelationStatus: 'friend',
+                  ),
         ),
-        _buildActionIcon(
-          key: rejectKey,
+        _buildCompactIconButton(
           icon: Icons.close_rounded,
           tooltip: 'Отклонить заявку',
-          call: (repo) => repo.rejectRequest(item.requestId!),
-          success: 'Заявка отклонена',
           danger: true,
+          loading: rejectBusy,
+          onPressed: rejectBusy
+              ? null
+              : () => _runSearchAction(
+                    key: rejectKey,
+                    call: (repo) => repo.rejectRequest(item.requestId!),
+                    success: 'Заявка отклонена',
+                    userID: item.user.id,
+                    nextRelationStatus: 'none',
+                  ),
         ),
       ]);
     } else if (relation == 'friend') {
-      controls.add(
-        _buildActionIcon(
-          key: removeKey,
+      final removeBusy = _busy(removeKey);
+      controls.addAll([
+        _buildCompactIconButton(
+          icon: Icons.chat_bubble_outline_rounded,
+          tooltip: 'Написать сообщение',
+          loading: _busy(chatKey),
+          onPressed: _busy(chatKey)
+              ? null
+              : () => _openChatWithUser(item.user, actionKey: chatKey),
+        ),
+        _buildCompactIconButton(
           icon: Icons.person_remove_alt_1_rounded,
           tooltip: 'Удалить из друзей',
-          call: (repo) => repo.removeFriend(item.user.id),
-          success: 'Пользователь удалён из друзей',
           danger: true,
+          loading: removeBusy,
+          onPressed: removeBusy
+              ? null
+              : () => _runSearchAction(
+                    key: removeKey,
+                    call: (repo) => repo.removeFriend(item.user.id),
+                    success: 'Пользователь удалён из друзей',
+                    userID: item.user.id,
+                    nextRelationStatus: 'none',
+                  ),
         ),
-      );
+      ]);
     }
 
     final relationLabel = switch (relation) {
@@ -856,35 +1049,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               child: TextField(
                 controller: _searchController,
                 focusNode: _searchFocusNode,
-                textInputAction: TextInputAction.search,
+                textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
                   hintText: 'Поиск по нику',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _searchController.text.isEmpty
                       ? null
-                      : IconButton(
-                          tooltip: 'Очистить поиск',
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchResults = const [];
-                              _isSearching = false;
-                            });
-                            _searchFocusNode.requestFocus();
-                          },
-                          icon: const Icon(Icons.close_rounded, color: Colors.red),
+                      : Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.red.shade400, width: 1.8),
+                          ),
+                          child: IconButton(
+                            tooltip: 'Очистить поиск',
+                            onPressed: () {
+                              _searchDebounce?.cancel();
+                              _searchRevision++;
+                              _searchController.clear();
+                              setState(() {
+                                _searchResults = const [];
+                                _isSearching = false;
+                              });
+                              _searchFocusNode.requestFocus();
+                            },
+                            icon: const Icon(Icons.close_rounded, color: Colors.red),
+                          ),
                         ),
                 ),
-                onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => _performSearch(),
+                onChanged: _onSearchTextChanged,
+                onSubmitted: (_) => _scheduleSearch(immediate: true),
               ),
-            ),
-            const SizedBox(width: 8),
-            _buildCompactIconButton(
-              icon: Icons.arrow_forward_rounded,
-              tooltip: 'Найти',
-              onPressed: _isSearching ? null : _performSearch,
-              loading: _isSearching,
             ),
           ],
         ),
@@ -895,34 +1090,53 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   Widget _buildSearchResults() {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
-      return const Center(
-        child: Text(
-          'Введите запрос и нажмите "Найти"',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: const [
+          Center(
+            child: Text(
+              'Введите запрос для поиска',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       );
     }
     if (_isSearching) {
-      return const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accentStart,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: const [
+          Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
+              ),
+            ),
           ),
-        ),
+        ],
       );
     }
     if (_searchResults.isEmpty) {
-      return const Center(
-        child: Text(
-          'Ничего не найдено',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 80),
+        children: const [
+          Center(
+            child: Text(
+              'Ничего не найдено',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       );
     }
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       itemCount: _searchResults.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -957,6 +1171,43 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         if (snapshot == null) return 'Исходящие';
         return 'Исходящие (${snapshot.outgoing.length})';
     }
+  }
+
+  Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    final title = _tabTitle(tab, snapshot);
+    final incomingCount = snapshot?.incoming.length ?? 0;
+    final isIncoming = tab == _FriendsTabKind.incoming;
+    if (!isIncoming || incomingCount <= 0) {
+      return Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('Входящие'),
+        const SizedBox(width: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.red.shade600,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$incomingCount',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot) {
@@ -1000,13 +1251,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     icon: _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
                     tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
                     onPressed: _toggleSearch,
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: () => _refreshSnapshot(refreshSearch: true),
-                    tooltip: 'Обновить',
-                    icon: const Icon(Icons.refresh_rounded),
+                    redFrame: _isSearchExpanded,
                   ),
                 ],
               ),
@@ -1020,7 +1265,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     ),
             ),
             if (_isSearchExpanded)
-              Expanded(child: _buildSearchResults())
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => _refreshSnapshot(refreshSearch: true),
+                  child: _buildSearchResults(),
+                ),
+              )
             else ...[
               Expanded(
                 child: DefaultTabController(
@@ -1045,12 +1295,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                           tabs: [
                             for (final tab in tabs)
                               Tab(
-                                child: Text(
-                                  _tabTitle(tab, friendsAsync.valueOrNull),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                ),
+                                child: _buildTabLabel(tab, friendsAsync.valueOrNull),
                               ),
                           ],
                         ),
@@ -1058,10 +1303,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                       Expanded(
                         child: friendsAsync.when(
                           data: (snapshot) {
-                            return TabBarView(
-                              children: [
-                                for (final tab in tabs) _tabContent(tab, snapshot),
-                              ],
+                            return RefreshIndicator(
+                              onRefresh: () => _refreshSnapshot(refreshSearch: false),
+                              child: TabBarView(
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: [
+                                  for (final tab in tabs) _tabContent(tab, snapshot),
+                                ],
+                              ),
                             );
                           },
                           loading: () => const Center(

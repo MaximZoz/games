@@ -46,6 +46,7 @@ secret_args=(
 
 optional_vars=(
   "REDIS_URL"
+  "APP_LOG_ENABLED"
   "APP_LOG_FILE"
   "APP_LOG_STATE_FILE"
   "APP_LOG_SYNC_INTERVAL_SECONDS"
