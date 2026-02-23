@@ -86,8 +86,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       if (hasNewTail || initial) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
-      unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
-      ref.invalidate(chatsUnreadCountProvider);
+      unawaited(() async {
+        try {
+          final updated = await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
+          if (updated > 0) {
+            await refreshChatsList(ref);
+          }
+        } catch (_) {
+          // Ошибку чтения не показываем пользователю в фоне.
+        }
+      }());
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -165,7 +173,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         if (messageRaw is! Map) return;
         final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
         _upsertMessage(item);
-        ref.invalidate(chatsUnreadCountProvider);
+        unawaited(refreshChatsList(ref));
         final meID = ref.read(authStateProvider).valueOrNull?.id;
         if (item.senderUserID != meID) {
           unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
@@ -175,11 +183,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         if (chatID == widget.chatID) {
           unawaited(_loadMessages());
         }
-        ref.invalidate(chatsUnreadCountProvider);
+        unawaited(refreshChatsList(ref));
       } else if (type == 'chat_list_changed') {
-        ref.invalidate(chatsUnreadCountProvider);
+        unawaited(refreshChatsList(ref));
       } else if (type == 'friends_updated') {
-        ref.invalidate(friendsIncomingCountProvider);
+        unawaited(refreshFriendsSnapshot(ref));
       }
     } catch (_) {}
   }
@@ -231,7 +239,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       if (!mounted) return;
       _textController.clear();
       _upsertMessage(sent);
-      ref.invalidate(chatsUnreadCountProvider);
+      unawaited(refreshChatsList(ref));
       setState(() {
         _sending = false;
         _error = null;
@@ -265,13 +273,46 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     );
   }
 
-  String _formatBubbleTime(String raw) {
+  String _formatBubbleDateTime(String raw) {
     final parsed = DateTime.tryParse(raw);
     if (parsed == null) return '';
     final local = parsed.toLocal();
+    final dd = local.day.toString().padLeft(2, '0');
+    final mo = local.month.toString().padLeft(2, '0');
+    final yyyy = local.year.toString();
     final hh = local.hour.toString().padLeft(2, '0');
     final mm = local.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
+    return '$dd.$mo.$yyyy $hh:$mm';
+  }
+
+  String _formatDateGroupTitle(DateTime localDate) {
+    final today = DateTime.now();
+    final todayKey = DateTime(today.year, today.month, today.day);
+    final yesterdayKey = todayKey.subtract(const Duration(days: 1));
+    final dateKey = DateTime(localDate.year, localDate.month, localDate.day);
+    if (dateKey == todayKey) return 'Сегодня';
+    if (dateKey == yesterdayKey) return 'Вчера';
+    final dd = localDate.day.toString().padLeft(2, '0');
+    final mo = localDate.month.toString().padLeft(2, '0');
+    final yyyy = localDate.year.toString();
+    return '$dd.$mo.$yyyy';
+  }
+
+  List<_ChatTimelineEntry> _buildTimelineEntries() {
+    final entries = <_ChatTimelineEntry>[];
+    DateTime? previousDate;
+    for (final message in _messages) {
+      final parsed = DateTime.tryParse(message.createdAt)?.toLocal();
+      if (parsed != null) {
+        final currentDate = DateTime(parsed.year, parsed.month, parsed.day);
+        if (previousDate == null || currentDate != previousDate) {
+          entries.add(_ChatTimelineEntry.header(_formatDateGroupTitle(parsed)));
+          previousDate = currentDate;
+        }
+      }
+      entries.add(_ChatTimelineEntry.message(message));
+    }
+    return entries;
   }
 
   @override
@@ -294,6 +335,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         ),
       );
     } else {
+      final timeline = _buildTimelineEntries();
       messagesWidget = RefreshIndicator(
         onRefresh: _loadMessages,
         child: _messages.isEmpty
@@ -318,9 +360,34 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   parent: ClampingScrollPhysics(),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                itemCount: _messages.length,
+                itemCount: timeline.length,
                 itemBuilder: (context, index) {
-                  final message = _messages[index];
+                  final entry = timeline[index];
+                  if (entry.headerLabel != null) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceCard.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: Colors.black.withOpacity(0.08)),
+                          ),
+                          child: Text(
+                            entry.headerLabel!,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final message = entry.message!;
                   final mine = message.senderUserID == meID;
                   return Align(
                     alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -350,7 +417,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _formatBubbleTime(message.createdAt),
+                              _formatBubbleDateTime(message.createdAt),
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 11,
@@ -436,4 +503,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       ),
     );
   }
+}
+
+class _ChatTimelineEntry {
+  const _ChatTimelineEntry.header(this.headerLabel) : message = null;
+  const _ChatTimelineEntry.message(this.message) : headerLabel = null;
+
+  final String? headerLabel;
+  final ChatMessageItem? message;
 }

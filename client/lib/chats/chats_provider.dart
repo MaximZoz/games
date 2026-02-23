@@ -11,15 +11,15 @@ final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
   return ChatsRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
-final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
+final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref) {
   final keepAliveLink = ref.keepAlive();
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
     keepAliveLink.close();
-    return Stream<int>.value(0);
+    return Stream<List<ChatPreviewItem>>.value(const []);
   }
 
-  final controller = StreamController<int>();
+  final controller = StreamController<List<ChatPreviewItem>>();
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
@@ -31,10 +31,9 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
     loadInFlight = true;
     try {
       final chats = await ref.read(chatsRepositoryProvider).listChats(limit: 100, offset: 0);
-      final unread = chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
-      if (!controller.isClosed) controller.add(unread);
-    } catch (_) {
-      if (!controller.isClosed) controller.add(0);
+      if (!controller.isClosed) controller.add(chats);
+    } catch (e, st) {
+      if (!controller.isClosed) controller.addError(e, st);
     } finally {
       loadInFlight = false;
     }
@@ -98,3 +97,13 @@ final chatsUnreadCountProvider = StreamProvider.autoDispose<int>((ref) {
 
   return controller.stream;
 });
+
+final chatsUnreadCountProvider = Provider<int>((ref) {
+  final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+  return chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
+});
+
+Future<void> refreshChatsList(Ref ref) async {
+  ref.invalidate(chatsListProvider);
+  await ref.read(chatsListProvider.future);
+}

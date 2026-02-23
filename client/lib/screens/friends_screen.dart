@@ -7,8 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:multigames_client/core/api_config.dart';
-import 'package:multigames_client/core/realtime_ws.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -42,9 +40,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<String> _actionsInProgress = <String>{};
-  RealtimeSocket? _socket;
-  StreamSubscription<String>? _socketSubscription;
-  Timer? _reconnectTimer;
+  Timer? _searchDebounce;
+  int _searchRevision = 0;
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
@@ -53,64 +50,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(_connectRealtime());
   }
 
   @override
   void dispose() {
-    _reconnectTimer?.cancel();
-    unawaited(_socketSubscription?.cancel());
-    _socket?.close();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _showMessage(String? error, String? success) {}
-
-  Future<void> _connectRealtime() async {
-    await _socketSubscription?.cancel();
-    _socket?.close();
-    _socket = null;
-
-    final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) return;
-
-    final uri = buildWebSocketUri(
-      '/api/ws',
-      queryParameters: {'access_token': token},
-    );
-    final socket = connectRealtimeSocket(uri);
-    _socket = socket;
-    _socketSubscription = socket.messages.listen(
-      _handleRealtimeMessage,
-      onError: (_) => _scheduleReconnect(),
-      onDone: _scheduleReconnect,
-      cancelOnError: false,
-    );
-  }
-
-  void _scheduleReconnect() {
-    if (!mounted || _reconnectTimer != null) return;
-    _reconnectTimer = Timer(const Duration(seconds: 2), () {
-      _reconnectTimer = null;
-      unawaited(_connectRealtime());
-    });
-  }
-
-  void _handleRealtimeMessage(String raw) {
-    try {
-      final payload = jsonDecode(raw);
-      if (payload is! Map) return;
-      final type = payload['type']?.toString() ?? '';
-      if (type == 'friends_updated') {
-        ref.invalidate(friendsIncomingCountProvider);
-        unawaited(_refreshSnapshot(refreshSearch: _isSearchExpanded));
-      } else if (type == 'chat_message' || type == 'chat_list_changed' || type == 'chat_read') {
-        ref.invalidate(chatsUnreadCountProvider);
-      }
-    } catch (_) {}
-  }
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -388,8 +338,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     setState(() {
       _isSearchExpanded = !_isSearchExpanded;
       if (!_isSearchExpanded) {
+        _searchDebounce?.cancel();
+        _searchRevision++;
         _searchController.clear();
         _searchResults = const [];
+        _isSearching = false;
       }
     });
 
@@ -397,6 +350,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _searchFocusNode.requestFocus();
       });
+      _scheduleSearch(immediate: true);
     } else {
       _searchFocusNode.unfocus();
     }
@@ -404,11 +358,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
-      ref.invalidate(friendsSnapshotProvider);
-      ref.invalidate(friendsIncomingCountProvider);
-      await ref.read(friendsSnapshotProvider.future);
+      await refreshFriendsSnapshot(ref);
       if (refreshSearch && _searchController.text.trim().isNotEmpty) {
-        await _performSearch();
+        await _performSearch(query: _searchController.text.trim());
       }
     } catch (e) {
       if (e is FriendsException) {
@@ -419,9 +371,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
   }
 
-  Future<void> _performSearch() async {
+  void _onSearchTextChanged(String _) {
+    setState(() {});
+    _scheduleSearch();
+  }
+
+  void _scheduleSearch({bool immediate = false}) {
+    _searchDebounce?.cancel();
     final query = _searchController.text.trim();
     if (query.isEmpty) {
+      _searchRevision++;
+      if (!mounted) return;
       setState(() {
         _searchResults = const [];
         _isSearching = false;
@@ -429,23 +389,43 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       return;
     }
 
+    final requestID = ++_searchRevision;
+    final delay = immediate ? Duration.zero : const Duration(milliseconds: 220);
+    _searchDebounce = Timer(delay, () {
+      unawaited(_performSearch(query: query, requestID: requestID));
+    });
+  }
+
+  Future<void> _performSearch({String? query, int? requestID}) async {
+    final q = (query ?? _searchController.text).trim();
+    final currentRequestID = requestID ?? ++_searchRevision;
+    if (q.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _searchResults = const [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    if (!mounted) return;
     setState(() => _isSearching = true);
     final repo = ref.read(friendsRepositoryProvider);
     try {
-      final result = await repo.searchUsers(query, limit: 30);
-      if (!mounted) return;
+      final result = await repo.searchUsers(q, limit: 30);
+      if (!mounted || currentRequestID != _searchRevision) return;
       setState(() {
         _searchResults = result;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || currentRequestID != _searchRevision) return;
       if (e is FriendsException) {
         await _handleFriendsException(e);
       } else {
         _showMessage(e.toString(), null);
       }
     } finally {
-      if (mounted) {
+      if (mounted && currentRequestID == _searchRevision) {
         setState(() => _isSearching = false);
       }
     }
@@ -802,8 +782,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
+    bool redFrame = false,
   }) {
-    final gradient = AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    final gradient = redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    final redBorderColor = Colors.red.shade400;
+    final iconColor = redFrame ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,
       child: Container(
@@ -812,6 +795,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           gradient: gradient,
+          border: redFrame ? Border.all(color: redBorderColor, width: 2) : null,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Material(
@@ -820,7 +804,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           child: InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(10),
-            child: Icon(icon, size: 20, color: AppColors.textPrimary),
+            child: Icon(icon, size: 20, color: iconColor),
           ),
         ),
       ),
@@ -973,35 +957,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               child: TextField(
                 controller: _searchController,
                 focusNode: _searchFocusNode,
-                textInputAction: TextInputAction.search,
+                textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
                   hintText: 'Поиск по нику',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _searchController.text.isEmpty
                       ? null
-                      : IconButton(
-                          tooltip: 'Очистить поиск',
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchResults = const [];
-                              _isSearching = false;
-                            });
-                            _searchFocusNode.requestFocus();
-                          },
-                          icon: const Icon(Icons.close_rounded, color: Colors.red),
+                      : Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.red.shade400, width: 1.8),
+                          ),
+                          child: IconButton(
+                            tooltip: 'Очистить поиск',
+                            onPressed: () {
+                              _searchDebounce?.cancel();
+                              _searchRevision++;
+                              _searchController.clear();
+                              setState(() {
+                                _searchResults = const [];
+                                _isSearching = false;
+                              });
+                              _searchFocusNode.requestFocus();
+                            },
+                            icon: const Icon(Icons.close_rounded, color: Colors.red),
+                          ),
                         ),
                 ),
-                onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => _performSearch(),
+                onChanged: _onSearchTextChanged,
+                onSubmitted: (_) => _scheduleSearch(immediate: true),
               ),
-            ),
-            const SizedBox(width: 8),
-            _buildCompactIconButton(
-              icon: Icons.arrow_forward_rounded,
-              tooltip: 'Найти',
-              onPressed: _isSearching ? null : _performSearch,
-              loading: _isSearching,
             ),
           ],
         ),
@@ -1018,7 +1004,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         children: const [
           Center(
             child: Text(
-              'Введите запрос и нажмите "Найти"',
+              'Введите запрос для поиска',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -1173,6 +1159,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     icon: _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
                     tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
                     onPressed: _toggleSearch,
+                    redFrame: _isSearchExpanded,
                   ),
                 ],
               ),

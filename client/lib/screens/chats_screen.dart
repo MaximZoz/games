@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,9 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:multigames_client/core/api_config.dart';
-import 'package:multigames_client/core/realtime_ws.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -22,38 +18,12 @@ class ChatsScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatsScreenState extends ConsumerState<ChatsScreen> {
-  bool _loading = true;
   String? _error;
-  List<ChatPreviewItem> _chats = const [];
-
-  RealtimeSocket? _socket;
-  StreamSubscription<String>? _socketSubscription;
-  Timer? _reconnectTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadChats();
-    unawaited(_connectRealtime());
-  }
-
-  @override
-  void dispose() {
-    _reconnectTimer?.cancel();
-    unawaited(_socketSubscription?.cancel());
-    _socket?.close();
-    super.dispose();
-  }
 
   Future<void> _loadChats() async {
+    setState(() => _error = null);
     try {
-      final items = await ref.read(chatsRepositoryProvider).listChats(limit: 100, offset: 0);
-      if (!mounted) return;
-      setState(() {
-        _chats = items;
-        _error = null;
-        _loading = false;
-      });
+      await refreshChatsList(ref);
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -61,63 +31,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         return;
       }
       if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _loading = false;
-      });
+      setState(() => _error = e.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось загрузить чаты';
-        _loading = false;
-      });
+      setState(() => _error = 'Не удалось загрузить чаты');
     }
-  }
-
-  Future<void> _connectRealtime() async {
-    await _socketSubscription?.cancel();
-    _socket?.close();
-    _socket = null;
-
-    final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) return;
-
-    final uri = buildWebSocketUri(
-      '/api/ws',
-      queryParameters: {'access_token': token},
-    );
-    final socket = connectRealtimeSocket(uri);
-    _socket = socket;
-    _socketSubscription = socket.messages.listen(
-      _handleRealtimeMessage,
-      onError: (_) => _scheduleReconnect(),
-      onDone: _scheduleReconnect,
-      cancelOnError: false,
-    );
-  }
-
-  void _scheduleReconnect() {
-    if (!mounted || _reconnectTimer != null) return;
-    _reconnectTimer = Timer(const Duration(seconds: 2), () {
-      _reconnectTimer = null;
-      unawaited(_connectRealtime());
-    });
-  }
-
-  void _handleRealtimeMessage(String raw) {
-    try {
-      final payload = jsonDecode(raw);
-      if (payload is! Map) return;
-      final type = payload['type']?.toString() ?? '';
-      if (type == 'chat_message' ||
-          type == 'chat_list_changed' ||
-          type == 'chat_read') {
-        unawaited(_loadChats());
-        ref.invalidate(chatsUnreadCountProvider);
-      } else if (type == 'friends_updated') {
-        ref.invalidate(friendsIncomingCountProvider);
-      }
-    } catch (_) {}
   }
 
   Future<void> _openStartChatDialog() async {
@@ -158,6 +76,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     try {
       final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
       if (!mounted || chatID.isEmpty) return;
+      unawaited(refreshChatsList(ref));
       final name = Uri.encodeQueryComponent(_friendTitle(pickedUser));
       context.push('/chats/$chatID?name=$name');
     } on ChatException catch (e) {
@@ -325,9 +244,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     final parsed = DateTime.tryParse(raw);
     if (parsed == null) return '';
     final local = parsed.toLocal();
+    final dd = local.day.toString().padLeft(2, '0');
+    final mo = local.month.toString().padLeft(2, '0');
+    final yyyy = local.year.toString();
     final hh = local.hour.toString().padLeft(2, '0');
     final mm = local.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
+    return '$dd.$mo.$yyyy $hh:$mm';
   }
 
   String _peerTitle(ChatUserItem user) {
@@ -338,6 +260,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final chatsAsync = ref.watch(chatsListProvider);
+    final chats = chatsAsync.valueOrNull ?? const <ChatPreviewItem>[];
+    final providerError = chatsAsync.whenOrNull(
+      error: (err, _) => err is ChatException ? err.message : 'Не удалось загрузить чаты',
+    );
+    final errorText = _error ?? providerError;
+    final loading = chatsAsync.isLoading && chats.isEmpty && errorText == null;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -367,16 +297,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              if (_loading)
+              if (loading)
                 const Padding(
                   padding: EdgeInsets.only(top: 24),
                   child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                 )
-              else if (_error != null)
+              else if (errorText != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 24),
                   child: Text(
-                    _error!,
+                    errorText,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.red.shade700,
@@ -384,7 +314,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                     ),
                   ),
                 )
-              else if (_chats.isEmpty)
+              else if (chats.isEmpty)
                 const Padding(
                   padding: EdgeInsets.only(top: 24),
                   child: Text(
@@ -397,7 +327,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                   ),
                 )
               else
-                ..._chats.map(
+                ...chats.map(
                   (item) {
                     final lastMessage = item.lastMessage;
                     final unread = item.unreadCount;

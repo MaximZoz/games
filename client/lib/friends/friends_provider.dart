@@ -12,31 +12,22 @@ final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
   return FriendsRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
-final friendsSnapshotProvider = FutureProvider.autoDispose<FriendsSnapshot>((ref) async {
-  final repo = ref.watch(friendsRepositoryProvider);
-  return repo.getFriends();
-});
-
-Future<int> _loadIncomingCount(FriendsRepository repo) async {
-  try {
-    final snapshot = await repo.getFriends();
-    return snapshot.incoming.length;
-  } catch (_) {
-    return 0;
-  }
-}
-
-final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async* {
+final friendsSnapshotProvider = StreamProvider.autoDispose<FriendsSnapshot>((ref) {
   final keepAliveLink = ref.keepAlive();
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
     keepAliveLink.close();
-    yield 0;
-    return;
+    return Stream<FriendsSnapshot>.value(
+      FriendsSnapshot(
+        friends: const [],
+        incoming: const [],
+        outgoing: const [],
+      ),
+    );
   }
 
   final repo = ref.watch(friendsRepositoryProvider);
-  final controller = StreamController<int>();
+  final controller = StreamController<FriendsSnapshot>();
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
@@ -47,8 +38,10 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     if (loadInFlight) return;
     loadInFlight = true;
     try {
-      final count = await _loadIncomingCount(repo);
-      if (!controller.isClosed) controller.add(count);
+      final snapshot = await repo.getFriends();
+      if (!controller.isClosed) controller.add(snapshot);
+    } catch (e, st) {
+      if (!controller.isClosed) controller.addError(e, st);
     } finally {
       loadInFlight = false;
     }
@@ -99,7 +92,7 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     });
   };
 
-  await load();
+  unawaited(load());
   unawaited(connect());
 
   ref.onDispose(() {
@@ -110,5 +103,15 @@ final friendsIncomingCountProvider = StreamProvider.autoDispose<int>((ref) async
     unawaited(controller.close());
   });
 
-  yield* controller.stream;
+  return controller.stream;
 });
+
+final friendsIncomingCountProvider = Provider<int>((ref) {
+  final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
+  return snapshot?.incoming.length ?? 0;
+});
+
+Future<void> refreshFriendsSnapshot(Ref ref) async {
+  ref.invalidate(friendsSnapshotProvider);
+  await ref.read(friendsSnapshotProvider.future);
+}

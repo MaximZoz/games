@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -51,14 +53,33 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
-    final unreadChats = ref.watch(chatsUnreadCountProvider).valueOrNull ?? 0;
-    final incomingFriends = ref.watch(friendsIncomingCountProvider).valueOrNull ?? 0;
+    final unreadChats = ref.watch(chatsUnreadCountProvider);
+    final incomingFriends = ref.watch(friendsIncomingCountProvider);
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = _selectedIndexForPath(path);
+    final isAuthorized = authState.valueOrNull != null;
+
+    Future<void> navigateWithPrefetch(int i) async {
+      final target = _navItems[i].path;
+      if (isAuthorized) {
+        if (target == '/chats') {
+          try {
+            await ref.read(chatsListProvider.future);
+          } catch (_) {}
+        } else if (target == '/friends') {
+          try {
+            await ref.read(friendsSnapshotProvider.future);
+          } catch (_) {}
+        }
+      }
+      if (context.mounted) {
+        context.go(target);
+      }
+    }
 
     return Stack(
       fit: StackFit.expand,
@@ -160,7 +181,7 @@ class AppShell extends ConsumerWidget {
                       children: [
                         NavigationRail(
                           selectedIndex: selectedIndex,
-                          onDestinationSelected: (i) => context.go(_navItems[i].path),
+                          onDestinationSelected: (i) => unawaited(navigateWithPrefetch(i)),
                           backgroundColor: Colors.transparent,
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
@@ -186,7 +207,7 @@ class AppShell extends ConsumerWidget {
                   child: MediaQuery.withNoTextScaling(
                     child: BottomNavigationBar(
                       currentIndex: selectedIndex,
-                      onTap: (i) => context.go(_navItems[i].path),
+                      onTap: (i) => unawaited(navigateWithPrefetch(i)),
                       type: BottomNavigationBarType.fixed,
                       elevation: 0,
                       backgroundColor: Colors.transparent,
