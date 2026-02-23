@@ -431,6 +431,57 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
   }
 
+  void _updateSearchRelation(
+    String userID, {
+    required String relationStatus,
+    String? requestID,
+  }) {
+    if (!mounted) return;
+    setState(() {
+      _searchResults = _searchResults.map((entry) {
+        if (entry.user.id != userID) return entry;
+        return FriendSearchItem(
+          user: entry.user,
+          relationStatus: relationStatus,
+          requestId: requestID,
+        );
+      }).toList();
+    });
+  }
+
+  Future<void> _runSearchAction({
+    required String key,
+    required Future<void> Function(FriendsRepository repo) call,
+    required String success,
+    required String userID,
+    required String nextRelationStatus,
+    String? nextRequestID,
+  }) async {
+    if (_actionsInProgress.contains(key)) return;
+    setState(() => _actionsInProgress.add(key));
+
+    final repo = ref.read(friendsRepositoryProvider);
+    try {
+      await call(repo);
+      _showMessage(null, success);
+      _updateSearchRelation(
+        userID,
+        relationStatus: nextRelationStatus,
+        requestID: nextRequestID,
+      );
+    } catch (e) {
+      if (e is FriendsException) {
+        await _handleFriendsException(e);
+      } else {
+        _showMessage(e.toString(), null);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _actionsInProgress.remove(key));
+      }
+    }
+  }
+
   Future<void> _runAction({
     required String key,
     required Future<void> Function(FriendsRepository repo) call,
@@ -828,45 +879,79 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       ),
     ];
     if (relation == 'none') {
+      final busy = _busy(sendKey);
       controls.add(
-        _buildActionIcon(
-          key: sendKey,
+        _buildCompactIconButton(
           icon: Icons.person_add_alt_1_rounded,
           tooltip: 'Добавить в друзья',
-          call: (repo) => repo.sendRequest(item.user.id),
-          success: 'Заявка отправлена',
+          loading: busy,
+          onPressed: busy
+              ? null
+              : () => _runSearchAction(
+                    key: sendKey,
+                    call: (repo) => repo.sendRequest(item.user.id),
+                    success: 'Заявка отправлена',
+                    userID: item.user.id,
+                    nextRelationStatus: 'outgoing',
+                    nextRequestID: item.requestId,
+                  ),
         ),
       );
     } else if (relation == 'outgoing' && item.requestId != null) {
+      final busy = _busy(cancelKey);
       controls.add(
-        _buildActionIcon(
-          key: cancelKey,
+        _buildCompactIconButton(
           icon: Icons.close_rounded,
           tooltip: 'Отменить заявку',
-          call: (repo) => repo.cancelRequest(item.requestId!),
-          success: 'Заявка отменена',
           danger: true,
+          loading: busy,
+          onPressed: busy
+              ? null
+              : () => _runSearchAction(
+                    key: cancelKey,
+                    call: (repo) => repo.cancelRequest(item.requestId!),
+                    success: 'Заявка отменена',
+                    userID: item.user.id,
+                    nextRelationStatus: 'none',
+                  ),
         ),
       );
     } else if (relation == 'incoming' && item.requestId != null) {
+      final acceptBusy = _busy(acceptKey);
+      final rejectBusy = _busy(rejectKey);
       controls.addAll([
-        _buildActionIcon(
-          key: acceptKey,
+        _buildCompactIconButton(
           icon: Icons.check_rounded,
           tooltip: 'Принять заявку',
-          call: (repo) => repo.acceptRequest(item.requestId!),
-          success: 'Заявка принята',
+          loading: acceptBusy,
+          onPressed: acceptBusy
+              ? null
+              : () => _runSearchAction(
+                    key: acceptKey,
+                    call: (repo) => repo.acceptRequest(item.requestId!),
+                    success: 'Заявка принята',
+                    userID: item.user.id,
+                    nextRelationStatus: 'friend',
+                  ),
         ),
-        _buildActionIcon(
-          key: rejectKey,
+        _buildCompactIconButton(
           icon: Icons.close_rounded,
           tooltip: 'Отклонить заявку',
-          call: (repo) => repo.rejectRequest(item.requestId!),
-          success: 'Заявка отклонена',
           danger: true,
+          loading: rejectBusy,
+          onPressed: rejectBusy
+              ? null
+              : () => _runSearchAction(
+                    key: rejectKey,
+                    call: (repo) => repo.rejectRequest(item.requestId!),
+                    success: 'Заявка отклонена',
+                    userID: item.user.id,
+                    nextRelationStatus: 'none',
+                  ),
         ),
       ]);
     } else if (relation == 'friend') {
+      final removeBusy = _busy(removeKey);
       controls.addAll([
         _buildCompactIconButton(
           icon: Icons.chat_bubble_outline_rounded,
@@ -876,13 +961,20 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ? null
               : () => _openChatWithUser(item.user, actionKey: chatKey),
         ),
-        _buildActionIcon(
-          key: removeKey,
+        _buildCompactIconButton(
           icon: Icons.person_remove_alt_1_rounded,
           tooltip: 'Удалить из друзей',
-          call: (repo) => repo.removeFriend(item.user.id),
-          success: 'Пользователь удалён из друзей',
           danger: true,
+          loading: removeBusy,
+          onPressed: removeBusy
+              ? null
+              : () => _runSearchAction(
+                    key: removeKey,
+                    call: (repo) => repo.removeFriend(item.user.id),
+                    success: 'Пользователь удалён из друзей',
+                    userID: item.user.id,
+                    nextRelationStatus: 'none',
+                  ),
         ),
       ]);
     }

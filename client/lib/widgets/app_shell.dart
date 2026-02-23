@@ -186,12 +186,19 @@ class AppShell extends ConsumerWidget {
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
                           labelType: NavigationRailLabelType.all,
-                          destinations: _navItems
-                              .map((e) => NavigationRailDestination(
-                                    icon: _navIcon(e, unreadChats, incomingFriends),
-                                    label: Text(e.label),
-                                  ))
-                              .toList(),
+                          destinations: _navItems.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            return NavigationRailDestination(
+                              icon: _navIcon(
+                                item,
+                                unreadChats,
+                                incomingFriends,
+                                selected: index == selectedIndex,
+                              ),
+                              label: Text(item.label),
+                            );
+                          }).toList(),
                         ),
                         Expanded(
                           child: SizedBox.expand(child: child),
@@ -216,12 +223,19 @@ class AppShell extends ConsumerWidget {
                       selectedFontSize: 10,
                       unselectedFontSize: 10,
                       showUnselectedLabels: true,
-                      items: _navItems
-                          .map((e) => BottomNavigationBarItem(
-                                icon: _navIcon(e, unreadChats, incomingFriends),
-                                label: e.label,
-                              ))
-                          .toList(),
+                      items: _navItems.asMap().entries.map((entry) {
+                        final item = entry.value;
+                        return BottomNavigationBarItem(
+                          icon: _navIcon(item, unreadChats, incomingFriends),
+                          activeIcon: _navIcon(
+                            item,
+                            unreadChats,
+                            incomingFriends,
+                            selected: true,
+                          ),
+                          label: item.label,
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
@@ -233,7 +247,26 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-Widget _navIcon(_NavItem item, int unreadChats, int incomingFriends) {
+Widget _navIcon(
+  _NavItem item,
+  int unreadChats,
+  int incomingFriends, {
+  bool selected = false,
+}) {
+  final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
+  final iconSize = selected ? 25.0 : 22.0;
+  final baseIcon = Container(
+    padding: const EdgeInsets.all(5),
+    decoration: selected
+        ? BoxDecoration(
+            color: AppColors.accentSoft.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.accentStart.withOpacity(0.35)),
+          )
+        : null,
+    child: Icon(item.icon, color: iconColor, size: iconSize),
+  );
+
   var badgeValue = 0;
   if (item.path == '/chats') {
     badgeValue = unreadChats;
@@ -242,12 +275,12 @@ Widget _navIcon(_NavItem item, int unreadChats, int incomingFriends) {
   }
 
   if (badgeValue <= 0) {
-    return Icon(item.icon);
+    return baseIcon;
   }
   return Stack(
     clipBehavior: Clip.none,
     children: [
-      Icon(item.icon),
+      baseIcon,
       Positioned(
         right: -10,
         top: -8,
