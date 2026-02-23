@@ -39,9 +39,13 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      overflow-x: hidden;
+      overscroll-behavior: none;
+      overscroll-behavior-x: none;
     }
     body {
       background-color: #F5F5F5;
+      touch-action: pan-y;
     }
     flt-glass-pane, flutter-view {
       display: block;
@@ -65,5 +69,30 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (function () {
+      let startX = 0;
+      let startY = 0;
+      document.addEventListener('touchstart', function (e) {
+        if (!e.touches || e.touches.length === 0) return;
+        const x = e.touches[0].clientX;
+        startX = x;
+        startY = e.touches[0].clientY;
+        // Блокируем системный свайп "назад/вперёд" от краёв экрана на iOS.
+        if (x <= 24 || x >= window.innerWidth - 24) {
+          e.preventDefault();
+        }
+      }, { passive: false, capture: true });
+
+      document.addEventListener('touchmove', function (e) {
+        if (!e.touches || e.touches.length === 0) return;
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 8 && dx > dy) {
+          e.preventDefault();
+        }
+      }, { passive: false, capture: true });
+    })();
+  </script>
 </body>
 </html>

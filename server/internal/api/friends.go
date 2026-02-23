@@ -11,19 +11,24 @@ import (
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type FriendsHandler struct {
 	Pool *pgxpool.Pool
+	Hub  *RealtimeHub
 }
 
 type FriendUserItem struct {
 	ID          string  `json:"id"`
-	Email       string  `json:"email"`
+	Email       string  `json:"email,omitempty"`
 	DisplayName *string `json:"display_name,omitempty"`
 	AvatarKind  string  `json:"avatar_kind,omitempty"`
 	AvatarValue *string `json:"avatar_value,omitempty"`
+	Age         *int    `json:"age,omitempty"`
+	Gender      *string `json:"gender,omitempty"`
+	About       *string `json:"about,omitempty"`
 }
 
 type FriendItem struct {
@@ -58,10 +63,12 @@ type RemoveFriendBody struct {
 func friendUserToItem(u store.FriendUser) FriendUserItem {
 	return FriendUserItem{
 		ID:          u.ID.String(),
-		Email:       u.Email,
 		DisplayName: u.DisplayName,
 		AvatarKind:  u.AvatarKind,
 		AvatarValue: u.AvatarValue,
+		Age:         u.Age,
+		Gender:      u.Gender,
+		About:       u.About,
 	}
 }
 
@@ -87,6 +94,35 @@ func writeFriendError(w http.ResponseWriter, err error) {
 	default:
 		http.Error(w, "server error", http.StatusInternalServerError)
 	}
+}
+
+func (h *FriendsHandler) publishFriendsUpdated(userIDs ...uuid.UUID) {
+	if h == nil || h.Hub == nil || len(userIDs) == 0 {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type": "friends_updated",
+	})
+}
+
+func (h *FriendsHandler) requestParticipants(
+	r *http.Request,
+	requestID uuid.UUID,
+) (uuid.UUID, uuid.UUID, error) {
+	var senderID uuid.UUID
+	var receiverID uuid.UUID
+	err := h.Pool.QueryRow(
+		r.Context(),
+		`SELECT sender_user_id, receiver_user_id FROM friend_requests WHERE id = $1`,
+		requestID,
+	).Scan(&senderID, &receiverID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return uuid.Nil, uuid.Nil, store.ErrFriendNotFound
+		}
+		return uuid.Nil, uuid.Nil, err
+	}
+	return senderID, receiverID, nil
 }
 
 func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -229,6 +265,7 @@ func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 		writeFriendError(w, err)
 		return
 	}
+	h.publishFriendsUpdated(userID, targetID)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -260,10 +297,17 @@ func (h *FriendsHandler) AcceptRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	senderID, receiverID, err := h.requestParticipants(r, requestID)
+	if err != nil {
+		writeFriendError(w, err)
+		return
+	}
+
 	if err := store.AcceptFriendRequest(r.Context(), h.Pool, requestID, userID); err != nil {
 		writeFriendError(w, err)
 		return
 	}
+	h.publishFriendsUpdated(senderID, receiverID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -290,10 +334,17 @@ func (h *FriendsHandler) RejectRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	senderID, receiverID, err := h.requestParticipants(r, requestID)
+	if err != nil {
+		writeFriendError(w, err)
+		return
+	}
+
 	if err := store.RejectFriendRequest(r.Context(), h.Pool, requestID, userID); err != nil {
 		writeFriendError(w, err)
 		return
 	}
+	h.publishFriendsUpdated(senderID, receiverID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -320,10 +371,17 @@ func (h *FriendsHandler) CancelRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	senderID, receiverID, err := h.requestParticipants(r, requestID)
+	if err != nil {
+		writeFriendError(w, err)
+		return
+	}
+
 	if err := store.CancelOutgoingFriendRequest(r.Context(), h.Pool, requestID, userID); err != nil {
 		writeFriendError(w, err)
 		return
 	}
+	h.publishFriendsUpdated(senderID, receiverID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -354,5 +412,6 @@ func (h *FriendsHandler) RemoveFriend(w http.ResponseWriter, r *http.Request) {
 		writeFriendError(w, err)
 		return
 	}
+	h.publishFriendsUpdated(userID, friendID)
 	w.WriteHeader(http.StatusNoContent)
 }

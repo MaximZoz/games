@@ -1,0 +1,417 @@
+package store
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	ErrChatNotFound           = errors.New("chat not found")
+	ErrChatForbidden          = errors.New("chat action forbidden")
+	ErrCannotChatWithYourself = errors.New("cannot chat with yourself")
+	ErrChatMessageEmpty       = errors.New("chat message is empty")
+	ErrChatMessageTooLong     = errors.New("chat message is too long")
+)
+
+type ChatMessage struct {
+	ID           uuid.UUID
+	ChatID       uuid.UUID
+	SenderUserID uuid.UUID
+	Body         string
+	CreatedAt    time.Time
+	ReadAt       *time.Time
+}
+
+type ChatUser struct {
+	ID          uuid.UUID
+	Email       string
+	DisplayName *string
+	AvatarKind  string
+	AvatarValue *string
+	Age         *int
+	Gender      *string
+	About       *string
+}
+
+type ChatPreview struct {
+	ChatID      uuid.UUID
+	Peer        ChatUser
+	CreatedAt   time.Time
+	LastMessage *ChatMessage
+	UnreadCount int
+	UpdatedAt   time.Time
+}
+
+func orderedChatPair(a, b uuid.UUID) (uuid.UUID, uuid.UUID) {
+	if strings.Compare(a.String(), b.String()) < 0 {
+		return a, b
+	}
+	return b, a
+}
+
+func EnsureDirectChat(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	currentUserID, targetUserID uuid.UUID,
+) (uuid.UUID, error) {
+	if currentUserID == targetUserID {
+		return uuid.Nil, ErrCannotChatWithYourself
+	}
+
+	targetExists, err := userExists(ctx, pool, targetUserID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if !targetExists {
+		return uuid.Nil, ErrChatNotFound
+	}
+
+	low, high := orderedChatPair(currentUserID, targetUserID)
+	_, err = pool.Exec(ctx, `
+		INSERT INTO chats (user_low, user_high)
+		VALUES ($1, $2)
+		ON CONFLICT (user_low, user_high) DO NOTHING
+	`, low, high)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	var chatID uuid.UUID
+	err = pool.QueryRow(ctx, `
+		SELECT id
+		FROM chats
+		WHERE user_low = $1 AND user_high = $2
+	`, low, high).Scan(&chatID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return uuid.Nil, ErrChatNotFound
+		}
+		return uuid.Nil, err
+	}
+	return chatID, nil
+}
+
+func ListChatsForUser(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	userID uuid.UUID,
+	limit, offset int,
+) ([]ChatPreview, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	rows, err := pool.Query(ctx, `
+		WITH my_chats AS (
+			SELECT
+				c.id,
+				c.created_at,
+				CASE
+					WHEN c.user_low = $1 THEN c.user_high
+					ELSE c.user_low
+				END AS peer_id
+			FROM chats c
+			WHERE c.user_low = $1 OR c.user_high = $1
+		),
+		last_msg AS (
+			SELECT DISTINCT ON (m.chat_id)
+				m.chat_id,
+				m.id,
+				m.sender_user_id,
+				m.body,
+				m.created_at,
+				m.read_at
+			FROM chat_messages m
+			JOIN my_chats mc ON mc.id = m.chat_id
+			ORDER BY m.chat_id, m.created_at DESC
+		),
+		unread AS (
+			SELECT
+				m.chat_id,
+				COUNT(*)::int AS unread_count
+			FROM chat_messages m
+			JOIN my_chats mc ON mc.id = m.chat_id
+			WHERE m.sender_user_id <> $1 AND m.read_at IS NULL
+			GROUP BY m.chat_id
+		)
+		SELECT
+			mc.id,
+			mc.created_at,
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
+			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.read_at,
+			COALESCE(un.unread_count, 0),
+			COALESCE(lm.created_at, mc.created_at) AS updated_at
+		FROM my_chats mc
+		JOIN users u ON u.id = mc.peer_id
+		LEFT JOIN last_msg lm ON lm.chat_id = mc.id
+		LEFT JOIN unread un ON un.chat_id = mc.id
+		ORDER BY updated_at DESC
+		LIMIT $2 OFFSET $3
+	`, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]ChatPreview, 0, limit)
+	for rows.Next() {
+		var item ChatPreview
+		var lastMessageIDRaw sql.NullString
+		var lastSenderIDRaw sql.NullString
+		var lastBody sql.NullString
+		var lastCreatedAt sql.NullTime
+		var lastReadAt sql.NullTime
+
+		if err := rows.Scan(
+			&item.ChatID,
+			&item.CreatedAt,
+			&item.Peer.ID,
+			&item.Peer.Email,
+			&item.Peer.DisplayName,
+			&item.Peer.AvatarKind,
+			&item.Peer.AvatarValue,
+			&item.Peer.Age,
+			&item.Peer.Gender,
+			&item.Peer.About,
+			&lastMessageIDRaw,
+			&lastSenderIDRaw,
+			&lastBody,
+			&lastCreatedAt,
+			&lastReadAt,
+			&item.UnreadCount,
+			&item.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		item.CreatedAt = item.CreatedAt.UTC()
+		item.UpdatedAt = item.UpdatedAt.UTC()
+		if lastMessageIDRaw.Valid && lastSenderIDRaw.Valid && lastCreatedAt.Valid {
+			messageID, errID := uuid.Parse(lastMessageIDRaw.String)
+			senderID, errSender := uuid.Parse(lastSenderIDRaw.String)
+			if errID == nil && errSender == nil {
+				msg := ChatMessage{
+					ID:           messageID,
+					ChatID:       item.ChatID,
+					SenderUserID: senderID,
+					Body:         strings.TrimSpace(lastBody.String),
+					CreatedAt:    lastCreatedAt.Time.UTC(),
+				}
+				if lastReadAt.Valid {
+					readAt := lastReadAt.Time.UTC()
+					msg.ReadAt = &readAt
+				}
+				item.LastMessage = &msg
+			}
+		}
+
+		result = append(result, item)
+	}
+
+	return result, rows.Err()
+}
+
+func ListChatMessages(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, currentUserID uuid.UUID,
+	limit int,
+	before *time.Time,
+) ([]ChatMessage, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+
+	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
+		return nil, err
+	}
+
+	var (
+		rows pgx.Rows
+		err  error
+	)
+	if before != nil {
+		rows, err = pool.Query(ctx, `
+			SELECT id, chat_id, sender_user_id, body, created_at, read_at
+			FROM chat_messages
+			WHERE chat_id = $1 AND created_at < $3
+			ORDER BY created_at DESC
+			LIMIT $2
+		`, chatID, limit, before.UTC())
+	} else {
+		rows, err = pool.Query(ctx, `
+			SELECT id, chat_id, sender_user_id, body, created_at, read_at
+			FROM chat_messages
+			WHERE chat_id = $1
+			ORDER BY created_at DESC
+			LIMIT $2
+		`, chatID, limit)
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	messages := make([]ChatMessage, 0, limit)
+	for rows.Next() {
+		var msg ChatMessage
+		var readAt sql.NullTime
+		if err := rows.Scan(
+			&msg.ID,
+			&msg.ChatID,
+			&msg.SenderUserID,
+			&msg.Body,
+			&msg.CreatedAt,
+			&readAt,
+		); err != nil {
+			return nil, err
+		}
+		msg.CreatedAt = msg.CreatedAt.UTC()
+		if readAt.Valid {
+			value := readAt.Time.UTC()
+			msg.ReadAt = &value
+		}
+		messages = append(messages, msg)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Возвращаем в хронологическом порядке (старые -> новые).
+	for left, right := 0, len(messages)-1; left < right; {
+		messages[left], messages[right] = messages[right], messages[left]
+		left++
+		right--
+	}
+	return messages, nil
+}
+
+func SendChatMessage(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, senderUserID uuid.UUID,
+	body string,
+) (ChatMessage, error) {
+	text := strings.TrimSpace(body)
+	if text == "" {
+		return ChatMessage{}, ErrChatMessageEmpty
+	}
+	if utf8.RuneCountInString(text) > 2000 {
+		return ChatMessage{}, ErrChatMessageTooLong
+	}
+
+	if err := ensureChatMembership(ctx, pool, chatID, senderUserID); err != nil {
+		return ChatMessage{}, err
+	}
+
+	var msg ChatMessage
+	var readAt sql.NullTime
+	err := pool.QueryRow(ctx, `
+		INSERT INTO chat_messages (chat_id, sender_user_id, body)
+		VALUES ($1, $2, $3)
+		RETURNING id, chat_id, sender_user_id, body, created_at, read_at
+	`, chatID, senderUserID, text).Scan(
+		&msg.ID,
+		&msg.ChatID,
+		&msg.SenderUserID,
+		&msg.Body,
+		&msg.CreatedAt,
+		&readAt,
+	)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+	msg.CreatedAt = msg.CreatedAt.UTC()
+	if readAt.Valid {
+		value := readAt.Time.UTC()
+		msg.ReadAt = &value
+	}
+	return msg, nil
+}
+
+func MarkChatRead(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, currentUserID uuid.UUID,
+) (int, error) {
+	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
+		return 0, err
+	}
+
+	tag, err := pool.Exec(ctx, `
+		UPDATE chat_messages
+		SET read_at = now()
+		WHERE chat_id = $1
+		  AND sender_user_id <> $2
+		  AND read_at IS NULL
+	`, chatID, currentUserID)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
+}
+
+func ChatParticipantIDs(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID uuid.UUID,
+) (uuid.UUID, uuid.UUID, error) {
+	var low uuid.UUID
+	var high uuid.UUID
+	err := pool.QueryRow(ctx, `
+		SELECT user_low, user_high
+		FROM chats
+		WHERE id = $1
+	`, chatID).Scan(&low, &high)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return uuid.Nil, uuid.Nil, ErrChatNotFound
+		}
+		return uuid.Nil, uuid.Nil, err
+	}
+	return low, high, nil
+}
+
+func ensureChatMembership(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, userID uuid.UUID,
+) error {
+	low, high, err := ChatParticipantIDs(ctx, pool, chatID)
+	if err != nil {
+		return err
+	}
+	if userID != low && userID != high {
+		return ErrChatForbidden
+	}
+	return nil
+}
+
+func userExists(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (bool, error) {
+	var exists int
+	err := pool.QueryRow(ctx, `SELECT 1 FROM users WHERE id = $1`, userID).Scan(&exists)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}

@@ -36,6 +36,18 @@ func getEnv(key, defaultVal string) string {
 	return defaultVal
 }
 
+func getEnvBool(key string, defaultVal bool) bool {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return defaultVal
+	}
+	parsed, err := strconv.ParseBool(raw)
+	if err != nil {
+		return defaultVal
+	}
+	return parsed
+}
+
 func runMigrations(dbURL string) error {
 	m, err := migrate.New("file://migrations", dbURL)
 	if err != nil {
@@ -175,53 +187,66 @@ func main() {
 		log.Println("JWT_SECRET: using default (dev only)")
 	}
 
-	appLogFilePath := getEnv("APP_LOG_FILE", "logs/app_events.jsonl")
-	appLogStatePath := getEnv("APP_LOG_STATE_FILE", "logs/app_events.offset")
-	syncIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_SYNC_INTERVAL_SECONDS", "5"))
-	if err != nil || syncIntervalSeconds <= 0 {
-		syncIntervalSeconds = 5
-	}
-	retentionDays, err := strconv.Atoi(getEnv("APP_LOG_RETENTION_DAYS", "30"))
-	if err != nil || retentionDays < 0 {
-		retentionDays = 30
-	}
-	cleanupIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_CLEANUP_INTERVAL_SECONDS", "3600"))
-	if err != nil || cleanupIntervalSeconds <= 0 {
-		cleanupIntervalSeconds = 3600
-	}
-	retentionDuration := time.Duration(retentionDays) * 24 * time.Hour
-	cleanupIntervalDuration := time.Duration(cleanupIntervalSeconds) * time.Second
-	if retentionDuration > 0 {
-		log.Printf(
-			"App logs retention: delete older than %d days (every %s)",
-			retentionDays,
+	appLogEnabled := getEnvBool("APP_LOG_ENABLED", false)
+	var logWriter *applog.FileWriter
+	var logImporter *applog.Importer
+	if appLogEnabled {
+		appLogFilePath := getEnv("APP_LOG_FILE", "logs/app_events.jsonl")
+		appLogStatePath := getEnv("APP_LOG_STATE_FILE", "logs/app_events.offset")
+		syncIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_SYNC_INTERVAL_SECONDS", "5"))
+		if err != nil || syncIntervalSeconds <= 0 {
+			syncIntervalSeconds = 5
+		}
+		retentionDays, err := strconv.Atoi(getEnv("APP_LOG_RETENTION_DAYS", "30"))
+		if err != nil || retentionDays < 0 {
+			retentionDays = 30
+		}
+		cleanupIntervalSeconds, err := strconv.Atoi(getEnv("APP_LOG_CLEANUP_INTERVAL_SECONDS", "3600"))
+		if err != nil || cleanupIntervalSeconds <= 0 {
+			cleanupIntervalSeconds = 3600
+		}
+		retentionDuration := time.Duration(retentionDays) * 24 * time.Hour
+		cleanupIntervalDuration := time.Duration(cleanupIntervalSeconds) * time.Second
+		if retentionDuration > 0 {
+			log.Printf(
+				"App logs retention: delete older than %d days (every %s)",
+				retentionDays,
+				cleanupIntervalDuration,
+			)
+		} else {
+			log.Printf("App logs retention: disabled")
+		}
+
+		logWriter, err = applog.NewFileWriter(appLogFilePath)
+		if err != nil {
+			log.Fatalf("App logs file: %v", err)
+		}
+		defer logWriter.Close()
+
+		logImporter = applog.NewImporter(
+			pool,
+			appLogFilePath,
+			appLogStatePath,
+			time.Duration(syncIntervalSeconds)*time.Second,
+			retentionDuration,
 			cleanupIntervalDuration,
 		)
+		logImporter.Start(ctx)
+		if err := logImporter.SyncNow(ctx); err != nil {
+			log.Printf("App logs initial sync failed: %v", err)
+		}
 	} else {
-		log.Printf("App logs retention: disabled")
-	}
-
-	logWriter, err := applog.NewFileWriter(appLogFilePath)
-	if err != nil {
-		log.Fatalf("App logs file: %v", err)
-	}
-	defer logWriter.Close()
-
-	logImporter := applog.NewImporter(
-		pool,
-		appLogFilePath,
-		appLogStatePath,
-		time.Duration(syncIntervalSeconds)*time.Second,
-		retentionDuration,
-		cleanupIntervalDuration,
-	)
-	logImporter.Start(ctx)
-	if err := logImporter.SyncNow(ctx); err != nil {
-		log.Printf("App logs initial sync failed: %v", err)
+		log.Printf("App logs: disabled (APP_LOG_ENABLED=false)")
 	}
 
 	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
-	friendsHandler := &api.FriendsHandler{Pool: pool}
+	realtimeHub := api.NewRealtimeHub()
+	wsHandler := &api.RealtimeWSHandler{
+		Hub:       realtimeHub,
+		JWTSecret: []byte(jwtSecret),
+	}
+	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub}
+	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{
 		Pool:        pool,
@@ -244,6 +269,7 @@ func main() {
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
+	mux.Handle("/api/ws", http.HandlerFunc(wsHandler.ServeHTTP))
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
@@ -253,6 +279,10 @@ func main() {
 	mux.Handle("/api/friends/reject", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RejectRequest)))
 	mux.Handle("/api/friends/cancel", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.CancelRequest)))
 	mux.Handle("/api/friends/remove", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RemoveFriend)))
+	mux.Handle("/api/chats", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.List)))
+	mux.Handle("/api/chats/start", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Start)))
+	mux.Handle("/api/chats/messages", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Messages)))
+	mux.Handle("/api/chats/read", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Read)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
@@ -281,7 +311,9 @@ func main() {
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
 	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
+	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
+	log.Printf("Chats API: GET /api/chats, POST /api/chats/start, /api/chats/messages, /api/chats/read (Bearer)")
 	_ = rdb
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)

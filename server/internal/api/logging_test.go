@@ -115,3 +115,17 @@ func TestFrontendLogHandler_IngestWritesFrontendEvent(t *testing.T) {
 		t.Errorf("path = %q, want /api/auth/login", event.Path)
 	}
 }
+
+func TestFrontendLogHandler_IngestDisabledWriter_NoOp(t *testing.T) {
+	h := &FrontendLogHandler{Writer: nil}
+	reqBody := []byte(`{"method_name":"noop"}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/logs/frontend", bytes.NewReader(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	h.Ingest(rec, req)
+
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusAccepted)
+	}
+}
