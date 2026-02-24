@@ -231,10 +231,26 @@ cp deploy.cursor.env.example deploy.cursor.env
 ./launcher/deploy_cursor.sh
 ```
 
+Если нужно всегда деплоить именно `origin/develop`:
+
+```bash
+./launcher/deploy_develop.sh
+```
+
 Windows:
 
 ```powershell
 .\launcher\deploy_cursor.ps1
+```
+
+```powershell
+.\launcher\deploy_develop.ps1
+```
+
+В чате Cursor доступна slash-команда проекта:
+
+```
+/deploy-develop
 ```
 
 Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)

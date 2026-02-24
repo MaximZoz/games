@@ -165,3 +165,119 @@ func TestChats_Read_InvalidChatID(t *testing.T) {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
 	}
 }
+
+func TestChats_Clear_MethodNotAllowed(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodGet, "/api/chats/clear", nil)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Clear(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestChats_Clear_InvalidJSON(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodPost, "/api/chats/clear", bytes.NewReader([]byte("{")))
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Clear(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestChats_Clear_InvalidChatID(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/chats/clear",
+		bytes.NewReader([]byte(`{"chat_id":"bad"}`)),
+	)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Clear(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestChats_Block_MethodNotAllowed(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodGet, "/api/chats/block", nil)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Block(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestChats_Block_InvalidJSON(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodPost, "/api/chats/block", bytes.NewReader([]byte("{")))
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Block(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestChats_Block_InvalidTargetUserID(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/chats/block",
+		bytes.NewReader([]byte(`{"target_user_id":"bad"}`)),
+	)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Block(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestChats_Unblock_InvalidTargetUserID(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/chats/unblock",
+		bytes.NewReader([]byte(`{"target_user_id":"bad"}`)),
+	)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Unblock(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestChats_Blocked_MethodNotAllowed(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodPost, "/api/chats/blocked", nil)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Blocked(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}

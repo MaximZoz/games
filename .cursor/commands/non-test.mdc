@@ -1,0 +1,12 @@
+---
+description: Алиас для деплоя origin/develop
+---
+
+Выполни деплой ветки `origin/develop` на Fly для этого репозитория.
+
+Шаги:
+1. Проверь наличие `deploy.cursor.env` в корне проекта.
+2. Запусти:
+   - Linux/macOS: `./launcher/deploy_develop.sh`
+   - Windows PowerShell: `.\launcher\deploy_develop.ps1`
+3. Выведи итог: успех/ошибка и URL приложения при успехе.

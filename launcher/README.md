@@ -50,6 +50,14 @@
 
 Скрипт читает `deploy.cursor.env` из корня проекта, обновляет секреты и запускает `fly deploy --remote-only --yes`.
 
+**Деплой именно ветки `develop` (даже если ты на другой ветке):**
+
+```powershell
+.\launcher\deploy_develop.ps1
+```
+
+Скрипт подтягивает `origin/develop`, создаёт временный worktree и деплоит именно эту ветку.
+
 Если выполнение скриптов запрещено политикой:
 
 ```powershell
@@ -85,6 +93,15 @@ chmod +x launcher/deploy_cursor.sh
 
 Скрипт читает `deploy.cursor.env` из корня проекта, обновляет секреты и запускает `fly deploy --remote-only --yes`.
 
+**Деплой именно ветки `develop` (даже если ты на другой ветке):**
+
+```bash
+chmod +x launcher/deploy_develop.sh
+./launcher/deploy_develop.sh
+```
+
+Скрипт подтягивает `origin/develop`, создаёт временный worktree и деплоит именно эту ветку.
+
 ---
 
 ## Варианты запуска клиента
@@ -112,11 +129,13 @@ Windows
 ├── restart.ps1 # Windows — перезапуск (применить изменения)
 ├── test.ps1    # Windows — тесты Go + Flutter
 ├── deploy_cursor.ps1 # Windows — деплой на Fly из deploy.cursor.env
+├── deploy_develop.ps1 # Windows — деплой именно origin/develop
 
 macOS / Linux
 ├── start.sh    # macOS / Linux
 ├── test.sh     # macOS / Linux — тесты
 ├── deploy_cursor.sh # macOS / Linux — деплой на Fly из deploy.cursor.env
+├── deploy_develop.sh # macOS / Linux — деплой именно origin/develop
 └── README.md   # этот файл
 ```
 
