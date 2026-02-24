@@ -54,8 +54,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   RealtimeSocket? _socket;
   StreamSubscription<String>? _socketSubscription;
   Timer? _reconnectTimer;
-  Timer? _backgroundSyncTimer;
-  bool _syncInFlight = false;
 
   bool _loading = true;
   bool _sending = false;
@@ -71,7 +69,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _loadMessages(initial: true);
     unawaited(_connectRealtime());
-    _startBackgroundSync();
   }
 
   @override
@@ -85,7 +82,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
-    _backgroundSyncTimer?.cancel();
     _reconnectTimer?.cancel();
     unawaited(_socketSubscription?.cancel());
     _socket?.close();
@@ -296,19 +292,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _reconnectTimer = Timer(const Duration(seconds: 2), () {
       _reconnectTimer = null;
       unawaited(_connectRealtime());
-    });
-  }
-
-  void _startBackgroundSync() {
-    _backgroundSyncTimer?.cancel();
-    _backgroundSyncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted || _syncInFlight || _loading) return;
-      _syncInFlight = true;
-      unawaited(
-        _loadMessages(surfaceErrors: false).whenComplete(() {
-          _syncInFlight = false;
-        }),
-      );
     });
   }
 
