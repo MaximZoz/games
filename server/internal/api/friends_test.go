@@ -140,6 +140,7 @@ func TestWriteFriendError_StatusCodes(t *testing.T) {
 		{name: "already friends", err: store.ErrAlreadyFriends, want: http.StatusConflict},
 		{name: "request already sent", err: store.ErrFriendRequestAlreadySent, want: http.StatusConflict},
 		{name: "request already pending", err: store.ErrFriendRequestAlreadyPending, want: http.StatusConflict},
+		{name: "user blocked", err: store.ErrUserBlocked, want: http.StatusForbidden},
 		{name: "forbidden", err: store.ErrFriendForbidden, want: http.StatusForbidden},
 		{name: "not found", err: store.ErrFriendNotFound, want: http.StatusNotFound},
 		{name: "internal default", err: errors.New("unexpected"), want: http.StatusInternalServerError},

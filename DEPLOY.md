@@ -39,6 +39,24 @@ cp deploy.cursor.env.example deploy.cursor.env
 .\launcher\deploy_cursor.ps1
 ```
 
+**Отдельно: деплой именно ветки `develop` (удобно как “одна кнопка” в чате Cursor):**
+
+```bash
+./launcher/deploy_develop.sh
+```
+
+```powershell
+.\launcher\deploy_develop.ps1
+```
+
+**Прямо в чате Cursor (slash-команда проекта):**
+
+```
+/deploy-develop
+```
+
+Команда лежит в `.cursor/commands/deploy-develop.md` и запускает тот же сценарий деплоя ветки `origin/develop`.
+
 **Linux/macOS/Cursor shell:**
 
 ```bash
