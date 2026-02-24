@@ -212,8 +212,24 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 		}
 		limit = n
 	}
+	offset := 0
+	if raw := strings.TrimSpace(r.URL.Query().Get("offset")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 {
+			http.Error(w, "invalid offset", http.StatusBadRequest)
+			return
+		}
+		offset = n
+	}
 
-	users, err := store.SearchUsersWithFriendRelation(r.Context(), h.Pool, userID, query, limit)
+	users, hasMore, err := store.SearchUsersWithFriendRelation(
+		r.Context(),
+		h.Pool,
+		userID,
+		query,
+		limit,
+		offset,
+	)
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
@@ -235,7 +251,10 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"users": items,
+		"users":    items,
+		"limit":    limit,
+		"offset":   offset,
+		"has_more": hasMore,
 	})
 }
 

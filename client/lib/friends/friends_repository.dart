@@ -127,6 +127,40 @@ class FriendSearchItem {
   }
 }
 
+class FriendSearchPage {
+  final List<FriendSearchItem> users;
+  final int limit;
+  final int offset;
+  final bool hasMore;
+
+  FriendSearchPage({
+    required this.users,
+    required this.limit,
+    required this.offset,
+    required this.hasMore,
+  });
+
+  factory FriendSearchPage.fromJson(
+    Map<String, dynamic> json, {
+    required int fallbackLimit,
+    required int fallbackOffset,
+  }) {
+    final usersRaw = json['users'] as List<dynamic>? ?? const [];
+    final users = usersRaw
+        .map((e) => FriendSearchItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    final limit = json['limit'] as int? ?? fallbackLimit;
+    final offset = json['offset'] as int? ?? fallbackOffset;
+    final hasMore = json['has_more'] as bool? ?? (users.length >= limit);
+    return FriendSearchPage(
+      users: users,
+      limit: limit,
+      offset: offset,
+      hasMore: hasMore,
+    );
+  }
+}
+
 class FriendsRepository {
   FriendsRepository({required AuthRepository authRepository}) : _auth = authRepository;
 
@@ -182,17 +216,32 @@ class FriendsRepository {
     return FriendsSnapshot.fromJson(body);
   }
 
-  Future<List<FriendSearchItem>> searchUsers(String query, {int limit = 20}) async {
+  Future<FriendSearchPage> searchUsersPage(
+    String query, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
     final q = query.trim();
-    if (q.isEmpty) return [];
+    if (q.isEmpty) {
+      return FriendSearchPage(
+        users: const [],
+        limit: limit,
+        offset: offset,
+        hasMore: false,
+      );
+    }
 
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/friends/search').replace(
-          queryParameters: {'q': q, 'limit': '$limit'},
+          queryParameters: {
+            'q': q,
+            'limit': '$limit',
+            'offset': '$offset',
+          },
         ),
         headers: {'Authorization': 'Bearer $token'},
-        operation: 'FriendsRepository.searchUsers',
+        operation: 'FriendsRepository.searchUsersPage',
       ),
     );
     if (response.statusCode != 200) {
@@ -200,10 +249,24 @@ class FriendsRepository {
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final list = body['users'] as List<dynamic>? ?? const [];
-    return list
-        .map((e) => FriendSearchItem.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
+    return FriendSearchPage.fromJson(
+      body,
+      fallbackLimit: limit,
+      fallbackOffset: offset,
+    );
+  }
+
+  Future<List<FriendSearchItem>> searchUsers(
+    String query, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final page = await searchUsersPage(
+      query,
+      limit: limit,
+      offset: offset,
+    );
+    return page.users;
   }
 
   Future<void> sendRequest(String targetUserID) async {

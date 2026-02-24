@@ -181,10 +181,11 @@ func SearchUsersWithFriendRelation(
 	userID uuid.UUID,
 	query string,
 	limit int,
-) ([]FriendSearchResult, error) {
+	offset int,
+) ([]FriendSearchResult, bool, error) {
 	query = strings.TrimSpace(query)
 	if query == "" {
-		return []FriendSearchResult{}, nil
+		return []FriendSearchResult{}, false, nil
 	}
 
 	if limit <= 0 {
@@ -193,6 +194,10 @@ func SearchUsersWithFriendRelation(
 	if limit > 50 {
 		limit = 50
 	}
+	if offset < 0 {
+		offset = 0
+	}
+	limitPlusOne := limit + 1
 
 	pattern := "%" + query + "%"
 	rows, err := pool.Query(ctx, `
@@ -231,14 +236,14 @@ func SearchUsersWithFriendRelation(
 		ORDER BY
 			CASE WHEN u.display_name IS NULL OR u.display_name = '' THEN 1 ELSE 0 END ASC,
 			COALESCE(u.display_name, u.email) ASC
-		LIMIT $3
-	`, userID, pattern, limit)
+		LIMIT $3 OFFSET $4
+	`, userID, pattern, limitPlusOne, offset)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	defer rows.Close()
 
-	result := make([]FriendSearchResult, 0)
+	result := make([]FriendSearchResult, 0, limitPlusOne)
 	for rows.Next() {
 		var item FriendSearchResult
 		var requestIDRaw sql.NullString
@@ -254,7 +259,7 @@ func SearchUsersWithFriendRelation(
 			&item.RelationStatus,
 			&requestIDRaw,
 		); err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		if requestIDRaw.Valid {
 			if id, err := uuid.Parse(requestIDRaw.String); err == nil {
@@ -263,7 +268,14 @@ func SearchUsersWithFriendRelation(
 		}
 		result = append(result, item)
 	}
-	return result, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, false, err
+	}
+	hasMore := len(result) > limit
+	if hasMore {
+		result = result[:limit]
+	}
+	return result, hasMore, nil
 }
 
 func CreateFriendRequest(

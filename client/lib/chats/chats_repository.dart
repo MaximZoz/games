@@ -263,7 +263,7 @@ class ChatsRepository {
 
   Future<List<ChatMessageItem>> listMessages(
     String chatID, {
-    int limit = 100,
+    int limit = 20,
     DateTime? before,
   }) async {
     final query = <String, String>{

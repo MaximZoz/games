@@ -47,6 +47,9 @@ const List<IconData> _chatAvatarIcons = [
 
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     with WidgetsBindingObserver {
+  static const int _messagesPageSize = 20;
+  static const double _loadOlderThreshold = 120;
+
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _composerFocusNode = FocusNode();
@@ -58,6 +61,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   bool _loading = true;
   bool _sending = false;
+  bool _loadingOlder = false;
+  bool _hasMoreOlder = true;
   bool _leavingToChats = false;
   bool _roomActionInFlight = false;
   String? _error;
@@ -68,6 +73,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _composerFocusNode.addListener(_onComposerFocusChanged);
+    _scrollController.addListener(_onMessagesScroll);
     _loadMessages(initial: true);
     unawaited(_connectRealtime());
   }
@@ -83,6 +89,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
+    _scrollController.removeListener(_onMessagesScroll);
     _reconnectTimer?.cancel();
     unawaited(_socketSubscription?.cancel());
     _socket?.close();
@@ -212,7 +219,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Future<void> _loadMessages({bool initial = false, bool surfaceErrors = true}) async {
     try {
-      final list = await ref.read(chatsRepositoryProvider).listMessages(widget.chatID, limit: 100);
+      final list = await ref.read(chatsRepositoryProvider).listMessages(
+            widget.chatID,
+            limit: _messagesPageSize,
+          );
       if (!mounted) return;
 
       final previousLastID = _messages.isEmpty ? null : _messages.last.id;
@@ -228,6 +238,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             ..addAll(list.map((e) => e.id));
           _error = null;
           _loading = false;
+          _loadingOlder = false;
+          _hasMoreOlder = list.length >= _messagesPageSize;
+        });
+      } else if (_loadingOlder || _hasMoreOlder != (list.length >= _messagesPageSize)) {
+        setState(() {
+          _loadingOlder = false;
+          _hasMoreOlder = list.length >= _messagesPageSize;
         });
       }
 
@@ -263,6 +280,70 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _error = 'Не удалось загрузить сообщения';
         _loading = false;
       });
+    }
+  }
+
+  void _onMessagesScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_loading || _loadingOlder || !_hasMoreOlder || _messages.isEmpty) return;
+    if (_scrollController.position.pixels <= _loadOlderThreshold) {
+      unawaited(_loadOlderMessages());
+    }
+  }
+
+  Future<void> _loadOlderMessages() async {
+    if (_loading || _loadingOlder || !_hasMoreOlder || _messages.isEmpty) return;
+    final before = DateTime.tryParse(_messages.first.createdAt);
+    if (before == null) {
+      if (mounted) {
+        setState(() => _hasMoreOlder = false);
+      }
+      return;
+    }
+
+    final previousMaxScrollExtent = _scrollController.hasClients
+        ? _scrollController.position.maxScrollExtent
+        : 0.0;
+    if (mounted) {
+      setState(() => _loadingOlder = true);
+    }
+
+    try {
+      final older = await ref.read(chatsRepositoryProvider).listMessages(
+            widget.chatID,
+            limit: _messagesPageSize,
+            before: before.toUtc(),
+          );
+      if (!mounted) return;
+
+      if (older.isEmpty) {
+        setState(() {
+          _loadingOlder = false;
+          _hasMoreOlder = false;
+        });
+        return;
+      }
+
+      final deduplicated = older.where((m) => !_messageIDs.contains(m.id)).toList();
+      setState(() {
+        if (deduplicated.isNotEmpty) {
+          _messages = [...deduplicated, ..._messages];
+          _messageIDs.addAll(deduplicated.map((m) => m.id));
+        }
+        _loadingOlder = false;
+        _hasMoreOlder = older.length >= _messagesPageSize;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollController.hasClients) return;
+        final newMaxScrollExtent = _scrollController.position.maxScrollExtent;
+        final delta = newMaxScrollExtent - previousMaxScrollExtent;
+        final targetOffset = _scrollController.offset + (delta > 0 ? delta : 0);
+        _scrollController.jumpTo(targetOffset);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingOlder = false);
     }
   }
 
@@ -725,9 +806,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   parent: ClampingScrollPhysics(),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                itemCount: timeline.length,
+                itemCount: timeline.length + ((_loadingOlder || _hasMoreOlder) ? 1 : 0),
                 itemBuilder: (context, index) {
-                  final entry = timeline[index];
+                  final topLoaderVisible = _loadingOlder || _hasMoreOlder;
+                  if (topLoaderVisible && index == 0) {
+                    if (_loadingOlder) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 4, bottom: 8),
+                        child: Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox(height: 8);
+                  }
+
+                  final timelineIndex = topLoaderVisible ? index - 1 : index;
+                  final entry = timeline[timelineIndex];
                   if (entry.headerLabel != null) {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
