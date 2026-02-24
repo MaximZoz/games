@@ -313,10 +313,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
         }
       } else if (type == 'chat_read') {
-        final chatID = payload['chat_id']?.toString() ?? '';
-        if (chatID == widget.chatID) {
-          unawaited(_loadMessages());
-        }
         unawaited(refreshChatsList(ref));
       } else if (type == 'chat_list_changed') {
         unawaited(refreshChatsList(ref));

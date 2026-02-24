@@ -368,14 +368,16 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
-		h.publishChatRead(
-			[]uuid.UUID{lowID, highID},
-			chatID.String(),
-			userID.String(),
-			updated,
-		)
-		h.publishChatListChanged(lowID, highID)
+	if updated > 0 {
+		if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+			h.publishChatRead(
+				[]uuid.UUID{lowID, highID},
+				chatID.String(),
+				userID.String(),
+				updated,
+			)
+			h.publishChatListChanged(lowID, highID)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
