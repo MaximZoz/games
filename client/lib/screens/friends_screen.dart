@@ -1281,37 +1281,36 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         ],
       );
     }
-    return ListView(
+    final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
+    final itemCount = _searchResults.length + (showPagingLoader ? 1 : 0);
+    return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      children: [
-        ...List.generate(
-          _searchResults.length,
-          (index) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildSearchResultCard(_searchResults[index]),
-          ),
-        ),
-        if (_searchHasMore)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+      itemCount: itemCount,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        if (index >= _searchResults.length) {
+          if (_searchHasMore && !_isSearchLoadingMore) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              unawaited(_loadMoreSearchResults());
+            });
+          }
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 6),
             child: Center(
-              child: _isSearchLoadingMore
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.accentStart,
-                      ),
-                    )
-                  : OutlinedButton(
-                      onPressed: _loadMoreSearchResults,
-                      child: const Text('Показать ещё'),
-                    ),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              ),
             ),
-          ),
-      ],
+          );
+        }
+        return _buildSearchResultCard(_searchResults[index]);
+      },
     );
   }
 
