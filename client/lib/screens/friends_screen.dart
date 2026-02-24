@@ -1144,21 +1144,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  List<_FriendsTabKind> _visibleTabs(FriendsSnapshot? snapshot) {
-    if (snapshot == null) {
-      return const [
-        _FriendsTabKind.friends,
-        _FriendsTabKind.incoming,
-        _FriendsTabKind.outgoing,
-      ];
-    }
-
-    final result = <_FriendsTabKind>[_FriendsTabKind.friends];
-    if (snapshot.incoming.isNotEmpty) result.add(_FriendsTabKind.incoming);
-    if (snapshot.outgoing.isNotEmpty) result.add(_FriendsTabKind.outgoing);
-    return result;
-  }
-
   String _tabTitle(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
     switch (tab) {
       case _FriendsTabKind.friends:
@@ -1224,7 +1209,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    final tabs = _visibleTabs(friendsAsync.valueOrNull);
+    const tabs = <_FriendsTabKind>[
+      _FriendsTabKind.friends,
+      _FriendsTabKind.incoming,
+      _FriendsTabKind.outgoing,
+    ];
     final compact = MediaQuery.sizeOf(context).width < 430;
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -1274,7 +1263,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             else ...[
               Expanded(
                 child: DefaultTabController(
-                  key: ValueKey('friends-tabs-${tabs.map((e) => e.name).join("_")}'),
+                  key: const ValueKey('friends-tabs-fixed'),
                   length: tabs.length,
                   child: Column(
                     children: [
