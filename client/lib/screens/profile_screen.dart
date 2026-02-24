@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -770,6 +771,7 @@ final _aboutFormatters = [
 
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
+  bool _isAvatarProcessing = false;
   String? _ageError;
   String? _saveError;
   late TextEditingController _ageController;
@@ -904,37 +906,57 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Future<void> _pickImage() async {
-    Uint8List rawBytes;
-    if (kIsWeb) {
-      final webBytes = await pickImageBytesWeb();
-      if (webBytes == null || !mounted) return;
-      rawBytes = webBytes;
-    } else {
-      final picker = ImagePicker();
-      final xFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 256,
-        maxHeight: 256,
-        imageQuality: 70,
-      );
-      if (xFile == null || !mounted) return;
-      rawBytes = await xFile.readAsBytes();
-    }
-
-    final compactAvatarValue = await _buildCompactAvatarValue(rawBytes);
-    if (!mounted) return;
-
-    setState(() {
-      if (compactAvatarValue == null) {
-        // Если даже после ресайза аватар всё ещё слишком тяжёлый — используем лёгкую иконку.
-        final presetIndex = widget.user.id.hashCode.abs() % _presetAvatarIcons.length;
-        _avatarKind = AvatarKind.preset;
-        _avatarValue = presetIndex.toString();
+    if (_isAvatarProcessing) return;
+    setState(() => _isAvatarProcessing = true);
+    try {
+      Uint8List rawBytes;
+      if (kIsWeb) {
+        final webBytes = await pickImageBytesWeb();
+        if (webBytes == null || !mounted) return;
+        rawBytes = webBytes;
       } else {
-        _avatarKind = AvatarKind.file;
-        _avatarValue = compactAvatarValue;
+        final picker = ImagePicker();
+        final xFile = await picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 256,
+          maxHeight: 256,
+          imageQuality: 70,
+        );
+        if (xFile == null || !mounted) return;
+        rawBytes = await xFile.readAsBytes();
       }
-    });
+
+      if (!mounted) return;
+      final editedBytes = await _openAvatarEditor(rawBytes);
+      if (!mounted || editedBytes == null || editedBytes.isEmpty) return;
+
+      final compactAvatarValue = await _buildCompactAvatarValue(editedBytes);
+      if (!mounted) return;
+
+      setState(() {
+        if (compactAvatarValue == null) {
+          // Если даже после ресайза аватар всё ещё слишком тяжёлый — используем лёгкую иконку.
+          final presetIndex = widget.user.id.hashCode.abs() % _presetAvatarIcons.length;
+          _avatarKind = AvatarKind.preset;
+          _avatarValue = presetIndex.toString();
+        } else {
+          _avatarKind = AvatarKind.file;
+          _avatarValue = compactAvatarValue;
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isAvatarProcessing = false);
+      }
+    }
+  }
+
+  Future<Uint8List?> _openAvatarEditor(Uint8List sourceBytes) async {
+    return showDialog<Uint8List>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _AvatarCropDialog(sourceBytes: sourceBytes),
+    );
   }
 
   Future<void> _submit() async {
@@ -1111,7 +1133,33 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   ),
             ),
             const SizedBox(height: 8),
-            Center(child: _buildCurrentAvatar()),
+            Center(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  _buildCurrentAvatar(),
+                  if (_isAvatarProcessing)
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: const BoxDecoration(
+                        color: Color(0x8A000000),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 26,
+                          height: 26,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
@@ -1151,12 +1199,22 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: _isSaving ? null : _pickImage,
-              icon: Icon(
-                _hasPhoto ? Icons.change_circle_outlined : Icons.photo_library_outlined,
-                size: 20,
+              onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+              icon: _isAvatarProcessing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      _hasPhoto ? Icons.change_circle_outlined : Icons.photo_library_outlined,
+                      size: 20,
+                    ),
+              label: Text(
+                _isAvatarProcessing
+                    ? 'Обработка фото...'
+                    : (_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
               ),
-              label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
             ),
             if (_saveError != null) ...[
               MessageBanner(message: _saveError!, type: BannerType.error),
@@ -1186,6 +1244,176 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvatarCropDialog extends StatefulWidget {
+  const _AvatarCropDialog({required this.sourceBytes});
+
+  final Uint8List sourceBytes;
+
+  @override
+  State<_AvatarCropDialog> createState() => _AvatarCropDialogState();
+}
+
+class _AvatarCropDialogState extends State<_AvatarCropDialog> {
+  static const double _viewportSize = 240;
+
+  final TransformationController _transformation = TransformationController();
+  final GlobalKey _captureKey = GlobalKey();
+
+  bool _ready = false;
+  bool _exporting = false;
+  double _baseWidth = _viewportSize;
+  double _baseHeight = _viewportSize;
+
+  @override
+  void initState() {
+    super.initState();
+    _prepare();
+  }
+
+  @override
+  void dispose() {
+    _transformation.dispose();
+    super.dispose();
+  }
+
+  Future<void> _prepare() async {
+    ui.Codec? codec;
+    ui.Image? image;
+    try {
+      codec = await ui.instantiateImageCodec(widget.sourceBytes);
+      final frame = await codec.getNextFrame();
+      image = frame.image;
+
+      final width = image.width.toDouble();
+      final height = image.height.toDouble();
+      final aspect = (height == 0) ? 1.0 : width / height;
+
+      double baseWidth;
+      double baseHeight;
+      if (aspect >= 1) {
+        baseHeight = _viewportSize;
+        baseWidth = _viewportSize * aspect;
+      } else {
+        baseWidth = _viewportSize;
+        baseHeight = _viewportSize / aspect;
+      }
+
+      _baseWidth = baseWidth;
+      _baseHeight = baseHeight;
+
+      final tx = (_viewportSize - _baseWidth) / 2;
+      final ty = (_viewportSize - _baseHeight) / 2;
+      _transformation.value = Matrix4.identity()..translate(tx, ty);
+
+      if (mounted) {
+        setState(() => _ready = true);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _ready = true;
+          _baseWidth = _viewportSize;
+          _baseHeight = _viewportSize;
+          _transformation.value = Matrix4.identity();
+        });
+      }
+    } finally {
+      image?.dispose();
+      codec?.dispose();
+    }
+  }
+
+  Future<void> _applyCrop() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    ui.Image? renderedImage;
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      final boundary = _captureKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      renderedImage = await boundary.toImage(pixelRatio: 2);
+      final data = await renderedImage.toByteData(format: ui.ImageByteFormat.png);
+      if (!mounted || data == null) return;
+      Navigator.of(context).pop(data.buffer.asUint8List());
+    } finally {
+      renderedImage?.dispose();
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Выбери область аватара'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Масштабируй и двигай фото внутри круга',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          RepaintBoundary(
+            key: _captureKey,
+            child: ClipOval(
+              child: SizedBox(
+                width: _viewportSize,
+                height: _viewportSize,
+                child: ColoredBox(
+                  color: AppColors.surfaceCard,
+                  child: _ready
+                      ? InteractiveViewer(
+                          transformationController: _transformation,
+                          minScale: 1,
+                          maxScale: 4.5,
+                          boundaryMargin: const EdgeInsets.all(180),
+                          clipBehavior: Clip.none,
+                          constrained: false,
+                          child: SizedBox(
+                            width: _baseWidth,
+                            height: _baseHeight,
+                            child: Image.memory(
+                              widget.sourceBytes,
+                              fit: BoxFit.fill,
+                              filterQuality: FilterQuality.high,
+                            ),
+                          ),
+                        )
+                      : const Center(
+                          child: SizedBox(
+                            width: 26,
+                            height: 26,
+                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _exporting ? null : () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        FilledButton.icon(
+          onPressed: (!_ready || _exporting) ? null : _applyCrop,
+          icon: _exporting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.check_rounded),
+          label: Text(_exporting ? 'Подготовка...' : 'Применить'),
         ),
       ],
     );
