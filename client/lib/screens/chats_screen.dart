@@ -60,6 +60,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   bool get _hasFreshFriendsCache {
     final ts = _friendsCachedAt;
     if (ts == null) return false;
+    if (_cachedFriends.isEmpty) return false;
     return DateTime.now().difference(ts) <= _friendsCacheTTL;
   }
 
@@ -79,8 +80,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   Future<List<FriendItem>> _loadFriendsForStartChat({
     bool forceRefresh = false,
   }) async {
-    if (!forceRefresh && _hasFreshFriendsCache) {
-      return _cachedFriends;
+    if (!forceRefresh) {
+      final liveSnapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+      if (liveSnapshot != null && liveSnapshot.friends.isNotEmpty) {
+        _cacheFriends(liveSnapshot.friends);
+        return liveSnapshot.friends;
+      }
+      if (_hasFreshFriendsCache) {
+        return _cachedFriends;
+      }
     }
     final inFlight = _friendsLoadInFlight;
     if (!forceRefresh && inFlight != null) {
@@ -90,19 +98,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     late Future<List<FriendItem>> request;
     request = () async {
       try {
-        if (!forceRefresh) {
-          final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
-          if (snapshot != null) {
-            _cacheFriends(snapshot.friends);
-            return snapshot.friends;
-          }
-        }
-        final snapshot = await ref.read(friendsSnapshotProvider.future);
+        // Для модалки "Новый чат" берём свежие данные напрямую, чтобы не
+        // застревать на пустом снимке stream-провайдера.
+        final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
         _cacheFriends(snapshot.friends);
         return snapshot.friends;
       } catch (_) {
-        // Если потоковый снимок недоступен, фолбэкаемся на прямой API-запрос.
-        final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
+        // Если прямой запрос недоступен, пробуем потоковый снимок.
+        final snapshot = await ref.read(friendsSnapshotProvider.future);
         _cacheFriends(snapshot.friends);
         return snapshot.friends;
       }

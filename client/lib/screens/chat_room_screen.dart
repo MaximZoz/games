@@ -100,13 +100,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Future<void> _goBackToChats() async {
     if (_leavingToChats) return;
     setState(() => _leavingToChats = true);
-    try {
-      await refreshChatsList(ref, force: true);
-    } catch (_) {
-      // Если синхронизация не удалась, всё равно даём вернуться в список.
-    }
     if (!mounted) return;
     context.go('/chats');
+    unawaited(
+      refreshChatsList(ref, force: true).catchError((_) {
+        // Фоновая синхронизация после перехода назад.
+      }),
+    );
   }
 
   Future<bool> _confirmAction({
