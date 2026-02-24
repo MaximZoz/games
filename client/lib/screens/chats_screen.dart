@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -865,6 +866,208 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     return value;
   }
 
+  IconData? _genderIcon(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    switch (normalized) {
+      case 'male':
+      case 'm':
+      case 'man':
+      case 'м':
+      case 'муж':
+      case 'мужской':
+        return Icons.male_rounded;
+      case 'female':
+      case 'f':
+      case 'woman':
+      case 'ж':
+      case 'жен':
+      case 'женский':
+        return Icons.female_rounded;
+      default:
+        return null;
+    }
+  }
+
+  bool _isFemaleGender(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    return normalized == 'female' ||
+        normalized == 'f' ||
+        normalized == 'woman' ||
+        normalized == 'ж' ||
+        normalized == 'жен' ||
+        normalized == 'женский';
+  }
+
+  Widget _buildInfoPill({
+    String? text,
+    IconData? icon,
+    Color? backgroundColor,
+    Color? foregroundColor,
+    double? minWidth,
+  }) {
+    final bg = backgroundColor ?? AppColors.accentSoft;
+    final fg = foregroundColor ?? AppColors.textPrimary;
+    return Container(
+      constraints: BoxConstraints(minWidth: minWidth ?? 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: fg),
+            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
+          ],
+          if (text != null && text.isNotEmpty)
+            Text(
+              text,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showUserInfoDialog(ChatUserItem user) async {
+    final name = _peerTitle(user);
+    final about = user.about?.trim();
+    final genderIcon = _genderIcon(user.gender);
+    final female = _isFemaleGender(user.gender);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          backgroundColor: Colors.transparent,
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AvatarDot(user: user, radius: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
+                ),
+                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (user.age != null && user.age! > 0)
+                        _buildInfoPill(
+                          text: '${user.age} лет',
+                          minWidth: 72,
+                        ),
+                      if (genderIcon != null)
+                        _buildInfoPill(
+                          icon: genderIcon,
+                          minWidth: 46,
+                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
+                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
+                        ),
+                    ],
+                  ),
+                ],
+                if (about != null && about.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'О себе',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    about,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoIconButton({
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final enabled = onPressed != null;
+    return Tooltip(
+      message: tooltip,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.6,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.accentStart.withOpacity(0.5),
+                  width: 1.5,
+                ),
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 17,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatsAsync = ref.watch(chatsListProvider);
@@ -1063,24 +1266,36 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                                             fontSize: 11,
                                           ),
                                         ),
-                                      if (unread > 0) ...[
-                                        const SizedBox(height: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.accentStart,
-                                            borderRadius: BorderRadius.circular(999),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          _buildInfoIconButton(
+                                            onPressed: itemBusy
+                                                ? null
+                                                : () => unawaited(_showUserInfoDialog(item.user)),
+                                            tooltip: 'Информация о пользователе',
                                           ),
-                                          child: Text(
-                                            unread > 99 ? '99+' : '$unread',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
+                                          if (unread > 0) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accentStart,
+                                                borderRadius: BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                unread > 99 ? '99+' : '$unread',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      ],
+                                          ],
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -1101,12 +1316,30 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
 }
 
 class _AvatarDot extends StatelessWidget {
-  const _AvatarDot({required this.user});
+  const _AvatarDot({
+    required this.user,
+    this.radius = 20,
+  });
 
   final ChatUserItem user;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
+    if (user.avatarKind == 'file' &&
+        user.avatarValue != null &&
+        user.avatarValue!.trim().isNotEmpty) {
+      var raw = user.avatarValue!.trim();
+      if (raw.startsWith('base64,')) raw = raw.substring(7);
+      try {
+        final bytes = base64Decode(raw);
+        return CircleAvatar(
+          radius: radius,
+          backgroundImage: MemoryImage(bytes),
+        );
+      } catch (_) {}
+    }
+
     if (user.avatarKind == 'preset') {
       final iconIndex = int.tryParse(user.avatarValue ?? '');
       if (iconIndex != null) {
@@ -1126,9 +1359,13 @@ class _AvatarDot extends StatelessWidget {
         ];
         final idx = iconIndex % icons.length;
         return CircleAvatar(
-          radius: 20,
+          radius: radius,
           backgroundColor: AppColors.accentSoft,
-          child: Icon(icons[idx], color: AppColors.accentStart),
+          child: Icon(
+            icons[idx],
+            color: AppColors.accentStart,
+            size: radius,
+          ),
         );
       }
     }
@@ -1136,13 +1373,14 @@ class _AvatarDot extends StatelessWidget {
     final raw = user.displayName?.trim();
     final letter = (raw != null && raw.isNotEmpty) ? raw.substring(0, 1).toUpperCase() : '?';
     return CircleAvatar(
-      radius: 20,
+      radius: radius,
       backgroundColor: AppColors.accentSoft,
       child: Text(
         letter,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.accentStart,
           fontWeight: FontWeight.w700,
+          fontSize: radius * 0.8,
         ),
       ),
     );

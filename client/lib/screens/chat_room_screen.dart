@@ -29,6 +29,21 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
 
 enum _RoomAction { clearChat, blockUser }
 
+const List<IconData> _chatAvatarIcons = [
+  Icons.face_rounded,
+  Icons.face_2_rounded,
+  Icons.face_3_rounded,
+  Icons.face_4_rounded,
+  Icons.face_5_rounded,
+  Icons.face_6_rounded,
+  Icons.man_rounded,
+  Icons.woman_rounded,
+  Icons.elderly_rounded,
+  Icons.elderly_woman_rounded,
+  Icons.person_rounded,
+  Icons.child_care_rounded,
+];
+
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
@@ -434,6 +449,232 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return '$dd.$mo.$yyyy';
   }
 
+  String _peerTitle(ChatUserItem user) {
+    final value = user.displayName?.trim();
+    if (value == null || value.isEmpty) return 'Пользователь';
+    return value;
+  }
+
+  IconData? _genderIcon(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    switch (normalized) {
+      case 'male':
+      case 'm':
+      case 'man':
+      case 'м':
+      case 'муж':
+      case 'мужской':
+        return Icons.male_rounded;
+      case 'female':
+      case 'f':
+      case 'woman':
+      case 'ж':
+      case 'жен':
+      case 'женский':
+        return Icons.female_rounded;
+      default:
+        return null;
+    }
+  }
+
+  bool _isFemaleGender(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    return normalized == 'female' ||
+        normalized == 'f' ||
+        normalized == 'woman' ||
+        normalized == 'ж' ||
+        normalized == 'жен' ||
+        normalized == 'женский';
+  }
+
+  Widget _buildInfoPill({
+    String? text,
+    IconData? icon,
+    Color? backgroundColor,
+    Color? foregroundColor,
+    double? minWidth,
+  }) {
+    final bg = backgroundColor ?? AppColors.accentSoft;
+    final fg = foregroundColor ?? AppColors.textPrimary;
+    return Container(
+      constraints: BoxConstraints(minWidth: minWidth ?? 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: fg),
+            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
+          ],
+          if (text != null && text.isNotEmpty)
+            Text(
+              text,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeerAvatar({
+    required ChatUserItem? user,
+    required String fallbackTitle,
+    double radius = 18,
+  }) {
+    if (user != null &&
+        user.avatarKind == 'file' &&
+        user.avatarValue != null &&
+        user.avatarValue!.trim().isNotEmpty) {
+      var raw = user.avatarValue!.trim();
+      if (raw.startsWith('base64,')) raw = raw.substring(7);
+      try {
+        final bytes = base64Decode(raw);
+        return CircleAvatar(
+          radius: radius,
+          backgroundImage: MemoryImage(bytes),
+        );
+      } catch (_) {}
+    }
+
+    if (user != null && user.avatarKind == 'preset') {
+      final iconIndex = int.tryParse(user.avatarValue ?? '');
+      if (iconIndex != null) {
+        final idx = iconIndex % _chatAvatarIcons.length;
+        return CircleAvatar(
+          radius: radius,
+          backgroundColor: AppColors.accentSoft,
+          child: Icon(
+            _chatAvatarIcons[idx],
+            color: AppColors.accentStart,
+            size: radius,
+          ),
+        );
+      }
+    }
+
+    final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
+    final letter = raw.isEmpty ? '?' : raw.substring(0, 1).toUpperCase();
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: AppColors.accentSoft,
+      child: Text(
+        letter,
+        style: TextStyle(
+          color: AppColors.accentStart,
+          fontWeight: FontWeight.w700,
+          fontSize: radius * 0.8,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showUserInfoDialog(ChatUserItem user) async {
+    final name = _peerTitle(user);
+    final about = user.about?.trim();
+    final genderIcon = _genderIcon(user.gender);
+    final female = _isFemaleGender(user.gender);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          backgroundColor: Colors.transparent,
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPeerAvatar(
+                      user: user,
+                      fallbackTitle: name,
+                      radius: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
+                ),
+                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (user.age != null && user.age! > 0)
+                        _buildInfoPill(
+                          text: '${user.age} лет',
+                          minWidth: 72,
+                        ),
+                      if (genderIcon != null)
+                        _buildInfoPill(
+                          icon: genderIcon,
+                          minWidth: 46,
+                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
+                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
+                        ),
+                    ],
+                  ),
+                ],
+                if (about != null && about.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'О себе',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    about,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   List<_ChatTimelineEntry> _buildTimelineEntries() {
     final entries = <_ChatTimelineEntry>[];
     DateTime? previousDate;
@@ -454,7 +695,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   @override
   Widget build(BuildContext context) {
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
-    final title = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
+    final routeTitle = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     ChatUserItem? peerUser;
     for (final item in chats) {
@@ -463,6 +704,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         break;
       }
     }
+    final title = peerUser == null ? routeTitle : _peerTitle(peerUser);
+    final infoUser = peerUser;
 
     Widget messagesWidget;
     if (_loading) {
@@ -591,6 +834,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     icon: const Icon(Icons.arrow_back_rounded),
                     tooltip: 'Назад к чатам',
                   ),
+                  _buildPeerAvatar(
+                    user: peerUser,
+                    fallbackTitle: title,
+                    radius: 18,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       title,
@@ -601,6 +850,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             fontWeight: FontWeight.w700,
                           ),
                     ),
+                  ),
+                  IconButton(
+                    onPressed: infoUser == null
+                        ? null
+                        : () {
+                            final user = infoUser;
+                            if (user == null) return;
+                            unawaited(_showUserInfoDialog(user));
+                          },
+                    tooltip: 'Информация о пользователе',
+                    icon: const Icon(Icons.info_outline_rounded),
                   ),
                   PopupMenuButton<_RoomAction>(
                     enabled: !_roomActionInFlight,
