@@ -141,7 +141,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit := 50
+	limit := 10
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n <= 0 {

@@ -250,9 +250,9 @@ Widget _navIcon(
     padding: const EdgeInsets.all(5),
     decoration: selected
         ? BoxDecoration(
-            color: AppColors.accentSoft.withOpacity(0.8),
+            color: AppColors.accentSoft.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.accentStart.withOpacity(0.35)),
+            border: Border.all(color: AppColors.accentStart.withValues(alpha: 0.35)),
           )
         : null,
     child: Icon(item.icon, color: iconColor, size: iconSize),

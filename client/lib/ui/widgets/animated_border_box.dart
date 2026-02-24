@@ -69,7 +69,7 @@ class _AnimatedBorderBoxState extends State<AnimatedBorderBox>
         borderRadius: BorderRadius.circular(r + widget.borderWidth),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentStart.withOpacity(0.15),
+            color: AppColors.accentStart.withValues(alpha: 0.15),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),

@@ -22,6 +22,7 @@ class FriendsScreen extends ConsumerStatefulWidget {
 enum _FriendsTabKind { friends, incoming, outgoing }
 
 class _FriendsScreenState extends ConsumerState<FriendsScreen> {
+  static const int _pageSize = 10;
   static const List<IconData> _presetAvatarIcons = [
     Icons.face_rounded,
     Icons.face_2_rounded,
@@ -45,7 +46,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   List<FriendSearchItem> _searchResults = const [];
   bool _isSearching = false;
+  bool _isSearchLoadingMore = false;
+  bool _searchHasMore = false;
   bool _isSearchExpanded = false;
+  int _friendsVisibleCount = _pageSize;
+  int _incomingVisibleCount = _pageSize;
+  int _outgoingVisibleCount = _pageSize;
 
   @override
   void initState() {
@@ -320,7 +326,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       if (!mounted) return;
       if (chatID.isEmpty) return;
       final name = Uri.encodeQueryComponent(_displayName(user));
-      context.push('/chats/$chatID?name=$name');
+      context.push('/chats/$chatID?name=$name&from=friends');
     } catch (e) {
       if (e is ChatException) {
         await _handleChatException(e);
@@ -341,6 +347,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         _searchController.clear();
         _searchResults = const [];
         _isSearching = false;
+        _isSearchLoadingMore = false;
+        _searchHasMore = false;
       }
     });
 
@@ -356,7 +364,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
-      await refreshFriendsSnapshot(ref);
+      ref.invalidate(friendsSnapshotProvider);
+      await ref.read(friendsSnapshotProvider.future);
+      if (mounted) {
+        setState(() {
+          _friendsVisibleCount = _pageSize;
+          _incomingVisibleCount = _pageSize;
+          _outgoingVisibleCount = _pageSize;
+        });
+      }
       if (refreshSearch && _searchController.text.trim().isNotEmpty) {
         await _performSearch(query: _searchController.text.trim());
       }
@@ -383,6 +399,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       setState(() {
         _searchResults = const [];
         _isSearching = false;
+        _isSearchLoadingMore = false;
+        _searchHasMore = false;
       });
       return;
     }
@@ -402,18 +420,29 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       setState(() {
         _searchResults = const [];
         _isSearching = false;
+        _isSearchLoadingMore = false;
+        _searchHasMore = false;
       });
       return;
     }
 
     if (!mounted) return;
-    setState(() => _isSearching = true);
+    setState(() {
+      _isSearching = true;
+      _isSearchLoadingMore = false;
+      _searchHasMore = false;
+    });
     final repo = ref.read(friendsRepositoryProvider);
     try {
-      final result = await repo.searchUsers(q, limit: 30);
+      final page = await repo.searchUsersPage(
+        q,
+        limit: _pageSize,
+        offset: 0,
+      );
       if (!mounted || currentRequestID != _searchRevision) return;
       setState(() {
-        _searchResults = result;
+        _searchResults = page.users;
+        _searchHasMore = page.hasMore;
       });
     } catch (e) {
       if (!mounted || currentRequestID != _searchRevision) return;
@@ -422,9 +451,49 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       } else {
         _showMessage(e.toString(), null);
       }
+      if (mounted && currentRequestID == _searchRevision) {
+        setState(() => _searchHasMore = false);
+      }
     } finally {
       if (mounted && currentRequestID == _searchRevision) {
         setState(() => _isSearching = false);
+      }
+    }
+  }
+
+  Future<void> _loadMoreSearchResults() async {
+    if (_isSearching || _isSearchLoadingMore || !_searchHasMore) return;
+    final q = _searchController.text.trim();
+    if (q.isEmpty) return;
+    final requestID = _searchRevision;
+    if (!mounted) return;
+    setState(() => _isSearchLoadingMore = true);
+
+    final repo = ref.read(friendsRepositoryProvider);
+    try {
+      final page = await repo.searchUsersPage(
+        q,
+        limit: _pageSize,
+        offset: _searchResults.length,
+      );
+      if (!mounted || requestID != _searchRevision) return;
+      setState(() {
+        _searchResults = [..._searchResults, ...page.users];
+        _searchHasMore = page.hasMore;
+      });
+    } catch (e) {
+      if (!mounted || requestID != _searchRevision) return;
+      if (e is FriendsException) {
+        await _handleFriendsException(e);
+      } else {
+        _showMessage(e.toString(), null);
+      }
+      if (mounted && requestID == _searchRevision) {
+        setState(() => _searchHasMore = false);
+      }
+    } finally {
+      if (mounted && requestID == _searchRevision) {
+        setState(() => _isSearchLoadingMore = false);
       }
     }
   }
@@ -567,10 +636,43 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
+  void _expandVisibleForTab(_FriendsTabKind tab, int totalCount) {
+    if (!mounted) return;
+    int current;
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        current = _friendsVisibleCount;
+        break;
+      case _FriendsTabKind.incoming:
+        current = _incomingVisibleCount;
+        break;
+      case _FriendsTabKind.outgoing:
+        current = _outgoingVisibleCount;
+        break;
+    }
+    if (current >= totalCount) return;
+    final next = current + _pageSize;
+    final nextCount = next > totalCount ? totalCount : next;
+    setState(() {
+      switch (tab) {
+        case _FriendsTabKind.friends:
+          _friendsVisibleCount = nextCount;
+          break;
+        case _FriendsTabKind.incoming:
+          _incomingVisibleCount = nextCount;
+          break;
+        case _FriendsTabKind.outgoing:
+          _outgoingVisibleCount = nextCount;
+          break;
+      }
+    });
+  }
+
   Widget _buildAdaptiveList<T>({
     required List<T> items,
     required Widget Function(T item) itemBuilder,
     required String emptyText,
+    required _FriendsTabKind tab,
   }) {
     if (items.isEmpty) {
       return ListView(
@@ -587,6 +689,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       );
     }
 
+    final configuredVisibleCount = switch (tab) {
+      _FriendsTabKind.friends => _friendsVisibleCount,
+      _FriendsTabKind.incoming => _incomingVisibleCount,
+      _FriendsTabKind.outgoing => _outgoingVisibleCount,
+    };
+    final visibleCount = configuredVisibleCount > items.length
+        ? items.length
+        : configuredVisibleCount;
+    final hasMore = visibleCount < items.length;
+    final totalCount = visibleCount + (hasMore ? 1 : 0);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth > 900) {
@@ -599,17 +712,48 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               crossAxisSpacing: 12,
               childAspectRatio: 2.6,
             ),
-            itemCount: items.length,
-            itemBuilder: (context, index) => itemBuilder(items[index]),
+            itemCount: totalCount,
+            itemBuilder: (context, index) {
+              if (index >= visibleCount) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _expandVisibleForTab(tab, items.length);
+                });
+                return const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              }
+              return itemBuilder(items[index]);
+            },
           );
         }
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
-          itemCount: items.length,
+          itemCount: totalCount,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) => itemBuilder(items[index]),
+          itemBuilder: (context, index) {
+            if (index >= visibleCount) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _expandVisibleForTab(tab, items.length);
+              });
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+            return itemBuilder(items[index]);
+          },
         );
       },
     );
@@ -619,6 +763,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return _buildAdaptiveList<FriendItem>(
       items: snapshot.friends,
       emptyText: 'У вас пока нет друзей',
+      tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
         final key = 'remove_${item.user.id}';
         final chatKey = 'chat_${item.user.id}';
@@ -663,6 +808,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return _buildAdaptiveList<FriendRequestItem>(
       items: snapshot.incoming,
       emptyText: 'Нет входящих заявок',
+      tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
         final rejectKey = 'reject_${item.requestId}';
@@ -716,6 +862,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return _buildAdaptiveList<FriendRequestItem>(
       items: snapshot.outgoing,
       emptyText: 'Нет исходящих заявок',
+      tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
         final chatKey = 'chat_outgoing_${item.user.id}';
@@ -764,7 +911,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     bool loading = false,
   }) {
     final enabled = onPressed != null && !loading;
-    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withOpacity(0.55);
+    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withValues(alpha: 0.55);
     final iconColor = danger ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,
@@ -1068,6 +1215,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                               setState(() {
                                 _searchResults = const [];
                                 _isSearching = false;
+                                _isSearchLoadingMore = false;
+                                _searchHasMore = false;
                               });
                               _searchFocusNode.requestFocus();
                             },
@@ -1133,12 +1282,36 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         ],
       );
     }
+    final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
+    final itemCount = _searchResults.length + (showPagingLoader ? 1 : 0);
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      itemCount: _searchResults.length,
+      itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) => _buildSearchResultCard(_searchResults[index]),
+      itemBuilder: (context, index) {
+        if (index >= _searchResults.length) {
+          if (_searchHasMore && !_isSearchLoadingMore) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              unawaited(_loadMoreSearchResults());
+            });
+          }
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 6),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildSearchResultCard(_searchResults[index]);
+      },
     );
   }
 

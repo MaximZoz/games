@@ -291,7 +291,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       decoration: BoxDecoration(
         color: AppColors.accentSoft,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.textSecondary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.textSecondary.withValues(alpha: 0.3)),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -822,7 +822,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: selectedValue,
+                initialValue: selectedValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -860,7 +860,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: sourceValue,
+                initialValue: sourceValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -907,7 +907,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                         side: BorderSide(
                           color: _copyLimit == opt.value
                               ? AppColors.accentStart
-                              : AppColors.textSecondary.withOpacity(0.4),
+                              : AppColors.textSecondary.withValues(alpha: 0.4),
                         ),
                         labelStyle: const TextStyle(color: AppColors.textPrimary),
                         onSelected: (_) {

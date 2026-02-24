@@ -72,7 +72,7 @@ class _MessageBannerState extends State<MessageBanner>
             boxShadow: [
               BoxShadow(
                 color: (isError ? Colors.red : Colors.green)
-                    .withOpacity(0.08),
+                    .withValues(alpha: 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

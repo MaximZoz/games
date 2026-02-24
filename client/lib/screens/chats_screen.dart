@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -23,15 +24,24 @@ class ChatsScreen extends ConsumerStatefulWidget {
 enum _ChatSwipeAction { clear, block }
 
 class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProviderStateMixin {
+  static const int _chatsPageSize = 10;
+  static const int _modalPageSize = 10;
+
   String? _error;
   bool _isOpeningStartChatDialog = false;
   bool _isOpeningBlockedUsersDialog = false;
   bool _isStartingChat = false;
   bool _isNavigatingToChat = false;
+  bool _isLoadingChats = true;
+  bool _isLoadingMoreChats = false;
+  bool _hasMoreChats = true;
+  bool _isChatsRequestInFlight = false;
   final Set<String> _chatActionInFlight = <String>{};
+  final ScrollController _chatsScrollController = ScrollController();
   late final AnimationController _borderAnimationController;
   Future<List<FriendItem>>? _friendsLoadInFlight;
   List<FriendItem> _cachedFriends = const [];
+  List<ChatPreviewItem> _chats = const [];
   DateTime? _friendsCachedAt;
   Timer? _navigationLockTimer;
 
@@ -40,10 +50,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    _chatsScrollController.addListener(_onChatsScroll);
     _borderAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
     )..repeat();
+    unawaited(_loadChats());
     unawaited(_warmUpStartChatData());
     unawaited(
       ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
@@ -53,6 +65,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   @override
   void dispose() {
     _borderAnimationController.dispose();
+    _chatsScrollController.removeListener(_onChatsScroll);
+    _chatsScrollController.dispose();
     _navigationLockTimer?.cancel();
     super.dispose();
   }
@@ -128,10 +142,36 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   }
 
   Future<void> _loadChats() async {
-    setState(() => _error = null);
+    if (!mounted || _isChatsRequestInFlight) return;
+    _isChatsRequestInFlight = true;
+    setState(() {
+      _error = null;
+      _isLoadingChats = true;
+      _isLoadingMoreChats = false;
+    });
     try {
-      await refreshChatsList(ref, force: true);
-      await refreshBlockedUsers(ref, force: true);
+      final chats = await ref
+          .read(chatsRepositoryProvider)
+          .listChats(limit: _chatsPageSize, offset: 0);
+      if (!mounted) return;
+      setState(() {
+        _chats = chats;
+        _hasMoreChats = chats.length >= _chatsPageSize;
+        _isLoadingChats = false;
+        _isLoadingMoreChats = false;
+        _error = null;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_chatsScrollController.hasClients) return;
+        final position = _chatsScrollController.position;
+        if (position.maxScrollExtent <= 0 &&
+            _hasMoreChats &&
+            !_isLoadingMoreChats) {
+          unawaited(_loadMoreChats());
+        }
+      });
+      unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+      unawaited(refreshBlockedUsers(ref, force: true).catchError((_) {}));
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -139,10 +179,70 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
         return;
       }
       if (!mounted) return;
-      setState(() => _error = e.message);
+      setState(() {
+        _error = e.message;
+        _isLoadingChats = false;
+        _isLoadingMoreChats = false;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Не удалось загрузить чаты');
+      setState(() {
+        _error = 'Не удалось загрузить чаты';
+        _isLoadingChats = false;
+        _isLoadingMoreChats = false;
+      });
+    } finally {
+      _isChatsRequestInFlight = false;
+    }
+  }
+
+  Future<void> _loadMoreChats() async {
+    if (_isLoadingChats || _isLoadingMoreChats || !_hasMoreChats) return;
+    setState(() => _isLoadingMoreChats = true);
+    try {
+      final next = await ref.read(chatsRepositoryProvider).listChats(
+            limit: _chatsPageSize,
+            offset: _chats.length,
+          );
+      if (!mounted) return;
+      final existingIDs = _chats.map((e) => e.chatID).toSet();
+      final uniqueNext = next.where((item) => !existingIDs.contains(item.chatID));
+      setState(() {
+        _chats = [..._chats, ...uniqueNext];
+        _hasMoreChats = uniqueNext.isNotEmpty && next.length >= _chatsPageSize;
+        _isLoadingMoreChats = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_chatsScrollController.hasClients) return;
+        final position = _chatsScrollController.position;
+        if (position.maxScrollExtent <= 0 &&
+            _hasMoreChats &&
+            !_isLoadingMoreChats) {
+          unawaited(_loadMoreChats());
+        }
+      });
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _isLoadingMoreChats = false;
+        _error = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingMoreChats = false);
+    }
+  }
+
+  void _onChatsScroll() {
+    if (!_chatsScrollController.hasClients) return;
+    final position = _chatsScrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 220) {
+      unawaited(_loadMoreChats());
     }
   }
 
@@ -183,6 +283,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
         builder: (sheetContext) {
           final unblocking = <String>{};
           final locallyHiddenUserIDs = <String>{};
+          var visibleBlockedCount = _modalPageSize;
           return StatefulBuilder(
             builder: (context, setSheetState) {
               return Consumer(
@@ -192,6 +293,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                   final blocked = blockedRaw
                       .where((entry) => !locallyHiddenUserIDs.contains(entry.user.id))
                       .toList(growable: false);
+                  if (visibleBlockedCount > blocked.length) {
+                    visibleBlockedCount = blocked.length;
+                  }
 
                   Widget content;
                   if (blockedAsync.isLoading && blockedRaw.isEmpty) {
@@ -224,7 +328,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                         const SizedBox(height: 12),
                         Center(
                           child: OutlinedButton.icon(
-                            onPressed: () => unawaited(refreshBlockedUsers(modalRef, force: true)),
+                            onPressed: () {
+                              setSheetState(() => visibleBlockedCount = _modalPageSize);
+                              unawaited(refreshBlockedUsers(modalRef, force: true));
+                            },
                             icon: const Icon(Icons.refresh_rounded),
                             label: const Text('Повторить'),
                           ),
@@ -247,13 +354,38 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                       ],
                     );
                   } else {
+                    final visible = visibleBlockedCount > blocked.length
+                        ? blocked.length
+                        : visibleBlockedCount;
+                    final hasMore = visible < blocked.length;
+                    final itemCount = visible + (hasMore ? 1 : 0);
                     content = ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(
                         parent: ClampingScrollPhysics(),
                       ),
-                      itemCount: blocked.length,
+                      itemCount: itemCount,
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (_, index) {
+                        if (index >= visible) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            setSheetState(() {
+                              final next = visibleBlockedCount + _modalPageSize;
+                              visibleBlockedCount = next > blocked.length
+                                  ? blocked.length
+                                  : next;
+                            });
+                          });
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 4),
+                            child: Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          );
+                        }
                         final entry = blocked[index];
                         final user = entry.user;
                         final busy = unblocking.contains(user.id);
@@ -267,7 +399,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                               ),
                             ),
                             child: Row(
@@ -317,10 +449,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                                               await modalRef
                                                   .read(authStateProvider.notifier)
                                                   .logout();
-                                              if (mounted) context.go('/login');
+                                              if (context.mounted) {
+                                                context.go('/login');
+                                              }
                                               return;
                                             }
-                                            if (!mounted) return;
+                                            if (!context.mounted) return;
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(content: Text(e.message)),
                                             );
@@ -389,6 +523,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     try {
       final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
       if (!mounted || chatID.isEmpty) return;
+      unawaited(_loadChats());
       _openChatRoute(
         chatID: chatID,
         peerName: _friendTitle(pickedUser),
@@ -476,6 +611,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     setState(() => _chatActionInFlight.add(actionKey));
     try {
       await ref.read(chatsRepositoryProvider).clearChat(item.chatID);
+      await _loadChats();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -506,6 +642,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     setState(() => _chatActionInFlight.add(actionKey));
     try {
       await ref.read(chatsRepositoryProvider).blockUser(userID);
+      await _loadChats();
+      unawaited(refreshFriendsSnapshot(ref).catchError((_) {}));
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -573,7 +711,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
         await _blockChatUserFromList(item);
       }
     } finally {
-      Slidable.of(actionContext)?.close();
+      if (actionContext.mounted) {
+        Slidable.of(actionContext)?.close();
+      }
     }
   }
 
@@ -592,6 +732,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
         backgroundColor: Colors.transparent,
         builder: (sheetContext) {
           var query = '';
+          var visibleCount = _modalPageSize;
 
           List<FriendItem> filtered(List<FriendItem> source) {
             final q = query.trim().toLowerCase();
@@ -636,7 +777,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                               prefixIcon: Icon(Icons.search_rounded),
                             ),
                             onChanged: (value) {
-                              setSheetState(() => query = value);
+                              setSheetState(() {
+                                query = value;
+                                visibleCount = _modalPageSize;
+                              });
                             },
                           ),
                           const SizedBox(height: 10),
@@ -676,6 +820,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                                         child: OutlinedButton.icon(
                                           onPressed: () {
                                             setSheetState(() {
+                                              visibleCount = _modalPageSize;
                                               friendsFuture = _loadFriendsForStartChat(
                                                 forceRefresh: true,
                                               );
@@ -726,13 +871,36 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                                   );
                                 }
 
+                                final visible = visibleCount > list.length
+                                    ? list.length
+                                    : visibleCount;
+                                final hasMore = visible < list.length;
+                                final itemCount = visible + (hasMore ? 1 : 0);
                                 return ListView.separated(
                                   physics: const AlwaysScrollableScrollPhysics(
                                     parent: ClampingScrollPhysics(),
                                   ),
-                                  itemCount: list.length,
+                                  itemCount: itemCount,
                                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                                   itemBuilder: (_, index) {
+                                    if (index >= visible) {
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        setSheetState(() {
+                                          final next = visibleCount + _modalPageSize;
+                                          visibleCount = next > list.length ? list.length : next;
+                                        });
+                                      });
+                                      return const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4),
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          ),
+                                        ),
+                                      );
+                                    }
                                     final friend = list[index].user;
                                     return Material(
                                       color: Colors.transparent,
@@ -1006,7 +1174,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                 color: AppColors.surfaceCard,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.accentStart.withOpacity(0.5),
+                  color: AppColors.accentStart.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
               ),
@@ -1024,15 +1192,26 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final chatsAsync = ref.watch(chatsListProvider);
-    final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
-    final chats = chatsAsync.valueOrNull ?? const <ChatPreviewItem>[];
-    final hasBlockedUsers = blockedUsers.isNotEmpty;
-    final providerError = chatsAsync.whenOrNull(
-      error: (err, _) => err is ChatException ? err.message : 'Не удалось загрузить чаты',
+    ref.listen<AsyncValue<Map<String, dynamic>>>(
+      realtimeEventsProvider,
+      (_, next) {
+        final type = next.valueOrNull?['type']?.toString() ?? '';
+        if (type == 'chat_message' ||
+            type == 'chat_list_changed' ||
+            type == 'chat_read' ||
+            type == 'realtime_connected') {
+          if (_chats.length <= _chatsPageSize) {
+            unawaited(_loadChats());
+          }
+        }
+      },
     );
-    final errorText = _error ?? providerError;
-    final loading = chatsAsync.isLoading && chats.isEmpty && errorText == null;
+
+    final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
+    final chats = _chats;
+    final hasBlockedUsers = blockedUsers.isNotEmpty;
+    final errorText = _error;
+    final loading = _isLoadingChats && chats.isEmpty && errorText == null;
     final actionBusy = _isOpeningStartChatDialog ||
         _isOpeningBlockedUsersDialog ||
         _isStartingChat ||
@@ -1044,6 +1223,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
         child: RefreshIndicator(
           onRefresh: _loadChats,
           child: ListView(
+            controller: _chatsScrollController,
             physics: const AlwaysScrollableScrollPhysics(
               parent: ClampingScrollPhysics(),
             ),
@@ -1262,6 +1442,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                       ),
                     );
                   },
+                ),
+              if (_isLoadingMoreChats)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
                 ),
             ],
           ),

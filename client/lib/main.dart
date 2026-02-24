@@ -72,7 +72,7 @@ class MultiGamesApp extends ConsumerWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.transparent,
         textSelectionTheme: TextSelectionThemeData(
-          selectionColor: AppColors.accentSoft.withOpacity(0.5),
+          selectionColor: AppColors.accentSoft.withValues(alpha: 0.5),
           cursorColor: AppColors.textPrimary,
           selectionHandleColor: AppColors.accentStart,
         ),
