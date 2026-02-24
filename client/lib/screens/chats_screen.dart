@@ -9,6 +9,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -23,8 +24,18 @@ enum _ChatSwipeAction { clear, block }
 
 class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProviderStateMixin {
   String? _error;
-  final Set<String> _actionInFlight = <String>{};
+  bool _isOpeningStartChatDialog = false;
+  bool _isOpeningBlockedUsersDialog = false;
+  bool _isStartingChat = false;
+  bool _isNavigatingToChat = false;
+  final Set<String> _chatActionInFlight = <String>{};
   late final AnimationController _borderAnimationController;
+  Future<List<FriendItem>>? _friendsLoadInFlight;
+  List<FriendItem> _cachedFriends = const [];
+  DateTime? _friendsCachedAt;
+  Timer? _navigationLockTimer;
+
+  static const Duration _friendsCacheTTL = Duration(minutes: 2);
 
   @override
   void initState() {
@@ -33,18 +44,94 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
       vsync: this,
       duration: const Duration(milliseconds: 2600),
     )..repeat();
+    unawaited(_warmUpStartChatData());
+    unawaited(
+      ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
+    );
   }
 
   @override
   void dispose() {
     _borderAnimationController.dispose();
+    _navigationLockTimer?.cancel();
     super.dispose();
+  }
+
+  bool get _hasFreshFriendsCache {
+    final ts = _friendsCachedAt;
+    if (ts == null) return false;
+    if (_cachedFriends.isEmpty) return false;
+    return DateTime.now().difference(ts) <= _friendsCacheTTL;
+  }
+
+  void _cacheFriends(List<FriendItem> friends) {
+    _cachedFriends = List<FriendItem>.unmodifiable(friends);
+    _friendsCachedAt = DateTime.now();
+  }
+
+  Future<void> _warmUpStartChatData() async {
+    try {
+      await _loadFriendsForStartChat();
+    } catch (_) {
+      // Тихий прогрев: ошибки покажем только если пользователь откроет диалог.
+    }
+  }
+
+  Future<List<FriendItem>> _loadFriendsForStartChat({
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh) {
+      final liveSnapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+      if (liveSnapshot != null && liveSnapshot.friends.isNotEmpty) {
+        _cacheFriends(liveSnapshot.friends);
+        return liveSnapshot.friends;
+      }
+      if (_hasFreshFriendsCache) {
+        return _cachedFriends;
+      }
+    }
+    final inFlight = _friendsLoadInFlight;
+    if (!forceRefresh && inFlight != null) {
+      return inFlight;
+    }
+
+    late Future<List<FriendItem>> request;
+    request = () async {
+      try {
+        // Для модалки "Новый чат" берём свежие данные напрямую, чтобы не
+        // застревать на пустом снимке stream-провайдера.
+        final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
+        _cacheFriends(snapshot.friends);
+        return snapshot.friends;
+      } catch (_) {
+        // Если прямой запрос недоступен, пробуем потоковый снимок.
+        final snapshot = await ref.read(friendsSnapshotProvider.future);
+        _cacheFriends(snapshot.friends);
+        return snapshot.friends;
+      }
+    }();
+
+    _friendsLoadInFlight = request;
+    try {
+      return await request;
+    } on FriendsException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+      }
+      rethrow;
+    } finally {
+      if (identical(_friendsLoadInFlight, request)) {
+        _friendsLoadInFlight = null;
+      }
+    }
   }
 
   Future<void> _loadChats() async {
     setState(() => _error = null);
     try {
-      await refreshChatsList(ref);
+      await refreshChatsList(ref, force: true);
+      await refreshBlockedUsers(ref, force: true);
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -60,46 +147,252 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   }
 
   Future<void> _openStartChatDialog() async {
-    List<FriendItem> friends;
+    if (_isOpeningStartChatDialog || _isStartingChat || _isNavigatingToChat) {
+      return;
+    }
+    setState(() {
+      _isOpeningStartChatDialog = true;
+      _error = null;
+    });
+
+    FriendUserItem? pickedUser;
     try {
-      final snapshot = await ref.read(friendsRepositoryProvider).getFriends();
-      friends = snapshot.friends;
-    } on FriendsException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
+      pickedUser = await _pickFriendDialog();
+    } finally {
+      if (mounted) {
+        setState(() => _isOpeningStartChatDialog = false);
       }
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-      });
-      return;
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось загрузить друзей';
-      });
-      return;
     }
 
-    if (friends.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Сначала добавьте друзей, потом можно открыть чат')),
+    if (!mounted) return;
+    if (pickedUser == null) return;
+
+    await _startChatWithUser(pickedUser);
+  }
+
+  Future<void> _openBlockedUsersDialog() async {
+    if (_isOpeningBlockedUsersDialog || _isOpeningStartChatDialog || _isNavigatingToChat) {
+      return;
+    }
+    setState(() => _isOpeningBlockedUsersDialog = true);
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          final unblocking = <String>{};
+          final locallyHiddenUserIDs = <String>{};
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              return Consumer(
+                builder: (context, modalRef, _) {
+                  final blockedAsync = modalRef.watch(blockedUsersProvider);
+                  final blockedRaw = blockedAsync.valueOrNull ?? const <BlockedChatUserItem>[];
+                  final blocked = blockedRaw
+                      .where((entry) => !locallyHiddenUserIDs.contains(entry.user.id))
+                      .toList(growable: false);
+
+                  Widget content;
+                  if (blockedAsync.isLoading && blockedRaw.isEmpty) {
+                    content = const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  } else if (blockedAsync.hasError && blockedRaw.isEmpty) {
+                    final err = blockedAsync.error;
+                    final message = err is ChatException ? err.message : 'Не удалось загрузить список';
+                    content = ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: [
+                        const SizedBox(height: 80),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              message,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.red.shade700),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: OutlinedButton.icon(
+                            onPressed: () => unawaited(refreshBlockedUsers(modalRef, force: true)),
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Повторить'),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else if (blocked.isEmpty) {
+                    content = ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: const [
+                        SizedBox(height: 80),
+                        Center(
+                          child: Text(
+                            'Список пуст',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    content = ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      itemCount: blocked.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, index) {
+                        final entry = blocked[index];
+                        final user = entry.user;
+                        final busy = unblocking.contains(user.id);
+                        return Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.black.withOpacity(0.08),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                _AvatarDot(user: user),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _peerTitle(user),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Заблокирован: ${_formatDateTime(entry.blockedAt)}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: busy
+                                      ? null
+                                      : () async {
+                                          setSheetState(() => unblocking.add(user.id));
+                                          try {
+                                            await modalRef
+                                                .read(chatsRepositoryProvider)
+                                                .unblockUser(user.id);
+                                            if (!mounted) return;
+                                            setSheetState(
+                                              () => locallyHiddenUserIDs.add(user.id),
+                                            );
+                                          } on ChatException catch (e) {
+                                            if (e.statusCode == 401) {
+                                              await modalRef
+                                                  .read(authStateProvider.notifier)
+                                                  .logout();
+                                              if (mounted) context.go('/login');
+                                              return;
+                                            }
+                                            if (!mounted) return;
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(e.message)),
+                                            );
+                                          } finally {
+                                            if (mounted) {
+                                              setSheetState(() => unblocking.remove(user.id));
+                                            }
+                                          }
+                                        },
+                                  child: const Text('Разблокировать'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+
+                  return SafeArea(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
+                      ),
+                      child: GradientCard(
+                        animate: false,
+                        margin: EdgeInsets.zero,
+                        padding: const EdgeInsets.all(12),
+                        child: SizedBox(
+                          height: 420,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'Заблокированные пользователи',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Expanded(child: content),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       );
-      return;
+    } finally {
+      if (mounted) setState(() => _isOpeningBlockedUsersDialog = false);
     }
+  }
 
-    final pickedUser = await _pickFriendDialog(friends);
-    if (!mounted || pickedUser == null) return;
-
+  Future<void> _startChatWithUser(FriendUserItem pickedUser) async {
+    if (_isStartingChat || _isNavigatingToChat) return;
+    setState(() => _isStartingChat = true);
     try {
       final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
       if (!mounted || chatID.isEmpty) return;
-      unawaited(refreshChatsList(ref));
-      final name = Uri.encodeQueryComponent(_friendTitle(pickedUser));
-      context.push('/chats/$chatID?name=$name');
+      _openChatRoute(
+        chatID: chatID,
+        peerName: _friendTitle(pickedUser),
+      );
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -111,83 +404,329 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = 'Не удалось создать чат');
+    } finally {
+      if (mounted) {
+        setState(() => _isStartingChat = false);
+      }
     }
   }
 
-  Future<FriendUserItem?> _pickFriendDialog(List<FriendItem> friends) async {
-    final queryController = TextEditingController();
-    final result = await showModalBottomSheet<FriendUserItem>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        var query = '';
-
-        List<FriendItem> filtered() {
-          final q = query.trim().toLowerCase();
-          if (q.isEmpty) return friends;
-          return friends.where((item) {
-            final name = _friendTitle(item.user).toLowerCase();
-            return name.contains(q);
-          }).toList();
+  void _openChatRoute({
+    required String chatID,
+    required String peerName,
+  }) {
+    if (_isNavigatingToChat) return;
+    setState(() => _isNavigatingToChat = true);
+    _navigationLockTimer?.cancel();
+    _navigationLockTimer = Timer(const Duration(milliseconds: 650), () {
+      if (mounted) {
+        setState(() => _isNavigatingToChat = false);
+      }
+    });
+    final name = Uri.encodeQueryComponent(peerName);
+    unawaited(
+      context.push('/chats/$chatID?name=$name').whenComplete(() {
+        _navigationLockTimer?.cancel();
+        if (mounted) {
+          setState(() => _isNavigatingToChat = false);
         }
+      }),
+    );
+  }
 
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final list = filtered();
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 12,
-                  right: 12,
-                  bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
-                ),
-                child: GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    height: 420,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Новый чат',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
+  Future<bool> _confirmChatAction({
+    required String title,
+    required String description,
+    required String confirmText,
+    bool destructive = false,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(description),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            style: destructive
+                ? FilledButton.styleFrom(backgroundColor: Colors.red.shade700)
+                : null,
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(confirmText),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _clearChatFromList(ChatPreviewItem item) async {
+    final confirmed = await _confirmChatAction(
+      title: 'Очистить переписку?',
+      description: 'Диалог будет удалён без возможности восстановления.',
+      confirmText: 'Очистить',
+      destructive: true,
+    );
+    if (!confirmed) return;
+
+    final actionKey = 'clear_${item.chatID}';
+    setState(() => _chatActionInFlight.add(actionKey));
+    try {
+      await ref.read(chatsRepositoryProvider).clearChat(item.chatID);
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
+    }
+  }
+
+  Future<void> _blockChatUserFromList(ChatPreviewItem item) async {
+    final userID = item.user.id.trim();
+    if (userID.isEmpty) return;
+    final confirmed = await _confirmChatAction(
+      title: 'Заблокировать пользователя?',
+      description: 'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.',
+      confirmText: 'Заблокировать',
+      destructive: true,
+    );
+    if (!confirmed) return;
+
+    final actionKey = 'block_${item.user.id}';
+    setState(() => _chatActionInFlight.add(actionKey));
+    try {
+      await ref.read(chatsRepositoryProvider).blockUser(userID);
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
+    }
+  }
+
+  Widget _buildSlidableActionContent({
+    required IconData icon,
+    required Color iconColor,
+    required double phaseShift,
+    required bool busy,
+  }) {
+    return AnimatedBuilder(
+      animation: _borderAnimationController,
+      builder: (context, _) {
+        final phase = (_borderAnimationController.value + phaseShift) % 1.0;
+        return Opacity(
+          opacity: busy ? 0.6 : 1,
+          child: Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              gradient: AppGradients.borderAt(phase),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onSlidableActionPressed(
+    BuildContext actionContext,
+    ChatPreviewItem item,
+    _ChatSwipeAction action,
+  ) async {
+    final clearKey = 'clear_${item.chatID}';
+    final blockKey = 'block_${item.user.id}';
+    final busy = _chatActionInFlight.contains(clearKey) || _chatActionInFlight.contains(blockKey);
+    if (busy) return;
+
+    try {
+      if (action == _ChatSwipeAction.clear) {
+        await _clearChatFromList(item);
+      } else {
+        await _blockChatUserFromList(item);
+      }
+    } finally {
+      Slidable.of(actionContext)?.close();
+    }
+  }
+
+  String _friendLoadErrorText(Object? error) {
+    if (error is FriendsException) return error.message;
+    return 'Не удалось загрузить друзей';
+  }
+
+  Future<FriendUserItem?> _pickFriendDialog() async {
+    final queryController = TextEditingController();
+    Future<List<FriendItem>> friendsFuture = _loadFriendsForStartChat();
+    try {
+      return await showModalBottomSheet<FriendUserItem>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          var query = '';
+
+          List<FriendItem> filtered(List<FriendItem> source) {
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return source;
+            return source.where((item) {
+              final name = _friendTitle(item.user).toLowerCase();
+              return name.contains(q);
+            }).toList();
+          }
+
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              return SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
+                  ),
+                  child: GradientCard(
+                    animate: false,
+                    margin: EdgeInsets.zero,
+                    padding: const EdgeInsets.all(12),
+                    child: SizedBox(
+                      height: 420,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Новый чат',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: queryController,
-                          decoration: const InputDecoration(
-                            hintText: 'Найти друга по нику',
-                            prefixIcon: Icon(Icons.search_rounded),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: queryController,
+                            decoration: const InputDecoration(
+                              hintText: 'Найти друга по нику',
+                              prefixIcon: Icon(Icons.search_rounded),
+                            ),
+                            onChanged: (value) {
+                              setSheetState(() => query = value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setSheetState(() => query = value);
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: list.isEmpty
-                              ? ListView(
-                                  physics: const AlwaysScrollableScrollPhysics(
-                                    parent: ClampingScrollPhysics(),
-                                  ),
-                                  children: const [
-                                    SizedBox(height: 80),
-                                    Center(
-                                      child: Text(
-                                        'Друзья не найдены',
-                                        style: TextStyle(color: AppColors.textSecondary),
-                                      ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            child: FutureBuilder<List<FriendItem>>(
+                              future: friendsFuture,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState != ConnectionState.done) {
+                                  return const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     ),
-                                  ],
-                                )
-                              : ListView.separated(
+                                  );
+                                }
+
+                                if (snapshot.hasError) {
+                                  return ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: [
+                                      const SizedBox(height: 70),
+                                      Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          child: Text(
+                                            _friendLoadErrorText(snapshot.error),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(color: Colors.red.shade700),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Center(
+                                        child: OutlinedButton.icon(
+                                          onPressed: () {
+                                            setSheetState(() {
+                                              friendsFuture = _loadFriendsForStartChat(
+                                                forceRefresh: true,
+                                              );
+                                            });
+                                          },
+                                          icon: const Icon(Icons.refresh_rounded),
+                                          label: const Text('Повторить'),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                final friends = snapshot.data ?? const <FriendItem>[];
+                                if (friends.isEmpty) {
+                                  return ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: const [
+                                      SizedBox(height: 80),
+                                      Center(
+                                        child: Text(
+                                          'Сначала добавьте друзей, потом можно открыть чат.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: AppColors.textSecondary),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                final list = filtered(friends);
+                                if (list.isEmpty) {
+                                  return ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: const [
+                                      SizedBox(height: 80),
+                                      Center(
+                                        child: Text(
+                                          'Друзья не найдены',
+                                          style: TextStyle(color: AppColors.textSecondary),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                return ListView.separated(
                                   physics: const AlwaysScrollableScrollPhysics(
                                     parent: ClampingScrollPhysics(),
                                   ),
@@ -238,21 +777,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                                       ),
                                     );
                                   },
-                                ),
-                        ),
-                      ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    queryController.dispose();
-    return result;
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      queryController.dispose();
+    }
   }
 
   String _friendTitle(FriendUserItem user) {
@@ -279,672 +820,236 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     return value;
   }
 
-  DateTime _chatSortDate(ChatPreviewItem item) {
-    final updated = DateTime.tryParse(item.updatedAt);
-    if (updated != null) return updated;
-    final lastMessageAt = DateTime.tryParse(item.lastMessage?.createdAt ?? '');
-    if (lastMessageAt != null) return lastMessageAt;
-    return DateTime.tryParse(item.createdAt) ?? DateTime.fromMillisecondsSinceEpoch(0);
+  IconData? _genderIcon(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    switch (normalized) {
+      case 'male':
+      case 'm':
+      case 'man':
+      case 'м':
+      case 'муж':
+      case 'мужской':
+        return Icons.male_rounded;
+      case 'female':
+      case 'f':
+      case 'woman':
+      case 'ж':
+      case 'жен':
+      case 'женский':
+        return Icons.female_rounded;
+      default:
+        return null;
+    }
   }
 
-  List<ChatPreviewItem> _sortedChats(List<ChatPreviewItem> input) {
-    final list = List<ChatPreviewItem>.of(input);
-    list.sort((left, right) {
-      final leftUnread = left.unreadCount > 0;
-      final rightUnread = right.unreadCount > 0;
-      if (leftUnread != rightUnread) {
-        return leftUnread ? -1 : 1;
-      }
-      final rightTime = _chatSortDate(right);
-      final leftTime = _chatSortDate(left);
-      final byTime = rightTime.compareTo(leftTime);
-      if (byTime != 0) return byTime;
-      return right.chatID.compareTo(left.chatID);
-    });
-    return list;
+  bool _isFemaleGender(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    return normalized == 'female' ||
+        normalized == 'f' ||
+        normalized == 'woman' ||
+        normalized == 'ж' ||
+        normalized == 'жен' ||
+        normalized == 'женский';
   }
 
-  Future<bool> _confirmChatAction({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    bool danger = false,
-  }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: danger
-                  ? FilledButton.styleFrom(
-                      backgroundColor: Colors.red.shade700,
-                    )
-                  : null,
-              child: Text(confirmLabel),
-            ),
+  Widget _buildInfoPill({
+    String? text,
+    IconData? icon,
+    Color? backgroundColor,
+    Color? foregroundColor,
+    double? minWidth,
+  }) {
+    final bg = backgroundColor ?? AppColors.accentSoft;
+    final fg = foregroundColor ?? AppColors.textPrimary;
+    return Container(
+      constraints: BoxConstraints(minWidth: minWidth ?? 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: fg),
+            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
           ],
-        );
-      },
-    );
-    return result ?? false;
-  }
-
-  Future<void> _runChatAction({
-    required String actionKey,
-    required Future<void> Function() action,
-    required String successMessage,
-    required String fallbackErrorMessage,
-  }) async {
-    if (_actionInFlight.contains(actionKey)) return;
-    setState(() {
-      _error = null;
-      _actionInFlight.add(actionKey);
-    });
-    try {
-      await action();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(successMessage)),
-      );
-    } on ChatException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      setState(() => _error = e.message);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _error = fallbackErrorMessage);
-    } finally {
-      if (mounted) {
-        setState(() => _actionInFlight.remove(actionKey));
-      }
-    }
-  }
-
-  Future<void> _clearChat(ChatPreviewItem item, {bool requireConfirmation = true}) async {
-    if (requireConfirmation) {
-      final confirmed = await _confirmChatAction(
-        title: 'Очистить чат',
-        message: 'Чат и вся переписка будут удалены для обеих сторон. Продолжить?',
-        confirmLabel: 'Очистить',
-        danger: true,
-      );
-      if (!confirmed) return;
-    }
-
-    await _runChatAction(
-      actionKey: 'clear_${item.chatID}',
-      action: () async {
-        await ref.read(chatsRepositoryProvider).clearChat(item.chatID);
-        await refreshChatsList(ref);
-      },
-      successMessage: 'Чат удалён',
-      fallbackErrorMessage: 'Не удалось очистить чат',
-    );
-  }
-
-  Future<void> _blockUserFromChat(ChatPreviewItem item, {bool requireConfirmation = true}) async {
-    if (requireConfirmation) {
-      final peerName = _peerTitle(item.user);
-      final confirmed = await _confirmChatAction(
-        title: 'Заблокировать пользователя',
-        message: 'Пользователь "$peerName" будет заблокирован.\n'
-            'Чат с перепиской удалится, и он не сможет писать вам и добавлять в друзья до разблокировки.',
-        confirmLabel: 'Заблокировать',
-        danger: true,
-      );
-      if (!confirmed) return;
-    }
-
-    await _runChatAction(
-      actionKey: 'block_${item.user.id}',
-      action: () async {
-        await ref.read(chatsRepositoryProvider).blockUser(item.user.id);
-        await refreshChatsList(ref);
-        await refreshFriendsSnapshot(ref);
-      },
-      successMessage: 'Пользователь заблокирован',
-      fallbackErrorMessage: 'Не удалось заблокировать пользователя',
-    );
-  }
-
-  Widget _buildSlidableActionContent({
-    required IconData icon,
-    required bool loading,
-    required Color iconColor,
-    required double phaseShift,
-  }) {
-    return AnimatedBuilder(
-      animation: _borderAnimationController,
-      builder: (context, _) {
-        final phase = (_borderAnimationController.value + phaseShift) % 1.0;
-        return Container(
-          width: 44,
-          height: 44,
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            gradient: AppGradients.borderAt(phase),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: loading
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                      ),
-                    )
-                  : Icon(icon, color: iconColor, size: 22),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _onSlidableActionPressed(
-    BuildContext actionContext,
-    ChatPreviewItem item,
-    _ChatSwipeAction action,
-  ) async {
-    final clearKey = 'clear_${item.chatID}';
-    final blockKey = 'block_${item.user.id}';
-    final busy = _actionInFlight.contains(clearKey) || _actionInFlight.contains(blockKey);
-    if (busy) return;
-
-    final slidable = Slidable.of(actionContext);
-    if (action == _ChatSwipeAction.clear) {
-      final confirmed = await _confirmChatAction(
-        title: 'Очистить чат',
-        message: 'Чат и вся переписка будут удалены для обеих сторон. Продолжить?',
-        confirmLabel: 'Очистить',
-        danger: true,
-      );
-      if (!confirmed) {
-        slidable?.close();
-        return;
-      }
-      await _clearChat(item, requireConfirmation: false);
-    } else {
-      final peerName = _peerTitle(item.user);
-      final confirmed = await _confirmChatAction(
-        title: 'Заблокировать пользователя',
-        message: 'Пользователь "$peerName" будет заблокирован.\n'
-            'Чат с перепиской удалится, и он не сможет писать вам и добавлять в друзья до разблокировки.',
-        confirmLabel: 'Заблокировать',
-        danger: true,
-      );
-      if (!confirmed) {
-        slidable?.close();
-        return;
-      }
-      await _blockUserFromChat(item, requireConfirmation: false);
-    }
-  }
-
-  Widget _buildGradientHeaderIconButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onPressed,
-    double phaseShift = 0,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: AnimatedBuilder(
-        animation: _borderAnimationController,
-        builder: (context, _) {
-          final phase = (_borderAnimationController.value + phaseShift) % 1.0;
-          return Container(
-            width: 40,
-            height: 40,
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              gradient: AppGradients.borderAt(phase),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Material(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                onTap: onPressed,
-                borderRadius: BorderRadius.circular(10),
-                child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          if (text != null && text.isNotEmpty)
+            Text(
+              text,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          );
-        },
+        ],
       ),
     );
   }
 
-  Future<void> _openBlockedUsersDialog() async {
-    List<BlockedChatUserItem> blockedUsers;
-    try {
-      blockedUsers = await ref.read(chatsRepositoryProvider).listBlockedUsers();
-    } on ChatException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      setState(() => _error = e.message);
-      return;
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _error = 'Не удалось загрузить заблокированных пользователей');
-      return;
-    }
-
-    if (!mounted) return;
-    final busyIDs = <String>{};
-    String? sheetError;
-    await showModalBottomSheet<void>(
+  Future<void> _showUserInfoDialog(ChatUserItem user) async {
+    final name = _peerTitle(user);
+    final about = user.about?.trim();
+    final genderIcon = _genderIcon(user.gender);
+    final female = _isFemaleGender(user.gender);
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetInnerContext, setSheetState) {
-            Future<void> unblock(BlockedChatUserItem item) async {
-              final key = item.user.id;
-              if (busyIDs.contains(key)) return;
-              setSheetState(() {
-                busyIDs.add(key);
-                sheetError = null;
-              });
-              try {
-                await ref.read(chatsRepositoryProvider).unblockUser(item.user.id);
-                blockedUsers = blockedUsers.where((entry) => entry.user.id != item.user.id).toList();
-                setSheetState(() {});
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Пользователь разблокирован')),
-                );
-                unawaited(refreshChatsList(ref));
-                unawaited(refreshFriendsSnapshot(ref));
-              } on ChatException catch (e) {
-                if (e.statusCode == 401) {
-                  await ref.read(authStateProvider.notifier).logout();
-                  if (!mounted) return;
-                  Navigator.of(sheetContext).pop();
-                  context.go('/login');
-                  return;
-                }
-                setSheetState(() => sheetError = e.message);
-              } catch (_) {
-                setSheetState(() => sheetError = 'Не удалось разблокировать пользователя');
-              } finally {
-                if (mounted) {
-                  setSheetState(() => busyIDs.remove(key));
-                }
-              }
-            }
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 12,
-                  right: 12,
-                  bottom: MediaQuery.viewInsetsOf(sheetInnerContext).bottom + 10,
+      builder: (dialogContext) {
+        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          backgroundColor: Colors.transparent,
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AvatarDot(user: user, radius: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
                 ),
-                child: GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    height: 430,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Заблокированные',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                          ),
+                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (user.age != null && user.age! > 0)
+                        _buildInfoPill(
+                          text: '${user.age} лет',
+                          minWidth: 72,
                         ),
-                        if (sheetError != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            sheetError!,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: blockedUsers.isEmpty
-                              ? ListView(
-                                  physics: const AlwaysScrollableScrollPhysics(
-                                    parent: ClampingScrollPhysics(),
-                                  ),
-                                  children: const [
-                                    SizedBox(height: 80),
-                                    Center(
-                                      child: Text(
-                                        'Список пуст',
-                                        style: TextStyle(color: AppColors.textSecondary),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ListView.separated(
-                                  physics: const AlwaysScrollableScrollPhysics(
-                                    parent: ClampingScrollPhysics(),
-                                  ),
-                                  itemCount: blockedUsers.length,
-                                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                  itemBuilder: (_, index) {
-                                    final item = blockedUsers[index];
-                                    final key = item.user.id;
-                                    final busy = busyIDs.contains(key);
-                                    return Material(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            _AvatarDot(user: item.user),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    _peerTitle(item.user),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      color: AppColors.textPrimary,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    'Заблокирован: ${_formatDateTime(item.blockedAt)}',
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      color: AppColors.textSecondary,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            IconButton(
-                                              onPressed: busy ? null : () => unblock(item),
-                                              tooltip: 'Разблокировать',
-                                              icon: busy
-                                                  ? const SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                                    )
-                                                  : const Icon(Icons.lock_open_rounded),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                      if (genderIcon != null)
+                        _buildInfoPill(
+                          icon: genderIcon,
+                          minWidth: 46,
+                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
+                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
                         ),
-                      ],
+                    ],
+                  ),
+                ],
+                if (about != null && about.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'О себе',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ),
-            );
-          },
+                  const SizedBox(height: 4),
+                  Text(
+                    about,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildInfoIconButton({
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final enabled = onPressed != null;
+    return Tooltip(
+      message: tooltip,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.6,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.accentStart.withOpacity(0.5),
+                  width: 1.5,
+                ),
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 17,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final chatsAsync = ref.watch(chatsListProvider);
+    final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
     final chats = chatsAsync.valueOrNull ?? const <ChatPreviewItem>[];
-    final sortedChats = _sortedChats(chats);
+    final hasBlockedUsers = blockedUsers.isNotEmpty;
     final providerError = chatsAsync.whenOrNull(
       error: (err, _) => err is ChatException ? err.message : 'Не удалось загрузить чаты',
     );
     final errorText = _error ?? providerError;
     final loading = chatsAsync.isLoading && chats.isEmpty && errorText == null;
-    final listPadding = const EdgeInsets.fromLTRB(16, 12, 16, 16);
-
-    Widget buildStateList(List<Widget> children) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: ClampingScrollPhysics(),
-        ),
-        padding: listPadding,
-        children: children,
-      );
-    }
-
-    final listContent = loading
-        ? buildStateList(const [
-            SizedBox(height: 100),
-            Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          ])
-        : errorText != null
-            ? buildStateList([
-                const SizedBox(height: 100),
-                Text(
-                  errorText,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.red.shade700,
-                    fontSize: 14,
-                  ),
-                ),
-              ])
-            : sortedChats.isEmpty
-                ? buildStateList(const [
-                    SizedBox(height: 100),
-                    Text(
-                      'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ])
-                : ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: ClampingScrollPhysics(),
-                    ),
-                    padding: listPadding,
-                    itemCount: sortedChats.length,
-                    itemBuilder: (context, index) {
-                      final item = sortedChats[index];
-                      final clearKey = 'clear_${item.chatID}';
-                      final blockKey = 'block_${item.user.id}';
-                      final clearLoading = _actionInFlight.contains(clearKey);
-                      final blockLoading = _actionInFlight.contains(blockKey);
-                      final busy = _actionInFlight.contains(clearKey) || _actionInFlight.contains(blockKey);
-                      final lastMessage = item.lastMessage;
-                      final unread = item.unreadCount;
-                      final subtitle = (lastMessage?.body ?? '').trim();
-
-                      return Padding(
-                        padding: EdgeInsets.only(top: index == 0 ? 0 : 10),
-                        child: Slidable(
-                          key: ValueKey('chat-${item.chatID}'),
-                          enabled: !busy,
-                          endActionPane: ActionPane(
-                            motion: const DrawerMotion(),
-                            extentRatio: 0.40,
-                            children: [
-                              CustomSlidableAction(
-                                onPressed: busy
-                                    ? null
-                                    : (actionContext) {
-                                        unawaited(
-                                          _onSlidableActionPressed(
-                                            actionContext,
-                                            item,
-                                            _ChatSwipeAction.clear,
-                                          ),
-                                        );
-                                      },
-                                backgroundColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                                child: _buildSlidableActionContent(
-                                  icon: Icons.delete_sweep_rounded,
-                                  loading: clearLoading,
-                                  iconColor: const Color(0xFF1E88E5),
-                                  phaseShift: 0.0,
-                                ),
-                              ),
-                              CustomSlidableAction(
-                                onPressed: busy
-                                    ? null
-                                    : (actionContext) {
-                                        unawaited(
-                                          _onSlidableActionPressed(
-                                            actionContext,
-                                            item,
-                                            _ChatSwipeAction.block,
-                                          ),
-                                        );
-                                      },
-                                backgroundColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                                child: _buildSlidableActionContent(
-                                  icon: Icons.block_rounded,
-                                  loading: blockLoading,
-                                  iconColor: const Color(0xFFD32F2F),
-                                  phaseShift: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          child: Opacity(
-                            opacity: busy ? 0.65 : 1,
-                            child: GradientCard(
-                              margin: EdgeInsets.zero,
-                              animate: false,
-                              child: InkWell(
-                                onTap: () {
-                                  final name = Uri.encodeQueryComponent(_peerTitle(item.user));
-                                  context.push('/chats/${item.chatID}?name=$name');
-                                },
-                                borderRadius: BorderRadius.circular(AppRadius.card),
-                                child: Row(
-                                  children: [
-                                    _AvatarDot(user: item.user),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _peerTitle(item.user),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: AppColors.textPrimary,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            subtitle.isEmpty ? 'Нет сообщений' : subtitle,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        if (lastMessage != null)
-                                          Text(
-                                            _formatDateTime(lastMessage.createdAt),
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        if (unread > 0) ...[
-                                          const SizedBox(height: 6),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 7,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.accentStart,
-                                              borderRadius: BorderRadius.circular(999),
-                                            ),
-                                            child: Text(
-                                              unread > 99 ? '99+' : '$unread',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
+    final actionBusy = _isOpeningStartChatDialog ||
+        _isOpeningBlockedUsersDialog ||
+        _isStartingChat ||
+        _isNavigatingToChat;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-              child: Row(
+        child: RefreshIndicator(
+          onRefresh: _loadChats,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics(),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            children: [
+              Row(
                 children: [
                   Text(
                     'Чаты',
@@ -954,29 +1059,212 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                         ),
                   ),
                   const Spacer(),
-                  _buildGradientHeaderIconButton(
-                    onPressed: _openBlockedUsersDialog,
-                    tooltip: 'Заблокированные пользователи',
-                    icon: Icons.block_rounded,
-                    phaseShift: 0.0,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildGradientHeaderIconButton(
-                    onPressed: _openStartChatDialog,
+                  if (hasBlockedUsers)
+                    IconButton(
+                      onPressed: actionBusy ? null : _openBlockedUsersDialog,
+                      tooltip: 'Заблокированные пользователи',
+                      icon: const Icon(Icons.block_rounded),
+                    ),
+                  IconButton(
+                    onPressed: actionBusy ? null : _openStartChatDialog,
                     tooltip: 'Новый чат',
-                    icon: Icons.add_comment_rounded,
-                    phaseShift: 0.45,
+                    icon: const Icon(Icons.add_comment_rounded),
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _loadChats,
-                child: listContent,
-              ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              if (loading)
+                const Padding(
+                  padding: EdgeInsets.only(top: 24),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              else if (errorText != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: Text(
+                    errorText,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 14,
+                    ),
+                  ),
+                )
+              else if (chats.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 24),
+                  child: Text(
+                    'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                )
+              else
+                ...chats.map(
+                  (item) {
+                    final lastMessage = item.lastMessage;
+                    final unread = item.unreadCount;
+                    final subtitle = (lastMessage?.body ?? '').trim();
+                    final clearKey = 'clear_${item.chatID}';
+                    final blockKey = 'block_${item.user.id}';
+                    final clearBusy = _chatActionInFlight.contains(clearKey);
+                    final blockBusy = _chatActionInFlight.contains(blockKey);
+                    final itemBusy = clearBusy || blockBusy;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Slidable(
+                        key: ValueKey('chat_${item.chatID}'),
+                        enabled: !itemBusy,
+                        endActionPane: ActionPane(
+                          motion: const DrawerMotion(),
+                          extentRatio: 0.40,
+                          children: [
+                            CustomSlidableAction(
+                              onPressed: itemBusy
+                                  ? null
+                                  : (actionContext) {
+                                      unawaited(
+                                        _onSlidableActionPressed(
+                                          actionContext,
+                                          item,
+                                          _ChatSwipeAction.clear,
+                                        ),
+                                      );
+                                    },
+                              backgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              child: _buildSlidableActionContent(
+                                icon: Icons.delete_sweep_rounded,
+                                iconColor: const Color(0xFF1E88E5),
+                                phaseShift: 0.0,
+                                busy: clearBusy,
+                              ),
+                            ),
+                            CustomSlidableAction(
+                              onPressed: itemBusy
+                                  ? null
+                                  : (actionContext) {
+                                      unawaited(
+                                        _onSlidableActionPressed(
+                                          actionContext,
+                                          item,
+                                          _ChatSwipeAction.block,
+                                        ),
+                                      );
+                                    },
+                              backgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              child: _buildSlidableActionContent(
+                                icon: Icons.block_rounded,
+                                iconColor: const Color(0xFFD32F2F),
+                                phaseShift: 0.5,
+                                busy: blockBusy,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: Opacity(
+                          opacity: itemBusy ? 0.65 : 1,
+                          child: GradientCard(
+                            margin: EdgeInsets.zero,
+                            animate: false,
+                            child: InkWell(
+                              onTap: _isNavigatingToChat || itemBusy
+                                  ? null
+                                  : () => _openChatRoute(
+                                        chatID: item.chatID,
+                                        peerName: _peerTitle(item.user),
+                                      ),
+                              borderRadius: BorderRadius.circular(AppRadius.card),
+                              child: Row(
+                                children: [
+                                  _AvatarDot(user: item.user),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _peerTitle(item.user),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          subtitle.isEmpty ? 'Нет сообщений' : subtitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (lastMessage != null)
+                                        Text(
+                                          _formatDateTime(lastMessage.createdAt),
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          _buildInfoIconButton(
+                                            onPressed: itemBusy
+                                                ? null
+                                                : () => unawaited(_showUserInfoDialog(item.user)),
+                                            tooltip: 'Информация о пользователе',
+                                          ),
+                                          if (unread > 0) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accentStart,
+                                                borderRadius: BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                unread > 99 ? '99+' : '$unread',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -984,12 +1272,28 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
 }
 
 class _AvatarDot extends StatelessWidget {
-  const _AvatarDot({required this.user});
+  const _AvatarDot({
+    required this.user,
+    this.radius = 20,
+  });
 
   final ChatUserItem user;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
+    if (user.avatarKind == 'file' &&
+        user.avatarValue != null &&
+        user.avatarValue!.trim().isNotEmpty) {
+      final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
+      if (memoryImage != null) {
+        return CircleAvatar(
+          radius: radius,
+          backgroundImage: memoryImage,
+        );
+      }
+    }
+
     if (user.avatarKind == 'preset') {
       final iconIndex = int.tryParse(user.avatarValue ?? '');
       if (iconIndex != null) {
@@ -1009,9 +1313,13 @@ class _AvatarDot extends StatelessWidget {
         ];
         final idx = iconIndex % icons.length;
         return CircleAvatar(
-          radius: 20,
+          radius: radius,
           backgroundColor: AppColors.accentSoft,
-          child: Icon(icons[idx], color: AppColors.accentStart),
+          child: Icon(
+            icons[idx],
+            color: AppColors.accentStart,
+            size: radius,
+          ),
         );
       }
     }
@@ -1019,13 +1327,14 @@ class _AvatarDot extends StatelessWidget {
     final raw = user.displayName?.trim();
     final letter = (raw != null && raw.isNotEmpty) ? raw.substring(0, 1).toUpperCase() : '?';
     return CircleAvatar(
-      radius: 20,
+      radius: radius,
       backgroundColor: AppColors.accentSoft,
       child: Text(
         letter,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.accentStart,
           fontWeight: FontWeight.w700,
+          fontSize: radius * 0.8,
         ),
       ),
     );

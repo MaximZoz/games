@@ -9,6 +9,7 @@ import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
@@ -263,15 +264,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     // Загруженное фото хранится с avatarKind = 'file'.
     // На web значение имеет вид 'base64,<данные>', на мобильном — путь к файлу.
     if (u.avatarKind == 'file' && u.avatarValue != null && u.avatarValue!.isNotEmpty) {
-      String raw = u.avatarValue!;
-      if (raw.startsWith('base64,')) raw = raw.substring(7);
-      try {
-        final bytes = base64Decode(raw);
+      final memoryImage = AvatarMemoryCache.fromAvatarValue(u.avatarValue);
+      if (memoryImage != null) {
         return CircleAvatar(
           radius: 22,
-          backgroundImage: MemoryImage(bytes),
+          backgroundImage: memoryImage,
         );
-      } catch (_) {}
+      }
     }
 
     // Пресет — индекс иконки
