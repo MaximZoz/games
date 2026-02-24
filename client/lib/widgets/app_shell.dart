@@ -50,14 +50,10 @@ class AppShell extends ConsumerWidget {
     final isAuthorized = authState.valueOrNull != null;
 
     void navigateWithPrefetch(int i) {
-      final sameBranch = i == navigationShell.currentIndex;
-      navigationShell.goBranch(
-        i,
-        initialLocation: sameBranch,
-      );
+      final target = _navItems[i].path;
+      context.go(target);
 
       if (!isAuthorized) return;
-      final target = _navItems[i].path;
       if (target == '/chats') {
         unawaited(
           ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
