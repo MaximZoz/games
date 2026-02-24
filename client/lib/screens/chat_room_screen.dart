@@ -834,7 +834,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         ? null
                         : () {
                             final user = infoUser;
-                            if (user == null) return;
                             unawaited(_showUserInfoDialog(user));
                           },
                     tooltip: 'Информация о пользователе',
