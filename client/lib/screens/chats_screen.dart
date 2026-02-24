@@ -19,7 +19,9 @@ class ChatsScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatsScreen> createState() => _ChatsScreenState();
 }
 
-class _ChatsScreenState extends ConsumerState<ChatsScreen> {
+enum _ChatSwipeAction { clear, block }
+
+class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProviderStateMixin {
   String? _error;
   bool _isOpeningStartChatDialog = false;
   bool _isOpeningBlockedUsersDialog = false;
@@ -27,6 +29,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   bool _isNavigatingToChat = false;
   bool _hasBlockedUsers = false;
   final Set<String> _chatActionInFlight = <String>{};
+  late final AnimationController _borderAnimationController;
   Future<List<FriendItem>>? _friendsLoadInFlight;
   List<FriendItem> _cachedFriends = const [];
   DateTime? _friendsCachedAt;
@@ -37,12 +40,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   @override
   void initState() {
     super.initState();
+    _borderAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat();
     unawaited(_warmUpStartChatData());
     unawaited(_refreshBlockedUsersPresence());
   }
 
   @override
   void dispose() {
+    _borderAnimationController.dispose();
     _navigationLockTimer?.cancel();
     super.dispose();
   }
@@ -505,7 +513,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
     if (!confirmed) return;
 
-    setState(() => _chatActionInFlight.add(item.chatID));
+    final actionKey = 'clear_${item.chatID}';
+    setState(() => _chatActionInFlight.add(actionKey));
     try {
       await ref.read(chatsRepositoryProvider).clearChat(item.chatID);
       await refreshChatsList(ref, force: true);
@@ -520,7 +529,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         SnackBar(content: Text(e.message)),
       );
     } finally {
-      if (mounted) setState(() => _chatActionInFlight.remove(item.chatID));
+      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
     }
   }
 
@@ -535,7 +544,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
     if (!confirmed) return;
 
-    setState(() => _chatActionInFlight.add(item.chatID));
+    final actionKey = 'block_${item.user.id}';
+    setState(() => _chatActionInFlight.add(actionKey));
     try {
       await ref.read(chatsRepositoryProvider).blockUser(userID);
       await refreshChatsList(ref, force: true);
@@ -552,7 +562,63 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         SnackBar(content: Text(e.message)),
       );
     } finally {
-      if (mounted) setState(() => _chatActionInFlight.remove(item.chatID));
+      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
+    }
+  }
+
+  Widget _buildSlidableActionContent({
+    required IconData icon,
+    required Color iconColor,
+    required double phaseShift,
+    required bool busy,
+  }) {
+    return AnimatedBuilder(
+      animation: _borderAnimationController,
+      builder: (context, _) {
+        final phase = (_borderAnimationController.value + phaseShift) % 1.0;
+        return Opacity(
+          opacity: busy ? 0.6 : 1,
+          child: Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              gradient: AppGradients.borderAt(phase),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onSlidableActionPressed(
+    BuildContext actionContext,
+    ChatPreviewItem item,
+    _ChatSwipeAction action,
+  ) async {
+    final clearKey = 'clear_${item.chatID}';
+    final blockKey = 'block_${item.user.id}';
+    final busy = _chatActionInFlight.contains(clearKey) || _chatActionInFlight.contains(blockKey);
+    if (busy) return;
+
+    try {
+      if (action == _ChatSwipeAction.clear) {
+        await _clearChatFromList(item);
+      } else {
+        await _blockChatUserFromList(item);
+      }
+    } finally {
+      Slidable.of(actionContext)?.close();
     }
   }
 
@@ -883,35 +949,61 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                     final lastMessage = item.lastMessage;
                     final unread = item.unreadCount;
                     final subtitle = (lastMessage?.body ?? '').trim();
-                    final itemBusy = _chatActionInFlight.contains(item.chatID);
+                    final clearKey = 'clear_${item.chatID}';
+                    final blockKey = 'block_${item.user.id}';
+                    final clearBusy = _chatActionInFlight.contains(clearKey);
+                    final blockBusy = _chatActionInFlight.contains(blockKey);
+                    final itemBusy = clearBusy || blockBusy;
                     return Padding(
                       padding: const EdgeInsets.only(top: 10),
                       child: Slidable(
                         key: ValueKey('chat_${item.chatID}'),
                         enabled: !itemBusy,
-                        startActionPane: ActionPane(
-                          motion: const DrawerMotion(),
-                          extentRatio: 0.24,
-                          children: [
-                            SlidableAction(
-                              onPressed: (_) => unawaited(_clearChatFromList(item)),
-                              backgroundColor: const Color(0xFF1E88E5),
-                              foregroundColor: Colors.white,
-                              icon: Icons.delete_sweep_rounded,
-                              label: 'Очистить',
-                            ),
-                          ],
-                        ),
                         endActionPane: ActionPane(
                           motion: const DrawerMotion(),
-                          extentRatio: 0.24,
+                          extentRatio: 0.40,
                           children: [
-                            SlidableAction(
-                              onPressed: (_) => unawaited(_blockChatUserFromList(item)),
-                              backgroundColor: const Color(0xFFD32F2F),
-                              foregroundColor: Colors.white,
-                              icon: Icons.block_rounded,
-                              label: 'Блок',
+                            CustomSlidableAction(
+                              onPressed: itemBusy
+                                  ? null
+                                  : (actionContext) {
+                                      unawaited(
+                                        _onSlidableActionPressed(
+                                          actionContext,
+                                          item,
+                                          _ChatSwipeAction.clear,
+                                        ),
+                                      );
+                                    },
+                              backgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              child: _buildSlidableActionContent(
+                                icon: Icons.delete_sweep_rounded,
+                                iconColor: const Color(0xFF1E88E5),
+                                phaseShift: 0.0,
+                                busy: clearBusy,
+                              ),
+                            ),
+                            CustomSlidableAction(
+                              onPressed: itemBusy
+                                  ? null
+                                  : (actionContext) {
+                                      unawaited(
+                                        _onSlidableActionPressed(
+                                          actionContext,
+                                          item,
+                                          _ChatSwipeAction.block,
+                                        ),
+                                      );
+                                    },
+                              backgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              child: _buildSlidableActionContent(
+                                icon: Icons.block_rounded,
+                                iconColor: const Color(0xFFD32F2F),
+                                phaseShift: 0.5,
+                                busy: blockBusy,
+                              ),
                             ),
                           ],
                         ),
