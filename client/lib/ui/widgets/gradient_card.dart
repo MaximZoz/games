@@ -88,7 +88,7 @@ class _GradientCardState extends State<GradientCard>
         borderRadius: BorderRadius.circular(r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentStart.withOpacity(0.12),
+            color: AppColors.accentStart.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

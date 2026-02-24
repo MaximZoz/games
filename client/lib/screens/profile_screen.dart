@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
@@ -477,7 +476,7 @@ class _ProfileEmptyState extends StatelessWidget {
             Icon(
               Icons.person_outline_rounded,
               size: 56,
-              color: AppColors.textSecondary.withOpacity(0.6),
+              color: AppColors.textSecondary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 16),
             Text(
@@ -814,7 +813,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     final ageStr = _ageController.text.trim();
     final initialAge = initial.age;
     if ((initialAge == null && ageStr.isNotEmpty) ||
-        (initialAge != null && ageStr != initialAge.toString())) return true;
+        (initialAge != null && ageStr != initialAge.toString())) {
+      return true;
+    }
     if (_gender != initial.gender) return true;
     final about = _aboutController.text.trim();
     final initialAbout = initial.about ?? '';
@@ -1309,7 +1310,7 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
 
       final tx = (_viewportSize - _baseWidth) / 2;
       final ty = (_viewportSize - _baseHeight) / 2;
-      _transformation.value = Matrix4.identity()..translate(tx, ty);
+      _transformation.value = Matrix4.identity()..translateByDouble(tx, ty, 0, 1);
 
       if (mounted) {
         setState(() => _ready = true);

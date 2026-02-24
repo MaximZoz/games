@@ -192,3 +192,16 @@ func TestFriends_Search_InvalidLimit(t *testing.T) {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
 	}
 }
+
+func TestFriends_Search_InvalidOffset(t *testing.T) {
+	h := friendsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodGet, "/api/friends/search?q=abc&offset=bad", nil)
+	req = withUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Search(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
