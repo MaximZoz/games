@@ -19,10 +19,13 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
     super.key,
     required this.chatID,
     this.peerName,
+    this.fromFriends = false,
   });
 
   final String chatID;
   final String? peerName;
+  final bool fromFriends;
+
 
   @override
   ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
@@ -108,7 +111,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (_leavingToChats) return;
     setState(() => _leavingToChats = true);
     if (!mounted) return;
-    context.go('/chats');
+    if (widget.fromFriends) {
+      context.go('/friends');
+    } else {
+      context.go('/chats');
+    }
     unawaited(
       refreshChatsList(ref, force: true).catchError((_) {
         // Фоновая синхронизация после перехода назад.

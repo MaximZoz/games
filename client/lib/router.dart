@@ -150,6 +150,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   ChatRoomScreen(
                     chatID: state.pathParameters['chatId'] ?? '',
                     peerName: state.uri.queryParameters['name'],
+                    fromFriends: state.uri.queryParameters['from'] == 'friends',
                   ),
                 ),
               ),

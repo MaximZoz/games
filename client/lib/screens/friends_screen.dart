@@ -326,7 +326,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       if (!mounted) return;
       if (chatID.isEmpty) return;
       final name = Uri.encodeQueryComponent(_displayName(user));
-      context.push('/chats/$chatID?name=$name');
+      context.push('/chats/$chatID?name=$name&from=friends');
     } catch (e) {
       if (e is ChatException) {
         await _handleChatException(e);
