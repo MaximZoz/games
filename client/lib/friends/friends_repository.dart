@@ -218,7 +218,7 @@ class FriendsRepository {
 
   Future<FriendSearchPage> searchUsersPage(
     String query, {
-    int limit = 20,
+    int limit = 10,
     int offset = 0,
   }) async {
     final q = query.trim();
@@ -258,7 +258,7 @@ class FriendsRepository {
 
   Future<List<FriendSearchItem>> searchUsers(
     String query, {
-    int limit = 20,
+    int limit = 10,
     int offset = 0,
   }) async {
     final page = await searchUsersPage(

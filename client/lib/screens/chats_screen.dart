@@ -24,8 +24,8 @@ class ChatsScreen extends ConsumerStatefulWidget {
 enum _ChatSwipeAction { clear, block }
 
 class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProviderStateMixin {
-  static const int _chatsPageSize = 20;
-  static const int _modalPageSize = 20;
+  static const int _chatsPageSize = 10;
+  static const int _modalPageSize = 10;
 
   String? _error;
   bool _isOpeningStartChatDialog = false;

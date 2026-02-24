@@ -189,7 +189,7 @@ func SearchUsersWithFriendRelation(
 	}
 
 	if limit <= 0 {
-		limit = 20
+		limit = 10
 	}
 	if limit > 50 {
 		limit = 50

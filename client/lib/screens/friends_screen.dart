@@ -22,7 +22,7 @@ class FriendsScreen extends ConsumerStatefulWidget {
 enum _FriendsTabKind { friends, incoming, outgoing }
 
 class _FriendsScreenState extends ConsumerState<FriendsScreen> {
-  static const int _pageSize = 20;
+  static const int _pageSize = 10;
   static const List<IconData> _presetAvatarIcons = [
     Icons.face_rounded,
     Icons.face_2_rounded,
