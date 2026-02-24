@@ -220,6 +220,14 @@ func SearchUsersWithFriendRelation(
 		WHERE
 			u.id <> $1
 			AND COALESCE(u.display_name, '') ILIKE $2
+			AND NOT EXISTS (
+				SELECT 1
+				FROM user_blocks ub
+				WHERE
+					(ub.blocker_user_id = u.id AND ub.blocked_user_id = $1)
+					OR
+					(ub.blocker_user_id = $1 AND ub.blocked_user_id = u.id)
+			)
 		ORDER BY
 			CASE WHEN u.display_name IS NULL OR u.display_name = '' THEN 1 ELSE 0 END ASC,
 			COALESCE(u.display_name, u.email) ASC
