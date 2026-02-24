@@ -109,7 +109,6 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            ),
           ),
         ),
       ),
