@@ -10,6 +10,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -165,14 +166,20 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        final wide = isWide(dialogContext);
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
-          child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.all(compact ? 12 : 14),
-            child: Column(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: wide ? 420 : double.infinity,
+            ),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.all(compact ? 12 : 14),
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -205,7 +212,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     ),
                   ],
                 ),
-                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
+                if ((user.age != null && user.age! > 0) ||
+                    genderIcon != null) ...[
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
@@ -220,8 +228,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                         _buildInfoPill(
                           icon: genderIcon,
                           minWidth: 46,
-                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
-                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
+                          backgroundColor: female
+                              ? const Color(0xFFFCE7F3)
+                              : AppColors.accentSoft,
+                          foregroundColor: female
+                              ? const Color(0xFFBE185D)
+                              : AppColors.textPrimary,
                         ),
                     ],
                   ),
@@ -250,6 +262,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ],
             ),
           ),
+        ),
         );
       },
     );
@@ -622,12 +635,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           const SizedBox(height: 10),
           Text(
             subtitle,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
           if (actions.isNotEmpty) ...[
             const SizedBox(height: 10),
             Align(
-              alignment: alignActionsRight ? Alignment.centerRight : Alignment.centerLeft,
+              alignment: alignActionsRight
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
               child: Wrap(spacing: 8, runSpacing: 8, children: actions),
             ),
           ],
@@ -676,7 +692,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }) {
     if (items.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: [
           Center(
@@ -700,17 +717,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final hasMore = visibleCount < items.length;
     final totalCount = visibleCount + (hasMore ? 1 : 0);
 
+    final useGrid = isWide(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth > 900) {
+        if (useGrid) {
           return GridView.builder(
             padding: const EdgeInsets.all(16),
-            physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics()),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 520,
+              maxCrossAxisExtent: 380,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 2.6,
+              childAspectRatio: 2.4,
             ),
             itemCount: totalCount,
             itemBuilder: (context, index) {
@@ -733,7 +752,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
-          physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics()),
           itemCount: totalCount,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
@@ -911,7 +931,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     bool loading = false,
   }) {
     final enabled = onPressed != null && !loading;
-    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withValues(alpha: 0.55);
+    final borderColor = danger
+        ? Colors.red.shade300
+        : AppColors.accentStart.withValues(alpha: 0.55);
     final iconColor = danger ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,
@@ -980,7 +1002,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required VoidCallback onPressed,
     bool redFrame = false,
   }) {
-    final gradient = redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    final gradient =
+        redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
     final redBorderColor = Colors.red.shade400;
     final iconColor = redFrame ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
@@ -1201,10 +1224,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   suffixIcon: _searchController.text.isEmpty
                       ? null
                       : Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 6),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.red.shade400, width: 1.8),
+                            border: Border.all(
+                                color: Colors.red.shade400, width: 1.8),
                           ),
                           child: IconButton(
                             tooltip: 'Очистить поиск',
@@ -1220,7 +1245,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                               });
                               _searchFocusNode.requestFocus();
                             },
-                            icon: const Icon(Icons.close_rounded, color: Colors.red),
+                            icon: const Icon(Icons.close_rounded,
+                                color: Colors.red),
                           ),
                         ),
                 ),
@@ -1238,7 +1264,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: const [
           Center(
@@ -1252,7 +1279,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
     if (_isSearching) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: const [
           Center(
@@ -1270,7 +1298,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
     if (_searchResults.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: const [
           Center(
@@ -1284,8 +1313,45 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
     final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
     final itemCount = _searchResults.length + (showPagingLoader ? 1 : 0);
+
+    if (isWide(context)) {
+      return GridView.builder(
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 380,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 2.4,
+        ),
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index >= _searchResults.length) {
+            if (_searchHasMore && !_isSearchLoadingMore) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                unawaited(_loadMoreSearchResults());
+              });
+            }
+            return const Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              ),
+            );
+          }
+          return _buildSearchResultCard(_searchResults[index]);
+        },
+      );
+    }
+
     return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -1312,6 +1378,72 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         }
         return _buildSearchResultCard(_searchResults[index]);
       },
+    );
+  }
+
+  Widget _buildWideHeader(bool compact) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Друзья',
+          style: (compact
+                  ? Theme.of(context).textTheme.headlineMedium
+                  : Theme.of(context).textTheme.headlineSmall)
+              ?.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: _buildInlineSearchField(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineSearchField() {
+    return AnimatedBorderBox(
+      animateBorder: true,
+      borderWidth: 2,
+      borderRadius: AppRadius.input,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: 'Поиск по нику',
+          prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: _searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Очистить',
+                  onPressed: () {
+                    _searchDebounce?.cancel();
+                    _searchRevision++;
+                    _searchController.clear();
+                    setState(() {
+                      _searchResults = const [];
+                      _isSearching = false;
+                      _isSearchLoadingMore = false;
+                      _searchHasMore = false;
+                    });
+                    _searchFocusNode.requestFocus();
+                  },
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                ),
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        ),
+        onChanged: _onSearchTextChanged,
+        onSubmitted: (_) => _scheduleSearch(immediate: true),
+      ),
     );
   }
 
@@ -1392,11 +1524,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
   }
 
+  static const double _wideContentMaxWidth = 880;
+
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
+    final wide = isWide(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -1405,118 +1540,138 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Text(
-                    'Друзья',
-                    style: (compact
-                            ? Theme.of(context).textTheme.headlineMedium
-                            : Theme.of(context).textTheme.headlineSmall)
-                        ?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  _buildGradientHeaderIconButton(
-                    icon: _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
-                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
-                    onPressed: _toggleSearch,
-                    redFrame: _isSearchExpanded,
-                  ),
-                ],
-              ),
-            ),
-            AnimatedSwitcher(
-              duration: AppDurations.short,
-              child: _isSearchExpanded
-                  ? _buildSearchPanel()
-                  : const SizedBox(
-                      key: ValueKey('friends-search-collapsed'),
-                    ),
-            ),
-            if (_isSearchExpanded)
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () => _refreshSnapshot(refreshSearch: true),
-                  child: _buildSearchResults(),
-                ),
-              )
-            else ...[
-              Expanded(
-                child: DefaultTabController(
-                  key: ValueKey('friends-tabs-${tabs.map((e) => e.name).join("_")}'),
-                  length: tabs.length,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: TabBar(
-                          isScrollable: false,
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelStyle: TextStyle(
-                            fontSize: compact ? 12 : 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          unselectedLabelStyle: TextStyle(
-                            fontSize: compact ? 12 : 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          tabs: [
-                            for (final tab in tabs)
-                              Tab(
-                                child: _buildTabLabel(tab, friendsAsync.valueOrNull),
-                              ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: friendsAsync.when(
-                          data: (snapshot) {
-                            return RefreshIndicator(
-                              onRefresh: () => _refreshSnapshot(refreshSearch: false),
-                              child: TabBarView(
-                                physics: const NeverScrollableScrollPhysics(),
-                                children: [
-                                  for (final tab in tabs) _tabContent(tab, snapshot),
-                                ],
-                              ),
-                            );
-                          },
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.accentStart,
-                            ),
-                          ),
-                          error: (err, _) => Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline_rounded,
-                                    size: 46,
-                                    color: Colors.red.shade700,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    err.toString(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(color: Colors.red.shade700),
-                                  ),
-                                ],
-                              ),
-                            ),
+              child: wide
+                  ? _buildWideHeader(compact)
+                  : Row(
+                      children: [
+                        Text(
+                          'Друзья',
+                          style: (compact
+                                  ? Theme.of(context).textTheme.headlineMedium
+                                  : Theme.of(context).textTheme.headlineSmall)
+                              ?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const Spacer(),
+                        _buildGradientHeaderIconButton(
+                          icon: _isSearchExpanded
+                              ? Icons.search_off_rounded
+                              : Icons.search_rounded,
+                          tooltip: _isSearchExpanded
+                              ? 'Свернуть поиск'
+                              : 'Показать поиск',
+                          onPressed: _toggleSearch,
+                          redFrame: _isSearchExpanded,
+                        ),
+                      ],
+                    ),
+            ),
+            if (!wide)
+              AnimatedSwitcher(
+                duration: AppDurations.short,
+                child: _isSearchExpanded
+                    ? _buildSearchPanel()
+                    : const SizedBox(
+                        key: ValueKey('friends-search-collapsed'),
                       ),
-                    ],
+              ),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: wide ? _wideContentMaxWidth : double.infinity,
                   ),
+                  child: (wide && _searchController.text.trim().isNotEmpty) ||
+                          _isSearchExpanded
+                      ? RefreshIndicator(
+                          onRefresh: () =>
+                              _refreshSnapshot(refreshSearch: true),
+                          child: _buildSearchResults(),
+                        )
+                      : DefaultTabController(
+                          key: ValueKey(
+                              'friends-tabs-${tabs.map((e) => e.name).join("_")}'),
+                          length: tabs.length,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 6),
+                                child: TabBar(
+                                  isScrollable: false,
+                                  labelPadding:
+                                      const EdgeInsets.symmetric(horizontal: 2),
+                                  indicatorSize: TabBarIndicatorSize.tab,
+                                  labelStyle: TextStyle(
+                                    fontSize: compact ? 12 : 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  unselectedLabelStyle: TextStyle(
+                                    fontSize: compact ? 12 : 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  tabs: [
+                                    for (final tab in tabs)
+                                      Tab(
+                                        child: _buildTabLabel(
+                                            tab, friendsAsync.valueOrNull),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: friendsAsync.when(
+                                  data: (snapshot) {
+                                    return RefreshIndicator(
+                                      onRefresh: () => _refreshSnapshot(
+                                          refreshSearch: false),
+                                      child: TabBarView(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        children: [
+                                          for (final tab in tabs)
+                                            _tabContent(tab, snapshot),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  loading: () => const Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.accentStart,
+                                    ),
+                                  ),
+                                  error: (err, _) => Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.error_outline_rounded,
+                                            size: 46,
+                                            color: Colors.red.shade700,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            err.toString(),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                color: Colors.red.shade700),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
               ),
-            ],
+            ),
           ],
         ),
       ),
