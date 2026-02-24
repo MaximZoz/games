@@ -36,6 +36,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     Icons.person_rounded,
     Icons.child_care_rounded,
   ];
+  static final Map<int, MemoryImage> _base64AvatarCache = <int, MemoryImage>{};
+  static const int _base64AvatarCacheLimit = 180;
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -61,6 +63,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   void _showMessage(String? error, String? success) {}
+
+  MemoryImage? _memoryImageFromBase64(String rawValue) {
+    var raw = rawValue.trim();
+    if (raw.startsWith('base64,')) raw = raw.substring(7);
+    if (raw.isEmpty) return null;
+    final key = Object.hash(raw.length, raw.hashCode);
+    final cached = _base64AvatarCache[key];
+    if (cached != null) return cached;
+    try {
+      final image = MemoryImage(base64Decode(raw));
+      _base64AvatarCache[key] = image;
+      if (_base64AvatarCache.length > _base64AvatarCacheLimit) {
+        _base64AvatarCache.remove(_base64AvatarCache.keys.first);
+      }
+      return image;
+    } catch (_) {
+      return null;
+    }
+  }
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -253,15 +274,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.isNotEmpty) {
-      var raw = user.avatarValue!;
-      if (raw.startsWith('base64,')) raw = raw.substring(7);
-      try {
-        final bytes = base64Decode(raw);
+      final memoryImage = _memoryImageFromBase64(user.avatarValue!);
+      if (memoryImage != null) {
         return CircleAvatar(
           radius: 20,
-          backgroundImage: MemoryImage(bytes),
+          backgroundImage: memoryImage,
         );
-      } catch (_) {}
+      }
     }
 
     if (user.avatarKind == 'preset' && user.avatarValue != null) {
@@ -1144,6 +1163,21 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
+  List<_FriendsTabKind> _visibleTabs(FriendsSnapshot? snapshot) {
+    if (snapshot == null) {
+      return const [
+        _FriendsTabKind.friends,
+        _FriendsTabKind.incoming,
+        _FriendsTabKind.outgoing,
+      ];
+    }
+
+    final result = <_FriendsTabKind>[_FriendsTabKind.friends];
+    if (snapshot.incoming.isNotEmpty) result.add(_FriendsTabKind.incoming);
+    if (snapshot.outgoing.isNotEmpty) result.add(_FriendsTabKind.outgoing);
+    return result;
+  }
+
   String _tabTitle(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
     switch (tab) {
       case _FriendsTabKind.friends:
@@ -1209,11 +1243,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    const tabs = <_FriendsTabKind>[
-      _FriendsTabKind.friends,
-      _FriendsTabKind.incoming,
-      _FriendsTabKind.outgoing,
-    ];
+    final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -1263,7 +1293,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             else ...[
               Expanded(
                 child: DefaultTabController(
-                  key: const ValueKey('friends-tabs-fixed'),
+                  key: ValueKey('friends-tabs-${tabs.map((e) => e.name).join("_")}'),
                   length: tabs.length,
                   child: Column(
                     children: [
