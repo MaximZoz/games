@@ -19,21 +19,6 @@ const List<_NavItem> _navItems = [
   _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
 ];
 
-int _selectedIndexForPath(String path) {
-  final n = _normalizePath(path);
-  if (n.startsWith('/chats')) {
-    return _navItems.indexWhere((e) => e.path == '/chats');
-  }
-  final i = _navItems.indexWhere((e) => e.path == n);
-  if (i >= 0) return i;
-  if (n == '/achievements' || n == '/coins') return 1;
-  return 0;
-}
-
-String _normalizePath(String path) {
-  return path.endsWith('/') && path.length > 1 ? path.substring(0, path.length - 1) : path;
-}
-
 class _NavItem {
   const _NavItem({required this.path, required this.icon, required this.label});
   final String path;
@@ -44,10 +29,10 @@ class _NavItem {
 class AppShell extends ConsumerWidget {
   const AppShell({
     super.key,
-    required this.child,
+    required this.navigationShell,
   });
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,24 +46,29 @@ class AppShell extends ConsumerWidget {
     final inChatRoom = path.startsWith('/chats/');
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
-    final selectedIndex = _selectedIndexForPath(path);
+    final selectedIndex = navigationShell.currentIndex;
     final isAuthorized = authState.valueOrNull != null;
 
-    Future<void> navigateWithPrefetch(int i) async {
+    void navigateWithPrefetch(int i) {
+      final sameBranch = i == navigationShell.currentIndex;
+      navigationShell.goBranch(
+        i,
+        initialLocation: sameBranch,
+      );
+
+      if (!isAuthorized) return;
       final target = _navItems[i].path;
-      if (isAuthorized) {
-        if (target == '/chats') {
-          try {
-            await ref.read(chatsListProvider.future);
-          } catch (_) {}
-        } else if (target == '/friends') {
-          try {
-            await ref.read(friendsSnapshotProvider.future);
-          } catch (_) {}
-        }
-      }
-      if (context.mounted) {
-        context.go(target);
+      if (target == '/chats') {
+        unawaited(
+          ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
+        );
+        unawaited(
+          ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
+        );
+      } else if (target == '/friends') {
+        unawaited(
+          ref.read(friendsSnapshotProvider.future).then((_) {}, onError: (_, __) {}),
+        );
       }
     }
 
@@ -177,12 +167,12 @@ class AppShell extends ConsumerWidget {
             ),
             Expanded(
               child: narrow
-                  ? SizedBox.expand(child: child)
+                  ? SizedBox.expand(child: navigationShell)
                   : Row(
                       children: [
                         NavigationRail(
                           selectedIndex: selectedIndex,
-                          onDestinationSelected: (i) => unawaited(navigateWithPrefetch(i)),
+                          onDestinationSelected: navigateWithPrefetch,
                           backgroundColor: Colors.transparent,
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
@@ -202,7 +192,7 @@ class AppShell extends ConsumerWidget {
                           }).toList(),
                         ),
                         Expanded(
-                          child: SizedBox.expand(child: child),
+                          child: SizedBox.expand(child: navigationShell),
                         ),
                       ],
                     ),
@@ -215,7 +205,7 @@ class AppShell extends ConsumerWidget {
                   child: MediaQuery.withNoTextScaling(
                     child: BottomNavigationBar(
                       currentIndex: selectedIndex,
-                      onTap: (i) => unawaited(navigateWithPrefetch(i)),
+                      onTap: navigateWithPrefetch,
                       type: BottomNavigationBarType.fixed,
                       elevation: 0,
                       backgroundColor: Colors.transparent,

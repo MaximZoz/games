@@ -479,6 +479,8 @@ func (h *ChatsHandler) Unblock(w http.ResponseWriter, r *http.Request) {
 		writeChatError(w, err)
 		return
 	}
+	h.publishChatListChanged(userID, targetID)
+	h.publishFriendsUpdated(userID, targetID)
 	w.WriteHeader(http.StatusNoContent)
 }
 

@@ -92,70 +92,96 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/',
-            pageBuilder: (_, state) => _noTransitionPage(state, const HomeScreen()),
-          ),
-          GoRoute(
-            path: '/profile',
-            pageBuilder: (_, state) => _noTransitionPage(state, const ProfileScreen()),
-          ),
-          GoRoute(
-            path: '/friends',
-            pageBuilder: (_, state) => _noTransitionPage(state, const FriendsScreen()),
-          ),
-          GoRoute(
-            path: '/chats',
-            pageBuilder: (_, state) => _noTransitionPage(state, const ChatsScreen()),
-          ),
-          GoRoute(
-            path: '/chats/:chatId',
-            pageBuilder: (_, state) => _noTransitionPage(
-              state,
-              ChatRoomScreen(
-                chatID: state.pathParameters['chatId'] ?? '',
-                peerName: state.uri.queryParameters['name'],
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => AppShell(
+          navigationShell: navigationShell,
+        ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                pageBuilder: (_, state) => _noTransitionPage(state, const HomeScreen()),
               ),
-            ),
+            ],
           ),
-          GoRoute(
-            path: '/tournaments',
-            pageBuilder: (_, state) => _noTransitionPage(state, const TournamentsScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                pageBuilder: (_, state) => _noTransitionPage(state, const ProfileScreen()),
+              ),
+              GoRoute(
+                path: '/achievements',
+                pageBuilder: (_, state) => _noTransitionPage(state, const AchievementsScreen()),
+              ),
+              GoRoute(
+                path: '/coins',
+                pageBuilder: (_, state) => _noTransitionPage(state, const CoinsScreen()),
+              ),
+              GoRoute(
+                path: '/login',
+                pageBuilder: (_, state) => _noTransitionPage(state, const LoginScreen()),
+              ),
+              GoRoute(
+                path: '/register',
+                pageBuilder: (_, state) => _noTransitionPage(state, const RegisterScreen()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/games',
-            pageBuilder: (_, state) => _noTransitionPage(state, const GamesScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/friends',
+                pageBuilder: (_, state) => _noTransitionPage(state, const FriendsScreen()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/inventory',
-            pageBuilder: (_, state) => _noTransitionPage(state, const InventoryScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/chats',
+                pageBuilder: (_, state) => _noTransitionPage(state, const ChatsScreen()),
+              ),
+              GoRoute(
+                path: '/chats/:chatId',
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  ChatRoomScreen(
+                    chatID: state.pathParameters['chatId'] ?? '',
+                    peerName: state.uri.queryParameters['name'],
+                  ),
+                ),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/achievements',
-            pageBuilder: (_, state) => _noTransitionPage(state, const AchievementsScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/games',
+                pageBuilder: (_, state) => _noTransitionPage(state, const GamesScreen()),
+              ),
+              GoRoute(
+                path: '/tournaments',
+                pageBuilder: (_, state) => _noTransitionPage(state, const TournamentsScreen()),
+              ),
+              GoRoute(
+                path: '/inventory',
+                pageBuilder: (_, state) => _noTransitionPage(state, const InventoryScreen()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/settings',
-            pageBuilder: (_, state) => _noTransitionPage(state, const SettingsScreen()),
-          ),
-          GoRoute(
-            path: '/coins',
-            pageBuilder: (_, state) => _noTransitionPage(state, const CoinsScreen()),
-          ),
-          GoRoute(
-            path: '/login',
-            pageBuilder: (_, state) => _noTransitionPage(state, const LoginScreen()),
-          ),
-          GoRoute(
-            path: '/register',
-            pageBuilder: (_, state) => _noTransitionPage(state, const RegisterScreen()),
-          ),
-          GoRoute(
-            path: '/admin',
-            pageBuilder: (_, state) => _noTransitionPage(state, const AdminScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                pageBuilder: (_, state) => _noTransitionPage(state, const SettingsScreen()),
+              ),
+              GoRoute(
+                path: '/admin',
+                pageBuilder: (_, state) => _noTransitionPage(state, const AdminScreen()),
+              ),
+            ],
           ),
         ],
       ),

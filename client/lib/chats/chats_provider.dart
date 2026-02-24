@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:multigames_client/core/api_config.dart';
-import 'package:multigames_client/core/realtime_ws.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 
 final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
   return ChatsRepository(authRepository: ref.watch(authRepositoryProvider));
@@ -20,11 +18,7 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
   }
 
   final controller = StreamController<List<ChatPreviewItem>>();
-  RealtimeSocket? socket;
-  StreamSubscription<String>? socketSubscription;
-  Timer? reconnectTimer;
   var loadInFlight = false;
-  late void Function() scheduleReconnect;
 
   Future<void> load() async {
     if (loadInFlight) return;
@@ -39,59 +33,69 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
     }
   }
 
-  Future<void> connect() async {
-    await socketSubscription?.cancel();
-    socket?.close();
-    socket = null;
-
-    final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) {
-      scheduleReconnect();
-      return;
-    }
-
-    final uri = buildWebSocketUri(
-      '/api/ws',
-      queryParameters: {'access_token': token},
-    );
-    final nextSocket = connectRealtimeSocket(uri);
-    socket = nextSocket;
-    socketSubscription = nextSocket.messages.listen(
-      (raw) {
-        try {
-          final payload = jsonDecode(raw);
-          if (payload is! Map) return;
-          final type = payload['type']?.toString() ?? '';
-          if (type == 'chat_message' || type == 'chat_list_changed' || type == 'chat_read') {
-            unawaited(load());
-          }
-        } catch (_) {}
-      },
-      onError: (_) => scheduleReconnect(),
-      onDone: scheduleReconnect,
-      cancelOnError: false,
-    );
-
-    // На переподключении догружаем состояние, чтобы не пропустить события в оффлайне.
-    unawaited(load());
-  }
-
-  scheduleReconnect = () {
-    if (reconnectTimer != null || controller.isClosed) return;
-    reconnectTimer = Timer(const Duration(seconds: 2), () {
-      reconnectTimer = null;
-      unawaited(connect());
-    });
-  };
+  ref.listen<AsyncValue<Map<String, dynamic>>>(
+    realtimeEventsProvider,
+    (_, next) {
+      final type = next.valueOrNull?['type']?.toString() ?? '';
+      if (type == 'chat_message' ||
+          type == 'chat_list_changed' ||
+          type == 'chat_read' ||
+          type == 'realtime_connected') {
+        unawaited(load());
+      }
+    },
+  );
 
   unawaited(load());
-  unawaited(connect());
 
   ref.onDispose(() {
     keepAliveLink.close();
-    reconnectTimer?.cancel();
-    unawaited(socketSubscription?.cancel());
-    socket?.close();
+    unawaited(controller.close());
+  });
+
+  return controller.stream;
+});
+
+final blockedUsersProvider = StreamProvider.autoDispose<List<BlockedChatUserItem>>((ref) {
+  final keepAliveLink = ref.keepAlive();
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user == null) {
+    keepAliveLink.close();
+    return Stream<List<BlockedChatUserItem>>.value(const []);
+  }
+
+  final controller = StreamController<List<BlockedChatUserItem>>();
+  var loadInFlight = false;
+
+  Future<void> load() async {
+    if (loadInFlight) return;
+    loadInFlight = true;
+    try {
+      final blocked = await ref.read(chatsRepositoryProvider).listBlockedUsers();
+      if (!controller.isClosed) controller.add(blocked);
+    } catch (e, st) {
+      if (!controller.isClosed) controller.addError(e, st);
+    } finally {
+      loadInFlight = false;
+    }
+  }
+
+  ref.listen<AsyncValue<Map<String, dynamic>>>(
+    realtimeEventsProvider,
+    (_, next) {
+      final type = next.valueOrNull?['type']?.toString() ?? '';
+      if (type == 'chat_list_changed' ||
+          type == 'friends_updated' ||
+          type == 'realtime_connected') {
+        unawaited(load());
+      }
+    },
+  );
+
+  unawaited(load());
+
+  ref.onDispose(() {
+    keepAliveLink.close();
     unawaited(controller.close());
   });
 
@@ -101,6 +105,11 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
 final chatsUnreadCountProvider = Provider<int>((ref) {
   final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
   return chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
+});
+
+final blockedUsersCountProvider = Provider<int>((ref) {
+  final blocked = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
+  return blocked.length;
 });
 
 Future<void>? _refreshChatsInFlight;
@@ -138,6 +147,45 @@ Future<void> refreshChatsList(
   } finally {
     if (identical(_refreshChatsInFlight, request)) {
       _refreshChatsInFlight = null;
+    }
+  }
+}
+
+Future<void>? _refreshBlockedUsersInFlight;
+DateTime? _lastBlockedUsersRefreshAt;
+const _minBlockedUsersRefreshInterval = Duration(milliseconds: 400);
+
+Future<void> refreshBlockedUsers(
+  WidgetRef ref, {
+  bool force = false,
+}) async {
+  final inFlight = _refreshBlockedUsersInFlight;
+  if (inFlight != null) {
+    await inFlight;
+    if (!force) return;
+  }
+
+  final now = DateTime.now();
+  final lastRefreshAt = _lastBlockedUsersRefreshAt;
+  if (!force &&
+      lastRefreshAt != null &&
+      now.difference(lastRefreshAt) < _minBlockedUsersRefreshInterval) {
+    return;
+  }
+
+  late Future<void> request;
+  request = () async {
+    ref.invalidate(blockedUsersProvider);
+    await ref.read(blockedUsersProvider.future);
+    _lastBlockedUsersRefreshAt = DateTime.now();
+  }();
+
+  _refreshBlockedUsersInFlight = request;
+  try {
+    await request;
+  } finally {
+    if (identical(_refreshBlockedUsersInFlight, request)) {
+      _refreshBlockedUsersInFlight = null;
     }
   }
 }

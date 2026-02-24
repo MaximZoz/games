@@ -28,7 +28,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   bool _isOpeningBlockedUsersDialog = false;
   bool _isStartingChat = false;
   bool _isNavigatingToChat = false;
-  bool _hasBlockedUsers = false;
   final Set<String> _chatActionInFlight = <String>{};
   late final AnimationController _borderAnimationController;
   Future<List<FriendItem>>? _friendsLoadInFlight;
@@ -46,7 +45,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
       duration: const Duration(milliseconds: 2600),
     )..repeat();
     unawaited(_warmUpStartChatData());
-    unawaited(_refreshBlockedUsersPresence());
+    unawaited(
+      ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
+    );
   }
 
   @override
@@ -72,30 +73,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
       await _loadFriendsForStartChat();
     } catch (_) {
       // Тихий прогрев: ошибки покажем только если пользователь откроет диалог.
-    }
-  }
-
-  Future<void> _refreshBlockedUsersPresence({bool silent = true}) async {
-    try {
-      final blocked = await ref.read(chatsRepositoryProvider).listBlockedUsers();
-      if (!mounted) return;
-      final hasBlocked = blocked.isNotEmpty;
-      if (hasBlocked != _hasBlockedUsers) {
-        setState(() => _hasBlockedUsers = hasBlocked);
-      }
-    } on ChatException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!silent && mounted) {
-        setState(() => _error = e.message);
-      }
-    } catch (_) {
-      if (!silent && mounted) {
-        setState(() => _error = 'Не удалось загрузить список блокировок');
-      }
     }
   }
 
@@ -151,7 +128,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     setState(() => _error = null);
     try {
       await refreshChatsList(ref, force: true);
-      await _refreshBlockedUsersPresence();
+      await refreshBlockedUsers(ref, force: true);
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -196,224 +173,203 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     }
     setState(() => _isOpeningBlockedUsersDialog = true);
     try {
-      Future<List<BlockedChatUserItem>> blockedFuture =
-          ref.read(chatsRepositoryProvider).listBlockedUsers();
-
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (sheetContext) {
           final unblocking = <String>{};
+          final locallyHiddenUserIDs = <String>{};
           return StatefulBuilder(
             builder: (context, setSheetState) {
-              return SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 12,
-                    right: 12,
-                    bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
-                  ),
-                  child: GradientCard(
-                    animate: false,
-                    margin: EdgeInsets.zero,
-                    padding: const EdgeInsets.all(12),
-                    child: SizedBox(
-                      height: 420,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'Заблокированные пользователи',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
+              return Consumer(
+                builder: (context, modalRef, _) {
+                  final blockedAsync = modalRef.watch(blockedUsersProvider);
+                  final blockedRaw = blockedAsync.valueOrNull ?? const <BlockedChatUserItem>[];
+                  final blocked = blockedRaw
+                      .where((entry) => !locallyHiddenUserIDs.contains(entry.user.id))
+                      .toList(growable: false);
+
+                  Widget content;
+                  if (blockedAsync.isLoading && blockedRaw.isEmpty) {
+                    content = const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  } else if (blockedAsync.hasError && blockedRaw.isEmpty) {
+                    final err = blockedAsync.error;
+                    final message = err is ChatException ? err.message : 'Не удалось загрузить список';
+                    content = ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: [
+                        const SizedBox(height: 80),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              message,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.red.shade700),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Expanded(
-                            child: FutureBuilder<List<BlockedChatUserItem>>(
-                              future: blockedFuture,
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState != ConnectionState.done) {
-                                  return const Center(
-                                    child: SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  );
-                                }
-
-                                if (snapshot.hasError) {
-                                  final err = snapshot.error;
-                                  final message = err is ChatException
-                                      ? err.message
-                                      : 'Не удалось загрузить список';
-                                  return ListView(
-                                    physics: const AlwaysScrollableScrollPhysics(
-                                      parent: ClampingScrollPhysics(),
-                                    ),
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: OutlinedButton.icon(
+                            onPressed: () => unawaited(refreshBlockedUsers(modalRef, force: true)),
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Повторить'),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else if (blocked.isEmpty) {
+                    content = ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: const [
+                        SizedBox(height: 80),
+                        Center(
+                          child: Text(
+                            'Список пуст',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    content = ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      itemCount: blocked.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, index) {
+                        final entry = blocked[index];
+                        final user = entry.user;
+                        final busy = unblocking.contains(user.id);
+                        return Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.black.withOpacity(0.08),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                _AvatarDot(user: user),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const SizedBox(height: 80),
-                                      Center(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                                          child: Text(
-                                            message,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(color: Colors.red.shade700),
-                                          ),
+                                      Text(
+                                        _peerTitle(user),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      const SizedBox(height: 12),
-                                      Center(
-                                        child: OutlinedButton.icon(
-                                          onPressed: () {
-                                            setSheetState(() {
-                                              blockedFuture = ref
-                                                  .read(chatsRepositoryProvider)
-                                                  .listBlockedUsers();
-                                            });
-                                          },
-                                          icon: const Icon(Icons.refresh_rounded),
-                                          label: const Text('Повторить'),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Заблокирован: ${_formatDateTime(entry.blockedAt)}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],
-                                  );
-                                }
-
-                                final blocked = snapshot.data ?? const <BlockedChatUserItem>[];
-                                final hasBlockedNow = blocked.isNotEmpty;
-                                if (hasBlockedNow != _hasBlockedUsers) {
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    if (!mounted) return;
-                                    setState(() => _hasBlockedUsers = hasBlockedNow);
-                                  });
-                                }
-                                if (blocked.isEmpty) {
-                                  return ListView(
-                                    physics: const AlwaysScrollableScrollPhysics(
-                                      parent: ClampingScrollPhysics(),
-                                    ),
-                                    children: const [
-                                      SizedBox(height: 80),
-                                      Center(
-                                        child: Text(
-                                          'Список пуст',
-                                          style: TextStyle(color: AppColors.textSecondary),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }
-
-                                return ListView.separated(
-                                  physics: const AlwaysScrollableScrollPhysics(
-                                    parent: ClampingScrollPhysics(),
                                   ),
-                                  itemCount: blocked.length,
-                                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                  itemBuilder: (_, index) {
-                                    final entry = blocked[index];
-                                    final user = entry.user;
-                                    final busy = unblocking.contains(user.id);
-                                    return Material(
-                                      color: Colors.transparent,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: Colors.black.withOpacity(0.08),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            _AvatarDot(user: user),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    _peerTitle(user),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      color: AppColors.textPrimary,
-                                                      fontSize: 15,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    'Заблокирован: ${_formatDateTime(entry.blockedAt)}',
-                                                    style: const TextStyle(
-                                                      color: AppColors.textSecondary,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            TextButton(
-                                              onPressed: busy
-                                                  ? null
-                                                  : () async {
-                                                      setSheetState(() => unblocking.add(user.id));
-                                                      try {
-                                                        await ref
-                                                            .read(chatsRepositoryProvider)
-                                                            .unblockUser(user.id);
-                                                        await refreshChatsList(ref, force: true);
-                                                        await refreshFriendsSnapshot(ref);
-                                                        if (!mounted) return;
-                                                        setSheetState(() {
-                                                          blockedFuture = ref
-                                                              .read(chatsRepositoryProvider)
-                                                              .listBlockedUsers();
-                                                        });
-                                                        unawaited(_refreshBlockedUsersPresence());
-                                                      } on ChatException catch (e) {
-                                                        if (e.statusCode == 401) {
-                                                          await ref
-                                                              .read(authStateProvider.notifier)
-                                                              .logout();
-                                                          if (mounted) context.go('/login');
-                                                          return;
-                                                        }
-                                                        if (!mounted) return;
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          SnackBar(content: Text(e.message)),
-                                                        );
-                                                      } finally {
-                                                        if (mounted) {
-                                                          setSheetState(() => unblocking.remove(user.id));
-                                                        }
-                                                      }
-                                                    },
-                                              child: const Text('Разблокировать'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
+                                ),
+                                TextButton(
+                                  onPressed: busy
+                                      ? null
+                                      : () async {
+                                          setSheetState(() => unblocking.add(user.id));
+                                          try {
+                                            await modalRef
+                                                .read(chatsRepositoryProvider)
+                                                .unblockUser(user.id);
+                                            if (!mounted) return;
+                                            setSheetState(
+                                              () => locallyHiddenUserIDs.add(user.id),
+                                            );
+                                          } on ChatException catch (e) {
+                                            if (e.statusCode == 401) {
+                                              await modalRef
+                                                  .read(authStateProvider.notifier)
+                                                  .logout();
+                                              if (mounted) context.go('/login');
+                                              return;
+                                            }
+                                            if (!mounted) return;
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(e.message)),
+                                            );
+                                          } finally {
+                                            if (mounted) {
+                                              setSheetState(() => unblocking.remove(user.id));
+                                            }
+                                          }
+                                        },
+                                  child: const Text('Разблокировать'),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        );
+                      },
+                    );
+                  }
+
+                  return SafeArea(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
+                      ),
+                      child: GradientCard(
+                        animate: false,
+                        margin: EdgeInsets.zero,
+                        padding: const EdgeInsets.all(12),
+                        child: SizedBox(
+                          height: 420,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'Заблокированные пользователи',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Expanded(child: content),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           );
@@ -430,7 +386,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     try {
       final chatID = await ref.read(chatsRepositoryProvider).startChat(pickedUser.id);
       if (!mounted || chatID.isEmpty) return;
-      unawaited(refreshChatsList(ref));
       _openChatRoute(
         chatID: chatID,
         peerName: _friendTitle(pickedUser),
@@ -518,7 +473,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     setState(() => _chatActionInFlight.add(actionKey));
     try {
       await ref.read(chatsRepositoryProvider).clearChat(item.chatID);
-      await refreshChatsList(ref, force: true);
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -549,9 +503,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
     setState(() => _chatActionInFlight.add(actionKey));
     try {
       await ref.read(chatsRepositoryProvider).blockUser(userID);
-      await refreshChatsList(ref, force: true);
-      await refreshFriendsSnapshot(ref);
-      await _refreshBlockedUsersPresence();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -1071,7 +1022,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final chatsAsync = ref.watch(chatsListProvider);
+    final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
     final chats = chatsAsync.valueOrNull ?? const <ChatPreviewItem>[];
+    final hasBlockedUsers = blockedUsers.isNotEmpty;
     final providerError = chatsAsync.whenOrNull(
       error: (err, _) => err is ChatException ? err.message : 'Не удалось загрузить чаты',
     );
@@ -1103,7 +1056,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                         ),
                   ),
                   const Spacer(),
-                  if (_hasBlockedUsers)
+                  if (hasBlockedUsers)
                     IconButton(
                       onPressed: actionBusy ? null : _openBlockedUsersDialog,
                       tooltip: 'Заблокированные пользователи',

@@ -7,24 +7,26 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
+final homeStartMessageProvider = FutureProvider.autoDispose<String>((ref) async {
+  ref.keepAlive();
+  final response = await ApiClient.get(
+    Uri.parse('$apiBaseUrl/api/start'),
+    operation: 'HomeScreen.fetchServerStart',
+  );
+  if (response.statusCode == 200) {
+    return response.body.trim();
+  }
+  throw Exception('Server: ${response.statusCode}');
+});
+
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  Future<String> _fetchServerStart() async {
-    final response = await ApiClient.get(
-      Uri.parse('$apiBaseUrl/api/start'),
-      operation: 'HomeScreen.fetchServerStart',
-    );
-    if (response.statusCode == 200) {
-      return response.body.trim();
-    }
-    throw Exception('Server: ${response.statusCode}');
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
+    final serverStartAsync = ref.watch(homeStartMessageProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -34,9 +36,9 @@ class HomeScreen extends ConsumerWidget {
           child: GradientCard(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
             child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
                   'MultiGames',
                   style: TextStyle(
                     fontSize: 32,
@@ -45,54 +47,47 @@ class HomeScreen extends ConsumerWidget {
                     letterSpacing: -0.5,
                     decoration: TextDecoration.none,
                   ),
+                ),
+                const SizedBox(height: 24),
+                serverStartAsync.when(
+                  loading: () => const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.accentStart,
+                    ),
                   ),
-                  const SizedBox(height: 24),
-                  FutureBuilder<String>(
-                  future: _fetchServerStart(),
-                  builder: (context, snapshot) {
-                    final hasData = snapshot.hasData;
-                    final error = snapshot.error;
-                    final serverMessage = hasData ? snapshot.data! : null;
-
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accentStart,
-                        ),
-                      );
+                  data: (serverMessage) {
+                    if (serverMessage.isEmpty) {
+                      return const SizedBox.shrink();
                     }
-                    if (hasData && serverMessage != null && serverMessage.isNotEmpty) {
-                      return Text(
-                        serverMessage,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: AppColors.textSecondary,
-                          decoration: TextDecoration.none,
-                        ),
-                        textAlign: TextAlign.center,
-                      );
-                    }
-                    if (error != null) {
-                      final message = error is http.ClientException
-                          ? 'Не удалось подключиться к серверу. Проверьте интернет или что сервер запущен.'
-                          : 'Ошибка: $error';
-                      return Text(
-                        message,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.red.shade700,
-                          decoration: TextDecoration.none,
-                        ),
-                        textAlign: TextAlign.center,
-                      );
-                    }
-                    return const SizedBox.shrink();
+                    return Text(
+                      serverMessage,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: AppColors.textSecondary,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
                   },
-                  ),
-                  authState.when(
+                  error: (error, _) {
+                    final message = error is http.ClientException
+                        ? 'Не удалось подключиться к серверу. Проверьте интернет или что сервер запущен.'
+                        : 'Ошибка: $error';
+                    return Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red.shade700,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
+                authState.when(
                   data: (user) {
                     if (user != null) {
                       return Padding(
@@ -111,12 +106,13 @@ class HomeScreen extends ConsumerWidget {
                   },
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
             ),
           ),
         ),
+      ),
     );
   }
 }
