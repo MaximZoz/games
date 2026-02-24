@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -10,6 +9,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -1282,15 +1282,13 @@ class _AvatarDot extends StatelessWidget {
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
-      var raw = user.avatarValue!.trim();
-      if (raw.startsWith('base64,')) raw = raw.substring(7);
-      try {
-        final bytes = base64Decode(raw);
+      final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
+      if (memoryImage != null) {
         return CircleAvatar(
           radius: radius,
-          backgroundImage: MemoryImage(bytes),
+          backgroundImage: memoryImage,
         );
-      } catch (_) {}
+      }
     }
 
     if (user.avatarKind == 'preset') {

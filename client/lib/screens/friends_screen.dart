@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -36,8 +36,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     Icons.person_rounded,
     Icons.child_care_rounded,
   ];
-  static final Map<int, MemoryImage> _base64AvatarCache = <int, MemoryImage>{};
-  static const int _base64AvatarCacheLimit = 180;
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -63,25 +61,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   void _showMessage(String? error, String? success) {}
-
-  MemoryImage? _memoryImageFromBase64(String rawValue) {
-    var raw = rawValue.trim();
-    if (raw.startsWith('base64,')) raw = raw.substring(7);
-    if (raw.isEmpty) return null;
-    final key = Object.hash(raw.length, raw.hashCode);
-    final cached = _base64AvatarCache[key];
-    if (cached != null) return cached;
-    try {
-      final image = MemoryImage(base64Decode(raw));
-      _base64AvatarCache[key] = image;
-      if (_base64AvatarCache.length > _base64AvatarCacheLimit) {
-        _base64AvatarCache.remove(_base64AvatarCache.keys.first);
-      }
-      return image;
-    } catch (_) {
-      return null;
-    }
-  }
 
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
@@ -274,7 +253,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.isNotEmpty) {
-      final memoryImage = _memoryImageFromBase64(user.avatarValue!);
+      final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
       if (memoryImage != null) {
         return CircleAvatar(
           radius: 20,

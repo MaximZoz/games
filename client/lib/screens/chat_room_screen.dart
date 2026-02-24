@@ -11,6 +11,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/realtime_ws.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
@@ -513,15 +514,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
-      var raw = user.avatarValue!.trim();
-      if (raw.startsWith('base64,')) raw = raw.substring(7);
-      try {
-        final bytes = base64Decode(raw);
+      final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
+      if (memoryImage != null) {
         return CircleAvatar(
           radius: radius,
-          backgroundImage: MemoryImage(bytes),
+          backgroundImage: memoryImage,
         );
-      } catch (_) {}
+      }
     }
 
     if (user != null && user.avatarKind == 'preset') {
