@@ -841,9 +841,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceCard.withOpacity(0.7),
+                            color: AppColors.surfaceCard.withValues(alpha: 0.7),
                             borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: Colors.black.withOpacity(0.08)),
+                            border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
                           ),
                           child: Text(
                             entry.headerLabel!,
@@ -872,8 +872,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: mine
-                                ? AppColors.accentStart.withOpacity(0.35)
-                                : Colors.black.withOpacity(0.08),
+                                ? AppColors.accentStart.withValues(alpha: 0.35)
+                                : Colors.black.withValues(alpha: 0.08),
                           ),
                         ),
                         child: Column(

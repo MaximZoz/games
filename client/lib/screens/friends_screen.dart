@@ -364,7 +364,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
-      await ref.refresh(friendsSnapshotProvider.future);
+      ref.invalidate(friendsSnapshotProvider);
+      await ref.read(friendsSnapshotProvider.future);
       if (mounted) {
         setState(() {
           _friendsVisibleCount = _pageSize;
@@ -910,7 +911,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     bool loading = false,
   }) {
     final enabled = onPressed != null && !loading;
-    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withOpacity(0.55);
+    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withValues(alpha: 0.55);
     final iconColor = danger ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,

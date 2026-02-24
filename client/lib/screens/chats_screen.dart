@@ -399,7 +399,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                               ),
                             ),
                             child: Row(
@@ -449,10 +449,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                                               await modalRef
                                                   .read(authStateProvider.notifier)
                                                   .logout();
-                                              if (mounted) context.go('/login');
+                                              if (context.mounted) {
+                                                context.go('/login');
+                                              }
                                               return;
                                             }
-                                            if (!mounted) return;
+                                            if (!context.mounted) return;
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(content: Text(e.message)),
                                             );
@@ -709,7 +711,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
         await _blockChatUserFromList(item);
       }
     } finally {
-      Slidable.of(actionContext)?.close();
+      if (actionContext.mounted) {
+        Slidable.of(actionContext)?.close();
+      }
     }
   }
 
@@ -1170,7 +1174,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> with SingleTickerProv
                 color: AppColors.surfaceCard,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.accentStart.withOpacity(0.5),
+                  color: AppColors.accentStart.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
               ),
