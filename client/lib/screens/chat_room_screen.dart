@@ -51,6 +51,7 @@ const List<IconData> _chatAvatarIcons = [
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     with WidgetsBindingObserver {
   static const int _messagesPageSize = 20;
+  static const int _messagesInitialLoad = 10;
   static const double _loadOlderThreshold = 120;
 
   final TextEditingController _textController = TextEditingController();
@@ -228,7 +229,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     try {
       final list = await ref.read(chatsRepositoryProvider).listMessages(
             widget.chatID,
-            limit: _messagesPageSize,
+            limit: initial ? _messagesInitialLoad : _messagesPageSize,
           );
       if (!mounted) return;
 
@@ -237,6 +238,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final hasNewTail = previousLastID != nextLastID;
       final changed = !_areMessagesEqual(_messages, list);
 
+      final limitUsed = initial ? _messagesInitialLoad : _messagesPageSize;
       if (_loading || _error != null || changed) {
         setState(() {
           _messages = list;
@@ -246,12 +248,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           _error = null;
           _loading = false;
           _loadingOlder = false;
-          _hasMoreOlder = list.length >= _messagesPageSize;
+          _hasMoreOlder = list.length >= limitUsed;
         });
-      } else if (_loadingOlder || _hasMoreOlder != (list.length >= _messagesPageSize)) {
+      } else if (_loadingOlder || _hasMoreOlder != (list.length >= limitUsed)) {
         setState(() {
           _loadingOlder = false;
-          _hasMoreOlder = list.length >= _messagesPageSize;
+          _hasMoreOlder = list.length >= limitUsed;
         });
       }
 

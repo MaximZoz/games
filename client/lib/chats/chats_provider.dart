@@ -24,7 +24,7 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
     if (loadInFlight) return;
     loadInFlight = true;
     try {
-      final chats = await ref.read(chatsRepositoryProvider).listChats(limit: 100, offset: 0);
+      final chats = await ref.read(chatsRepositoryProvider).listChats(limit: 10, offset: 0);
       if (!controller.isClosed) controller.add(chats);
     } catch (e, st) {
       if (!controller.isClosed) controller.addError(e, st);
