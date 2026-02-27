@@ -3,8 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
+import 'shimmer_animation_scope.dart';
 
 /// Переливающийся градиент фона: цвета плавно сдвигаются.
+/// Использует общую анимацию из [ShimmerAnimationScope], если доступна.
 class ShimmeringGradient extends StatefulWidget {
   const ShimmeringGradient({
     super.key,
@@ -21,22 +23,40 @@ class ShimmeringGradient extends StatefulWidget {
 
 class _ShimmeringGradientState extends State<ShimmeringGradient>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  AnimationController? _ownController;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat();
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.linear);
+    _animation = const AlwaysStoppedAnimation(0.0);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final shared = ShimmerAnimationScope.of(context);
+    if (shared != null) {
+      if (_ownController != null) {
+        _ownController!.dispose();
+        _ownController = null;
+      }
+      _animation = shared;
+    } else if (_ownController == null) {
+      _ownController = AnimationController(
+        vsync: this,
+        duration: widget.duration,
+      )..repeat();
+      _animation = CurvedAnimation(
+        parent: _ownController!,
+        curve: Curves.linear,
+      );
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ownController?.dispose();
     super.dispose();
   }
 

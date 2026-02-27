@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router.dart';
 import 'ui/app_theme.dart';
+import 'ui/widgets/shimmer_animation_scope.dart';
 import 'src/console_log_stub.dart'
     if (dart.library.html) 'src/console_log_web.dart' as console_log;
 
@@ -59,7 +60,9 @@ class MultiGamesApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
-    return MaterialApp.router(
+    return ShimmerAnimationScope(
+      duration: const Duration(seconds: 28),
+      child: MaterialApp.router(
       title: 'MultiGames',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -115,6 +118,7 @@ class MultiGamesApp extends ConsumerWidget {
         ),
       ),
       routerConfig: router,
+      ),
     );
   }
 }

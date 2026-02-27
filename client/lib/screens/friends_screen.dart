@@ -1381,25 +1381,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildWideHeader(bool compact) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          'Друзья',
-          style: (compact
-                  ? Theme.of(context).textTheme.headlineMedium
-                  : Theme.of(context).textTheme.headlineSmall)
-              ?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
+  Widget _buildWideHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
           child: _buildInlineSearchField(),
         ),
-      ],
+      ),
     );
   }
 
@@ -1524,7 +1514,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
   }
 
-  static const double _wideContentMaxWidth = 880;
 
   @override
   Widget build(BuildContext context) {
@@ -1541,7 +1530,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: wide
-                  ? _buildWideHeader(compact)
+                  ? _buildWideHeader()
                   : Row(
                       children: [
                         Text(
@@ -1580,9 +1569,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: wide ? _wideContentMaxWidth : double.infinity,
-                  ),
+                  constraints: const BoxConstraints(maxWidth: double.infinity),
                   child: (wide && _searchController.text.trim().isNotEmpty) ||
                           _isSearchExpanded
                       ? RefreshIndicator(
