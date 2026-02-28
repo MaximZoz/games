@@ -54,7 +54,7 @@ const List<IconData> _chatAvatarIcons = [
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     with WidgetsBindingObserver {
   static const int _messagesPageSize = 20;
-  static const int _messagesInitialLoad = 10;
+  static const int _messagesInitialLoad = 15;
   static const double _loadOlderThreshold = 120;
 
   final TextEditingController _textController = TextEditingController();
@@ -72,6 +72,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   bool _hasMoreOlder = true;
   bool _initialScrollDone = false;
   bool _leavingToChats = false;
+  bool _showScrollToBottomButton = false;
   bool _roomActionInFlight = false;
   String? _error;
   List<ChatMessageItem> _messages = const [];
@@ -316,10 +317,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
   }
 
+  static const double _scrollToBottomThreshold = 80;
+
   void _onMessagesScroll() {
     if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    final nearBottom = pos.pixels <= _scrollToBottomThreshold;
+    if (_showScrollToBottomButton != !nearBottom) {
+      setState(() => _showScrollToBottomButton = !nearBottom);
+    }
     if (!_initialScrollDone || _loading || _loadingOlder || !_hasMoreOlder || _messages.isEmpty) return;
-    if (_scrollController.position.pixels <= _loadOlderThreshold) {
+    if (pos.pixels >= pos.maxScrollExtent - _loadOlderThreshold) {
       unawaited(_loadOlderMessages());
     }
   }
@@ -509,7 +517,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
-    final target = _scrollController.position.maxScrollExtent;
+    const target = 0.0;
     _scrollController.animateTo(
       target,
       duration: const Duration(milliseconds: 240),
@@ -517,24 +525,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     );
   }
 
-  void _scheduleScrollToBottom({int retriesLeft = 5}) {
+  void _scheduleScrollToBottom({int retriesLeft = 12}) {
     if (!mounted || retriesLeft <= 0) {
       if (mounted) setState(() => _initialScrollDone = true);
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients || !mounted) return;
-      final pos = _scrollController.position;
-      final target = pos.maxScrollExtent;
-      _scrollController.jumpTo(target);
+      _scrollController.jumpTo(0);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_scrollController.hasClients || !mounted) return;
         final pos = _scrollController.position;
         const threshold = 24.0;
-        if (pos.pixels < pos.maxScrollExtent - threshold) {
+        if (pos.pixels > threshold) {
           _scheduleScrollToBottom(retriesLeft: retriesLeft - 1);
         } else {
-          setState(() => _initialScrollDone = true);
+          setState(() {
+            _initialScrollDone = true;
+            _showScrollToBottomButton = pos.pixels > _scrollToBottomThreshold;
+          });
         }
       });
     });
@@ -940,14 +949,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             )
           : ListView.builder(
               controller: _scrollController,
+              reverse: true,
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics(),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              cacheExtent: 400,
               itemCount: timeline.length + ((_loadingOlder || _hasMoreOlder) ? 1 : 0),
               itemBuilder: (context, index) {
                   final topLoaderVisible = _loadingOlder || _hasMoreOlder;
-                  if (topLoaderVisible && index == 0) {
+                  final itemCount = timeline.length + (topLoaderVisible ? 1 : 0);
+                  if (topLoaderVisible && index == itemCount - 1) {
                     if (_loadingOlder) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 4, bottom: 8),
@@ -963,7 +975,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     return const SizedBox(height: 8);
                   }
 
-                  final timelineIndex = topLoaderVisible ? index - 1 : index;
+                  final timelineIndex = timeline.length - 1 - index;
                   final entry = timeline[timelineIndex];
                   if (entry.headerLabel != null) {
                     return Padding(
@@ -1032,13 +1044,29 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   );
                 },
               );
-      final scrollChild = isWide(context) && _messages.isNotEmpty
+      Widget scrollChild = isWide(context) && _messages.isNotEmpty
           ? Scrollbar(
               controller: _scrollController,
               thumbVisibility: true,
               child: listView,
             )
           : listView;
+      scrollChild = NotificationListener<ScrollNotification>(
+        onNotification: (_) {
+          if (_scrollController.hasClients) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || !_scrollController.hasClients) return;
+              final pos = _scrollController.position;
+              final nearBottom = pos.pixels <= _scrollToBottomThreshold;
+              if (_showScrollToBottomButton != !nearBottom) {
+                setState(() => _showScrollToBottomButton = !nearBottom);
+              }
+            });
+          }
+          return false;
+        },
+        child: scrollChild,
+      );
       messagesWidget = RefreshIndicator(
         onRefresh: _loadMessages,
         child: scrollChild,
@@ -1062,7 +1090,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                 child: _buildChatToolbar(peerUser: peerUser, title: title),
               ),
-            Expanded(child: messagesWidget),
+            Expanded(
+              child: Stack(
+                children: [
+                  messagesWidget,
+                  if (_showScrollToBottomButton && _messages.isNotEmpty)
+                    Positioned(
+                      bottom: 16,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Tooltip(
+                          message: 'В конец переписки',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _scrollToBottom,
+                              borderRadius: BorderRadius.circular(28),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  gradient: AppGradients.borderAt(0.22),
+                                  borderRadius: BorderRadius.circular(28),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.accentStart.withValues(alpha: 0.2),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(26),
+                                  ),
+                                  child: Icon(
+                                    Icons.keyboard_double_arrow_down_rounded,
+                                    color: AppColors.accentStart,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
               child: GradientCard(
