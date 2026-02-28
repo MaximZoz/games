@@ -25,7 +25,7 @@ func TestRequestLogger_WritesBackendEvent(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	})
-	handler := RequestLogger(nil, writer, next)
+	handler := RequestLogger(nil, writer, nil, false, next)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/test?x=1", nil)
 	rec := httptest.NewRecorder()
@@ -117,7 +117,7 @@ func TestFrontendLogHandler_IngestWritesFrontendEvent(t *testing.T) {
 }
 
 func TestFrontendLogHandler_IngestDisabledWriter_NoOp(t *testing.T) {
-	h := &FrontendLogHandler{Writer: nil}
+	h := &FrontendLogHandler{Writer: nil, Pool: nil, DirectDB: false}
 	reqBody := []byte(`{"method_name":"noop"}`)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/logs/frontend", bytes.NewReader(reqBody))

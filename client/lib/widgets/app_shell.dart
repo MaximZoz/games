@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -41,9 +42,10 @@ class AppShell extends ConsumerWidget {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
-    // Явно держим realtime WebSocket активным для бейджей (чаты, друзья)
+    // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
     if (isAuthorized) {
       ref.watch(realtimeEventsProvider);
+      ref.watch(presenceMapProvider);
     }
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);

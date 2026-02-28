@@ -8,7 +8,10 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_ws.dart';
+import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -654,25 +657,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required ChatUserItem? user,
     required String fallbackTitle,
     double radius = 18,
+    bool? isOnline,
   }) {
+    Widget avatar;
     if (user != null &&
         user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
       final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
       if (memoryImage != null) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundImage: memoryImage,
         );
+      } else {
+        avatar = _buildLetterAvatar(raw: user.displayName?.trim() ?? fallbackTitle.trim(), radius: radius);
       }
-    }
-
-    if (user != null && user.avatarKind == 'preset') {
+    } else if (user != null && user.avatarKind == 'preset') {
       final iconIndex = int.tryParse(user.avatarValue ?? '');
       if (iconIndex != null) {
         final idx = iconIndex % _chatAvatarIcons.length;
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundColor: AppColors.accentSoft,
           child: Icon(
@@ -681,10 +686,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             size: radius,
           ),
         );
+      } else {
+        avatar = _buildLetterAvatar(raw: user.displayName?.trim() ?? fallbackTitle.trim(), radius: radius);
       }
+    } else {
+      final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
+      avatar = _buildLetterAvatar(raw: raw, radius: radius);
     }
+    if (isOnline == true) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: radius * 0.4,
+              height: radius * 0.4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceCard, width: 1),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return avatar;
+  }
 
-    final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
+  Widget _buildLetterAvatar({required String raw, required double radius}) {
     final letter = raw.isEmpty ? '?' : raw.substring(0, 1).toUpperCase();
     return CircleAvatar(
       radius: radius,
@@ -700,7 +733,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     );
   }
 
-  Future<void> _showUserInfoDialog(ChatUserItem user) async {
+  Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
     final name = _peerTitle(user);
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
@@ -709,6 +742,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        final statusText = presence == null
+            ? null
+            : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
@@ -732,18 +768,36 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       user: user,
                       fallbackTitle: name,
                       radius: 22,
+                      isOnline: presence?.online,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        name,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (statusText != null && statusText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     IconButton(
@@ -824,8 +878,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Widget _buildChatToolbar({
     required ChatUserItem? peerUser,
     required String title,
+    PresenceEntry? presence,
   }) {
     final infoUser = peerUser;
+    final statusText = presence == null
+        ? null
+        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Row(
@@ -843,17 +901,34 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             user: peerUser,
             fallbackTitle: title,
             radius: 18,
+            isOnline: presence?.online,
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                if (statusText != null && statusText.isNotEmpty)
+                  Text(
+                    statusText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
+              ],
             ),
           ),
           IconButton(
@@ -861,7 +936,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ? null
                 : () {
                     final user = infoUser;
-                    unawaited(_showUserInfoDialog(user));
+                    unawaited(_showUserInfoDialog(user, presence: presence));
                   },
             tooltip: 'Информация о пользователе',
             icon: const Icon(Icons.info_outline_rounded),
@@ -898,6 +973,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         isNarrow(context) && media.size.width > media.size.height;
     final routeTitle = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     ChatUserItem? peerUser;
     for (final item in chats) {
       if (item.chatID == widget.chatID) {
@@ -906,12 +982,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }
     }
     final title = peerUser == null ? routeTitle : _peerTitle(peerUser);
+    final peerPresence = peerUser != null ? presence[peerUser.id] : null;
 
     if (narrowLandscape) {
       Future.microtask(() {
         if (!mounted) return;
         ref.read(mobileToolbarLeadingProvider.notifier).state =
-            _buildChatToolbar(peerUser: peerUser, title: title);
+            _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence);
       });
     }
 
@@ -1088,7 +1165,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             if (!narrowLandscape)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                child: _buildChatToolbar(peerUser: peerUser, title: title),
+                child: _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence),
               ),
             Expanded(
               child: Stack(

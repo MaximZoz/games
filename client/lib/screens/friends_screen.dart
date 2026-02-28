@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_repository.dart';
+import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -162,11 +165,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _showRequestInfoDialog({
     required FriendUserItem user,
+    PresenceEntry? presence,
   }) async {
     final name = _displayName(user);
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
     final female = _isFemaleGender(user.gender);
+    final statusText = presence == null
+        ? null
+        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -191,7 +198,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildAvatar(user),
+                    _buildAvatar(user, isOnline: presence?.online),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -207,6 +214,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (statusText != null && statusText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -273,30 +291,59 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildAvatar(FriendUserItem user) {
+  Widget _buildAvatar(FriendUserItem user, {bool? isOnline}) {
+    Widget avatar;
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.isNotEmpty) {
       final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
       if (memoryImage != null) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: 20,
           backgroundImage: memoryImage,
         );
+      } else {
+        avatar = _buildLetterAvatar(user);
       }
-    }
-
-    if (user.avatarKind == 'preset' && user.avatarValue != null) {
+    } else if (user.avatarKind == 'preset' && user.avatarValue != null) {
       final index = int.tryParse(user.avatarValue!);
       if (index != null && index >= 0 && index < _presetAvatarIcons.length) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: 20,
           backgroundColor: AppColors.accentSoft,
           child: Icon(_presetAvatarIcons[index], color: AppColors.accentStart),
         );
+      } else {
+        avatar = _buildLetterAvatar(user);
       }
+    } else {
+      avatar = _buildLetterAvatar(user);
     }
+    if (isOnline == true) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceCard, width: 1),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return avatar;
+  }
 
+  Widget _buildLetterAvatar(FriendUserItem user) {
     final first = _displayName(user).trim();
     final letter = first.isEmpty ? '?' : first.substring(0, 1).toUpperCase();
     return CircleAvatar(
@@ -602,7 +649,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required List<Widget> actions,
     Widget? trailing,
     bool alignActionsRight = false,
+    PresenceEntry? presence,
   }) {
+    final statusText = presence == null
+        ? null
+        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),
@@ -613,7 +664,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         children: [
           Row(
             children: [
-              _buildAvatar(user),
+              _buildAvatar(user, isOnline: presence?.online),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -628,6 +679,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (statusText != null && statusText.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          statusText,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -784,7 +848,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildFriendsTab(FriendsSnapshot snapshot) {
+  Widget _buildFriendsTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     return _buildAdaptiveList<FriendItem>(
       items: snapshot.friends,
       emptyText: 'У вас пока нет друзей',
@@ -794,6 +858,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         final chatKey = 'chat_${item.user.id}';
         return _buildUserCard(
           user: item.user,
+          presence: presence[item.user.id],
           subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -801,7 +866,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               _buildCompactIconButton(
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(user: item.user),
+                onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
               ),
               const SizedBox(width: 4),
               _buildCompactIconButton(
@@ -829,7 +894,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildIncomingTab(FriendsSnapshot snapshot) {
+  Widget _buildIncomingTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     return _buildAdaptiveList<FriendRequestItem>(
       items: snapshot.incoming,
       emptyText: 'Нет входящих заявок',
@@ -840,6 +905,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         final chatKey = 'chat_incoming_${item.user.id}';
         return _buildUserCard(
           user: item.user,
+          presence: presence[item.user.id],
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -847,7 +913,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               _buildCompactIconButton(
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(user: item.user),
+                onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
               ),
               const SizedBox(width: 4),
               _buildCompactIconButton(
@@ -883,7 +949,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildOutgoingTab(FriendsSnapshot snapshot) {
+  Widget _buildOutgoingTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     return _buildAdaptiveList<FriendRequestItem>(
       items: snapshot.outgoing,
       emptyText: 'Нет исходящих заявок',
@@ -893,6 +959,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         final chatKey = 'chat_outgoing_${item.user.id}';
         return _buildUserCard(
           user: item.user,
+          presence: presence[item.user.id],
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -900,7 +967,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               _buildCompactIconButton(
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(user: item.user),
+                onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
               ),
               const SizedBox(width: 4),
               _buildCompactIconButton(
@@ -1035,7 +1102,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildSearchResultCard(FriendSearchItem item) {
+  Widget _buildSearchResultCard(FriendSearchItem item, Map<String, PresenceEntry> presence) {
     final relation = item.relationStatus;
     final sendKey = 'send_${item.user.id}';
     final cancelKey = 'cancel_search_${item.requestId ?? item.user.id}';
@@ -1048,7 +1115,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       _buildCompactIconButton(
         icon: Icons.info_outline_rounded,
         tooltip: 'Информация о пользователе',
-        onPressed: () => _showRequestInfoDialog(user: item.user),
+        onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
       ),
     ];
     if (relation == 'none') {
@@ -1173,7 +1240,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       animate: false,
       child: Row(
         children: [
-          _buildAvatar(item.user),
+          _buildAvatar(item.user, isOnline: presence[item.user.id]?.online),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1191,6 +1258,20 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   ),
                 ),
                 const SizedBox(height: 2),
+                if (presence[item.user.id] != null) ...[
+                  Text(
+                    presence[item.user.id]!.online
+                        ? 'Онлайн'
+                        : formatLastSeen(presence[item.user.id]!.lastSeenAt),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                ],
                 Text(
                   relationLabel,
                   maxLines: 1,
@@ -1265,7 +1346,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(Map<String, PresenceEntry> presence) {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
       return ListView(
@@ -1349,7 +1430,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ),
             );
           }
-          return _buildSearchResultCard(_searchResults[index]);
+          return _buildSearchResultCard(_searchResults[index], presence);
         },
       );
     }
@@ -1381,7 +1462,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             ),
           );
         }
-        return _buildSearchResultCard(_searchResults[index]);
+        return _buildSearchResultCard(_searchResults[index], presence);
       },
     );
   }
@@ -1508,20 +1589,21 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot) {
+  Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        return _buildFriendsTab(snapshot);
+        return _buildFriendsTab(snapshot, presence);
       case _FriendsTabKind.incoming:
-        return _buildIncomingTab(snapshot);
+        return _buildIncomingTab(snapshot, presence);
       case _FriendsTabKind.outgoing:
-        return _buildOutgoingTab(snapshot);
+        return _buildOutgoingTab(snapshot, presence);
     }
   }
 
 
   @override
   Widget build(BuildContext context) {
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
@@ -1577,7 +1659,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                       ? RefreshIndicator(
                           onRefresh: () =>
                               _refreshSnapshot(refreshSearch: true),
-                          child: _buildSearchResults(),
+                          child: _buildSearchResults(presence),
                         )
                       : DefaultTabController(
                           key: ValueKey(
@@ -1621,7 +1703,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                             const NeverScrollableScrollPhysics(),
                                         children: [
                                           for (final tab in tabs)
-                                            _tabContent(tab, snapshot),
+                                            _tabContent(tab, snapshot, presence),
                                         ],
                                       ),
                                     );

@@ -212,6 +212,7 @@ class AdminRepository {
     int offset = 0,
     String? userId,
     String? source,
+    String? methodName,
     DateTime? from,
     DateTime? to,
   }) async {
@@ -220,6 +221,7 @@ class AdminRepository {
       'offset': '$offset',
       if (userId != null && userId.isNotEmpty) 'user_id': userId,
       if (source != null && source.isNotEmpty) 'source': source,
+      if (methodName != null && methodName.isNotEmpty) 'method_name': methodName,
       if (from != null) 'from': from.toUtc().toIso8601String(),
       if (to != null) 'to': to.toUtc().toIso8601String(),
     };
@@ -238,6 +240,22 @@ class AdminRepository {
     return list
         .map((e) => AdminLogItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
+  }
+
+  Future<void> clearLogs() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/admin/logs/clear'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        operation: 'AdminRepository.clearLogs',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
   }
 }
 

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -29,12 +30,13 @@ type AppLog struct {
 }
 
 type ListAppLogsParams struct {
-	Limit  int
-	Offset int
-	UserID *uuid.UUID
-	Source *string
-	From   *time.Time
-	To     *time.Time
+	Limit      int
+	Offset     int
+	UserID     *uuid.UUID
+	Source     *string
+	MethodName *string
+	From       *time.Time
+	To         *time.Time
 }
 
 func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, p ListAppLogsParams) ([]AppLog, error) {
@@ -76,6 +78,10 @@ func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, p ListAppLogsParams) (
 	if p.Source != nil && strings.TrimSpace(*p.Source) != "" {
 		args = append(args, strings.TrimSpace(*p.Source))
 		conds = append(conds, fmt.Sprintf("source = $%d", len(args)))
+	}
+	if p.MethodName != nil && strings.TrimSpace(*p.MethodName) != "" {
+		args = append(args, strings.TrimSpace(*p.MethodName))
+		conds = append(conds, fmt.Sprintf("method_name = $%d", len(args)))
 	}
 	if p.From != nil {
 		args = append(args, p.From.UTC())
@@ -151,6 +157,12 @@ func ListAppLogs(ctx context.Context, pool *pgxpool.Pool, p ListAppLogsParams) (
 	return result, rows.Err()
 }
 
+// TruncateAppLogs удаляет все записи из app_logs.
+func TruncateAppLogs(ctx context.Context, pool *pgxpool.Pool) error {
+	_, err := pool.Exec(ctx, `TRUNCATE app_logs`)
+	return err
+}
+
 func nullStringPtr(v sql.NullString) *string {
 	if !v.Valid {
 		return nil
@@ -173,4 +185,80 @@ func nullInt64Ptr(v sql.NullInt64) *int64 {
 	}
 	n := v.Int64
 	return &n
+}
+
+// InsertAppLogParams для прямой вставки в app_logs (обход файла).
+type InsertAppLogParams struct {
+	EventID    string
+	EventTime  time.Time
+	Source     string
+	MethodName string
+	UserID     *uuid.UUID
+	Level      string
+	Message    string
+	Metadata   map[string]interface{}
+	HTTPMethod *string
+	Path       *string
+	StatusCode *int
+	DurationMS *int64
+}
+
+// InsertAppLog вставляет событие напрямую в БД. Используется для presence, когда файл может не работать.
+func InsertAppLog(ctx context.Context, pool *pgxpool.Pool, p InsertAppLogParams) error {
+	if p.EventID == "" {
+		p.EventID = uuid.NewString()
+	}
+	if p.Source == "" {
+		p.Source = "backend"
+	}
+	if p.MethodName == "" {
+		p.MethodName = "unspecified"
+	}
+	if p.Level == "" {
+		p.Level = "info"
+	}
+	if p.EventTime.IsZero() {
+		p.EventTime = time.Now().UTC()
+	}
+	rawPayload := map[string]interface{}{
+		"event_id":    p.EventID,
+		"event_time":  p.EventTime.Format(time.RFC3339Nano),
+		"source":      p.Source,
+		"method_name": p.MethodName,
+		"level":       p.Level,
+		"message":     p.Message,
+		"metadata":    p.Metadata,
+	}
+	if p.UserID != nil {
+		rawPayload["user_id"] = p.UserID.String()
+	}
+	if p.HTTPMethod != nil {
+		rawPayload["http_method"] = *p.HTTPMethod
+	}
+	if p.Path != nil {
+		rawPayload["path"] = *p.Path
+	}
+	rawJSON, err := json.Marshal(rawPayload)
+	if err != nil {
+		return err
+	}
+	var userID any
+	if p.UserID != nil {
+		userID = *p.UserID
+	}
+	var metadataJSON []byte
+	if p.Metadata != nil {
+		metadataJSON, _ = json.Marshal(p.Metadata)
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO app_logs (
+			event_id, event_time, source, method_name,
+			user_id, level, message, metadata, raw_payload,
+			http_method, path, status_code, duration_ms
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		ON CONFLICT (event_id) DO NOTHING
+	`, p.EventID, p.EventTime, p.Source, p.MethodName,
+		userID, p.Level, p.Message, metadataJSON, rawJSON,
+		p.HTTPMethod, p.Path, p.StatusCode, p.DurationMS)
+	return err
 }

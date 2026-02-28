@@ -293,6 +293,11 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		source = &raw
 	}
 
+	var methodName *string
+	if raw := strings.TrimSpace(r.URL.Query().Get("method_name")); raw != "" {
+		methodName = &raw
+	}
+
 	var from *time.Time
 	if raw := strings.TrimSpace(r.URL.Query().Get("from")); raw != "" {
 		t, err := time.Parse(time.RFC3339, raw)
@@ -320,12 +325,13 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logs, err := store.ListAppLogs(r.Context(), h.Pool, store.ListAppLogsParams{
-		Limit:  limit,
-		Offset: offset,
-		UserID: userID,
-		Source: source,
-		From:   from,
-		To:     to,
+		Limit:      limit,
+		Offset:     offset,
+		UserID:     userID,
+		Source:     source,
+		MethodName: methodName,
+		From:       from,
+		To:         to,
 	})
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -363,4 +369,17 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		"limit":  limit,
 		"offset": offset,
 	})
+}
+
+// ClearLogs очищает таблицу app_logs. POST /api/admin/logs/clear
+func (h *AdminHandler) ClearLogs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := store.TruncateAppLogs(r.Context(), h.Pool); err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -126,6 +126,12 @@ fly secrets set ADMIN_INIT_SECRET="твой-секрет-для-админа" --
 
 **Redis** не обязателен: если `REDIS_URL` не задан, приложение запустится без Redis. Позже можно добавить Upstash и задать `REDIS_URL`.
 
+**Отключение логирования в `app_logs`** (для production):
+
+```bash
+fly secrets set APP_LOG_ENABLED=false --app <имя-приложения>
+```
+
 ---
 
 ## Шаг 4. Деплой
