@@ -77,13 +77,12 @@ void main() {
     // Переход между роутами анимирован в AppShell
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Кнопка «На главную» удалена — тулбар всегда показывает «Войти»/«Выйти»
+    // Кнопка «На главную» и заголовок в тулбаре удалены — тулбар показывает «Войти»/«Выйти»
     expect(find.byTooltip('На главную'), findsNothing);
-    expect(find.byKey(const Key('toolbar_title')), findsOneWidget);
     expect(find.text('Вход'), findsOneWidget);
   });
 
-  testWidgets('On login page, MultiGames title in toolbar is tappable', (WidgetTester tester) async {
+  testWidgets('On login page, form is visible and toolbar has auth button', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -94,15 +93,140 @@ void main() {
 
     await tester.tap(find.byTooltip('Войти'));
     await tester.pump();
-    // Переход между роутами анимирован в AppShell
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Вход'), findsOneWidget);
 
-    // Тулбар без AppBar: заголовок в оболочке с ключом toolbar_title
-    final titleInToolbar = find.byKey(const Key('toolbar_title'));
-    expect(titleInToolbar, findsOneWidget);
-    await tester.tap(titleInToolbar, warnIfMissed: false);
+    // Тулбар без заголовка MultiGames — проверяем наличие формы и кнопки входа
+    expect(find.byTooltip('Войти'), findsOneWidget);
+  });
+
+  testWidgets('Navigation rail shows main sections', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Главная'), findsWidgets);
+    expect(find.text('Профиль'), findsWidgets);
+    expect(find.text('Друзья'), findsWidgets);
+    expect(find.text('Чаты'), findsWidgets);
+  });
+
+  testWidgets('Profile for unauthenticated user shows login prompt', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byIcon(Icons.person));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Войдите в аккаунт'), findsOneWidget);
+    expect(find.text('Чтобы видеть профиль и достижения'), findsOneWidget);
+    expect(find.text('Войти'), findsWidgets);
+    expect(find.text('Регистрация'), findsOneWidget);
+  });
+
+  testWidgets('Profile → Login → Register → Login navigation', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Профиль → Войти
+    await tester.tap(find.byIcon(Icons.person));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Войти').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Вход'), findsOneWidget);
+    expect(find.text('Нет аккаунта? Зарегистрироваться'), findsOneWidget);
+
+    // Логин → Регистрация
+    await tester.tap(find.text('Нет аккаунта? Зарегистрироваться'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Регистрация'), findsOneWidget);
+    expect(find.text('Уже есть аккаунт? Войти'), findsOneWidget);
+
+    // Регистрация → Логин
+    await tester.tap(find.text('Уже есть аккаунт? Войти'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Вход'), findsOneWidget);
+  });
+
+  testWidgets('Login form shows validation errors on empty submit', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    await tester.tap(find.byTooltip('Войти'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Тап по кнопке «Войти» в форме (не иконке в тулбаре)
+    final loginButtons = find.text('Войти');
+    expect(loginButtons, findsWidgets);
+    await tester.tap(loginButtons.last);
+    await tester.pump();
+
+    expect(find.text('Введите email или логин'), findsOneWidget);
+    expect(find.text('Введите пароль'), findsOneWidget);
+  });
+
+  testWidgets('Unauthenticated user tapping Friends redirects to profile', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byIcon(Icons.people));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Редирект: /friends → /profile (needsAuth)
+    expect(find.text('Войдите в аккаунт'), findsOneWidget);
+  });
+
+  testWidgets('Register form has title and link to login', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MultiGamesApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    await tester.tap(find.byTooltip('Войти'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.text('Нет аккаунта? Зарегистрироваться'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Регистрация'), findsOneWidget);
+    expect(find.text('Уже есть аккаунт? Войти'), findsOneWidget);
   });
 }
