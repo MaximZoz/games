@@ -10,6 +10,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -61,6 +62,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   @override
   void dispose() {
+    final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifier.state = null;
+    });
     _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -166,14 +171,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        final wide = isWide(dialogContext);
         return Dialog(
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: wide ? 420 : double.infinity,
+              maxWidth: 420,
+              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
             ),
             child: GradientCard(
               animate: false,
@@ -1521,50 +1526,47 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
+    final path = ref.watch(currentRoutePathProvider);
+    if (!wide && path == '/friends') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref.read(mobileToolbarLeadingProvider.notifier).state =
+              _buildGradientHeaderIconButton(
+            icon: _isSearchExpanded
+                ? Icons.search_off_rounded
+                : Icons.search_rounded,
+            tooltip: _isSearchExpanded
+                ? 'Свернуть поиск'
+                : 'Показать поиск',
+            onPressed: _toggleSearch,
+            redFrame: _isSearchExpanded,
+          );
+        });
+      });
+    }
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: wide
-                  ? _buildWideHeader()
-                  : Row(
-                      children: [
-                        Text(
-                          'Друзья',
-                          style: (compact
-                                  ? Theme.of(context).textTheme.headlineMedium
-                                  : Theme.of(context).textTheme.headlineSmall)
-                              ?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        _buildGradientHeaderIconButton(
-                          icon: _isSearchExpanded
-                              ? Icons.search_off_rounded
-                              : Icons.search_rounded,
-                          tooltip: _isSearchExpanded
-                              ? 'Свернуть поиск'
-                              : 'Показать поиск',
-                          onPressed: _toggleSearch,
-                          redFrame: _isSearchExpanded,
-                        ),
-                      ],
-                    ),
-            ),
+            if (wide)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildWideHeader(),
+              ),
             if (!wide)
-              AnimatedSwitcher(
-                duration: AppDurations.short,
-                child: _isSearchExpanded
-                    ? _buildSearchPanel()
-                    : const SizedBox(
-                        key: ValueKey('friends-search-collapsed'),
-                      ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: AnimatedSwitcher(
+                  duration: AppDurations.short,
+                  child: _isSearchExpanded
+                      ? _buildSearchPanel()
+                      : const SizedBox(
+                          key: ValueKey('friends-search-collapsed'),
+                        ),
+                ),
               ),
             Expanded(
               child: Center(

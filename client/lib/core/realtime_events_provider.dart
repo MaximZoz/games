@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -17,10 +18,17 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
   }
 
   final controller = StreamController<Map<String, dynamic>>();
+  var disposed = false;
+  void emitAfterFrame(Map<String, dynamic> data) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!disposed && !controller.isClosed) controller.add(data);
+      });
+    });
+  }
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
-  var disposed = false;
   late void Function() scheduleReconnect;
 
   Future<void> connect() async {
@@ -40,16 +48,13 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
     );
     final nextSocket = connectRealtimeSocket(uri);
     socket = nextSocket;
-    if (!controller.isClosed) {
-      controller.add(const {'type': 'realtime_connected'});
-    }
+    emitAfterFrame(const {'type': 'realtime_connected'});
     socketSubscription = nextSocket.messages.listen(
       (raw) {
-        if (controller.isClosed) return;
         try {
           final payload = jsonDecode(raw);
           if (payload is! Map) return;
-          controller.add(Map<String, dynamic>.from(payload));
+          emitAfterFrame(Map<String, dynamic>.from(payload));
         } catch (_) {
           // Игнорируем невалидные фреймы, чтобы не ронять соединение.
         }

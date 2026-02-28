@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
@@ -8,6 +9,24 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
   return ChatsRepository(authRepository: ref.watch(authRepositoryProvider));
 });
+
+/// Откладывает emit на 2 frame'а, чтобы dispose виджетов успел завершиться.
+Future<void> _emitAfterFrame(void Function() fn) async {
+  final c = Completer<void>();
+  SchedulerBinding.instance.addPostFrameCallback((_) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      fn();
+      if (!c.isCompleted) c.complete();
+    });
+  });
+  return c.future;
+}
+
+/// Кэш списка чатов для переиспользования при переходе список → чат (desktop split).
+final chatsListCacheProvider = StateProvider<({List<ChatPreviewItem> chats, DateTime at})?>((ref) => null);
+
+/// Состояние свёрнутости боковой панели чатов на десктопе (сохраняется при навигации).
+final chatsSidebarCollapsedProvider = StateProvider<bool>((ref) => false);
 
 final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref) {
   final keepAliveLink = ref.keepAlive();
@@ -25,9 +44,13 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
     loadInFlight = true;
     try {
       final chats = await ref.read(chatsRepositoryProvider).listChats(limit: 10, offset: 0);
-      if (!controller.isClosed) controller.add(chats);
+      await _emitAfterFrame(() {
+        if (!controller.isClosed) controller.add(chats);
+      });
     } catch (e, st) {
-      if (!controller.isClosed) controller.addError(e, st);
+      await _emitAfterFrame(() {
+        if (!controller.isClosed) controller.addError(e, st);
+      });
     } finally {
       loadInFlight = false;
     }
@@ -72,9 +95,13 @@ final blockedUsersProvider = StreamProvider.autoDispose<List<BlockedChatUserItem
     loadInFlight = true;
     try {
       final blocked = await ref.read(chatsRepositoryProvider).listBlockedUsers();
-      if (!controller.isClosed) controller.add(blocked);
+      await _emitAfterFrame(() {
+        if (!controller.isClosed) controller.add(blocked);
+      });
     } catch (e, st) {
-      if (!controller.isClosed) controller.addError(e, st);
+      await _emitAfterFrame(() {
+        if (!controller.isClosed) controller.addError(e, st);
+      });
     } finally {
       loadInFlight = false;
     }

@@ -13,11 +13,21 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ChatsScreen extends ConsumerStatefulWidget {
-  const ChatsScreen({super.key});
+  const ChatsScreen({
+    super.key,
+    this.inSplitView = false,
+    this.sidebarCompact = false,
+  });
+
+  /// В split-view на десктопе используем go вместо push при выборе чата.
+  final bool inSplitView;
+  /// Компактный режим: только круглые аватары (для свёрнутой панели).
+  final bool sidebarCompact;
 
   @override
   ConsumerState<ChatsScreen> createState() => _ChatsScreenState();
@@ -91,7 +101,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2600),
     )..repeat();
-    unawaited(_loadChats());
+    unawaited(_loadChatsOrUseCache());
     unawaited(_warmUpStartChatData());
     unawaited(
       ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
@@ -100,6 +110,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   @override
   void dispose() {
+    final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifier.state = null;
+    });
     chatsRouteObserver.unsubscribe(this);
     _borderAnimationController.dispose();
     _chatsScrollController.removeListener(_onChatsScroll);
@@ -178,6 +192,28 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     }
   }
 
+  static const _chatsCacheTTL = Duration(seconds: 60);
+
+  Future<void> _loadChatsOrUseCache() async {
+    if (!widget.inSplitView) {
+      return unawaited(_loadChats());
+    }
+    final cache = ref.read(chatsListCacheProvider);
+    if (cache != null &&
+        DateTime.now().difference(cache.at) <= _chatsCacheTTL &&
+        cache.chats.isNotEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _chats = cache.chats;
+        _hasMoreChats = cache.chats.length >= _chatsPageSize;
+        _isLoadingChats = false;
+        _error = null;
+      });
+      return;
+    }
+    return unawaited(_loadChats());
+  }
+
   Future<void> _loadChats() async {
     if (!mounted || _isChatsRequestInFlight) return;
     _isChatsRequestInFlight = true;
@@ -192,6 +228,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
           .listChats(limit: _chatsPageSize, offset: 0);
       if (!mounted) return;
       final chats = _sortChats(raw);
+      if (widget.inSplitView) {
+        ref.read(chatsListCacheProvider.notifier).state = (chats: chats, at: DateTime.now());
+      }
       setState(() {
         _chats = chats;
         _hasMoreChats = raw.length >= _chatsPageSize;
@@ -596,34 +635,43 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       );
     }
 
-    final maxListHeight = MediaQuery.of(context).size.height * 0.65;
-    final columnContent = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'Заблокированные пользователи',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 10),
-        if (wrapInSheet)
-          SizedBox(height: 420, child: content)
-        else
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxListHeight),
-            child: content,
-          ),
-      ],
-    );
+    final screenHeight = MediaQuery.of(context).size.height;
+    const headerReserved = 80.0;
     final cardContent = GradientCard(
       animate: false,
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(12),
-      child: columnContent,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableHeight = constraints.maxHeight;
+          final safeListHeight = (availableHeight - headerReserved).clamp(120.0, double.infinity);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Заблокированные пользователи',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (wrapInSheet)
+                SizedBox(
+                  height: (screenHeight * 0.5).clamp(200.0, 400.0),
+                  child: content,
+                )
+              else
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: availableHeight.isFinite ? safeListHeight : screenHeight * 0.5),
+                  child: content,
+                ),
+            ],
+          );
+        },
+      ),
     );
     return cardContent;
   }
@@ -670,14 +718,20 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       }
     });
     final name = Uri.encodeQueryComponent(peerName);
-    unawaited(
-      context.push('/chats/$chatID?name=$name').whenComplete(() {
-        _navigationLockTimer?.cancel();
-        if (mounted) {
-          setState(() => _isNavigatingToChat = false);
-        }
-      }),
-    );
+    if (widget.inSplitView) {
+      context.go('/chats/$chatID?name=$name');
+      _navigationLockTimer?.cancel();
+      if (mounted) setState(() => _isNavigatingToChat = false);
+    } else {
+      unawaited(
+        context.push('/chats/$chatID?name=$name').whenComplete(() {
+          _navigationLockTimer?.cancel();
+          if (mounted) {
+            setState(() => _isNavigatingToChat = false);
+          }
+        }),
+      );
+    }
   }
 
   Future<bool> _confirmChatAction({
@@ -1317,7 +1371,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
-          child: GradientCard(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 420,
+              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
+            ),
+            child: GradientCard(
             animate: false,
             margin: EdgeInsets.zero,
             padding: EdgeInsets.all(compact ? 12 : 14),
@@ -1394,8 +1453,59 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               ],
             ),
           ),
+        ),
         );
       },
+    );
+  }
+
+  Widget _buildChatsToolbarActions({
+    required bool hasBlockedUsers,
+    required bool actionBusy,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: AnimatedBorderBox(
+            animateBorder: true,
+            padding: const EdgeInsets.all(6),
+            borderRadius: 999,
+            margin: EdgeInsets.zero,
+            child: IconButton(
+              onPressed: actionBusy ? null : _openStartChatDialog,
+              tooltip: 'Новый чат',
+              icon: const Icon(Icons.add_comment_rounded),
+              style: IconButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(28, 28),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+        ),
+        if (hasBlockedUsers)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: AnimatedBorderBox(
+              animateBorder: true,
+              padding: const EdgeInsets.all(6),
+              borderRadius: 999,
+              margin: EdgeInsets.zero,
+              child: IconButton(
+                onPressed: actionBusy ? null : _openBlockedUsersDialog,
+                tooltip: 'Заблокированные пользователи',
+                icon: const Icon(Icons.block_rounded),
+                style: IconButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(28, 28),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1406,16 +1516,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return Row(
       children: [
         const Spacer(),
-        if (hasBlockedUsers)
-          IconButton(
-            onPressed: actionBusy ? null : _openBlockedUsersDialog,
-            tooltip: 'Заблокированные пользователи',
-            icon: const Icon(Icons.block_rounded),
-          ),
-        IconButton(
-          onPressed: actionBusy ? null : _openStartChatDialog,
-          tooltip: 'Новый чат',
-          icon: const Icon(Icons.add_comment_rounded),
+        _buildChatsToolbarActions(
+          hasBlockedUsers: hasBlockedUsers,
+          actionBusy: actionBusy,
         ),
       ],
     );
@@ -1500,20 +1603,130 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       hasBlockedUsers: hasBlockedUsers,
       actionBusy: actionBusy,
     );
+    final narrow = !isWide(context) && !widget.inSplitView;
+    final path = ref.watch(currentRoutePathProvider);
+    if (narrow && path == '/chats') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref.read(mobileToolbarLeadingProvider.notifier).state =
+              _buildChatsToolbarActions(
+                hasBlockedUsers: hasBlockedUsers,
+                actionBusy: actionBusy,
+              );
+        });
+      });
+    }
 
     const double headerHeight = 56;
+    final compact = widget.sidebarCompact && widget.inSplitView;
+
+    if (compact) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 48,
+                child: Center(
+                  child: IconButton(
+                    onPressed: actionBusy ? null : _openStartChatDialog,
+                    tooltip: 'Новый чат',
+                    icon: const Icon(Icons.add_comment_rounded),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: loading
+                    ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                    : chats.isEmpty
+                        ? const Center(
+                            child: Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 32,
+                              color: AppColors.textSecondary,
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadChats,
+                            child: ListView.builder(
+                              controller: _chatsScrollController,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: chats.length,
+                              itemBuilder: (context, index) {
+                                final item = chats[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Center(
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: _isNavigatingToChat
+                                            ? null
+                                            : () => _openChatRoute(
+                                                  chatID: item.chatID,
+                                                  peerName: _peerTitle(item.user),
+                                                ),
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            _AvatarDot(user: item.user, radius: 24),
+                                            if (item.unreadCount > 0)
+                                              Positioned(
+                                                right: -2,
+                                                top: -2,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 5,
+                                                    vertical: 2,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.accentStart,
+                                                    borderRadius: BorderRadius.circular(999),
+                                                  ),
+                                                  child: Text(
+                                                    item.unreadCount > 99
+                                                        ? '99+'
+                                                        : '${item.unreadCount}',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(
-              height: headerHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: headerRow,
+            if (!narrow)
+              SizedBox(
+                height: headerHeight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: headerRow,
+                ),
               ),
-            ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _loadChats,

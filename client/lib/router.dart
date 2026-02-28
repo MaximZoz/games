@@ -9,8 +9,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
-import 'package:multigames_client/screens/chat_room_screen.dart';
-import 'package:multigames_client/screens/chats_screen.dart';
+import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
@@ -146,14 +145,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/chats',
-                pageBuilder: (_, state) => _noTransitionPage(state, const ChatsScreen()),
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  const ChatsLayoutScreen(),
+                ),
               ),
               GoRoute(
                 path: '/chats/:chatId',
                 pageBuilder: (_, state) => _noTransitionPage(
                   state,
-                  ChatRoomScreen(
-                    chatID: state.pathParameters['chatId'] ?? '',
+                  ChatsLayoutScreen(
+                    chatId: state.pathParameters['chatId'],
                     peerName: state.uri.queryParameters['name'],
                     fromFriends: state.uri.queryParameters['from'] == 'friends',
                   ),
