@@ -15,10 +15,15 @@
 client/.dart_tool
 client/build
 client/.packages
+client/test
+client/integration_test
+client/coverage
+client/*.iml
 
 # Сервер: тесты и кэш
 server/*.test
 server/.cache
+server/*_test.go
 
 # Лаунчер и прочее
 launcher

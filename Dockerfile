@@ -5,15 +5,25 @@
 FROM ghcr.io/cirruslabs/flutter:stable AS flutter_build
 WORKDIR /app
 
+# Кэш pub get: слой пересобирается только при изменении pubspec
+COPY client/pubspec.yaml client/pubspec.lock ./
+RUN flutter pub get
+
+# Остальной код — build web
 COPY client/ .
-RUN flutter pub get \
-  && flutter build web --release --dart-define=API_BASE=
+RUN flutter build web --release --dart-define=API_BASE= --no-source-maps
 
 # --- Stage 2: Go binary с встроенной статикой ---
 FROM golang:1.24-alpine AS go_build
 WORKDIR /app
 
-# Копируем исходники сервера
+# Кэш go mod: слой пересобирается только при изменении go.mod/go.sum
+COPY server/go.mod server/go.sum ./server/
+WORKDIR /app/server
+RUN go mod download
+
+# Исходники и статика
+WORKDIR /app
 COPY server/ ./server/
 # Подставляем собранный Flutter web в каталог для embed
 COPY --from=flutter_build /app/build/web ./server/cmd/server/web/
