@@ -41,6 +41,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
   late final TabController _tabController;
   String? _selectedLogUserId;
   String _selectedLogSource = _sourceAll;
+  String? _selectedLogMethod;
   int? _copyLimit = 120;
   AsyncValue<List<AdminLogItem>> _logsState = const AsyncValue.loading();
   int _logRequestID = 0;
@@ -85,6 +86,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     }
   }
 
+  Future<void> _clearLogs() async {
+    final repo = ref.read(adminRepositoryProvider);
+    try {
+      await repo.clearLogs();
+      _showMessage(null, 'Логи очищены');
+      unawaited(_loadLogs());
+    } catch (e) {
+      _showMessage(e.toString(), null);
+    }
+  }
+
   Future<void> _loadLogs() async {
     final requestID = ++_logRequestID;
     setState(() {
@@ -98,6 +110,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         limit: 2000,
         userId: _selectedLogUserId,
         source: _selectedLogSource == _sourceAll ? null : _selectedLogSource,
+        methodName: _selectedLogMethod,
         from: now.subtract(const Duration(hours: 24)),
         to: now,
       );
@@ -822,7 +835,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                initialValue: selectedValue,
+                value: selectedValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -860,7 +873,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                initialValue: sourceValue,
+                value: sourceValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -889,6 +902,53 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                   if (nextSource == _selectedLogSource) return;
                   setState(() {
                     _selectedLogSource = nextSource;
+                  });
+                  _loadLogs();
+                },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _selectedLogMethod ?? '__all__',
+                dropdownColor: AppColors.surfaceCard,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+                iconEnabledColor: AppColors.textPrimary,
+                decoration: const InputDecoration(
+                  labelText: 'Метод',
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: '__all__',
+                    child: Text('Все методы'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'http.request',
+                    child: Text('http.request (Backend HTTP)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'frontend.request',
+                    child: Text('frontend.request (Frontend)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'realtime.presence_online',
+                    child: Text('realtime.presence_online (вход)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'realtime.presence_offline',
+                    child: Text('realtime.presence_offline (выход)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'server.started',
+                    child: Text('server.started'),
+                  ),
+                ],
+                onChanged: (value) {
+                  final next = value == '__all__' ? null : value;
+                  if (next == _selectedLogMethod) return;
+                  setState(() {
+                    _selectedLogMethod = next;
                   });
                   _loadLogs();
                 },
@@ -977,6 +1037,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
                     onPressed: _loadLogs,
                     tooltip: 'Обновить логи',
                     icon: const Icon(Icons.refresh_rounded),
+                  ),
+                  IconButton(
+                    onPressed: _clearLogs,
+                    tooltip: 'Очистить логи',
+                    icon: const Icon(Icons.delete_sweep_rounded),
                   ),
                 ],
               ),

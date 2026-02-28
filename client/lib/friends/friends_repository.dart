@@ -14,6 +14,8 @@ class FriendUserItem {
   final int? age;
   final String? gender;
   final String? about;
+  final bool? isOnline;
+  final String? lastSeenAt;
 
   FriendUserItem({
     required this.id,
@@ -24,7 +26,35 @@ class FriendUserItem {
     this.age,
     this.gender,
     this.about,
+    this.isOnline,
+    this.lastSeenAt,
   });
+
+  FriendUserItem copyWith({
+    String? id,
+    String? email,
+    String? displayName,
+    String? avatarKind,
+    String? avatarValue,
+    int? age,
+    String? gender,
+    String? about,
+    bool? isOnline,
+    String? lastSeenAt,
+  }) {
+    return FriendUserItem(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      avatarKind: avatarKind ?? this.avatarKind,
+      avatarValue: avatarValue ?? this.avatarValue,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      about: about ?? this.about,
+      isOnline: isOnline ?? this.isOnline,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+    );
+  }
 
   factory FriendUserItem.fromJson(Map<String, dynamic> json) {
     return FriendUserItem(

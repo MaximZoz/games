@@ -8,10 +8,15 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_ws.dart';
+import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
@@ -20,12 +25,13 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
     required this.chatID,
     this.peerName,
     this.fromFriends = false,
+    this.inSplitView = false,
   });
 
   final String chatID;
   final String? peerName;
   final bool fromFriends;
-
+  final bool inSplitView;
 
   @override
   ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
@@ -51,6 +57,7 @@ const List<IconData> _chatAvatarIcons = [
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     with WidgetsBindingObserver {
   static const int _messagesPageSize = 20;
+  static const int _messagesInitialLoad = 15;
   static const double _loadOlderThreshold = 120;
 
   final TextEditingController _textController = TextEditingController();
@@ -66,7 +73,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   bool _sending = false;
   bool _loadingOlder = false;
   bool _hasMoreOlder = true;
+  bool _initialScrollDone = false;
   bool _leavingToChats = false;
+  bool _showScrollToBottomButton = false;
   bool _roomActionInFlight = false;
   String? _error;
   List<ChatMessageItem> _messages = const [];
@@ -82,6 +91,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   @override
+  void didUpdateWidget(covariant ChatRoomScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.chatID != widget.chatID) {
+      _messages = const [];
+      _loading = true;
+      _loadingOlder = false;
+      _hasMoreOlder = true;
+      _initialScrollDone = false;
+      _messageIDs.clear();
+      _loadMessages(initial: true);
+    }
+  }
+
+  @override
   void didChangeMetrics() {
     super.didChangeMetrics();
     if (!_composerFocusNode.hasFocus) return;
@@ -90,6 +113,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   @override
   void dispose() {
+    final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifier.state = null;
+    });
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
     _scrollController.removeListener(_onMessagesScroll);
@@ -116,11 +143,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     } else {
       context.go('/chats');
     }
-    unawaited(
-      refreshChatsList(ref, force: true).catchError((_) {
-        // Фоновая синхронизация после перехода назад.
-      }),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        refreshChatsList(ref, force: true).catchError((_) {
+          // Фоновая синхронизация после перехода назад.
+        });
+      });
+    });
   }
 
   Future<bool> _confirmAction({
@@ -228,7 +257,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     try {
       final list = await ref.read(chatsRepositoryProvider).listMessages(
             widget.chatID,
-            limit: _messagesPageSize,
+            limit: initial ? _messagesInitialLoad : _messagesPageSize,
           );
       if (!mounted) return;
 
@@ -237,6 +266,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final hasNewTail = previousLastID != nextLastID;
       final changed = !_areMessagesEqual(_messages, list);
 
+      final limitUsed = initial ? _messagesInitialLoad : _messagesPageSize;
       if (_loading || _error != null || changed) {
         setState(() {
           _messages = list;
@@ -246,24 +276,24 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           _error = null;
           _loading = false;
           _loadingOlder = false;
-          _hasMoreOlder = list.length >= _messagesPageSize;
+          _hasMoreOlder = list.length >= limitUsed;
         });
-      } else if (_loadingOlder || _hasMoreOlder != (list.length >= _messagesPageSize)) {
+      } else if (_loadingOlder || _hasMoreOlder != (list.length >= limitUsed)) {
         setState(() {
           _loadingOlder = false;
-          _hasMoreOlder = list.length >= _messagesPageSize;
+          _hasMoreOlder = list.length >= limitUsed;
         });
       }
 
       if (hasNewTail || initial) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        // ListView.builder строит элементы лениво. Длинные сообщения требуют нескольких
+        // layout-проходов — повторяем скролл до низа, пока позиция не стабилизируется.
+        _scheduleScrollToBottom(retriesLeft: 8);
       }
       unawaited(() async {
         try {
-          final updated = await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
-          if (updated > 0) {
-            await refreshChatsList(ref);
-          }
+          await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
+          // Список чатов обновится по realtime (chat_read) — не перезагружаем здесь.
         } catch (_) {
           // Ошибку чтения не показываем пользователю в фоне.
         }
@@ -290,10 +320,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
   }
 
+  static const double _scrollToBottomThreshold = 80;
+
   void _onMessagesScroll() {
     if (!_scrollController.hasClients) return;
-    if (_loading || _loadingOlder || !_hasMoreOlder || _messages.isEmpty) return;
-    if (_scrollController.position.pixels <= _loadOlderThreshold) {
+    final pos = _scrollController.position;
+    final nearBottom = pos.pixels <= _scrollToBottomThreshold;
+    if (_showScrollToBottomButton != !nearBottom) {
+      setState(() => _showScrollToBottomButton = !nearBottom);
+    }
+    if (!_initialScrollDone || _loading || _loadingOlder || !_hasMoreOlder || _messages.isEmpty) return;
+    if (pos.pixels >= pos.maxScrollExtent - _loadOlderThreshold) {
       unawaited(_loadOlderMessages());
     }
   }
@@ -385,6 +422,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _handleRealtimeMessage(String raw) {
+    if (!mounted) return;
     try {
       final payload = jsonDecode(raw);
       if (payload is! Map) return;
@@ -396,18 +434,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         if (messageRaw is! Map) return;
         final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
         _upsertMessage(item);
-        unawaited(refreshChatsList(ref));
+        // chatsListProvider уже слушает realtimeEventsProvider и обновится сам
+        if (!mounted) return;
         final meID = ref.read(authStateProvider).valueOrNull?.id;
         if (item.senderUserID != meID) {
           unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
         }
-      } else if (type == 'chat_read') {
-        unawaited(refreshChatsList(ref));
-      } else if (type == 'chat_list_changed') {
-        unawaited(refreshChatsList(ref));
-      } else if (type == 'friends_updated') {
-        unawaited(refreshFriendsSnapshot(ref));
       }
+      // chat_read, chat_list_changed, friends_updated — провайдеры обновятся
+      // автоматически через realtimeEventsProvider
     } catch (_) {}
   }
 
@@ -458,7 +493,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (!mounted) return;
       _textController.clear();
       _upsertMessage(sent);
-      unawaited(refreshChatsList(ref));
+      // chatsListProvider обновится через realtimeEventsProvider
       setState(() {
         _sending = false;
         _error = null;
@@ -485,11 +520,36 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
+    const target = 0.0;
     _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent + 80,
+      target,
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOut,
     );
+  }
+
+  void _scheduleScrollToBottom({int retriesLeft = 12}) {
+    if (!mounted || retriesLeft <= 0) {
+      if (mounted) setState(() => _initialScrollDone = true);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients || !mounted) return;
+      _scrollController.jumpTo(0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollController.hasClients || !mounted) return;
+        final pos = _scrollController.position;
+        const threshold = 24.0;
+        if (pos.pixels > threshold) {
+          _scheduleScrollToBottom(retriesLeft: retriesLeft - 1);
+        } else {
+          setState(() {
+            _initialScrollDone = true;
+            _showScrollToBottomButton = pos.pixels > _scrollToBottomThreshold;
+          });
+        }
+      });
+    });
   }
 
   String _formatBubbleDateTime(String raw) {
@@ -597,25 +657,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required ChatUserItem? user,
     required String fallbackTitle,
     double radius = 18,
+    bool? isOnline,
   }) {
+    Widget avatar;
     if (user != null &&
         user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
       final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
       if (memoryImage != null) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundImage: memoryImage,
         );
+      } else {
+        avatar = _buildLetterAvatar(raw: user.displayName?.trim() ?? fallbackTitle.trim(), radius: radius);
       }
-    }
-
-    if (user != null && user.avatarKind == 'preset') {
+    } else if (user != null && user.avatarKind == 'preset') {
       final iconIndex = int.tryParse(user.avatarValue ?? '');
       if (iconIndex != null) {
         final idx = iconIndex % _chatAvatarIcons.length;
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundColor: AppColors.accentSoft,
           child: Icon(
@@ -624,10 +686,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             size: radius,
           ),
         );
+      } else {
+        avatar = _buildLetterAvatar(raw: user.displayName?.trim() ?? fallbackTitle.trim(), radius: radius);
       }
+    } else {
+      final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
+      avatar = _buildLetterAvatar(raw: raw, radius: radius);
     }
+    if (isOnline == true) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: radius * 0.4,
+              height: radius * 0.4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceCard, width: 1),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return avatar;
+  }
 
-    final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
+  Widget _buildLetterAvatar({required String raw, required double radius}) {
     final letter = raw.isEmpty ? '?' : raw.substring(0, 1).toUpperCase();
     return CircleAvatar(
       radius: radius,
@@ -643,7 +733,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     );
   }
 
-  Future<void> _showUserInfoDialog(ChatUserItem user) async {
+  Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
     final name = _peerTitle(user);
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
@@ -652,10 +742,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        final statusText = presence == null
+            ? null
+            : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
-          child: GradientCard(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 420,
+              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
+            ),
+            child: GradientCard(
             animate: false,
             margin: EdgeInsets.zero,
             padding: EdgeInsets.all(compact ? 12 : 14),
@@ -670,18 +768,36 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       user: user,
                       fallbackTitle: name,
                       radius: 22,
+                      isOnline: presence?.online,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        name,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (statusText != null && statusText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     IconButton(
@@ -736,6 +852,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ],
             ),
           ),
+          ),
         );
       },
     );
@@ -758,11 +875,105 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return entries;
   }
 
+  Widget _buildChatToolbar({
+    required ChatUserItem? peerUser,
+    required String title,
+    PresenceEntry? presence,
+  }) {
+    final infoUser = peerUser;
+    final statusText = presence == null
+        ? null
+        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.inSplitView && !widget.fromFriends)
+            const SizedBox(width: 8)
+          else
+            IconButton(
+              onPressed: _leavingToChats ? null : _goBackToChats,
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: 'Назад к чатам',
+            ),
+          _buildPeerAvatar(
+            user: peerUser,
+            fallbackTitle: title,
+            radius: 18,
+            isOnline: presence?.online,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                if (statusText != null && statusText.isNotEmpty)
+                  Text(
+                    statusText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: infoUser == null
+                ? null
+                : () {
+                    final user = infoUser;
+                    unawaited(_showUserInfoDialog(user, presence: presence));
+                  },
+            tooltip: 'Информация о пользователе',
+            icon: const Icon(Icons.info_outline_rounded),
+          ),
+          PopupMenuButton<_RoomAction>(
+            enabled: !_roomActionInFlight,
+            tooltip: 'Действия с чатом',
+            onSelected: (action) {
+              unawaited(_runRoomAction(action, peerUserID: peerUser?.id));
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<_RoomAction>(
+                value: _RoomAction.clearChat,
+                child: Text('Очистить переписку'),
+              ),
+              PopupMenuItem<_RoomAction>(
+                value: _RoomAction.blockUser,
+                enabled: (peerUser?.id ?? '').trim().isNotEmpty,
+                child: const Text('Заблокировать пользователя'),
+              ),
+            ],
+            icon: const Icon(Icons.more_vert_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
+    final media = MediaQuery.of(context);
+    final narrowLandscape =
+        isNarrow(context) && media.size.width > media.size.height;
     final routeTitle = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     ChatUserItem? peerUser;
     for (final item in chats) {
       if (item.chatID == widget.chatID) {
@@ -771,7 +982,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }
     }
     final title = peerUser == null ? routeTitle : _peerTitle(peerUser);
-    final infoUser = peerUser;
+    final peerPresence = peerUser != null ? presence[peerUser.id] : null;
+
+    if (narrowLandscape) {
+      Future.microtask(() {
+        if (!mounted) return;
+        ref.read(mobileToolbarLeadingProvider.notifier).state =
+            _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence);
+      });
+    }
 
     Widget messagesWidget;
     if (_loading) {
@@ -789,34 +1008,35 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       );
     } else {
       final timeline = _buildTimelineEntries();
-      messagesWidget = RefreshIndicator(
-        onRefresh: _loadMessages,
-        child: _messages.isEmpty
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: ClampingScrollPhysics(),
-                ),
-                children: const [
-                  SizedBox(height: 120),
-                  Center(
-                    child: Text(
-                      'Сообщений пока нет.\nНапишите первое сообщение.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
+      final listView = _messages.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              children: const [
+                SizedBox(height: 120),
+                Center(
+                  child: Text(
+                    'Сообщений пока нет.\nНапишите первое сообщение.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
-                ],
-              )
-            : ListView.builder(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: ClampingScrollPhysics(),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                itemCount: timeline.length + ((_loadingOlder || _hasMoreOlder) ? 1 : 0),
-                itemBuilder: (context, index) {
+              ],
+            )
+          : ListView.builder(
+              controller: _scrollController,
+              reverse: true,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              cacheExtent: 400,
+              itemCount: timeline.length + ((_loadingOlder || _hasMoreOlder) ? 1 : 0),
+              itemBuilder: (context, index) {
                   final topLoaderVisible = _loadingOlder || _hasMoreOlder;
-                  if (topLoaderVisible && index == 0) {
+                  final itemCount = timeline.length + (topLoaderVisible ? 1 : 0);
+                  if (topLoaderVisible && index == itemCount - 1) {
                     if (_loadingOlder) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 4, bottom: 8),
@@ -832,7 +1052,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     return const SizedBox(height: 8);
                   }
 
-                  final timelineIndex = topLoaderVisible ? index - 1 : index;
+                  final timelineIndex = timeline.length - 1 - index;
                   final entry = timeline[timelineIndex];
                   if (entry.headerLabel != null) {
                     return Padding(
@@ -900,74 +1120,104 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   );
                 },
-              ),
+              );
+      Widget scrollChild = isWide(context) && _messages.isNotEmpty
+          ? Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: true,
+              child: listView,
+            )
+          : listView;
+      scrollChild = NotificationListener<ScrollNotification>(
+        onNotification: (_) {
+          if (_scrollController.hasClients) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || !_scrollController.hasClients) return;
+              final pos = _scrollController.position;
+              final nearBottom = pos.pixels <= _scrollToBottomThreshold;
+              if (_showScrollToBottomButton != !nearBottom) {
+                setState(() => _showScrollToBottomButton = !nearBottom);
+              }
+            });
+          }
+          return false;
+        },
+        child: scrollChild,
+      );
+      messagesWidget = RefreshIndicator(
+        onRefresh: _loadMessages,
+        child: scrollChild,
       );
     }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: Column(
+        child: GestureDetector(
+          onHorizontalDragEnd: (details) {
+            if ((widget.inSplitView && !widget.fromFriends) || _leavingToChats) return;
+            if (details.primaryVelocity != null && details.primaryVelocity! > 200) {
+              _goBackToChats();
+            }
+          },
+          child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-              child: Row(
+            if (!narrowLandscape)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                child: _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence),
+              ),
+            Expanded(
+              child: Stack(
                 children: [
-                  IconButton(
-                    onPressed: _leavingToChats ? null : _goBackToChats,
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    tooltip: 'Назад к чатам',
-                  ),
-                  _buildPeerAvatar(
-                    user: peerUser,
-                    fallbackTitle: title,
-                    radius: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                  messagesWidget,
+                  if (_showScrollToBottomButton && _messages.isNotEmpty)
+                    Positioned(
+                      bottom: 16,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Tooltip(
+                          message: 'В конец переписки',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _scrollToBottom,
+                              borderRadius: BorderRadius.circular(28),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  gradient: AppGradients.borderAt(0.22),
+                                  borderRadius: BorderRadius.circular(28),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.accentStart.withValues(alpha: 0.2),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(26),
+                                  ),
+                                  child: Icon(
+                                    Icons.keyboard_double_arrow_down_rounded,
+                                    color: AppColors.accentStart,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
+                        ),
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: infoUser == null
-                        ? null
-                        : () {
-                            final user = infoUser;
-                            unawaited(_showUserInfoDialog(user));
-                          },
-                    tooltip: 'Информация о пользователе',
-                    icon: const Icon(Icons.info_outline_rounded),
-                  ),
-                  PopupMenuButton<_RoomAction>(
-                    enabled: !_roomActionInFlight,
-                    tooltip: 'Действия с чатом',
-                    onSelected: (action) {
-                      unawaited(_runRoomAction(action, peerUserID: peerUser?.id));
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem<_RoomAction>(
-                        value: _RoomAction.clearChat,
-                        child: Text('Очистить переписку'),
-                      ),
-                      PopupMenuItem<_RoomAction>(
-                        value: _RoomAction.blockUser,
-                        enabled: (peerUser?.id ?? '').trim().isNotEmpty,
-                        child: const Text('Заблокировать пользователя'),
-                      ),
-                    ],
-                    icon: const Icon(Icons.more_vert_rounded),
-                  ),
                 ],
               ),
             ),
-            Expanded(child: messagesWidget),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
               child: GradientCard(
@@ -1007,6 +1257,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ),
             ),
           ],
+        ),
         ),
       ),
     );

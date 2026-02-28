@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -9,8 +10,10 @@ import (
 
 	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
+	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type statusRecorder struct {
@@ -23,9 +26,9 @@ func (w *statusRecorder) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-// RequestLogger логирует все HTTP-запросы бэкенда в файл.
-func RequestLogger(secret []byte, writer *applog.FileWriter, next http.Handler) http.Handler {
-	if writer == nil {
+// RequestLogger логирует все HTTP-запросы бэкенда (в файл и/или напрямую в БД).
+func RequestLogger(secret []byte, writer *applog.FileWriter, pool *pgxpool.Pool, directDB bool, next http.Handler) http.Handler {
+	if writer == nil && !(pool != nil && directDB) {
 		return next
 	}
 
@@ -58,13 +61,47 @@ func RequestLogger(secret []byte, writer *applog.FileWriter, next http.Handler) 
 			event.UserID = userID
 		}
 
-		_ = writer.Append(event)
+		if writer != nil {
+			_ = writer.Append(event)
+		}
+		var uid *uuid.UUID
+		if event.UserID != "" {
+			if parsed, err := uuid.Parse(event.UserID); err == nil {
+				uid = &parsed
+				// Обновляем last_seen при каждом auth-запросе (не только WebSocket)
+				if pool != nil {
+					go store.UpdateUserLastSeen(context.Background(), pool, parsed)
+				}
+			}
+		}
+		if pool != nil && directDB {
+			msg := r.Method + " " + r.URL.Path
+			if r.URL.RawQuery != "" {
+				msg += "?" + r.URL.RawQuery
+			}
+			path := r.URL.Path
+			_ = store.InsertAppLog(r.Context(), pool, store.InsertAppLogParams{
+				EventTime:  started,
+				Source:     "backend",
+				MethodName: "http.request",
+				UserID:     uid,
+				Level:      "info",
+				Message:    msg,
+				Metadata:   metadata,
+				HTTPMethod: &r.Method,
+				Path:       &path,
+				StatusCode: &status,
+				DurationMS: &duration,
+			})
+		}
 	})
 }
 
 type FrontendLogHandler struct {
-	Writer    *applog.FileWriter
-	JWTSecret []byte
+	Writer       *applog.FileWriter
+	JWTSecret    []byte
+	Pool        *pgxpool.Pool
+	DirectDB    bool
 }
 
 type frontendLogRequest struct {
@@ -80,14 +117,13 @@ type frontendLogRequest struct {
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
-// Ingest принимает frontend-события и пишет их в файл.
+// Ingest принимает frontend-события и пишет их в файл и/или напрямую в БД.
 func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	if h.Writer == nil {
-		// Логирование отключено через конфиг — считаем запрос успешно принятым.
+	if h.Writer == nil && !(h.Pool != nil && h.DirectDB) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
@@ -130,11 +166,52 @@ func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.Writer.Append(event); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
+	if h.Writer != nil {
+		if err := h.Writer.Append(event); err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+	}
+	if h.Pool != nil && h.DirectDB {
+		var uid *uuid.UUID
+		if event.UserID != "" {
+			if parsed, err := uuid.Parse(event.UserID); err == nil {
+				uid = &parsed
+			}
+		}
+		evTime := time.Now().UTC()
+		if event.EventTime != "" {
+			if t, err := time.Parse(time.RFC3339Nano, event.EventTime); err == nil {
+				evTime = t.UTC()
+			}
+		}
+		level := event.Level
+		if level == "" {
+			level = "info"
+		}
+		_ = store.InsertAppLog(r.Context(), h.Pool, store.InsertAppLogParams{
+			EventID:    event.EventID,
+			EventTime:  evTime,
+			Source:     "frontend",
+			MethodName: event.MethodName,
+			UserID:     uid,
+			Level:      level,
+			Message:    event.Message,
+			Metadata:   event.Metadata,
+			HTTPMethod: strPtr(event.HTTPMethod),
+			Path:       strPtr(event.Path),
+			StatusCode: event.StatusCode,
+			DurationMS: event.DurationMS,
+		})
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func userIDFromBearer(secret []byte, header string) string {

@@ -6,10 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_repository.dart';
+import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -60,6 +65,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   @override
   void dispose() {
+    final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifier.state = null;
+    });
     _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -156,30 +165,40 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _showRequestInfoDialog({
     required FriendUserItem user,
+    PresenceEntry? presence,
   }) async {
     final name = _displayName(user);
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
     final female = _isFemaleGender(user.gender);
+    final statusText = presence == null
+        ? null
+        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
-          child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.all(compact ? 12 : 14),
-            child: Column(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 420,
+              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
+            ),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.all(compact ? 12 : 14),
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildAvatar(user),
+                    _buildAvatar(user, isOnline: presence?.online),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -195,6 +214,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (statusText != null && statusText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -205,7 +235,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     ),
                   ],
                 ),
-                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
+                if ((user.age != null && user.age! > 0) ||
+                    genderIcon != null) ...[
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
@@ -220,8 +251,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                         _buildInfoPill(
                           icon: genderIcon,
                           minWidth: 46,
-                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
-                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
+                          backgroundColor: female
+                              ? const Color(0xFFFCE7F3)
+                              : AppColors.accentSoft,
+                          foregroundColor: female
+                              ? const Color(0xFFBE185D)
+                              : AppColors.textPrimary,
                         ),
                     ],
                   ),
@@ -250,35 +285,65 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ],
             ),
           ),
+        ),
         );
       },
     );
   }
 
-  Widget _buildAvatar(FriendUserItem user) {
+  Widget _buildAvatar(FriendUserItem user, {bool? isOnline}) {
+    Widget avatar;
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.isNotEmpty) {
       final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
       if (memoryImage != null) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: 20,
           backgroundImage: memoryImage,
         );
+      } else {
+        avatar = _buildLetterAvatar(user);
       }
-    }
-
-    if (user.avatarKind == 'preset' && user.avatarValue != null) {
+    } else if (user.avatarKind == 'preset' && user.avatarValue != null) {
       final index = int.tryParse(user.avatarValue!);
       if (index != null && index >= 0 && index < _presetAvatarIcons.length) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: 20,
           backgroundColor: AppColors.accentSoft,
           child: Icon(_presetAvatarIcons[index], color: AppColors.accentStart),
         );
+      } else {
+        avatar = _buildLetterAvatar(user);
       }
+    } else {
+      avatar = _buildLetterAvatar(user);
     }
+    if (isOnline == true) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceCard, width: 1),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return avatar;
+  }
 
+  Widget _buildLetterAvatar(FriendUserItem user) {
     final first = _displayName(user).trim();
     final letter = first.isEmpty ? '?' : first.substring(0, 1).toUpperCase();
     return CircleAvatar(
@@ -584,7 +649,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required List<Widget> actions,
     Widget? trailing,
     bool alignActionsRight = false,
+    PresenceEntry? presence,
   }) {
+    final statusText = presence == null
+        ? null
+        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),
@@ -595,7 +664,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         children: [
           Row(
             children: [
-              _buildAvatar(user),
+              _buildAvatar(user, isOnline: presence?.online),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -610,6 +679,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (statusText != null && statusText.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          statusText,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -622,12 +704,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           const SizedBox(height: 10),
           Text(
             subtitle,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
           if (actions.isNotEmpty) ...[
             const SizedBox(height: 10),
             Align(
-              alignment: alignActionsRight ? Alignment.centerRight : Alignment.centerLeft,
+              alignment: alignActionsRight
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
               child: Wrap(spacing: 8, runSpacing: 8, children: actions),
             ),
           ],
@@ -676,7 +761,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }) {
     if (items.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: [
           Center(
@@ -700,17 +786,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final hasMore = visibleCount < items.length;
     final totalCount = visibleCount + (hasMore ? 1 : 0);
 
+    final useGrid = isWide(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth > 900) {
+        if (useGrid) {
           return GridView.builder(
             padding: const EdgeInsets.all(16),
-            physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics()),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 520,
+              maxCrossAxisExtent: 380,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 2.6,
+              childAspectRatio: 2.4,
             ),
             itemCount: totalCount,
             itemBuilder: (context, index) {
@@ -733,7 +821,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
-          physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics()),
           itemCount: totalCount,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
@@ -759,7 +848,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildFriendsTab(FriendsSnapshot snapshot) {
+  Widget _buildFriendsTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     return _buildAdaptiveList<FriendItem>(
       items: snapshot.friends,
       emptyText: 'У вас пока нет друзей',
@@ -769,6 +858,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         final chatKey = 'chat_${item.user.id}';
         return _buildUserCard(
           user: item.user,
+          presence: presence[item.user.id],
           subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -776,7 +866,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               _buildCompactIconButton(
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(user: item.user),
+                onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
               ),
               const SizedBox(width: 4),
               _buildCompactIconButton(
@@ -804,7 +894,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildIncomingTab(FriendsSnapshot snapshot) {
+  Widget _buildIncomingTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     return _buildAdaptiveList<FriendRequestItem>(
       items: snapshot.incoming,
       emptyText: 'Нет входящих заявок',
@@ -815,6 +905,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         final chatKey = 'chat_incoming_${item.user.id}';
         return _buildUserCard(
           user: item.user,
+          presence: presence[item.user.id],
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -822,7 +913,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               _buildCompactIconButton(
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(user: item.user),
+                onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
               ),
               const SizedBox(width: 4),
               _buildCompactIconButton(
@@ -858,7 +949,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildOutgoingTab(FriendsSnapshot snapshot) {
+  Widget _buildOutgoingTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     return _buildAdaptiveList<FriendRequestItem>(
       items: snapshot.outgoing,
       emptyText: 'Нет исходящих заявок',
@@ -868,6 +959,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         final chatKey = 'chat_outgoing_${item.user.id}';
         return _buildUserCard(
           user: item.user,
+          presence: presence[item.user.id],
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -875,7 +967,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               _buildCompactIconButton(
                 icon: Icons.info_outline_rounded,
                 tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(user: item.user),
+                onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
               ),
               const SizedBox(width: 4),
               _buildCompactIconButton(
@@ -911,7 +1003,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     bool loading = false,
   }) {
     final enabled = onPressed != null && !loading;
-    final borderColor = danger ? Colors.red.shade300 : AppColors.accentStart.withValues(alpha: 0.55);
+    final borderColor = danger
+        ? Colors.red.shade300
+        : AppColors.accentStart.withValues(alpha: 0.55);
     final iconColor = danger ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,
@@ -980,7 +1074,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     required VoidCallback onPressed,
     bool redFrame = false,
   }) {
-    final gradient = redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
+    final gradient =
+        redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
     final redBorderColor = Colors.red.shade400;
     final iconColor = redFrame ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
@@ -1007,7 +1102,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildSearchResultCard(FriendSearchItem item) {
+  Widget _buildSearchResultCard(FriendSearchItem item, Map<String, PresenceEntry> presence) {
     final relation = item.relationStatus;
     final sendKey = 'send_${item.user.id}';
     final cancelKey = 'cancel_search_${item.requestId ?? item.user.id}';
@@ -1020,7 +1115,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       _buildCompactIconButton(
         icon: Icons.info_outline_rounded,
         tooltip: 'Информация о пользователе',
-        onPressed: () => _showRequestInfoDialog(user: item.user),
+        onPressed: () => _showRequestInfoDialog(user: item.user, presence: presence[item.user.id]),
       ),
     ];
     if (relation == 'none') {
@@ -1145,7 +1240,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       animate: false,
       child: Row(
         children: [
-          _buildAvatar(item.user),
+          _buildAvatar(item.user, isOnline: presence[item.user.id]?.online),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1163,6 +1258,20 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   ),
                 ),
                 const SizedBox(height: 2),
+                if (presence[item.user.id] != null) ...[
+                  Text(
+                    presence[item.user.id]!.online
+                        ? 'Онлайн'
+                        : formatLastSeen(presence[item.user.id]!.lastSeenAt),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                ],
                 Text(
                   relationLabel,
                   maxLines: 1,
@@ -1201,10 +1310,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   suffixIcon: _searchController.text.isEmpty
                       ? null
                       : Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 6),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.red.shade400, width: 1.8),
+                            border: Border.all(
+                                color: Colors.red.shade400, width: 1.8),
                           ),
                           child: IconButton(
                             tooltip: 'Очистить поиск',
@@ -1220,7 +1331,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                               });
                               _searchFocusNode.requestFocus();
                             },
-                            icon: const Icon(Icons.close_rounded, color: Colors.red),
+                            icon: const Icon(Icons.close_rounded,
+                                color: Colors.red),
                           ),
                         ),
                 ),
@@ -1234,11 +1346,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(Map<String, PresenceEntry> presence) {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: const [
           Center(
@@ -1252,7 +1365,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
     if (_isSearching) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: const [
           Center(
@@ -1270,7 +1384,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
     if (_searchResults.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
         children: const [
           Center(
@@ -1284,8 +1399,45 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     }
     final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
     final itemCount = _searchResults.length + (showPagingLoader ? 1 : 0);
+
+    if (isWide(context)) {
+      return GridView.builder(
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 380,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 2.4,
+        ),
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index >= _searchResults.length) {
+            if (_searchHasMore && !_isSearchLoadingMore) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                unawaited(_loadMoreSearchResults());
+              });
+            }
+            return const Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              ),
+            );
+          }
+          return _buildSearchResultCard(_searchResults[index], presence);
+        },
+      );
+    }
+
     return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -1310,8 +1462,64 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             ),
           );
         }
-        return _buildSearchResultCard(_searchResults[index]);
+        return _buildSearchResultCard(_searchResults[index], presence);
       },
+    );
+  }
+
+  Widget _buildWideHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: _buildInlineSearchField(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInlineSearchField() {
+    return AnimatedBorderBox(
+      animateBorder: true,
+      borderWidth: 2,
+      borderRadius: AppRadius.input,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: 'Поиск по нику',
+          prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: _searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Очистить',
+                  onPressed: () {
+                    _searchDebounce?.cancel();
+                    _searchRevision++;
+                    _searchController.clear();
+                    setState(() {
+                      _searchResults = const [];
+                      _isSearching = false;
+                      _isSearchLoadingMore = false;
+                      _searchHasMore = false;
+                    });
+                    _searchFocusNode.requestFocus();
+                  },
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                ),
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        ),
+        onChanged: _onSearchTextChanged,
+        onSubmitted: (_) => _scheduleSearch(immediate: true),
+      ),
     );
   }
 
@@ -1381,142 +1589,160 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
-  Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot) {
+  Widget _tabContent(_FriendsTabKind tab, FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        return _buildFriendsTab(snapshot);
+        return _buildFriendsTab(snapshot, presence);
       case _FriendsTabKind.incoming:
-        return _buildIncomingTab(snapshot);
+        return _buildIncomingTab(snapshot, presence);
       case _FriendsTabKind.outgoing:
-        return _buildOutgoingTab(snapshot);
+        return _buildOutgoingTab(snapshot, presence);
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
+    final wide = isWide(context);
+    final path = ref.watch(currentRoutePathProvider);
+    if (!wide && path == '/friends') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref.read(mobileToolbarLeadingProvider.notifier).state =
+              _buildGradientHeaderIconButton(
+            icon: _isSearchExpanded
+                ? Icons.search_off_rounded
+                : Icons.search_rounded,
+            tooltip: _isSearchExpanded
+                ? 'Свернуть поиск'
+                : 'Показать поиск',
+            onPressed: _toggleSearch,
+            redFrame: _isSearchExpanded,
+          );
+        });
+      });
+    }
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Text(
-                    'Друзья',
-                    style: (compact
-                            ? Theme.of(context).textTheme.headlineMedium
-                            : Theme.of(context).textTheme.headlineSmall)
-                        ?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  _buildGradientHeaderIconButton(
-                    icon: _isSearchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
-                    tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
-                    onPressed: _toggleSearch,
-                    redFrame: _isSearchExpanded,
-                  ),
-                ],
+            if (wide)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildWideHeader(),
               ),
-            ),
-            AnimatedSwitcher(
-              duration: AppDurations.short,
-              child: _isSearchExpanded
-                  ? _buildSearchPanel()
-                  : const SizedBox(
-                      key: ValueKey('friends-search-collapsed'),
-                    ),
-            ),
-            if (_isSearchExpanded)
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () => _refreshSnapshot(refreshSearch: true),
-                  child: _buildSearchResults(),
-                ),
-              )
-            else ...[
-              Expanded(
-                child: DefaultTabController(
-                  key: ValueKey('friends-tabs-${tabs.map((e) => e.name).join("_")}'),
-                  length: tabs.length,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: TabBar(
-                          isScrollable: false,
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelStyle: TextStyle(
-                            fontSize: compact ? 12 : 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          unselectedLabelStyle: TextStyle(
-                            fontSize: compact ? 12 : 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          tabs: [
-                            for (final tab in tabs)
-                              Tab(
-                                child: _buildTabLabel(tab, friendsAsync.valueOrNull),
-                              ),
-                          ],
+            if (!wide)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: AnimatedSwitcher(
+                  duration: AppDurations.short,
+                  child: _isSearchExpanded
+                      ? _buildSearchPanel()
+                      : const SizedBox(
+                          key: ValueKey('friends-search-collapsed'),
                         ),
-                      ),
-                      Expanded(
-                        child: friendsAsync.when(
-                          data: (snapshot) {
-                            return RefreshIndicator(
-                              onRefresh: () => _refreshSnapshot(refreshSearch: false),
-                              child: TabBarView(
-                                physics: const NeverScrollableScrollPhysics(),
-                                children: [
-                                  for (final tab in tabs) _tabContent(tab, snapshot),
-                                ],
-                              ),
-                            );
-                          },
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.accentStart,
-                            ),
-                          ),
-                          error: (err, _) => Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline_rounded,
-                                    size: 46,
-                                    color: Colors.red.shade700,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    err.toString(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(color: Colors.red.shade700),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
-            ],
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: double.infinity),
+                  child: (wide && _searchController.text.trim().isNotEmpty) ||
+                          _isSearchExpanded
+                      ? RefreshIndicator(
+                          onRefresh: () =>
+                              _refreshSnapshot(refreshSearch: true),
+                          child: _buildSearchResults(presence),
+                        )
+                      : DefaultTabController(
+                          key: ValueKey(
+                              'friends-tabs-${tabs.map((e) => e.name).join("_")}'),
+                          length: tabs.length,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 6),
+                                child: TabBar(
+                                  isScrollable: false,
+                                  labelPadding:
+                                      const EdgeInsets.symmetric(horizontal: 2),
+                                  indicatorSize: TabBarIndicatorSize.tab,
+                                  labelStyle: TextStyle(
+                                    fontSize: compact ? 12 : 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  unselectedLabelStyle: TextStyle(
+                                    fontSize: compact ? 12 : 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  tabs: [
+                                    for (final tab in tabs)
+                                      Tab(
+                                        child: _buildTabLabel(
+                                            tab, friendsAsync.valueOrNull),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: friendsAsync.when(
+                                  data: (snapshot) {
+                                    return RefreshIndicator(
+                                      onRefresh: () => _refreshSnapshot(
+                                          refreshSearch: false),
+                                      child: TabBarView(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        children: [
+                                          for (final tab in tabs)
+                                            _tabContent(tab, snapshot, presence),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  loading: () => const Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.accentStart,
+                                    ),
+                                  ),
+                                  error: (err, _) => Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.error_outline_rounded,
+                                            size: 46,
+                                            color: Colors.red.shade700,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            err.toString(),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                color: Colors.red.shade700),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -253,6 +253,12 @@ Windows:
 /deploy-develop
 ```
 
+**Отключить логирование в production:**
+
+```bash
+fly secrets set APP_LOG_ENABLED=false --app multigameszozu
+```
+
 Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)
 
 ---

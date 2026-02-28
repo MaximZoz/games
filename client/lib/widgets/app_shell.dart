@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
@@ -38,26 +41,45 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     final authState = ref.watch(authStateProvider);
+    final isAuthorized = authState.valueOrNull != null;
+    // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
+    if (isAuthorized) {
+      ref.watch(realtimeEventsProvider);
+      ref.watch(presenceMapProvider);
+    }
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
+    final isLandscape = media.size.width > media.size.height;
+    final narrowLandscape = narrow && isLandscape;
     final inChatRoom = path.startsWith('/chats/');
+    final onChatsList = path == '/chats';
+    final onFriends = path == '/friends';
+    final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
+    Future.microtask(() {
+      if (!context.mounted) return;
+      try {
+        ref.read(currentRoutePathProvider.notifier).state = path;
+        final shouldClearToolbar =
+            !onFriends && !onChatsList && !(inChatRoom && narrowLandscape);
+        if (shouldClearToolbar) {
+          ref.read(mobileToolbarLeadingProvider.notifier).state = null;
+        }
+      } catch (_) {
+        // Игнорируем: виджет мог быть disposed (defunct element)
+      }
+    });
     final keyboardLikelyVisible =
         narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = navigationShell.currentIndex;
-    final isAuthorized = authState.valueOrNull != null;
 
     void navigateWithPrefetch(int i) {
-      final sameBranch = i == navigationShell.currentIndex;
-      navigationShell.goBranch(
-        i,
-        initialLocation: sameBranch,
-      );
+      final target = _navItems[i].path;
+      context.go(target);
 
       if (!isAuthorized) return;
-      final target = _navItems[i].path;
       if (target == '/chats') {
         unawaited(
           ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
@@ -90,23 +112,22 @@ class AppShell extends ConsumerWidget {
                 height: kToolbarHeight,
                 child: Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => context.go('/'),
-                      child: const Padding(
-                        key: Key('toolbar_title'),
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'MultiGames',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
-                            decoration: TextDecoration.none,
-                            decorationColor: Colors.transparent,
-                          ),
-                        ),
-                      ),
-                    ),
+                    if ((narrow && (onFriends || onChatsList) ||
+                            (narrowLandscape && inChatRoom)) &&
+                        toolbarLeading != null)
+                      narrowLandscape && inChatRoom
+                          ? Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: toolbarLeading,
+                              ),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: toolbarLeading,
+                            )
+                    else
+                      const SizedBox.shrink(),
                     const Spacer(),
                     authState.when(
                       data: (user) {
@@ -166,7 +187,7 @@ class AppShell extends ConsumerWidget {
               ),
             ),
             Expanded(
-              child: narrow
+              child: narrow && !narrowLandscape
                   ? SizedBox.expand(child: navigationShell)
                   : Row(
                       children: [
@@ -176,7 +197,9 @@ class AppShell extends ConsumerWidget {
                           backgroundColor: Colors.transparent,
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
-                          labelType: NavigationRailLabelType.all,
+                          labelType: narrowLandscape
+                              ? NavigationRailLabelType.none
+                              : NavigationRailLabelType.all,
                           destinations: _navItems.asMap().entries.map((entry) {
                             final index = entry.key;
                             final item = entry.value;
@@ -197,7 +220,7 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow && !keyboardLikelyVisible && !inChatRoom)
+            if (narrow && !narrowLandscape && !keyboardLikelyVisible && !inChatRoom)
               SafeArea(
                 top: false,
                 child: Material(

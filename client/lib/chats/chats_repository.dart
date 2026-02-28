@@ -13,6 +13,8 @@ class ChatUserItem {
   final int? age;
   final String? gender;
   final String? about;
+  final bool? isOnline;
+  final String? lastSeenAt;
 
   ChatUserItem({
     required this.id,
@@ -22,7 +24,33 @@ class ChatUserItem {
     this.age,
     this.gender,
     this.about,
+    this.isOnline,
+    this.lastSeenAt,
   });
+
+  ChatUserItem copyWith({
+    String? id,
+    String? displayName,
+    String? avatarKind,
+    String? avatarValue,
+    int? age,
+    String? gender,
+    String? about,
+    bool? isOnline,
+    String? lastSeenAt,
+  }) {
+    return ChatUserItem(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      avatarKind: avatarKind ?? this.avatarKind,
+      avatarValue: avatarValue ?? this.avatarValue,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      about: about ?? this.about,
+      isOnline: isOnline ?? this.isOnline,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+    );
+  }
 
   factory ChatUserItem.fromJson(Map<String, dynamic> json) {
     return ChatUserItem(

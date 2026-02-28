@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ModalRoute, RouteObserver;
 import 'package:flutter/widgets.dart' show Widget;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,8 +9,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
-import 'package:multigames_client/screens/chat_room_screen.dart';
-import 'package:multigames_client/screens/chats_screen.dart';
+import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
@@ -57,6 +57,9 @@ NoTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
   );
 }
 
+/// Обсервер для уведомления экранов о смене маршрута (например, при возврате назад).
+final chatsRouteObserver = RouteObserver<ModalRoute<void>>();
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
@@ -64,6 +67,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: refreshListenable,
+    observers: [chatsRouteObserver],
     redirect: (context, state) async {
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);
@@ -141,14 +145,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/chats',
-                pageBuilder: (_, state) => _noTransitionPage(state, const ChatsScreen()),
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  const ChatsLayoutScreen(),
+                ),
               ),
               GoRoute(
                 path: '/chats/:chatId',
                 pageBuilder: (_, state) => _noTransitionPage(
                   state,
-                  ChatRoomScreen(
-                    chatID: state.pathParameters['chatId'] ?? '',
+                  ChatsLayoutScreen(
+                    chatId: state.pathParameters['chatId'],
                     peerName: state.uri.queryParameters['name'],
                     fromFriends: state.uri.queryParameters['from'] == 'friends',
                   ),
