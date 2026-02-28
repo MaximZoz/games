@@ -1,16 +1,22 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
+	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type RealtimeHub struct {
@@ -74,6 +80,14 @@ func (h *RealtimeHub) Unregister(userID uuid.UUID, conn *websocket.Conn) {
 	}
 }
 
+// IsUserOnline returns true if the user has at least one active WebSocket connection.
+func (h *RealtimeHub) IsUserOnline(userID uuid.UUID) bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	conns, ok := h.clients[userID]
+	return ok && len(conns) > 0
+}
+
 func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 	if h == nil || len(userIDs) == 0 {
 		return
@@ -118,8 +132,11 @@ func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 }
 
 type RealtimeWSHandler struct {
-	Hub       *RealtimeHub
-	JWTSecret []byte
+	Hub           *RealtimeHub
+	Pool          *pgxpool.Pool
+	JWTSecret     []byte
+	LogWriter     *applog.FileWriter // файл (для импорта)
+	AppLogEnabled bool               // если true — presence пишем ещё и напрямую в БД
 }
 
 var wsUpgrader = websocket.Upgrader{
@@ -173,12 +190,134 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := h.Hub.Register(userID, conn)
+	log.Printf("realtime: user %s connected", userID)
+
+	// Update last_seen and notify presence on connect
+	if h.Pool != nil {
+		ctx := r.Context()
+		_ = store.UpdateUserLastSeen(ctx, h.Pool, userID)
+		now := time.Now().UTC().Format(time.RFC3339Nano)
+		recipients, recErr := store.GetPresenceRecipientsForUser(ctx, h.Pool, userID)
+		if recErr == nil && len(recipients) > 0 {
+			h.Hub.PublishToUsers(recipients, map[string]any{
+				"type":         "user_online",
+				"user_id":      userID.String(),
+				"online":       true,
+				"last_seen_at": now,
+			})
+		}
+		if h.LogWriter != nil {
+			meta := map[string]interface{}{
+				"recipients_count": len(recipients),
+				"last_seen_at":     now,
+			}
+			if recErr == nil && len(recipients) > 0 {
+				ids := make([]string, 0, len(recipients))
+				for _, r := range recipients {
+					ids = append(ids, r.String())
+				}
+				meta["recipient_ids"] = ids
+			} else if recErr != nil {
+				meta["error"] = recErr.Error()
+			}
+			_ = h.LogWriter.Append(applog.Event{
+				Source:     "backend",
+				MethodName: "realtime.presence_online",
+				UserID:     userID.String(),
+				Level:      "info",
+				Message:    "user connected, user_online sent to " + strconv.Itoa(len(recipients)) + " recipients",
+				Metadata:   meta,
+			})
+		}
+		if h.AppLogEnabled && h.Pool != nil {
+			meta := map[string]interface{}{
+				"recipients_count": len(recipients),
+				"last_seen_at":     now,
+			}
+			if recErr == nil && len(recipients) > 0 {
+				ids := make([]string, 0, len(recipients))
+				for _, r := range recipients {
+					ids = append(ids, r.String())
+				}
+				meta["recipient_ids"] = ids
+			}
+			_ = store.InsertAppLog(ctx, h.Pool, store.InsertAppLogParams{
+				Source:     "backend",
+				MethodName: "realtime.presence_online",
+				UserID:     &userID,
+				Level:      "info",
+				Message:    "user connected, user_online sent to " + strconv.Itoa(len(recipients)) + " recipients",
+				Metadata:   meta,
+			})
+		}
+	}
+
 	defer func() {
+		log.Printf("realtime: user %s disconnected", userID)
+		// Update last_seen and notify presence on disconnect
+		if h.Pool != nil {
+			ctx := context.Background()
+			_ = store.UpdateUserLastSeen(ctx, h.Pool, userID)
+			now := time.Now().UTC().Format(time.RFC3339Nano)
+			recipients, recErr := store.GetPresenceRecipientsForUser(ctx, h.Pool, userID)
+			if recErr == nil && len(recipients) > 0 {
+				h.Hub.PublishToUsers(recipients, map[string]any{
+					"type":         "user_offline",
+					"user_id":      userID.String(),
+					"online":      false,
+					"last_seen_at": now,
+				})
+			}
+			if h.LogWriter != nil {
+				meta := map[string]interface{}{
+					"recipients_count": len(recipients),
+					"last_seen_at":     now,
+				}
+				if recErr == nil && len(recipients) > 0 {
+					ids := make([]string, 0, len(recipients))
+					for _, r := range recipients {
+						ids = append(ids, r.String())
+					}
+					meta["recipient_ids"] = ids
+				} else if recErr != nil {
+					meta["error"] = recErr.Error()
+				}
+				_ = h.LogWriter.Append(applog.Event{
+					Source:     "backend",
+					MethodName: "realtime.presence_offline",
+					UserID:     userID.String(),
+					Level:      "info",
+					Message:    "user disconnected, user_offline sent to " + strconv.Itoa(len(recipients)) + " recipients",
+					Metadata:   meta,
+				})
+			}
+			if h.AppLogEnabled && h.Pool != nil {
+				meta := map[string]interface{}{
+					"recipients_count": len(recipients),
+					"last_seen_at":     now,
+				}
+				if recErr == nil && len(recipients) > 0 {
+					ids := make([]string, 0, len(recipients))
+					for _, r := range recipients {
+						ids = append(ids, r.String())
+					}
+					meta["recipient_ids"] = ids
+				}
+				_ = store.InsertAppLog(context.Background(), h.Pool, store.InsertAppLogParams{
+					Source:     "backend",
+					MethodName: "realtime.presence_offline",
+					UserID:     &userID,
+					Level:      "info",
+					Message:    "user disconnected, user_offline sent to " + strconv.Itoa(len(recipients)) + " recipients",
+					Metadata:   meta,
+				})
+			}
+		}
 		h.Hub.Unregister(userID, conn)
 		_ = conn.Close()
 	}()
 
-	const readTimeout = 70 * time.Second
+	const readTimeout = 60 * time.Second // Неактивен 1 мин → disconnect → user_offline друзьям и чатам
 	const pingInterval = 30 * time.Second
 
 	conn.SetReadLimit(4096)

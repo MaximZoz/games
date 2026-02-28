@@ -1,0 +1,1 @@
+TRUNCATE app_logs;

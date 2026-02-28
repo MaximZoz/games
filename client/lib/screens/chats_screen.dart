@@ -8,8 +8,11 @@ import 'package:multigames_client/router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -1021,6 +1024,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     }
 
     final maxListHeight = !wrapInSheet ? MediaQuery.of(modalContext).size.height * 0.65 : null;
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     return GradientCard(
       animate: false,
       margin: EdgeInsets.zero,
@@ -1039,6 +1043,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                 onVisibleCountChanged: onVisibleCountChanged,
                 onRefreshFriends: onRefreshFriends,
                 maxListHeight: null,
+                presence: presence,
               ),
             )
           : _newChatColumn(
@@ -1052,6 +1057,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               onVisibleCountChanged: onVisibleCountChanged,
               onRefreshFriends: onRefreshFriends,
               maxListHeight: maxListHeight,
+              presence: presence,
             ),
     );
   }
@@ -1067,6 +1073,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required void Function(int) onVisibleCountChanged,
     required void Function() onRefreshFriends,
     double? maxListHeight,
+    Map<String, PresenceEntry> presence = const {},
   }) {
     final listChild = FutureBuilder<List<FriendItem>>(
       future: friendsFuture,
@@ -1203,6 +1210,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                   gender: friend.gender,
                                                   about: friend.about,
                                                 ),
+                                                isOnline: presence[friend.id]?.online,
                                               ),
                                               const SizedBox(width: 10),
                                               Expanded(
@@ -1289,6 +1297,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return value;
   }
 
+  String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
+    if (presence == null) {
+      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+    }
+    final statusText = presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt);
+    if (statusText.isEmpty) {
+      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+    }
+    return subtitle.isEmpty ? statusText : '$statusText · $subtitle';
+  }
+
   IconData? _genderIcon(String? value) {
     final normalized = value?.trim().toLowerCase();
     if (normalized == null || normalized.isEmpty) return null;
@@ -1359,7 +1378,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     );
   }
 
-  Future<void> _showUserInfoDialog(ChatUserItem user) async {
+  Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
     final name = _peerTitle(user);
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
@@ -1368,6 +1387,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
+        final statusText = presence == null
+            ? null
+            : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
@@ -1387,7 +1409,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AvatarDot(user: user, radius: 22),
+                    _AvatarDot(user: user, radius: 22, isOnline: presence?.online),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1408,6 +1430,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     ),
                   ],
                 ),
+                if (statusText != null && statusText.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    statusText,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
                 if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
                   const SizedBox(height: 6),
                   Wrap(
@@ -1589,6 +1621,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       }
     });
 
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
     final chats = _chats;
     final hasBlockedUsers = blockedUsers.isNotEmpty;
@@ -1672,7 +1705,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                         child: Stack(
                                           clipBehavior: Clip.none,
                                           children: [
-                                            _AvatarDot(user: item.user, radius: 24),
+                                            _AvatarDot(
+                                              user: item.user,
+                                              radius: 24,
+                                              isOnline: presence[item.user.id]?.online,
+                                            ),
                                             if (item.unreadCount > 0)
                                               Positioned(
                                                 right: -2,
@@ -1866,7 +1903,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             BorderRadius.circular(AppRadius.card),
                                         child: Row(
                                           children: [
-                                            _AvatarDot(user: item.user),
+                                            _AvatarDot(
+                                              user: item.user,
+                                              isOnline: presence[item.user.id]?.online,
+                                            ),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
@@ -1886,9 +1926,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
-                                                    subtitle.isEmpty
-                                                        ? 'Нет сообщений'
-                                                        : subtitle,
+                                                    _chatSubtitleWithPresence(
+                                                      subtitle,
+                                                      presence[item.user.id],
+                                                    ),
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -1923,7 +1964,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                           ? null
                                                           : () => unawaited(
                                                                 _showUserInfoDialog(
-                                                                    item.user)),
+                                                                    item.user,
+                                                                    presence: presence[item.user.id])),
                                                       tooltip:
                                                           'Информация о пользователе',
                                                     ),
@@ -2000,26 +2042,29 @@ class _AvatarDot extends StatelessWidget {
   const _AvatarDot({
     required this.user,
     this.radius = 20,
+    this.isOnline,
   });
 
   final ChatUserItem user;
   final double radius;
+  final bool? isOnline;
 
   @override
   Widget build(BuildContext context) {
+    Widget avatar;
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
       final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);
       if (memoryImage != null) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundImage: memoryImage,
         );
+      } else {
+        avatar = _buildLetterAvatar();
       }
-    }
-
-    if (user.avatarKind == 'preset') {
+    } else if (user.avatarKind == 'preset') {
       final iconIndex = int.tryParse(user.avatarValue ?? '');
       if (iconIndex != null) {
         const icons = <IconData>[
@@ -2037,7 +2082,7 @@ class _AvatarDot extends StatelessWidget {
           Icons.child_care_rounded,
         ];
         final idx = iconIndex % icons.length;
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundColor: AppColors.accentSoft,
           child: Icon(
@@ -2046,9 +2091,37 @@ class _AvatarDot extends StatelessWidget {
             size: radius,
           ),
         );
+      } else {
+        avatar = _buildLetterAvatar();
       }
+    } else {
+      avatar = _buildLetterAvatar();
     }
+    if (isOnline == true) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: radius * 0.4,
+              height: radius * 0.4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceCard, width: 1),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return avatar;
+  }
 
+  Widget _buildLetterAvatar() {
     final raw = user.displayName?.trim();
     final letter = (raw != null && raw.isNotEmpty) ? raw.substring(0, 1).toUpperCase() : '?';
     return CircleAvatar(
