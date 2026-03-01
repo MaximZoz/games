@@ -91,7 +91,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           onPressed: _isLeaving ? null : () => _leaveLobby(context),
           icon: const Icon(Icons.close_rounded),
         ),
-        title: const Text('Своя игра'),
+        title: lobbyAsync.when(
+          data: (lobby) => Text(
+            lobby.status == 'waiting_matchmake' ? 'Лобби' : 'Своя игра',
+          ),
+          loading: () => const Text('Лобби'),
+          error: (_, __) => const Text('Лобби'),
+        ),
       ),
       body: lobbyAsync.when(
         data: (lobby) {
