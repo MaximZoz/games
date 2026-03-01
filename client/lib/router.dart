@@ -12,6 +12,8 @@ import 'package:multigames_client/screens/coins_screen.dart';
 import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/screens/games_screen.dart';
+import 'package:multigames_client/screens/tictactoe_game_screen.dart';
+import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/inventory_screen.dart';
 import 'package:multigames_client/screens/login_screen.dart';
@@ -71,7 +73,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);
-      final needsAuth = _authRequiredPaths.contains(path) || path.startsWith('/chats/');
+      final needsAuth = _authRequiredPaths.contains(path) ||
+          path.startsWith('/chats/') ||
+          path.startsWith('/games');
       final isAdminRoute = path == '/admin';
 
       final authState = ref.read(authStateProvider);
@@ -158,6 +162,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     chatId: state.pathParameters['chatId'],
                     peerName: state.uri.queryParameters['name'],
                     fromFriends: state.uri.queryParameters['from'] == 'friends',
+                    fromGames: state.uri.queryParameters['from'] == 'games',
+                    gameReturnPath: state.uri.queryParameters['game'],
                   ),
                 ),
               ),
@@ -168,6 +174,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/games',
                 pageBuilder: (_, state) => _noTransitionPage(state, const GamesScreen()),
+              ),
+              GoRoute(
+                path: '/games/tictactoe/lobby/:lobbyId',
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  TicTacToeLobbyScreen(
+                    lobbyId: state.pathParameters['lobbyId'] ?? '',
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: '/games/tictactoe/game/:gameId',
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  TicTacToeGameScreen(
+                    gameId: state.pathParameters['gameId'] ?? '',
+                  ),
+                ),
               ),
               GoRoute(
                 path: '/tournaments',

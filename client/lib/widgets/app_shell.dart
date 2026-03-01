@@ -8,6 +8,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -49,6 +50,8 @@ class AppShell extends ConsumerWidget {
     }
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
+    final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
+    final gameInvitesCount = ref.watch(gameInvitesCountProvider);
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
@@ -77,6 +80,25 @@ class AppShell extends ConsumerWidget {
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
+      if (target == '/games' && isAuthorized) {
+        ref.read(activeGameProvider.future).then((active) {
+          if (!context.mounted) return;
+          if (active != null &&
+              active.type == 'game' &&
+              active.gameId != null &&
+              active.gameId!.isNotEmpty) {
+            context.go('/games/tictactoe/game/${active.gameId}');
+          } else if (active != null &&
+              active.type == 'lobby' &&
+              active.lobbyId != null &&
+              active.lobbyId!.isNotEmpty) {
+            context.go('/games/tictactoe/lobby/${active.lobbyId}');
+          } else {
+            context.go('/games');
+          }
+        });
+        return;
+      }
       context.go(target);
 
       if (!isAuthorized) return;
@@ -208,6 +230,8 @@ class AppShell extends ConsumerWidget {
                                 item,
                                 unreadChats,
                                 incomingFriends,
+                                gamesMyTurn,
+                                gameInvitesCount,
                                 selected: index == selectedIndex,
                               ),
                               label: Text(item.label),
@@ -240,11 +264,15 @@ class AppShell extends ConsumerWidget {
                       items: _navItems.asMap().entries.map((entry) {
                         final item = entry.value;
                         return BottomNavigationBarItem(
-                          icon: _navIcon(item, unreadChats, incomingFriends),
+                          icon: _navIcon(
+                              item, unreadChats, incomingFriends, gamesMyTurn,
+                              gameInvitesCount),
                           activeIcon: _navIcon(
                             item,
                             unreadChats,
                             incomingFriends,
+                            gamesMyTurn,
+                            gameInvitesCount,
                             selected: true,
                           ),
                           label: item.label,
@@ -264,7 +292,9 @@ class AppShell extends ConsumerWidget {
 Widget _navIcon(
   _NavItem item,
   int unreadChats,
-  int incomingFriends, {
+  int incomingFriends,
+  int gamesMyTurn,
+  int gameInvitesCount, {
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
@@ -286,6 +316,8 @@ Widget _navIcon(
     badgeValue = unreadChats;
   } else if (item.path == '/friends') {
     badgeValue = incomingFriends;
+  } else if (item.path == '/games') {
+    badgeValue = gamesMyTurn + gameInvitesCount;
   }
 
   if (badgeValue <= 0) {

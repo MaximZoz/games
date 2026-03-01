@@ -25,12 +25,16 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
     required this.chatID,
     this.peerName,
     this.fromFriends = false,
+    this.fromGames = false,
+    this.gameReturnPath,
     this.inSplitView = false,
   });
 
   final String chatID;
   final String? peerName;
   final bool fromFriends;
+  final bool fromGames;
+  final String? gameReturnPath;
   final bool inSplitView;
 
   @override
@@ -138,7 +142,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (_leavingToChats) return;
     setState(() => _leavingToChats = true);
     if (!mounted) return;
-    if (widget.fromFriends) {
+    if (widget.fromGames && widget.gameReturnPath != null) {
+      context.go(widget.gameReturnPath!);
+    } else if (widget.fromFriends) {
       context.go('/friends');
     } else {
       context.go('/chats');
@@ -889,13 +895,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (widget.inSplitView && !widget.fromFriends)
+          if (widget.inSplitView && !widget.fromFriends && !widget.fromGames)
             const SizedBox(width: 8)
           else
             IconButton(
               onPressed: _leavingToChats ? null : _goBackToChats,
               icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: 'Назад к чатам',
+              tooltip: widget.fromGames ? 'Назад в игру' : 'Назад к чатам',
             ),
           _buildPeerAvatar(
             user: peerUser,
@@ -1155,7 +1161,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       body: SafeArea(
         child: GestureDetector(
           onHorizontalDragEnd: (details) {
-            if ((widget.inSplitView && !widget.fromFriends) || _leavingToChats) return;
+            if ((widget.inSplitView && !widget.fromFriends && !widget.fromGames) || _leavingToChats) return;
             if (details.primaryVelocity != null && details.primaryVelocity! > 200) {
               _goBackToChats();
             }
