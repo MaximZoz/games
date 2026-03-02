@@ -200,8 +200,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     });
     ref.listen(activeGameProvider, (_, next) {
       final active = next.valueOrNull;
-      if (active == null || active.type != 'game' || active.gameId == null)
+      if (active == null || active.type != 'game' || active.gameId == null) {
         return;
+      }
       if (active.gameId != widget.gameId) {
         if (_rematchLobbyId == null) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -472,7 +473,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         setState(() => _isRematching = false);
         final gameId = result.gameId!;
         ref.invalidate(gameStateProvider(gameId));
-        if (!mounted) return;
+        if (!context.mounted) return;
         context.go('/games/tictactoe/game/$gameId');
       } else {
         setState(() {
@@ -495,29 +496,29 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
       final result = await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
-      if (!mounted) return;
+      if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
         final gameId = result.gameId!;
         ref.invalidate(gameStateProvider(gameId));
-        if (!mounted) return;
+        if (!context.mounted) return;
         context.go('/games/tictactoe/game/$gameId');
       }
     } on GamesException catch (e) {
       // 409 = одновременный реванш: соперник уже принял наше приглашение, игра создана
-      if (e.statusCode == 409 && mounted) {
+      if (e.statusCode == 409 && context.mounted) {
         ref.invalidate(activeGameProvider);
-        ref.read(activeGameProvider.future).then((active) {
-          if (active?.type == 'game' && active?.gameId != null && mounted) {
-            context.go('/games/tictactoe/game/${active!.gameId}');
-          } else if (mounted) {
-            _redirectToGamesOnError();
-          }
-        });
-      } else if (mounted) {
+        final active = await ref.read(activeGameProvider.future);
+        if (!context.mounted) return;
+        if (active != null && active.type == 'game' && active.gameId != null && active.gameId!.isNotEmpty) {
+          context.go('/games/tictactoe/game/${active.gameId}');
+        } else {
+          _redirectToGamesOnError();
+        }
+      } else if (context.mounted) {
         _redirectToGamesOnError();
       }
     } catch (_) {
-      if (mounted) _redirectToGamesOnError();
+      if (context.mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isAcceptingRematch = false);
     }
@@ -546,7 +547,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.createLobby(mode: 'matchmake');
-      if (!mounted) return;
+      if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
       if (result.matched && result.gameId != null) {
         context.go('/games/tictactoe/game/${result.gameId}');
@@ -554,7 +555,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         context.go('/games/tictactoe/lobby/${result.lobbyId}');
       }
     } catch (e) {
-      if (mounted) _redirectToGamesOnError();
+      if (context.mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isFindingGame = false);
     }

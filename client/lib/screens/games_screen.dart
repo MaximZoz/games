@@ -361,20 +361,23 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   Future<void> _createGame(BuildContext context, String mode) async {
     setState(() {
-      if (mode == 'invite') _isCreating = true;
-      else _isFinding = true;
+      if (mode == 'invite') {
+        _isCreating = true;
+      } else {
+        _isFinding = true;
+      }
     });
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.createLobby(mode: mode);
-      if (!mounted) return;
+      if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
       } else {
         context.push('/games/tictactoe/lobby/${result.lobbyId}');
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(formatUserError(e))),
         );
@@ -394,12 +397,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
-      if (!mounted) return;
+      if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(formatUserError(e))),
         );
@@ -415,13 +418,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
-      if (!mounted) return;
+      if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
       if (result.joined && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(formatUserError(e))),
         );

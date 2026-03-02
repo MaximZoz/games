@@ -836,7 +836,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: selectedValue,
+                initialValue: selectedValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -874,7 +874,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: sourceValue,
+                initialValue: sourceValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -909,7 +909,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedLogMethod ?? '__all__',
+                initialValue: _selectedLogMethod ?? '__all__',
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,

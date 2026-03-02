@@ -398,7 +398,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       await repo.inviteToLobby(widget.lobbyId, friendUserId);
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _invitedFriendIds.add(friendUserId);
           _invitingFriendIds.remove(friendUserId);
@@ -410,7 +410,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         );
       }
     } catch (e) {
-      if (mounted) context.go('/games');
+      if (context.mounted) context.go('/games');
     } finally {
       if (mounted) {
         setState(() => _invitingFriendIds.remove(friendUserId));
@@ -423,12 +423,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       await repo.leaveLobby(widget.lobbyId);
-      if (mounted) {
+      if (context.mounted) {
         ref.invalidate(openLobbiesProvider);
         context.go('/games');
       }
     } catch (e) {
-      if (mounted) context.go('/games');
+      if (context.mounted) context.go('/games');
     } finally {
       if (mounted) setState(() => _isLeaving = false);
     }
