@@ -9,6 +9,7 @@ import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -93,7 +94,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       _showMessage(null, 'Логи очищены');
       unawaited(_loadLogs());
     } catch (e) {
-      _showMessage(e.toString(), null);
+      _showMessage(formatUserError(e), null);
     }
   }
 
@@ -148,7 +149,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         if (e is AdminException) {
           await _handleAdminException(e);
         } else {
-          _showMessage(e.toString(), null);
+          _showMessage(formatUserError(e), null);
         }
       }
     }
@@ -195,7 +196,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         if (e is AdminException) {
           await _handleAdminException(e);
         } else {
-          _showMessage(e.toString(), null);
+          _showMessage(formatUserError(e), null);
         }
       }
     }
@@ -234,7 +235,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         if (e is AdminException) {
           await _handleAdminException(e);
         } else {
-          _showMessage(e.toString(), null);
+          _showMessage(formatUserError(e), null);
         }
       }
     }

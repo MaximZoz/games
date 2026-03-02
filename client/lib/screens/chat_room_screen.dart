@@ -142,6 +142,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (_leavingToChats) return;
     setState(() => _leavingToChats = true);
     if (!mounted) return;
+    try {
+      await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
+    } catch (_) {}
+    if (!mounted) return;
+    await refreshChatsList(ref, force: true).catchError((_) {});
+    if (!mounted) return;
     if (widget.fromGames && widget.gameReturnPath != null) {
       context.go(widget.gameReturnPath!);
     } else if (widget.fromFriends) {
@@ -150,11 +156,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       context.go('/chats');
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        refreshChatsList(ref, force: true).catchError((_) {
-          // Фоновая синхронизация после перехода назад.
-        });
-      });
+      refreshChatsList(ref, force: true).catchError((_) {});
     });
   }
 

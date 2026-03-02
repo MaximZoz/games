@@ -17,6 +17,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/router.dart';
 
 const List<IconData> _presetAvatarIcons = [
   Icons.face_rounded,
@@ -44,16 +45,34 @@ class TicTacToeGameScreen extends ConsumerStatefulWidget {
 }
 
 class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   bool _isMakingMove = false;
   bool _isRematching = false;
+  bool _isAcceptingRematch = false;
   String? _rematchLobbyId;
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
   Timer? _rematchPollTimer;
+  Timer? _syncStateTimer;
+  Timer? _chatsRefreshTimer;
   late AnimationController _pulseController;
   String? _prevGameStatus;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null) {
+      chatsRouteObserver.unsubscribe(this);
+      chatsRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (mounted) refreshChatsList(ref, force: true);
+  }
 
   @override
   void didUpdateWidget(covariant TicTacToeGameScreen oldWidget) {
@@ -61,10 +80,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (oldWidget.gameId != widget.gameId) {
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
+      ref.invalidate(gameStateProvider(widget.gameId));
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
         _iDeclinedRematch = false;
+        _isRematching = false;
+        _isAcceptingRematch = false;
+        _isFindingGame = false;
       });
     }
   }
@@ -76,6 +99,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
+    ref.invalidate(gameStateProvider(widget.gameId));
+    ref.invalidate(activeGameProvider);
+    _syncStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      ref.invalidate(gameStateProvider(widget.gameId));
+      ref.invalidate(activeGameProvider);
+    });
+    Timer(const Duration(seconds: 8), () {
+      _syncStateTimer?.cancel();
+      _syncStateTimer = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) refreshChatsList(ref, force: true);
+    });
+    _chatsRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) refreshChatsList(ref, force: true);
+    });
     ref.listen(
       realtimeEventsProvider,
       (_, next) {
@@ -88,6 +128,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
           final gameId = next.valueOrNull?['game_id']?.toString();
           if (lobbyId == _rematchLobbyId && gameId != null && mounted) {
+            ref.invalidate(gameStateProvider(gameId));
+            ref.invalidate(activeGameProvider);
             context.go('/games/tictactoe/game/$gameId');
           }
         }
@@ -101,49 +143,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             });
           }
         }
+        if (type == 'chat_message' || type == 'chat_list_changed') {
+          if (mounted) refreshChatsList(ref, force: true);
+        }
       },
     );
-    ref.listen(gameInvitesProvider, (_, invites) {
-      final inviteList = invites;
-      if (_rematchLobbyId == null || inviteList.isEmpty) return;
-      final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
-      if (game == null) return;
-      final currentUser = ref.read(authStateProvider).valueOrNull;
-      if (currentUser == null) return;
-      final opponentId =
-          game.xUserId == currentUser.id ? game.oUserId : game.xUserId;
-      final opponentInvite =
-          inviteList.where((i) => i.creatorId == opponentId).firstOrNull;
-      if (opponentInvite == null) return;
-      if (_rematchLobbyId!.compareTo(opponentInvite.lobbyId) >= 0) return;
-      _tryAcceptOpponentRematch(opponentInvite.lobbyId);
-    });
-  }
-
-  void _tryAcceptOpponentRematch(String theirLobbyId) async {
-    final myLobbyId = _rematchLobbyId;
-    if (myLobbyId == null) return;
-    _rematchPollTimer?.cancel();
-    setState(() => _rematchLobbyId = null);
-    try {
-      await ref.read(gamesRepositoryProvider).leaveLobby(myLobbyId);
-    } catch (_) {}
-    if (!mounted) return;
-    _acceptRematch(theirLobbyId);
   }
 
   void _startRematchPoll() {
     _rematchPollTimer?.cancel();
     if (_rematchLobbyId == null) return;
-    _rematchPollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
       if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
       try {
         final lobby =
             await ref.read(gamesRepositoryProvider).getLobby(_rematchLobbyId!);
         if (!mounted) return;
         if (lobby.gameId != null && lobby.gameId!.isNotEmpty) {
           _rematchPollTimer?.cancel();
-          context.go('/games/tictactoe/game/${lobby.gameId}');
+          final gameId = lobby.gameId!;
+          ref.invalidate(gameStateProvider(gameId));
+          context.go('/games/tictactoe/game/$gameId');
         }
       } on GamesException catch (e) {
         if (e.statusCode == 404 && mounted) {
@@ -156,7 +177,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
   @override
   void dispose() {
+    chatsRouteObserver.unsubscribe(this);
     _rematchPollTimer?.cancel();
+    _syncStateTimer?.cancel();
+    _chatsRefreshTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -165,7 +189,38 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(gameStateProvider(widget.gameId));
     final currentUser = ref.watch(authStateProvider).valueOrNull;
+    final activeGame = ref.watch(activeGameProvider).valueOrNull;
 
+    ref.listen(gameStateProvider(widget.gameId), (_, next) {
+      next.whenOrNull(
+        error: (_, __) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) context.go('/games');
+        }),
+      );
+    });
+    ref.listen(activeGameProvider, (_, next) {
+      final active = next.valueOrNull;
+      if (active == null || active.type != 'game' || active.gameId == null)
+        return;
+      if (active.gameId != widget.gameId) {
+        if (_rematchLobbyId == null) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.invalidate(gameStateProvider(active.gameId!));
+            context.go('/games/tictactoe/game/${active.gameId}');
+          }
+        });
+        return;
+      }
+      final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+      if (game == null || game.status != 'active') return;
+      final isMyTurnFromGame =
+          (game.turn == 'x' && game.xUserId == currentUser?.id) ||
+              (game.turn == 'o' && game.oUserId == currentUser?.id);
+      if (active.isMyTurn != isMyTurnFromGame) {
+        ref.invalidate(gameStateProvider(widget.gameId));
+      }
+    });
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -179,14 +234,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       body: gameAsync.when(
         data: (game) {
           final isOver = game.status != 'active';
-          final opponentId = game.xUserId == currentUser?.id
-              ? game.oUserId
-              : game.xUserId;
-          if (isOver && (_prevGameStatus == 'active' || _prevGameStatus == null)) {
+          final opponentId =
+              game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
+          if (isOver &&
+              (_prevGameStatus == 'active' || _prevGameStatus == null)) {
             _rematchPollTimer?.cancel();
             _prevGameStatus = game.status;
             if (currentUser != null) {
-              ref.read(gameInvitesProvider.notifier).removeByCreatorId(opponentId);
+              ref
+                  .read(gameInvitesProvider.notifier)
+                  .removeByCreatorId(opponentId);
             }
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
@@ -194,15 +251,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   _rematchLobbyId = null;
                   _rematchDeclined = false;
                   _iDeclinedRematch = false;
+                  _isRematching = false;
+                  _isFindingGame = false;
                 });
               }
             });
           } else {
             _prevGameStatus = game.status;
           }
-          final isMyTurn =
+          final isMyTurnFromGame =
               (game.turn == 'x' && game.xUserId == currentUser?.id) ||
                   (game.turn == 'o' && game.oUserId == currentUser?.id);
+          final isMyTurn = (activeGame != null &&
+                  activeGame.type == 'game' &&
+                  activeGame.gameId == widget.gameId)
+              ? activeGame.isMyTurn
+              : isMyTurnFromGame;
           final opponentName = game.xUserId == currentUser?.id
               ? (game.oDisplayName ?? 'Соперник')
               : (game.xDisplayName ?? 'Соперник');
@@ -218,12 +282,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             if (game.status == 'x_won') {
               final iWon = game.xUserId == currentUser?.id;
               statusText = iWon
-                  ? (game.forfeit ? 'Вы победили, соперник вышел' : 'Вы победили!')
+                  ? (game.forfeit
+                      ? 'Вы победили, соперник вышел'
+                      : 'Вы победили!')
                   : 'Победил $opponentName';
             } else if (game.status == 'o_won') {
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
-                  ? (game.forfeit ? 'Вы победили, соперник вышел' : 'Вы победили!')
+                  ? (game.forfeit
+                      ? 'Вы победили, соперник вышел'
+                      : 'Вы победили!')
                   : 'Победил $opponentName';
             } else if (game.status == 'draw') {
               statusText = 'Ничья';
@@ -245,8 +313,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           displayName: opponentName,
                           avatarKind: opponentAvatarKind,
                           avatarValue: opponentAvatarValue,
-                          friendsSnapshot: ref.watch(friendsSnapshotProvider).valueOrNull,
-                          chatsList: ref.watch(chatsListProvider).valueOrNull ?? const [],
+                          friendsSnapshot:
+                              ref.watch(friendsSnapshotProvider).valueOrNull,
+                          chatsList: ref.watch(chatsListProvider).valueOrNull ??
+                              const [],
                           onInfoTap: () => _showOpponentInfo(
                             context,
                             opponentId: opponentId,
@@ -254,21 +324,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             avatarKind: opponentAvatarKind,
                             avatarValue: opponentAvatarValue,
                           ),
-                          onMessageTap: () => _openChat(
-                              context, opponentId, opponentName),
-                          onAddFriendTap: (requestId) =>
-                              _addFriend(context, opponentId, opponentName, requestId: requestId),
+                          onMessageTap: () =>
+                              _openChat(context, opponentId, opponentName),
+                          onAddFriendTap: (requestId) => _addFriend(
+                              context, opponentId, opponentName,
+                              requestId: requestId),
                         ),
                         const SizedBox(height: 20),
                         Text(
                           statusText,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
                         ),
                         if (isOver) ...[
                           const SizedBox(height: 16),
@@ -277,6 +346,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             rematchDeclined: _rematchDeclined,
                             iDeclinedRematch: _iDeclinedRematch,
                             isRematching: _isRematching,
+                            isAcceptingRematch: _isAcceptingRematch,
                             isFindingGame: _isFindingGame,
                             opponentId: opponentId,
                             invites: ref.watch(gameInvitesProvider),
@@ -285,7 +355,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             onDecline: _declineRematch,
                             onCancelWait: _cancelRematchWait,
                             onFindGame: () => _findGame(context),
-                            onBothClickedRematch: _tryAcceptOpponentRematch,
                           ),
                         ],
                         const SizedBox(height: 20),
@@ -312,8 +381,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             displayName: opponentName,
                             avatarKind: opponentAvatarKind,
                             avatarValue: opponentAvatarValue,
-                            friendsSnapshot: ref.watch(friendsSnapshotProvider).valueOrNull,
-                            chatsList: ref.watch(chatsListProvider).valueOrNull ?? const [],
+                            friendsSnapshot:
+                                ref.watch(friendsSnapshotProvider).valueOrNull,
+                            chatsList:
+                                ref.watch(chatsListProvider).valueOrNull ??
+                                    const [],
                             onInfoTap: () => _showOpponentInfo(
                               context,
                               opponentId: opponentId,
@@ -323,8 +395,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             ),
                             onMessageTap: () =>
                                 _openChat(context, opponentId, opponentName),
-                            onAddFriendTap: (requestId) =>
-                                _addFriend(context, opponentId, opponentName, requestId: requestId),
+                            onAddFriendTap: (requestId) => _addFriend(
+                                context, opponentId, opponentName,
+                                requestId: requestId),
                           ),
                           const SizedBox(height: 20),
                           Text(
@@ -344,6 +417,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               rematchDeclined: _rematchDeclined,
                               iDeclinedRematch: _iDeclinedRematch,
                               isRematching: _isRematching,
+                              isAcceptingRematch: _isAcceptingRematch,
                               isFindingGame: _isFindingGame,
                               opponentId: opponentId,
                               invites: ref.watch(gameInvitesProvider),
@@ -352,7 +426,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               onDecline: _declineRematch,
                               onCancelWait: _cancelRematchWait,
                               onFindGame: () => _findGame(context),
-                              onBothClickedRematch: _tryAcceptOpponentRematch,
                             ),
                           ],
                           const SizedBox(height: 24),
@@ -376,24 +449,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             color: AppColors.accentStart,
           ),
         ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Ошибка: $e',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Назад'),
-                ),
-              ],
-            ),
+        error: (_, __) => const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accentStart,
           ),
         ),
       ),
@@ -407,8 +466,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       final result = await repo.rematch(widget.gameId);
       if (!mounted) return;
       ref.invalidate(openLobbiesProvider);
-      if (result.matched && result.gameId != null && result.gameId!.isNotEmpty) {
-        context.go('/games/tictactoe/game/${result.gameId}');
+      if (result.matched &&
+          result.gameId != null &&
+          result.gameId!.isNotEmpty) {
+        setState(() => _isRematching = false);
+        final gameId = result.gameId!;
+        ref.invalidate(gameStateProvider(gameId));
+        if (!mounted) return;
+        context.go('/games/tictactoe/game/$gameId');
       } else {
         setState(() {
           _rematchLobbyId = result.lobbyId;
@@ -419,29 +484,42 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         _startRematchPoll();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-      }
+      if (mounted) _redirectToGamesOnError();
       if (mounted) setState(() => _isRematching = false);
     }
   }
 
   Future<void> _acceptRematch(String lobbyId) async {
+    if (_isAcceptingRematch) return;
+    setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
       final result = await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;
       if (result.joined && result.gameId != null) {
-        context.go('/games/tictactoe/game/${result.gameId}');
+        final gameId = result.gameId!;
+        ref.invalidate(gameStateProvider(gameId));
+        if (!mounted) return;
+        context.go('/games/tictactoe/game/$gameId');
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
+    } on GamesException catch (e) {
+      // 409 = одновременный реванш: соперник уже принял наше приглашение, игра создана
+      if (e.statusCode == 409 && mounted) {
+        ref.invalidate(activeGameProvider);
+        ref.read(activeGameProvider.future).then((active) {
+          if (active?.type == 'game' && active?.gameId != null && mounted) {
+            context.go('/games/tictactoe/game/${active!.gameId}');
+          } else if (mounted) {
+            _redirectToGamesOnError();
+          }
+        });
+      } else if (mounted) {
+        _redirectToGamesOnError();
       }
+    } catch (_) {
+      if (mounted) _redirectToGamesOnError();
+    } finally {
+      if (mounted) setState(() => _isAcceptingRematch = false);
     }
   }
 
@@ -476,14 +554,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         context.go('/games/tictactoe/lobby/${result.lobbyId}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-      }
+      if (mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isFindingGame = false);
     }
+  }
+
+  void _redirectToGamesOnError() {
+    if (mounted) context.go('/games');
   }
 
   void _handleClose(GameStateItem? game) async {
@@ -528,11 +606,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           context.go('/games');
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка: $e')),
-          );
-        }
+        if (mounted) _redirectToGamesOnError();
       }
     });
   }
@@ -562,7 +636,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               builder: (context, ref, _) {
                 final friendsSnapshot =
                     ref.watch(friendsSnapshotProvider).valueOrNull;
-                final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
+                final presence =
+                    ref.watch(presenceMapProvider).valueOrNull ?? const {};
                 FriendItem? friendItem;
                 for (final f in friendsSnapshot?.friends ?? []) {
                   if (f.user.id == opponentId) {
@@ -600,7 +675,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                friendUser?.displayName?.trim().isNotEmpty == true
+                                friendUser?.displayName?.trim().isNotEmpty ==
+                                        true
                                     ? friendUser!.displayName!
                                     : displayName,
                                 style: const TextStyle(
@@ -639,8 +715,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          if (friendUser?.age != null &&
-                              friendUser!.age! > 0)
+                          if (friendUser?.age != null && friendUser!.age! > 0)
                             _buildInfoPill(
                               text: '${friendUser.age} лет',
                               minWidth: 72,
@@ -720,11 +795,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-      }
+      if (mounted) _redirectToGamesOnError();
     }
   }
 
@@ -735,8 +806,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     void Function()? onSuccess,
   }) async {
     try {
-      final chatId =
-          await ref.read(chatsRepositoryProvider).startChat(userId);
+      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
       if (!mounted) return;
       onSuccess?.call();
       if (mounted && chatId.isNotEmpty) {
@@ -751,11 +821,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         context.push(uri.toString());
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-      }
+      if (mounted) _redirectToGamesOnError();
     }
   }
 
@@ -870,11 +936,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.invalidate(activeGameProvider);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-      }
+      if (mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isMakingMove = false);
     }
@@ -922,21 +984,21 @@ class _IconWithBadge extends StatelessWidget {
             right: 2,
             top: 2,
             child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: Colors.red.shade600,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              badge > 99 ? '99+' : '$badge',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: Colors.red.shade600,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                badge > 99 ? '99+' : '$badge',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-        ),
         ],
       ),
     );
@@ -949,6 +1011,7 @@ class _RematchSection extends StatelessWidget {
     required this.rematchDeclined,
     required this.iDeclinedRematch,
     required this.isRematching,
+    required this.isAcceptingRematch,
     required this.isFindingGame,
     required this.opponentId,
     required this.invites,
@@ -957,13 +1020,13 @@ class _RematchSection extends StatelessWidget {
     required this.onDecline,
     required this.onCancelWait,
     required this.onFindGame,
-    this.onBothClickedRematch,
   });
 
   final String? rematchLobbyId;
   final bool rematchDeclined;
   final bool iDeclinedRematch;
   final bool isRematching;
+  final bool isAcceptingRematch;
   final bool isFindingGame;
   final String opponentId;
   final List<GameInvite> invites;
@@ -972,31 +1035,63 @@ class _RematchSection extends StatelessWidget {
   final void Function(String lobbyId) onDecline;
   final VoidCallback? onCancelWait;
   final VoidCallback onFindGame;
-  final void Function(String lobbyId)? onBothClickedRematch;
 
   @override
   Widget build(BuildContext context) {
-    final rematchOffer = invites.where((i) => i.creatorId == opponentId).firstOrNull;
+    final rematchOffer =
+        invites.where((i) => i.creatorId == opponentId).firstOrNull;
 
-    if (rematchLobbyId != null &&
-        rematchOffer != null &&
-        rematchLobbyId!.compareTo(rematchOffer.lobbyId) < 0 &&
-        onBothClickedRematch != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        onBothClickedRematch!(rematchOffer.lobbyId);
-      });
-      return SizedBox(
-        height: 48,
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
+    // После нажатия «Принять» показываем часики до перехода в игру
+    if (isAcceptingRematch) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.hourglass_empty_rounded,
+              size: 20, color: AppColors.accentStart),
+          const SizedBox(width: 8),
+          Text(
+            'Подключение к игре...',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
+        ],
+      );
+    }
+    // Приглашение соперника показываем всегда, даже если ранее отклоняли — новое предложение.
+    if (rematchOffer != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Соперник предлагает реванш',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: () => onDecline(rematchOffer.lobbyId),
+                child: const Text('Отклонить'),
+              ),
+              const SizedBox(width: 12),
+              FilledButton(
+                onPressed: () => onAccept(rematchOffer.lobbyId),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accentStart,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Принять'),
+              ),
+            ],
+          ),
+        ],
       );
     }
     if (iDeclinedRematch) {
@@ -1030,31 +1125,14 @@ class _RematchSection extends StatelessWidget {
       );
     }
     if (rematchLobbyId != null) {
-      final bothClicked =
-          rematchOffer != null &&
-          rematchLobbyId!.compareTo(rematchOffer.lobbyId) >= 0;
-      if (bothClicked) {
-        return SizedBox(
-          height: 48,
-          child: Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accentStart,
-              ),
-            ),
-          ),
-        );
-      }
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.hourglass_empty_rounded, size: 20, color: AppColors.accentStart),
+              Icon(Icons.hourglass_empty_rounded,
+                  size: 20, color: AppColors.accentStart),
               const SizedBox(width: 8),
               Text(
                 'Ожидание соперника',
@@ -1073,57 +1151,6 @@ class _RematchSection extends StatelessWidget {
               child: const Text('Отмена'),
             ),
           ],
-        ],
-      );
-    }
-    if (rematchOffer != null) {
-      if (isRematching) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          onAccept(rematchOffer.lobbyId);
-        });
-        return SizedBox(
-          height: 48,
-          child: Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accentStart,
-              ),
-            ),
-          ),
-        );
-      }
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Соперник предлагает реванш',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () => onDecline(rematchOffer.lobbyId),
-                child: const Text('Отклонить'),
-              ),
-              const SizedBox(width: 12),
-              FilledButton(
-                onPressed: () => onAccept(rematchOffer.lobbyId),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Принять'),
-              ),
-            ],
-          ),
         ],
       );
     }
@@ -1267,7 +1294,9 @@ class _OpponentCard extends StatelessWidget {
               badge: hasIncoming ? 1 : 0,
               tooltip: hasIncoming
                   ? 'Принять заявку'
-                  : (addFriendEnabled ? 'Добавить в друзья' : 'Заявка отправлена'),
+                  : (addFriendEnabled
+                      ? 'Добавить в друзья'
+                      : 'Заявка отправлена'),
               onPressed: addFriendEnabled
                   ? () => onAddFriendTap(hasIncoming ? incomingRequestId : null)
                   : null,
@@ -1411,10 +1440,12 @@ class _GameBoard extends StatelessWidget {
                             symbol: cell,
                             isMyTurn: isMyTurn && !isOver && !isMakingMove,
                             canTap: cell.isEmpty,
-                            onTap: () =>
-                                (cell.isEmpty && isMyTurn && !isOver && !isMakingMove)
-                                    ? onMove(i)
-                                    : null,
+                            onTap: () => (cell.isEmpty &&
+                                    isMyTurn &&
+                                    !isOver &&
+                                    !isMakingMove)
+                                ? onMove(i)
+                                : null,
                             pulse: isMyTurn && cell.isEmpty
                                 ? pulseController
                                 : null,
@@ -1500,16 +1531,17 @@ class _AnimatedGameCell extends StatelessWidget {
                       ? AppColors.accentSoft.withValues(alpha: 0.25)
                       : Colors.transparent,
                 ),
-                      child: pulse != null && canTap && isMyTurn
+                child: pulse != null && canTap && isMyTurn
                     ? AnimatedBuilder(
                         animation: pulse!,
                         builder: (context, _) {
-                          final alpha =
-                              0.2 + 0.12 * (0.5 + 0.5 * (pulse!.value * 2 - 1).abs());
+                          final alpha = 0.2 +
+                              0.12 * (0.5 + 0.5 * (pulse!.value * 2 - 1).abs());
                           return Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
-                              color: AppColors.accentStart.withValues(alpha: alpha),
+                              color: AppColors.accentStart
+                                  .withValues(alpha: alpha),
                             ),
                             child: Center(
                               child: _SymbolWidget(symbol: symbol),
@@ -1538,17 +1570,56 @@ class _SymbolWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (symbol.isEmpty) return const SizedBox.shrink();
     final isX = symbol == 'x';
+    final color = isX ? AppColors.accentStart : AppColors.accentEnd;
     return AnimatedSwitcher(
       duration: AppDurations.short,
-      child: Text(
+      child: CustomPaint(
         key: ValueKey(symbol),
-        isX ? '✕' : '○',
-        style: TextStyle(
-          fontSize: 42,
-          fontWeight: FontWeight.bold,
-          color: isX ? AppColors.accentStart : AppColors.accentEnd,
-        ),
+        size: const Size.square(42),
+        painter: _SymbolPainter(isX: isX, color: color),
       ),
     );
   }
+}
+
+/// Рисует X и O через Canvas — без шрифтов, чтобы не было placeholder при загрузке.
+class _SymbolPainter extends CustomPainter {
+  _SymbolPainter({required this.isX, required this.color});
+
+  final bool isX;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeWidth = size.width * 0.12;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    if (isX) {
+      final padding = size.width * 0.15;
+      canvas.drawLine(
+        Offset(padding, padding),
+        Offset(size.width - padding, size.height - padding),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(size.width - padding, padding),
+        Offset(padding, size.height - padding),
+        paint,
+      );
+    } else {
+      canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2),
+        (size.width - strokeWidth) / 2,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SymbolPainter old) =>
+      old.isX != isX || old.color != color;
 }

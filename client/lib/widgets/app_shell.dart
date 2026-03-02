@@ -81,6 +81,8 @@ class AppShell extends ConsumerWidget {
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
       if (target == '/games' && isAuthorized) {
+        ref.invalidate(activeGameProvider);
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         ref.read(activeGameProvider.future).then((active) {
           if (!context.mounted) return;
           if (active != null &&

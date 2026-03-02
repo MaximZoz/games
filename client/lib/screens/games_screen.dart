@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -24,18 +25,22 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   _GamesTab _selectedTab = _GamesTab.games;
   Timer? _lobbyRefreshTimer;
 
-  @override
-  void initState() {
-    super.initState();
+  void _startLobbyPoll() {
+    _lobbyRefreshTimer?.cancel();
     _lobbyRefreshTimer = Timer.periodic(
-      const Duration(seconds: 4),
+      const Duration(seconds: 10),
       (_) => ref.invalidate(openLobbiesProvider),
     );
   }
 
+  void _stopLobbyPoll() {
+    _lobbyRefreshTimer?.cancel();
+    _lobbyRefreshTimer = null;
+  }
+
   @override
   void dispose() {
-    _lobbyRefreshTimer?.cancel();
+    _stopLobbyPoll();
     super.dispose();
   }
 
@@ -64,7 +69,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                         constraints: const BoxConstraints(maxWidth: 440),
                         child: _GamesTabSwitcher(
                           selectedTab: _selectedTab,
-                          onTabChanged: (tab) => setState(() => _selectedTab = tab),
+                          onTabChanged: (tab) {
+                            setState(() => _selectedTab = tab);
+                            if (tab == _GamesTab.lobbies) {
+                              ref.invalidate(openLobbiesProvider);
+                              _startLobbyPoll();
+                            } else {
+                              _stopLobbyPoll();
+                            }
+                          },
                         ),
                       ),
                     ),
@@ -75,21 +88,31 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                         if (isDesktop) {
                           final width = constraints.maxWidth;
                           const minCardWidth = 320.0;
+                          const maxCardWidth = 420.0;
                           const gap = 16.0;
                           final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
-                          return GridView.count(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: crossAxisCount,
-                            mainAxisSpacing: gap,
-                            crossAxisSpacing: gap,
-                            childAspectRatio: 2.8,
-                            children: [_TictactoeGameCard(
-                              isCreating: _isCreating,
-                              isFinding: _isFinding,
-                              onCreateGame: () => _createGame(context, 'invite'),
-                              onFindGame: () => _createGame(context, 'matchmake'),
-                            )],
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: crossAxisCount == 1
+                                    ? maxCardWidth + 2 * gap
+                                    : width,
+                              ),
+                              child: GridView.count(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisCount: crossAxisCount,
+                                mainAxisSpacing: gap,
+                                crossAxisSpacing: gap,
+                                childAspectRatio: 1.95,
+                                children: [_TictactoeGameCard(
+                                  isCreating: _isCreating,
+                                  isFinding: _isFinding,
+                                  onCreateGame: () => _createGame(context, 'invite'),
+                                  onFindGame: () => _createGame(context, 'matchmake'),
+                                )],
+                              ),
+                            ),
                           );
                         }
                         return _TictactoeGameCard(
@@ -217,52 +240,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                             ),
                           );
                         }
-                        if (active.type == 'lobby' && active.lobbyId != null) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: GradientCard(
-                              padding: const EdgeInsets.all(16),
-                              child: InkWell(
-                                onTap: () =>
-                                    context.push('/games/tictactoe/lobby/${active.lobbyId}'),
-                                borderRadius: BorderRadius.circular(16),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.group_rounded,
-                                      size: 40,
-                                      color: AppColors.accentStart,
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Моё лобби',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.textPrimary,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Открыть лобби',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }
                         return const SizedBox.shrink();
                       },
                       loading: () => const SizedBox.shrink(),
@@ -365,7 +342,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                         error: (err, _) => Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(
-                            'Ошибка загрузки: $err',
+                            'Не удалось загрузить лобби. ${formatUserError(err, fallback: 'Попробуйте обновить страницу.')}',
                             style: const TextStyle(color: Colors.red),
                           ),
                         ),
@@ -399,7 +376,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(formatUserError(e))),
         );
       }
     } finally {
@@ -424,7 +401,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(formatUserError(e))),
         );
       }
     }
@@ -446,7 +423,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(formatUserError(e))),
         );
       }
     }

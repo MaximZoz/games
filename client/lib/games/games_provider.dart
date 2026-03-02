@@ -46,6 +46,10 @@ final gameInvitesProvider =
           ));
         }
       }
+      if (type == 'lobby_updated' && data['left'] == true) {
+        final lobbyId = data['lobby_id']?.toString();
+        if (lobbyId != null) notifier.remove(lobbyId);
+      }
     },
   );
 
@@ -131,11 +135,9 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         if (type == 'game_state' || type == 'game_started' ||
             type == 'lobby_updated') {
           ref.invalidate(activeGameProvider);
-          if (type == 'game_state') {
-            final gameId = data['game_id']?.toString();
-            if (gameId != null && gameId.isNotEmpty) {
-              ref.invalidate(gameStateProvider(gameId));
-            }
+          final gameId = data['game_id']?.toString();
+          if (gameId != null && gameId.isNotEmpty) {
+            ref.invalidate(gameStateProvider(gameId));
           }
         }
       },

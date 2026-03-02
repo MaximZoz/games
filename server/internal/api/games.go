@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -290,56 +291,9 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Если соперник уже предложил реванш — присоединяемся к его лобби.
-	keys, _ := h.Rdb.Keys(ctx, "lobby:*").Result()
-	for _, k := range keys {
-		lm, _ := h.Rdb.HGetAll(ctx, k).Result()
-		if lm["creator_id"] != opponentID || lm["invite_target_id"] != userID.String() {
-			continue
-		}
-		if lm["status"] != lobbyStatusWaitingInvite {
-			continue
-		}
-		existingLobbyID := strings.TrimPrefix(k, "lobby:")
-		creatorUUID, _ := uuid.Parse(opponentID)
-		gameID := uuid.New().String()
-		gameKey := "game:" + gameID
-		board := `["","","","","","","","",""]`
-		pipe := h.Rdb.Pipeline()
-		pipe.HSet(ctx, k, "opponent_id", userID.String(), "status", lobbyStatusInGame, "game_id", gameID)
-		pipe.Expire(ctx, k, 24*time.Hour)
-		pipe.HSet(ctx, gameKey,
-			"board", board,
-			"turn", "x",
-			"status", gameStatusActive,
-			"lobby_id", existingLobbyID,
-			"x_user_id", opponentID,
-			"o_user_id", userID.String(),
-		)
-		pipe.Expire(ctx, gameKey, 24*time.Hour)
-		if _, exErr := pipe.Exec(ctx); exErr != nil {
-			continue
-		}
-		clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
-		clearUserActiveLobby(ctx, h.Rdb, userID)
-		setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
-		setUserActiveGame(ctx, h.Rdb, userID, gameID)
-		h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
-			"type":        "lobby_updated",
-			"lobby_id":    existingLobbyID,
-			"game_id":     gameID,
-			"opponent_id": userID.String(),
-		})
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"matched":   true,
-			"game_id":   gameID,
-			"lobby_id":  existingLobbyID,
-			"status":    lobbyStatusInGame,
-		})
-		return
-	}
-
+	// Всегда создаём лобби и отправляем приглашение. Игра начнётся только после
+	// явного принятия соперником (JoinLobby). Нет автоприсоединения — согласие
+	// обнуляется после каждой игры, второй игрок должен подтвердить реванш.
 	lobbyID := uuid.New().String()
 	key := "lobby:" + lobbyID
 	invitedKey := key + ":invited"
@@ -392,6 +346,12 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 	gameID = uuid.New().String()
 	lobbyID = uuid.New().String()
 
+	xUserID := user1.String()
+	oUserID := user2.String()
+	if rand.Intn(2) == 1 {
+		xUserID, oUserID = oUserID, xUserID
+	}
+
 	board := `["","","","","","","","",""]`
 	key := "game:" + gameID
 	lobbyKey := "lobby:" + lobbyID
@@ -402,8 +362,8 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 		"turn", "x",
 		"status", gameStatusActive,
 		"lobby_id", lobbyID,
-		"x_user_id", user1.String(),
-		"o_user_id", user2.String(),
+		"x_user_id", xUserID,
+		"o_user_id", oUserID,
 	)
 	pipe.Expire(ctx, key, 24*time.Hour)
 
@@ -614,6 +574,28 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		return
 	}
 
+	creatorUUID, _ := uuid.Parse(creatorID)
+
+	// При одновременном реванше оба нажимают «Принять» — блокировка, чтобы создать только одну игру.
+	if status == lobbyStatusWaitingInvite {
+		lockKey := "rematch_lock:" + minUUID(creatorUUID, userID) + ":" + maxUUID(creatorUUID, userID)
+		ok, _ := h.Rdb.SetNX(ctx, lockKey, "1", 15*time.Second).Result()
+		if !ok {
+			time.Sleep(300 * time.Millisecond)
+			for _, u := range []uuid.UUID{creatorUUID, userID} {
+				if gid, _ := h.Rdb.Get(ctx, userActiveGameKey(u)).Result(); gid != "" {
+					if gm, _ := h.Rdb.HGet(ctx, "game:"+gid, "status").Result(); gm == gameStatusActive {
+						http.Error(w, "у вас или соперника уже есть активная игра", http.StatusConflict)
+						return
+					}
+				}
+			}
+			http.Error(w, "игра уже создана, обновите страницу", http.StatusConflict)
+			return
+		}
+		defer h.Rdb.Del(ctx, lockKey)
+	}
+
 	if status == lobbyStatusWaitingInvite {
 		okInv, _ := h.Rdb.SIsMember(ctx, invitedKey, userID.String()).Result()
 		if !okInv && inviteTarget != userID.String() {
@@ -627,11 +609,13 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		}
 	}
 
-	creatorUUID, _ := uuid.Parse(creatorID)
 	gameID := uuid.New().String()
 	gameKey := "game:" + gameID
 	xUserID := creatorID
 	oUserID := userID.String()
+	if rand.Intn(2) == 1 {
+		xUserID, oUserID = oUserID, xUserID
+	}
 	board := `["","","","","","","","",""]`
 
 	pipe := h.Rdb.Pipeline()
@@ -660,6 +644,20 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	clearUserActiveLobby(ctx, h.Rdb, userID)
 	setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
 	setUserActiveGame(ctx, h.Rdb, userID, gameID)
+
+	// Удалить «обратное» лобби (joiner создал своё, invite_target=creator), чтобы второй запрос получил 404
+	if status == lobbyStatusWaitingInvite {
+		keys, _ := h.Rdb.Keys(ctx, "lobby:*").Result()
+		for _, k := range keys {
+			lm, _ := h.Rdb.HGetAll(ctx, k).Result()
+			if lm["creator_id"] == userID.String() && lm["invite_target_id"] == creatorID && lm["status"] == lobbyStatusWaitingInvite {
+				h.Rdb.Del(ctx, k)
+				h.Rdb.Del(ctx, k+":invited")
+				break
+			}
+		}
+	}
+
 	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
 		"type":         "lobby_updated",
 		"lobby_id":     lobbyID,
@@ -707,6 +705,10 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	otherUserID := creatorID
 	if creatorID == userID.String() {
 		otherUserID = opponentID
+	}
+	// Для invite-лобби opponent_id пуст, уведомляем invite_target
+	if otherUserID == "" && status == lobbyStatusWaitingInvite {
+		otherUserID = m["invite_target_id"]
 	}
 	if otherUserID != "" {
 		otherUUID, err := uuid.Parse(otherUserID)
@@ -1077,6 +1079,20 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "no active game or lobby", http.StatusNotFound)
+}
+
+func minUUID(a, b uuid.UUID) string {
+	if a.String() < b.String() {
+		return a.String()
+	}
+	return b.String()
+}
+
+func maxUUID(a, b uuid.UUID) string {
+	if a.String() > b.String() {
+		return a.String()
+	}
+	return b.String()
 }
 
 func parseBoard(s string) []string {

@@ -94,13 +94,16 @@ class _GradientCardState extends State<GradientCard>
           ),
         ],
       ),
-      child: Container(
-        padding: widget.padding ?? const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: Container(
+          padding: widget.padding ?? const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCard,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: widget.child,
         ),
-        child: widget.child,
       ),
     );
   }

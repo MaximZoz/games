@@ -221,6 +221,31 @@ class GamesRepository {
     }
   }
 
+  static String _translateMessage(String msg) {
+    final m = msg.toLowerCase().trim();
+    const Map<String, String> map = {
+      'lobby not found': 'Лобби не найдено',
+      'game not found': 'Игра не найдена',
+      'not found': 'Не найдено',
+      'you are not invited': 'Вас не приглашали в эту игру',
+      'cannot invite yourself': 'Нельзя пригласить самого себя',
+      'user is not your friend': 'Этот пользователь не в списке друзей',
+      'lobby not in invite mode': 'Лобби не в режиме приглашений',
+      'cannot join own lobby': 'Нельзя присоединиться к своему лобби',
+      'game is not over': 'Игра ещё не закончена',
+      'game already started': 'Игра уже началась',
+      'game is over': 'Игра уже завершена',
+      'not your turn': 'Сейчас не ваш ход',
+      'cell already taken': 'Эта клетка уже занята',
+      'cell must be 0-8': 'Неверный ход',
+      'lobby invite expired': 'Приглашение в лобби истекло',
+      'forbidden': 'Недостаточно прав',
+      'games service unavailable (redis required)': 'Игры временно недоступны',
+      'server error': 'Ошибка сервера. Попробуйте позже.',
+    };
+    return map[m] ?? (map[msg.trim()] ?? msg);
+  }
+
   Never _throwForErrorResponse(http.Response response) {
     var message = response.body.trim();
     try {
@@ -242,10 +267,8 @@ class GamesRepository {
     if (response.statusCode == 503 && message.isEmpty) {
       throw GamesException(503, 'Игры временно недоступны.');
     }
-    throw GamesException(
-      response.statusCode,
-      message.isEmpty ? 'Ошибка сервера' : message,
-    );
+    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
+    throw GamesException(response.statusCode, translated);
   }
 
   Future<RematchResult> rematch(String gameId) async {

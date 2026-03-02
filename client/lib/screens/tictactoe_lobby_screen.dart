@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +11,9 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -43,13 +47,25 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   final Set<String> _invitedFriendIds = {};
   final Set<String> _invitingFriendIds = {};
   bool _isLeaving = false;
+  Timer? _chatsRefreshTimer;
 
   @override
   void initState() {
     super.initState();
+    ref.invalidate(lobbyDetailProvider(widget.lobbyId));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(openLobbiesProvider);
+      refreshChatsList(ref, force: true).catchError((_) {});
     });
+    _chatsRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) refreshChatsList(ref, force: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _chatsRefreshTimer?.cancel();
+    super.dispose();
   }
 
   void _listenRealtime() {
@@ -57,6 +73,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       realtimeEventsProvider,
       (_, next) {
         final type = next.valueOrNull?['type']?.toString() ?? '';
+        if (type == 'chat_message' || type == 'chat_list_changed') {
+          if (mounted) refreshChatsList(ref, force: true).catchError((_) {});
+        }
         if (type == 'lobby_updated') {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
           if (lobbyId == widget.lobbyId) {
@@ -80,6 +99,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   Widget build(BuildContext context) {
     _listenRealtime();
     final lobbyAsync = ref.watch(lobbyDetailProvider(widget.lobbyId));
+    ref.listen(lobbyDetailProvider(widget.lobbyId), (_, next) {
+      next.whenOrNull(
+        error: (_, __) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            ref.invalidate(activeGameProvider);
+            context.go('/games');
+          }
+        }),
+      );
+    });
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final currentUser = ref.watch(authStateProvider).valueOrNull;
 
@@ -306,7 +335,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                               ),
                             ),
                             error: (e, _) => Text(
-                              'Ошибка загрузки друзей: $e',
+                              'Не удалось загрузить друзей. ${formatUserError(e, fallback: "Попробуйте позже.")}',
                               style: const TextStyle(color: Colors.red),
                             ),
                           ),
@@ -346,26 +375,20 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             color: AppColors.accentStart,
           ),
         ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Ошибка: $e',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => context.go('/games'),
-                  child: const Text('К списку игр'),
-                ),
-              ],
+        error: (_, __) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              ref.invalidate(activeGameProvider);
+              context.go('/games');
+            }
+          });
+          return const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -387,11 +410,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-      }
+      if (mounted) context.go('/games');
     } finally {
       if (mounted) {
         setState(() => _invitingFriendIds.remove(friendUserId));
@@ -409,12 +428,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         context.go('/games');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
-        context.go('/games');
-      }
+      if (mounted) context.go('/games');
     } finally {
       if (mounted) setState(() => _isLeaving = false);
     }
