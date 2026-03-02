@@ -163,6 +163,22 @@ class ChatsRepository {
     }
   }
 
+  static String _translateMessage(String msg) {
+    final m = msg.toLowerCase().trim();
+    const Map<String, String> map = {
+      'cannot chat with yourself': 'Нельзя написать самому себе',
+      'message is empty': 'Сообщение не может быть пустым',
+      'message is too long': 'Сообщение слишком длинное',
+      'cannot block yourself': 'Нельзя заблокировать самого себя',
+      'forbidden': 'Недостаточно прав',
+      'user is blocked': 'Пользователь заблокирован',
+      'user not found': 'Пользователь не найден',
+      'not found': 'Не найдено',
+      'server error': 'Ошибка сервера. Попробуйте позже.',
+    };
+    return map[m] ?? msg;
+  }
+
   Never _throwForErrorResponse(http.Response response) {
     var message = response.body.trim();
     try {
@@ -175,7 +191,8 @@ class ChatsRepository {
     if (response.statusCode == 401) {
       throw ChatException(401, 'Сессия истекла. Войдите заново.');
     }
-    throw ChatException(response.statusCode, message.isEmpty ? 'Ошибка сервера' : message);
+    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
+    throw ChatException(response.statusCode, translated);
   }
 
   Future<List<ChatPreviewItem>> listChats({int limit = 100, int offset = 0}) async {
