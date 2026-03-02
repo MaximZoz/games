@@ -209,6 +209,21 @@ class FriendsRepository {
     }
   }
 
+  static String _translateMessage(String msg) {
+    final m = msg.toLowerCase().trim();
+    const Map<String, String> map = {
+      'cannot friend yourself': 'Нельзя добавить в друзья самого себя',
+      'already friends': 'Вы уже друзья',
+      'friend request already sent': 'Запрос уже отправлен',
+      'incoming friend request is pending': 'У вас уже есть входящий запрос от этого пользователя',
+      'user is blocked': 'Пользователь заблокирован',
+      'forbidden': 'Недостаточно прав',
+      'not found': 'Не найдено',
+      'server error': 'Ошибка сервера. Попробуйте позже.',
+    };
+    return map[m] ?? msg;
+  }
+
   Never _throwForErrorResponse(http.Response response) {
     var message = response.body.trim();
     try {
@@ -227,7 +242,8 @@ class FriendsRepository {
     if (response.statusCode == 404 && message.isEmpty) {
       throw FriendsException(404, 'Запись не найдена.');
     }
-    throw FriendsException(response.statusCode, message.isEmpty ? 'Ошибка сервера' : message);
+    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
+    throw FriendsException(response.statusCode, translated);
   }
 
   Future<FriendsSnapshot> getFriends() async {

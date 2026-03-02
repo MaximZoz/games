@@ -14,11 +14,15 @@ class ChatsLayoutScreen extends ConsumerWidget {
     this.chatId,
     this.peerName,
     this.fromFriends = false,
+    this.fromGames = false,
+    this.gameReturnPath,
   });
 
   final String? chatId;
   final String? peerName;
   final bool fromFriends;
+  final bool fromGames;
+  final String? gameReturnPath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,6 +34,8 @@ class ChatsLayoutScreen extends ConsumerWidget {
           chatID: chatId!,
           peerName: peerName,
           fromFriends: fromFriends,
+          fromGames: fromGames,
+          gameReturnPath: gameReturnPath,
         );
       }
       return const ChatsScreen();
@@ -39,6 +45,8 @@ class ChatsLayoutScreen extends ConsumerWidget {
       chatId: chatId,
       peerName: peerName,
       fromFriends: fromFriends,
+      fromGames: fromGames,
+      gameReturnPath: gameReturnPath,
     );
   }
 }
@@ -51,11 +59,15 @@ class _DesktopChatsLayout extends ConsumerStatefulWidget {
     this.chatId,
     this.peerName,
     this.fromFriends = false,
+    this.fromGames = false,
+    this.gameReturnPath,
   });
 
   final String? chatId;
   final String? peerName;
   final bool fromFriends;
+  final bool fromGames;
+  final String? gameReturnPath;
 
   @override
   ConsumerState<_DesktopChatsLayout> createState() => _DesktopChatsLayoutState();
@@ -65,7 +77,7 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
   @override
   Widget build(BuildContext context) {
     final sidebarCollapsed = ref.watch(chatsSidebarCollapsedProvider);
-    final showChatList = !widget.fromFriends;
+    final showChatList = !widget.fromFriends && !widget.fromGames;
     final panelWidth = sidebarCollapsed ? _sidebarCollapsedWidth : _sidebarExpandedWidth;
 
     return Scaffold(
@@ -148,7 +160,9 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
                         chatID: widget.chatId!,
                         peerName: widget.peerName,
                         fromFriends: widget.fromFriends,
-                        inSplitView: widget.fromFriends ? false : true,
+                        fromGames: widget.fromGames,
+                        gameReturnPath: widget.gameReturnPath,
+                        inSplitView: (widget.fromFriends || widget.fromGames) ? false : true,
                       ),
                     )
                   : _buildEmptyState(context),

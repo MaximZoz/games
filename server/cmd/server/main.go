@@ -257,7 +257,17 @@ func main() {
 	}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub}
 	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub}
+	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
+	gamesHandler := &api.GamesHandler{
+		Pool:        pool,
+		Rdb:         rdb,
+		Hub:         realtimeHub,
+		Broadcaster: gamesBroadcaster,
+	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
+	if rdb != nil {
+		go gamesBroadcaster.Start(ctx)
+	}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{
 		Pool:        pool,
@@ -300,6 +310,7 @@ func main() {
 	mux.Handle("/api/chats/block", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Block)))
 	mux.Handle("/api/chats/unblock", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Unblock)))
 	mux.Handle("/api/chats/blocked", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Blocked)))
+	mux.Handle("/api/games/", api.RequireAuth([]byte(jwtSecret), gamesHandler))
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
@@ -335,7 +346,7 @@ func main() {
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
 	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
 	log.Printf("Presence API: GET /api/presence?user_ids=... (Bearer)")
-	_ = rdb
+	log.Printf("Games API: POST /api/games/tictactoe/lobby, GET /api/games/tictactoe/lobbies, POST /api/games/tictactoe/lobby/:id/invite|join|leave, GET /api/games/tictactoe/game/:id, POST /api/games/tictactoe/game/:id/move (Bearer, Redis required)")
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)
 	}

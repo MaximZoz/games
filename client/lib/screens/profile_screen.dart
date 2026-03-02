@@ -8,7 +8,6 @@ import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
@@ -17,6 +16,7 @@ import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/utils/user_error.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -369,7 +369,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   loading: () => const _ProfileLoadingState(key: ValueKey('loading')),
                   error: (err, _) => _ProfileErrorState(
                     key: const ValueKey('error'),
-                    message: err is AuthException ? err.message : err.toString(),
+                    message: err is AuthException ? err.message : formatUserError(err),
                     onRetry: () => ref.read(authStateProvider.notifier).refresh(),
                   ),
                 ),
@@ -991,11 +991,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       if (mounted) {
         setState(() {
           _isSaving = false;
-          _saveError = e is AuthException
-              ? e.message
-              : e is http.ClientException
-                  ? 'Не удалось подключиться к серверу. Проверьте, что сервер запущен.'
-                  : 'Не удалось сохранить профиль';
+          _saveError = formatUserError(e, fallback: 'Не удалось сохранить профиль');
         });
       }
     }

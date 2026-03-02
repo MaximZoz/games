@@ -13,6 +13,7 @@ import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -476,7 +477,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       );
     } else if (blockedAsync.hasError && blockedRaw.isEmpty) {
       final err = blockedAsync.error;
-      final message = err is ChatException ? err.message : 'Не удалось загрузить список';
+      final message = formatUserError(err, fallback: 'Не удалось загрузить список');
       content = ListView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),

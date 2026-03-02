@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 final homeStartMessageProvider = FutureProvider.autoDispose<String>((ref) async {
@@ -16,7 +16,7 @@ final homeStartMessageProvider = FutureProvider.autoDispose<String>((ref) async 
   if (response.statusCode == 200) {
     return response.body.trim();
   }
-  throw Exception('Server: ${response.statusCode}');
+  throw Exception('Сервер вернул ошибку: ${response.statusCode}');
 });
 
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
@@ -73,9 +73,7 @@ class HomeScreen extends ConsumerWidget {
                     );
                   },
                   error: (error, _) {
-                    final message = error is http.ClientException
-                        ? 'Не удалось подключиться к серверу. Проверьте интернет или что сервер запущен.'
-                        : 'Ошибка: $error';
+                    final message = formatUserError(error, fallback: 'Не удалось загрузить данные.');
                     return Text(
                       message,
                       style: TextStyle(

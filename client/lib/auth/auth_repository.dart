@@ -139,6 +139,24 @@ class AuthRepository {
     return _handleAuthResponse(response);
   }
 
+  static String _translateMessage(String msg) {
+    final m = msg.toLowerCase().trim();
+    const Map<String, String> map = {
+      'invalid email or password': 'Неверный email или пароль',
+      'email already registered': 'Такой email уже зарегистрирован',
+      'invalid or expired token': 'Сессия истекла. Войдите заново.',
+      'invalid token': 'Сессия истекла. Войдите заново.',
+      'missing authorization header': 'Требуется авторизация',
+      'invalid authorization header': 'Неверный формат авторизации',
+      'user not found': 'Пользователь не найден',
+      'email required, password at least 6 characters': 'Укажите email, пароль — минимум 6 символов',
+      'email or login and password required': 'Укажите email и пароль',
+      'refresh_token required': 'Сессия истекла. Войдите заново.',
+      'server error': 'Ошибка сервера. Попробуйте позже.',
+    };
+    return map[m] ?? msg;
+  }
+
   Future<AuthResult> _handleAuthResponse(http.Response response) async {
     if (response.statusCode != 200) {
       String msg = response.body;
@@ -146,7 +164,7 @@ class AuthRepository {
         final body = jsonDecode(response.body);
         if (body is Map) msg = (body['message'] ?? body['error'] ?? msg).toString();
       } catch (_) {}
-      throw AuthException(response.statusCode, msg);
+      throw AuthException(response.statusCode, _translateMessage(msg));
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final accessToken = body['access_token'] as String;
@@ -305,7 +323,7 @@ class AuthRepository {
         final body = jsonDecode(response.body);
         if (body is Map) msg = (body['message'] ?? body['error'] ?? msg).toString();
       } catch (_) {}
-      throw AuthException(response.statusCode, msg);
+      throw AuthException(response.statusCode, _translateMessage(msg));
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;

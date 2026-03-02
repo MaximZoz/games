@@ -135,7 +135,17 @@ class AdminRepository {
     if (response.statusCode == 403 && message.isEmpty) {
       throw AdminException(403, 'Недостаточно прав для этого действия.');
     }
-    throw AdminException(response.statusCode, message.isEmpty ? 'Ошибка сервера' : message);
+    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
+    throw AdminException(response.statusCode, translated);
+  }
+
+  static String _translateMessage(String msg) {
+    final m = msg.toLowerCase().trim();
+    const Map<String, String> map = {
+      'server error': 'Ошибка сервера. Попробуйте позже.',
+      'admin only': 'Только для администраторов',
+    };
+    return map[m] ?? msg;
   }
 
   Future<List<AdminUserItem>> listUsers() async {

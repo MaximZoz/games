@@ -9,6 +9,7 @@ import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -93,7 +94,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
       _showMessage(null, 'Логи очищены');
       unawaited(_loadLogs());
     } catch (e) {
-      _showMessage(e.toString(), null);
+      _showMessage(formatUserError(e), null);
     }
   }
 
@@ -148,7 +149,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         if (e is AdminException) {
           await _handleAdminException(e);
         } else {
-          _showMessage(e.toString(), null);
+          _showMessage(formatUserError(e), null);
         }
       }
     }
@@ -195,7 +196,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         if (e is AdminException) {
           await _handleAdminException(e);
         } else {
-          _showMessage(e.toString(), null);
+          _showMessage(formatUserError(e), null);
         }
       }
     }
@@ -234,7 +235,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         if (e is AdminException) {
           await _handleAdminException(e);
         } else {
-          _showMessage(e.toString(), null);
+          _showMessage(formatUserError(e), null);
         }
       }
     }
@@ -835,7 +836,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: selectedValue,
+                initialValue: selectedValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -873,7 +874,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: sourceValue,
+                initialValue: sourceValue,
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -908,7 +909,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedLogMethod ?? '__all__',
+                initialValue: _selectedLogMethod ?? '__all__',
                 dropdownColor: AppColors.surfaceCard,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
