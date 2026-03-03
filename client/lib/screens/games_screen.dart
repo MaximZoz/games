@@ -51,7 +51,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final activeAsync = ref.watch(activeGameProvider);
 
     final isDesktop = isWide(context);
-    final contentPadding = isDesktop ? 32.0 : 24.0;
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final contentPadding = isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -90,21 +92,22 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                           const minCardWidth = 320.0;
                           const maxCardWidth = 420.0;
                           const gap = 16.0;
+                          const gameCards = 1; // пока одна игра
                           final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
+                          final effectiveCount = crossAxisCount > gameCards ? gameCards : crossAxisCount;
+                          final maxW = effectiveCount == 1
+                              ? (width * 0.9).clamp(380.0, 520.0)
+                              : width;
                           return Center(
                             child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: crossAxisCount == 1
-                                    ? maxCardWidth + 2 * gap
-                                    : width,
-                              ),
+                              constraints: BoxConstraints(maxWidth: maxW),
                               child: GridView.count(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: crossAxisCount,
+                                crossAxisCount: effectiveCount,
                                 mainAxisSpacing: gap,
                                 crossAxisSpacing: gap,
-                                childAspectRatio: 1.95,
+                                childAspectRatio: 1.85,
                                 children: [_TictactoeGameCard(
                                   isCreating: _isCreating,
                                   isFinding: _isFinding,
@@ -449,11 +452,13 @@ class _TictactoeGameCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
     final theme = Theme.of(context);
     return GradientCard(
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 24 : 20,
-        vertical: isDesktop ? 22 : 20,
+        horizontal: isMedium ? 18 : (isDesktop ? 24 : 20),
+        vertical: isMedium ? 16 : (isDesktop ? 22 : 20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -526,12 +531,12 @@ class _TictactoeGameCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: isDesktop ? 8 : 6),
+                    SizedBox(height: isMedium ? 6 : (isDesktop ? 8 : 6)),
                     Text(
                       'Классическая игра на двоих',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
-                        fontSize: isDesktop ? 14 : 13,
+                        fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
                         height: 1.35,
                       ),
                     ),
@@ -540,7 +545,7 @@ class _TictactoeGameCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: isDesktop ? 24 : 20),
+          SizedBox(height: isMedium ? 16 : (isDesktop ? 24 : 20)),
           Row(
             children: [
               Expanded(
@@ -566,12 +571,12 @@ class _TictactoeGameCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: EdgeInsets.symmetric(
-                      vertical: isDesktop ? 14 : 12,
+                      vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isMedium ? 10 : 12),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: isCreating || isFinding ? null : onFindGame,
@@ -595,7 +600,7 @@ class _TictactoeGameCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: EdgeInsets.symmetric(
-                      vertical: isDesktop ? 14 : 12,
+                      vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
                     ),
                   ),
                 ),
