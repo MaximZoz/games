@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -24,6 +25,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   bool _isFinding = false;
   _GamesTab _selectedTab = _GamesTab.games;
   Timer? _lobbyRefreshTimer;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _stopLobbyPoll();
+    super.dispose();
+  }
 
   void _startLobbyPoll() {
     _lobbyRefreshTimer?.cancel();
@@ -38,10 +53,19 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     _lobbyRefreshTimer = null;
   }
 
-  @override
-  void dispose() {
-    _stopLobbyPoll();
-    super.dispose();
+  void _onTabChanged(_GamesTab tab) {
+    setState(() => _selectedTab = tab);
+    _pageController.animateToPage(
+      tab == _GamesTab.games ? 0 : 1,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+    );
+    if (tab == _GamesTab.lobbies) {
+      ref.invalidate(openLobbiesProvider);
+      _startLobbyPoll();
+    } else {
+      _stopLobbyPoll();
+    }
   }
 
   @override
@@ -58,304 +82,59 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(contentPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 440),
-                        child: _GamesTabSwitcher(
-                          selectedTab: _selectedTab,
-                          onTabChanged: (tab) {
-                            setState(() => _selectedTab = tab);
-                            if (tab == _GamesTab.lobbies) {
-                              ref.invalidate(openLobbiesProvider);
-                              _startLobbyPoll();
-                            } else {
-                              _stopLobbyPoll();
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: isDesktop ? 28 : 20),
-                    if (_selectedTab == _GamesTab.games) ...[
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (isDesktop) {
-                          final width = constraints.maxWidth;
-                          const minCardWidth = 320.0;
-                          const maxCardWidth = 420.0;
-                          const gap = 16.0;
-                          const gameCards = 1; // пока одна игра
-                          final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
-                          final effectiveCount = crossAxisCount > gameCards ? gameCards : crossAxisCount;
-                          final maxW = effectiveCount == 1
-                              ? (width * 0.9).clamp(380.0, 520.0)
-                              : width;
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: maxW),
-                              child: GridView.count(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: effectiveCount,
-                                mainAxisSpacing: gap,
-                                crossAxisSpacing: gap,
-                                childAspectRatio: 1.85,
-                                children: [_TictactoeGameCard(
-                                  isCreating: _isCreating,
-                                  isFinding: _isFinding,
-                                  onCreateGame: () => _createGame(context, 'invite'),
-                                  onFindGame: () => _createGame(context, 'matchmake'),
-                                )],
-                              ),
-                            ),
-                          );
-                        }
-                        return _TictactoeGameCard(
-                          isCreating: _isCreating,
-                          isFinding: _isFinding,
-                          onCreateGame: () => _createGame(context, 'invite'),
-                          onFindGame: () => _createGame(context, 'matchmake'),
-                        );
-                      },
-                    ),
-                    if (invites.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      Text(
-                        'Вас пригласили',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                      ),
-                      const SizedBox(height: 12),
-                      ...invites.map(
-                        (inv) => GradientCard(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: AppColors.accentSoft,
-                                child: Text(
-                                  (inv.creatorName.isNotEmpty
-                                          ? inv.creatorName[0]
-                                          : '?')
-                                      .toUpperCase(),
-                                  style: const TextStyle(
-                                    color: AppColors.accentStart,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      inv.creatorName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const Text(
-                                      'Приглашение в крестики-нолики',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => _declineInvite(inv.lobbyId),
-                                child: const Text('Отклонить'),
-                              ),
-                              FilledButton(
-                                onPressed: () => _acceptInvite(context, inv.lobbyId),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.accentStart,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Принять'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    activeAsync.when(
-                      data: (active) {
-                        if (active == null) return const SizedBox.shrink();
-                        if (active.type == 'game' && active.gameId != null) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: GradientCard(
-                              padding: const EdgeInsets.all(16),
-                              child: InkWell(
-                                onTap: () =>
-                                    context.push('/games/tictactoe/game/${active.gameId}'),
-                                borderRadius: BorderRadius.circular(16),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.sports_esports_rounded,
-                                      size: 40,
-                                      color: AppColors.accentStart,
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            active.isMyTurn ? 'Ваш ход' : 'Ход соперника',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.textPrimary,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const Text(
-                                            'Текущая игра',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
-                    ),
-                    ],
-                    if (_selectedTab == _GamesTab.lobbies) ...[
-                      Text(
-                        'Открытые лобби',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                      ),
-                      SizedBox(height: isDesktop ? 16 : 12),
-                      lobbiesAsync.when(
-                        data: (lobbies) {
-                          if (lobbies.isEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Text(
-                                'Нет открытых лобби. Нажмите «Найти игру» или создайте своё.',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: isDesktop ? 15 : 14,
-                                ),
-                              ),
-                            );
-                          }
-                          return Column(
-                            children: lobbies
-                                .map(
-                                  (lobby) => Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: isDesktop ? 8 : 6,
-                                    ),
-                                    child: GradientCard(
-                                      padding: EdgeInsets.all(isDesktop ? 20 : 16),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.grid_3x3_rounded,
-                                            size: isDesktop ? 36 : 32,
-                                            color: AppColors.accentStart,
-                                          ),
-                                          SizedBox(width: isDesktop ? 16 : 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  lobby.creatorName.trim().isNotEmpty
-                                                      ? lobby.creatorName
-                                                      : 'Игрок',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: AppColors.textPrimary,
-                                                    fontSize: isDesktop ? 16 : 14,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  'Ожидает соперника',
-                                                  style: TextStyle(
-                                                    fontSize: isDesktop ? 14 : 13,
-                                                    color: AppColors.textSecondary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          FilledButton(
-                                            onPressed: () => _joinLobby(context, lobby.id),
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor: AppColors.accentStart,
-                                              foregroundColor: Colors.white,
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: isDesktop ? 24 : 16,
-                                                vertical: isDesktop ? 14 : 12,
-                                              ),
-                                            ),
-                                            child: const Text('Присоединиться'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                          );
-                        },
-                        loading: () => Padding(
-                          padding: EdgeInsets.all(isDesktop ? 32 : 24),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.accentStart,
-                            ),
-                          ),
-                        ),
-                        error: (err, _) => Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(
-                            'Не удалось загрузить лобби. ${formatUserError(err, fallback: 'Попробуйте обновить страницу.')}',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(contentPadding),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: _GamesTabSwitcher(
+                    selectedTab: _selectedTab,
+                    onTabChanged: _onTabChanged,
+                  ),
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 48)),
+            SizedBox(height: isDesktop ? 28 : 20),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  final tab = index == 0 ? _GamesTab.games : _GamesTab.lobbies;
+                  if (tab != _selectedTab) {
+                    setState(() => _selectedTab = tab);
+                    if (tab == _GamesTab.lobbies) {
+                      ref.invalidate(openLobbiesProvider);
+                      _startLobbyPoll();
+                    } else {
+                      _stopLobbyPoll();
+                    }
+                  }
+                },
+                children: [
+                  _GamesPageContent(
+                    isDesktop: isDesktop,
+                    isCreating: _isCreating,
+                    isFinding: _isFinding,
+                    onCreateGame: () => _createGame(context, 'invite'),
+                    onFindGame: () => _createGame(context, 'matchmake'),
+                    invites: invites,
+                    activeAsync: activeAsync,
+                    onAcceptInvite: _acceptInvite,
+                    onDeclineInvite: _declineInvite,
+                    contentPadding: contentPadding,
+                  ),
+                  _LobbiesPageContent(
+                    lobbiesAsync: lobbiesAsync,
+                    isDesktop: isDesktop,
+                    onJoinLobby: _joinLobby,
+                    contentPadding: contentPadding,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -433,6 +212,314 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         );
       }
     }
+  }
+}
+
+class _GamesPageContent extends StatelessWidget {
+  const _GamesPageContent({
+    required this.isDesktop,
+    required this.isCreating,
+    required this.isFinding,
+    required this.onCreateGame,
+    required this.onFindGame,
+    required this.invites,
+    required this.activeAsync,
+    required this.onAcceptInvite,
+    required this.onDeclineInvite,
+    required this.contentPadding,
+  });
+
+  final bool isDesktop;
+  final bool isCreating;
+  final bool isFinding;
+  final VoidCallback onCreateGame;
+  final VoidCallback onFindGame;
+  final List<GameInvite> invites;
+  final AsyncValue<ActiveGameItem?> activeAsync;
+  final void Function(BuildContext, String) onAcceptInvite;
+  final void Function(String) onDeclineInvite;
+  final double contentPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (isDesktop) {
+                final width = constraints.maxWidth;
+                const minCardWidth = 320.0;
+                const gap = 16.0;
+                const gameCards = 1;
+                final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
+                final effectiveCount = crossAxisCount > gameCards ? gameCards : crossAxisCount;
+                final maxW = effectiveCount == 1
+                    ? (width * 0.9).clamp(380.0, 520.0)
+                    : width;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxW),
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: effectiveCount,
+                      mainAxisSpacing: gap,
+                      crossAxisSpacing: gap,
+                      childAspectRatio: 2.6,
+                      children: [_TictactoeGameCard(
+                        isCreating: isCreating,
+                        isFinding: isFinding,
+                        onCreateGame: onCreateGame,
+                        onFindGame: onFindGame,
+                      )],
+                    ),
+                  ),
+                );
+              }
+              return _TictactoeGameCard(
+                isCreating: isCreating,
+                isFinding: isFinding,
+                onCreateGame: onCreateGame,
+                onFindGame: onFindGame,
+              );
+            },
+          ),
+          if (invites.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Вас пригласили',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...invites.map(
+              (inv) => GradientCard(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.accentSoft,
+                      child: Text(
+                        (inv.creatorName.isNotEmpty ? inv.creatorName[0] : '?').toUpperCase(),
+                        style: const TextStyle(
+                          color: AppColors.accentStart,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            inv.creatorName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const Text(
+                            'Приглашение в крестики-нолики',
+                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => onDeclineInvite(inv.lobbyId),
+                      child: const Text('Отклонить'),
+                    ),
+                    FilledButton(
+                      onPressed: () => onAcceptInvite(context, inv.lobbyId),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accentStart,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Принять'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          activeAsync.when(
+            data: (active) {
+              if (active == null) return const SizedBox.shrink();
+              if (active.type == 'game' && active.gameId != null) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: GradientCard(
+                    padding: const EdgeInsets.all(16),
+                    child: InkWell(
+                      onTap: () => context.push('/games/tictactoe/game/${active.gameId}'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Row(
+                        children: [
+                          Icon(Icons.sports_esports_rounded, size: 40, color: AppColors.accentStart),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  active.isMyTurn ? 'Ваш ход' : 'Ход соперника',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const Text(
+                                  'Текущая игра',
+                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LobbiesPageContent extends StatelessWidget {
+  const _LobbiesPageContent({
+    required this.lobbiesAsync,
+    required this.isDesktop,
+    required this.onJoinLobby,
+    required this.contentPadding,
+  });
+
+  final AsyncValue<List<LobbyItem>> lobbiesAsync;
+  final bool isDesktop;
+  final void Function(BuildContext, String) onJoinLobby;
+  final double contentPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Открытые лобби',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: isDesktop ? 16 : 12),
+          lobbiesAsync.when(
+            data: (lobbies) {
+              if (lobbies.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'Нет открытых лобби. Нажмите «Найти игру» или создайте своё.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: isDesktop ? 15 : 14,
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                children: lobbies
+                    .map(
+                      (lobby) => Padding(
+                        padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
+                        child: GradientCard(
+                          padding: EdgeInsets.all(isDesktop ? 20 : 16),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.grid_3x3_rounded,
+                                size: isDesktop ? 36 : 32,
+                                color: AppColors.accentStart,
+                              ),
+                              SizedBox(width: isDesktop ? 16 : 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      lobby.creatorName.trim().isNotEmpty ? lobby.creatorName : 'Игрок',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                        fontSize: isDesktop ? 16 : 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Ожидает соперника',
+                                      style: TextStyle(
+                                        fontSize: isDesktop ? 14 : 13,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              FilledButton(
+                                onPressed: () => onJoinLobby(context, lobby.id),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.accentStart,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isDesktop ? 24 : 16,
+                                    vertical: isDesktop ? 14 : 12,
+                                  ),
+                                ),
+                                child: const Text('Присоединиться'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+            loading: () => Padding(
+              padding: EdgeInsets.all(isDesktop ? 32 : 24),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              ),
+            ),
+            error: (err, _) => Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Не удалось загрузить лобби. ${formatUserError(err, fallback: 'Попробуйте обновить страницу.')}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

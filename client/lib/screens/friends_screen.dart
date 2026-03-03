@@ -1605,54 +1605,68 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     ];
   }
 
-  String _tabTitle(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+  String _tabTitle(_FriendsTabKind tab) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        if (snapshot == null) return 'Друзья';
-        return 'Друзья (${snapshot.friends.length})';
+        return 'Друзья';
       case _FriendsTabKind.incoming:
-        if (snapshot == null) return 'Входящие';
-        return 'Входящие (${snapshot.incoming.length})';
+        return 'Входящие';
       case _FriendsTabKind.outgoing:
-        if (snapshot == null) return 'Исходящие';
-        return 'Исходящие (${snapshot.outgoing.length})';
+        return 'Исходящие';
       case _FriendsTabKind.findFriend:
         return 'Найти друга';
     }
   }
 
-  Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
-    final title = _tabTitle(tab, snapshot);
-    final incomingCount = snapshot?.incoming.length ?? 0;
-    final isIncoming = tab == _FriendsTabKind.incoming;
-    if (!isIncoming || incomingCount <= 0) {
-      return Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-      );
+  int? _tabCount(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    if (snapshot == null) return null;
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        return snapshot.friends.length;
+      case _FriendsTabKind.incoming:
+        return snapshot.incoming.length;
+      case _FriendsTabKind.outgoing:
+        return snapshot.outgoing.length;
+      case _FriendsTabKind.findFriend:
+        return null;
     }
-    // Красный badge для входящих
-    return Row(
+  }
+
+  Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    final title = _tabTitle(tab);
+    final count = _tabCount(tab, snapshot);
+    final isIncoming = tab == _FriendsTabKind.incoming;
+    final countColor = (isIncoming && (count ?? 0) > 0)
+        ? Colors.red.shade600
+        : AppColors.accentStart;
+    return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('Входящие'),
-        const SizedBox(width: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-          decoration: BoxDecoration(
-            color: Colors.red.shade600,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(
-            '$incomingCount',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+        if (count != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(999),
             ),
-          ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: countColor,
+              ),
+            ),
+          )
+        else
+          const SizedBox(height: 22),
+        if (count != null) const SizedBox(height: 4),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -1737,8 +1751,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                                 child: TabBar(
                                   controller: _tabController,
                                   isScrollable: false,
-                                  labelPadding:
-                                      const EdgeInsets.symmetric(horizontal: 2),
+                                  tabAlignment: TabAlignment.fill,
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 2,
+                                  ),
                                   indicatorSize: TabBarIndicatorSize.tab,
                                   labelStyle: TextStyle(
                                     fontSize: compact ? 12 : 15,

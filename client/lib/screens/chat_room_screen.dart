@@ -386,13 +386,24 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _hasMoreOlder = older.length >= _messagesPageSize;
       });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_scrollController.hasClients) return;
-        final newMaxScrollExtent = _scrollController.position.maxScrollExtent;
-        final delta = newMaxScrollExtent - previousMaxScrollExtent;
-        final targetOffset = _scrollController.offset + (delta > 0 ? delta : 0);
-        _scrollController.jumpTo(targetOffset);
-      });
+      void tryRestoreScroll([int attemptsLeft = 3]) {
+        if (attemptsLeft <= 0) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_scrollController.hasClients) return;
+          final pos = _scrollController.position;
+          final newMax = pos.maxScrollExtent;
+          final delta = newMax - previousMaxScrollExtent;
+          if (delta > 0) {
+            final target = (_scrollController.offset + delta)
+                .clamp(0.0, pos.maxScrollExtent);
+            _scrollController.jumpTo(target);
+          }
+          if (delta <= 0 && attemptsLeft > 1) {
+            tryRestoreScroll(attemptsLeft - 1);
+          }
+        });
+      }
+      tryRestoreScroll();
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingOlder = false);
@@ -1035,11 +1046,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           : ListView.builder(
               controller: _scrollController,
               reverse: true,
+              addAutomaticKeepAlives: true,
+              addRepaintBoundaries: true,
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics(),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              cacheExtent: 400,
+              cacheExtent: 1200,
               itemCount: timeline.length + ((_loadingOlder || _hasMoreOlder) ? 1 : 0),
               itemBuilder: (context, index) {
                   final topLoaderVisible = _loadingOlder || _hasMoreOlder;
@@ -1062,8 +1075,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
                   final timelineIndex = timeline.length - 1 - index;
                   final entry = timeline[timelineIndex];
+                  final itemKey = entry.message?.id ?? 'h-${entry.headerLabel ?? index}';
                   if (entry.headerLabel != null) {
                     return Padding(
+                      key: ValueKey(itemKey),
                       padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
                       child: Center(
                         child: Container(
@@ -1089,6 +1104,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   final message = entry.message!;
                   final mine = message.senderUserID == meID;
                   return Align(
+                    key: ValueKey(message.id),
                     alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 320),
