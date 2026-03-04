@@ -20,6 +20,26 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/router.dart';
 
+/// Индексы центральных клеток (запрещены для первого хода при first_move_restriction).
+List<int> _centerCellIndices(int gridSize) {
+  switch (gridSize) {
+    case 3:
+      return [4];
+    case 4:
+      return [5, 6, 9, 10];
+    case 5:
+      return [12];
+    case 6:
+      return [14, 15, 20, 21];
+    case 7:
+      return [24];
+    case 8:
+      return [27, 28, 35, 36];
+    default:
+      return [];
+  }
+}
+
 const List<IconData> _presetAvatarIcons = [
   Icons.face_rounded,
   Icons.face_2_rounded,
@@ -48,6 +68,7 @@ class TicTacToeGameScreen extends ConsumerStatefulWidget {
 class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   bool _isMakingMove = false;
+  bool _isSwapping = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   String? _rematchLobbyId;
@@ -342,6 +363,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             statusText = isMyTurn ? 'Ваш ход' : 'Ход соперника';
           }
 
+          final showSwapButton = !isOver &&
+              game.canSwap &&
+              isMyTurn &&
+              !_isSwapping &&
+              !_isMakingMove;
+
           final iWon = isOver &&
               ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
                   (game.status == 'o_won' && game.oUserId == currentUser?.id));
@@ -392,6 +419,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                   color: AppColors.textPrimary,
                                   fontSize: narrow ? 15 : null,
                                 ),
+                          ),
+                        if (showSwapButton)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: OutlinedButton.icon(
+                              onPressed: () => _swapSides(),
+                              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                              label: const Text('Сменить стороны'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentStart,
+                                side: BorderSide(
+                                    color: AppColors.accentStart.withValues(alpha: 0.6)),
+                              ),
+                            ),
                           ),
                         if (!isOver &&
                             game.turnTimeSec > 0 &&
@@ -477,6 +518,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                   fontSize: narrow ? 15 : null,
                                 ),
                           ),
+                          if (showSwapButton)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: OutlinedButton.icon(
+                                onPressed: () => _swapSides(),
+                                icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                                label: const Text('Сменить стороны'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.accentStart,
+                                  side: BorderSide(
+                                      color: AppColors.accentStart.withValues(alpha: 0.6)),
+                                ),
+                              ),
+                            ),
                           if (!isOver &&
                               game.turnTimeSec > 0 &&
                               game.turnDeadline != null)
@@ -727,14 +782,48 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     ref.watch(friendsSnapshotProvider).valueOrNull;
                 final presence =
                     ref.watch(presenceMapProvider).valueOrNull ?? const {};
-                FriendItem? friendItem;
+                final chatsList =
+                    ref.watch(chatsListProvider).valueOrNull ?? const [];
+                FriendUserItem? friendUser;
                 for (final f in friendsSnapshot?.friends ?? []) {
                   if (f.user.id == opponentId) {
-                    friendItem = f;
+                    friendUser = f.user;
                     break;
                   }
                 }
-                final friendUser = friendItem?.user;
+                if (friendUser == null) {
+                  for (final r in friendsSnapshot?.incoming ?? []) {
+                    if (r.user.id == opponentId) {
+                      friendUser = r.user;
+                      break;
+                    }
+                  }
+                }
+                if (friendUser == null) {
+                  for (final r in friendsSnapshot?.outgoing ?? []) {
+                    if (r.user.id == opponentId) {
+                      friendUser = r.user;
+                      break;
+                    }
+                  }
+                }
+                if (friendUser == null) {
+                  for (final chat in chatsList) {
+                    if (chat.user.id == opponentId) {
+                      friendUser = FriendUserItem(
+                        id: chat.user.id,
+                        email: '',
+                        displayName: chat.user.displayName,
+                        avatarKind: chat.user.avatarKind,
+                        avatarValue: chat.user.avatarValue,
+                        age: chat.user.age,
+                        gender: chat.user.gender,
+                        about: chat.user.about,
+                      );
+                      break;
+                    }
+                  }
+                }
                 final presenceEntry = presence[opponentId];
                 final statusText = presenceEntry == null
                     ? null
@@ -1033,6 +1122,24 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isMakingMove = false);
+    }
+  }
+
+  Future<void> _swapSides() async {
+    setState(() => _isSwapping = true);
+    try {
+      final repo = ref.read(gamesRepositoryProvider);
+      final response = await repo.swapSides(widget.gameId);
+      if (mounted) {
+        ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+            response;
+        ref.invalidate(gameStateProvider(widget.gameId));
+        ref.invalidate(activeGameProvider);
+      }
+    } catch (e) {
+      if (mounted) _redirectToGamesOnError();
+    } finally {
+      if (mounted) setState(() => _isSwapping = false);
     }
   }
 }
@@ -1566,12 +1673,25 @@ class _GameBoard extends StatelessWidget {
                           final cellH =
                               innerConstraints.maxHeight / gridSize;
                           final gap = boardSize > 280 ? 4.0 : 2.0;
+                          final isFirstMoveX = game.turn == 'x' &&
+                              game.board.every((c) => c.isEmpty);
+                          final forbiddenCenters = game.firstMoveRestriction &&
+                                  isFirstMoveX
+                              ? _centerCellIndices(gridSize)
+                              : <int>[];
                           return Stack(
                             children: List.generate(n, (i) {
                               final row = i ~/ gridSize;
                               final col = i % gridSize;
                               final cell =
                                   i < game.board.length ? game.board[i] : '';
+                              final isForbiddenCenter =
+                                  cell.isEmpty && forbiddenCenters.contains(i);
+                              final cellCanTap = cell.isEmpty &&
+                                  !isForbiddenCenter &&
+                                  isMyTurn &&
+                                  !isOver &&
+                                  !isMakingMove;
                               return Positioned(
                                 left: col * cellW + gap,
                                 top: row * cellH + gap,
@@ -1581,16 +1701,10 @@ class _GameBoard extends StatelessWidget {
                                   symbol: cell,
                                   isMyTurn:
                                       isMyTurn && !isOver && !isMakingMove,
-                                  canTap: cell.isEmpty,
-                                  onTap: () => (cell.isEmpty &&
-                                          isMyTurn &&
-                                          !isOver &&
-                                          !isMakingMove)
-                                      ? onMove(i)
-                                      : null,
-                                  pulse: isMyTurn && cell.isEmpty
-                                      ? pulseController
-                                      : null,
+                                  canTap: cellCanTap,
+                                  isForbidden: isForbiddenCenter,
+                                  onTap: cellCanTap ? () => onMove(i) : null,
+                                  pulse: cellCanTap ? pulseController : null,
                                 ),
                               );
                             }),
@@ -1651,7 +1765,7 @@ class _WinningLineOverlayState extends State<_WinningLineOverlay>
   @override
   Widget build(BuildContext context) {
     final wc = widget.winningCells;
-    if (wc == null || wc.length < 3 || wc.length > 4) {
+    if (wc == null || wc.length < 3) {
       return widget.child;
     }
     return Stack(
@@ -1692,7 +1806,7 @@ class _WinningLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (winningCells.length < 3 || winningCells.length > 4 ||
+    if (winningCells.length < 3 ||
         size.width <= 0 ||
         size.height <= 0) return;
     final cellW = size.width / gridSize;
@@ -2017,6 +2131,7 @@ class _AnimatedGameCell extends StatelessWidget {
     required this.symbol,
     required this.isMyTurn,
     required this.canTap,
+    this.isForbidden = false,
     this.onTap,
     this.pulse,
   });
@@ -2024,6 +2139,7 @@ class _AnimatedGameCell extends StatelessWidget {
   final String symbol;
   final bool isMyTurn;
   final bool canTap;
+  final bool isForbidden;
   final VoidCallback? onTap;
   final AnimationController? pulse;
 
@@ -2044,9 +2160,11 @@ class _AnimatedGameCell extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  color: canTap && isMyTurn
-                      ? AppColors.accentSoft.withValues(alpha: 0.25)
-                      : Colors.transparent,
+                  color: isForbidden
+                      ? Colors.grey.withValues(alpha: 0.15)
+                      : canTap && isMyTurn
+                          ? AppColors.accentSoft.withValues(alpha: 0.25)
+                          : Colors.transparent,
                 ),
                 child: pulse != null && canTap && isMyTurn
                     ? AnimatedBuilder(

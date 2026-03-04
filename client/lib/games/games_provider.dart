@@ -17,6 +17,10 @@ class GameInvite {
     required this.gameType,
     this.turnTimeSec = 0,
     this.gridSize = 3,
+    this.swapRule = false,
+    this.firstMoveRestriction = false,
+    this.creatorAvatarKind = 'letter',
+    this.creatorAvatarValue,
   });
   final String lobbyId;
   final String creatorId;
@@ -24,6 +28,10 @@ class GameInvite {
   final String gameType;
   final int turnTimeSec;
   final int gridSize;
+  final bool swapRule;
+  final bool firstMoveRestriction;
+  final String creatorAvatarKind;
+  final String? creatorAvatarValue;
 }
 
 final gameInvitesProvider =
@@ -43,6 +51,10 @@ final gameInvitesProvider =
         final gameType = data['game_type']?.toString() ?? 'tictactoe';
         final turnTimeSec = (data['turn_time_sec'] as num?)?.toInt() ?? 0;
         final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;
+        final swapRule = data['swap_rule'] == true;
+        final firstMoveRestriction = data['first_move_restriction'] == true;
+        final creatorAvatarKind = data['creator_avatar_kind']?.toString() ?? 'letter';
+        final creatorAvatarValue = data['creator_avatar_value']?.toString();
         if (lobbyId != null && creatorId != null) {
           notifier.add(GameInvite(
             lobbyId: lobbyId,
@@ -51,6 +63,10 @@ final gameInvitesProvider =
             gameType: gameType,
             turnTimeSec: turnTimeSec,
             gridSize: gridSize,
+            swapRule: swapRule,
+            firstMoveRestriction: firstMoveRestriction,
+            creatorAvatarKind: creatorAvatarKind,
+            creatorAvatarValue: creatorAvatarValue,
           ));
         }
       }

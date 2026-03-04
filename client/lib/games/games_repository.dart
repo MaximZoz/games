@@ -17,8 +17,8 @@ class GamesException implements Exception {
 /// Допустимые значения времени на ход (сек): 0=без лимита, 10, 30, 60, 600
 const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
 
-/// Размеры сетки: 3x3, 4x4, 5x5
-const List<int> gridSizeOptions = [3, 4, 5];
+/// Размеры сетки: 3x3, 4x4, 5x5, 6x6, 7x7, 8x8
+const List<int> gridSizeOptions = [3, 4, 5, 6, 7, 8];
 
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';
@@ -40,6 +40,8 @@ class LobbyItem {
   final String createdAt;
   final int turnTimeSec;
   final int gridSize;
+  final bool swapRule;
+  final bool firstMoveRestriction;
 
   LobbyItem({
     required this.id,
@@ -51,6 +53,8 @@ class LobbyItem {
     required this.createdAt,
     this.turnTimeSec = 0,
     this.gridSize = 3,
+    this.swapRule = false,
+    this.firstMoveRestriction = false,
   });
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
@@ -64,6 +68,8 @@ class LobbyItem {
       createdAt: json['created_at'] as String? ?? '',
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
+      swapRule: json['swap_rule'] == true,
+      firstMoveRestriction: json['first_move_restriction'] == true,
     );
   }
 }
@@ -77,10 +83,13 @@ class GameStateItem {
   final bool forfeit;
   final bool timeout;
   final int turnTimeSec;
-  final int? turnDeadline; // Unix sec
+  final int? turnDeadline;
   final int gridSize;
   final String xUserId;
   final String oUserId;
+  final bool swapRule;
+  final bool firstMoveRestriction;
+  final bool canSwap;
   final String? xDisplayName;
   final String? oDisplayName;
   final String xAvatarKind;
@@ -102,6 +111,9 @@ class GameStateItem {
     this.gridSize = 3,
     required this.xUserId,
     required this.oUserId,
+    this.swapRule = false,
+    this.firstMoveRestriction = false,
+    this.canSwap = false,
     this.xDisplayName,
     this.oDisplayName,
     this.xAvatarKind = 'letter',
@@ -141,6 +153,9 @@ class GameStateItem {
       gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
       xUserId: json['x_user_id'] as String? ?? '',
       oUserId: json['o_user_id'] as String? ?? '',
+      swapRule: json['swap_rule'] == true,
+      firstMoveRestriction: json['first_move_restriction'] == true,
+      canSwap: json['can_swap'] == true,
       xDisplayName: json['x_display_name'] as String?,
       oDisplayName: json['o_display_name'] as String?,
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',
@@ -152,7 +167,7 @@ class GameStateItem {
   }
 
   static List<int>? _parseWinningCells(dynamic raw) {
-    if (raw is! List || raw.length != 3) return null;
+    if (raw is! List || raw.length < 3 || raw.length > 8) return null;
     final list = <int>[];
     for (final e in raw) {
       final n = (e is num) ? e.toInt() : null;
@@ -164,20 +179,24 @@ class GameStateItem {
 
   /// Победная линия: из winningCells или вычисленная по доске.
   List<int>? get effectiveWinningCells {
-    final winLen = gridSize == 3 ? 3 : 4;
-    if (winningCells != null && winningCells!.length == winLen) return winningCells;
+    final winLen = GameStateItem.winLength(gridSize);
+    if (winningCells != null && winningCells!.length == winLen) {
+      return winningCells;
+    }
     final mark = winner;
     if (mark == null || mark.isEmpty) return null;
     if (status != 'x_won' && status != 'o_won') return null;
     return _computeWinningCells(board, mark, gridSize);
   }
 
-  static int _winLength(int gridSize) => gridSize == 3 ? 3 : 4;
+  /// Для 3–5: N в ряд. Для 6–8: 5 в ряд (гомоку).
+  static int winLength(int gridSize) => gridSize >= 6 ? 5 : gridSize;
 
-  static List<int>? _computeWinningCells(List<String> board, String mark, int gridSize) {
+  static List<int>? _computeWinningCells(
+      List<String> board, String mark, int gridSize) {
     final n = gridSize * gridSize;
     if (board.length < n) return null;
-    final winLen = _winLength(gridSize);
+    final winLen = GameStateItem.winLength(gridSize);
     if (winLen > gridSize) return null;
     // Горизонтали
     for (var row = 0; row < gridSize; row++) {
@@ -241,22 +260,6 @@ class GameStateItem {
           }
         }
         if (allMatch) return line;
-      }
-    }
-    return null;
-  }
-
-  static List<int>? _computeWinningCellsOld(List<String> board, String mark, int gridSize) {
-    final n = gridSize * gridSize;
-    if (board.length < n) return null;
-    for (var row = 0; row <= gridSize - 3; row++) {
-      for (var col = 2; col < gridSize; col++) {
-        final i = row * gridSize + col;
-        if (board[i] == mark &&
-            board[i + gridSize - 1] == mark &&
-            board[i + 2 * (gridSize - 1)] == mark) {
-          return [i, i + gridSize - 1, i + 2 * (gridSize - 1)];
-        }
       }
     }
     return null;
@@ -395,6 +398,13 @@ class GamesRepository {
       'not your turn': 'Сейчас не ваш ход',
       'cell already taken': 'Эта клетка уже занята',
       'cell must be 0-8': 'Неверный ход',
+      'first move cannot be in center': 'Первый ход нельзя делать в центр',
+      'swap not allowed in this game': 'Смена сторон недоступна в этой игре',
+      'only O can swap': 'Сменить стороны может только игрок O',
+      'can only swap on your turn after X\'s first move':
+          'Сменить стороны можно только после первого хода X',
+      'can only swap after X\'s first move':
+          'Сменить стороны можно только после первого хода X',
       'lobby invite expired': 'Приглашение в лобби истекло',
       'forbidden': 'Недостаточно прав',
       'games service unavailable (redis required)': 'Игры временно недоступны',
@@ -424,7 +434,8 @@ class GamesRepository {
     if (response.statusCode == 503 && message.isEmpty) {
       throw GamesException(503, 'Игры временно недоступны.');
     }
-    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
+    final translated =
+        message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
     throw GamesException(response.statusCode, translated);
   }
 
@@ -451,6 +462,8 @@ class GamesRepository {
     required String mode,
     int turnTimeSec = 0,
     int gridSize = 3,
+    bool swapRule = false,
+    bool firstMoveRestriction = false,
   }) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
@@ -463,6 +476,8 @@ class GamesRepository {
           'mode': mode,
           'turn_time_sec': turnTimeSec,
           'grid_size': gridSize,
+          'swap_rule': swapRule,
+          'first_move_restriction': firstMoveRestriction,
         }),
         operation: 'GamesRepository.createLobby',
       ),
@@ -619,6 +634,25 @@ class GamesRepository {
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
+  }
+
+  Future<GameStateItem> swapSides(String gameId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/swap'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+        operation: 'GamesRepository.swapSides',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return GameStateItem.fromJson(body);
   }
 
   Future<GameStateItem> makeMove(String gameId, int cell) async {

@@ -12,8 +12,32 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+
+/// Общий формат правил крестиков-ноликов (игра, лобби, приглашения).
+String _buildTictactoeRulesText({
+  required int gridSize,
+  required int turnTimeSec,
+  required bool swapRule,
+  required bool firstMoveRestriction,
+}) {
+  final parts = <String>[
+    'Крестики-нолики на поле ${formatGridSize(gridSize)}. Ходят по очереди, X начинает.',
+    'Победа: нужно выстроить ${gridSize >= 6 ? 5 : gridSize} в ряд по горизонтали, вертикали или диагонали.',
+    turnTimeSec == 0
+        ? 'Без ограничения по времени на ход.'
+        : 'Время на ход: ${formatTurnTime(turnTimeSec)}.',
+  ];
+  if (swapRule) {
+    parts.add('Смена сторон: O может поменяться местами с X после первого хода X.');
+  }
+  if (firstMoveRestriction) {
+    parts.add('Запрет центра: X не может ходить в центр первым ходом.');
+  }
+  return parts.join('\n\n');
+}
 
 class GamesScreen extends ConsumerStatefulWidget {
   const GamesScreen({super.key});
@@ -30,6 +54,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   _GamesTab _selectedTab = _GamesTab.games;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
   int _selectedGridSize = 3; // 3, 4, 5
+  bool _selectedSwapRule = false;
+  bool _selectedFirstMoveRestriction = false;
   Timer? _lobbyRefreshTimer;
   late PageController _pageController;
 
@@ -128,6 +154,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onTurnTimeChanged: (v) => setState(() => _selectedTurnTimeSec = v),
                     gridSize: _selectedGridSize,
                     onGridSizeChanged: (v) => setState(() => _selectedGridSize = v),
+                    swapRule: _selectedSwapRule,
+                    onSwapRuleChanged: (v) => setState(() => _selectedSwapRule = v),
+                    firstMoveRestriction: _selectedFirstMoveRestriction,
+                    onFirstMoveRestrictionChanged: (v) => setState(() => _selectedFirstMoveRestriction = v),
                     onCreateGame: () => _createGame(context, 'invite'),
                     onFindGame: () => _createGame(context, 'matchmake'),
                     invites: invites,
@@ -135,12 +165,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onAcceptInvite: _acceptInvite,
                     onDeclineInvite: _declineInvite,
                     onShowCreatorInfo: _showCreatorInfo,
+                    onShowInviteRules: _showInviteRules,
                     contentPadding: contentPadding,
                   ),
                   _LobbiesPageContent(
                     lobbiesAsync: lobbiesAsync,
                     isDesktop: isDesktop,
                     onJoinLobby: _joinLobby,
+                    onShowLobbyRules: _showLobbyRulesInfo,
                     contentPadding: contentPadding,
                   ),
                 ],
@@ -166,6 +198,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         mode: mode,
         turnTimeSec: _selectedTurnTimeSec,
         gridSize: _selectedGridSize,
+        swapRule: _selectedSwapRule,
+        firstMoveRestriction: _selectedFirstMoveRestriction,
       );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
@@ -207,13 +241,29 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
+  String _inviteRulesText(GameInvite inv) {
+    return _buildTictactoeRulesText(
+      gridSize: inv.gridSize,
+      turnTimeSec: inv.turnTimeSec,
+      swapRule: inv.swapRule,
+      firstMoveRestriction: inv.firstMoveRestriction,
+    );
+  }
+
   void _showCreatorInfo(BuildContext context, GameInvite inv) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-        backgroundColor: Colors.transparent,
-        child: Consumer(
+      builder: (ctx) {
+        final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 80 : 14,
+            vertical: isDesktop ? 40 : 20,
+          ),
+          backgroundColor: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 440 : double.infinity),
+            child: Consumer(
           builder: (context, ref, _) {
             final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
             final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
@@ -259,16 +309,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: AppColors.accentSoft,
-                        child: Text(
-                          (name.isNotEmpty ? name[0] : '?').toUpperCase(),
-                          style: const TextStyle(
-                            color: AppColors.accentStart,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      _InviteCreatorAvatar(
+                        creatorName: name,
+                        avatarKind: user?.avatarKind ?? 'letter',
+                        avatarValue: user?.avatarValue,
+                        creatorId: inv.creatorId,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -331,6 +376,67 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           },
         ),
       ),
+        );
+      },
+    );
+  }
+
+  void _showInviteRules(BuildContext context, GameInvite inv) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 80 : 14,
+            vertical: isDesktop ? 40 : 20,
+          ),
+          backgroundColor: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 380 : double.infinity),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Правила игры',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Закрыть',
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(ctx).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    child: Text(
+                      _inviteRulesText(inv),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -355,6 +461,40 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       }
     }
   }
+
+  void _showLobbyRulesInfo(BuildContext context, LobbyItem lobby) {
+    final rulesText = _buildTictactoeRulesText(
+      gridSize: lobby.gridSize,
+      turnTimeSec: lobby.turnTimeSec,
+      swapRule: lobby.swapRule,
+      firstMoveRestriction: lobby.firstMoveRestriction,
+    );
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
+        return AlertDialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 80 : 24,
+            vertical: isDesktop ? 40 : 24,
+          ),
+          title: const Text('Правила'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
+            child: SingleChildScrollView(
+              child: Text(rulesText),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Закрыть'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _GamesPageContent extends StatelessWidget {
@@ -366,6 +506,10 @@ class _GamesPageContent extends StatelessWidget {
     required this.onTurnTimeChanged,
     required this.gridSize,
     required this.onGridSizeChanged,
+    required this.swapRule,
+    required this.onSwapRuleChanged,
+    required this.firstMoveRestriction,
+    required this.onFirstMoveRestrictionChanged,
     required this.onCreateGame,
     required this.onFindGame,
     required this.invites,
@@ -373,6 +517,7 @@ class _GamesPageContent extends StatelessWidget {
     required this.onAcceptInvite,
     required this.onDeclineInvite,
     required this.onShowCreatorInfo,
+    required this.onShowInviteRules,
     required this.contentPadding,
   });
 
@@ -383,6 +528,10 @@ class _GamesPageContent extends StatelessWidget {
   final void Function(int) onTurnTimeChanged;
   final int gridSize;
   final void Function(int) onGridSizeChanged;
+  final bool swapRule;
+  final void Function(bool) onSwapRuleChanged;
+  final bool firstMoveRestriction;
+  final void Function(bool) onFirstMoveRestrictionChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
   final List<GameInvite> invites;
@@ -390,6 +539,7 @@ class _GamesPageContent extends StatelessWidget {
   final void Function(BuildContext, String) onAcceptInvite;
   final void Function(String) onDeclineInvite;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
+  final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
 
   @override
@@ -428,6 +578,10 @@ class _GamesPageContent extends StatelessWidget {
                         onTurnTimeChanged: onTurnTimeChanged,
                         gridSize: gridSize,
                         onGridSizeChanged: onGridSizeChanged,
+                        swapRule: swapRule,
+                        onSwapRuleChanged: onSwapRuleChanged,
+                        firstMoveRestriction: firstMoveRestriction,
+                        onFirstMoveRestrictionChanged: onFirstMoveRestrictionChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
                       )],
@@ -442,6 +596,10 @@ class _GamesPageContent extends StatelessWidget {
                 onTurnTimeChanged: onTurnTimeChanged,
                 gridSize: gridSize,
                 onGridSizeChanged: onGridSizeChanged,
+                swapRule: swapRule,
+                onSwapRuleChanged: onSwapRuleChanged,
+                firstMoveRestriction: firstMoveRestriction,
+                onFirstMoveRestrictionChanged: onFirstMoveRestrictionChanged,
                 onCreateGame: onCreateGame,
                 onFindGame: onFindGame,
               );
@@ -457,94 +615,43 @@ class _GamesPageContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...invites.map(
-              (inv) => GradientCard(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: AppColors.accentSoft,
-                      child: Text(
-                        (inv.creatorName.isNotEmpty ? inv.creatorName[0] : '?').toUpperCase(),
-                        style: const TextStyle(
-                          color: AppColors.accentStart,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final inviteContent = invites.map(
+                  (inv) => _InviteCard(
+                    inv: inv,
+                    onShowCreatorInfo: onShowCreatorInfo,
+                    onShowInviteRules: onShowInviteRules,
+                    onDeclineInvite: onDeclineInvite,
+                    onAcceptInvite: onAcceptInvite,
+                  ),
+                );
+                if (isDesktop) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            inv.creatorName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.grid_on_rounded,
-                                size: 16,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                formatGridSize(inv.gridSize),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Icon(
-                                Icons.timer_outlined,
-                                size: 16,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                formatTurnTime(inv.turnTimeSec),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: inviteContent
+                            .map((w) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: w,
+                                ))
+                            .toList(),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => onShowCreatorInfo(context, inv),
-                      icon: const Icon(Icons.info_outline_rounded),
-                      tooltip: 'Информация о пользователе',
-                    ),
-                    IconButton(
-                      onPressed: () => onDeclineInvite(inv.lobbyId),
-                      icon: const Icon(Icons.close_rounded),
-                      tooltip: 'Отклонить',
-                      style: IconButton.styleFrom(
-                        foregroundColor: Colors.red,
-                      ),
-                    ),
-                    IconButton.filled(
-                      onPressed: () => onAcceptInvite(context, inv.lobbyId),
-                      icon: const Icon(Icons.check_rounded),
-                      tooltip: 'Принять',
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.accentStart,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: inviteContent
+                      .map((w) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: w,
+                          ))
+                      .toList(),
+                );
+              },
             ),
           ],
           activeAsync.when(
@@ -604,12 +711,14 @@ class _LobbiesPageContent extends StatelessWidget {
     required this.lobbiesAsync,
     required this.isDesktop,
     required this.onJoinLobby,
+    required this.onShowLobbyRules,
     required this.contentPadding,
   });
 
   final AsyncValue<List<LobbyItem>> lobbiesAsync;
   final bool isDesktop;
   final void Function(BuildContext, String) onJoinLobby;
+  final void Function(BuildContext, LobbyItem) onShowLobbyRules;
   final double contentPadding;
 
   @override
@@ -641,12 +750,11 @@ class _LobbiesPageContent extends StatelessWidget {
                   ),
                 );
               }
-              return Column(
-                children: lobbies
-                    .map(
-                      (lobby) => Padding(
-                        padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
-                        child: GradientCard(
+              final lobbyCards = lobbies
+                  .map(
+                    (lobby) => Padding(
+                      padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
+                      child: GradientCard(
                           padding: EdgeInsets.all(isDesktop ? 20 : 16),
                           child: Row(
                             children: [
@@ -668,39 +776,73 @@ class _LobbiesPageContent extends StatelessWidget {
                                         fontSize: isDesktop ? 16 : 14,
                                       ),
                                     ),
-                                    Row(
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 4,
                                       children: [
-                                        Icon(
-                                          Icons.timer_outlined,
-                                          size: 14,
-                                          color: AppColors.textSecondary,
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.timer_outlined,
+                                              size: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              formatTurnTime(lobby.turnTimeSec),
+                                              style: TextStyle(
+                                                fontSize: isDesktop ? 14 : 13,
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          formatTurnTime(lobby.turnTimeSec),
-                                          style: TextStyle(
-                                            fontSize: isDesktop ? 14 : 13,
-                                            color: AppColors.textSecondary,
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.grid_on_rounded,
+                                              size: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              formatGridSize(lobby.gridSize),
+                                              style: TextStyle(
+                                                fontSize: isDesktop ? 14 : 13,
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        if (lobby.swapRule)
+                                          Tooltip(
+                                            message: 'Смена сторон',
+                                            child: const Icon(
+                                              Icons.swap_horiz_rounded,
+                                              size: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Icon(
-                                          Icons.grid_on_rounded,
-                                          size: 14,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          formatGridSize(lobby.gridSize),
-                                          style: TextStyle(
-                                            fontSize: isDesktop ? 14 : 13,
-                                            color: AppColors.textSecondary,
+                                        if (lobby.firstMoveRestriction)
+                                          Tooltip(
+                                            message: 'Запрет центра',
+                                            child: const Icon(
+                                              Icons.block_rounded,
+                                              size: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ],
                                 ),
+                              ),
+                              IconButton(
+                                onPressed: () => onShowLobbyRules(context, lobby),
+                                icon: const Icon(Icons.info_outline_rounded),
+                                tooltip: 'Правила игры',
                               ),
                               IconButton.filled(
                                 onPressed: () => onJoinLobby(context, lobby.id),
@@ -716,7 +858,21 @@ class _LobbiesPageContent extends StatelessWidget {
                         ),
                       ),
                     )
-                    .toList(),
+                    .toList();
+              if (isDesktop) {
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: lobbyCards,
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: lobbyCards,
               );
             },
             loading: () => Padding(
@@ -750,6 +906,10 @@ class _TictactoeGameCard extends StatelessWidget {
     required this.onTurnTimeChanged,
     required this.gridSize,
     required this.onGridSizeChanged,
+    required this.swapRule,
+    required this.onSwapRuleChanged,
+    required this.firstMoveRestriction,
+    required this.onFirstMoveRestrictionChanged,
     required this.onCreateGame,
     required this.onFindGame,
   });
@@ -760,6 +920,10 @@ class _TictactoeGameCard extends StatelessWidget {
   final void Function(int) onTurnTimeChanged;
   final int gridSize;
   final void Function(int) onGridSizeChanged;
+  final bool swapRule;
+  final void Function(bool) onSwapRuleChanged;
+  final bool firstMoveRestriction;
+  final void Function(bool) onFirstMoveRestrictionChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
 
@@ -773,6 +937,236 @@ class _TictactoeGameCard extends StatelessWidget {
     final idx = gridSizeOptions.indexOf(gridSize);
     final next = (idx + 1) % gridSizeOptions.length;
     onGridSizeChanged(gridSizeOptions[next]);
+  }
+
+  String _buildRulesText() => _buildTictactoeRulesText(
+        gridSize: gridSize,
+        turnTimeSec: turnTimeSec,
+        swapRule: swapRule,
+        firstMoveRestriction: firstMoveRestriction,
+      );
+
+  List<Widget> _buildChipList({
+    required TextTheme? theme,
+    required bool isCreating,
+    required bool isFinding,
+    required bool isDesktop,
+    required bool isMedium,
+    bool compact = false,
+  }) {
+    final padV = compact ? 4.0 : 6.0;
+    final padH = compact ? 6.0 : 10.0;
+    final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
+    final fontSz = compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+    return [
+      Container(
+        padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.textSecondary.withValues(alpha: 0.25),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_outline_rounded,
+              size: iconSz,
+              color: AppColors.textSecondary,
+            ),
+            SizedBox(width: compact ? 3 : 4),
+            Text(
+              '2',
+              style: theme?.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                fontSize: fontSz,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isCreating || isFinding ? null : _cycleTurnTime,
+          borderRadius: BorderRadius.circular(10),
+          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+          child: Tooltip(
+            message: 'Нажмите для смены времени на ход',
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+              decoration: BoxDecoration(
+                color: AppColors.accentSoft.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.accentStart.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.timer_outlined,
+                    size: iconSz,
+                    color: AppColors.accentStart,
+                  ),
+                  SizedBox(width: compact ? 4 : 6),
+                  Text(
+                    formatTurnTime(turnTimeSec),
+                    style: theme?.bodyMedium?.copyWith(
+                      color: AppColors.accentStart,
+                      fontWeight: FontWeight.w600,
+                      fontSize: fontSz,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isCreating || isFinding ? null : _cycleGridSize,
+          borderRadius: BorderRadius.circular(10),
+          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+          child: Tooltip(
+            message: 'Нажмите для смены размера сетки',
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+              decoration: BoxDecoration(
+                color: AppColors.accentSoft.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.accentStart.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.grid_on_rounded,
+                    size: iconSz,
+                    color: AppColors.accentStart,
+                  ),
+                  SizedBox(width: compact ? 4 : 6),
+                  Text(
+                    formatGridSize(gridSize),
+                    style: theme?.bodyMedium?.copyWith(
+                      color: AppColors.accentStart,
+                      fontWeight: FontWeight.w600,
+                      fontSize: fontSz,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isCreating || isFinding
+              ? null
+              : () => onSwapRuleChanged(!swapRule),
+          borderRadius: BorderRadius.circular(10),
+          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+          child: Tooltip(
+            message: 'O может стать X после 1-го хода',
+            child: Container(
+              padding: EdgeInsets.all(compact ? 4 : 6),
+              decoration: BoxDecoration(
+                color: swapRule
+                    ? AppColors.accentSoft.withValues(alpha: 0.6)
+                    : AppColors.textSecondary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: swapRule
+                      ? AppColors.accentStart.withValues(alpha: 0.3)
+                      : AppColors.textSecondary.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                Icons.swap_horiz_rounded,
+                size: iconSz,
+                color: swapRule
+                    ? AppColors.accentStart
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isCreating || isFinding
+              ? null
+              : () => onFirstMoveRestrictionChanged(!firstMoveRestriction),
+          borderRadius: BorderRadius.circular(10),
+          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+          child: Tooltip(
+            message: 'Первый ход не в центр',
+            child: Container(
+              padding: EdgeInsets.all(compact ? 4 : 6),
+              decoration: BoxDecoration(
+                color: firstMoveRestriction
+                    ? AppColors.accentSoft.withValues(alpha: 0.6)
+                    : AppColors.textSecondary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: firstMoveRestriction
+                      ? AppColors.accentStart.withValues(alpha: 0.3)
+                      : AppColors.textSecondary.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                Icons.block_rounded,
+                size: iconSz,
+                color: firstMoveRestriction
+                    ? AppColors.accentStart
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  void _showRulesInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Правила игры'),
+        content: SingleChildScrollView(
+          child: Text(_buildRulesText()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -794,8 +1188,8 @@ class _TictactoeGameCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: isDesktop ? 52 : 48,
-                height: isDesktop ? 52 : 48,
+                width: isDesktop ? 52 : 44,
+                height: isDesktop ? 52 : 44,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
@@ -818,159 +1212,59 @@ class _TictactoeGameCard extends StatelessWidget {
                   size: 26,
                 ),
               ),
-              SizedBox(width: isDesktop ? 20 : 16),
+              SizedBox(width: isDesktop ? 20 : 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      'Крестики-нолики',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        fontSize: isDesktop ? 20 : 18,
-                        letterSpacing: -0.3,
+                    Expanded(
+                      child: Text(
+                        'Крестики-нолики',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          fontSize: isDesktop ? 20 : 18,
+                          letterSpacing: -0.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
-                    SizedBox(height: isMedium ? 6 : (isDesktop ? 8 : 6)),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.textSecondary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: AppColors.textSecondary.withValues(alpha: 0.25),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.person_outline_rounded,
-                                size: isDesktop ? 18 : 16,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '2',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
-                                  height: 1.35,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: isCreating || isFinding ? null : _cycleTurnTime,
-                            borderRadius: BorderRadius.circular(10),
-                            splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-                            highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-                            child: Tooltip(
-                              message: 'Нажмите для смены времени на ход',
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                  horizontal: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentSoft.withValues(alpha: 0.6),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: AppColors.accentStart.withValues(alpha: 0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.timer_outlined,
-                                      size: isDesktop ? 18 : 16,
-                                      color: AppColors.accentStart,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      formatTurnTime(turnTimeSec),
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: AppColors.accentStart,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: isCreating || isFinding ? null : _cycleGridSize,
-                            borderRadius: BorderRadius.circular(10),
-                            splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-                            highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-                            child: Tooltip(
-                              message: 'Нажмите для смены размера сетки',
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                  horizontal: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentSoft.withValues(alpha: 0.6),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: AppColors.accentStart.withValues(alpha: 0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.grid_on_rounded,
-                                      size: isDesktop ? 18 : 16,
-                                      color: AppColors.accentStart,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      formatGridSize(gridSize),
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: AppColors.accentStart,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    IconButton(
+                      onPressed: isCreating || isFinding
+                          ? null
+                          : () => _showRulesInfo(context),
+                      icon: const Icon(
+                        Icons.info_outline_rounded,
+                        size: 22,
+                        color: AppColors.textSecondary,
+                      ),
+                      tooltip: 'Правила игры',
+                      style: IconButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size(36, 36),
+                        padding: const EdgeInsets.all(6),
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Wrap(
+              spacing: width < 400 ? 6 : 10,
+              runSpacing: 6,
+              alignment: WrapAlignment.start,
+              children: _buildChipList(
+                theme: theme.textTheme,
+                isCreating: isCreating,
+                isFinding: isFinding,
+                isDesktop: isDesktop,
+                isMedium: isMedium,
+                compact: width < 400,
+              ),
+            ),
           ),
           SizedBox(height: isMedium ? 16 : (isDesktop ? 24 : 20)),
           Row(
@@ -979,7 +1273,7 @@ class _TictactoeGameCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: isCreating || isFinding ? null : onCreateGame,
                   icon: isCreating
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
@@ -1008,7 +1302,7 @@ class _TictactoeGameCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: isCreating || isFinding ? null : onFindGame,
                   icon: isFinding
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
@@ -1150,3 +1444,179 @@ class _TabSegment extends StatelessWidget {
     );
   }
 }
+
+class _InviteCard extends ConsumerWidget {
+  const _InviteCard({
+    required this.inv,
+    required this.onShowCreatorInfo,
+    required this.onShowInviteRules,
+    required this.onDeclineInvite,
+    required this.onAcceptInvite,
+  });
+
+  final GameInvite inv;
+  final void Function(BuildContext, GameInvite) onShowCreatorInfo;
+  final void Function(BuildContext, GameInvite) onShowInviteRules;
+  final void Function(String) onDeclineInvite;
+  final void Function(BuildContext, String) onAcceptInvite;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
+    final p = presence[inv.creatorId];
+    final statusText = p == null
+        ? null
+        : (p.online ? 'Онлайн' : formatLastSeen(p.lastSeenAt));
+
+    return GradientCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          _InviteCreatorAvatar(
+            creatorName: inv.creatorName,
+            avatarKind: inv.creatorAvatarKind,
+            avatarValue: inv.creatorAvatarValue,
+            creatorId: inv.creatorId,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  inv.creatorName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                if (statusText != null && statusText.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      statusText,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => onShowCreatorInfo(context, inv),
+            icon: const Icon(Icons.info_outline_rounded),
+            tooltip: 'Информация об игроке',
+          ),
+          IconButton(
+            onPressed: () => onShowInviteRules(context, inv),
+            icon: const Icon(Icons.rule_rounded),
+            tooltip: 'Правила игры',
+          ),
+          IconButton(
+            onPressed: () => onDeclineInvite(inv.lobbyId),
+            icon: const Icon(Icons.close_rounded),
+            tooltip: 'Отклонить',
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+          ),
+          IconButton.filled(
+            onPressed: () => onAcceptInvite(context, inv.lobbyId),
+            icon: const Icon(Icons.check_rounded),
+            tooltip: 'Принять',
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InviteCreatorAvatar extends ConsumerWidget {
+  const _InviteCreatorAvatar({
+    required this.creatorName,
+    required this.avatarKind,
+    required this.avatarValue,
+    required this.creatorId,
+  });
+
+  final String creatorName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String creatorId;
+
+  static const _presetIcons = [
+    Icons.face_rounded,
+    Icons.face_2_rounded,
+    Icons.face_3_rounded,
+    Icons.face_4_rounded,
+    Icons.face_5_rounded,
+    Icons.face_6_rounded,
+    Icons.man_rounded,
+    Icons.woman_rounded,
+    Icons.person_rounded,
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    String kind = avatarKind;
+    String? value = avatarValue;
+    if ((value == null || value.isEmpty) && kind == 'letter') {
+      final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
+      for (final f in snapshot?.friends ?? []) {
+        if (f.user.id == creatorId) {
+          kind = f.user.avatarKind;
+          value = f.user.avatarValue;
+          break;
+        }
+      }
+    }
+    Widget avatar;
+    if (kind == 'file' && value != null && value.trim().isNotEmpty) {
+      final img = AvatarMemoryCache.fromAvatarValue(value);
+      avatar = img != null
+          ? CircleAvatar(
+              radius: 22,
+              backgroundImage: img,
+            )
+          : _letterAvatar(creatorName);
+    } else if (kind == 'preset' && value != null) {
+      final idx = int.tryParse(value);
+      if (idx != null && idx >= 0 && idx < _presetIcons.length) {
+        avatar = CircleAvatar(
+          radius: 22,
+          backgroundColor: AppColors.accentSoft,
+          child: Icon(_presetIcons[idx], color: AppColors.accentStart, size: 26),
+        );
+      } else {
+        avatar = _letterAvatar(creatorName);
+      }
+    } else {
+      avatar = _letterAvatar(creatorName);
+    }
+    return avatar;
+  }
+
+  Widget _letterAvatar(String name) {
+    final letter = name.trim().isEmpty ? '?' : name[0].toUpperCase();
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: AppColors.accentSoft,
+      child: Text(
+        letter,
+        style: const TextStyle(
+          color: AppColors.accentStart,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
+    );
+  }
+}
+
