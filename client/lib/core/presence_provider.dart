@@ -29,6 +29,12 @@ final _presenceUserIdsProvider = Provider<Set<String>>((ref) {
     for (final f in friendsSnap.friends) {
       if (f.user.id.isNotEmpty) ids.add(f.user.id);
     }
+    for (final r in friendsSnap.incoming) {
+      if (r.user.id.isNotEmpty) ids.add(r.user.id);
+    }
+    for (final r in friendsSnap.outgoing) {
+      if (r.user.id.isNotEmpty) ids.add(r.user.id);
+    }
   }
   return ids;
 });
