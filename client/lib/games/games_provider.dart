@@ -119,6 +119,11 @@ final gameStateProvider =
   },
 );
 
+/// Временное состояние после makeMove для немедленного отображения победы/ничьей
+/// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
+final gameStateOverrideProvider =
+    StateProvider.autoDispose.family<GameStateItem?, String>((ref, gameId) => null);
+
 final activeGameProvider =
     AsyncNotifierProvider.autoDispose<ActiveGameNotifier, ActiveGameItem?>(
         ActiveGameNotifier.new);

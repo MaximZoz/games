@@ -56,6 +56,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Timer? _rematchPollTimer;
   Timer? _syncStateTimer;
   Timer? _chatsRefreshTimer;
+  Timer? _timeoutRetryTimer;
   late AnimationController _pulseController;
   String? _prevGameStatus;
 
@@ -175,24 +176,55 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     });
   }
 
+  void _onTurnTimeExpired() {
+    _timeoutRetryTimer?.cancel();
+    void doRefresh() {
+      ref.invalidate(gameStateProvider(widget.gameId));
+      ref.invalidate(activeGameProvider);
+      if (mounted) setState(() {});
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => doRefresh());
+    _timeoutRetryTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (!mounted) return;
+      doRefresh();
+      _timeoutRetryTimer = null;
+    });
+  }
+
   @override
   void dispose() {
     chatsRouteObserver.unsubscribe(this);
     _rematchPollTimer?.cancel();
     _syncStateTimer?.cancel();
     _chatsRefreshTimer?.cancel();
+    _timeoutRetryTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final override = ref.watch(gameStateOverrideProvider(widget.gameId));
     final gameAsync = ref.watch(gameStateProvider(widget.gameId));
+    // При наличии override (после победного хода) показываем сразу, без ожидания refetch
+    final effectiveGameAsync =
+        override != null ? AsyncData(override) : gameAsync;
     final currentUser = ref.watch(authStateProvider).valueOrNull;
     final activeGame = ref.watch(activeGameProvider).valueOrNull;
 
     ref.listen(gameStateProvider(widget.gameId), (_, next) {
       next.whenOrNull(
+        data: (_) {
+          // Сбрасываем override при получении актуальных данных с сервера
+          if (override != null && mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+                    null;
+              }
+            });
+          }
+        },
         error: (_, __) => WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) context.go('/games');
         }),
@@ -227,12 +259,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          onPressed: () => _handleClose(gameAsync.valueOrNull),
+          onPressed: () => _handleClose(effectiveGameAsync.valueOrNull),
           icon: const Icon(Icons.close_rounded),
         ),
         title: const Text('Крестики-нолики'),
       ),
-      body: gameAsync.when(
+      body: effectiveGameAsync.when(
         data: (game) {
           final isOver = game.status != 'active';
           final opponentId =
@@ -285,15 +317,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               statusText = iWon
                   ? (game.forfeit
                       ? 'Вы победили, соперник вышел'
-                      : 'Вы победили!')
-                  : 'Победил $opponentName';
+                      : game.timeout
+                          ? 'Вы победили, время соперника вышло'
+                          : 'Вы победили!')
+                  : (game.timeout
+                      ? 'Время вышло. Победил $opponentName'
+                      : 'Победил $opponentName');
             } else if (game.status == 'o_won') {
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
                       ? 'Вы победили, соперник вышел'
-                      : 'Вы победили!')
-                  : 'Победил $opponentName';
+                      : game.timeout
+                          ? 'Вы победили, время соперника вышло'
+                          : 'Вы победили!')
+                  : (game.timeout
+                      ? 'Время вышло. Победил $opponentName'
+                      : 'Победил $opponentName');
             } else if (game.status == 'draw') {
               statusText = 'Ничья';
             }
@@ -340,6 +380,17 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                     color: AppColors.textPrimary,
                                   ),
                         ),
+                        if (!isOver &&
+                            game.turnTimeSec > 0 &&
+                            game.turnDeadline != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: _TurnCountdown(
+                              turnDeadline: game.turnDeadline!,
+                              isMyTurn: isMyTurn,
+                              onExpired: _onTurnTimeExpired,
+                            ),
+                          ),
                         if (isOver) ...[
                           const SizedBox(height: 16),
                           _RematchSection(
@@ -411,6 +462,17 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                   color: AppColors.textPrimary,
                                 ),
                           ),
+                          if (!isOver &&
+                              game.turnTimeSec > 0 &&
+                              game.turnDeadline != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: _TurnCountdown(
+                                turnDeadline: game.turnDeadline!,
+                                isMyTurn: isMyTurn,
+                                onExpired: _onTurnTimeExpired,
+                              ),
+                            ),
                           if (isOver) ...[
                             const SizedBox(height: 16),
                             _RematchSection(
@@ -931,8 +993,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isMakingMove = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      await repo.makeMove(widget.gameId, cell);
+      final response = await repo.makeMove(widget.gameId, cell);
       if (mounted) {
+        // Немедленно показываем победу/ничью из ответа (сервер уже обновил состояние)
+        if (response.status != 'active') {
+          ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+              response;
+        }
         ref.invalidate(gameStateProvider(widget.gameId));
         ref.invalidate(activeGameProvider);
       }
@@ -1391,109 +1458,194 @@ class _GameBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.12),
-            blurRadius: 20,
-            offset: Offset.zero,
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: Offset.zero,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: CustomPaint(
-                painter: _GridPainter(),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final cellW = constraints.maxWidth / 3;
-                    final cellH = constraints.maxHeight / 3;
-                    return Stack(
-                      children: List.generate(9, (i) {
-                        final row = i ~/ 3;
-                        final col = i % 3;
-                        final cell = game.board[i];
-                        return Positioned(
-                          left: col * cellW + 4,
-                          top: row * cellH + 4,
-                          width: cellW - 8,
-                          height: cellH - 8,
-                          child: _AnimatedGameCell(
-                            symbol: cell,
-                            isMyTurn: isMyTurn && !isOver && !isMakingMove,
-                            canTap: cell.isEmpty,
-                            onTap: () => (cell.isEmpty &&
-                                    isMyTurn &&
-                                    !isOver &&
-                                    !isMakingMove)
-                                ? onMove(i)
-                                : null,
-                            pulse: isMyTurn && cell.isEmpty
-                                ? pulseController
-                                : null,
-                          ),
+    final gridSize = game.gridSize;
+    final n = gridSize * gridSize;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var maxW = constraints.maxWidth;
+        var maxH = constraints.maxHeight;
+        if (!maxW.isFinite) maxW = 400;
+        if (!maxH.isFinite) maxH = 400;
+        final maxSide = (maxW > maxH ? maxH : maxW).clamp(200.0, 420.0);
+        final boardSize = maxSide;
+        return Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            width: boardSize,
+            height: boardSize,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accentStart.withValues(alpha: 0.12),
+                  blurRadius: 20,
+                  offset: Offset.zero,
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: Offset.zero,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(boardSize > 280 ? 12 : 8),
+                  child: CustomPaint(
+                    painter: _GridPainter(gridSize: gridSize),
+                    child: LayoutBuilder(
+                      builder: (context, innerConstraints) {
+                        final cellW = innerConstraints.maxWidth / gridSize;
+                        final cellH = innerConstraints.maxHeight / gridSize;
+                        final gap = boardSize > 280 ? 4.0 : 2.0;
+                        return Stack(
+                          children: List.generate(n, (i) {
+                            final row = i ~/ gridSize;
+                            final col = i % gridSize;
+                            final cell = i < game.board.length ? game.board[i] : '';
+                            return Positioned(
+                              left: col * cellW + gap,
+                              top: row * cellH + gap,
+                              width: cellW - gap * 2,
+                              height: cellH - gap * 2,
+                              child: _AnimatedGameCell(
+                                symbol: cell,
+                                isMyTurn: isMyTurn && !isOver && !isMakingMove,
+                                canTap: cell.isEmpty,
+                                onTap: () => (cell.isEmpty &&
+                                        isMyTurn &&
+                                        !isOver &&
+                                        !isMakingMove)
+                                    ? onMove(i)
+                                    : null,
+                                pulse: isMyTurn && cell.isEmpty
+                                    ? pulseController
+                                    : null,
+                              ),
+                            );
+                          }),
                         );
-                      }),
-                    );
-                  },
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 class _GridPainter extends CustomPainter {
+  _GridPainter({required this.gridSize});
+  final int gridSize;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = AppColors.accentSoft.withValues(alpha: 0.8)
-      ..strokeWidth = 3
+      ..strokeWidth = gridSize <= 3 ? 3 : (gridSize == 4 ? 2.5 : 2)
       ..style = PaintingStyle.stroke;
 
     final w = size.width;
     final h = size.height;
-    final thirdW = w / 3;
-    final thirdH = h / 3;
+    final cellW = w / gridSize;
+    final cellH = h / gridSize;
 
-    for (var i = 1; i < 3; i++) {
+    for (var i = 1; i < gridSize; i++) {
       canvas.drawLine(
-        Offset(thirdW * i, 0),
-        Offset(thirdW * i, h),
+        Offset(cellW * i, 0),
+        Offset(cellW * i, h),
         paint,
       );
       canvas.drawLine(
-        Offset(0, thirdH * i),
-        Offset(w, thirdH * i),
+        Offset(0, cellH * i),
+        Offset(w, cellH * i),
         paint,
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _GridPainter old) => old.gridSize != gridSize;
+}
+
+class _TurnCountdown extends StatefulWidget {
+  const _TurnCountdown({
+    required this.turnDeadline,
+    required this.isMyTurn,
+    required this.onExpired,
+  });
+
+  final int turnDeadline; // Unix sec
+  final bool isMyTurn;
+  final VoidCallback onExpired;
+
+  @override
+  State<_TurnCountdown> createState() => _TurnCountdownState();
+}
+
+class _TurnCountdownState extends State<_TurnCountdown> {
+  Timer? _timer;
+  int _remaining = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateRemaining();
+      if (_remaining <= 0) {
+        _timer?.cancel();
+        widget.onExpired();
+      }
+    });
+  }
+
+  void _updateRemaining() {
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    final r = widget.turnDeadline - now;
+    if (r != _remaining && mounted) {
+      setState(() => _remaining = r.clamp(0, 999));
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _remaining <= 5 && widget.isMyTurn
+        ? Colors.red
+        : AppColors.textSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.timer_outlined, size: 18, color: color),
+        const SizedBox(width: 6),
+        Text(
+          '$_remaining с',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
 }
 
 class _AnimatedGameCell extends StatelessWidget {
@@ -1572,12 +1724,15 @@ class _SymbolWidget extends StatelessWidget {
     if (symbol.isEmpty) return const SizedBox.shrink();
     final isX = symbol == 'x';
     final color = isX ? AppColors.accentStart : AppColors.accentEnd;
-    return AnimatedSwitcher(
-      duration: AppDurations.short,
-      child: CustomPaint(
-        key: ValueKey(symbol),
-        size: const Size.square(42),
-        painter: _SymbolPainter(isX: isX, color: color),
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: AnimatedSwitcher(
+        duration: AppDurations.short,
+        child: CustomPaint(
+          key: ValueKey(symbol),
+          size: const Size.square(42),
+          painter: _SymbolPainter(isX: isX, color: color),
+        ),
       ),
     );
   }

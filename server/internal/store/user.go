@@ -128,6 +128,12 @@ func CountAdmins(ctx context.Context, pool *pgxpool.Pool) (int, error) {
 	return n, err
 }
 
+func CountUsers(ctx context.Context, pool *pgxpool.Pool) (int, error) {
+	var n int
+	err := pool.QueryRow(ctx, `SELECT COUNT(*)::int FROM users`).Scan(&n)
+	return n, err
+}
+
 type UpdateProfileParams struct {
 	ID          uuid.UUID
 	DisplayName *string

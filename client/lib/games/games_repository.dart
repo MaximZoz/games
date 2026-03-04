@@ -14,6 +14,22 @@ class GamesException implements Exception {
   String toString() => 'GamesException($statusCode): $message';
 }
 
+/// Допустимые значения времени на ход (сек): 0=без лимита, 10, 30, 60, 600
+const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
+
+/// Размеры сетки: 3x3, 4x4, 5x5
+const List<int> gridSizeOptions = [3, 4, 5];
+
+String formatTurnTime(int sec) {
+  if (sec == 0) return '∞';
+  if (sec == 10 || sec == 30) return '${sec} с';
+  if (sec == 60) return '1 мин';
+  if (sec == 600) return '10 мин';
+  return '$sec с';
+}
+
+String formatGridSize(int size) => '${size}x$size';
+
 class LobbyItem {
   final String id;
   final String creatorId;
@@ -22,6 +38,8 @@ class LobbyItem {
   final String status;
   final String? gameId;
   final String createdAt;
+  final int turnTimeSec;
+  final int gridSize;
 
   LobbyItem({
     required this.id,
@@ -31,6 +49,8 @@ class LobbyItem {
     required this.status,
     this.gameId,
     required this.createdAt,
+    this.turnTimeSec = 0,
+    this.gridSize = 3,
   });
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
@@ -42,6 +62,8 @@ class LobbyItem {
       status: json['status'] as String? ?? '',
       gameId: json['game_id'] as String?,
       createdAt: json['created_at'] as String? ?? '',
+      turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
+      gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
     );
   }
 }
@@ -53,6 +75,10 @@ class GameStateItem {
   final String? winner;
   final String status;
   final bool forfeit;
+  final bool timeout;
+  final int turnTimeSec;
+  final int? turnDeadline; // Unix sec
+  final int gridSize;
   final String xUserId;
   final String oUserId;
   final String? xDisplayName;
@@ -69,6 +95,10 @@ class GameStateItem {
     this.winner,
     required this.status,
     this.forfeit = false,
+    this.timeout = false,
+    this.turnTimeSec = 0,
+    this.turnDeadline,
+    this.gridSize = 3,
     required this.xUserId,
     required this.oUserId,
     this.xDisplayName,
@@ -80,20 +110,33 @@ class GameStateItem {
   });
 
   factory GameStateItem.fromJson(Map<String, dynamic> json) {
+    final gridSize = (json['grid_size'] as num?)?.toInt() ?? 3;
+    final n = gridSize * gridSize;
     final boardRaw = json['board'];
-    List<String> board = List.filled(9, '');
+    List<String> board = List.filled(n, '');
     if (boardRaw is List) {
-      for (var i = 0; i < boardRaw.length && i < 9; i++) {
+      for (var i = 0; i < boardRaw.length && i < n; i++) {
         board[i] = (boardRaw[i] as String? ?? '').toString();
       }
     }
+    final turnDeadlineRaw = json['turn_deadline'];
+    int? turnDeadline;
+    if (turnDeadlineRaw != null) {
+      turnDeadline = (turnDeadlineRaw is int)
+          ? turnDeadlineRaw
+          : (turnDeadlineRaw is num ? turnDeadlineRaw.toInt() : null);
+    }
     return GameStateItem(
-      id: json['id'] as String? ?? '',
+      id: json['id'] as String? ?? json['game_id'] as String? ?? '',
       board: board,
       turn: json['turn'] as String? ?? 'x',
       winner: json['winner'] as String?,
       status: json['status'] as String? ?? 'active',
       forfeit: json['forfeit'] == true,
+      timeout: json['timeout'] == true,
+      turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
+      turnDeadline: turnDeadline,
+      gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
       xUserId: json['x_user_id'] as String? ?? '',
       oUserId: json['o_user_id'] as String? ?? '',
       xDisplayName: json['x_display_name'] as String?,
@@ -290,7 +333,11 @@ class GamesRepository {
     return RematchResult.fromJson(body);
   }
 
-  Future<CreateLobbyResult> createLobby({required String mode}) async {
+  Future<CreateLobbyResult> createLobby({
+    required String mode,
+    int turnTimeSec = 0,
+    int gridSize = 3,
+  }) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/lobby'),
@@ -298,7 +345,11 @@ class GamesRepository {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({'mode': mode}),
+        body: jsonEncode({
+          'mode': mode,
+          'turn_time_sec': turnTimeSec,
+          'grid_size': gridSize,
+        }),
         operation: 'GamesRepository.createLobby',
       ),
     );

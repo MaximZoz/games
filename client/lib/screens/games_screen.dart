@@ -24,6 +24,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   bool _isCreating = false;
   bool _isFinding = false;
   _GamesTab _selectedTab = _GamesTab.games;
+  int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
+  int _selectedGridSize = 3; // 3, 4, 5
   Timer? _lobbyRefreshTimer;
   late PageController _pageController;
 
@@ -118,6 +120,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     isDesktop: isDesktop,
                     isCreating: _isCreating,
                     isFinding: _isFinding,
+                    turnTimeSec: _selectedTurnTimeSec,
+                    onTurnTimeChanged: (v) => setState(() => _selectedTurnTimeSec = v),
+                    gridSize: _selectedGridSize,
+                    onGridSizeChanged: (v) => setState(() => _selectedGridSize = v),
                     onCreateGame: () => _createGame(context, 'invite'),
                     onFindGame: () => _createGame(context, 'matchmake'),
                     invites: invites,
@@ -151,7 +157,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     });
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      final result = await repo.createLobby(mode: mode);
+      final result = await repo.createLobby(
+        mode: mode,
+        turnTimeSec: _selectedTurnTimeSec,
+        gridSize: _selectedGridSize,
+      );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
@@ -220,6 +230,10 @@ class _GamesPageContent extends StatelessWidget {
     required this.isDesktop,
     required this.isCreating,
     required this.isFinding,
+    required this.turnTimeSec,
+    required this.onTurnTimeChanged,
+    required this.gridSize,
+    required this.onGridSizeChanged,
     required this.onCreateGame,
     required this.onFindGame,
     required this.invites,
@@ -232,6 +246,10 @@ class _GamesPageContent extends StatelessWidget {
   final bool isDesktop;
   final bool isCreating;
   final bool isFinding;
+  final int turnTimeSec;
+  final void Function(int) onTurnTimeChanged;
+  final int gridSize;
+  final void Function(int) onGridSizeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
   final List<GameInvite> invites;
@@ -272,6 +290,10 @@ class _GamesPageContent extends StatelessWidget {
                       children: [_TictactoeGameCard(
                         isCreating: isCreating,
                         isFinding: isFinding,
+                        turnTimeSec: turnTimeSec,
+                        onTurnTimeChanged: onTurnTimeChanged,
+                        gridSize: gridSize,
+                        onGridSizeChanged: onGridSizeChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
                       )],
@@ -282,6 +304,10 @@ class _GamesPageContent extends StatelessWidget {
               return _TictactoeGameCard(
                 isCreating: isCreating,
                 isFinding: isFinding,
+                turnTimeSec: turnTimeSec,
+                onTurnTimeChanged: onTurnTimeChanged,
+                gridSize: gridSize,
+                onGridSizeChanged: onGridSizeChanged,
                 onCreateGame: onCreateGame,
                 onFindGame: onFindGame,
               );
@@ -470,12 +496,36 @@ class _LobbiesPageContent extends StatelessWidget {
                                         fontSize: isDesktop ? 16 : 14,
                                       ),
                                     ),
-                                    Text(
-                                      'Ожидает соперника',
-                                      style: TextStyle(
-                                        fontSize: isDesktop ? 14 : 13,
-                                        color: AppColors.textSecondary,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.timer_outlined,
+                                          size: 14,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          formatTurnTime(lobby.turnTimeSec),
+                                          style: TextStyle(
+                                            fontSize: isDesktop ? 14 : 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Icon(
+                                          Icons.grid_on_rounded,
+                                          size: 14,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          formatGridSize(lobby.gridSize),
+                                          style: TextStyle(
+                                            fontSize: isDesktop ? 14 : 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -527,14 +577,34 @@ class _TictactoeGameCard extends StatelessWidget {
   const _TictactoeGameCard({
     required this.isCreating,
     required this.isFinding,
+    required this.turnTimeSec,
+    required this.onTurnTimeChanged,
+    required this.gridSize,
+    required this.onGridSizeChanged,
     required this.onCreateGame,
     required this.onFindGame,
   });
 
   final bool isCreating;
   final bool isFinding;
+  final int turnTimeSec;
+  final void Function(int) onTurnTimeChanged;
+  final int gridSize;
+  final void Function(int) onGridSizeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
+
+  void _cycleTurnTime() {
+    final idx = turnTimeOptions.indexOf(turnTimeSec);
+    final next = (idx + 1) % turnTimeOptions.length;
+    onTurnTimeChanged(turnTimeOptions[next]);
+  }
+
+  void _cycleGridSize() {
+    final idx = gridSizeOptions.indexOf(gridSize);
+    final next = (idx + 1) % gridSizeOptions.length;
+    onGridSizeChanged(gridSizeOptions[next]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -619,13 +689,63 @@ class _TictactoeGameCard extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: isMedium ? 6 : (isDesktop ? 8 : 6)),
-                    Text(
-                      'Классическая игра на двоих',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
-                        height: 1.35,
-                      ),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        InkWell(
+                          onTap: isCreating || isFinding ? null : _cycleTurnTime,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.timer_outlined,
+                                  size: isDesktop ? 20 : 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  formatTurnTime(turnTimeSec),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: isCreating || isFinding ? null : _cycleGridSize,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.grid_on_rounded,
+                                  size: isDesktop ? 20 : 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  formatGridSize(gridSize),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: isMedium ? 13 : (isDesktop ? 14 : 13),
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

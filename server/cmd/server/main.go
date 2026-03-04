@@ -296,6 +296,7 @@ func main() {
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
+	mux.Handle("/api/friends/users-count", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.UsersCount)))
 	mux.Handle("/api/friends/search", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.Search)))
 	mux.Handle("/api/friends/request", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.SendRequest)))
 	mux.Handle("/api/friends/accept", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.AcceptRequest)))
