@@ -119,29 +119,29 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
                       ),
                     ),
                     Positioned(
-                      left: panelWidth - 16,
+                      left: panelWidth - 14,
                       top: 0,
                       bottom: 0,
                       child: Center(
                         child: Material(
-                          color: AppColors.surfaceCard.withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(20),
-                          elevation: 2,
+                          color: AppColors.accentSoft.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(10),
+                          elevation: 1,
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(10),
                             onTap: () => ref.read(chatsSidebarCollapsedProvider.notifier).state = !sidebarCollapsed,
                             child: Tooltip(
                               message: sidebarCollapsed ? 'Развернуть панель' : 'Свернуть панель',
                               child: Container(
-                                width: 32,
-                                height: 48,
+                                width: 20,
+                                height: 36,
                                 alignment: Alignment.center,
                                 child: Icon(
                                   sidebarCollapsed
                                     ? Icons.chevron_right_rounded
                                     : Icons.chevron_left_rounded,
-                                  color: AppColors.textPrimary,
-                                  size: 24,
+                                  color: AppColors.textPrimary.withValues(alpha: 0.9),
+                                  size: 18,
                                 ),
                               ),
                             ),

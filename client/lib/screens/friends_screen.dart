@@ -24,9 +24,10 @@ class FriendsScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-enum _FriendsTabKind { friends, incoming, outgoing }
+enum _FriendsTabKind { friends, incoming, outgoing, findFriend }
 
-class _FriendsScreenState extends ConsumerState<FriendsScreen> {
+class _FriendsScreenState extends ConsumerState<FriendsScreen>
+    with SingleTickerProviderStateMixin {
   static const int _pageSize = 10;
   static const List<IconData> _presetAvatarIcons = [
     Icons.face_rounded,
@@ -45,6 +46,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  late TabController _tabController;
   final Set<String> _actionsInProgress = <String>{};
   Timer? _searchDebounce;
   int _searchRevision = 0;
@@ -61,6 +63,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (_isFindFriendTab && _searchController.text.trim().isNotEmpty) {
+      _scheduleSearch(immediate: true);
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -70,10 +81,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       notifier.state = null;
     });
     _searchDebounce?.cancel();
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
+
+  bool get _isFindFriendTab =>
+      _tabController.index == 3; // findFriend всегда последний
 
   void _showMessage(String? error, String? success) {}
 
@@ -81,6 +97,47 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final name = user.displayName?.trim();
     if (name != null && name.isNotEmpty) return name;
     return 'Пользователь';
+  }
+
+  bool _matchesSearch(FriendUserItem user, String query) {
+    if (query.isEmpty) return true;
+    final q = query.trim().toLowerCase();
+    final name = _displayName(user).toLowerCase();
+    return name.contains(q);
+  }
+
+  List<FriendItem> _sortedAndFilteredFriends(
+    List<FriendItem> friends,
+    Map<String, PresenceEntry> presence,
+    String searchQuery,
+  ) {
+    var list = friends.where((f) => _matchesSearch(f.user, searchQuery)).toList();
+    list.sort((a, b) {
+      final pa = presence[a.user.id];
+      final pb = presence[b.user.id];
+      final aOnline = pa?.online ?? false;
+      final bOnline = pb?.online ?? false;
+      if (aOnline != bOnline) return bOnline ? 1 : -1;
+      if (aOnline) return 0;
+      final aTime = pa?.lastSeenAt;
+      final bTime = pb?.lastSeenAt;
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      final da = DateTime.tryParse(aTime);
+      final db = DateTime.tryParse(bTime);
+      if (da == null || db == null) return 0;
+      return db.compareTo(da);
+    });
+    return list;
+  }
+
+  List<FriendRequestItem> _filteredRequests(
+    List<FriendRequestItem> items,
+    String searchQuery,
+  ) {
+    if (searchQuery.isEmpty) return items;
+    return items.where((r) => _matchesSearch(r.user, searchQuery)).toList();
   }
 
   String _formatDateTime(String raw) {
@@ -421,7 +478,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _searchFocusNode.requestFocus();
       });
-      _scheduleSearch(immediate: true);
+      if (_searchController.text.trim().isNotEmpty) {
+        _scheduleSearch(immediate: true, forceRun: true);
+      }
     } else {
       _searchFocusNode.unfocus();
     }
@@ -455,7 +514,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     _scheduleSearch();
   }
 
-  void _scheduleSearch({bool immediate = false}) {
+  void _scheduleSearch({bool immediate = false, bool forceRun = false}) {
+    if (!forceRun && !_isFindFriendTab) return;
     _searchDebounce?.cancel();
     final query = _searchController.text.trim();
     if (query.isEmpty) {
@@ -601,6 +661,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         relationStatus: nextRelationStatus,
         requestID: nextRequestID,
       );
+      await _refreshSnapshot(refreshSearch: true);
     } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
@@ -734,6 +795,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       case _FriendsTabKind.outgoing:
         current = _outgoingVisibleCount;
         break;
+      case _FriendsTabKind.findFriend:
+        return; // не используется для поиска
     }
     if (current >= totalCount) return;
     final next = current + _pageSize;
@@ -748,6 +811,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           break;
         case _FriendsTabKind.outgoing:
           _outgoingVisibleCount = nextCount;
+          break;
+        case _FriendsTabKind.findFriend:
           break;
       }
     });
@@ -779,6 +844,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       _FriendsTabKind.friends => _friendsVisibleCount,
       _FriendsTabKind.incoming => _incomingVisibleCount,
       _FriendsTabKind.outgoing => _outgoingVisibleCount,
+      _FriendsTabKind.findFriend => items.length,
     };
     final visibleCount = configuredVisibleCount > items.length
         ? items.length
@@ -849,8 +915,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   Widget _buildFriendsTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
+    final searchQuery = _searchController.text.trim();
+    final items = _sortedAndFilteredFriends(snapshot.friends, presence, searchQuery);
     return _buildAdaptiveList<FriendItem>(
-      items: snapshot.friends,
+      items: items,
       emptyText: 'У вас пока нет друзей',
       tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
@@ -895,8 +963,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   Widget _buildIncomingTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
+    final searchQuery = _searchController.text.trim();
+    final items = _filteredRequests(snapshot.incoming, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
-      items: snapshot.incoming,
+      items: items,
       emptyText: 'Нет входящих заявок',
       tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
@@ -950,8 +1020,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   Widget _buildOutgoingTab(FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
+    final searchQuery = _searchController.text.trim();
+    final items = _filteredRequests(snapshot.outgoing, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
-      items: snapshot.outgoing,
+      items: items,
       emptyText: 'Нет исходящих заявок',
       tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {
@@ -1356,8 +1428,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         children: const [
           Center(
             child: Text(
-              'Введите запрос для поиска',
+              'Введите ник для поиска новых друзей',
               style: TextStyle(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
             ),
           ),
         ],
@@ -1404,7 +1477,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       return GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(
             parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 380,
           mainAxisSpacing: 12,
@@ -1438,7 +1511,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return ListView.separated(
       physics:
           const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
       itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
@@ -1524,66 +1597,76 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   }
 
   List<_FriendsTabKind> _visibleTabs(FriendsSnapshot? snapshot) {
-    if (snapshot == null) {
-      return const [
-        _FriendsTabKind.friends,
-        _FriendsTabKind.incoming,
-        _FriendsTabKind.outgoing,
-      ];
-    }
-
-    final result = <_FriendsTabKind>[_FriendsTabKind.friends];
-    if (snapshot.incoming.isNotEmpty) result.add(_FriendsTabKind.incoming);
-    if (snapshot.outgoing.isNotEmpty) result.add(_FriendsTabKind.outgoing);
-    return result;
+    return const [
+      _FriendsTabKind.friends,
+      _FriendsTabKind.incoming,
+      _FriendsTabKind.outgoing,
+      _FriendsTabKind.findFriend,
+    ];
   }
 
-  String _tabTitle(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+  String _tabTitle(_FriendsTabKind tab) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        if (snapshot == null) return 'Друзья';
-        return 'Друзья (${snapshot.friends.length})';
+        return 'Друзья';
       case _FriendsTabKind.incoming:
-        if (snapshot == null) return 'Входящие';
-        return 'Входящие (${snapshot.incoming.length})';
+        return 'Входящие';
       case _FriendsTabKind.outgoing:
-        if (snapshot == null) return 'Исходящие';
-        return 'Исходящие (${snapshot.outgoing.length})';
+        return 'Исходящие';
+      case _FriendsTabKind.findFriend:
+        return 'Найти друга';
+    }
+  }
+
+  int? _tabCount(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+    if (snapshot == null) return null;
+    switch (tab) {
+      case _FriendsTabKind.friends:
+        return snapshot.friends.length;
+      case _FriendsTabKind.incoming:
+        return snapshot.incoming.length;
+      case _FriendsTabKind.outgoing:
+        return snapshot.outgoing.length;
+      case _FriendsTabKind.findFriend:
+        return null;
     }
   }
 
   Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
-    final title = _tabTitle(tab, snapshot);
-    final incomingCount = snapshot?.incoming.length ?? 0;
+    final title = _tabTitle(tab);
+    final count = _tabCount(tab, snapshot);
     final isIncoming = tab == _FriendsTabKind.incoming;
-    if (!isIncoming || incomingCount <= 0) {
-      return Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-      );
-    }
-
-    return Row(
+    final countColor = (isIncoming && (count ?? 0) > 0)
+        ? Colors.red.shade600
+        : AppColors.accentStart;
+    return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('Входящие'),
-        const SizedBox(width: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-          decoration: BoxDecoration(
-            color: Colors.red.shade600,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(
-            '$incomingCount',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+        if (count != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(999),
             ),
-          ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: countColor,
+              ),
+            ),
+          )
+        else
+          const SizedBox(height: 22),
+        if (count != null) const SizedBox(height: 4),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -1597,6 +1680,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         return _buildIncomingTab(snapshot, presence);
       case _FriendsTabKind.outgoing:
         return _buildOutgoingTab(snapshot, presence);
+      case _FriendsTabKind.findFriend:
+        return RefreshIndicator(
+          onRefresh: () => _refreshSnapshot(refreshSearch: true),
+          child: _buildSearchResults(presence),
+        );
     }
   }
 
@@ -1654,26 +1742,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: double.infinity),
-                  child: (wide && _searchController.text.trim().isNotEmpty) ||
-                          _isSearchExpanded
-                      ? RefreshIndicator(
-                          onRefresh: () =>
-                              _refreshSnapshot(refreshSearch: true),
-                          child: _buildSearchResults(presence),
-                        )
-                      : DefaultTabController(
-                          key: ValueKey(
-                              'friends-tabs-${tabs.map((e) => e.name).join("_")}'),
-                          length: tabs.length,
-                          child: Column(
+                  child: Column(
+                            key: const ValueKey('friends-tabs'),
                             children: [
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 6),
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: TabBar(
+                                  controller: _tabController,
                                   isScrollable: false,
-                                  labelPadding:
-                                      const EdgeInsets.symmetric(horizontal: 2),
+                                  tabAlignment: TabAlignment.fill,
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 2,
+                                  ),
                                   indicatorSize: TabBarIndicatorSize.tab,
                                   labelStyle: TextStyle(
                                     fontSize: compact ? 12 : 15,
@@ -1699,8 +1780,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                       onRefresh: () => _refreshSnapshot(
                                           refreshSearch: false),
                                       child: TabBarView(
+                                        controller: _tabController,
                                         physics:
-                                            const NeverScrollableScrollPhysics(),
+                                            const PageScrollPhysics(),
                                         children: [
                                           for (final tab in tabs)
                                             _tabContent(tab, snapshot, presence),
@@ -1739,7 +1821,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                               ),
                             ],
                           ),
-                        ),
                 ),
               ),
             ),
