@@ -15,11 +15,15 @@ class GameInvite {
     required this.creatorId,
     required this.creatorName,
     required this.gameType,
+    this.turnTimeSec = 0,
+    this.gridSize = 3,
   });
   final String lobbyId;
   final String creatorId;
   final String creatorName;
   final String gameType;
+  final int turnTimeSec;
+  final int gridSize;
 }
 
 final gameInvitesProvider =
@@ -37,12 +41,16 @@ final gameInvitesProvider =
         final creatorId = data['creator_id']?.toString();
         final creatorName = data['creator_name']?.toString() ?? 'Игрок';
         final gameType = data['game_type']?.toString() ?? 'tictactoe';
+        final turnTimeSec = (data['turn_time_sec'] as num?)?.toInt() ?? 0;
+        final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;
         if (lobbyId != null && creatorId != null) {
           notifier.add(GameInvite(
             lobbyId: lobbyId,
             creatorId: creatorId,
             creatorName: creatorName,
             gameType: gameType,
+            turnTimeSec: turnTimeSec,
+            gridSize: gridSize,
           ));
         }
       }

@@ -17,14 +17,14 @@ import (
 )
 
 const (
-	lobbyStatusWaitingInvite   = "waiting_invite"
+	lobbyStatusWaitingInvite    = "waiting_invite"
 	lobbyStatusWaitingMatchmake = "waiting_matchmake"
-	lobbyStatusInGame          = "in_game"
-	gameStatusActive           = "active"
-	gameStatusXWon             = "x_won"
-	gameStatusOWon             = "o_won"
-	gameStatusDraw   = "draw"
-	lobbyTTL         = 10 * time.Minute
+	lobbyStatusInGame           = "in_game"
+	gameStatusActive            = "active"
+	gameStatusXWon              = "x_won"
+	gameStatusOWon              = "o_won"
+	gameStatusDraw              = "draw"
+	lobbyTTL                    = 10 * time.Minute
 )
 
 // turn_time_sec: 0=unlimited, 10, 30, 60, 600
@@ -38,16 +38,16 @@ func matchmakeKey(turnTimeSec, gridSize int) string {
 }
 
 type GamesHandler struct {
-	Pool       *pgxpool.Pool
-	Rdb        *redis.Client
-	Hub        *RealtimeHub
+	Pool        *pgxpool.Pool
+	Rdb         *redis.Client
+	Hub         *RealtimeHub
 	Broadcaster *GamesBroadcaster
 }
 
 type CreateLobbyBody struct {
-	Mode        string `json:"mode"`         // "invite" | "matchmake"
+	Mode        string `json:"mode"`          // "invite" | "matchmake"
 	TurnTimeSec int    `json:"turn_time_sec"` // 0=unlimited, 10, 30, 60, 600
-	GridSize    int    `json:"grid_size"`    // 3, 4, 5
+	GridSize    int    `json:"grid_size"`     // 3, 4, 5
 }
 
 type InviteBody struct {
@@ -74,13 +74,14 @@ type GameStateItem struct {
 	ID           string   `json:"id"`
 	Board        []string `json:"board"` // N*N cells: "", "x", "o"
 	GridSize     int      `json:"grid_size,omitempty"`
-	Turn         string   `json:"turn"`  // "x" | "o"
+	Turn         string   `json:"turn"` // "x" | "o"
 	Winner       *string  `json:"winner,omitempty"`
 	Status       string   `json:"status"`
 	Forfeit      bool     `json:"forfeit,omitempty"`
 	Timeout      bool     `json:"timeout,omitempty"`
 	TurnTimeSec  int      `json:"turn_time_sec,omitempty"`
 	TurnDeadline *int64   `json:"turn_deadline,omitempty"` // Unix sec, when current player's turn expires
+	WinningCells []int    `json:"winning_cells,omitempty"` // Индексы 3 клеток победной линии
 	XUserID      string   `json:"x_user_id"`
 	OUserID      string   `json:"o_user_id"`
 	XDisplayName *string  `json:"x_display_name,omitempty"`
@@ -263,7 +264,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"lobby_id":   lobbyID,
 		"status":     status,
-		"created_at":  now,
+		"created_at": now,
 		"creator_id": userID.String(),
 	})
 }
@@ -367,11 +368,13 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		creatorName = *creator.DisplayName
 	}
 	h.broadcast([]uuid.UUID{opponentUUID}, map[string]any{
-		"type":         "game_invite",
-		"lobby_id":     lobbyID,
-		"creator_id":   userID.String(),
-		"creator_name": creatorName,
-		"game_type":    "tictactoe",
+		"type":          "game_invite",
+		"lobby_id":      lobbyID,
+		"creator_id":    userID.String(),
+		"creator_name":  creatorName,
+		"game_type":     "tictactoe",
+		"turn_time_sec": turnTimeSec,
+		"grid_size":     gridSize,
 	})
 
 	w.Header().Set("Content-Type", "application/json")
@@ -616,13 +619,20 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	if creator != nil && creator.DisplayName != nil && *creator.DisplayName != "" {
 		creatorName = *creator.DisplayName
 	}
+	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+	gridSize, _ := strconv.Atoi(m["grid_size"])
+	if !validGridSize[gridSize] {
+		gridSize = 3
+	}
 
 	h.broadcast([]uuid.UUID{friendID}, map[string]any{
-		"type":         "game_invite",
-		"lobby_id":     lobbyID,
-		"creator_id":   userID.String(),
-		"creator_name": creatorName,
-		"game_type":    "tictactoe",
+		"type":          "game_invite",
+		"lobby_id":      lobbyID,
+		"creator_id":    userID.String(),
+		"creator_name":  creatorName,
+		"game_type":     "tictactoe",
+		"turn_time_sec": turnTimeSec,
+		"grid_size":     gridSize,
 	})
 
 	w.Header().Set("Content-Type", "application/json")
@@ -752,17 +762,17 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
-		"type":         "lobby_updated",
-		"lobby_id":     lobbyID,
-		"game_id":      gameID,
-		"opponent_id":  userID.String(),
+		"type":        "lobby_updated",
+		"lobby_id":    lobbyID,
+		"game_id":     gameID,
+		"opponent_id": userID.String(),
 	})
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"joined":   true,
-		"game_id":  gameID,
-		"status":   lobbyStatusInGame,
+		"joined":  true,
+		"game_id": gameID,
+		"status":  lobbyStatusInGame,
 	})
 }
 
@@ -944,18 +954,21 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	}
 	board := parseBoard(m["board"], gridSize)
 	item := GameStateItem{
-		ID:      gameID,
-		Board:   board,
-		Turn:    m["turn"],
-		Status:  m["status"],
+		ID:       gameID,
+		Board:    board,
+		Turn:     m["turn"],
+		Status:   m["status"],
 		GridSize: gridSize,
-		XUserID: xUserID,
-		OUserID: oUserID,
-		Forfeit: m["forfeit"] == "1",
-		Timeout: m["timeout"] == "1",
+		XUserID:  xUserID,
+		OUserID:  oUserID,
+		Forfeit:  m["forfeit"] == "1",
+		Timeout:  m["timeout"] == "1",
 	}
 	if w := m["winner"]; w != "" {
 		item.Winner = &w
+		if line := checkWinLine(board, w, gridSize); len(line) == 3 {
+			item.WinningCells = line
+		}
 	}
 	if tt, _ := strconv.Atoi(m["turn_time_sec"]); tt > 0 {
 		item.TurnTimeSec = tt
@@ -1063,7 +1076,8 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	status := gameStatusActive
 	winner := turn
 
-	if checkWin(board, turn, gridSize) {
+	winningCells := checkWinLine(board, turn, gridSize)
+	if len(winningCells) == 3 {
 		status = gameStatusXWon
 		if turn == "o" {
 			status = gameStatusOWon
@@ -1115,6 +1129,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		"type": "game_state", "game_id": gameID,
 		"board": board, "turn": nextTurn, "winner": winnerVal, "status": status,
 	}
+	if len(winningCells) == 3 {
+		broadcastPayload["winning_cells"] = winningCells
+	}
 	if turnTimeSec > 0 && status == gameStatusActive {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
 		broadcastPayload["turn_deadline"] = deadline
@@ -1124,14 +1141,17 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
-		"game_id":    gameID,
-		"board":      board,
-		"turn":       nextTurn,
-		"winner":     winner,
-		"status":     status,
-		"grid_size":  gridSize,
-		"x_user_id":  xUserID,
-		"o_user_id":  oUserID,
+		"game_id":   gameID,
+		"board":     board,
+		"turn":      nextTurn,
+		"winner":    winner,
+		"status":    status,
+		"grid_size": gridSize,
+		"x_user_id": xUserID,
+		"o_user_id": oUserID,
+	}
+	if len(winningCells) == 3 {
+		resp["winning_cells"] = winningCells
 	}
 	if turnTimeSec > 0 && status == gameStatusActive {
 		resp["turn_time_sec"] = turnTimeSec
@@ -1264,7 +1284,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type":       "game",
-				"game_id":   gameID,
+				"game_id":    gameID,
 				"is_my_turn": isMyTurn,
 			})
 			return
@@ -1278,7 +1298,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"type":      "lobby",
+				"type":     "lobby",
 				"lobby_id": lobbyID,
 			})
 			return
@@ -1286,7 +1306,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		clearUserActiveLobby(ctx, h.Rdb, userID)
 	}
 
-	http.Error(w, "no active game or lobby", http.StatusNotFound)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func minUUID(a, b uuid.UUID) string {
@@ -1326,47 +1346,52 @@ func formatBoard(b []string) string {
 
 // checkWin: классические правила — 3 в ряд (горизонталь, вертикаль, диагональ) для любого размера поля.
 func checkWin(board []string, mark string, gridSize int) bool {
+	return len(checkWinLine(board, mark, gridSize)) == 3
+}
+
+// checkWinLine возвращает индексы 3 клеток победной линии или nil.
+func checkWinLine(board []string, mark string, gridSize int) []int {
 	n := gridSize * gridSize
 	if len(board) < n {
-		return false
+		return nil
 	}
-	// Горизонтали: 3 подряд в строке
+	// Горизонтали
 	for row := 0; row < gridSize; row++ {
 		for col := 0; col <= gridSize-3; col++ {
 			i := row*gridSize + col
 			if board[i] == mark && board[i+1] == mark && board[i+2] == mark {
-				return true
+				return []int{i, i + 1, i + 2}
 			}
 		}
 	}
-	// Вертикали: 3 подряд в столбце
+	// Вертикали
 	for col := 0; col < gridSize; col++ {
 		for row := 0; row <= gridSize-3; row++ {
 			i := row*gridSize + col
 			if board[i] == mark && board[i+gridSize] == mark && board[i+2*gridSize] == mark {
-				return true
+				return []int{i, i + gridSize, i + 2*gridSize}
 			}
 		}
 	}
-	// Диагональ \ (сверху-слева вниз-вправо)
+	// Диагональ \
 	for row := 0; row <= gridSize-3; row++ {
 		for col := 0; col <= gridSize-3; col++ {
 			i := row*gridSize + col
 			if board[i] == mark && board[i+gridSize+1] == mark && board[i+2*(gridSize+1)] == mark {
-				return true
+				return []int{i, i + gridSize + 1, i + 2*(gridSize+1)}
 			}
 		}
 	}
-	// Диагональ / (сверху-справа вниз-влево)
+	// Диагональ /
 	for row := 0; row <= gridSize-3; row++ {
 		for col := 2; col < gridSize; col++ {
 			i := row*gridSize + col
 			if board[i] == mark && board[i+gridSize-1] == mark && board[i+2*(gridSize-1)] == mark {
-				return true
+				return []int{i, i + gridSize - 1, i + 2*(gridSize-1)}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func isDraw(board []string, gridSize int) bool {

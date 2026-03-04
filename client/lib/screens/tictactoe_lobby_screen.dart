@@ -206,15 +206,25 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                               final friends = snapshot.friends;
                               final presence =
                                   ref.watch(presenceMapProvider).valueOrNull ?? const {};
-                              final onlineFriends = friends.where((f) {
-                                final entry = presence[f.user.id];
-                                return entry != null && entry.online;
-                              }).toList();
+                              final onlineFriends = friends
+                                  .where((f) {
+                                    final entry = presence[f.user.id];
+                                    return entry != null && entry.online;
+                                  })
+                                  .where((f) => !_invitedFriendIds.contains(f.user.id))
+                                  .toList();
                               if (onlineFriends.isEmpty) {
+                                final onlineInvitedCount = friends
+                                    .where((f) =>
+                                        (presence[f.user.id]?.online ?? false) &&
+                                        _invitedFriendIds.contains(f.user.id))
+                                    .length;
                                 return Text(
                                   friends.isEmpty
                                       ? 'У вас пока нет друзей. Добавьте друзей в разделе «Друзья».'
-                                      : 'Нет друзей онлайн. Пригласить можно только тех, кто сейчас в сети.',
+                                      : onlineInvitedCount > 0
+                                          ? 'Приглашения отправлены. Ожидайте ответа.'
+                                          : 'Нет друзей онлайн. Пригласить можно только тех, кто сейчас в сети.',
                                   style: TextStyle(
                                     color: AppColors.textSecondary,
                                     fontSize: 14,
@@ -274,56 +284,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       ),
                                     );
                                   }),
-                                  if (_invitedFriendIds.isNotEmpty) ...[
-                                    const SizedBox(height: 20),
-                                    Text(
-                                      'Приглашённые',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    ...friends
-                                        .where((f) => _invitedFriendIds.contains(f.user.id))
-                                        .map((f) => Padding(
-                                              padding: const EdgeInsets.only(bottom: 8),
-                                              child: Row(
-                                                children: [
-                                                  _buildFriendAvatar(f.user, 20),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Text(
-                                                      f.user.displayName?.trim().isNotEmpty == true
-                                                          ? f.user.displayName!
-                                                          : 'Пользователь',
-                                                      style: const TextStyle(
-                                                        color: AppColors.textPrimary,
-                                                        fontWeight: FontWeight.w500,
-                                                      ),
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  Icon(
-                                                    Icons.schedule_rounded,
-                                                    size: 18,
-                                                    color: AppColors.textSecondary,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    'Ожидает',
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      color: AppColors.textSecondary,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            )),
-                                  ],
                                 ],
                               );
                             },

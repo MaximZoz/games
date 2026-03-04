@@ -661,7 +661,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         relationStatus: nextRelationStatus,
         requestID: nextRequestID,
       );
-      await _refreshSnapshot(refreshSearch: true);
+      await _refreshSnapshot(refreshSearch: false);
     } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
@@ -1428,7 +1428,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         children: const [
           Center(
             child: Text(
-              'Введите ник для поиска новых друзей',
+              'Используйте поиск, чтобы найти новых друзей',
               style: TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),

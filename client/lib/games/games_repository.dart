@@ -87,6 +87,7 @@ class GameStateItem {
   final String? xAvatarValue;
   final String oAvatarKind;
   final String? oAvatarValue;
+  final List<int>? winningCells;
 
   GameStateItem({
     required this.id,
@@ -107,6 +108,7 @@ class GameStateItem {
     this.xAvatarValue,
     this.oAvatarKind = 'letter',
     this.oAvatarValue,
+    this.winningCells,
   });
 
   factory GameStateItem.fromJson(Map<String, dynamic> json) {
@@ -145,7 +147,119 @@ class GameStateItem {
       xAvatarValue: json['x_avatar_value'] as String?,
       oAvatarKind: json['o_avatar_kind'] as String? ?? 'letter',
       oAvatarValue: json['o_avatar_value'] as String?,
+      winningCells: _parseWinningCells(json['winning_cells']),
     );
+  }
+
+  static List<int>? _parseWinningCells(dynamic raw) {
+    if (raw is! List || raw.length != 3) return null;
+    final list = <int>[];
+    for (final e in raw) {
+      final n = (e is num) ? e.toInt() : null;
+      if (n == null || n < 0) return null;
+      list.add(n);
+    }
+    return list;
+  }
+
+  /// Победная линия: из winningCells или вычисленная по доске.
+  List<int>? get effectiveWinningCells {
+    final winLen = gridSize == 3 ? 3 : 4;
+    if (winningCells != null && winningCells!.length == winLen) return winningCells;
+    final mark = winner;
+    if (mark == null || mark.isEmpty) return null;
+    if (status != 'x_won' && status != 'o_won') return null;
+    return _computeWinningCells(board, mark, gridSize);
+  }
+
+  static int _winLength(int gridSize) => gridSize == 3 ? 3 : 4;
+
+  static List<int>? _computeWinningCells(List<String> board, String mark, int gridSize) {
+    final n = gridSize * gridSize;
+    if (board.length < n) return null;
+    final winLen = _winLength(gridSize);
+    if (winLen > gridSize) return null;
+    // Горизонтали
+    for (var row = 0; row < gridSize; row++) {
+      for (var col = 0; col <= gridSize - winLen; col++) {
+        var allMatch = true;
+        final line = <int>[];
+        for (var k = 0; k < winLen; k++) {
+          final idx = row * gridSize + col + k;
+          line.add(idx);
+          if (board[idx] != mark) {
+            allMatch = false;
+            break;
+          }
+        }
+        if (allMatch) return line;
+      }
+    }
+    // Вертикали
+    for (var col = 0; col < gridSize; col++) {
+      for (var row = 0; row <= gridSize - winLen; row++) {
+        var allMatch = true;
+        final line = <int>[];
+        for (var k = 0; k < winLen; k++) {
+          final idx = (row + k) * gridSize + col;
+          line.add(idx);
+          if (board[idx] != mark) {
+            allMatch = false;
+            break;
+          }
+        }
+        if (allMatch) return line;
+      }
+    }
+    // Диагональ \
+    for (var row = 0; row <= gridSize - winLen; row++) {
+      for (var col = 0; col <= gridSize - winLen; col++) {
+        var allMatch = true;
+        final line = <int>[];
+        for (var k = 0; k < winLen; k++) {
+          final idx = (row + k) * gridSize + col + k;
+          line.add(idx);
+          if (board[idx] != mark) {
+            allMatch = false;
+            break;
+          }
+        }
+        if (allMatch) return line;
+      }
+    }
+    // Диагональ /
+    for (var row = 0; row <= gridSize - winLen; row++) {
+      for (var col = winLen - 1; col < gridSize; col++) {
+        var allMatch = true;
+        final line = <int>[];
+        for (var k = 0; k < winLen; k++) {
+          final idx = (row + k) * gridSize + (col - k);
+          line.add(idx);
+          if (board[idx] != mark) {
+            allMatch = false;
+            break;
+          }
+        }
+        if (allMatch) return line;
+      }
+    }
+    return null;
+  }
+
+  static List<int>? _computeWinningCellsOld(List<String> board, String mark, int gridSize) {
+    final n = gridSize * gridSize;
+    if (board.length < n) return null;
+    for (var row = 0; row <= gridSize - 3; row++) {
+      for (var col = 2; col < gridSize; col++) {
+        final i = row * gridSize + col;
+        if (board[i] == mark &&
+            board[i + gridSize - 1] == mark &&
+            board[i + 2 * (gridSize - 1)] == mark) {
+          return [i, i + gridSize - 1, i + 2 * (gridSize - 1)];
+        }
+      }
+    }
+    return null;
   }
 }
 
@@ -482,7 +596,7 @@ class GamesRepository {
         operation: 'GamesRepository.getActive',
       ),
     );
-    if (response.statusCode == 404) return null;
+    if (response.statusCode == 204 || response.statusCode == 404) return null;
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
