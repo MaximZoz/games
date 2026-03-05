@@ -15,6 +15,7 @@ import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -237,6 +238,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   static const _closeDuration = Duration(milliseconds: 280);
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(mobileToolbarLeadingProvider.notifier).state = null;
+    });
+  }
+
   void _onTapOutsideCard(PointerDownEvent e) {
     if (!_isEditing || _isClosing) return;
     final box = _cardKey.currentContext?.findRenderObject() as RenderBox?;
@@ -289,9 +299,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            const SizedBox(height: 8),
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
@@ -306,6 +315,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     }
                     final extraAsync = ref.watch(profileExtraProvider);
                     final profileExtra = extraAsync.valueOrNull ?? _lastProfileExtra ?? const ProfileExtra();
+                    final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
+                    final coinsBadgeCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
                     Widget content = extraAsync.when(
                       data: (extra) {
                         return _ProfileContent(
@@ -323,6 +334,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                           onCancelEdit: _cancelEditing,
                           onSave: _saveProfile,
+                          coinsBadgeCount: coinsBadgeCount,
                         );
                       },
                       loading: () => _ProfileContent(
@@ -340,6 +352,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         onCancelEdit: _cancelEditing,
                         onSave: _saveProfile,
+                        coinsBadgeCount: coinsBadgeCount,
                       ),
                       error: (_, __) => _ProfileContent(
                         key: ValueKey(user.id),
@@ -356,6 +369,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         onCancelEdit: _cancelEditing,
                         onSave: _saveProfile,
+                        coinsBadgeCount: coinsBadgeCount,
                       ),
                     );
                     if (_isEditing) {
@@ -527,10 +541,12 @@ class _ProfileContent extends StatelessWidget {
     required this.onStartEdit,
     required this.onCancelEdit,
     required this.onSave,
+    this.coinsBadgeCount = 0,
   });
 
   final Key? cardKey;
   final AuthUser user;
+  final int coinsBadgeCount;
   final ProfileExtra profileExtra;
   final bool isEditing;
   final bool isClosing;
@@ -607,6 +623,7 @@ class _ProfileContent extends StatelessWidget {
                 icon: Icons.monetization_on,
                 label: 'Монеты',
                 onTap: () => context.push('/coins'),
+                badgeCount: coinsBadgeCount,
               ),
             ],
           ),
@@ -1422,11 +1439,13 @@ class _ProfileLink extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1448,6 +1467,23 @@ class _ProfileLink extends StatelessWidget {
               ),
             ),
             const Spacer(),
+            if (badgeCount > 0)
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade600,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  badgeCount > 99 ? '99+' : '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             const Icon(Icons.chevron_right, color: AppColors.textSecondary),
           ],
         ),

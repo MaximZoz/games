@@ -20,6 +20,9 @@ const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
 /// Размеры сетки: 3x3, 4x4, 5x5, 6x6, 7x7, 8x8
 const List<int> gridSizeOptions = [3, 4, 5, 6, 7, 8];
 
+/// Ставки в бронзовых: 1, 10, 50, 100
+const List<int> stakeOptions = [1, 10, 50, 100];
+
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';
   if (sec == 10 || sec == 30) return '${sec} с';
@@ -29,6 +32,20 @@ String formatTurnTime(int sec) {
 }
 
 String formatGridSize(int size) => '${size}x$size';
+
+/// 100 бронзы=1 серебро, 100 серебра=1 золото, 100 золота=1 бриллиант.
+String formatBalance(int bronze) {
+  if (bronze < 100) return '$bronze бр';
+  final silver = bronze ~/ 100;
+  final b = bronze % 100;
+  if (silver < 100) return b > 0 ? '$silver с. $b бр' : '$silver с';
+  final gold = silver ~/ 100;
+  final s = silver % 100;
+  if (gold < 100) return s > 0 || b > 0 ? '$gold з. $s с. $b бр' : '$gold з';
+  final diamond = gold ~/ 100;
+  final g = gold % 100;
+  return g > 0 || s > 0 || b > 0 ? '$diamond ◆ $g з. $s с' : '$diamond ◆';
+}
 
 class LobbyItem {
   final String id;
@@ -42,6 +59,7 @@ class LobbyItem {
   final int gridSize;
   final bool swapRule;
   final bool firstMoveRestriction;
+  final int stakeBronze;
 
   LobbyItem({
     required this.id,
@@ -55,6 +73,7 @@ class LobbyItem {
     this.gridSize = 3,
     this.swapRule = false,
     this.firstMoveRestriction = false,
+    this.stakeBronze = 1,
   });
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
@@ -70,6 +89,7 @@ class LobbyItem {
       gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
     );
   }
 }
@@ -406,6 +426,8 @@ class GamesRepository {
       'can only swap after X\'s first move':
           'Сменить стороны можно только после первого хода X',
       'lobby invite expired': 'Приглашение в лобби истекло',
+      'insufficient balance': 'Недостаточно монет',
+      'creator has insufficient balance': 'У создателя недостаточно монет',
       'forbidden': 'Недостаточно прав',
       'games service unavailable (redis required)': 'Игры временно недоступны',
       'server error': 'Ошибка сервера. Попробуйте позже.',
@@ -424,6 +446,9 @@ class GamesRepository {
 
     if (response.statusCode == 401) {
       throw GamesException(401, 'Сессия истекла. Войдите заново.');
+    }
+    if (response.statusCode == 402) {
+      throw GamesException(402, 'Недостаточно монет для этой ставки.');
     }
     if (response.statusCode == 403 && message.isEmpty) {
       throw GamesException(403, 'Недостаточно прав для этого действия.');
@@ -464,6 +489,7 @@ class GamesRepository {
     int gridSize = 3,
     bool swapRule = false,
     bool firstMoveRestriction = false,
+    int stakeBronze = 1,
   }) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
@@ -474,6 +500,7 @@ class GamesRepository {
         },
         body: jsonEncode({
           'mode': mode,
+          'stake_bronze': stakeBronze.clamp(1, 999999),
           'turn_time_sec': turnTimeSec,
           'grid_size': gridSize,
           'swap_rule': swapRule,

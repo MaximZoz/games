@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -11,8 +12,10 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -56,6 +59,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   int _selectedGridSize = 3; // 3, 4, 5
   bool _selectedSwapRule = false;
   bool _selectedFirstMoveRestriction = false;
+  int _selectedStakeBronze = 1; // 1, 10, 50, 100
   Timer? _lobbyRefreshTimer;
   late PageController _pageController;
 
@@ -63,6 +67,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(mobileToolbarLeadingProvider.notifier).state = null;
+        ref.read(authStateProvider.notifier).refresh();
+      }
+    });
   }
 
   @override
@@ -142,6 +152,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       _startLobbyPoll();
                     } else {
                       _stopLobbyPoll();
+                      ref.read(authStateProvider.notifier).refresh();
                     }
                   }
                 },
@@ -158,6 +169,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onSwapRuleChanged: (v) => setState(() => _selectedSwapRule = v),
                     firstMoveRestriction: _selectedFirstMoveRestriction,
                     onFirstMoveRestrictionChanged: (v) => setState(() => _selectedFirstMoveRestriction = v),
+                    stakeBronze: _selectedStakeBronze,
+                    onStakeChanged: (v) => setState(() => _selectedStakeBronze = v),
                     onCreateGame: () => _createGame(context, 'invite'),
                     onFindGame: () => _createGame(context, 'matchmake'),
                     invites: invites,
@@ -200,6 +213,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         gridSize: _selectedGridSize,
         swapRule: _selectedSwapRule,
         firstMoveRestriction: _selectedFirstMoveRestriction,
+        stakeBronze: _selectedStakeBronze,
       );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
@@ -510,6 +524,8 @@ class _GamesPageContent extends StatelessWidget {
     required this.onSwapRuleChanged,
     required this.firstMoveRestriction,
     required this.onFirstMoveRestrictionChanged,
+    required this.stakeBronze,
+    required this.onStakeChanged,
     required this.onCreateGame,
     required this.onFindGame,
     required this.invites,
@@ -532,6 +548,8 @@ class _GamesPageContent extends StatelessWidget {
   final void Function(bool) onSwapRuleChanged;
   final bool firstMoveRestriction;
   final void Function(bool) onFirstMoveRestrictionChanged;
+  final int stakeBronze;
+  final void Function(int) onStakeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
   final List<GameInvite> invites;
@@ -582,6 +600,8 @@ class _GamesPageContent extends StatelessWidget {
                         onSwapRuleChanged: onSwapRuleChanged,
                         firstMoveRestriction: firstMoveRestriction,
                         onFirstMoveRestrictionChanged: onFirstMoveRestrictionChanged,
+                        stakeBronze: stakeBronze,
+                        onStakeChanged: onStakeChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
                       )],
@@ -600,6 +620,8 @@ class _GamesPageContent extends StatelessWidget {
                 onSwapRuleChanged: onSwapRuleChanged,
                 firstMoveRestriction: firstMoveRestriction,
                 onFirstMoveRestrictionChanged: onFirstMoveRestrictionChanged,
+                stakeBronze: stakeBronze,
+                onStakeChanged: onStakeChanged,
                 onCreateGame: onCreateGame,
                 onFindGame: onFindGame,
               );
@@ -816,6 +838,25 @@ class _LobbiesPageContent extends StatelessWidget {
                                             ),
                                           ],
                                         ),
+                                        if (lobby.stakeBronze > 0)
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${lobby.stakeBronze}',
+                                                style: TextStyle(
+                                                  fontSize: isDesktop ? 14 : 13,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              CoinIcon(
+                                                coinType: CoinType.bronze,
+                                                size: 14,
+                                                showBorder: true,
+                                              ),
+                                            ],
+                                          ),
                                         if (lobby.swapRule)
                                           Tooltip(
                                             message: 'Смена сторон',
@@ -910,6 +951,8 @@ class _TictactoeGameCard extends StatelessWidget {
     required this.onSwapRuleChanged,
     required this.firstMoveRestriction,
     required this.onFirstMoveRestrictionChanged,
+    required this.stakeBronze,
+    required this.onStakeChanged,
     required this.onCreateGame,
     required this.onFindGame,
   });
@@ -924,6 +967,8 @@ class _TictactoeGameCard extends StatelessWidget {
   final void Function(bool) onSwapRuleChanged;
   final bool firstMoveRestriction;
   final void Function(bool) onFirstMoveRestrictionChanged;
+  final int stakeBronze;
+  final void Function(int) onStakeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
 
@@ -937,6 +982,12 @@ class _TictactoeGameCard extends StatelessWidget {
     final idx = gridSizeOptions.indexOf(gridSize);
     final next = (idx + 1) % gridSizeOptions.length;
     onGridSizeChanged(gridSizeOptions[next]);
+  }
+
+  void _cycleStake() {
+    final idx = stakeOptions.indexOf(stakeBronze);
+    final next = (idx + 1) % stakeOptions.length;
+    onStakeChanged(stakeOptions[next]);
   }
 
   String _buildRulesText() => _buildTictactoeRulesText(
@@ -1063,6 +1114,49 @@ class _TictactoeGameCard extends StatelessWidget {
                   SizedBox(width: compact ? 4 : 6),
                   Text(
                     formatGridSize(gridSize),
+                    style: theme?.bodyMedium?.copyWith(
+                      color: AppColors.accentStart,
+                      fontWeight: FontWeight.w600,
+                      fontSize: fontSz,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isCreating || isFinding ? null : _cycleStake,
+          borderRadius: BorderRadius.circular(10),
+          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+          child: Tooltip(
+            message: 'Ставка за игру (бронза)',
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+              decoration: BoxDecoration(
+                color: AppColors.accentSoft.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.accentStart.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CoinIcon(
+                    coinType: CoinType.bronze,
+                    size: iconSz,
+                    showBorder: true,
+                  ),
+                  SizedBox(width: compact ? 4 : 6),
+                  Text(
+                    '$stakeBronze',
                     style: theme?.bodyMedium?.copyWith(
                       color: AppColors.accentStart,
                       fontWeight: FontWeight.w600,
@@ -1510,6 +1604,29 @@ class _InviteCard extends ConsumerWidget {
             icon: const Icon(Icons.info_outline_rounded),
             tooltip: 'Информация об игроке',
           ),
+          if (inv.stakeBronze > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${inv.stakeBronze}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const CoinIcon(
+                    coinType: CoinType.bronze,
+                    size: 18,
+                    showBorder: true,
+                  ),
+                ],
+              ),
+            ),
           IconButton(
             onPressed: () => onShowInviteRules(context, inv),
             icon: const Icon(Icons.rule_rounded),

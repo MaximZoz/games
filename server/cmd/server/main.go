@@ -265,6 +265,7 @@ func main() {
 		Broadcaster: gamesBroadcaster,
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
+	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 	}
@@ -313,6 +314,8 @@ func main() {
 	mux.Handle("/api/chats/blocked", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Blocked)))
 	mux.Handle("/api/games/", api.RequireAuth([]byte(jwtSecret), gamesHandler))
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
+	mux.Handle("/api/coins/daily-available", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.DailyAvailable)))
+	mux.Handle("/api/coins/claim-daily", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.ClaimDaily)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

@@ -21,6 +21,7 @@ class GameInvite {
     this.firstMoveRestriction = false,
     this.creatorAvatarKind = 'letter',
     this.creatorAvatarValue,
+    this.stakeBronze = 1,
   });
   final String lobbyId;
   final String creatorId;
@@ -32,6 +33,7 @@ class GameInvite {
   final bool firstMoveRestriction;
   final String creatorAvatarKind;
   final String? creatorAvatarValue;
+  final int stakeBronze;
 }
 
 final gameInvitesProvider =
@@ -55,6 +57,7 @@ final gameInvitesProvider =
         final firstMoveRestriction = data['first_move_restriction'] == true;
         final creatorAvatarKind = data['creator_avatar_kind']?.toString() ?? 'letter';
         final creatorAvatarValue = data['creator_avatar_value']?.toString();
+        final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
         if (lobbyId != null && creatorId != null) {
           notifier.add(GameInvite(
             lobbyId: lobbyId,
@@ -67,6 +70,7 @@ final gameInvitesProvider =
             firstMoveRestriction: firstMoveRestriction,
             creatorAvatarKind: creatorAvatarKind,
             creatorAvatarValue: creatorAvatarValue,
+            stakeBronze: stakeBronze,
           ));
         }
       }

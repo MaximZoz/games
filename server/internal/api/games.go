@@ -33,7 +33,7 @@ var validTurnTimeSec = map[int]bool{0: true, 10: true, 30: true, 60: true, 600: 
 // grid_size: 3, 4, 5, 6, 7, 8
 var validGridSize = map[int]bool{3: true, 4: true, 5: true, 6: true, 7: true, 8: true}
 
-func matchmakeKey(turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool) string {
+func matchmakeKey(turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) string {
 	sr := "0"
 	if swapRule {
 		sr = "1"
@@ -42,7 +42,7 @@ func matchmakeKey(turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool
 	if firstMoveRestriction {
 		fmr = "1"
 	}
-	return "tictactoe:matchmake:" + strconv.Itoa(turnTimeSec) + ":" + strconv.Itoa(gridSize) + ":" + sr + ":" + fmr
+	return "tictactoe:matchmake:" + strconv.Itoa(turnTimeSec) + ":" + strconv.Itoa(gridSize) + ":" + sr + ":" + fmr + ":" + strconv.Itoa(stakeBronze)
 }
 
 type GamesHandler struct {
@@ -53,11 +53,12 @@ type GamesHandler struct {
 }
 
 type CreateLobbyBody struct {
-	Mode                 string `json:"mode"`                   // "invite" | "matchmake"
-	TurnTimeSec          int    `json:"turn_time_sec"`          // 0=unlimited, 10, 30, 60, 600
+	Mode                 string `json:"mode"`                    // "invite" | "matchmake"
+	TurnTimeSec          int    `json:"turn_time_sec"`           // 0=unlimited, 10, 30, 60, 600
 	GridSize             int    `json:"grid_size"`              // 3, 4, 5
-	SwapRule             bool   `json:"swap_rule"`              // смена сторон после 1-го хода
-	FirstMoveRestriction bool   `json:"first_move_restriction"` // первый ход не в центр
+	SwapRule             bool   `json:"swap_rule"`               // смена сторон после 1-го хода
+	FirstMoveRestriction bool   `json:"first_move_restriction"`  // первый ход не в центр
+	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 1)
 }
 
 type InviteBody struct {
@@ -80,6 +81,7 @@ type LobbyItem struct {
 	GridSize             int     `json:"grid_size,omitempty"`
 	SwapRule             bool    `json:"swap_rule,omitempty"`
 	FirstMoveRestriction bool    `json:"first_move_restriction,omitempty"`
+	StakeBronze          int     `json:"stake_bronze,omitempty"`
 }
 
 type GameStateItem struct {
@@ -201,6 +203,20 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "mode must be invite or matchmake", http.StatusBadRequest)
 		return
 	}
+	stakeBronze := body.StakeBronze
+	if stakeBronze < 1 {
+		stakeBronze = 1
+	}
+	ctx := r.Context()
+	balance, err := store.GetBalance(ctx, h.Pool, userID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if balance < stakeBronze {
+		http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+		return
+	}
 	turnTimeSec := body.TurnTimeSec
 	if !validTurnTimeSec[turnTimeSec] {
 		http.Error(w, "turn_time_sec must be 0, 10, 30, 60 or 600", http.StatusBadRequest)
@@ -213,10 +229,8 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	swapRule := body.SwapRule
 	firstMoveRestriction := body.FirstMoveRestriction
 
-	ctx := r.Context()
-
 	if mode == "matchmake" {
-		otherEntry, err := h.rdbRPOPMatchmake(ctx, turnTimeSec, gridSize, swapRule, firstMoveRestriction)
+		otherEntry, err := h.rdbRPOPMatchmake(ctx, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 		if err == nil && otherEntry != "" {
 			parts := strings.SplitN(otherEntry, ":", 2)
 			otherUserID := parts[0]
@@ -229,7 +243,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 				if otherLobbyID != "" {
 					h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
 				}
-				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction)
+				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 				if err != nil {
 					http.Error(w, "server error", http.StatusInternalServerError)
 					return
@@ -268,10 +282,11 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		"grid_size", strconv.Itoa(gridSize),
 		"swap_rule", strconv.FormatBool(swapRule),
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"stake_bronze", strconv.Itoa(stakeBronze),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	if mode == "matchmake" {
-		mmKey := matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction)
+		mmKey := matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 		pipe.LPush(ctx, mmKey, userID.String()+":"+lobbyID)
 		pipe.Expire(ctx, mmKey, 5*time.Minute)
 	}
@@ -364,6 +379,10 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 			gridSize = n
 		}
 	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	if stakeBronze < 1 {
+		stakeBronze = 1
+	}
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, key,
 		"game_type", "tictactoe",
@@ -376,6 +395,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		"grid_size", strconv.Itoa(gridSize),
 		"swap_rule", strconv.FormatBool(swapRule),
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"stake_bronze", strconv.Itoa(stakeBronze),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	pipe.SAdd(ctx, invitedKey, opponentID)
@@ -412,6 +432,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		"grid_size":              gridSize,
 		"swap_rule":              swapRule,
 		"first_move_restriction": firstMoveRestriction,
+		"stake_bronze":           stakeBronze,
 	}
 	if creatorAvatarKind != "" {
 		broadcastData["creator_avatar_kind"] = creatorAvatarKind
@@ -429,8 +450,8 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *GamesHandler) rdbRPOPMatchmake(ctx context.Context, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool) (string, error) {
-	return h.Rdb.RPop(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction)).Result()
+func (h *GamesHandler) rdbRPOPMatchmake(ctx context.Context, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (string, error) {
+	return h.Rdb.RPop(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)).Result()
 }
 
 func emptyBoardJSON(gridSize int) string {
@@ -446,7 +467,10 @@ func emptyBoardJSON(gridSize int) string {
 	return string(raw)
 }
 
-func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool) (gameID, lobbyID string, err error) {
+func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
+	if err := store.DeductCoinsTwo(ctx, h.Pool, user1, user2, stakeBronze); err != nil {
+		return "", "", err
+	}
 	gameID = uuid.New().String()
 	lobbyID = uuid.New().String()
 
@@ -473,6 +497,7 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 		"swap_rule", strconv.FormatBool(swapRule),
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"swapped", "false",
+		"stake_bronze", strconv.Itoa(stakeBronze),
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -538,6 +563,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 		}
 		swapRule := m["swap_rule"] == "true"
 		firstMoveRestriction := m["first_move_restriction"] == "true"
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		lobbies = append(lobbies, LobbyItem{
 			ID:                   id,
 			CreatorID:            creatorID,
@@ -548,6 +574,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			GridSize:             gridSize,
 			SwapRule:             swapRule,
 			FirstMoveRestriction: firstMoveRestriction,
+			StakeBronze:          stakeBronze,
 		})
 	}
 
@@ -589,6 +616,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	}
 	swapRule := m["swap_rule"] == "true"
 	firstMoveRestriction := m["first_move_restriction"] == "true"
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	item := LobbyItem{
 		ID:                   lobbyID,
 		CreatorID:            creatorID,
@@ -598,6 +626,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		GridSize:             gridSize,
 		SwapRule:             swapRule,
 		FirstMoveRestriction: firstMoveRestriction,
+		StakeBronze:          stakeBronze,
 	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
@@ -694,6 +723,10 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	swapRule := m["swap_rule"] == "true"
 	firstMoveRestriction := m["first_move_restriction"] == "true"
 
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	if stakeBronze < 1 {
+		stakeBronze = 1
+	}
 	inviteData := map[string]any{
 		"type":                   "game_invite",
 		"lobby_id":               lobbyID,
@@ -704,6 +737,7 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		"grid_size":              gridSize,
 		"swap_rule":              swapRule,
 		"first_move_restriction": firstMoveRestriction,
+		"stake_bronze":           stakeBronze,
 	}
 	if creatorAvatarKind != "" {
 		inviteData["creator_avatar_kind"] = creatorAvatarKind
@@ -784,6 +818,28 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 	swapRule := m["swap_rule"] == "true"
 	firstMoveRestriction := m["first_move_restriction"] == "true"
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	if stakeBronze < 1 {
+		stakeBronze = 1
+	}
+	bal, err := store.GetBalance(ctx, h.Pool, userID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if bal < stakeBronze {
+		http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+		return
+	}
+	creatorBal, err := store.GetBalance(ctx, h.Pool, creatorUUID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if creatorBal < stakeBronze {
+		http.Error(w, "creator has insufficient balance", http.StatusConflict)
+		return
+	}
 
 	gameID := uuid.New().String()
 	gameKey := "game:" + gameID
@@ -798,7 +854,12 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	pipe.HSet(ctx, key, "opponent_id", userID.String(), "status", lobbyStatusInGame, "game_id", gameID)
 	pipe.Expire(ctx, key, 24*time.Hour)
 	if status == lobbyStatusWaitingMatchmake {
-		pipe.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction), 0, creatorID+":"+lobbyID)
+		pipe.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze), 0, creatorID+":"+lobbyID)
+	}
+
+	if err := store.DeductCoinsTwo(ctx, h.Pool, creatorUUID, userID, stakeBronze); err != nil {
+		http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+		return
 	}
 
 	gameFields := []any{
@@ -813,6 +874,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		"swap_rule", strconv.FormatBool(swapRule),
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"swapped", "false",
+		"stake_bronze", strconv.Itoa(stakeBronze),
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -917,7 +979,8 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		}
 		swapRule := m["swap_rule"] == "true"
 		firstMoveRestriction := m["first_move_restriction"] == "true"
-		h.Rdb.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction), 0, userID.String()+":"+lobbyID)
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+		h.Rdb.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze), 0, userID.String()+":"+lobbyID)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -988,6 +1051,8 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	}
 	h.Rdb.HSet(ctx, key, "status", status, "winner", winner, "timeout", "1")
 	h.Rdb.Expire(ctx, key, 24*time.Hour)
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
 	xUUID, _ := uuid.Parse(xUserID)
 	oUUID, _ := uuid.Parse(oUserID)
 	clearUserActiveGame(ctx, h.Rdb, xUUID)
@@ -1230,6 +1295,8 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 
 	if status != gameStatusActive {
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+		h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
 		xUUID, _ := uuid.Parse(xUserID)
 		oUUID, _ := uuid.Parse(oUserID)
 		clearUserActiveGame(ctx, h.Rdb, xUUID)
@@ -1435,6 +1502,8 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
 	xUUID, _ := uuid.Parse(xUserID)
 	oUUID, _ := uuid.Parse(oUserID)
 	clearUserActiveGame(ctx, h.Rdb, xUUID)
@@ -1474,6 +1543,21 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 
 func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
 func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.String() + ":active_lobby" }
+
+func (h *GamesHandler) settleGameCoins(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
+	if stakeBronze <= 0 || xUserID == "" || oUserID == "" {
+		return
+	}
+	xUUID, _ := uuid.Parse(xUserID)
+	oUUID, _ := uuid.Parse(oUserID)
+	winner := ""
+	if status == gameStatusXWon {
+		winner = "x"
+	} else if status == gameStatusOWon {
+		winner = "o"
+	}
+	_ = store.SettleGameCoins(ctx, h.Pool, xUUID, oUUID, stakeBronze, winner)
+}
 
 func setUserActiveGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
 	if rdb == nil {

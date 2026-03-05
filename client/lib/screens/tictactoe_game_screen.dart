@@ -300,6 +300,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   .read(gameInvitesProvider.notifier)
                   .removeByCreatorId(opponentId);
             }
+            unawaited(ref.read(authStateProvider.notifier).refresh());
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 setState(() {
