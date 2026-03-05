@@ -1,8 +1,10 @@
 package api
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -24,6 +26,14 @@ type statusRecorder struct {
 func (w *statusRecorder) WriteHeader(code int) {
 	w.statusCode = code
 	w.ResponseWriter.WriteHeader(code)
+}
+
+// Hijack поддерживает WebSocket upgrade: делегирует к нижележащему ResponseWriter.
+func (w *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if h, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return h.Hijack()
+	}
+	return nil, nil, fmt.Errorf("response writer does not support hijacking")
 }
 
 // RequestLogger логирует все HTTP-запросы бэкенда (в файл и/или напрямую в БД).

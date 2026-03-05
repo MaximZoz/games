@@ -5,6 +5,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 final homeStartMessageProvider = FutureProvider.autoDispose<String>((ref) async {
@@ -30,84 +31,93 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: GradientCard(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'MultiGames',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                serverStartAsync.when(
-                  loading: () => const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.accentStart,
-                    ),
-                  ),
-                  data: (serverMessage) {
-                    if (serverMessage.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    return Text(
-                      serverMessage,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: AppColors.textSecondary,
-                        decoration: TextDecoration.none,
-                      ),
-                      textAlign: TextAlign.center,
-                    );
-                  },
-                  error: (error, _) {
-                    final message = formatUserError(error, fallback: 'Не удалось загрузить данные.');
-                    return Text(
-                      message,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.red.shade700,
-                        decoration: TextDecoration.none,
-                      ),
-                      textAlign: TextAlign.center,
-                    );
-                  },
-                ),
-                authState.when(
-                  data: (user) {
-                    if (user != null) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 28),
-                        child: Text(
-                          'Вы вошли как ${user.displayName ?? user.email}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: GradientCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                                const Text(
+                          'MultiGames',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.5,
                             decoration: TextDecoration.none,
                           ),
                         ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                        const SizedBox(height: 24),
+                        serverStartAsync.when(
+                          loading: () => const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accentStart,
+                            ),
+                          ),
+                          data: (serverMessage) {
+                            if (serverMessage.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return Text(
+                              serverMessage,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: AppColors.textSecondary,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.center,
+                            );
+                          },
+                          error: (error, _) {
+                            final message = formatUserError(error, fallback: 'Не удалось загрузить данные.');
+                            return Text(
+                              message,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.red.shade700,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.center,
+                            );
+                          },
+                        ),
+                        authState.when(
+                          data: (user) {
+                            if (user != null) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 28),
+                                child: Text(
+                                  'Вы вошли как ${user.displayName ?? user.email}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

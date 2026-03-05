@@ -1949,11 +1949,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                               children: [
                                                 if (lastMessage != null)
                                                   Text(
-                                                    _formatDateTime(
+                                                    formatChatListDateTime(
                                                         lastMessage.createdAt),
                                                     style: const TextStyle(
                                                       color: AppColors.textSecondary,
-                                                      fontSize: 11,
+                                                      fontSize: 12,
                                                     ),
                                                   ),
                                                 const SizedBox(height: 6),

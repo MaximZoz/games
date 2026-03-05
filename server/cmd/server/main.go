@@ -265,6 +265,7 @@ func main() {
 		Broadcaster: gamesBroadcaster,
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
+	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 	}
@@ -296,6 +297,7 @@ func main() {
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
+	mux.Handle("/api/friends/users-count", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.UsersCount)))
 	mux.Handle("/api/friends/search", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.Search)))
 	mux.Handle("/api/friends/request", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.SendRequest)))
 	mux.Handle("/api/friends/accept", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.AcceptRequest)))
@@ -312,6 +314,8 @@ func main() {
 	mux.Handle("/api/chats/blocked", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Blocked)))
 	mux.Handle("/api/games/", api.RequireAuth([]byte(jwtSecret), gamesHandler))
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
+	mux.Handle("/api/coins/daily-available", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.DailyAvailable)))
+	mux.Handle("/api/coins/claim-daily", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.ClaimDaily)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

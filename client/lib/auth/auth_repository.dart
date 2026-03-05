@@ -19,6 +19,7 @@ class AuthUser {
   final String? about;
   final String avatarKind;
   final String? avatarValue;
+  final int balanceBronze;
 
   AuthUser({
     required this.id,
@@ -30,6 +31,7 @@ class AuthUser {
     this.about,
     this.avatarKind = 'letter',
     this.avatarValue,
+    this.balanceBronze = 0,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class AuthUser {
       about: json['about'] as String?,
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
+      balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -56,6 +59,7 @@ class AuthUser {
         'about': about,
         'avatar_kind': avatarKind,
         'avatar_value': avatarValue,
+        'balance_bronze': balanceBronze,
       };
 }
 
@@ -217,6 +221,37 @@ class AuthRepository {
     return token;
   }
 
+  /// Загружает текущего пользователя с сервера (GET /api/me) и обновляет локальное хранилище.
+  Future<AuthUser?> fetchCurrentUser() async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) return null;
+
+    final response = await ApiClient.get(
+      Uri.parse('$apiBaseUrl/api/me'),
+      headers: {'Authorization': 'Bearer $token'},
+      operation: 'AuthRepository.fetchCurrentUser',
+    );
+    if (response.statusCode != 200) return null;
+
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final user = AuthUser.fromJson(Map<String, dynamic>.from(body));
+      _memoryUser = user;
+      await _persistUser(user);
+      return user;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _persistUser(AuthUser user) async {
+    await init();
+    if (_prefs == null) return;
+    try {
+      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+    } catch (_) {}
+  }
+
   Future<AuthUser?> getStoredUser() async {
     final token = await getAccessToken();
     if (token == null || token.isEmpty) return null;
@@ -255,6 +290,53 @@ class AuthRepository {
       await _prefs!.remove(_keyRefreshToken);
       await _prefs!.remove(_keyUser);
     } catch (_) {}
+  }
+
+  /// GET /api/coins/daily-available → { "available": bool }
+  Future<bool> getDailyRewardAvailable() async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await sendAuthorized(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/coins/daily-available?_=$cacheBuster'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AuthRepository.getDailyRewardAvailable',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401 ? 'Сессия истекла' : 'Ошибка: ${response.statusCode}',
+      );
+    }
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return (body['available'] as bool?) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// POST /api/coins/claim-daily → { "balance_bronze": int }
+  Future<int?> claimDailyReward() async {
+    final response = await sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/coins/claim-daily'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: '{}',
+        operation: 'AuthRepository.claimDailyReward',
+      ),
+    );
+    if (response.statusCode != 200 && response.statusCode != 409) return null;
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final balance = body['balance_bronze'];
+      return balance is num ? balance.toInt() : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<http.Response> sendAuthorized(
@@ -342,6 +424,11 @@ class AuthRepository {
           );
     await _saveUser(user);
     return user;
+  }
+
+  /// Обновляет сохранённого пользователя (например, после claim монет).
+  Future<void> updateStoredUser(AuthUser user) async {
+    await _saveUser(user);
   }
 
   Future<void> _saveUser(AuthUser user) async {

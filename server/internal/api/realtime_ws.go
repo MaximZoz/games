@@ -206,6 +206,12 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"last_seen_at": now,
 			})
 		}
+		if available, err := store.CanClaimDailyReward(ctx, h.Pool, userID); err == nil {
+			h.Hub.PublishToUsers([]uuid.UUID{userID}, map[string]any{
+				"type":      "daily_reward_available",
+				"available": available,
+			})
+		}
 		if h.LogWriter != nil {
 			meta := map[string]interface{}{
 				"recipients_count": len(recipients),

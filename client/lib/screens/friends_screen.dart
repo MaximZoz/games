@@ -661,7 +661,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         relationStatus: nextRelationStatus,
         requestID: nextRequestID,
       );
-      await _refreshSnapshot(refreshSearch: true);
+      await _refreshSnapshot(refreshSearch: false);
     } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
@@ -1428,7 +1428,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         children: const [
           Center(
             child: Text(
-              'Введите ник для поиска новых друзей',
+              'Используйте поиск, чтобы найти новых друзей',
               style: TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
@@ -1618,27 +1618,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
   }
 
-  int? _tabCount(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
-    if (snapshot == null) return null;
+  int? _tabCount(
+    _FriendsTabKind tab,
+    FriendsSnapshot? snapshot,
+    int? totalUsersCount,
+  ) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        return snapshot.friends.length;
+        return snapshot?.friends.length;
       case _FriendsTabKind.incoming:
-        return snapshot.incoming.length;
+        return snapshot?.incoming.length;
       case _FriendsTabKind.outgoing:
-        return snapshot.outgoing.length;
+        return snapshot?.outgoing.length;
       case _FriendsTabKind.findFriend:
-        return null;
+        return totalUsersCount;
     }
   }
 
-  Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+  Widget _buildTabLabel(
+    _FriendsTabKind tab,
+    FriendsSnapshot? snapshot,
+    int? totalUsersCount,
+  ) {
     final title = _tabTitle(tab);
-    final count = _tabCount(tab, snapshot);
+    final count = _tabCount(tab, snapshot, totalUsersCount);
     final isIncoming = tab == _FriendsTabKind.incoming;
+    final isFindFriend = tab == _FriendsTabKind.findFriend;
     final countColor = (isIncoming && (count ?? 0) > 0)
         ? Colors.red.shade600
-        : AppColors.accentStart;
+        : isFindFriend
+            ? Colors.green.shade700
+            : AppColors.accentStart;
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1693,6 +1703,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   Widget build(BuildContext context) {
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
+    final totalUsersCount = ref.watch(totalUsersCountProvider).valueOrNull;
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
@@ -1768,7 +1779,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                                     for (final tab in tabs)
                                       Tab(
                                         child: _buildTabLabel(
-                                            tab, friendsAsync.valueOrNull),
+                                          tab,
+                                          friendsAsync.valueOrNull,
+                                          totalUsersCount,
+                                        ),
                                       ),
                                   ],
                                 ),

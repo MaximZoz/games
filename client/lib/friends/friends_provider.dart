@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 
 final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
   return FriendsRepository(authRepository: ref.watch(authRepositoryProvider));
@@ -64,6 +65,36 @@ final friendsIncomingCountProvider = Provider<int>((ref) {
   final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
   return snapshot?.incoming.length ?? 0;
 });
+
+/// Общее количество зарегистрированных пользователей. Обновляется каждые 30 сек,
+/// только когда пользователь находится на экране «Друзья».
+final totalUsersCountProvider =
+    AsyncNotifierProvider.autoDispose<TotalUsersCountNotifier, int>(
+        TotalUsersCountNotifier.new);
+
+class TotalUsersCountNotifier extends AutoDisposeAsyncNotifier<int> {
+  static const _pollInterval = Duration(seconds: 30);
+  Timer? _pollTimer;
+
+  @override
+  Future<int> build() async {
+    _pollTimer?.cancel();
+    final user = ref.watch(authStateProvider).valueOrNull;
+    final path = ref.watch(currentRoutePathProvider);
+    final onFriends = path == '/friends';
+    if (user == null || !onFriends) return 0;
+    final repo = ref.read(friendsRepositoryProvider);
+    final count = await repo.getUsersCount();
+    _pollTimer = Timer(_pollInterval, () {
+      ref.invalidate(totalUsersCountProvider);
+    });
+    ref.onDispose(() {
+      _pollTimer?.cancel();
+      _pollTimer = null;
+    });
+    return count;
+  }
+}
 
 Future<void> refreshFriendsSnapshot(WidgetRef ref) async {
   ref.invalidate(friendsSnapshotProvider);

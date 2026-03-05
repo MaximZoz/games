@@ -11,22 +11,24 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	PasswordHash string
-	DisplayName  *string
-	IsAdmin      bool
-	Age          *int
-	Gender       *string
-	About        *string
-	AvatarKind   string
-	AvatarValue  *string
-	CreatedAt    string
-	UpdatedAt    string
+	ID            uuid.UUID
+	Email         string
+	PasswordHash  string
+	DisplayName   *string
+	IsAdmin       bool
+	Age           *int
+	Gender        *string
+	About         *string
+	AvatarKind    string
+	AvatarValue   *string
+	BalanceBronze int
+	CreatedAt     string
+	UpdatedAt     string
 }
 
 const selectUserCols = `id, email, password_hash, display_name, is_admin,
 	age, gender, about, avatar_kind, avatar_value,
+	balance_bronze,
 	created_at::text, updated_at::text`
 
 func scanUser(row pgx.Row) (*User, error) {
@@ -34,6 +36,7 @@ func scanUser(row pgx.Row) (*User, error) {
 	err := row.Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName, &u.IsAdmin,
 		&u.Age, &u.Gender, &u.About, &u.AvatarKind, &u.AvatarValue,
+		&u.BalanceBronze,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
@@ -48,8 +51,8 @@ func CreateUser(ctx context.Context, pool *pgxpool.Pool, email, passwordHash, di
 		displayNamePtr = &displayName
 	}
 	row := pool.QueryRow(ctx,
-		`INSERT INTO users (email, password_hash, display_name)
-		 VALUES ($1, $2, $3)
+		`INSERT INTO users (email, password_hash, display_name, balance_bronze)
+		 VALUES ($1, $2, $3, 100)
 		 RETURNING `+selectUserCols,
 		email, passwordHash, displayNamePtr,
 	)
@@ -125,6 +128,12 @@ func DeleteUser(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) error {
 func CountAdmins(ctx context.Context, pool *pgxpool.Pool) (int, error) {
 	var n int
 	err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE is_admin = true`).Scan(&n)
+	return n, err
+}
+
+func CountUsers(ctx context.Context, pool *pgxpool.Pool) (int, error) {
+	var n int
+	err := pool.QueryRow(ctx, `SELECT COUNT(*)::int FROM users`).Scan(&n)
 	return n, err
 }
 
