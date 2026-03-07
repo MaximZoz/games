@@ -25,7 +25,7 @@ const List<int> stakeOptions = [1, 10, 50, 100];
 
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';
-  if (sec == 10 || sec == 30) return '${sec} с';
+  if (sec == 10 || sec == 30) return '$sec с';
   if (sec == 60) return '1 мин';
   if (sec == 600) return '10 мин';
   return '$sec с';

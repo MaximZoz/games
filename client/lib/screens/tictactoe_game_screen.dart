@@ -343,7 +343,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   activeGame.type != 'game' ||
                   activeGame.gameId != widget.gameId)
               ? isMyTurnFromGame
-              : activeGame!.isMyTurn;
+              : activeGame.isMyTurn;
           final opponentName = opponentId.startsWith('bot:')
               ? 'Бот'
               : (game.xUserId == currentUser?.id
@@ -679,20 +679,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         final gameId = result.gameId!;
         ref.invalidate(gameStateProvider(gameId));
         if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         context.go('/games/tictactoe/game/$gameId');
       }
     } on GamesException catch (e) {
+      if (!context.mounted) return;
       // 409 = одновременный реванш: соперник уже принял наше приглашение, игра создана
-      if (e.statusCode == 409 && context.mounted) {
+      if (e.statusCode == 409) {
         ref.invalidate(activeGameProvider);
         final active = await ref.read(activeGameProvider.future);
-        if (!context.mounted) return;
+        if (!mounted) return;
         if (active != null && active.type == 'game' && active.gameId != null && active.gameId!.isNotEmpty) {
           context.go('/games/tictactoe/game/${active.gameId}');
         } else {
           _redirectToGamesOnError();
         }
-      } else if (context.mounted) {
+      } else {
         _redirectToGamesOnError();
       }
     } catch (_) {
@@ -1375,10 +1377,10 @@ class _RematchSection extends StatelessWidget {
     if (isAcceptingRematch) {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: const [
           Icon(Icons.hourglass_empty_rounded,
               size: 20, color: AppColors.accentStart),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Подключение к игре...',
             style: TextStyle(
@@ -1939,7 +1941,9 @@ class _WinningLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (winningCells.length < 3 ||
         size.width <= 0 ||
-        size.height <= 0) return;
+        size.height <= 0) {
+      return;
+    }
     final cellW = size.width / gridSize;
     final cellH = size.height / gridSize;
     final points = winningCells.map((i) {
@@ -2098,8 +2102,8 @@ class _ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final centerX = size.width * 0.5;
     final centerY = size.height * 0.35;
-    final burstT = 0.12;
-    final fadeStart = 0.55;
+    const burstT = 0.12;
+    const fadeStart = 0.55;
     final minDim = math.min(size.width, size.height);
     final scale = minDim / 400;
 
@@ -2109,7 +2113,7 @@ class _ConfettiPainter extends CustomPainter {
         t = t / burstT;
         final x = centerX + math.cos(p.angle) * p.speed * t * scale;
         final y = centerY + math.sin(p.angle) * p.speed * t * scale;
-        final alpha = 1.0;
+        const alpha = 1.0;
         _drawParticle(canvas, x, y, p, t * 2 * math.pi, alpha);
       } else {
         final fallT = (progress - burstT) / (1 - burstT);
@@ -2120,7 +2124,9 @@ class _ConfettiPainter extends CustomPainter {
         final rot = fallT * p.rotationSpeed * math.pi;
         final alpha = 1.0 -
             ((progress - fadeStart) / (1 - fadeStart)).clamp(0.0, 1.0);
-        if (alpha > 0.01) _drawParticle(canvas, x, y, p, rot, alpha);
+        if (alpha > 0.01) {
+          _drawParticle(canvas, x, y, p, rot, alpha);
+        }
       }
     }
   }

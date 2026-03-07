@@ -46,7 +46,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  final ScrollController _listScrollController = ScrollController();
   late TabController _tabController;
   final Set<String> _actionsInProgress = <String>{};
   Timer? _searchDebounce;
@@ -60,7 +59,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   int _friendsVisibleCount = _pageSize;
   int _incomingVisibleCount = _pageSize;
   int _outgoingVisibleCount = _pageSize;
-  final ScrollController _gridScrollController = ScrollController();
 
   @override
   void initState() {
@@ -718,7 +716,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final statusText = presence == null
         ? null
         : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
-    final isDesktop = isWide(context);
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),
