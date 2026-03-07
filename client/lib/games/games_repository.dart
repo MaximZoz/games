@@ -25,13 +25,37 @@ const List<int> stakeOptions = [1, 10, 50, 100];
 
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';
-  if (sec == 10 || sec == 30) return '${sec} с';
+  if (sec == 10 || sec == 30) return '$sec с';
   if (sec == 60) return '1 мин';
   if (sec == 600) return '10 мин';
   return '$sec с';
 }
 
 String formatGridSize(int size) => '${size}x$size';
+
+/// Общий формат правил крестиков-ноликов (игра, лобби, приглашения).
+String buildTictactoeRulesText({
+  required int gridSize,
+  required int turnTimeSec,
+  required bool swapRule,
+  required bool firstMoveRestriction,
+}) {
+  final parts = <String>[
+    'Крестики-нолики на поле ${formatGridSize(gridSize)}. Ходят по очереди, X начинает.',
+    'Победа: нужно выстроить ${gridSize >= 6 ? 5 : gridSize} в ряд по горизонтали, вертикали или диагонали.',
+    turnTimeSec == 0
+        ? 'Без ограничения по времени на ход.'
+        : 'Время на ход: ${formatTurnTime(turnTimeSec)}.',
+  ];
+  if (swapRule) {
+    parts.add(
+        'Смена сторон: O может поменяться местами с X после первого хода X.');
+  }
+  if (firstMoveRestriction) {
+    parts.add('Запрет центра: X не может ходить в центр первым ходом.');
+  }
+  return parts.join('\n\n');
+}
 
 /// 100 бронзы=1 серебро, 100 серебра=1 золото, 100 золота=1 бриллиант.
 String formatBalance(int bronze) {
@@ -490,7 +514,19 @@ class GamesRepository {
     bool swapRule = false,
     bool firstMoveRestriction = false,
     int stakeBronze = 1,
+    bool addBotsAfter30s = false,
   }) async {
+    final body = <String, dynamic>{
+      'mode': mode,
+      'stake_bronze': stakeBronze.clamp(1, 999999),
+      'turn_time_sec': turnTimeSec,
+      'grid_size': gridSize,
+      'swap_rule': swapRule,
+      'first_move_restriction': firstMoveRestriction,
+    };
+    if (mode == 'matchmake') {
+      body['add_bots_after_30s'] = addBotsAfter30s;
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/lobby'),
@@ -498,22 +534,15 @@ class GamesRepository {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'mode': mode,
-          'stake_bronze': stakeBronze.clamp(1, 999999),
-          'turn_time_sec': turnTimeSec,
-          'grid_size': gridSize,
-          'swap_rule': swapRule,
-          'first_move_restriction': firstMoveRestriction,
-        }),
+        body: jsonEncode(body),
         operation: 'GamesRepository.createLobby',
       ),
     );
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    return CreateLobbyResult.fromJson(body);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return CreateLobbyResult.fromJson(data);
   }
 
   Future<List<LobbyItem>> listLobbies() async {

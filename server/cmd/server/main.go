@@ -268,6 +268,7 @@ func main() {
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
+		go api.StartBotTimeoutTicker(ctx, gamesHandler)
 	}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{

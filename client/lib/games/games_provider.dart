@@ -152,6 +152,10 @@ final gameStateProvider =
 final gameStateOverrideProvider =
     StateProvider.autoDispose.family<GameStateItem?, String>((ref, gameId) => null);
 
+/// Блокирует invalidate по game_state (чтобы не перезапрашивать до хода бота).
+final gameStateInvalidateBlockedProvider =
+    StateProvider.autoDispose.family<bool, String>((ref, gameId) => false);
+
 final activeGameProvider =
     AsyncNotifierProvider.autoDispose<ActiveGameNotifier, ActiveGameItem?>(
         ActiveGameNotifier.new);
@@ -170,7 +174,9 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
           ref.invalidate(activeGameProvider);
           final gameId = data['game_id']?.toString();
           if (gameId != null && gameId.isNotEmpty) {
-            ref.invalidate(gameStateProvider(gameId));
+            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
+              ref.invalidate(gameStateProvider(gameId));
+            }
           }
         }
       },

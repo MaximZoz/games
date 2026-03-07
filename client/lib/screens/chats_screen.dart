@@ -605,26 +605,27 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               await modalRef
                                   .read(chatsRepositoryProvider)
                                   .unblockUser(user.id);
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               setSheetState(
                                 () => locallyHiddenUserIDs.add(user.id),
                               );
                             } on ChatException catch (e) {
+                              if (!context.mounted) return;
                               if (e.statusCode == 401) {
                                 await modalRef
                                     .read(authStateProvider.notifier)
                                     .logout();
-                                if (context.mounted) {
-                                  context.go('/login');
-                                }
+                                if (!context.mounted) return;
+                                // ignore: use_build_context_synchronously
+                                context.go('/login');
                                 return;
                               }
-                              if (!context.mounted) return;
+                              // ignore: use_build_context_synchronously
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(e.message)),
                               );
                             } finally {
-                              if (mounted) {
+                              if (context.mounted) {
                                 setSheetState(() => unblocking.remove(user.id));
                               }
                             }

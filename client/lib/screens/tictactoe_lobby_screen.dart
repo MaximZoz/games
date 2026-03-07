@@ -184,7 +184,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                 ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
+                          const Text(
                             'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»',
                             textAlign: TextAlign.center,
                             style: TextStyle(
@@ -193,14 +193,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                             ),
                           ),
                         ] else if (isInviteMode && isCreator) ...[
-                          Text(
-                            'Выберите друга для приглашения',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
                           friendsAsync.when(
                             data: (snapshot) {
                               final friends = snapshot.friends;

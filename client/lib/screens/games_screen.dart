@@ -9,6 +9,7 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -18,29 +19,6 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-
-/// Общий формат правил крестиков-ноликов (игра, лобби, приглашения).
-String _buildTictactoeRulesText({
-  required int gridSize,
-  required int turnTimeSec,
-  required bool swapRule,
-  required bool firstMoveRestriction,
-}) {
-  final parts = <String>[
-    'Крестики-нолики на поле ${formatGridSize(gridSize)}. Ходят по очереди, X начинает.',
-    'Победа: нужно выстроить ${gridSize >= 6 ? 5 : gridSize} в ряд по горизонтали, вертикали или диагонали.',
-    turnTimeSec == 0
-        ? 'Без ограничения по времени на ход.'
-        : 'Время на ход: ${formatTurnTime(turnTimeSec)}.',
-  ];
-  if (swapRule) {
-    parts.add('Смена сторон: O может поменяться местами с X после первого хода X.');
-  }
-  if (firstMoveRestriction) {
-    parts.add('Запрет центра: X не может ходить в центр первым ходом.');
-  }
-  return parts.join('\n\n');
-}
 
 class GamesScreen extends ConsumerStatefulWidget {
   const GamesScreen({super.key});
@@ -139,7 +117,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 ),
               ),
             ),
-            SizedBox(height: isDesktop ? 28 : 20),
+            SizedBox(height: isDesktop ? 8 : 20),
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -207,6 +185,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     });
     try {
       final repo = ref.read(gamesRepositoryProvider);
+      final addBotsAfter30s = ref.read(addBotsAfter30sProvider);
       final result = await repo.createLobby(
         mode: mode,
         turnTimeSec: _selectedTurnTimeSec,
@@ -214,6 +193,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         swapRule: _selectedSwapRule,
         firstMoveRestriction: _selectedFirstMoveRestriction,
         stakeBronze: _selectedStakeBronze,
+        addBotsAfter30s: mode == 'matchmake' ? addBotsAfter30s : false,
       );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
@@ -256,7 +236,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   String _inviteRulesText(GameInvite inv) {
-    return _buildTictactoeRulesText(
+    return buildTictactoeRulesText(
       gridSize: inv.gridSize,
       turnTimeSec: inv.turnTimeSec,
       swapRule: inv.swapRule,
@@ -477,7 +457,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _showLobbyRulesInfo(BuildContext context, LobbyItem lobby) {
-    final rulesText = _buildTictactoeRulesText(
+    final rulesText = buildTictactoeRulesText(
       gridSize: lobby.gridSize,
       turnTimeSec: lobby.turnTimeSec,
       swapRule: lobby.swapRule,
@@ -562,34 +542,43 @@ class _GamesPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            contentPadding,
+            0,
+            contentPadding,
+            isDesktop ? 24 : 48,
+          ),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight.isFinite && constraints.maxHeight > 100
+                    ? constraints.maxHeight
+                    : 400,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
           LayoutBuilder(
             builder: (context, constraints) {
               if (isDesktop) {
-                final width = constraints.maxWidth;
-                const minCardWidth = 320.0;
                 const gap = 16.0;
-                const gameCards = 1;
-                final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
-                final effectiveCount = crossAxisCount > gameCards ? gameCards : crossAxisCount;
-                final maxW = effectiveCount == 1
-                    ? (width * 0.9).clamp(380.0, 520.0)
-                    : width;
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxW),
-                    child: GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: effectiveCount,
-                      mainAxisSpacing: gap,
-                      crossAxisSpacing: gap,
-                      childAspectRatio: 2.6,
-                      children: [_TictactoeGameCard(
+                const minCardWidth = 400.0;
+                final availableWidth = constraints.maxWidth;
+                final crossAxisCount = (availableWidth / (minCardWidth + gap)).floor().clamp(1, 4);
+                final cardWidth = (availableWidth - (crossAxisCount - 1) * gap) / crossAxisCount;
+                return SizedBox(
+                  width: availableWidth,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: cardWidth,
+                      child: _TictactoeGameCard(
                         isCreating: isCreating,
                         isFinding: isFinding,
                         turnTimeSec: turnTimeSec,
@@ -604,10 +593,10 @@ class _GamesPageContent extends StatelessWidget {
                         onStakeChanged: onStakeChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
-                      )],
-                    ),
+                      ),
                   ),
-                );
+                ),
+              );
               }
               return _TictactoeGameCard(
                 isCreating: isCreating,
@@ -629,11 +618,13 @@ class _GamesPageContent extends StatelessWidget {
           ),
           if (invites.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text(
-              'Вас пригласили',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+            Center(
+              child: Text(
+                'Вас пригласили',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -649,14 +640,21 @@ class _GamesPageContent extends StatelessWidget {
                   ),
                 );
                 if (isDesktop) {
+                  final width = constraints.maxWidth;
+                  const minCardWidth = 360.0;
+                  const gap = 16.0;
+                  final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
+                  final itemWidth = (width - gap * (crossAxisCount - 1)) / crossAxisCount;
                   return Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 520),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      constraints: BoxConstraints(maxWidth: width),
+                      child: Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        alignment: WrapAlignment.center,
                         children: inviteContent
-                            .map((w) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
+                            .map((w) => SizedBox(
+                                  width: itemWidth,
                                   child: w,
                                 ))
                             .toList(),
@@ -724,6 +722,10 @@ class _GamesPageContent extends StatelessWidget {
           ),
         ],
       ),
+    ),
+    ),
+    );
+      },
     );
   }
 }
@@ -745,40 +747,34 @@ class _LobbiesPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Открытые лобби',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: isDesktop ? 16 : 12),
-          lobbiesAsync.when(
-            data: (lobbies) {
-              if (lobbies.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    'Нет открытых лобби. Нажмите «Найти игру» или создайте своё.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: isDesktop ? 15 : 14,
-                    ),
-                  ),
-                );
-              }
-              final lobbyCards = lobbies
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minH = constraints.maxHeight.isFinite ? constraints.maxHeight : 400.0;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: minH),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  lobbiesAsync.when(
+                  data: (lobbies) {
+                    if (lobbies.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    final lobbyCards = lobbies
                   .map(
                     (lobby) => Padding(
                       padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
                       child: GradientCard(
                           padding: EdgeInsets.all(isDesktop ? 20 : 16),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.grid_3x3_rounded,
@@ -802,6 +798,25 @@ class _LobbiesPageContent extends StatelessWidget {
                                       spacing: 12,
                                       runSpacing: 4,
                                       children: [
+                                        if (lobby.stakeBronze > 0)
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${lobby.stakeBronze}',
+                                                style: TextStyle(
+                                                  fontSize: isDesktop ? 14 : 13,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              CoinIcon(
+                                                coinType: CoinType.bronze,
+                                                size: 14,
+                                                showBorder: true,
+                                              ),
+                                            ],
+                                          ),
                                         Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -838,25 +853,6 @@ class _LobbiesPageContent extends StatelessWidget {
                                             ),
                                           ],
                                         ),
-                                        if (lobby.stakeBronze > 0)
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                '${lobby.stakeBronze}',
-                                                style: TextStyle(
-                                                  fontSize: isDesktop ? 14 : 13,
-                                                  color: AppColors.textSecondary,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              CoinIcon(
-                                                coinType: CoinType.bronze,
-                                                size: 14,
-                                                showBorder: true,
-                                              ),
-                                            ],
-                                          ),
                                         if (lobby.swapRule)
                                           Tooltip(
                                             message: 'Смена сторон',
@@ -900,22 +896,36 @@ class _LobbiesPageContent extends StatelessWidget {
                       ),
                     )
                     .toList();
-              if (isDesktop) {
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: Column(
+                    if (isDesktop) {
+                    final width = constraints.maxWidth;
+                    const minCardWidth = 360.0;
+                    const gap = 16.0;
+                    final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
+                    final itemWidth = (width - gap * (crossAxisCount - 1)) / crossAxisCount;
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: width),
+                        child: Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          alignment: WrapAlignment.start,
+                          children: [
+                            for (var i = 0; i < lobbyCards.length; i++)
+                              SizedBox(
+                                width: itemWidth,
+                                child: lobbyCards[i],
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                    }
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: lobbyCards,
-                    ),
-                  ),
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: lobbyCards,
-              );
-            },
+                    );
+                  },
             loading: () => Padding(
               padding: EdgeInsets.all(isDesktop ? 32 : 24),
               child: const Center(
@@ -935,6 +945,10 @@ class _LobbiesPageContent extends StatelessWidget {
           ),
         ],
       ),
+    ),
+  ),
+  );
+      },
     );
   }
 }
@@ -990,7 +1004,7 @@ class _TictactoeGameCard extends StatelessWidget {
     onStakeChanged(stakeOptions[next]);
   }
 
-  String _buildRulesText() => _buildTictactoeRulesText(
+  String _buildRulesText() => buildTictactoeRulesText(
         gridSize: gridSize,
         turnTimeSec: turnTimeSec,
         swapRule: swapRule,
@@ -1114,49 +1128,6 @@ class _TictactoeGameCard extends StatelessWidget {
                   SizedBox(width: compact ? 4 : 6),
                   Text(
                     formatGridSize(gridSize),
-                    style: theme?.bodyMedium?.copyWith(
-                      color: AppColors.accentStart,
-                      fontWeight: FontWeight.w600,
-                      fontSize: fontSz,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isCreating || isFinding ? null : _cycleStake,
-          borderRadius: BorderRadius.circular(10),
-          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-          child: Tooltip(
-            message: 'Ставка за игру (бронза)',
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-              decoration: BoxDecoration(
-                color: AppColors.accentSoft.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CoinIcon(
-                    coinType: CoinType.bronze,
-                    size: iconSz,
-                    showBorder: true,
-                  ),
-                  SizedBox(width: compact ? 4 : 6),
-                  Text(
-                    '$stakeBronze',
                     style: theme?.bodyMedium?.copyWith(
                       color: AppColors.accentStart,
                       fontWeight: FontWeight.w600,
@@ -1323,6 +1294,40 @@ class _TictactoeGameCard extends StatelessWidget {
                         maxLines: 1,
                       ),
                     ),
+                    if (stakeBronze > 0) ...[
+                      SizedBox(width: isDesktop ? 24 : 12),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: isCreating || isFinding ? null : _cycleStake,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Tooltip(
+                            message: 'Нажмите для смены ставки',
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$stakeBronze',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const CoinIcon(
+                                    coinType: CoinType.bronze,
+                                    size: 20,
+                                    showBorder: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     IconButton(
                       onPressed: isCreating || isFinding
                           ? null
@@ -1360,7 +1365,7 @@ class _TictactoeGameCard extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: isMedium ? 16 : (isDesktop ? 24 : 20)),
+          SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
           Row(
             children: [
               Expanded(
@@ -1556,101 +1561,173 @@ class _InviteCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
-    final p = presence[inv.creatorId];
-    final statusText = p == null
-        ? null
-        : (p.online ? 'Онлайн' : formatLastSeen(p.lastSeenAt));
-
+    const iconSz = 16.0;
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          _InviteCreatorAvatar(
-            creatorName: inv.creatorName,
-            avatarKind: inv.creatorAvatarKind,
-            avatarValue: inv.creatorAvatarValue,
-            creatorId: inv.creatorId,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  inv.creatorName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                if (statusText != null && statusText.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      statusText,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => onShowCreatorInfo(context, inv),
-            icon: const Icon(Icons.info_outline_rounded),
-            tooltip: 'Информация об игроке',
-          ),
-          if (inv.stakeBronze > 0)
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Row(
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '${inv.stakeBronze}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                  Row(
+                    children: [
+                      _InviteGameIcon(gameType: inv.gameType),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          inv.creatorName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () => onShowInviteRules(context, inv),
+                        icon: const Icon(Icons.rule_rounded, size: 20),
+                        tooltip: 'Правила игры',
+                        style: IconButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          minimumSize: const Size(32, 32),
+                          padding: const EdgeInsets.all(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (inv.stakeBronze > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${inv.stakeBronze}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const CoinIcon(
+                                coinType: CoinType.bronze,
+                                size: 18,
+                                showBorder: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                      Expanded(
+                        child: Wrap(
+                          spacing: 8,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.start,
+                  children: [
+                    const Tooltip(
+                      message: 'Время на ход',
+                      child: Icon(Icons.timer_outlined, size: iconSz, color: AppColors.textSecondary),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  const CoinIcon(
-                    coinType: CoinType.bronze,
-                    size: 18,
-                    showBorder: true,
-                  ),
-                ],
+                    Text(
+                      formatTurnTime(inv.turnTimeSec),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(width: 4),
+                    const Tooltip(
+                      message: 'Размер сетки',
+                      child: Icon(Icons.grid_on_rounded, size: iconSz, color: AppColors.textSecondary),
+                    ),
+                    Text(
+                      formatGridSize(inv.gridSize),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                    if (inv.swapRule)
+                      const Tooltip(
+                        message: 'Смена сторон',
+                        child: Icon(Icons.swap_horiz_rounded, size: iconSz, color: AppColors.textSecondary),
+                      ),
+                    if (inv.firstMoveRestriction)
+                      const Tooltip(
+                        message: 'Запрет центра',
+                        child: Icon(Icons.block_rounded, size: iconSz, color: AppColors.textSecondary),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          IconButton(
-            onPressed: () => onShowInviteRules(context, inv),
-            icon: const Icon(Icons.rule_rounded),
-            tooltip: 'Правила игры',
-          ),
-          IconButton(
-            onPressed: () => onDeclineInvite(inv.lobbyId),
-            icon: const Icon(Icons.close_rounded),
-            tooltip: 'Отклонить',
-            style: IconButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-          ),
-          IconButton.filled(
-            onPressed: () => onAcceptInvite(context, inv.lobbyId),
-            icon: const Icon(Icons.check_rounded),
-            tooltip: 'Принять',
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-            ),
+            ],
           ),
         ],
       ),
+    ),
+    Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: () => onDeclineInvite(inv.lobbyId),
+          icon: const Icon(Icons.close_rounded),
+          tooltip: 'Отклонить',
+          style: IconButton.styleFrom(foregroundColor: Colors.red),
+        ),
+        IconButton.filled(
+          onPressed: () => onAcceptInvite(context, inv.lobbyId),
+          icon: const Icon(Icons.check_rounded),
+          tooltip: 'Принять',
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.accentStart,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    ),
+      ],
+    ),
+  ),
+);
+  }
+}
+
+class _InviteGameIcon extends StatelessWidget {
+  const _InviteGameIcon({required this.gameType});
+
+  final String gameType;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (gameType) {
+      'tictactoe' => Icons.grid_3x3_rounded,
+      _ => Icons.grid_3x3_rounded,
+    };
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.accentStart, AppColors.accentEnd],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentStart.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, color: Colors.white, size: 26),
     );
   }
 }

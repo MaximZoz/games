@@ -264,7 +264,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [CoinColors.diamondBlue, CoinColors.diamondDark],
+          colors: const [CoinColors.diamondBlue, CoinColors.diamondDark],
         ).createShader(rect),
     );
 
@@ -278,7 +278,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [CoinColors.diamondDark, CoinColors.diamondBlue],
+          colors: const [CoinColors.diamondDark, CoinColors.diamondBlue],
         ).createShader(rect),
     );
 
@@ -292,7 +292,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
-          colors: [CoinColors.diamondDark, CoinColors.diamondBlue],
+          colors: const [CoinColors.diamondDark, CoinColors.diamondBlue],
         ).createShader(rect),
     );
 
@@ -308,7 +308,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [CoinColors.diamondWhite, CoinColors.diamondLight],
+          colors: const [CoinColors.diamondWhite, CoinColors.diamondLight],
         ).createShader(rect),
     );
     canvas.drawPath(
@@ -317,7 +317,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [CoinColors.diamondLight, CoinColors.diamondMid],
+          colors: const [CoinColors.diamondLight, CoinColors.diamondMid],
         ).createShader(rect),
     );
     canvas.drawPath(
@@ -326,7 +326,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [CoinColors.diamondWhite, CoinColors.diamondLight],
+          colors: const [CoinColors.diamondWhite, CoinColors.diamondLight],
         ).createShader(rect),
     );
     canvas.drawPath(
@@ -335,7 +335,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
-          colors: [CoinColors.diamondLight, CoinColors.diamondMid],
+          colors: const [CoinColors.diamondLight, CoinColors.diamondMid],
         ).createShader(rect),
     );
 
@@ -351,7 +351,7 @@ class _DiamondPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [CoinColors.diamondSparkle, CoinColors.diamondWhite],
+          colors: const [CoinColors.diamondSparkle, CoinColors.diamondWhite],
         ).createShader(rect),
     );
 
