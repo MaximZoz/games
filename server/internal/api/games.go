@@ -25,6 +25,8 @@ const (
 	gameStatusOWon              = "o_won"
 	gameStatusDraw              = "draw"
 	lobbyTTL                    = 10 * time.Minute
+	botUserID                   = "bot:ttt"
+	botTimeoutSeconds           = 30
 )
 
 // turn_time_sec: 0=unlimited, 10, 30, 60, 600
@@ -59,6 +61,7 @@ type CreateLobbyBody struct {
 	SwapRule             bool   `json:"swap_rule"`               // смена сторон после 1-го хода
 	FirstMoveRestriction bool   `json:"first_move_restriction"`  // первый ход не в центр
 	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 1)
+	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`      // в matchmake: через 30 с добавить бота
 }
 
 type InviteBody struct {
@@ -228,6 +231,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 	swapRule := body.SwapRule
 	firstMoveRestriction := body.FirstMoveRestriction
+	addBotsAfter30s := body.AddBotsAfter30s
 
 	if mode == "matchmake" {
 		otherEntry, err := h.rdbRPOPMatchmake(ctx, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
@@ -283,6 +287,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		"swap_rule", strconv.FormatBool(swapRule),
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"stake_bronze", strconv.Itoa(stakeBronze),
+		"add_bots_after_30s", strconv.FormatBool(addBotsAfter30s),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	if mode == "matchmake" {
@@ -523,6 +528,373 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 
 	_, err = pipe.Exec(ctx)
 	return gameID, lobbyID, err
+}
+
+// createGameWithBot создаёт игру пользователь vs бот и обновляет существующее лобби.
+func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID string, err error) {
+	if err := store.DeductCoins(ctx, h.Pool, userID, stakeBronze); err != nil {
+		return "", err
+	}
+	gameID = uuid.New().String()
+
+	xUserID := userID.String()
+	oUserID := botUserID
+	if rand.Intn(2) == 1 {
+		xUserID, oUserID = oUserID, xUserID
+	}
+
+	board := emptyBoardJSON(gridSize)
+	key := "game:" + gameID
+	lobbyKey := "lobby:" + existingLobbyID
+
+	pipe := h.Rdb.Pipeline()
+	gameFields := []any{
+		"board", board,
+		"turn", "x",
+		"status", gameStatusActive,
+		"lobby_id", existingLobbyID,
+		"x_user_id", xUserID,
+		"o_user_id", oUserID,
+		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"grid_size", strconv.Itoa(gridSize),
+		"swap_rule", strconv.FormatBool(swapRule),
+		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"swapped", "false",
+		"stake_bronze", strconv.Itoa(stakeBronze),
+	}
+	if turnTimeSec > 0 {
+		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
+		gameFields = append(gameFields, "turn_deadline", strconv.FormatInt(deadline, 10))
+	}
+	pipe.HSet(ctx, key, gameFields...)
+	pipe.Expire(ctx, key, 24*time.Hour)
+
+	pipe.HSet(ctx, lobbyKey,
+		"opponent_id", botUserID,
+		"status", lobbyStatusInGame,
+		"game_id", gameID,
+	)
+	pipe.Expire(ctx, lobbyKey, 24*time.Hour)
+
+	_, err = pipe.Exec(ctx)
+	return gameID, err
+}
+
+func isBot(userID string) bool { return strings.HasPrefix(userID, "bot:") }
+
+func validMoves(board []string, gridSize int, turn string, firstMoveRestriction bool) []int {
+	var out []int
+	centerIdxs := centerCellIndices(gridSize)
+	for i, c := range board {
+		if c != "" {
+			continue
+		}
+		if firstMoveRestriction && turn == "x" {
+			moveCount := 0
+			for _, b := range board {
+				if b != "" {
+					moveCount++
+				}
+			}
+			if moveCount == 0 {
+				skip := false
+				for _, ci := range centerIdxs {
+					if i == ci {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					continue
+				}
+			}
+		}
+		out = append(out, i)
+	}
+	return out
+}
+
+// cellCompletesWin проверяет, даёт ли ход в cell победную линию.
+func cellCompletesWin(board []string, cell int, mark string, gridSize int) bool {
+	cp := make([]string, len(board))
+	copy(cp, board)
+	cp[cell] = mark
+	return len(checkWinLine(cp, mark, gridSize)) == winLength(gridSize)
+}
+
+// botPickCellSmart — осмысленный ход: победа > блок > минимакс (3x3) > центр > случайный.
+func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestriction bool) int {
+	moves := validMoves(board, gridSize, turn, firstMoveRestriction)
+	if len(moves) == 0 {
+		return -1
+	}
+	opponent := "o"
+	if turn == "o" {
+		opponent = "x"
+	}
+	// 1. Победа в один ход
+	for _, cell := range moves {
+		if cellCompletesWin(board, cell, turn, gridSize) {
+			return cell
+		}
+	}
+	// 2. Блокировать победу соперника
+	for _, cell := range moves {
+		if cellCompletesWin(board, cell, opponent, gridSize) {
+			return cell
+		}
+	}
+	// 3. Для 3x3 — минимакс
+	if gridSize == 3 {
+		if cell := botMinimax(board, turn, firstMoveRestriction); cell >= 0 {
+			return cell
+		}
+	}
+	// 4. Предпочтение центру (для нечётных сеток)
+	centerIdxs := centerCellIndices(gridSize)
+	for _, ci := range centerIdxs {
+		for _, m := range moves {
+			if m == ci {
+				return m
+			}
+		}
+	}
+	// 5. Случайный ход
+	return moves[rand.Intn(len(moves))]
+}
+
+func botMinimax(board []string, botMark string, firstMoveRestriction bool) int {
+	moves := validMoves(board, 3, botMark, firstMoveRestriction)
+	if len(moves) == 0 {
+		return -1
+	}
+	opponent := "o"
+	if botMark == "o" {
+		opponent = "x"
+	}
+	bestScore := -20
+	var bestCell int = -1
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = botMark
+		score := minimaxMin(cp, opponent, botMark, firstMoveRestriction)
+		if score > bestScore {
+			bestScore = score
+			bestCell = cell
+		}
+	}
+	return bestCell
+}
+
+func minimaxMax(board []string, botMark string, firstMoveRestriction bool) int {
+	if checkWin(board, "o", 3) {
+		if botMark == "o" {
+			return 10
+		}
+		return -10
+	}
+	if checkWin(board, "x", 3) {
+		if botMark == "x" {
+			return 10
+		}
+		return -10
+	}
+	if isDraw(board, 3) {
+		return 0
+	}
+	moves := validMoves(board, 3, botMark, firstMoveRestriction)
+	opponent := "o"
+	if botMark == "o" {
+		opponent = "x"
+	}
+	best := -20
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = botMark
+		s := minimaxMin(cp, opponent, botMark, firstMoveRestriction)
+		if s > best {
+			best = s
+		}
+	}
+	return best
+}
+
+func minimaxMin(board []string, opponent string, botMark string, firstMoveRestriction bool) int {
+	if checkWin(board, "o", 3) {
+		if botMark == "o" {
+			return 10
+		}
+		return -10
+	}
+	if checkWin(board, "x", 3) {
+		if botMark == "x" {
+			return 10
+		}
+		return -10
+	}
+	if isDraw(board, 3) {
+		return 0
+	}
+	moves := validMoves(board, 3, opponent, firstMoveRestriction)
+	best := 20
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = opponent
+		s := minimaxMax(cp, botMark, firstMoveRestriction)
+		if s < best {
+			best = s
+		}
+	}
+	return best
+}
+
+func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[string]string) bool {
+	time.Sleep(1 * time.Second) // Задержка хода бота для естественности
+	gridSize := 3
+	if gs := m["grid_size"]; gs != "" {
+		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
+			gridSize = n
+		}
+	}
+	turn := m["turn"]
+	firstMoveRestriction := m["first_move_restriction"] == "true"
+	board := parseBoard(m["board"], gridSize)
+	cell := botPickCellSmart(board, gridSize, turn, firstMoveRestriction)
+	if cell < 0 {
+		return false
+	}
+	board[cell] = turn
+	nextTurn := "o"
+	if turn == "o" {
+		nextTurn = "x"
+	}
+	newBoard := formatBoard(board)
+	status := gameStatusActive
+	winner := turn
+	winningCells := checkWinLine(board, turn, gridSize)
+	if len(winningCells) == winLength(gridSize) {
+		status = gameStatusXWon
+		if turn == "o" {
+			status = gameStatusOWon
+		}
+	} else if isDraw(board, gridSize) {
+		status = gameStatusDraw
+		winner = ""
+	} else {
+		winner = ""
+	}
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	pipe := h.Rdb.Pipeline()
+	setFields := []any{"board", newBoard, "turn", nextTurn, "status", status}
+	if winner != "" {
+		setFields = append(setFields, "winner", turn)
+	}
+	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+	if turnTimeSec > 0 && status == gameStatusActive {
+		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
+		setFields = append(setFields, "turn_deadline", strconv.FormatInt(deadline, 10))
+	} else if turnTimeSec > 0 && status != gameStatusActive {
+		pipe.HDel(ctx, key, "turn_deadline")
+	}
+	pipe.HSet(ctx, key, setFields...)
+	pipe.Expire(ctx, key, 24*time.Hour)
+	if _, err := pipe.Exec(ctx); err != nil {
+		return false
+	}
+	if status != gameStatusActive {
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+		h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
+		for _, u := range humanUserIDs(xUserID, oUserID) {
+			clearUserActiveGame(ctx, h.Rdb, u)
+		}
+		h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+			"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
+			"board": board, "turn": nextTurn, "winner": winner, "status": status,
+		})
+	}
+	return true
+}
+
+func humanUserIDs(xUserID, oUserID string) []uuid.UUID {
+	var out []uuid.UUID
+	for _, id := range []string{xUserID, oUserID} {
+		if !isBot(id) {
+			if u, e := uuid.Parse(id); e == nil {
+				out = append(out, u)
+			}
+		}
+	}
+	return out
+}
+
+// StartBotTimeoutTicker проверяет лобби с add_bots_after_30s: через 30 с без соперника добавляет бота.
+func StartBotTimeoutTicker(ctx context.Context, h *GamesHandler) {
+	if h == nil || h.Rdb == nil {
+		return
+	}
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			h.tickBotTimeout(ctx)
+		}
+	}
+}
+
+func (h *GamesHandler) tickBotTimeout(ctx context.Context) {
+	keys, err := h.Rdb.Keys(ctx, "lobby:*").Result()
+	if err != nil || len(keys) == 0 {
+		return
+	}
+	now := time.Now().UTC()
+	for _, key := range keys {
+		m, err := h.Rdb.HGetAll(ctx, key).Result()
+		if err != nil || m["status"] != lobbyStatusWaitingMatchmake || m["add_bots_after_30s"] != "true" {
+			continue
+		}
+		createdAt, err := time.Parse(time.RFC3339Nano, m["created_at"])
+		if err != nil {
+			continue
+		}
+		if now.Sub(createdAt) < botTimeoutSeconds*time.Second {
+			continue
+		}
+		lobbyID := strings.TrimPrefix(key, "lobby:")
+		creatorID := m["creator_id"]
+		creatorUUID, err := uuid.Parse(creatorID)
+		if err != nil {
+			continue
+		}
+		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+		gridSize, _ := strconv.Atoi(m["grid_size"])
+		if !validGridSize[gridSize] {
+			gridSize = 3
+		}
+		swapRule := m["swap_rule"] == "true"
+		firstMoveRestriction := m["first_move_restriction"] == "true"
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+		if stakeBronze < 1 {
+			stakeBronze = 1
+		}
+		mmKey := matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
+		h.Rdb.LRem(ctx, mmKey, 0, creatorID+":"+lobbyID)
+		// Игры с ботом всегда на 1 бронзовую
+		gameID, err := h.createGameWithBot(ctx, creatorUUID, lobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, 1)
+		if err != nil {
+			continue
+		}
+		clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
+		setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
+		h.publishGameStarted([]uuid.UUID{creatorUUID}, gameID, lobbyID)
+		return
+	}
 }
 
 func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
@@ -1053,10 +1425,9 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	h.Rdb.Expire(ctx, key, 24*time.Hour)
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
-	xUUID, _ := uuid.Parse(xUserID)
-	oUUID, _ := uuid.Parse(oUserID)
-	clearUserActiveGame(ctx, h.Rdb, xUUID)
-	clearUserActiveGame(ctx, h.Rdb, oUUID)
+	for _, u := range humanUserIDs(xUserID, oUserID) {
+		clearUserActiveGame(ctx, h.Rdb, u)
+	}
 	gridSize := 3
 	if gs := m["grid_size"]; gs != "" {
 		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
@@ -1064,7 +1435,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		}
 	}
 	board := parseBoard(m["board"], gridSize)
-	h.broadcast([]uuid.UUID{xUUID, oUUID}, map[string]any{
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
 		"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
 		"board": board, "turn": turn, "winner": winner, "status": status, "timeout": true,
 	})
@@ -1094,6 +1465,15 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	if xUserID != userID.String() && oUserID != userID.String() {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
+	}
+
+	// Если сейчас ход бота — выполняем ход перед возвратом состояния
+	turn := m["turn"]
+	botTurn := (turn == "x" && isBot(xUserID)) || (turn == "o" && isBot(oUserID))
+	if botTurn && m["status"] == gameStatusActive {
+		if h.applyBotMove(ctx, key, m) {
+			m, _ = h.Rdb.HGetAll(ctx, key).Result()
+		}
 	}
 
 	gridSize := 3
@@ -1145,21 +1525,28 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		}
 	}
 
-	xUUID, _ := uuid.Parse(xUserID)
-	oUUID, _ := uuid.Parse(oUserID)
-	if xu, err := store.GetUserByID(ctx, h.Pool, xUUID); err == nil {
-		if xu.DisplayName != nil && *xu.DisplayName != "" {
-			item.XDisplayName = xu.DisplayName
+	botName := "Бот"
+	if isBot(xUserID) {
+		item.XDisplayName = &botName
+	} else if xUUID, err := uuid.Parse(xUserID); err == nil {
+		if xu, err := store.GetUserByID(ctx, h.Pool, xUUID); err == nil {
+			if xu.DisplayName != nil && *xu.DisplayName != "" {
+				item.XDisplayName = xu.DisplayName
+			}
+			item.XAvatarKind = xu.AvatarKind
+			item.XAvatarValue = xu.AvatarValue
 		}
-		item.XAvatarKind = xu.AvatarKind
-		item.XAvatarValue = xu.AvatarValue
 	}
-	if ou, err := store.GetUserByID(ctx, h.Pool, oUUID); err == nil {
-		if ou.DisplayName != nil && *ou.DisplayName != "" {
-			item.ODisplayName = ou.DisplayName
+	if isBot(oUserID) {
+		item.ODisplayName = &botName
+	} else if oUUID, err := uuid.Parse(oUserID); err == nil {
+		if ou, err := store.GetUserByID(ctx, h.Pool, oUUID); err == nil {
+			if ou.DisplayName != nil && *ou.DisplayName != "" {
+				item.ODisplayName = ou.DisplayName
+			}
+			item.OAvatarKind = ou.AvatarKind
+			item.OAvatarValue = ou.AvatarValue
 		}
-		item.OAvatarKind = ou.AvatarKind
-		item.OAvatarValue = ou.AvatarValue
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -1297,17 +1684,15 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
-		xUUID, _ := uuid.Parse(xUserID)
-		oUUID, _ := uuid.Parse(oUserID)
-		clearUserActiveGame(ctx, h.Rdb, xUUID)
-		clearUserActiveGame(ctx, h.Rdb, oUUID)
+		for _, uid := range []string{xUserID, oUserID} {
+			if !isBot(uid) {
+				if u, e := uuid.Parse(uid); e == nil {
+					clearUserActiveGame(ctx, h.Rdb, u)
+				}
+			}
+		}
 	}
 
-	opponentID := xUserID
-	if userID.String() == xUserID {
-		opponentID = oUserID
-	}
-	opponentUUID, _ := uuid.Parse(opponentID)
 	winnerVal := winner
 	if winner != "" {
 		winnerVal = turn
@@ -1338,7 +1723,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		broadcastPayload["turn_deadline"] = deadline
 		broadcastPayload["turn_time_sec"] = turnTimeSec
 	}
-	h.broadcast([]uuid.UUID{userID, opponentUUID}, broadcastPayload)
+	h.broadcast(humanUserIDs(xUserID, oUserID), broadcastPayload)
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
@@ -1504,15 +1889,14 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
-	xUUID, _ := uuid.Parse(xUserID)
-	oUUID, _ := uuid.Parse(oUserID)
-	clearUserActiveGame(ctx, h.Rdb, xUUID)
-	clearUserActiveGame(ctx, h.Rdb, oUUID)
+	for _, u := range humanUserIDs(xUserID, oUserID) {
+		clearUserActiveGame(ctx, h.Rdb, u)
+	}
 	winnerVal := "o"
 	if status == gameStatusXWon {
 		winnerVal = "x"
 	}
-	h.broadcast([]uuid.UUID{xUUID, oUUID}, map[string]any{
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
 		"type":    "game_state",
 		"game_id": gameID,
 		"board":   board,
@@ -1546,6 +1930,29 @@ func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.Strin
 
 func (h *GamesHandler) settleGameCoins(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
 	if stakeBronze <= 0 || xUserID == "" || oUserID == "" {
+		return
+	}
+	if isBot(xUserID) || isBot(oUserID) {
+		// Один из игроков — бот. Возвращаем монеты человеку при ничьей/проигрыше, даём 2*stake при победе.
+		humanID := xUserID
+		if isBot(xUserID) {
+			humanID = oUserID
+		}
+		humanUUID, err := uuid.Parse(humanID)
+		if err != nil {
+			return
+		}
+		winner := ""
+		if status == gameStatusXWon {
+			winner = "x"
+		} else if status == gameStatusOWon {
+			winner = "o"
+		}
+		if winner == "" {
+			_ = store.AddCoins(ctx, h.Pool, humanUUID, stakeBronze)
+		} else if (winner == "x" && xUserID == humanID) || (winner == "o" && oUserID == humanID) {
+			_ = store.AddCoins(ctx, h.Pool, humanUUID, stakeBronze*2)
+		}
 		return
 	}
 	xUUID, _ := uuid.Parse(xUserID)

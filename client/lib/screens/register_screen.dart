@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -42,10 +43,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
     try {
+      final displayName = _displayNameController.text.trim().replaceAll(RegExp(r'\s'), '');
       await ref.read(authStateProvider.notifier).register(
-            email: _emailController.text,
+            email: _emailController.text.trim(),
             password: _passwordController.text,
-            displayName: _displayNameController.text.trim(),
+            displayName: displayName,
           );
       if (mounted) context.go('/');
     } catch (e) {
@@ -111,11 +113,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         TextFormField(
                           controller: _displayNameController,
                           textInputAction: TextInputAction.next,
+                          maxLength: 20,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                            LengthLimitingTextInputFormatter(20),
+                          ],
                           decoration: const InputDecoration(
-                            labelText: 'Имя (как показывать другим)',
-                            hintText: 'Игрок',
+                            labelText: 'Имя (логин)',
+                            hintText: 'Без пробелов, до 20 символов',
                             prefixIcon: Icon(Icons.person_outline_rounded),
+                            counterText: '',
                           ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Введите имя';
+                            }
+                            if (v.contains(RegExp(r'\s'))) {
+                              return 'Имя без пробелов';
+                            }
+                            if (v.length > 20) return 'Максимум 20 символов';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(

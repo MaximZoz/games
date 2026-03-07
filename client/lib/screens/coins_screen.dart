@@ -122,9 +122,9 @@ class _DailyRewardCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Ежедневная награда',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -134,7 +134,7 @@ class _DailyRewardCard extends StatelessWidget {
                           Text(
                             errorMessage ??
                                 (available
-                                    ? '20 бронзовых монет (раз в день)'
+                                    ? '20 бронзовых монет'
                                     : 'Уже получено сегодня'),
                             style: const TextStyle(
                               fontSize: 14,

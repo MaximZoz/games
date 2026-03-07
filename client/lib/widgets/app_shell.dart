@@ -192,16 +192,20 @@ class AppShell extends ConsumerWidget {
                                     tooltip: 'Админка',
                                   ),
                                 Flexible(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 4),
-                                    child: Text(
-                                      user.displayName ?? user.email,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textPrimary,
-                                        decoration: TextDecoration.none,
+                                  child: Tooltip(
+                                    message: user.displayName ?? user.email,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: Text(
+                                        user.displayName ?? user.email,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textPrimary,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
