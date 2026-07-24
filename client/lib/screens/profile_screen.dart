@@ -1323,7 +1323,7 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
 
       final tx = (_viewportSize - _baseWidth) / 2;
       final ty = (_viewportSize - _baseHeight) / 2;
-      _transformation.value = Matrix4.identity()..translateByDouble(tx, ty, 0, 1);
+      _transformation.value = Matrix4.identity()..translate(tx, ty);
 
       if (mounted) {
         setState(() => _ready = true);
