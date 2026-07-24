@@ -12,6 +12,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
 const List<_NavItem> _navItems = [
@@ -47,11 +48,23 @@ class AppShell extends ConsumerWidget {
     if (isAuthorized) {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
+      ref.listen(realtimeEventsProvider, (_, next) {
+        next.whenData((event) {
+          final type = event['type'];
+          if (type == 'daily_reward_available' || type == 'daily_reward_claimed') {
+            final available = event['available'] == true;
+            ref.read(dailyRewardFromRealtimeProvider.notifier).state = available;
+            ref.invalidate(dailyRewardAvailableProvider);
+          }
+        });
+      });
     }
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
     final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
     final gameInvitesCount = ref.watch(gameInvitesCountProvider);
+    final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
+    final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
@@ -134,79 +147,100 @@ class AppShell extends ConsumerWidget {
               padding: EdgeInsets.only(top: padding.top),
               child: SizedBox(
                 height: kToolbarHeight,
-                child: Row(
-                  children: [
-                    if ((narrow && (onFriends || onChatsList) ||
-                            (narrowLandscape && inChatRoom)) &&
-                        toolbarLeading != null)
-                      narrowLandscape && inChatRoom
-                          ? Expanded(
-                              child: Padding(
+                child: ClipRect(
+                  child: Row(
+                    children: [
+                      if ((narrow && (onFriends || onChatsList) ||
+                              (narrowLandscape && inChatRoom)) &&
+                          toolbarLeading != null)
+                        narrowLandscape && inChatRoom
+                            ? Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: toolbarLeading,
+                                ),
+                              )
+                            : Padding(
                                 padding: const EdgeInsets.only(left: 8),
                                 child: toolbarLeading,
-                              ),
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: toolbarLeading,
-                            )
-                    else
-                      const SizedBox.shrink(),
-                    const Spacer(),
-                    authState.when(
-                      data: (user) {
-                        if (user != null) {
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (user.isAdmin)
-                                IconButton(
-                                  icon: const Icon(Icons.admin_panel_settings),
-                                  onPressed: () => context.go('/admin'),
-                                  tooltip: 'Админка',
-                                ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 4),
-                                child: Text(
-                                  user.displayName ?? user.email,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textPrimary,
-                                    decoration: TextDecoration.none,
+                              )
+                      else if (isAuthorized)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: authState.when(
+                            data: (user) => user != null
+                                ? ToolbarBalanceChip(
+                                    bronze: user.balanceBronze,
+                                    coinSize: 18,
+                                  )
+                                : const SizedBox.shrink(),
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
+                        ),
+                      const Spacer(),
+                      authState.when(
+                        data: (user) {
+                          if (user != null) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (user.isAdmin)
+                                  IconButton(
+                                    icon: const Icon(Icons.admin_panel_settings),
+                                    onPressed: () => context.go('/admin'),
+                                    tooltip: 'Админка',
+                                  ),
+                                Flexible(
+                                  child: Tooltip(
+                                    message: user.displayName ?? user.email,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: Text(
+                                        user.displayName ?? user.email,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textPrimary,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.logout),
-                                onPressed: () async {
-                                  await ref.read(authStateProvider.notifier).logout();
-                                },
-                                tooltip: 'Выйти',
-                              ),
-                            ],
+                                IconButton(
+                                  icon: const Icon(Icons.logout),
+                                  onPressed: () async {
+                                    await ref.read(authStateProvider.notifier).logout();
+                                  },
+                                  tooltip: 'Выйти',
+                                ),
+                              ],
+                            );
+                          }
+                          return IconButton(
+                            icon: const Icon(Icons.login),
+                            onPressed: () => context.go('/login'),
+                            tooltip: 'Войти',
                           );
-                        }
-                        return IconButton(
+                        },
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        error: (_, __) => IconButton(
                           icon: const Icon(Icons.login),
                           onPressed: () => context.go('/login'),
                           tooltip: 'Войти',
-                        );
-                      },
-                      loading: () => const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                      error: (_, __) => IconButton(
-                        icon: const Icon(Icons.login),
-                        onPressed: () => context.go('/login'),
-                        tooltip: 'Войти',
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -234,6 +268,7 @@ class AppShell extends ConsumerWidget {
                                 incomingFriends,
                                 gamesMyTurn,
                                 gameInvitesCount,
+                                dailyRewardCount,
                                 selected: index == selectedIndex,
                               ),
                               label: Text(item.label),
@@ -268,13 +303,14 @@ class AppShell extends ConsumerWidget {
                         return BottomNavigationBarItem(
                           icon: _navIcon(
                               item, unreadChats, incomingFriends, gamesMyTurn,
-                              gameInvitesCount),
+                              gameInvitesCount, dailyRewardCount),
                           activeIcon: _navIcon(
                             item,
                             unreadChats,
                             incomingFriends,
                             gamesMyTurn,
                             gameInvitesCount,
+                            dailyRewardCount,
                             selected: true,
                           ),
                           label: item.label,
@@ -296,7 +332,8 @@ Widget _navIcon(
   int unreadChats,
   int incomingFriends,
   int gamesMyTurn,
-  int gameInvitesCount, {
+  int gameInvitesCount,
+  int dailyRewardCount, {
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
@@ -320,6 +357,8 @@ Widget _navIcon(
     badgeValue = incomingFriends;
   } else if (item.path == '/games') {
     badgeValue = gamesMyTurn + gameInvitesCount;
+  } else if (item.path == '/profile') {
+    badgeValue = dailyRewardCount;
   }
 
   if (badgeValue <= 0) {

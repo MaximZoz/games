@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -18,6 +20,26 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/router.dart';
+
+/// Индексы центральных клеток (запрещены для первого хода при first_move_restriction).
+List<int> _centerCellIndices(int gridSize) {
+  switch (gridSize) {
+    case 3:
+      return [4];
+    case 4:
+      return [5, 6, 9, 10];
+    case 5:
+      return [12];
+    case 6:
+      return [14, 15, 20, 21];
+    case 7:
+      return [24];
+    case 8:
+      return [27, 28, 35, 36];
+    default:
+      return [];
+  }
+}
 
 const List<IconData> _presetAvatarIcons = [
   Icons.face_rounded,
@@ -47,15 +69,18 @@ class TicTacToeGameScreen extends ConsumerStatefulWidget {
 class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   bool _isMakingMove = false;
+  bool _isSwapping = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   String? _rematchLobbyId;
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
+  bool _waitingForBotMove = false;
   Timer? _rematchPollTimer;
   Timer? _syncStateTimer;
   Timer? _chatsRefreshTimer;
+  Timer? _timeoutRetryTimer;
   late AnimationController _pulseController;
   String? _prevGameStatus;
 
@@ -102,7 +127,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     ref.invalidate(gameStateProvider(widget.gameId));
     ref.invalidate(activeGameProvider);
     _syncStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted) return;
+      if (!mounted || _waitingForBotMove) return;
       ref.invalidate(gameStateProvider(widget.gameId));
       ref.invalidate(activeGameProvider);
     });
@@ -121,7 +146,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       (_, next) {
         final type = next.valueOrNull?['type']?.toString() ?? '';
         if (type == 'game_state' &&
-            next.valueOrNull?['game_id'] == widget.gameId) {
+            next.valueOrNull?['game_id'] == widget.gameId &&
+            !_waitingForBotMove) {
           ref.invalidate(gameStateProvider(widget.gameId));
         }
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
@@ -175,26 +201,66 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     });
   }
 
+  void _onTurnTimeExpired() {
+    _timeoutRetryTimer?.cancel();
+    void doRefresh() {
+      ref.invalidate(gameStateProvider(widget.gameId));
+      ref.invalidate(activeGameProvider);
+      if (mounted) setState(() {});
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => doRefresh());
+    _timeoutRetryTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (!mounted) return;
+      doRefresh();
+      _timeoutRetryTimer = null;
+    });
+  }
+
   @override
   void dispose() {
     chatsRouteObserver.unsubscribe(this);
     _rematchPollTimer?.cancel();
     _syncStateTimer?.cancel();
     _chatsRefreshTimer?.cancel();
+    _timeoutRetryTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final override = ref.watch(gameStateOverrideProvider(widget.gameId));
     final gameAsync = ref.watch(gameStateProvider(widget.gameId));
+    // При наличии override (после победного хода) показываем сразу, без ожидания refetch
+    final effectiveGameAsync =
+        override != null ? AsyncData(override) : gameAsync;
     final currentUser = ref.watch(authStateProvider).valueOrNull;
     final activeGame = ref.watch(activeGameProvider).valueOrNull;
 
     ref.listen(gameStateProvider(widget.gameId), (_, next) {
       next.whenOrNull(
+        data: (_) {
+          if (!mounted) return;
+          // Во время ожидания хода бота не сбрасываем override — иначе старый fetch может вернуть данные без нашего хода
+          if (_waitingForBotMove) return;
+          ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state =
+              false;
+          if (override != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+                    null;
+              }
+            });
+          }
+        },
         error: (_, __) => WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) context.go('/games');
+          if (mounted) {
+            _waitingForBotMove = false;
+            ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state =
+                false;
+            context.go('/games');
+          }
         }),
       );
     });
@@ -227,12 +293,19 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          onPressed: () => _handleClose(gameAsync.valueOrNull),
+          onPressed: () => _handleClose(effectiveGameAsync.valueOrNull),
           icon: const Icon(Icons.close_rounded),
         ),
         title: const Text('Крестики-нолики'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.rule_rounded),
+            tooltip: 'Правила игры',
+            onPressed: () => _showGameRules(context),
+          ),
+        ],
       ),
-      body: gameAsync.when(
+      body: effectiveGameAsync.when(
         data: (game) {
           final isOver = game.status != 'active';
           final opponentId =
@@ -246,6 +319,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   .read(gameInvitesProvider.notifier)
                   .removeByCreatorId(opponentId);
             }
+            unawaited(ref.read(authStateProvider.notifier).refresh());
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 setState(() {
@@ -263,14 +337,18 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final isMyTurnFromGame =
               (game.turn == 'x' && game.xUserId == currentUser?.id) ||
                   (game.turn == 'o' && game.oUserId == currentUser?.id);
-          final isMyTurn = (activeGame != null &&
-                  activeGame.type == 'game' &&
-                  activeGame.gameId == widget.gameId)
-              ? activeGame.isMyTurn
-              : isMyTurnFromGame;
-          final opponentName = game.xUserId == currentUser?.id
-              ? (game.oDisplayName ?? 'Соперник')
-              : (game.xDisplayName ?? 'Соперник');
+          // При override (наш ход, ждём бота) — не доверяем activeGame, он может быть устаревшим
+          final isMyTurn = (override != null ||
+                  activeGame == null ||
+                  activeGame.type != 'game' ||
+                  activeGame.gameId != widget.gameId)
+              ? isMyTurnFromGame
+              : activeGame.isMyTurn;
+          final opponentName = opponentId.startsWith('bot:')
+              ? 'Бот'
+              : (game.xUserId == currentUser?.id
+                  ? (game.oDisplayName ?? 'Соперник')
+                  : (game.xDisplayName ?? 'Соперник'));
           final opponentAvatarKind = game.xUserId == currentUser?.id
               ? game.oAvatarKind
               : game.xAvatarKind;
@@ -285,15 +363,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               statusText = iWon
                   ? (game.forfeit
                       ? 'Вы победили, соперник вышел'
-                      : 'Вы победили!')
-                  : 'Победил $opponentName';
+                      : game.timeout
+                          ? 'Вы победили, время соперника вышло'
+                          : 'Вы победили!')
+                  : (game.timeout
+                      ? 'Время вышло. Победил $opponentName'
+                      : 'Победил $opponentName');
             } else if (game.status == 'o_won') {
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
                       ? 'Вы победили, соперник вышел'
-                      : 'Вы победили!')
-                  : 'Победил $opponentName';
+                      : game.timeout
+                          ? 'Вы победили, время соперника вышло'
+                          : 'Вы победили!')
+                  : (game.timeout
+                      ? 'Время вышло. Победил $opponentName'
+                      : 'Победил $opponentName');
             } else if (game.status == 'draw') {
               statusText = 'Ничья';
             }
@@ -301,19 +387,35 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             statusText = isMyTurn ? 'Ваш ход' : 'Ход соперника';
           }
 
+          final showSwapButton = !isOver &&
+              game.canSwap &&
+              isMyTurn &&
+              !_isSwapping &&
+              !_isMakingMove;
+
+          final iWon = isOver &&
+              ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
+                  (game.status == 'o_won' && game.oUserId == currentUser?.id));
           final isDesktop = isWide(context);
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: isDesktop
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
+          final narrow = isNarrow(context);
+          final contentPadding = narrow ? 12.0 : 24.0;
+          final verticalSpacing = narrow ? 10.0 : 20.0;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.all(contentPadding),
+                  child: (isDesktop
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
                         _OpponentCard(
                           opponentId: opponentId,
                           displayName: opponentName,
                           avatarKind: opponentAvatarKind,
                           avatarValue: opponentAvatarValue,
+                          isBot: opponentId.startsWith('bot:'),
                           friendsSnapshot:
                               ref.watch(friendsSnapshotProvider).valueOrNull,
                           chatsList: ref.watch(chatsListProvider).valueOrNull ??
@@ -331,17 +433,45 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               context, opponentId, opponentName,
                               requestId: requestId),
                         ),
-                        const SizedBox(height: 20),
-                        Text(
-                          statusText,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                        ),
+                          SizedBox(height: verticalSpacing),
+                          Text(
+                            statusText,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                  fontSize: narrow ? 15 : null,
+                                ),
+                          ),
+                        if (showSwapButton)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: OutlinedButton.icon(
+                              onPressed: () => _swapSides(),
+                              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                              label: const Text('Сменить стороны'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentStart,
+                                side: BorderSide(
+                                    color: AppColors.accentStart.withValues(alpha: 0.6)),
+                              ),
+                            ),
+                          ),
+                        if (!isOver &&
+                            game.turnTimeSec > 0 &&
+                            game.turnDeadline != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: _TurnCountdown(
+                              turnDeadline: game.turnDeadline!,
+                              isMyTurn: isMyTurn,
+                              onExpired: _onTurnTimeExpired,
+                            ),
+                          ),
                         if (isOver) ...[
-                          const SizedBox(height: 16),
+                          SizedBox(height: verticalSpacing * 0.8),
                           _RematchSection(
                             rematchLobbyId: _rematchLobbyId,
                             rematchDeclined: _rematchDeclined,
@@ -356,9 +486,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                             onDecline: _declineRematch,
                             onCancelWait: _cancelRematchWait,
                             onFindGame: () => _findGame(context),
+                            compact: narrow,
                           ),
                         ],
-                        const SizedBox(height: 20),
+                        SizedBox(height: verticalSpacing),
                         Expanded(
                           child: Center(
                             child: _GameBoard(
@@ -368,80 +499,127 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               isMakingMove: _isMakingMove,
                               onMove: _makeMove,
                               pulseController: _pulseController,
+                              compact: narrow,
                             ),
                           ),
                         ),
                       ],
                     )
-                  : SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _OpponentCard(
-                            opponentId: opponentId,
-                            displayName: opponentName,
-                            avatarKind: opponentAvatarKind,
-                            avatarValue: opponentAvatarValue,
-                            friendsSnapshot:
-                                ref.watch(friendsSnapshotProvider).valueOrNull,
-                            chatsList:
-                                ref.watch(chatsListProvider).valueOrNull ??
-                                    const [],
-                            onInfoTap: () => _showOpponentInfo(
-                              context,
-                              opponentId: opponentId,
-                              displayName: opponentName,
-                              avatarKind: opponentAvatarKind,
-                              avatarValue: opponentAvatarValue,
-                            ),
-                            onMessageTap: () =>
-                                _openChat(context, opponentId, opponentName),
-                            onAddFriendTap: (requestId) => _addFriend(
-                                context, opponentId, opponentName,
-                                requestId: requestId),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            statusText,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                      : Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Flexible(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _OpponentCard(
+                                      opponentId: opponentId,
+                                      displayName: opponentName,
+                                      avatarKind: opponentAvatarKind,
+                                      avatarValue: opponentAvatarValue,
+                                      isBot: opponentId.startsWith('bot:'),
+                                      friendsSnapshot:
+                                          ref.watch(friendsSnapshotProvider).valueOrNull,
+                                      chatsList:
+                                          ref.watch(chatsListProvider).valueOrNull ??
+                                              const [],
+                                      onInfoTap: () => _showOpponentInfo(
+                                        context,
+                                        opponentId: opponentId,
+                                        displayName: opponentName,
+                                        avatarKind: opponentAvatarKind,
+                                        avatarValue: opponentAvatarValue,
+                                      ),
+                                      onMessageTap: () =>
+                                          _openChat(context, opponentId, opponentName),
+                                      onAddFriendTap: (requestId) => _addFriend(
+                                          context, opponentId, opponentName,
+                                          requestId: requestId),
+                                    ),
+                                    SizedBox(height: verticalSpacing),
+                                    Text(
+                                      statusText,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                            fontSize: narrow ? 15 : null,
+                                          ),
+                                    ),
+                                    if (showSwapButton)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12),
+                                        child: OutlinedButton.icon(
+                                          onPressed: () => _swapSides(),
+                                          icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                                          label: const Text('Сменить стороны'),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: AppColors.accentStart,
+                                            side: BorderSide(
+                                                color: AppColors.accentStart.withValues(alpha: 0.6)),
+                                          ),
+                                        ),
+                                      ),
+                                    if (!isOver &&
+                                        game.turnTimeSec > 0 &&
+                                        game.turnDeadline != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: _TurnCountdown(
+                                          turnDeadline: game.turnDeadline!,
+                                          isMyTurn: isMyTurn,
+                                          onExpired: _onTurnTimeExpired,
+                                        ),
+                                      ),
+                                    if (isOver) ...[
+                                      SizedBox(height: verticalSpacing * 0.8),
+                                      _RematchSection(
+                                        rematchLobbyId: _rematchLobbyId,
+                                        rematchDeclined: _rematchDeclined,
+                                        iDeclinedRematch: _iDeclinedRematch,
+                                        isRematching: _isRematching,
+                                        isAcceptingRematch: _isAcceptingRematch,
+                                        isFindingGame: _isFindingGame,
+                                        opponentId: opponentId,
+                                        invites: ref.watch(gameInvitesProvider),
+                                        onRematch: () => _rematch(context),
+                                        onAccept: _acceptRematch,
+                                        onDecline: _declineRematch,
+                                        onCancelWait: _cancelRematchWait,
+                                        onFindGame: () => _findGame(context),
+                                        compact: narrow,
+                                      ),
+                                    ],
+                                    SizedBox(height: verticalSpacing),
+                                  ],
                                 ),
-                          ),
-                          if (isOver) ...[
-                            const SizedBox(height: 16),
-                            _RematchSection(
-                              rematchLobbyId: _rematchLobbyId,
-                              rematchDeclined: _rematchDeclined,
-                              iDeclinedRematch: _iDeclinedRematch,
-                              isRematching: _isRematching,
-                              isAcceptingRematch: _isAcceptingRematch,
-                              isFindingGame: _isFindingGame,
-                              opponentId: opponentId,
-                              invites: ref.watch(gameInvitesProvider),
-                              onRematch: () => _rematch(context),
-                              onAccept: _acceptRematch,
-                              onDecline: _declineRematch,
-                              onCancelWait: _cancelRematchWait,
-                              onFindGame: () => _findGame(context),
+                              ),
+                            ),
+                            Expanded(
+                              child: Center(
+                                child: _GameBoard(
+                                  game: game,
+                                  isMyTurn: isMyTurn,
+                                  isOver: isOver,
+                                  isMakingMove: _isMakingMove,
+                                  onMove: _makeMove,
+                                  pulseController: _pulseController,
+                                  compact: narrow,
+                                ),
+                              ),
                             ),
                           ],
-                          const SizedBox(height: 24),
-                          _GameBoard(
-                            game: game,
-                            isMyTurn: isMyTurn,
-                            isOver: isOver,
-                            isMakingMove: _isMakingMove,
-                            onMove: _makeMove,
-                            pulseController: _pulseController,
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
+                        )),
+                ),
+              ),
+              if (iWon)
+                Positioned.fill(
+                  child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
+                ),
+            ],
           );
         },
         loading: () => const Center(
@@ -501,20 +679,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         final gameId = result.gameId!;
         ref.invalidate(gameStateProvider(gameId));
         if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         context.go('/games/tictactoe/game/$gameId');
       }
     } on GamesException catch (e) {
+      if (!context.mounted) return;
       // 409 = одновременный реванш: соперник уже принял наше приглашение, игра создана
-      if (e.statusCode == 409 && context.mounted) {
+      if (e.statusCode == 409) {
         ref.invalidate(activeGameProvider);
         final active = await ref.read(activeGameProvider.future);
-        if (!context.mounted) return;
+        if (!mounted) return;
         if (active != null && active.type == 'game' && active.gameId != null && active.gameId!.isNotEmpty) {
           context.go('/games/tictactoe/game/${active.gameId}');
         } else {
           _redirectToGamesOnError();
         }
-      } else if (context.mounted) {
+      } else {
         _redirectToGamesOnError();
       }
     } catch (_) {
@@ -546,7 +726,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isFindingGame = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      final result = await repo.createLobby(mode: 'matchmake');
+      final addBotsAfter30s = ref.read(addBotsAfter30sProvider);
+      final result = await repo.createLobby(
+        mode: 'matchmake',
+        addBotsAfter30s: addBotsAfter30s,
+      );
       if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
       if (result.matched && result.gameId != null) {
@@ -639,14 +823,48 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     ref.watch(friendsSnapshotProvider).valueOrNull;
                 final presence =
                     ref.watch(presenceMapProvider).valueOrNull ?? const {};
-                FriendItem? friendItem;
+                final chatsList =
+                    ref.watch(chatsListProvider).valueOrNull ?? const [];
+                FriendUserItem? friendUser;
                 for (final f in friendsSnapshot?.friends ?? []) {
                   if (f.user.id == opponentId) {
-                    friendItem = f;
+                    friendUser = f.user;
                     break;
                   }
                 }
-                final friendUser = friendItem?.user;
+                if (friendUser == null) {
+                  for (final r in friendsSnapshot?.incoming ?? []) {
+                    if (r.user.id == opponentId) {
+                      friendUser = r.user;
+                      break;
+                    }
+                  }
+                }
+                if (friendUser == null) {
+                  for (final r in friendsSnapshot?.outgoing ?? []) {
+                    if (r.user.id == opponentId) {
+                      friendUser = r.user;
+                      break;
+                    }
+                  }
+                }
+                if (friendUser == null) {
+                  for (final chat in chatsList) {
+                    if (chat.user.id == opponentId) {
+                      friendUser = FriendUserItem(
+                        id: chat.user.id,
+                        email: '',
+                        displayName: chat.user.displayName,
+                        avatarKind: chat.user.avatarKind,
+                        avatarValue: chat.user.avatarValue,
+                        age: chat.user.age,
+                        gender: chat.user.gender,
+                        about: chat.user.about,
+                      );
+                      break;
+                    }
+                  }
+                }
                 final presenceEntry = presence[opponentId];
                 final statusText = presenceEntry == null
                     ? null
@@ -800,6 +1018,74 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     }
   }
 
+  void _showGameRules(BuildContext context) {
+    final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    if (game == null) return;
+    final rulesText = buildTictactoeRulesText(
+      gridSize: game.gridSize,
+      turnTimeSec: game.turnTimeSec,
+      swapRule: game.swapRule,
+      firstMoveRestriction: game.firstMoveRestriction,
+    );
+    final isDesktop = MediaQuery.sizeOf(context).width >= 700;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 80 : 14,
+          vertical: isDesktop ? 40 : 20,
+        ),
+        backgroundColor: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 380 : double.infinity,
+          ),
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Правила игры',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  child: Text(
+                    rulesText,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openChat(
     BuildContext ctx,
     String userId,
@@ -931,8 +1217,33 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isMakingMove = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      await repo.makeMove(widget.gameId, cell);
-      if (mounted) {
+      final response = await repo.makeMove(widget.gameId, cell);
+      if (!mounted) return;
+      final isBotGame = response.xUserId.startsWith('bot:') ||
+          response.oUserId.startsWith('bot:');
+      // Для бота: сразу блокируем invalidate, чтобы realtime/другие события не сбросили ход
+      if (isBotGame) {
+        _waitingForBotMove = true;
+        ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state =
+            true;
+      }
+      // Сразу показываем свой ход (через override)
+      ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+          response;
+      setState(() {}); // Принудительный ребилд, чтобы ход отрисовался сразу
+      if (response.status != 'active') {
+        ref.invalidate(gameStateProvider(widget.gameId));
+        ref.invalidate(activeGameProvider);
+      } else if (isBotGame) {
+        // С ботом: ~1.5 сек задержка (бот ходит ~1 сек), затем запрос хода бота
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (!mounted) return;
+          _waitingForBotMove = false;
+          ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state = false;
+          ref.invalidate(gameStateProvider(widget.gameId));
+          ref.invalidate(activeGameProvider);
+        });
+      } else {
         ref.invalidate(gameStateProvider(widget.gameId));
         ref.invalidate(activeGameProvider);
       }
@@ -940,6 +1251,24 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isMakingMove = false);
+    }
+  }
+
+  Future<void> _swapSides() async {
+    setState(() => _isSwapping = true);
+    try {
+      final repo = ref.read(gamesRepositoryProvider);
+      final response = await repo.swapSides(widget.gameId);
+      if (mounted) {
+        ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+            response;
+        ref.invalidate(gameStateProvider(widget.gameId));
+        ref.invalidate(activeGameProvider);
+      }
+    } catch (e) {
+      if (mounted) _redirectToGamesOnError();
+    } finally {
+      if (mounted) setState(() => _isSwapping = false);
     }
   }
 }
@@ -1021,6 +1350,7 @@ class _RematchSection extends StatelessWidget {
     required this.onDecline,
     required this.onCancelWait,
     required this.onFindGame,
+    this.compact = false,
   });
 
   final String? rematchLobbyId;
@@ -1036,6 +1366,7 @@ class _RematchSection extends StatelessWidget {
   final void Function(String lobbyId) onDecline;
   final VoidCallback? onCancelWait;
   final VoidCallback onFindGame;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -1046,10 +1377,10 @@ class _RematchSection extends StatelessWidget {
     if (isAcceptingRematch) {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: const [
           Icon(Icons.hourglass_empty_rounded,
               size: 20, color: AppColors.accentStart),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Подключение к игре...',
             style: TextStyle(
@@ -1070,10 +1401,10 @@ class _RematchSection extends StatelessWidget {
             'Соперник предлагает реванш',
             style: TextStyle(
               color: AppColors.textSecondary,
-              fontSize: 14,
+              fontSize: compact ? 13 : 14,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: compact ? 8 : 12),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1081,7 +1412,7 @@ class _RematchSection extends StatelessWidget {
                 onPressed: () => onDecline(rematchOffer.lobbyId),
                 child: const Text('Отклонить'),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: compact ? 8 : 12),
               FilledButton(
                 onPressed: () => onAccept(rematchOffer.lobbyId),
                 style: FilledButton.styleFrom(
@@ -1101,6 +1432,7 @@ class _RematchSection extends StatelessWidget {
         isFindingGame: isFindingGame,
         onRematch: onRematch,
         onFindGame: onFindGame,
+        compact: compact,
       );
     }
     if (rematchDeclined) {
@@ -1111,16 +1443,17 @@ class _RematchSection extends StatelessWidget {
             'Соперник отклонил предложение поиграть',
             style: TextStyle(
               color: AppColors.textSecondary,
-              fontSize: 14,
+              fontSize: compact ? 13 : 14,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: compact ? 8 : 12),
           _buildRematchButtons(
             isRematching: isRematching,
             isFindingGame: isFindingGame,
             onRematch: onRematch,
             onFindGame: onFindGame,
+            compact: compact,
           ),
         ],
       );
@@ -1133,20 +1466,20 @@ class _RematchSection extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.hourglass_empty_rounded,
-                  size: 20, color: AppColors.accentStart),
-              const SizedBox(width: 8),
+                  size: compact ? 18 : 20, color: AppColors.accentStart),
+              SizedBox(width: compact ? 6 : 8),
               Text(
                 'Ожидание соперника',
                 style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: 15,
+                  fontSize: compact ? 14 : 15,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
           if (onCancelWait != null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: compact ? 8 : 12),
             TextButton(
               onPressed: onCancelWait,
               child: const Text('Отмена'),
@@ -1160,6 +1493,7 @@ class _RematchSection extends StatelessWidget {
       isFindingGame: isFindingGame,
       onRematch: onRematch,
       onFindGame: onFindGame,
+      compact: compact,
     );
   }
 
@@ -1168,45 +1502,49 @@ class _RematchSection extends StatelessWidget {
     required bool isFindingGame,
     required VoidCallback onRematch,
     required VoidCallback onFindGame,
+    bool compact = false,
   }) {
+    final btnPadding = compact
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+        : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
     return Wrap(
       alignment: WrapAlignment.center,
-      spacing: 12,
-      runSpacing: 8,
+      spacing: compact ? 8 : 12,
+      runSpacing: compact ? 6 : 8,
       children: [
         FilledButton.icon(
           onPressed: isRematching ? null : onRematch,
           icon: isRematching
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
+              ? SizedBox(
+                  width: compact ? 16 : 18,
+                  height: compact ? 16 : 18,
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2,
                     color: Colors.white,
                   ),
                 )
-              : const Icon(Icons.replay_rounded, size: 20),
-          label: Text(isRematching ? 'Создание...' : 'Сыграть ещё раз'),
+              : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
+          label: Text(isRematching ? 'Создание...' : 'Повторить'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentStart,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: btnPadding,
           ),
         ),
         OutlinedButton.icon(
           onPressed: isFindingGame ? null : onFindGame,
           icon: isFindingGame
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+              ? SizedBox(
+                  width: compact ? 16 : 18,
+                  height: compact ? 16 : 18,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.search_rounded, size: 20),
-          label: Text(isFindingGame ? 'Поиск...' : 'Найти другую игру'),
+              : Icon(Icons.search_rounded, size: compact ? 18 : 20),
+          label: Text(isFindingGame ? 'Поиск...' : 'Другой соперник'),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.accentStart,
             side: BorderSide(color: AppColors.accentStart),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: btnPadding,
           ),
         ),
       ],
@@ -1220,6 +1558,7 @@ class _OpponentCard extends StatelessWidget {
     required this.displayName,
     required this.avatarKind,
     required this.avatarValue,
+    this.isBot = false,
     required this.friendsSnapshot,
     required this.chatsList,
     required this.onInfoTap,
@@ -1231,6 +1570,7 @@ class _OpponentCard extends StatelessWidget {
   final String displayName;
   final String avatarKind;
   final String? avatarValue;
+  final bool isBot;
   final FriendsSnapshot? friendsSnapshot;
   final List<ChatPreviewItem> chatsList;
   final VoidCallback onInfoTap;
@@ -1258,8 +1598,12 @@ class _OpponentCard extends StatelessWidget {
         .map((c) => c.unreadCount)
         .fold<int>(0, (a, b) => a + b);
 
+    final narrow = isNarrow(context);
     final card = GradientCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: narrow ? 12 : 16,
+        vertical: narrow ? 8 : 12,
+      ),
       margin: EdgeInsets.zero,
       animate: false,
       child: Row(
@@ -1270,38 +1614,41 @@ class _OpponentCard extends StatelessWidget {
             displayName: displayName,
             avatarKind: avatarKind,
             avatarValue: avatarValue,
+            compact: narrow,
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: narrow ? 10 : 14),
           Flexible(
             child: Text(
               displayName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 16,
+                fontSize: narrow ? 14 : 16,
                 color: AppColors.textPrimary,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          _IconWithBadge(
-            icon: Icons.chat_bubble_outline_rounded,
-            badge: messageBadge,
-            tooltip: 'Написать сообщение',
-            onPressed: onMessageTap,
-          ),
-          if (!isFriend)
+          if (!isBot) ...[
             _IconWithBadge(
-              icon: Icons.person_add_alt_1_rounded,
-              badge: hasIncoming ? 1 : 0,
-              tooltip: hasIncoming
-                  ? 'Принять заявку'
-                  : (addFriendEnabled
-                      ? 'Добавить в друзья'
-                      : 'Заявка отправлена'),
-              onPressed: addFriendEnabled
-                  ? () => onAddFriendTap(hasIncoming ? incomingRequestId : null)
-                  : null,
+              icon: Icons.chat_bubble_outline_rounded,
+              badge: messageBadge,
+              tooltip: 'Написать сообщение',
+              onPressed: onMessageTap,
             ),
+            if (!isFriend)
+              _IconWithBadge(
+                icon: Icons.person_add_alt_1_rounded,
+                badge: hasIncoming ? 1 : 0,
+                tooltip: hasIncoming
+                    ? 'Принять заявку'
+                    : (addFriendEnabled
+                        ? 'Добавить в друзья'
+                        : 'Заявка отправлена'),
+                onPressed: addFriendEnabled
+                    ? () => onAddFriendTap(hasIncoming ? incomingRequestId : null)
+                    : null,
+              ),
+          ],
           _IconWithBadge(
             icon: Icons.info_outline_rounded,
             tooltip: 'Информация о пользователе',
@@ -1327,21 +1674,24 @@ class _OpponentAvatar extends StatelessWidget {
     required this.displayName,
     required this.avatarKind,
     required this.avatarValue,
+    this.compact = false,
   });
 
   final String displayName;
   final String avatarKind;
   final String? avatarValue;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final r = compact ? 18.0 : 22.0;
     if (avatarKind == 'file' &&
         avatarValue != null &&
         avatarValue!.trim().isNotEmpty) {
       final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
       if (img != null) {
         return CircleAvatar(
-          radius: 22,
+          radius: r,
           backgroundImage: img,
         );
       }
@@ -1350,7 +1700,7 @@ class _OpponentAvatar extends StatelessWidget {
       final idx = int.tryParse(avatarValue!);
       if (idx != null && idx >= 0 && idx < _presetAvatarIcons.length) {
         return CircleAvatar(
-          radius: 22,
+          radius: r,
           backgroundColor: AppColors.accentSoft,
           child: Icon(_presetAvatarIcons[idx], color: AppColors.accentStart),
         );
@@ -1359,13 +1709,14 @@ class _OpponentAvatar extends StatelessWidget {
     final letter =
         displayName.trim().isEmpty ? '?' : displayName[0].toUpperCase();
     return CircleAvatar(
-      radius: 22,
+      radius: r,
       backgroundColor: AppColors.accentSoft,
       child: Text(
         letter,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,
+          fontSize: compact ? 14 : 16,
         ),
       ),
     );
@@ -1380,6 +1731,7 @@ class _GameBoard extends StatelessWidget {
     required this.isMakingMove,
     required this.onMove,
     required this.pulseController,
+    this.compact = false,
   });
 
   final GameStateItem game;
@@ -1388,112 +1740,527 @@ class _GameBoard extends StatelessWidget {
   final bool isMakingMove;
   final ValueChanged<int> onMove;
   final AnimationController pulseController;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.12),
-            blurRadius: 20,
-            offset: Offset.zero,
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: Offset.zero,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: CustomPaint(
-                painter: _GridPainter(),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final cellW = constraints.maxWidth / 3;
-                    final cellH = constraints.maxHeight / 3;
-                    return Stack(
-                      children: List.generate(9, (i) {
-                        final row = i ~/ 3;
-                        final col = i % 3;
-                        final cell = game.board[i];
-                        return Positioned(
-                          left: col * cellW + 4,
-                          top: row * cellH + 4,
-                          width: cellW - 8,
-                          height: cellH - 8,
-                          child: _AnimatedGameCell(
-                            symbol: cell,
-                            isMyTurn: isMyTurn && !isOver && !isMakingMove,
-                            canTap: cell.isEmpty,
-                            onTap: () => (cell.isEmpty &&
-                                    isMyTurn &&
-                                    !isOver &&
-                                    !isMakingMove)
-                                ? onMove(i)
-                                : null,
-                            pulse: isMyTurn && cell.isEmpty
-                                ? pulseController
-                                : null,
-                          ),
-                        );
-                      }),
-                    );
-                  },
+    final gridSize = game.gridSize;
+    final n = gridSize * gridSize;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var maxW = constraints.maxWidth;
+        var maxH = constraints.maxHeight;
+        if (!maxW.isFinite) maxW = 400;
+        if (!maxH.isFinite) maxH = 400;
+        final minBoard = compact ? 140.0 : 200.0;
+        final maxBoard = compact ? 380.0 : 420.0;
+        final maxSide =
+            (maxW > maxH ? maxH : maxW).clamp(minBoard, maxBoard);
+        final boardSize = maxSide;
+        final boardMargin = compact ? 8.0 : 12.0;
+        return Center(
+          child: Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: compact ? 8 : 16,
+              vertical: boardMargin,
+            ),
+            width: boardSize,
+            height: boardSize,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accentStart.withValues(alpha: 0.12),
+                  blurRadius: 20,
+                  offset: Offset.zero,
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: Offset.zero,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(
+                    compact ? 6 : (boardSize > 280 ? 12 : 8),
+                  ),
+                  child: _WinningLineOverlay(
+                    winningCells: game.effectiveWinningCells,
+                    gridSize: gridSize,
+                    child: CustomPaint(
+                      painter: _GridPainter(gridSize: gridSize),
+                      child: LayoutBuilder(
+                        builder: (context, innerConstraints) {
+                          final cellW =
+                              innerConstraints.maxWidth / gridSize;
+                          final cellH =
+                              innerConstraints.maxHeight / gridSize;
+                          final gap = boardSize > 280 ? 4.0 : 2.0;
+                          final isFirstMoveX = game.turn == 'x' &&
+                              game.board.every((c) => c.isEmpty);
+                          final forbiddenCenters = game.firstMoveRestriction &&
+                                  isFirstMoveX
+                              ? _centerCellIndices(gridSize)
+                              : <int>[];
+                          return Stack(
+                            children: List.generate(n, (i) {
+                              final row = i ~/ gridSize;
+                              final col = i % gridSize;
+                              final cell =
+                                  i < game.board.length ? game.board[i] : '';
+                              final isForbiddenCenter =
+                                  cell.isEmpty && forbiddenCenters.contains(i);
+                              final cellCanTap = cell.isEmpty &&
+                                  !isForbiddenCenter &&
+                                  isMyTurn &&
+                                  !isOver &&
+                                  !isMakingMove;
+                              return Positioned(
+                                left: col * cellW + gap,
+                                top: row * cellH + gap,
+                                width: cellW - gap * 2,
+                                height: cellH - gap * 2,
+                                child: _AnimatedGameCell(
+                                  symbol: cell,
+                                  isMyTurn:
+                                      isMyTurn && !isOver && !isMakingMove,
+                                  canTap: cellCanTap,
+                                  isForbidden: isForbiddenCenter,
+                                  onTap: cellCanTap ? () => onMove(i) : null,
+                                  pulse: cellCanTap ? pulseController : null,
+                                ),
+                              );
+                            }),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+class _WinningLineOverlay extends StatefulWidget {
+  const _WinningLineOverlay({
+    required this.winningCells,
+    required this.gridSize,
+    required this.child,
+  });
+
+  final List<int>? winningCells;
+  final int gridSize;
+  final Widget child;
+
+  @override
+  State<_WinningLineOverlay> createState() => _WinningLineOverlayState();
+}
+
+class _WinningLineOverlayState extends State<_WinningLineOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wc = widget.winningCells;
+    if (wc == null || wc.length < 3) {
+      return widget.child;
+    }
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        widget.child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _animation,
+              builder: (context, _) {
+                return CustomPaint(
+                  painter: _WinningLinePainter(
+                    winningCells: wc,
+                    gridSize: widget.gridSize,
+                    progress: _animation.value,
+                  ),
+                );
+              },
+            ),
+          ),
         ),
+      ],
+    );
+  }
+}
+
+class _WinningLinePainter extends CustomPainter {
+  _WinningLinePainter({
+    required this.winningCells,
+    required this.gridSize,
+    required this.progress,
+  });
+
+  final List<int> winningCells;
+  final int gridSize;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (winningCells.length < 3 ||
+        size.width <= 0 ||
+        size.height <= 0) {
+      return;
+    }
+    final cellW = size.width / gridSize;
+    final cellH = size.height / gridSize;
+    final points = winningCells.map((i) {
+      final row = i ~/ gridSize;
+      final col = i % gridSize;
+      return Offset(
+        (col + 0.5) * cellW,
+        (row + 0.5) * cellH,
+      );
+    }).toList();
+
+    final path = Path()..moveTo(points[0].dx, points[0].dy);
+    for (var i = 1; i < points.length; i++) {
+      path.lineTo(points[i].dx, points[i].dy);
+    }
+
+    final pathMetrics = path.computeMetrics();
+    final totalLength =
+        pathMetrics.isEmpty ? 0.0 : pathMetrics.first.length;
+    final drawLength = totalLength * progress;
+
+    final lineWidth = gridSize <= 3 ? 6.0 : (gridSize == 4 ? 5.0 : 4.0);
+    final glowPaint = Paint()
+      ..color = AppColors.accentStart.withValues(alpha: 0.35)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = lineWidth + 6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    final strokePaint = Paint()
+      ..color = AppColors.accentStart
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = lineWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    if (drawLength > 0 && pathMetrics.isNotEmpty) {
+      final extractPath =
+          pathMetrics.first.extractPath(0.0, drawLength);
+      canvas.drawPath(extractPath, glowPaint);
+      canvas.drawPath(extractPath, strokePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WinningLinePainter old) =>
+      old.progress != progress ||
+      old.winningCells != winningCells ||
+      old.gridSize != gridSize;
+}
+
+class _ConfettiOverlay extends StatefulWidget {
+  const _ConfettiOverlay({required this.winnerMark});
+
+  final String winnerMark;
+
+  @override
+  State<_ConfettiOverlay> createState() => _ConfettiOverlayState();
+}
+
+class _ConfettiOverlayState extends State<_ConfettiOverlay>
+    with SingleTickerProviderStateMixin {
+  static const _particleCount = 150;
+  late AnimationController _controller;
+  final List<_ConfettiParticle> _particles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    )..forward();
+
+    final r = math.Random();
+    final colors = [
+      AppColors.accentStart,
+      AppColors.accentEnd,
+      const Color(0xFFEC4899),
+      const Color(0xFFF59E0B),
+      const Color(0xFF10B981),
+    ];
+    for (var i = 0; i < _particleCount; i++) {
+      final angle = r.nextDouble() * 2 * math.pi;
+      final speed = 350 + r.nextDouble() * 450;
+      _particles.add(_ConfettiParticle(
+        startX: 0.5,
+        startY: 0.9,
+        angle: angle,
+        speed: speed,
+        color: colors[r.nextInt(colors.length)],
+        size: 4 + r.nextDouble() * 6,
+        rotationSpeed: (r.nextDouble() * 2 - 1) * 8,
+        gravity: 280 + r.nextDouble() * 120,
+      ));
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return CustomPaint(
+            painter: _ConfettiPainter(
+              particles: _particles,
+              progress: _controller.value,
+            ),
+          );
+        },
       ),
     );
   }
 }
 
+class _ConfettiParticle {
+  _ConfettiParticle({
+    required this.startX,
+    required this.startY,
+    required this.angle,
+    required this.speed,
+    required this.color,
+    required this.size,
+    required this.rotationSpeed,
+    required this.gravity,
+  });
+
+  final double startX;
+  final double startY;
+  final double angle;
+  final double speed;
+  final Color color;
+  final double size;
+  final double rotationSpeed;
+  final double gravity;
+}
+
+class _ConfettiPainter extends CustomPainter {
+  _ConfettiPainter({
+    required this.particles,
+    required this.progress,
+  });
+
+  final List<_ConfettiParticle> particles;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerX = size.width * 0.5;
+    final centerY = size.height * 0.35;
+    const burstT = 0.12;
+    const fadeStart = 0.55;
+    final minDim = math.min(size.width, size.height);
+    final scale = minDim / 400;
+
+    for (final p in particles) {
+      double t = progress;
+      if (t < burstT) {
+        t = t / burstT;
+        final x = centerX + math.cos(p.angle) * p.speed * t * scale;
+        final y = centerY + math.sin(p.angle) * p.speed * t * scale;
+        const alpha = 1.0;
+        _drawParticle(canvas, x, y, p, t * 2 * math.pi, alpha);
+      } else {
+        final fallT = (progress - burstT) / (1 - burstT);
+        final burstX = centerX + math.cos(p.angle) * p.speed * scale;
+        final burstY = centerY + math.sin(p.angle) * p.speed * scale;
+        final x = burstX + math.sin(fallT * 2) * 20;
+        final y = burstY + p.gravity * fallT * fallT * scale * 1.5;
+        final rot = fallT * p.rotationSpeed * math.pi;
+        final alpha = 1.0 -
+            ((progress - fadeStart) / (1 - fadeStart)).clamp(0.0, 1.0);
+        if (alpha > 0.01) {
+          _drawParticle(canvas, x, y, p, rot, alpha);
+        }
+      }
+    }
+  }
+
+  void _drawParticle(
+    Canvas canvas,
+    double x,
+    double y,
+    _ConfettiParticle p,
+    double rotation,
+    double alpha,
+  ) {
+    final paint = Paint()
+      ..color = p.color.withValues(alpha: alpha)
+      ..style = PaintingStyle.fill;
+    canvas.save();
+    canvas.translate(x, y);
+    canvas.rotate(rotation);
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset.zero,
+        width: p.size,
+        height: p.size * 0.6,
+      ),
+      paint,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConfettiPainter old) =>
+      old.progress != progress;
+}
+
 class _GridPainter extends CustomPainter {
+  _GridPainter({required this.gridSize});
+  final int gridSize;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = AppColors.accentSoft.withValues(alpha: 0.8)
-      ..strokeWidth = 3
+      ..strokeWidth = gridSize <= 3 ? 3 : (gridSize == 4 ? 2.5 : 2)
       ..style = PaintingStyle.stroke;
 
     final w = size.width;
     final h = size.height;
-    final thirdW = w / 3;
-    final thirdH = h / 3;
+    final cellW = w / gridSize;
+    final cellH = h / gridSize;
 
-    for (var i = 1; i < 3; i++) {
+    for (var i = 1; i < gridSize; i++) {
       canvas.drawLine(
-        Offset(thirdW * i, 0),
-        Offset(thirdW * i, h),
+        Offset(cellW * i, 0),
+        Offset(cellW * i, h),
         paint,
       );
       canvas.drawLine(
-        Offset(0, thirdH * i),
-        Offset(w, thirdH * i),
+        Offset(0, cellH * i),
+        Offset(w, cellH * i),
         paint,
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _GridPainter old) => old.gridSize != gridSize;
+}
+
+class _TurnCountdown extends StatefulWidget {
+  const _TurnCountdown({
+    required this.turnDeadline,
+    required this.isMyTurn,
+    required this.onExpired,
+  });
+
+  final int turnDeadline; // Unix sec
+  final bool isMyTurn;
+  final VoidCallback onExpired;
+
+  @override
+  State<_TurnCountdown> createState() => _TurnCountdownState();
+}
+
+class _TurnCountdownState extends State<_TurnCountdown> {
+  Timer? _timer;
+  int _remaining = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateRemaining();
+      if (_remaining <= 0) {
+        _timer?.cancel();
+        widget.onExpired();
+      }
+    });
+  }
+
+  void _updateRemaining() {
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    final r = widget.turnDeadline - now;
+    if (r != _remaining && mounted) {
+      setState(() => _remaining = r.clamp(0, 999));
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _remaining <= 5 && widget.isMyTurn
+        ? Colors.red
+        : AppColors.textSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.timer_outlined, size: 18, color: color),
+        const SizedBox(width: 6),
+        Text(
+          '$_remaining с',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
 }
 
 class _AnimatedGameCell extends StatelessWidget {
@@ -1501,6 +2268,7 @@ class _AnimatedGameCell extends StatelessWidget {
     required this.symbol,
     required this.isMyTurn,
     required this.canTap,
+    this.isForbidden = false,
     this.onTap,
     this.pulse,
   });
@@ -1508,6 +2276,7 @@ class _AnimatedGameCell extends StatelessWidget {
   final String symbol;
   final bool isMyTurn;
   final bool canTap;
+  final bool isForbidden;
   final VoidCallback? onTap;
   final AnimationController? pulse;
 
@@ -1528,9 +2297,11 @@ class _AnimatedGameCell extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  color: canTap && isMyTurn
-                      ? AppColors.accentSoft.withValues(alpha: 0.25)
-                      : Colors.transparent,
+                  color: isForbidden
+                      ? Colors.grey.withValues(alpha: 0.15)
+                      : canTap && isMyTurn
+                          ? AppColors.accentSoft.withValues(alpha: 0.25)
+                          : Colors.transparent,
                 ),
                 child: pulse != null && canTap && isMyTurn
                     ? AnimatedBuilder(
@@ -1572,12 +2343,15 @@ class _SymbolWidget extends StatelessWidget {
     if (symbol.isEmpty) return const SizedBox.shrink();
     final isX = symbol == 'x';
     final color = isX ? AppColors.accentStart : AppColors.accentEnd;
-    return AnimatedSwitcher(
-      duration: AppDurations.short,
-      child: CustomPaint(
-        key: ValueKey(symbol),
-        size: const Size.square(42),
-        painter: _SymbolPainter(isX: isX, color: color),
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: AnimatedSwitcher(
+        duration: AppDurations.short,
+        child: CustomPaint(
+          key: ValueKey(symbol),
+          size: const Size.square(42),
+          painter: _SymbolPainter(isX: isX, color: color),
+        ),
       ),
     );
   }

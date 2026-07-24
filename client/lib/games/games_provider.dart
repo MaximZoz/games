@@ -15,11 +15,25 @@ class GameInvite {
     required this.creatorId,
     required this.creatorName,
     required this.gameType,
+    this.turnTimeSec = 0,
+    this.gridSize = 3,
+    this.swapRule = false,
+    this.firstMoveRestriction = false,
+    this.creatorAvatarKind = 'letter',
+    this.creatorAvatarValue,
+    this.stakeBronze = 1,
   });
   final String lobbyId;
   final String creatorId;
   final String creatorName;
   final String gameType;
+  final int turnTimeSec;
+  final int gridSize;
+  final bool swapRule;
+  final bool firstMoveRestriction;
+  final String creatorAvatarKind;
+  final String? creatorAvatarValue;
+  final int stakeBronze;
 }
 
 final gameInvitesProvider =
@@ -37,12 +51,26 @@ final gameInvitesProvider =
         final creatorId = data['creator_id']?.toString();
         final creatorName = data['creator_name']?.toString() ?? 'Игрок';
         final gameType = data['game_type']?.toString() ?? 'tictactoe';
+        final turnTimeSec = (data['turn_time_sec'] as num?)?.toInt() ?? 0;
+        final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;
+        final swapRule = data['swap_rule'] == true;
+        final firstMoveRestriction = data['first_move_restriction'] == true;
+        final creatorAvatarKind = data['creator_avatar_kind']?.toString() ?? 'letter';
+        final creatorAvatarValue = data['creator_avatar_value']?.toString();
+        final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
         if (lobbyId != null && creatorId != null) {
           notifier.add(GameInvite(
             lobbyId: lobbyId,
             creatorId: creatorId,
             creatorName: creatorName,
             gameType: gameType,
+            turnTimeSec: turnTimeSec,
+            gridSize: gridSize,
+            swapRule: swapRule,
+            firstMoveRestriction: firstMoveRestriction,
+            creatorAvatarKind: creatorAvatarKind,
+            creatorAvatarValue: creatorAvatarValue,
+            stakeBronze: stakeBronze,
           ));
         }
       }
@@ -119,6 +147,15 @@ final gameStateProvider =
   },
 );
 
+/// Временное состояние после makeMove для немедленного отображения победы/ничьей
+/// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
+final gameStateOverrideProvider =
+    StateProvider.autoDispose.family<GameStateItem?, String>((ref, gameId) => null);
+
+/// Блокирует invalidate по game_state (чтобы не перезапрашивать до хода бота).
+final gameStateInvalidateBlockedProvider =
+    StateProvider.autoDispose.family<bool, String>((ref, gameId) => false);
+
 final activeGameProvider =
     AsyncNotifierProvider.autoDispose<ActiveGameNotifier, ActiveGameItem?>(
         ActiveGameNotifier.new);
@@ -137,7 +174,9 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
           ref.invalidate(activeGameProvider);
           final gameId = data['game_id']?.toString();
           if (gameId != null && gameId.isNotEmpty) {
-            ref.invalidate(gameStateProvider(gameId));
+            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
+              ref.invalidate(gameStateProvider(gameId));
+            }
           }
         }
       },

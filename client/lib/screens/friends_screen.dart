@@ -662,7 +662,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         relationStatus: nextRelationStatus,
         requestID: nextRequestID,
       );
-      await _refreshSnapshot(refreshSearch: true);
+      await _refreshSnapshot(refreshSearch: false);
     } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
@@ -706,6 +706,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   bool _busy(String key) => _actionsInProgress.contains(key);
 
   Widget _buildUserCard({
+    required BuildContext context,
     required FriendUserItem user,
     required String subtitle,
     required List<Widget> actions,
@@ -860,32 +861,48 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         if (useGrid) {
-          return GridView.builder(
+          const gap = 12.0;
+          const maxCellWidth = 320.0;
+          final availableWidth = constraints.maxWidth - 32;
+          final crossAxisCount =
+              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 4);
+          final itemWidth =
+              (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 320,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 3.2,
-            ),
-            itemCount: totalCount,
-            itemBuilder: (context, index) {
-              if (index >= visibleCount) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _expandVisibleForTab(tab, items.length);
-                });
-                return const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (var i = 0; i < visibleCount; i++)
+                      SizedBox(
+                        width: itemWidth,
+                        child: itemBuilder(items[i]),
+                      ),
+                  ],
+                ),
+                if (hasMore)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () => _expandVisibleForTab(tab, items.length),
+                        child: const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
                   ),
-                );
-              }
-              return itemBuilder(items[index]);
-            },
+              ],
+            ),
           );
         }
 
@@ -911,7 +928,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 ),
               );
             }
-            return itemBuilder(items[index]);
+            return Align(
+              alignment: Alignment.topCenter,
+              child: itemBuilder(items[index]),
+            );
           },
         );
       },
@@ -931,6 +951,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         final key = 'remove_${item.user.id}';
         final chatKey = 'chat_${item.user.id}';
         return _buildUserCard(
+          context: context,
           user: item.user,
           presence: presence[item.user.id],
           subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
@@ -982,6 +1003,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         final rejectKey = 'reject_${item.requestId}';
         final chatKey = 'chat_incoming_${item.user.id}';
         return _buildUserCard(
+          context: context,
           user: item.user,
           presence: presence[item.user.id],
           subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
@@ -1040,6 +1062,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         final cancelKey = 'cancel_${item.requestId}';
         final chatKey = 'chat_outgoing_${item.user.id}';
         return _buildUserCard(
+          context: context,
           user: item.user,
           presence: presence[item.user.id],
           subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
@@ -1185,8 +1208,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
-  Widget _buildSearchResultCard(
-      FriendSearchItem item, Map<String, PresenceEntry> presence) {
+  Widget _buildSearchResultCard(BuildContext context, FriendSearchItem item,
+      Map<String, PresenceEntry> presence) {
     final relation = item.relationStatus;
     final sendKey = 'send_${item.user.id}';
     final cancelKey = 'cancel_search_${item.requestId ?? item.user.id}';
@@ -1319,9 +1342,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       controlRow.add(controls[i]);
     }
 
+    final isDesktop = isWide(context);
     return GradientCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.all(10),
+      padding: isDesktop
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+          : const EdgeInsets.all(10),
       animate: false,
       child: Row(
         children: [
@@ -1441,7 +1467,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         children: const [
           Center(
             child: Text(
-              'Введите ник для поиска новых друзей',
+              'Используйте поиск, чтобы найти новых друзей',
               style: TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
@@ -1487,36 +1513,65 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final itemCount = _searchResults.length + (showPagingLoader ? 1 : 0);
 
     if (isWide(context)) {
-      return GridView.builder(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 380,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 2.4,
-        ),
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          if (index >= _searchResults.length) {
-            if (_searchHasMore && !_isSearchLoadingMore) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                unawaited(_loadMoreSearchResults());
-              });
-            }
-            return const Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentStart,
-                ),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 12.0;
+          const maxCellWidth = 600.0;
+          final availableWidth = constraints.maxWidth - 32;
+          final crossAxisCount =
+              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 4);
+          final itemWidth =
+              (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
+          return NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollEndNotification &&
+                  _searchHasMore &&
+                  !_isSearchLoadingMore) {
+                final m = notification.metrics;
+                if (m.pixels >= m.maxScrollExtent - 80) {
+                  unawaited(_loadMoreSearchResults());
+                }
+              }
+              return false;
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics()),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      for (var i = 0; i < _searchResults.length; i++)
+                        SizedBox(
+                          width: itemWidth,
+                          child: _buildSearchResultCard(
+                              context, _searchResults[i], presence),
+                        ),
+                    ],
+                  ),
+                  if (showPagingLoader)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentStart,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            );
-          }
-          return _buildSearchResultCard(_searchResults[index], presence);
+            ),
+          );
         },
       );
     }
@@ -1548,7 +1603,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             ),
           );
         }
-        return _buildSearchResultCard(_searchResults[index], presence);
+        return Align(
+          alignment: Alignment.topCenter,
+          child:
+              _buildSearchResultCard(context, _searchResults[index], presence),
+        );
       },
     );
   }
@@ -1631,27 +1690,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
   }
 
-  int? _tabCount(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
-    if (snapshot == null) return null;
+  int? _tabCount(
+    _FriendsTabKind tab,
+    FriendsSnapshot? snapshot,
+    int? totalUsersCount,
+  ) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        return snapshot.friends.length;
+        return snapshot?.friends.length;
       case _FriendsTabKind.incoming:
-        return snapshot.incoming.length;
+        return snapshot?.incoming.length;
       case _FriendsTabKind.outgoing:
-        return snapshot.outgoing.length;
+        return snapshot?.outgoing.length;
       case _FriendsTabKind.findFriend:
-        return null;
+        return totalUsersCount;
     }
   }
 
-  Widget _buildTabLabel(_FriendsTabKind tab, FriendsSnapshot? snapshot) {
+  Widget _buildTabLabel(
+    _FriendsTabKind tab,
+    FriendsSnapshot? snapshot,
+    int? totalUsersCount,
+  ) {
     final title = _tabTitle(tab);
-    final count = _tabCount(tab, snapshot);
+    final count = _tabCount(tab, snapshot, totalUsersCount);
     final isIncoming = tab == _FriendsTabKind.incoming;
+    final isFindFriend = tab == _FriendsTabKind.findFriend;
     final countColor = (isIncoming && (count ?? 0) > 0)
         ? Colors.red.shade600
-        : AppColors.accentStart;
+        : isFindFriend
+            ? Colors.green.shade700
+            : AppColors.accentStart;
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1706,6 +1775,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   Widget build(BuildContext context) {
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
+    final totalUsersCount = ref.watch(totalUsersCountProvider).valueOrNull;
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
@@ -1778,7 +1848,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                             for (final tab in tabs)
                               Tab(
                                 child: _buildTabLabel(
-                                    tab, friendsAsync.valueOrNull),
+                                  tab,
+                                  friendsAsync.valueOrNull,
+                                  totalUsersCount,
+                                ),
                               ),
                           ],
                         ),

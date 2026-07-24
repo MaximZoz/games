@@ -87,10 +87,26 @@ class _GradientCardState extends State<GradientCard>
         gradient: gradient,
         borderRadius: BorderRadius.circular(r),
         boxShadow: [
+          // Основная градиентная тень: accentStart (холодный фиолетовый)
           BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.12),
-            blurRadius: 20,
+            color: AppColors.accentStart.withValues(alpha: 0.25),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+            spreadRadius: -6,
+          ),
+          // Вторая тень: accentEnd (тёплый фиолетовый) — градиентный переход
+          BoxShadow(
+            color: AppColors.accentEnd.withValues(alpha: 0.18),
+            blurRadius: 22,
             offset: const Offset(0, 8),
+            spreadRadius: -3,
+          ),
+          // Мягкое свечение по контуру
+          BoxShadow(
+            color: AppColors.accentStart.withValues(alpha: 0.1),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
+            spreadRadius: 0,
           ),
         ],
       ),
