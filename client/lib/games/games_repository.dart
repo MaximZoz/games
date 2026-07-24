@@ -167,6 +167,17 @@ class GameStateItem {
     this.winningCells,
   });
 
+  bool isTurnOf(String? userId) {
+    if (userId == null || status != 'active') return false;
+    return (turn == 'x' && xUserId == userId) ||
+        (turn == 'o' && oUserId == userId);
+  }
+
+  bool get isActivePvp =>
+      status == 'active' &&
+      !xUserId.startsWith('bot:') &&
+      !oUserId.startsWith('bot:');
+
   factory GameStateItem.fromJson(Map<String, dynamic> json) {
     final gridSize = (json['grid_size'] as num?)?.toInt() ?? 3;
     final n = gridSize * gridSize;

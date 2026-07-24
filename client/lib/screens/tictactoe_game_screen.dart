@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
-import 'package:multigames_client/core/runtime_debug.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -85,12 +83,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Timer? _timeoutRetryTimer;
   late AnimationController _pulseController;
   String? _prevGameStatus;
-  AuthRepository? _debugAuthRepository;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _debugAuthRepository ??= ref.read(authRepositoryProvider);
     final route = ModalRoute.of(context);
     if (route != null) {
       chatsRouteObserver.unsubscribe(this);
@@ -130,14 +126,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     )..repeat(reverse: true);
     ref.invalidate(gameStateProvider(widget.gameId));
     ref.invalidate(activeGameProvider);
-    _syncStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+    _syncStateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || _waitingForBotMove) return;
+      final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+      if (game != null && !game.isActivePvp) return;
       ref.invalidate(gameStateProvider(widget.gameId));
-      ref.invalidate(activeGameProvider);
-    });
-    Timer(const Duration(seconds: 8), () {
-      _syncStateTimer?.cancel();
-      _syncStateTimer = null;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) refreshChatsList(ref, force: true);
@@ -152,36 +145,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (type == 'game_state' &&
             next.valueOrNull?['game_id'] == widget.gameId &&
             !_waitingForBotMove) {
-          // #region agent log
-          final debugData = {
-            'gameId': widget.gameId,
-            'turn': next.valueOrNull?['turn']?.toString(),
-            'waitingForBotMove': _waitingForBotMove,
-            'mounted': mounted,
-          };
-          final debugAuth = _debugAuthRepository;
-          if (debugAuth != null) {
-            appendRuntimeDebugLog(
-              debugAuth,
-              hypothesisId: 'D',
-              location: 'tictactoe_game_screen.dart:realtimeListener',
-              message: 'game screen accepted realtime invalidation',
-              data: debugData,
-            );
-          } else {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              final deferredDebugAuth = _debugAuthRepository;
-              if (!mounted || deferredDebugAuth == null) return;
-              appendRuntimeDebugLog(
-                deferredDebugAuth,
-                hypothesisId: 'D',
-                location: 'tictactoe_game_screen.dart:realtimeListener',
-                message: 'game screen accepted realtime invalidation',
-                data: debugData,
-              );
-            });
-          }
-          // #endregion
           ref.invalidate(gameStateProvider(widget.gameId));
         }
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
@@ -242,7 +205,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       ref.invalidate(activeGameProvider);
       if (mounted) setState(() {});
     }
-
     WidgetsBinding.instance.addPostFrameCallback((_) => doRefresh());
     _timeoutRetryTimer = Timer(const Duration(milliseconds: 1200), () {
       if (!mounted) return;
@@ -270,7 +232,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final effectiveGameAsync =
         override != null ? AsyncData(override) : gameAsync;
     final currentUser = ref.watch(authStateProvider).valueOrNull;
-    final activeGame = ref.watch(activeGameProvider).valueOrNull;
 
     ref.listen(gameStateProvider(widget.gameId), (_, next) {
       next.whenOrNull(
@@ -278,15 +239,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           if (!mounted) return;
           // Во время ожидания хода бота не сбрасываем override — иначе старый fetch может вернуть данные без нашего хода
           if (_waitingForBotMove) return;
-          ref
-              .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
-              .state = false;
+          ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state =
+              false;
           if (override != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                ref
-                    .read(gameStateOverrideProvider(widget.gameId).notifier)
-                    .state = null;
+                ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+                    null;
               }
             });
           }
@@ -294,10 +253,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         error: (_, __) => WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             _waitingForBotMove = false;
-            ref
-                .read(
-                    gameStateInvalidateBlockedProvider(widget.gameId).notifier)
-                .state = false;
+            ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state =
+                false;
             context.go('/games');
           }
         }),
@@ -320,9 +277,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       }
       final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
       if (game == null || game.status != 'active') return;
-      final isMyTurnFromGame =
-          (game.turn == 'x' && game.xUserId == currentUser?.id) ||
-              (game.turn == 'o' && game.oUserId == currentUser?.id);
+      final isMyTurnFromGame = game.isTurnOf(currentUser?.id);
       if (active.isMyTurn != isMyTurnFromGame) {
         ref.invalidate(gameStateProvider(widget.gameId));
       }
@@ -373,36 +328,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           } else {
             _prevGameStatus = game.status;
           }
-          final isMyTurnFromGame =
-              (game.turn == 'x' && game.xUserId == currentUser?.id) ||
-                  (game.turn == 'o' && game.oUserId == currentUser?.id);
-          // При override (наш ход, ждём бота) — не доверяем activeGame, он может быть устаревшим
-          final isMyTurn = (override != null ||
-                  activeGame == null ||
-                  activeGame.type != 'game' ||
-                  activeGame.gameId != widget.gameId)
-              ? isMyTurnFromGame
-              : activeGame.isMyTurn;
-          // #region agent log
-          appendRuntimeDebugLog(
-            ref.read(authRepositoryProvider),
-            hypothesisId: 'E',
-            location: 'tictactoe_game_screen.dart:isMyTurn',
-            message: 'screen turn calculation',
-            data: {
-              'gameId': widget.gameId,
-              'gameTurn': game.turn,
-              'isMyTurnFromGame': isMyTurnFromGame,
-              'activeIsMyTurn': activeGame?.isMyTurn,
-              'activeMatchesGame': activeGame?.type == 'game' &&
-                  activeGame?.gameId == widget.gameId,
-              'overridePresent': override != null,
-              'renderedIsMyTurn': isMyTurn,
-              'occupiedCells':
-                  game.board.where((cell) => cell.isNotEmpty).length,
-            },
-          );
-          // #endregion
+          // Полное состояние игры — источник истины для текущего хода.
+          final isMyTurn = game.isTurnOf(currentUser?.id);
           final opponentName = opponentId.startsWith('bot:')
               ? 'Бот'
               : (game.xUserId == currentUser?.id
@@ -469,105 +396,101 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            _OpponentCard(
-                              opponentId: opponentId,
-                              displayName: opponentName,
-                              avatarKind: opponentAvatarKind,
-                              avatarValue: opponentAvatarValue,
-                              isBot: opponentId.startsWith('bot:'),
-                              friendsSnapshot: ref
-                                  .watch(friendsSnapshotProvider)
-                                  .valueOrNull,
-                              chatsList:
-                                  ref.watch(chatsListProvider).valueOrNull ??
-                                      const [],
-                              onInfoTap: () => _showOpponentInfo(
-                                context,
-                                opponentId: opponentId,
-                                displayName: opponentName,
-                                avatarKind: opponentAvatarKind,
-                                avatarValue: opponentAvatarValue,
-                              ),
-                              onMessageTap: () =>
-                                  _openChat(context, opponentId, opponentName),
-                              onAddFriendTap: (requestId) => _addFriend(
-                                  context, opponentId, opponentName,
-                                  requestId: requestId),
-                            ),
-                            SizedBox(height: verticalSpacing),
-                            Text(
-                              statusText,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                    fontSize: narrow ? 15 : null,
-                                  ),
-                            ),
-                            if (showSwapButton)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _swapSides(),
-                                  icon: const Icon(Icons.swap_horiz_rounded,
-                                      size: 18),
-                                  label: const Text('Сменить стороны'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.accentStart,
-                                    side: BorderSide(
-                                        color: AppColors.accentStart
-                                            .withValues(alpha: 0.6)),
-                                  ),
+                        _OpponentCard(
+                          opponentId: opponentId,
+                          displayName: opponentName,
+                          avatarKind: opponentAvatarKind,
+                          avatarValue: opponentAvatarValue,
+                          isBot: opponentId.startsWith('bot:'),
+                          friendsSnapshot:
+                              ref.watch(friendsSnapshotProvider).valueOrNull,
+                          chatsList: ref.watch(chatsListProvider).valueOrNull ??
+                              const [],
+                          onInfoTap: () => _showOpponentInfo(
+                            context,
+                            opponentId: opponentId,
+                            displayName: opponentName,
+                            avatarKind: opponentAvatarKind,
+                            avatarValue: opponentAvatarValue,
+                          ),
+                          onMessageTap: () =>
+                              _openChat(context, opponentId, opponentName),
+                          onAddFriendTap: (requestId) => _addFriend(
+                              context, opponentId, opponentName,
+                              requestId: requestId),
+                        ),
+                          SizedBox(height: verticalSpacing),
+                          Text(
+                            statusText,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                  fontSize: narrow ? 15 : null,
                                 ),
-                              ),
-                            if (!isOver &&
-                                game.turnTimeSec > 0 &&
-                                game.turnDeadline != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: _TurnCountdown(
-                                  turnDeadline: game.turnDeadline!,
-                                  isMyTurn: isMyTurn,
-                                  onExpired: _onTurnTimeExpired,
-                                ),
-                              ),
-                            if (isOver) ...[
-                              SizedBox(height: verticalSpacing * 0.8),
-                              _RematchSection(
-                                rematchLobbyId: _rematchLobbyId,
-                                rematchDeclined: _rematchDeclined,
-                                iDeclinedRematch: _iDeclinedRematch,
-                                isRematching: _isRematching,
-                                isAcceptingRematch: _isAcceptingRematch,
-                                isFindingGame: _isFindingGame,
-                                opponentId: opponentId,
-                                invites: ref.watch(gameInvitesProvider),
-                                onRematch: () => _rematch(context),
-                                onAccept: _acceptRematch,
-                                onDecline: _declineRematch,
-                                onCancelWait: _cancelRematchWait,
-                                onFindGame: () => _findGame(context),
-                                compact: narrow,
-                              ),
-                            ],
-                            SizedBox(height: verticalSpacing),
-                            Expanded(
-                              child: Center(
-                                child: _GameBoard(
-                                  game: game,
-                                  isMyTurn: isMyTurn,
-                                  isOver: isOver,
-                                  isMakingMove: _isMakingMove,
-                                  onMove: _makeMove,
-                                  pulseController: _pulseController,
-                                  compact: narrow,
-                                ),
+                          ),
+                        if (showSwapButton)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: OutlinedButton.icon(
+                              onPressed: () => _swapSides(),
+                              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                              label: const Text('Сменить стороны'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentStart,
+                                side: BorderSide(
+                                    color: AppColors.accentStart.withValues(alpha: 0.6)),
                               ),
                             ),
-                          ],
-                        )
+                          ),
+                        if (!isOver &&
+                            game.turnTimeSec > 0 &&
+                            game.turnDeadline != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: _TurnCountdown(
+                              turnDeadline: game.turnDeadline!,
+                              isMyTurn: isMyTurn,
+                              onExpired: _onTurnTimeExpired,
+                            ),
+                          ),
+                        if (isOver) ...[
+                          SizedBox(height: verticalSpacing * 0.8),
+                          _RematchSection(
+                            rematchLobbyId: _rematchLobbyId,
+                            rematchDeclined: _rematchDeclined,
+                            iDeclinedRematch: _iDeclinedRematch,
+                            isRematching: _isRematching,
+                            isAcceptingRematch: _isAcceptingRematch,
+                            isFindingGame: _isFindingGame,
+                            opponentId: opponentId,
+                            invites: ref.watch(gameInvitesProvider),
+                            onRematch: () => _rematch(context),
+                            onAccept: _acceptRematch,
+                            onDecline: _declineRematch,
+                            onCancelWait: _cancelRematchWait,
+                            onFindGame: () => _findGame(context),
+                            compact: narrow,
+                          ),
+                        ],
+                        SizedBox(height: verticalSpacing),
+                        Expanded(
+                          child: Center(
+                            child: _GameBoard(
+                              game: game,
+                              isMyTurn: isMyTurn,
+                              isOver: isOver,
+                              isMakingMove: _isMakingMove,
+                              onMove: _makeMove,
+                              pulseController: _pulseController,
+                              compact: narrow,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
                       : Column(
                           mainAxisSize: MainAxisSize.max,
                           children: [
@@ -582,13 +505,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                       avatarKind: opponentAvatarKind,
                                       avatarValue: opponentAvatarValue,
                                       isBot: opponentId.startsWith('bot:'),
-                                      friendsSnapshot: ref
-                                          .watch(friendsSnapshotProvider)
-                                          .valueOrNull,
-                                      chatsList: ref
-                                              .watch(chatsListProvider)
-                                              .valueOrNull ??
-                                          const [],
+                                      friendsSnapshot:
+                                          ref.watch(friendsSnapshotProvider).valueOrNull,
+                                      chatsList:
+                                          ref.watch(chatsListProvider).valueOrNull ??
+                                              const [],
                                       onInfoTap: () => _showOpponentInfo(
                                         context,
                                         opponentId: opponentId,
@@ -596,8 +517,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                         avatarKind: opponentAvatarKind,
                                         avatarValue: opponentAvatarValue,
                                       ),
-                                      onMessageTap: () => _openChat(
-                                          context, opponentId, opponentName),
+                                      onMessageTap: () =>
+                                          _openChat(context, opponentId, opponentName),
                                       onAddFriendTap: (requestId) => _addFriend(
                                           context, opponentId, opponentName,
                                           requestId: requestId),
@@ -619,16 +540,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                         padding: const EdgeInsets.only(top: 12),
                                         child: OutlinedButton.icon(
                                           onPressed: () => _swapSides(),
-                                          icon: const Icon(
-                                              Icons.swap_horiz_rounded,
-                                              size: 18),
+                                          icon: const Icon(Icons.swap_horiz_rounded, size: 18),
                                           label: const Text('Сменить стороны'),
                                           style: OutlinedButton.styleFrom(
-                                            foregroundColor:
-                                                AppColors.accentStart,
+                                            foregroundColor: AppColors.accentStart,
                                             side: BorderSide(
-                                                color: AppColors.accentStart
-                                                    .withValues(alpha: 0.6)),
+                                                color: AppColors.accentStart.withValues(alpha: 0.6)),
                                           ),
                                         ),
                                       ),
@@ -758,10 +675,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.invalidate(activeGameProvider);
         final active = await ref.read(activeGameProvider.future);
         if (!mounted) return;
-        if (active != null &&
-            active.type == 'game' &&
-            active.gameId != null &&
-            active.gameId!.isNotEmpty) {
+        if (active != null && active.type == 'game' && active.gameId != null && active.gameId!.isNotEmpty) {
           context.go('/games/tictactoe/game/${active.gameId}');
         } else {
           _redirectToGamesOnError();
@@ -1296,9 +1210,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       // Для бота: сразу блокируем invalidate, чтобы realtime/другие события не сбросили ход
       if (isBotGame) {
         _waitingForBotMove = true;
-        ref
-            .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
-            .state = true;
+        ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state =
+            true;
       }
       // Сразу показываем свой ход (через override)
       ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
@@ -1312,9 +1225,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (!mounted) return;
           _waitingForBotMove = false;
-          ref
-              .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
-              .state = false;
+          ref.read(gameStateInvalidateBlockedProvider(widget.gameId).notifier).state = false;
           ref.invalidate(gameStateProvider(widget.gameId));
           ref.invalidate(activeGameProvider);
         });
@@ -1720,8 +1631,7 @@ class _OpponentCard extends StatelessWidget {
                         ? 'Добавить в друзья'
                         : 'Заявка отправлена'),
                 onPressed: addFriendEnabled
-                    ? () =>
-                        onAddFriendTap(hasIncoming ? incomingRequestId : null)
+                    ? () => onAddFriendTap(hasIncoming ? incomingRequestId : null)
                     : null,
               ),
           ],
@@ -1830,7 +1740,8 @@ class _GameBoard extends StatelessWidget {
         if (!maxH.isFinite) maxH = 400;
         final minBoard = compact ? 140.0 : 200.0;
         final maxBoard = compact ? 380.0 : 420.0;
-        final maxSide = (maxW > maxH ? maxH : maxW).clamp(minBoard, maxBoard);
+        final maxSide =
+            (maxW > maxH ? maxH : maxW).clamp(minBoard, maxBoard);
         final boardSize = maxSide;
         final boardMargin = compact ? 8.0 : 12.0;
         return Center(
@@ -1876,15 +1787,17 @@ class _GameBoard extends StatelessWidget {
                       painter: _GridPainter(gridSize: gridSize),
                       child: LayoutBuilder(
                         builder: (context, innerConstraints) {
-                          final cellW = innerConstraints.maxWidth / gridSize;
-                          final cellH = innerConstraints.maxHeight / gridSize;
+                          final cellW =
+                              innerConstraints.maxWidth / gridSize;
+                          final cellH =
+                              innerConstraints.maxHeight / gridSize;
                           final gap = boardSize > 280 ? 4.0 : 2.0;
                           final isFirstMoveX = game.turn == 'x' &&
                               game.board.every((c) => c.isEmpty);
-                          final forbiddenCenters =
-                              game.firstMoveRestriction && isFirstMoveX
-                                  ? _centerCellIndices(gridSize)
-                                  : <int>[];
+                          final forbiddenCenters = game.firstMoveRestriction &&
+                                  isFirstMoveX
+                              ? _centerCellIndices(gridSize)
+                              : <int>[];
                           return Stack(
                             children: List.generate(n, (i) {
                               final row = i ~/ gridSize;
@@ -2012,7 +1925,9 @@ class _WinningLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (winningCells.length < 3 || size.width <= 0 || size.height <= 0) {
+    if (winningCells.length < 3 ||
+        size.width <= 0 ||
+        size.height <= 0) {
       return;
     }
     final cellW = size.width / gridSize;
@@ -2032,7 +1947,8 @@ class _WinningLinePainter extends CustomPainter {
     }
 
     final pathMetrics = path.computeMetrics();
-    final totalLength = pathMetrics.isEmpty ? 0.0 : pathMetrics.first.length;
+    final totalLength =
+        pathMetrics.isEmpty ? 0.0 : pathMetrics.first.length;
     final drawLength = totalLength * progress;
 
     final lineWidth = gridSize <= 3 ? 6.0 : (gridSize == 4 ? 5.0 : 4.0);
@@ -2052,7 +1968,8 @@ class _WinningLinePainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     if (drawLength > 0 && pathMetrics.isNotEmpty) {
-      final extractPath = pathMetrics.first.extractPath(0.0, drawLength);
+      final extractPath =
+          pathMetrics.first.extractPath(0.0, drawLength);
       canvas.drawPath(extractPath, glowPaint);
       canvas.drawPath(extractPath, strokePaint);
     }
@@ -2191,8 +2108,8 @@ class _ConfettiPainter extends CustomPainter {
         final x = burstX + math.sin(fallT * 2) * 20;
         final y = burstY + p.gravity * fallT * fallT * scale * 1.5;
         final rot = fallT * p.rotationSpeed * math.pi;
-        final alpha =
-            1.0 - ((progress - fadeStart) / (1 - fadeStart)).clamp(0.0, 1.0);
+        final alpha = 1.0 -
+            ((progress - fadeStart) / (1 - fadeStart)).clamp(0.0, 1.0);
         if (alpha > 0.01) {
           _drawParticle(canvas, x, y, p, rot, alpha);
         }

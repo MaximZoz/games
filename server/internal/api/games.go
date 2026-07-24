@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"multigames/server/internal/store"
@@ -30,30 +28,6 @@ const (
 	botUserID                   = "bot:ttt"
 	botTimeoutSeconds           = 30
 )
-
-var agentDebugLogMu sync.Mutex
-
-func appendAgentDebugLog(hypothesisID, location, message string, data map[string]any) {
-	entry := map[string]any{
-		"hypothesisId": hypothesisID,
-		"location":     location,
-		"message":      message,
-		"data":         data,
-		"timestamp":    time.Now().UnixMilli(),
-	}
-	raw, err := json.Marshal(entry)
-	if err != nil {
-		return
-	}
-	agentDebugLogMu.Lock()
-	defer agentDebugLogMu.Unlock()
-	f, err := os.OpenFile("/opt/cursor/logs/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	_, _ = f.Write(append(raw, '\n'))
-}
 
 // turn_time_sec: 0=unlimited, 10, 30, 60, 600
 var validTurnTimeSec = map[int]bool{0: true, 10: true, 30: true, 60: true, 600: true}
@@ -191,9 +165,6 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(path, "/")
 
 	switch {
-	case path == "debug-log" && r.Method == http.MethodPost:
-		h.AppendDebugLog(w, r)
-		return
 	case path == "active" && r.Method == http.MethodGet:
 		h.GetActive(w, r)
 		return
@@ -249,24 +220,6 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "not found", http.StatusNotFound)
-}
-
-func (h *GamesHandler) AppendDebugLog(w http.ResponseWriter, r *http.Request) {
-	var entry struct {
-		HypothesisID string         `json:"hypothesisId"`
-		Location     string         `json:"location"`
-		Message      string         `json:"message"`
-		Data         map[string]any `json:"data"`
-	}
-	r.Body = http.MaxBytesReader(w, r.Body, 8*1024)
-	if err := json.NewDecoder(r.Body).Decode(&entry); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
-		return
-	}
-	// #region agent log
-	appendAgentDebugLog(entry.HypothesisID, entry.Location, entry.Message, entry.Data)
-	// #endregion
-	w.WriteHeader(http.StatusAccepted)
 }
 
 func currentUserIDFromGames(r *http.Request) (uuid.UUID, bool) {
@@ -1767,12 +1720,6 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
-	// #region agent log
-	appendAgentDebugLog("A", "games.go:MakeMove", "move committed before broadcast", map[string]any{
-		"gameId": gameID, "previousTurn": turn, "nextTurn": nextTurn, "status": status,
-		"recipientCount": len(humanUserIDs(xUserID, oUserID)),
-	})
-	// #endregion
 
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])

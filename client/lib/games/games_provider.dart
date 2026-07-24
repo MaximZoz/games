@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
-import 'package:multigames_client/core/runtime_debug.dart';
 import 'package:multigames_client/games/games_repository.dart';
 
 final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
@@ -56,8 +55,7 @@ final gameInvitesProvider =
         final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;
         final swapRule = data['swap_rule'] == true;
         final firstMoveRestriction = data['first_move_restriction'] == true;
-        final creatorAvatarKind =
-            data['creator_avatar_kind']?.toString() ?? 'letter';
+        final creatorAvatarKind = data['creator_avatar_kind']?.toString() ?? 'letter';
         final creatorAvatarValue = data['creator_avatar_value']?.toString();
         final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
         if (lobbyId != null && creatorId != null) {
@@ -134,8 +132,7 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
   }
 }
 
-final lobbyDetailProvider =
-    FutureProvider.autoDispose.family<LobbyItem, String>(
+final lobbyDetailProvider = FutureProvider.autoDispose.family<LobbyItem, String>(
   (ref, lobbyId) async {
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getLobby(lobbyId);
@@ -146,29 +143,14 @@ final gameStateProvider =
     FutureProvider.autoDispose.family<GameStateItem, String>(
   (ref, gameId) async {
     final repo = ref.read(gamesRepositoryProvider);
-    final game = await repo.getGame(gameId);
-    // #region agent log
-    appendRuntimeDebugLog(
-      ref.read(authRepositoryProvider),
-      hypothesisId: 'D',
-      location: 'games_provider.dart:gameStateProvider',
-      message: 'game state fetch completed',
-      data: {
-        'gameId': gameId,
-        'turn': game.turn,
-        'status': game.status,
-        'occupiedCells': game.board.where((cell) => cell.isNotEmpty).length,
-      },
-    );
-    // #endregion
-    return game;
+    return repo.getGame(gameId);
   },
 );
 
 /// Временное состояние после makeMove для немедленного отображения победы/ничьей
 /// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
-final gameStateOverrideProvider = StateProvider.autoDispose
-    .family<GameStateItem?, String>((ref, gameId) => null);
+final gameStateOverrideProvider =
+    StateProvider.autoDispose.family<GameStateItem?, String>((ref, gameId) => null);
 
 /// Блокирует invalidate по game_state (чтобы не перезапрашивать до хода бота).
 final gameStateInvalidateBlockedProvider =
@@ -187,30 +169,12 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         final data = next.valueOrNull;
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
-        if (type == 'game_state' ||
-            type == 'game_started' ||
+        if (type == 'game_state' || type == 'game_started' ||
             type == 'lobby_updated') {
-          final gameId = data['game_id']?.toString();
-          final blocked = gameId != null && gameId.isNotEmpty
-              ? ref.read(gameStateInvalidateBlockedProvider(gameId))
-              : false;
-          // #region agent log
-          appendRuntimeDebugLog(
-            ref.read(authRepositoryProvider),
-            hypothesisId: 'D',
-            location: 'games_provider.dart:ActiveGameNotifier.realtime',
-            message: 'realtime event reached provider invalidation',
-            data: {
-              'type': type,
-              'gameId': gameId,
-              'turn': data['turn']?.toString(),
-              'blocked': blocked,
-            },
-          );
-          // #endregion
           ref.invalidate(activeGameProvider);
+          final gameId = data['game_id']?.toString();
           if (gameId != null && gameId.isNotEmpty) {
-            if (!blocked) {
+            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
               ref.invalidate(gameStateProvider(gameId));
             }
           }
@@ -220,21 +184,7 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
     final user = ref.watch(authStateProvider).valueOrNull;
     if (user == null) return null;
     final repo = ref.read(gamesRepositoryProvider);
-    final active = await repo.getActive();
-    // #region agent log
-    appendRuntimeDebugLog(
-      ref.read(authRepositoryProvider),
-      hypothesisId: 'E',
-      location: 'games_provider.dart:ActiveGameNotifier.build',
-      message: 'active game fetch completed',
-      data: {
-        'type': active?.type,
-        'gameId': active?.gameId,
-        'isMyTurn': active?.isMyTurn,
-      },
-    );
-    // #endregion
-    return active;
+    return repo.getActive();
   }
 }
 

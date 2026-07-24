@@ -120,15 +120,6 @@ func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 	}
 	h.mu.RUnlock()
 
-	if payloadMap, ok := payload.(map[string]any); ok && payloadMap["type"] == "game_state" {
-		// #region agent log
-		appendAgentDebugLog("B", "realtime_ws.go:PublishToUsers", "game_state websocket delivery snapshot", map[string]any{
-			"gameId": payloadMap["game_id"], "turn": payloadMap["turn"], "status": payloadMap["status"],
-			"recipientCount": len(uniqueUsers), "connectionCount": len(deliveries),
-		})
-		// #endregion
-	}
-
 	for _, target := range deliveries {
 		if target.client == nil {
 			continue
@@ -279,7 +270,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				h.Hub.PublishToUsers(recipients, map[string]any{
 					"type":         "user_offline",
 					"user_id":      userID.String(),
-					"online":       false,
+					"online":      false,
 					"last_seen_at": now,
 				})
 			}

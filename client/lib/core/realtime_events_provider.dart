@@ -7,13 +7,11 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/realtime_visibility_stub.dart'
     if (dart.library.html) 'realtime_visibility_web.dart' as visibility;
-import 'package:multigames_client/core/runtime_debug.dart';
 import 'package:multigames_client/core/realtime_ws.dart';
 
 /// Общий поток событий realtime (WebSocket), чтобы не открывать отдельный сокет
 /// под каждый экран/провайдер.
-final realtimeEventsProvider =
-    StreamProvider.autoDispose<Map<String, dynamic>>((ref) {
+final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>((ref) {
   final keepAliveLink = ref.keepAlive();
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
@@ -32,7 +30,6 @@ final realtimeEventsProvider =
       });
     });
   }
-
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
@@ -81,25 +78,7 @@ final realtimeEventsProvider =
         try {
           final payload = jsonDecode(raw);
           if (payload is! Map) return;
-          final data = Map<String, dynamic>.from(payload);
-          if (data['type'] == 'game_state') {
-            // #region agent log
-            appendRuntimeDebugLog(
-              ref.read(authRepositoryProvider),
-              hypothesisId: 'C',
-              location: 'realtime_events_provider.dart:socket.messages',
-              message: 'game_state websocket frame parsed',
-              data: {
-                'gameId': data['game_id']?.toString(),
-                'turn': data['turn']?.toString(),
-                'status': data['status']?.toString(),
-                'disposed': disposed,
-                'controllerClosed': controller.isClosed,
-              },
-            );
-            // #endregion
-          }
-          emitAfterFrame(data);
+          emitAfterFrame(Map<String, dynamic>.from(payload));
         } catch (_) {
           // Игнорируем невалидные фреймы, чтобы не ронять соединение.
         }
