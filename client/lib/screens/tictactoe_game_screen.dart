@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/runtime_debug.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -84,10 +85,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Timer? _timeoutRetryTimer;
   late AnimationController _pulseController;
   String? _prevGameStatus;
+  AuthRepository? _debugAuthRepository;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _debugAuthRepository ??= ref.read(authRepositoryProvider);
     final route = ModalRoute.of(context);
     if (route != null) {
       chatsRouteObserver.unsubscribe(this);
@@ -150,18 +153,34 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             next.valueOrNull?['game_id'] == widget.gameId &&
             !_waitingForBotMove) {
           // #region agent log
-          appendRuntimeDebugLog(
-            ref.read(authRepositoryProvider),
-            hypothesisId: 'D',
-            location: 'tictactoe_game_screen.dart:realtimeListener',
-            message: 'game screen accepted realtime invalidation',
-            data: {
-              'gameId': widget.gameId,
-              'turn': next.valueOrNull?['turn']?.toString(),
-              'waitingForBotMove': _waitingForBotMove,
-              'mounted': mounted,
-            },
-          );
+          final debugData = {
+            'gameId': widget.gameId,
+            'turn': next.valueOrNull?['turn']?.toString(),
+            'waitingForBotMove': _waitingForBotMove,
+            'mounted': mounted,
+          };
+          final debugAuth = _debugAuthRepository;
+          if (debugAuth != null) {
+            appendRuntimeDebugLog(
+              debugAuth,
+              hypothesisId: 'D',
+              location: 'tictactoe_game_screen.dart:realtimeListener',
+              message: 'game screen accepted realtime invalidation',
+              data: debugData,
+            );
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final deferredDebugAuth = _debugAuthRepository;
+              if (!mounted || deferredDebugAuth == null) return;
+              appendRuntimeDebugLog(
+                deferredDebugAuth,
+                hypothesisId: 'D',
+                location: 'tictactoe_game_screen.dart:realtimeListener',
+                message: 'game screen accepted realtime invalidation',
+                data: debugData,
+              );
+            });
+          }
           // #endregion
           ref.invalidate(gameStateProvider(widget.gameId));
         }
