@@ -50,28 +50,30 @@ type TokenResponse struct {
 }
 
 type UserResponse struct {
-	ID          string  `json:"id"`
-	Email       string  `json:"email"`
-	DisplayName *string `json:"display_name,omitempty"`
-	IsAdmin     bool    `json:"is_admin,omitempty"`
-	Age         *int    `json:"age,omitempty"`
-	Gender      *string `json:"gender,omitempty"`
-	About       *string `json:"about,omitempty"`
-	AvatarKind  string  `json:"avatar_kind,omitempty"`
-	AvatarValue *string `json:"avatar_value,omitempty"`
+	ID            string  `json:"id"`
+	Email         string  `json:"email"`
+	DisplayName   *string `json:"display_name,omitempty"`
+	IsAdmin       bool    `json:"is_admin,omitempty"`
+	Age           *int    `json:"age,omitempty"`
+	Gender        *string `json:"gender,omitempty"`
+	About         *string `json:"about,omitempty"`
+	AvatarKind    string  `json:"avatar_kind,omitempty"`
+	AvatarValue   *string `json:"avatar_value,omitempty"`
+	BalanceBronze int     `json:"balance_bronze"`
 }
 
 func userToResponse(u *store.User) UserResponse {
 	return UserResponse{
-		ID:          u.ID.String(),
-		Email:       u.Email,
-		DisplayName: u.DisplayName,
-		IsAdmin:     u.IsAdmin,
-		Age:         u.Age,
-		Gender:      u.Gender,
-		About:       u.About,
-		AvatarKind:  u.AvatarKind,
-		AvatarValue: u.AvatarValue,
+		ID:            u.ID.String(),
+		Email:         u.Email,
+		DisplayName:   u.DisplayName,
+		IsAdmin:       u.IsAdmin,
+		Age:           u.Age,
+		Gender:        u.Gender,
+		About:         u.About,
+		AvatarKind:    u.AvatarKind,
+		AvatarValue:   u.AvatarValue,
+		BalanceBronze: u.BalanceBronze,
 	}
 }
 

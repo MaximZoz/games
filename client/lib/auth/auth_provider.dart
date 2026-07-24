@@ -15,6 +15,17 @@ final authStateProvider = StateNotifierProvider<AuthStateNotifier, AsyncValue<Au
   return AuthStateNotifier(ref);
 });
 
+/// Значение daily_reward из WebSocket (при подключении и после claim). Null = ещё не получено.
+final dailyRewardFromRealtimeProvider = StateProvider<bool?>((ref) => null);
+
+/// Доступна ли ежедневная награда (20 бронзы). Приоритет у значения из WebSocket.
+final dailyRewardAvailableProvider = FutureProvider<bool>((ref) async {
+  final fromWs = ref.watch(dailyRewardFromRealtimeProvider);
+  if (fromWs != null) return fromWs;
+  final repo = ref.watch(authRepositoryProvider);
+  return repo.getDailyRewardAvailable();
+});
+
 /// Расширенные данные профиля — берём напрямую из AuthUser (данные уже в БД).
 final profileExtraProvider = Provider<AsyncValue<ProfileExtra?>>((ref) {
   return ref.watch(authStateProvider).whenData((user) {
@@ -42,8 +53,12 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   Future<void> _loadUser() async {
     final repo = _ref.read(authRepositoryProvider);
     try {
-      final user = await repo.getStoredUser();
-      state = AsyncValue.data(user);
+      final cached = await repo.getStoredUser();
+      state = AsyncValue.data(cached);
+      final fresh = await repo.fetchCurrentUser();
+      if (fresh != null) {
+        state = AsyncValue.data(fresh);
+      }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -71,12 +86,45 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     state = const AsyncValue.data(null);
   }
 
-  void refresh() {
-    _loadUser();
+  Future<void> refresh() async {
+    final repo = _ref.read(authRepositoryProvider);
+    try {
+      final user = await repo.fetchCurrentUser();
+      state = AsyncValue.data(user);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> updateDisplayName(String displayName) async {
     await updateProfile(displayName: displayName);
+  }
+
+  /// Забирает ежедневную награду (20 бронзы). После успеха обновляет состояние и balance.
+  Future<int?> claimDailyReward() async {
+    final repo = _ref.read(authRepositoryProvider);
+    final newBalance = await repo.claimDailyReward();
+    _ref.read(dailyRewardFromRealtimeProvider.notifier).state = false;
+    _ref.invalidate(dailyRewardAvailableProvider);
+    if (newBalance == null) return null;
+    final user = state.valueOrNull;
+    if (user != null) {
+      final updated = AuthUser(
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        isAdmin: user.isAdmin,
+        age: user.age,
+        gender: user.gender,
+        about: user.about,
+        avatarKind: user.avatarKind,
+        avatarValue: user.avatarValue,
+        balanceBronze: newBalance,
+      );
+      state = AsyncValue.data(updated);
+      await repo.updateStoredUser(updated);
+    }
+    return newBalance;
   }
 
   /// Обновляет профиль пользователя на бэкенде. Все поля сохраняются в БД.

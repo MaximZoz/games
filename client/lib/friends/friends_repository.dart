@@ -246,6 +246,21 @@ class FriendsRepository {
     throw FriendsException(response.statusCode, translated);
   }
 
+  Future<int> getUsersCount() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/friends/users-count'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'FriendsRepository.getUsersCount',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return (body['count'] as num?)?.toInt() ?? 0;
+  }
+
   Future<FriendsSnapshot> getFriends() async {
     final response = await _authorizedRequest(
       (token) => ApiClient.get(

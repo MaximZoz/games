@@ -1,0 +1,74 @@
+---
+description: Адаптивный UI, соглашения репозитория, тесты и README после новой фичи
+globs: client/lib/**/*.dart
+alwaysApply: true
+---
+
+# Адаптивный интерфейс и соглашения репозитория
+
+## 1. Адаптивность под десктоп и мобильные экраны
+
+При работе с UI (экраны, виджеты, диалоги) **всегда проверяй и обеспечивай** адаптивность:
+
+- **Десктоп** (ширина >= 700): полноценный макет, боковые панели при необходимости.
+- **Мобильные** (shortestSide < 700): компактный макет, вертикальный стек, скрытие/сворачивание второстепенного.
+
+### Инструменты репозитория
+
+- Импортировать `package:multigames_client/ui/responsive.dart`
+- Использовать `isNarrow(context)` и `isWide(context)` для ветвления по ширине
+- Breakpoint: `Breakpoints.mobile = 700`
+- Для телефонов ориентироваться на `MediaQuery.sizeOf(context).shortestSide`, чтобы landscape обрабатывался корректно
+
+### Паттерны
+
+```dart
+// Разный layout для мобильной и десктопной ширины
+final narrow = isNarrow(context);
+if (narrow) {
+  return Column(children: [...]);
+} else {
+  return Row(children: [...]);
+}
+```
+
+```dart
+// LayoutBuilder для адаптивной ширины
+LayoutBuilder(
+  builder: (context, constraints) {
+    if (constraints.maxWidth < 700) return _MobileLayout();
+    return _DesktopLayout();
+  },
+)
+```
+
+Для диалогов и модалок — ограничивать `maxHeight: MediaQuery.sizeOf(context).height * 0.85`, на узких экранах (< 380) делать компактный вариант.
+
+---
+
+## 2. Соглашения репозитория
+
+Работа должна соответствовать принятым в проекте практикам:
+
+- **Клиент**: Flutter 3.27+, Riverpod, go_router; структура `lib/` по доменам (auth, friends, admin, screens, ui, widgets)
+- **Сервер**: Go 1.24+, `net/http`, pgx, миграции в `migrations/`
+- **Стиль**: следовать существующему коду в том же модуле (именование, отступы, импорты)
+- **Тесты**: `cd server && go test ./...` и `cd client && flutter test` должны проходить
+
+Не использовать устаревшие API (например, `DropdownButtonFormField.initialValue` в Flutter 3.27, `Matrix4.translateByDouble()` — их нет в текущей версии).
+
+---
+
+## 3. После новой фичи — обновлять тесты и README
+
+При добавлении новой функциональности **обязательно**:
+
+1. **Тесты**
+   - Go: добавить или обновить тесты в `server/` (unit/integration), если затрагивается API или логика
+   - Flutter: добавить или обновить widget/unit-тесты в `client/test/`, если добавляются экраны или виджеты
+   - Убедиться: `go test ./...` и `flutter test` проходят
+
+2. **README** (корневой `README.md`)
+   - Добавить фичу в раздел «Что уже реализовано» / «Актуальные задачи»
+   - При новом API — обновить список эндпоинтов
+   - При изменении структуры — обновить описание архитектуры, если нужно

@@ -9,11 +9,13 @@
 - полноценная аутентификация (register/login/me + refresh flow);
 - профиль пользователя (ник, возраст, пол, about, аватар);
 - модуль друзей (друзья, входящие/исходящие заявки, поиск, действия);
+- чаты между друзьями (список, сообщения, чтение, блокировка);
+- presence (онлайн-статус пользователей);
+- монеты и ежедневная награда;
+- крестики-нолики (лобби, invite/matchmake, игра 3×3–8×8, ставки, бот);
 - админка (пользователи + логи с фильтрами);
 - централизованное логирование frontend/backend в БД через файл-буфер;
 - деплой Flutter Web + Go API одним сервисом на Fly.io.
-
-Игровые режимы (`/games`, `/tournaments`, и др.) пока представлены базовыми экранами-заглушками.
 
 ---
 
@@ -21,12 +23,12 @@
 
 ```text
 Flutter (Web client, Riverpod + go_router)
-            │ REST (/api/*)
+            │ REST (/api/*) + WebSocket (/api/ws)
             ▼
-Go (net/http, middleware, auth, friends, admin, logging)
+Go (net/http, middleware, auth, friends, chats, games, admin, logging)
             │
             ├── PostgreSQL (users, sessions, friends, logs)
-            └── Redis (опционально)
+            └── Redis (чаты, games, presence — опционален, без него games недоступны)
 ```
 
 ---
@@ -68,8 +70,10 @@ Go (net/http, middleware, auth, friends, admin, logging)
 │   ├── lib/
 │   │   ├── admin/
 │   │   ├── auth/
+│   │   ├── chats/
 │   │   ├── core/
 │   │   ├── friends/
+│   │   ├── games/
 │   │   ├── screens/
 │   │   ├── ui/
 │   │   └── widgets/
@@ -114,6 +118,20 @@ Go (net/http, middleware, auth, friends, admin, logging)
   - `GET /api/friends`
   - `GET /api/friends/search`
   - `POST /api/friends/request|accept|reject|cancel|remove`
+- Chats API:
+  - `GET /api/chats`, `POST /api/chats/start`
+  - `GET /api/chats/messages`, `POST /api/chats/read`
+  - `POST /api/chats/clear`, `POST /api/chats/block`, `POST /api/chats/unblock`
+  - `GET /api/chats/blocked`
+- Presence API: `GET /api/presence?user_ids=...`
+- Coins API: `GET /api/coins/daily-available`, `POST /api/coins/claim-daily`
+- Games API (крестики-нолики, Redis обязателен):
+  - `POST /api/games/tictactoe/lobby` — создать лобби (invite/matchmake)
+  - `GET /api/games/tictactoe/lobbies` — список открытых лобби
+  - `GET /api/games/tictactoe/lobby/:id`, `POST /api/games/tictactoe/lobby/:id/invite|join|leave|decline`
+  - `POST /api/games/tictactoe/rematch` — реванш
+  - `GET /api/games/tictactoe/active` — активная игра/лобби
+  - `GET /api/games/tictactoe/game/:id`, `POST /api/games/tictactoe/game/:id/move|swap|forfeit`
 - Admin API:
   - `POST /api/admin/init`
   - `GET /api/admin/users`
@@ -142,6 +160,19 @@ Go (net/http, middleware, auth, friends, admin, logging)
   - компактные карточки и icon-only actions;
   - поиск только по нику (`display_name`);
   - email в карточках друзей не отображается.
+- Чаты (`/chats`): список диалогов, комната чата, непрочитанные, блокировка.
+- Presence: онлайн-статус в списке друзей и чатах.
+- Монеты и ежедневная награда (`/coins` или в меню).
+- Крестики-нолики (`/games`):
+  - «Своя игра» (приглашение друга) и «Поиск игры» (matchmake);
+  - поле 3×3–8×8, время на ход, правило swap, запрет центра;
+  - ставки в бронзовых;
+  - бот: если соперник не найден за 30 с (опция в настройках) — игра на 1 бр.;
+  - умный бот (минимакс 3×3, эвристики для больших полей), задержка 1 с перед ходом;
+  - карточка соперника (чат, добавить в друзья — скрыто для бота);
+  - иконка правил в экране игры.
+- Настройки (`/settings`):
+  - опция «Добавлять ботов через 30 с» — при поиске игры: если соперник не найден за 30 секунд, начинается игра с ботом.
 
 ---
 
@@ -272,13 +303,16 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 - [x] Админка пользователей
 - [x] Система логирования frontend/backend в БД
 - [x] Модуль друзей (API + UI)
+- [x] Чаты (API + UI)
+- [x] Presence, монеты, ежедневная награда
+- [x] Крестики-нолики (лобби, matchmake, игра, бот, ставки)
 - [x] Базовый деплой на Fly.io
 
 ### Ближайшие задачи
 
-- [ ] Добавить интеграционные тесты с реальной БД для friends/admin сценариев
+- [ ] Добавить интеграционные тесты с реальной БД для friends/admin/chats/games
 - [ ] Расширить покрытие Flutter widget-тестами ключевых экранов
-- [ ] Реализовать игровые режимы (вместо заглушек) и соответствующие API
+- [ ] Реализовать дополнительные игровые режимы (сейчас только крестики-нолики)
 - [ ] Подготовить релизный чек-лист для production (monitoring, alerts, backup policy)
 
 ---
