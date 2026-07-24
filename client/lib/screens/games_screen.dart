@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -222,16 +223,28 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
-      if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
-        context.push('/games/tictactoe/game/${result.gameId}');
+        _navigateToJoinedGame(result.gameId!);
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(formatUserError(e))),
-        );
-      }
+      _showInviteError(e);
+    }
+  }
+
+  void _navigateToJoinedGame(String gameId) {
+    if (!mounted) return;
+    navigateToGame(
+      GoRouter.of(context),
+      ref.read(gameNavigationCoordinatorProvider),
+      gameId,
+    );
+  }
+
+  void _showInviteError(Object error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(formatUserError(error))),
+      );
     }
   }
 

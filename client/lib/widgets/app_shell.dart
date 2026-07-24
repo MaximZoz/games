@@ -8,6 +8,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -42,6 +43,7 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
+    final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
@@ -51,6 +53,17 @@ class AppShell extends ConsumerWidget {
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
+          if (type == 'game_started' || type == 'lobby_updated') {
+            final router = GoRouter.of(context);
+            final gameId = realtimeGameIdForNavigation(
+              event,
+              currentPath:
+                  router.routerDelegate.currentConfiguration.uri.path,
+            );
+            if (context.mounted) {
+              navigateToGame(router, gameNavigation, gameId);
+            }
+          }
           if (type == 'daily_reward_available' || type == 'daily_reward_claimed') {
             final available = event['available'] == true;
             ref.read(dailyRewardFromRealtimeProvider.notifier).state = available;
