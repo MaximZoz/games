@@ -468,6 +468,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   }
 
   Future<void> _copyInviteLink(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
     final url = buildInviteLobbyShareUrl(
       lobbyId: widget.lobbyId,
       baseUri: Uri.base,
@@ -479,7 +480,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     _linkCopiedTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) setState(() => _linkCopied = false);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       const SnackBar(content: Text('Ссылка скопирована в буфер обмена')),
     );
   }
