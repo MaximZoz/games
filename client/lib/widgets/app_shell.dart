@@ -20,7 +20,8 @@ const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
   _NavItem(path: '/profile', icon: Icons.person, label: 'Профиль'),
   _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
-  _NavItem(path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
+  _NavItem(
+      path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
   _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
   _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
 ];
@@ -57,16 +58,17 @@ class AppShell extends ConsumerWidget {
             final router = GoRouter.of(context);
             final gameId = realtimeGameIdForNavigation(
               event,
-              currentPath:
-                  router.routerDelegate.currentConfiguration.uri.path,
+              currentPath: router.routerDelegate.currentConfiguration.uri.path,
             );
             if (context.mounted) {
               navigateToGame(router, gameNavigation, gameId);
             }
           }
-          if (type == 'daily_reward_available' || type == 'daily_reward_claimed') {
+          if (type == 'daily_reward_available' ||
+              type == 'daily_reward_claimed') {
             final available = event['available'] == true;
-            ref.read(dailyRewardFromRealtimeProvider.notifier).state = available;
+            ref.read(dailyRewardFromRealtimeProvider.notifier).state =
+                available;
             ref.invalidate(dailyRewardAvailableProvider);
           }
         });
@@ -91,7 +93,8 @@ class AppShell extends ConsumerWidget {
       if (!context.mounted) return;
       try {
         ref.read(currentRoutePathProvider.notifier).state = path;
-        final shouldClearToolbar = !onFriends && !onChatsList && !(inChatRoom && narrowLandscape);
+        final shouldClearToolbar =
+            !onFriends && !onChatsList && !(inChatRoom && narrowLandscape);
         if (shouldClearToolbar) {
           ref.read(mobileToolbarLeadingProvider.notifier).state = null;
         }
@@ -99,7 +102,8 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    final keyboardLikelyVisible = narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
+    final keyboardLikelyVisible =
+        narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = navigationShell.currentIndex;
 
     void navigateWithPrefetch(int i) {
@@ -109,9 +113,15 @@ class AppShell extends ConsumerWidget {
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         ref.read(activeGameProvider.future).then((active) {
           if (!context.mounted) return;
-          if (active != null && active.type == 'game' && active.gameId != null && active.gameId!.isNotEmpty) {
+          if (active != null &&
+              active.type == 'game' &&
+              active.gameId != null &&
+              active.gameId!.isNotEmpty) {
             context.go('/games/tictactoe/game/${active.gameId}');
-          } else if (active != null && active.type == 'lobby' && active.lobbyId != null && active.lobbyId!.isNotEmpty) {
+          } else if (active != null &&
+              active.type == 'lobby' &&
+              active.lobbyId != null &&
+              active.lobbyId!.isNotEmpty) {
             context.go('/games/tictactoe/lobby/${active.lobbyId}');
           } else {
             context.go('/games');
@@ -127,11 +137,15 @@ class AppShell extends ConsumerWidget {
           ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
         );
         unawaited(
-          ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
+          ref
+              .read(blockedUsersProvider.future)
+              .then((_) {}, onError: (_, __) {}),
         );
       } else if (target == '/friends') {
         unawaited(
-          ref.read(friendsSnapshotProvider.future).then((_) {}, onError: (_, __) {}),
+          ref
+              .read(friendsSnapshotProvider.future)
+              .then((_) {}, onError: (_, __) {}),
         );
       }
     }
@@ -155,7 +169,8 @@ class AppShell extends ConsumerWidget {
                 child: ClipRect(
                   child: Row(
                     children: [
-                      if ((narrow && (onFriends || onChatsList) || (narrowLandscape && inChatRoom)) &&
+                      if ((narrow && (onFriends || onChatsList) ||
+                              (narrowLandscape && inChatRoom)) &&
                           toolbarLeading != null)
                         narrowLandscape && inChatRoom
                             ? Expanded(
@@ -183,64 +198,74 @@ class AppShell extends ConsumerWidget {
                           ),
                         ),
                       const Spacer(),
-                      authState.when(
-                        data: (user) {
-                          if (user != null) {
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (user.isAdmin)
-                                  IconButton(
-                                    icon: const Icon(Icons.admin_panel_settings),
-                                    onPressed: () => context.go('/admin'),
-                                    tooltip: 'Админка',
-                                  ),
-                                Flexible(
-                                  child: Tooltip(
-                                    message: user.displayName ?? user.email,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 4),
-                                      child: Text(
-                                        user.displayName ?? user.email,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.textPrimary,
-                                          decoration: TextDecoration.none,
+                      Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: authState.when(
+                            data: (user) {
+                              if (user != null) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (user.isAdmin)
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.admin_panel_settings),
+                                        onPressed: () => context.go('/admin'),
+                                        tooltip: 'Админка',
+                                      ),
+                                    Flexible(
+                                      child: Tooltip(
+                                        message: user.displayName ?? user.email,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 4),
+                                          child: Text(
+                                            user.displayName ?? user.email,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textPrimary,
+                                              decoration: TextDecoration.none,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.logout),
-                                  onPressed: () async {
-                                    await ref.read(authStateProvider.notifier).logout();
-                                  },
-                                  tooltip: 'Выйти',
-                                ),
-                              ],
-                            );
-                          }
-                          return IconButton(
-                            icon: const Icon(Icons.login),
-                            onPressed: () => context.go('/login'),
-                            tooltip: 'Войти',
-                          );
-                        },
-                        loading: () => const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                                    IconButton(
+                                      icon: const Icon(Icons.logout),
+                                      onPressed: () async {
+                                        await ref
+                                            .read(authStateProvider.notifier)
+                                            .logout();
+                                      },
+                                      tooltip: 'Выйти',
+                                    ),
+                                  ],
+                                );
+                              }
+                              return IconButton(
+                                icon: const Icon(Icons.login),
+                                onPressed: () => context.go('/login'),
+                                tooltip: 'Войти',
+                              );
+                            },
+                            loading: () => const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                            error: (_, __) => IconButton(
+                              icon: const Icon(Icons.login),
+                              onPressed: () => context.go('/login'),
+                              tooltip: 'Войти',
+                            ),
                           ),
-                        ),
-                        error: (_, __) => IconButton(
-                          icon: const Icon(Icons.login),
-                          onPressed: () => context.go('/login'),
-                          tooltip: 'Войти',
                         ),
                       ),
                     ],
@@ -257,9 +282,13 @@ class AppShell extends ConsumerWidget {
                           selectedIndex: selectedIndex,
                           onDestinationSelected: navigateWithPrefetch,
                           backgroundColor: Colors.transparent,
-                          selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
-                          unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
-                          labelType: narrowLandscape ? NavigationRailLabelType.none : NavigationRailLabelType.all,
+                          selectedIconTheme:
+                              const IconThemeData(color: AppColors.accentStart),
+                          unselectedIconTheme: const IconThemeData(
+                              color: AppColors.textSecondary),
+                          labelType: narrowLandscape
+                              ? NavigationRailLabelType.none
+                              : NavigationRailLabelType.all,
                           destinations: _navItems.asMap().entries.map((entry) {
                             final index = entry.key;
                             final item = entry.value;
@@ -283,7 +312,10 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow && !narrowLandscape && !keyboardLikelyVisible && !inChatRoom)
+            if (narrow &&
+                !narrowLandscape &&
+                !keyboardLikelyVisible &&
+                !inChatRoom)
               SafeArea(
                 top: false,
                 child: Material(
@@ -303,8 +335,8 @@ class AppShell extends ConsumerWidget {
                       items: _navItems.asMap().entries.map((entry) {
                         final item = entry.value;
                         return BottomNavigationBarItem(
-                          icon: _navIcon(
-                              item, unreadChats, incomingFriends, gamesMyTurn, gameInvitesCount, dailyRewardCount),
+                          icon: _navIcon(item, unreadChats, incomingFriends,
+                              gamesMyTurn, gameInvitesCount, dailyRewardCount),
                           activeIcon: _navIcon(
                             item,
                             unreadChats,
@@ -345,7 +377,8 @@ Widget _navIcon(
         ? BoxDecoration(
             color: AppColors.accentSoft.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.accentStart.withValues(alpha: 0.35)),
+            border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35)),
           )
         : null,
     child: Icon(item.icon, color: iconColor, size: iconSize),
@@ -358,7 +391,7 @@ Widget _navIcon(
     badgeValue = incomingFriends;
   } else if (item.path == '/games') {
     badgeValue = gamesMyTurn + gameInvitesCount;
-  } else if (item.path == '/profile') {
+  } else if (item.path == '/') {
     badgeValue = dailyRewardCount;
   }
 

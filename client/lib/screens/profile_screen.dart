@@ -16,6 +16,7 @@ import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -28,18 +29,18 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 /// Готовый набор аватаров (иконки).
 const List<IconData> _presetAvatarIcons = [
-  Icons.face_rounded,           // лицо нейтральное
-  Icons.face_2_rounded,         // длинные волосы (ж)
-  Icons.face_3_rounded,         // вариант (м)
-  Icons.face_4_rounded,         // с усами (м)
-  Icons.face_5_rounded,         // с очками
-  Icons.face_6_rounded,         // вариант (ж)
-  Icons.man_rounded,            // мужчина
-  Icons.woman_rounded,          // женщина
-  Icons.elderly_rounded,        // пожилой м
-  Icons.elderly_woman_rounded,  // пожилая ж
-  Icons.person_rounded,         // нейтральный силуэт
-  Icons.child_care_rounded,     // ребёнок
+  Icons.face_rounded, // лицо нейтральное
+  Icons.face_2_rounded, // длинные волосы (ж)
+  Icons.face_3_rounded, // вариант (м)
+  Icons.face_4_rounded, // с усами (м)
+  Icons.face_5_rounded, // с очками
+  Icons.face_6_rounded, // вариант (ж)
+  Icons.man_rounded, // мужчина
+  Icons.woman_rounded, // женщина
+  Icons.elderly_rounded, // пожилой м
+  Icons.elderly_woman_rounded, // пожилая ж
+  Icons.person_rounded, // нейтральный силуэт
+  Icons.child_care_rounded, // ребёнок
 ];
 
 /// Декодирование base64 в отдельном isolate, чтобы не блокировать UI.
@@ -70,9 +71,8 @@ Future<Uint8List?> _compactAvatarBytes(Uint8List source) async {
     final width = probeImage.width;
     final height = probeImage.height;
     final longestSide = math.max(width, height);
-    final scale = longestSide > _avatarMaxSidePx
-        ? _avatarMaxSidePx / longestSide
-        : 1.0;
+    final scale =
+        longestSide > _avatarMaxSidePx ? _avatarMaxSidePx / longestSide : 1.0;
 
     final targetWidth = math.max(1, (width * scale).round());
     final targetHeight = math.max(1, (height * scale).round());
@@ -164,7 +164,8 @@ class _AsyncAvatarImageState extends State<_AsyncAvatarImage> {
     setState(() => _bytes = null);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      compute<String, Uint8List>(_decodeBase64Isolate, v.substring(7)).then((bytes) {
+      compute<String, Uint8List>(_decodeBase64Isolate, v.substring(7))
+          .then((bytes) {
         if (!mounted) return;
         _putAvatarCache(key, bytes);
         setState(() => _bytes = bytes);
@@ -212,7 +213,9 @@ class _AsyncAvatarImageState extends State<_AsyncAvatarImage> {
   }
 
   Widget _letterAvatar() {
-    final letter = widget.letter.isEmpty ? '?' : widget.letter.substring(0, 1).toUpperCase();
+    final letter = widget.letter.isEmpty
+        ? '?'
+        : widget.letter.substring(0, 1).toUpperCase();
     return CircleAvatar(
       radius: 40,
       backgroundColor: AppColors.accentSoft,
@@ -252,7 +255,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final box = _cardKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final topLeft = box.localToGlobal(Offset.zero);
-    final bounds = Rect.fromLTWH(topLeft.dx, topLeft.dy, box.size.width, box.size.height);
+    final bounds =
+        Rect.fromLTWH(topLeft.dx, topLeft.dy, box.size.width, box.size.height);
     if (!bounds.contains(e.position)) _startClosing();
   }
 
@@ -265,7 +269,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _startEditing(String currentName, ProfileExtra? extra) {
     _displayNameController.text = currentName;
-    _displayNameController.selection = TextSelection.collapsed(offset: currentName.length);
+    _displayNameController.selection =
+        TextSelection.collapsed(offset: currentName.length);
     setState(() => _isEditing = true);
   }
 
@@ -295,102 +300,114 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mobile = isNarrow(context);
+
+    Widget scrollableBody(Widget child) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: child,
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget centeredBody(Widget child) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: child,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: ref.watch(authStateProvider).when(
-                  data: (user) {
-                    if (user == null) {
-                      return _ProfileEmptyState(
-                        key: const ValueKey('empty'),
-                        onLogin: () => context.go('/login'),
-                        onRegister: () => context.go('/register'),
-                      );
-                    }
-                    final extraAsync = ref.watch(profileExtraProvider);
-                    final profileExtra = extraAsync.valueOrNull ?? _lastProfileExtra ?? const ProfileExtra();
-                    final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
-                    final coinsBadgeCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
-                    Widget content = extraAsync.when(
-                      data: (extra) {
-                        return _ProfileContent(
-                          key: ValueKey(user.id),
-                          cardKey: _cardKey,
-                          user: user,
-                          profileExtra: extra ?? const ProfileExtra(),
-                          isEditing: _isEditing,
-                          isClosing: _isClosing,
-                          displayNameController: _displayNameController,
-                          displayNameFocus: _displayNameFocus,
-                          onStartEdit: () => _startEditing(
-                            user.displayName ?? user.email,
-                            extra ?? const ProfileExtra(),
-                          ),
-                          onCancelEdit: _cancelEditing,
-                          onSave: _saveProfile,
-                          coinsBadgeCount: coinsBadgeCount,
-                        );
-                      },
-                      loading: () => _ProfileContent(
-                        key: ValueKey(user.id),
-                        cardKey: _cardKey,
+        child: ref.watch(authStateProvider).when(
+              data: (user) {
+                if (user == null) {
+                  return scrollableBody(
+                    _ProfileEmptyState(
+                      key: const ValueKey('empty'),
+                      onLogin: () => context.go('/login'),
+                      onRegister: () => context.go('/register'),
+                    ),
+                  );
+                }
+
+                final extraAsync = ref.watch(profileExtraProvider);
+                final profileExtra = extraAsync.valueOrNull ??
+                    _lastProfileExtra ??
+                    const ProfileExtra();
+
+                Widget buildProfile(ProfileExtra extra) {
+                  if (mobile && _isEditing) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                      child: _ProfileEditForm(
+                        key: const ValueKey('mobile_edit_form'),
                         user: user,
-                        profileExtra: profileExtra,
-                        isEditing: _isEditing,
-                        isClosing: _isClosing,
+                        profileExtra: extra,
                         displayNameController: _displayNameController,
-                        displayNameFocus: _displayNameFocus,
-                        onStartEdit: () => _startEditing(
-                          user.displayName ?? user.email,
-                          profileExtra,
-                        ),
-                        onCancelEdit: _cancelEditing,
+                        focusNode: _displayNameFocus,
+                        onCancel: _cancelEditing,
                         onSave: _saveProfile,
-                        coinsBadgeCount: coinsBadgeCount,
-                      ),
-                      error: (_, __) => _ProfileContent(
-                        key: ValueKey(user.id),
-                        cardKey: _cardKey,
-                        user: user,
-                        profileExtra: const ProfileExtra(),
-                        isEditing: _isEditing,
-                        isClosing: _isClosing,
-                        displayNameController: _displayNameController,
-                        displayNameFocus: _displayNameFocus,
-                        onStartEdit: () => _startEditing(
-                          user.displayName ?? user.email,
-                          const ProfileExtra(),
-                        ),
-                        onCancelEdit: _cancelEditing,
-                        onSave: _saveProfile,
-                        coinsBadgeCount: coinsBadgeCount,
+                        compact: true,
                       ),
                     );
-                    if (_isEditing) {
-                      content = Listener(
-                        onPointerDown: _onTapOutsideCard,
-                        child: content,
-                      );
-                    }
-                    return content;
-                  },
-                  loading: () => const _ProfileLoadingState(key: ValueKey('loading')),
-                  error: (err, _) => _ProfileErrorState(
-                    key: const ValueKey('error'),
-                    message: err is AuthException ? err.message : formatUserError(err),
-                    onRetry: () => ref.read(authStateProvider.notifier).refresh(),
-                  ),
+                  }
+
+                  Widget content = _ProfileContent(
+                    key: ValueKey(user.id),
+                    cardKey: _cardKey,
+                    user: user,
+                    profileExtra: extra,
+                    isEditing: _isEditing,
+                    isClosing: _isClosing,
+                    displayNameController: _displayNameController,
+                    displayNameFocus: _displayNameFocus,
+                    onStartEdit: () => _startEditing(
+                      user.displayName ?? user.email,
+                      extra,
+                    ),
+                    onCancelEdit: _cancelEditing,
+                    onSave: _saveProfile,
+                  );
+                  if (_isEditing) {
+                    content = Listener(
+                      onPointerDown: _onTapOutsideCard,
+                      child: content,
+                    );
+                  }
+                  return centeredBody(content);
+                }
+
+                return extraAsync.when(
+                  data: (extra) => buildProfile(extra ?? const ProfileExtra()),
+                  loading: () => buildProfile(profileExtra),
+                  error: (_, __) => buildProfile(profileExtra),
+                );
+              },
+              loading: () => scrollableBody(
+                const _ProfileLoadingState(key: ValueKey('loading')),
+              ),
+              error: (err, _) => scrollableBody(
+                _ProfileErrorState(
+                  key: const ValueKey('error'),
+                  message:
+                      err is AuthException ? err.message : formatUserError(err),
+                  onRetry: () => ref.read(authStateProvider.notifier).refresh(),
                 ),
               ),
             ),
-          ],
-        ),
       ),
     );
   }
@@ -502,7 +519,7 @@ class _ProfileEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Чтобы видеть профиль и достижения',
+              'Чтобы настроить личный профиль',
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14,
@@ -541,12 +558,10 @@ class _ProfileContent extends StatelessWidget {
     required this.onStartEdit,
     required this.onCancelEdit,
     required this.onSave,
-    this.coinsBadgeCount = 0,
   });
 
   final Key? cardKey;
   final AuthUser user;
-  final int coinsBadgeCount;
   final ProfileExtra profileExtra;
   final bool isEditing;
   final bool isClosing;
@@ -602,32 +617,6 @@ class _ProfileContent extends StatelessWidget {
                   ),
           ),
         ),
-        const SizedBox(height: 24),
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: AppDurations.medium,
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) => Opacity(
-            opacity: value,
-            child: child,
-          ),
-          child: Column(
-            children: [
-              _ProfileLink(
-                icon: Icons.emoji_events,
-                label: 'Достижения',
-                onTap: () => context.push('/achievements'),
-              ),
-              const SizedBox(height: 12),
-              _ProfileLink(
-                icon: Icons.monetization_on,
-                label: 'Монеты',
-                onTap: () => context.push('/coins'),
-                badgeCount: coinsBadgeCount,
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -653,7 +642,9 @@ class _ProfileView extends StatelessWidget {
     if (user.displayName?.trim().isNotEmpty == true) {
       return user.displayName!.trim().substring(0, 1).toUpperCase();
     }
-    return user.email.trim().isEmpty ? '?' : user.email.substring(0, 1).toUpperCase();
+    return user.email.trim().isEmpty
+        ? '?'
+        : user.email.substring(0, 1).toUpperCase();
   }
 
   Widget _buildAvatar() {
@@ -669,13 +660,31 @@ class _ProfileView extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildAvatar(),
-        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [AppColors.accentStart, AppColors.accentEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceCard,
+              shape: BoxShape.circle,
+            ),
+            child: _buildAvatar(),
+          ),
+        ),
+        const SizedBox(height: 18),
         Text(
           _displayTitle,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
               ),
           textAlign: TextAlign.center,
         ),
@@ -690,57 +699,110 @@ class _ProfileView extends StatelessWidget {
           ),
         ],
         if (profileExtra.age != null ||
-            (profileExtra.gender != null && profileExtra.gender!.isNotEmpty) ||
-            (profileExtra.about != null && profileExtra.about!.trim().isNotEmpty)) ...[
-          const SizedBox(height: 12),
-          if (profileExtra.age != null || (profileExtra.gender != null && profileExtra.gender!.isNotEmpty))
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (profileExtra.age != null) ...[
-                  Text(
-                    '${profileExtra.age} ${_ageYearsWord(profileExtra.age!)}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  if (profileExtra.gender != null && profileExtra.gender!.isNotEmpty) const SizedBox(width: 8),
-                ],
-                if (profileExtra.gender != null && profileExtra.gender!.isNotEmpty)
-                  Icon(
-                    profileExtra.gender == 'Женский' ? Icons.female : Icons.male,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-              ],
+            (profileExtra.gender != null &&
+                profileExtra.gender!.isNotEmpty)) ...[
+          const SizedBox(height: 14),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (profileExtra.age != null)
+                _ProfileInfoChip(
+                  icon: Icons.cake_outlined,
+                  label:
+                      '${profileExtra.age} ${_ageYearsWord(profileExtra.age!)}',
+                ),
+              if (profileExtra.gender != null &&
+                  profileExtra.gender!.isNotEmpty)
+                _ProfileInfoChip(
+                  icon: profileExtra.gender == 'Женский'
+                      ? Icons.female_rounded
+                      : Icons.male_rounded,
+                  label: profileExtra.gender!,
+                ),
+            ],
+          ),
+        ],
+        if (profileExtra.about != null &&
+            profileExtra.about!.trim().isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(16),
             ),
-          if (profileExtra.about != null && profileExtra.about!.trim().isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
+            child: Text(
               profileExtra.about!.trim(),
               style: const TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.textPrimary,
                 fontSize: 14,
+                height: 1.35,
               ),
               textAlign: TextAlign.center,
             ),
-          ],
+          ),
         ],
-        const SizedBox(height: 20),
-        TextButton.icon(
+        const SizedBox(height: 22),
+        OutlinedButton.icon(
           onPressed: onEdit,
-          icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.accentStart),
+          icon: const Icon(Icons.edit_outlined, size: 18),
           label: const Text(
             'Редактировать',
             style: TextStyle(
-              color: AppColors.accentStart,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.accentStart,
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+            side: BorderSide(
+              color: AppColors.accentStart.withValues(alpha: 0.6),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ProfileInfoChip extends StatelessWidget {
+  const _ProfileInfoChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.accentStart.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: AppColors.accentStart),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -754,6 +816,7 @@ class _ProfileEditForm extends StatefulWidget {
     required this.focusNode,
     required this.onCancel,
     required this.onSave,
+    this.compact = false,
   });
 
   final AuthUser user;
@@ -762,6 +825,7 @@ class _ProfileEditForm extends StatefulWidget {
   final FocusNode focusNode;
   final VoidCallback onCancel;
   final Future<void> Function(String displayName, ProfileExtra extra) onSave;
+  final bool compact;
 
   @override
   State<_ProfileEditForm> createState() => _ProfileEditFormState();
@@ -819,9 +883,13 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _avatarValue = widget.profileExtra.avatarValue;
   }
 
-  ProfileExtra get _effectiveInitialExtra => _initialExtra ?? widget.profileExtra;
+  ProfileExtra get _effectiveInitialExtra =>
+      _initialExtra ?? widget.profileExtra;
 
-  void _onFieldsChanged() => setState(() { _ageError = null; _saveError = null; });
+  void _onFieldsChanged() => setState(() {
+        _ageError = null;
+        _saveError = null;
+      });
 
   bool get _hasChanges {
     final name = widget.displayNameController.text.trim();
@@ -864,7 +932,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       return _cachedAvatarWidget!;
     }
     Widget avatarWidget;
-    if (_avatarKind == AvatarKind.file && _avatarValue != null && _avatarValue!.isNotEmpty) {
+    if (_avatarKind == AvatarKind.file &&
+        _avatarValue != null &&
+        _avatarValue!.isNotEmpty) {
       final v = _avatarValue!;
       if (v.startsWith('base64,')) {
         avatarWidget = _AsyncAvatarImage(
@@ -908,7 +978,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
   Widget _buildLetterAvatar(String name) {
     final displayName = name.isNotEmpty ? name : (widget.user.email);
-    final letter = displayName.isEmpty ? '?' : displayName.substring(0, 1).toUpperCase();
+    final letter =
+        displayName.isEmpty ? '?' : displayName.substring(0, 1).toUpperCase();
     return CircleAvatar(
       radius: 40,
       backgroundColor: AppColors.accentSoft,
@@ -954,7 +1025,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       setState(() {
         if (compactAvatarValue == null) {
           // Если даже после ресайза аватар всё ещё слишком тяжёлый — используем лёгкую иконку.
-          final presetIndex = widget.user.id.hashCode.abs() % _presetAvatarIcons.length;
+          final presetIndex =
+              widget.user.id.hashCode.abs() % _presetAvatarIcons.length;
           _avatarKind = AvatarKind.preset;
           _avatarValue = presetIndex.toString();
         } else {
@@ -989,7 +1061,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     final extra = ProfileExtra(
       age: age,
       gender: _gender,
-      about: _aboutController.text.trim().isEmpty ? null : _aboutController.text.trim(),
+      about: _aboutController.text.trim().isEmpty
+          ? null
+          : _aboutController.text.trim(),
       avatarKind: _avatarKind,
       avatarValue: _avatarValue,
     );
@@ -1008,7 +1082,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       if (mounted) {
         setState(() {
           _isSaving = false;
-          _saveError = formatUserError(e, fallback: 'Не удалось сохранить профиль');
+          _saveError =
+              formatUserError(e, fallback: 'Не удалось сохранить профиль');
         });
       }
     }
@@ -1036,7 +1111,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     Navigator.of(ctx).pop();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
                         Expanded(
@@ -1045,7 +1121,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 15,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -1061,8 +1139,187 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     );
   }
 
+  Widget _buildCompactEditor(BuildContext context) {
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              Text(
+                'Редактирование',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const Spacer(),
+              IconButton(
+                tooltip: 'Закрыть',
+                onPressed: _isSaving ? null : widget.onCancel,
+                icon: const Icon(Icons.close_rounded),
+                color: Colors.red.shade600,
+              ),
+            ],
+          ),
+        ),
+        if (!keyboardVisible) ...[
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 82,
+            child: Row(
+              children: [
+                SizedBox(
+                    width: 76, child: Center(child: _buildCurrentAvatar())),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _presetAvatarIcons.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 5),
+                    itemBuilder: (context, index) {
+                      final selected = _avatarKind == AvatarKind.preset &&
+                          _avatarValue == index.toString();
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _avatarKind = AvatarKind.preset;
+                          _avatarValue = index.toString();
+                        }),
+                        child: AnimatedContainer(
+                          duration: AppDurations.short,
+                          width: 48,
+                          height: 48,
+                          margin: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentSoft,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.accentStart
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            _presetAvatarIcons[index],
+                            color: AppColors.accentStart,
+                            size: 25,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: widget.displayNameController,
+          focusNode: widget.focusNode,
+          inputFormatters: _displayNameFormatters,
+          decoration: const InputDecoration(
+            labelText: 'Имя (логин)',
+            prefixIcon: Icon(Icons.person_outline_rounded),
+          ),
+          textCapitalization: TextCapitalization.none,
+          autocorrect: false,
+          onFieldSubmitted: (_) => _submit(),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          widget.user.email,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _ageController,
+                inputFormatters: _ageFormatters,
+                decoration: InputDecoration(
+                  labelText: 'Возраст',
+                  prefixIcon: const Icon(Icons.cake_outlined),
+                  errorText: _ageError,
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: InkWell(
+                onTap: _openGenderMenu,
+                borderRadius: BorderRadius.circular(AppRadius.input),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Пол',
+                    prefixIcon: Icon(Icons.wc_rounded),
+                  ),
+                  child: Text(
+                    _gender ?? 'Не указан',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _aboutController,
+          inputFormatters: _aboutFormatters,
+          decoration: const InputDecoration(
+            labelText: 'О себе',
+            prefixIcon: Icon(Icons.info_outline_rounded),
+            counterText: '',
+          ),
+          maxLines: keyboardVisible ? 1 : 2,
+          maxLength: 100,
+        ),
+        if (!keyboardVisible) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+            icon: _isAvatarProcessing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.photo_library_outlined, size: 19),
+            label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+          ),
+        ],
+        if (_saveError != null) ...[
+          const SizedBox(height: 6),
+          MessageBanner(message: _saveError!, type: BannerType.error),
+        ],
+        const SizedBox(height: 14),
+        AppButton(
+          onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+          label: 'Сохранить',
+          isLoading: _isSaving,
+          expanded: true,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.compact) {
+      return _buildCompactEditor(context);
+    }
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -1074,177 +1331,182 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               children: [
                 const SizedBox(height: 32),
                 TextFormField(
-              controller: widget.displayNameController,
-              focusNode: widget.focusNode,
-              inputFormatters: _displayNameFormatters,
-              decoration: const InputDecoration(
-                labelText: 'Имя (логин)',
-                hintText: 'Латиница, цифры, _ до 10 символов',
-                prefixIcon: Icon(Icons.person_outline_rounded),
-              ),
-              textCapitalization: TextCapitalization.none,
-              autocorrect: false,
-              onFieldSubmitted: (_) => _submit(),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.user.email,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _ageController,
-              inputFormatters: _ageFormatters,
-              decoration: InputDecoration(
-                labelText: 'Возраст',
-                hintText: 'От 1 до 111',
-                prefixIcon: const Icon(Icons.cake_outlined),
-                errorText: _ageError,
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: _openGenderMenu,
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Пол',
-                  prefixIcon: Icon(Icons.wc_rounded),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(_gender ?? 'Не указан'),
-                    const Icon(Icons.arrow_drop_down),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _aboutController,
-              inputFormatters: _aboutFormatters,
-              decoration: const InputDecoration(
-                labelText: 'О себе',
-                hintText: 'До 100 символов (по желанию)',
-                prefixIcon: Icon(Icons.info_outline_rounded),
-                alignLabelWithHint: true,
-                counterText: '',
-              ),
-              maxLines: 3,
-              maxLength: 100,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Аватар',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                  controller: widget.displayNameController,
+                  focusNode: widget.focusNode,
+                  inputFormatters: _displayNameFormatters,
+                  decoration: const InputDecoration(
+                    labelText: 'Имя (логин)',
+                    hintText: 'Латиница, цифры, _ до 10 символов',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
                   ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  _buildCurrentAvatar(),
-                  if (_isAvatarProcessing)
-                    Container(
-                      width: 88,
-                      height: 88,
-                      decoration: const BoxDecoration(
-                        color: Color(0x8A000000),
-                        shape: BoxShape.circle,
+                  textCapitalization: TextCapitalization.none,
+                  autocorrect: false,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.user.email,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _ageController,
+                  inputFormatters: _ageFormatters,
+                  decoration: InputDecoration(
+                    labelText: 'Возраст',
+                    hintText: 'От 1 до 111',
+                    prefixIcon: const Icon(Icons.cake_outlined),
+                    errorText: _ageError,
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                InkWell(
+                  onTap: _openGenderMenu,
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Пол',
+                      prefixIcon: Icon(Icons.wc_rounded),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_gender ?? 'Не указан'),
+                        const Icon(Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _aboutController,
+                  inputFormatters: _aboutFormatters,
+                  decoration: const InputDecoration(
+                    labelText: 'О себе',
+                    hintText: 'До 100 символов (по желанию)',
+                    prefixIcon: Icon(Icons.info_outline_rounded),
+                    alignLabelWithHint: true,
+                    counterText: '',
+                  ),
+                  maxLines: 3,
+                  maxLength: 100,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Аватар',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 26,
-                          height: 26,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            color: Colors.white,
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _buildCurrentAvatar(),
+                      if (_isAvatarProcessing)
+                        Container(
+                          width: 88,
+                          height: 88,
+                          decoration: const BoxDecoration(
+                            color: Color(0x8A000000),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 26,
+                              height: 26,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ...List.generate(_presetAvatarIcons.length, (index) {
-                  final selected = _avatarKind == AvatarKind.preset &&
-                      _avatarValue == index.toString();
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      _avatarKind = AvatarKind.preset;
-                      _avatarValue = index.toString();
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ...List.generate(_presetAvatarIcons.length, (index) {
+                      final selected = _avatarKind == AvatarKind.preset &&
+                          _avatarValue == index.toString();
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _avatarKind = AvatarKind.preset;
+                          _avatarValue = index.toString();
+                        }),
+                        child: AnimatedContainer(
+                          duration: AppDurations.short,
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.accentStart
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: AppColors.accentSoft,
+                            child: Icon(
+                              _presetAvatarIcons[index],
+                              color: AppColors.accentStart,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      );
                     }),
-                    child: AnimatedContainer(
-                      duration: AppDurations.short,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: selected ? AppColors.accentStart : Colors.transparent,
-                          width: 2,
+                  ],
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed:
+                      (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+                  icon: _isAvatarProcessing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          _hasPhoto
+                              ? Icons.change_circle_outlined
+                              : Icons.photo_library_outlined,
+                          size: 20,
                         ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.accentSoft,
-                        child: Icon(
-                          _presetAvatarIcons[index],
-                          color: AppColors.accentStart,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+                  label: Text(
+                    _isAvatarProcessing
+                        ? 'Обработка фото...'
+                        : (_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+                  ),
+                ),
+                if (_saveError != null) ...[
+                  MessageBanner(message: _saveError!, type: BannerType.error),
+                  const SizedBox(height: 16),
+                ],
+                const SizedBox(height: 24),
+                AppButton(
+                  onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+                  label: 'Сохранить',
+                  isLoading: _isSaving,
+                  expanded: true,
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-              icon: _isAvatarProcessing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      _hasPhoto ? Icons.change_circle_outlined : Icons.photo_library_outlined,
-                      size: 20,
-                    ),
-              label: Text(
-                _isAvatarProcessing
-                    ? 'Обработка фото...'
-                    : (_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
-              ),
-            ),
-            if (_saveError != null) ...[
-              MessageBanner(message: _saveError!, type: BannerType.error),
-              const SizedBox(height: 16),
-            ],
-            const SizedBox(height: 24),
-            AppButton(
-              onPressed: (_isSaving || !_hasChanges) ? null : _submit,
-              label: 'Сохранить',
-              isLoading: _isSaving,
-              expanded: true,
-            ),
-          ],
+          ),
         ),
-      ),
-    ),
         Positioned(
           top: -8,
           right: -8,
@@ -1353,7 +1615,8 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
           as RenderRepaintBoundary?;
       if (boundary == null) return;
       renderedImage = await boundary.toImage(pixelRatio: 2);
-      final data = await renderedImage.toByteData(format: ui.ImageByteFormat.png);
+      final data =
+          await renderedImage.toByteData(format: ui.ImageByteFormat.png);
       if (!mounted || data == null) return;
       Navigator.of(context).pop(data.buffer.asUint8List());
     } finally {
@@ -1430,64 +1693,6 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
           label: Text(_exporting ? 'Подготовка...' : 'Применить'),
         ),
       ],
-    );
-  }
-}
-
-class _ProfileLink extends StatelessWidget {
-  const _ProfileLink({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.badgeCount = 0,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final int badgeCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBorderBox(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.accentStart, size: 24),
-            const SizedBox(width: 16),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const Spacer(),
-            if (badgeCount > 0)
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade600,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  badgeCount > 99 ? '99+' : '$badgeCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-          ],
-        ),
-      ),
     );
   }
 }

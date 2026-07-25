@@ -28,7 +28,7 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
-          tooltip: 'Назад в профиль',
+          tooltip: 'Назад на главную',
         ),
         title: Text(
           'Монеты',
@@ -56,7 +56,9 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
                         onClaim: () async {
                           if (_isClaiming) return;
                           setState(() => _isClaiming = true);
-                          await ref.read(authStateProvider.notifier).claimDailyReward();
+                          await ref
+                              .read(authStateProvider.notifier)
+                              .claimDailyReward();
                           if (mounted) setState(() => _isClaiming = false);
                         },
                       ),
@@ -69,11 +71,13 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
                         available: false,
                         isClaiming: false,
                         onClaim: () async {},
-                        errorMessage: 'Не удалось проверить. Нажмите «Обновить».',
+                        errorMessage:
+                            'Не удалось проверить. Нажмите «Обновить».',
                       ),
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (_, __) => const SizedBox.shrink(),
                 ),
               ],
@@ -150,7 +154,11 @@ class _DailyRewardCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: canClaim ? () { onClaim(); } : null,
+                    onPressed: canClaim
+                        ? () {
+                            onClaim();
+                          }
+                        : null,
                     icon: isClaiming
                         ? const SizedBox(
                             width: 18,
@@ -165,9 +173,12 @@ class _DailyRewardCard extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accentStart,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.5),
-                      disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      disabledBackgroundColor:
+                          AppColors.accentStart.withValues(alpha: 0.5),
+                      disabledForegroundColor:
+                          Colors.white.withValues(alpha: 0.7),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
                     ),
                   ),
                 ),
