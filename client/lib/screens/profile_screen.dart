@@ -870,6 +870,8 @@ final _aboutFormatters = [
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  bool _aboutTypingActive = false;
+  bool _swipeFromEdge = false;
   double _swipeDx = 0;
   double _browserKeyboardInset = 0;
   void Function()? _stopKeyboardInsetListen;
@@ -901,7 +903,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _aboutFocus = FocusNode();
     _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onFieldsChanged);
-    _aboutController.addListener(_onFieldsChanged);
+    _aboutController.addListener(_onAboutTextChanged);
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
@@ -917,14 +919,23 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
   void _onAboutFocusChanged() {
     if (!mounted) return;
-    if (_aboutFocus.hasFocus) {
-      // iOS Safari уводит страницу вниз к input — возвращаем видимую область.
+    if (!_aboutFocus.hasFocus) {
+      _aboutTypingActive = false;
+    }
+    setState(() {});
+  }
+
+  void _onAboutTextChanged() {
+    _ageError = null;
+    _saveError = null;
+    if (_aboutFocus.hasFocus && !_aboutTypingActive) {
+      _aboutTypingActive = true;
       resetBrowserScrollForKeyboard();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         resetBrowserScrollForKeyboard();
       });
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -960,7 +971,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _stopKeyboardInsetListen = null;
     widget.displayNameController.removeListener(_onFieldsChanged);
     _ageController.removeListener(_onFieldsChanged);
-    _aboutController.removeListener(_onFieldsChanged);
+    _aboutController.removeListener(_onAboutTextChanged);
     _aboutFocus.removeListener(_onAboutFocusChanged);
     _aboutFocus.dispose();
     _ageController.dispose();
@@ -1189,10 +1200,13 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
   void _handleSwipeEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    if (!_isSaving && (_swipeDx > 72 || velocity > 400)) {
+    if (_swipeFromEdge &&
+        !_isSaving &&
+        (_swipeDx > 72 || velocity > 400)) {
       widget.onCancel();
     }
     _swipeDx = 0;
+    _swipeFromEdge = false;
   }
 
   Widget _buildCompactHeader(BuildContext context) {
@@ -1263,225 +1277,177 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     );
   }
 
+  Widget _buildCompactNameAgeRow() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          key: const ValueKey('compact_display_name'),
+          controller: widget.displayNameController,
+          focusNode: widget.focusNode,
+          inputFormatters: _displayNameFormatters,
+          decoration: const InputDecoration(
+            labelText: 'Имя (логин)',
+            prefixIcon: Icon(Icons.person_outline_rounded),
+          ),
+          textCapitalization: TextCapitalization.none,
+          autocorrect: false,
+          enableSuggestions: false,
+          onFieldSubmitted: (_) => _submit(),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                key: const ValueKey('compact_age'),
+                controller: _ageController,
+                inputFormatters: _ageFormatters,
+                decoration: InputDecoration(
+                  labelText: 'Возраст',
+                  prefixIcon: const Icon(Icons.cake_outlined),
+                  errorText: _ageError,
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: InkWell(
+                onTap: _openGenderMenu,
+                borderRadius: BorderRadius.circular(AppRadius.input),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Пол',
+                    prefixIcon: Icon(Icons.wc_rounded),
+                  ),
+                  child: Text(
+                    _gender ?? 'Не указан',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildCompactEditor(BuildContext context) {
     final mediaInset = MediaQuery.viewInsetsOf(context).bottom;
-    // На iOS Safari viewInsets часто 0 — берём Visual Viewport.
     final keyboardInset =
         mediaInset > 0 ? mediaInset : _browserKeyboardInset;
     final keyboardVisible = keyboardInset > 64;
-    final aboutFocused = _aboutFocus.hasFocus;
-    // На вебе клавиатура оверлеит canvas: режим по фокусу, не только по inset.
-    final focusAboutMode = aboutFocused;
+    // Поднимаем «О себе» только после реального ввода, не по одному тапу.
+    final aboutTypingMode = _aboutTypingActive && _aboutFocus.hasFocus;
 
     return GestureDetector(
+      // Свайп «назад» только от левого края — иначе мешает фокусу полей.
+      onHorizontalDragStart: (details) {
+        _swipeFromEdge = details.globalPosition.dx <= 28;
+        _swipeDx = 0;
+      },
       onHorizontalDragUpdate: (details) {
-        _swipeDx += details.delta.dx;
+        if (_swipeFromEdge) _swipeDx += details.delta.dx;
       },
       onHorizontalDragEnd: _handleSwipeEnd,
-      onHorizontalDragCancel: () => _swipeDx = 0,
-      behavior: HitTestBehavior.opaque,
+      onHorizontalDragCancel: () {
+        _swipeDx = 0;
+        _swipeFromEdge = false;
+      },
+      behavior: HitTestBehavior.deferToChild,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCompactHeader(context),
-          if (focusAboutMode) ...[
-            // iOS Safari: клавиатура оверлеит canvas и inset часто врёт.
-            // Держим поле и кнопку строго сверху — там они всегда видны.
+          if (aboutTypingMode) ...[
             const SizedBox(height: 10),
             SizedBox(
               height: 168,
               child: _buildCompactAboutField(expands: true),
             ),
-            const SizedBox(height: 10),
-            _buildCompactSaveButton(),
             if (_saveError != null) ...[
               const SizedBox(height: 8),
               MessageBanner(message: _saveError!, type: BannerType.error),
             ],
             const Spacer(),
-          ] else if (keyboardVisible) ...[
-            // Фокус на имени/возрасте: скролл, без гигантского «О себе».
-            const SizedBox(height: 12),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          ] else ...[
+            // Одна стабильная ветка: поля имени/возраста не пересоздаются
+            // при появлении клавиатуры (иначе iOS сразу закрывает keyboard).
+            if (!keyboardVisible) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 82,
+                child: Row(
                   children: [
-                    TextFormField(
-                      controller: widget.displayNameController,
-                      focusNode: widget.focusNode,
-                      inputFormatters: _displayNameFormatters,
-                      decoration: const InputDecoration(
-                        labelText: 'Имя (логин)',
-                        prefixIcon: Icon(Icons.person_outline_rounded),
+                    SizedBox(
+                      width: 76,
+                      child: Center(child: _buildCurrentAvatar()),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _presetAvatarIcons.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 5),
+                        itemBuilder: (context, index) {
+                          final selected = _avatarKind == AvatarKind.preset &&
+                              _avatarValue == index.toString();
+                          return GestureDetector(
+                            onTap: () => setState(() {
+                              _avatarKind = AvatarKind.preset;
+                              _avatarValue = index.toString();
+                            }),
+                            child: AnimatedContainer(
+                              duration: AppDurations.short,
+                              width: 48,
+                              height: 48,
+                              margin: const EdgeInsets.symmetric(vertical: 15),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentSoft,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: selected
+                                      ? AppColors.accentStart
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                _presetAvatarIcons[index],
+                                color: AppColors.accentStart,
+                                size: 25,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      textCapitalization: TextCapitalization.none,
-                      autocorrect: false,
-                      onFieldSubmitted: (_) => _submit(),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _ageController,
-                            inputFormatters: _ageFormatters,
-                            decoration: InputDecoration(
-                              labelText: 'Возраст',
-                              prefixIcon: const Icon(Icons.cake_outlined),
-                              errorText: _ageError,
-                            ),
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: InkWell(
-                            onTap: _openGenderMenu,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.input),
-                            child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Пол',
-                                prefixIcon: Icon(Icons.wc_rounded),
-                              ),
-                              child: Text(
-                                _gender ?? 'Не указан',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildCompactAboutField(expands: false),
                   ],
                 ),
               ),
-            ),
-            if (_saveError != null) ...[
-              const SizedBox(height: 8),
-              MessageBanner(message: _saveError!, type: BannerType.error),
             ],
-            const SizedBox(height: 10),
-            _buildCompactSaveButton(),
-          ] else ...[
             const SizedBox(height: 16),
-            SizedBox(
-              height: 82,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 76,
-                    child: Center(child: _buildCurrentAvatar()),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _presetAvatarIcons.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 5),
-                      itemBuilder: (context, index) {
-                        final selected = _avatarKind == AvatarKind.preset &&
-                            _avatarValue == index.toString();
-                        return GestureDetector(
-                          onTap: () => setState(() {
-                            _avatarKind = AvatarKind.preset;
-                            _avatarValue = index.toString();
-                          }),
-                          child: AnimatedContainer(
-                            duration: AppDurations.short,
-                            width: 48,
-                            height: 48,
-                            margin: const EdgeInsets.symmetric(vertical: 15),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentSoft,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: selected
-                                    ? AppColors.accentStart
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: Icon(
-                              _presetAvatarIcons[index],
-                              color: AppColors.accentStart,
-                              size: 25,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: widget.displayNameController,
-              focusNode: widget.focusNode,
-              inputFormatters: _displayNameFormatters,
-              decoration: const InputDecoration(
-                labelText: 'Имя (логин)',
-                prefixIcon: Icon(Icons.person_outline_rounded),
-              ),
-              textCapitalization: TextCapitalization.none,
-              autocorrect: false,
-              onFieldSubmitted: (_) => _submit(),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _ageController,
-                    inputFormatters: _ageFormatters,
-                    decoration: InputDecoration(
-                      labelText: 'Возраст',
-                      prefixIcon: const Icon(Icons.cake_outlined),
-                      errorText: _ageError,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InkWell(
-                    onTap: _openGenderMenu,
-                    borderRadius: BorderRadius.circular(AppRadius.input),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Пол',
-                        prefixIcon: Icon(Icons.wc_rounded),
-                      ),
-                      child: Text(
-                        _gender ?? 'Не указан',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildCompactNameAgeRow(),
             const SizedBox(height: 16),
             Expanded(child: _buildCompactAboutField(expands: true)),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-              icon: _isAvatarProcessing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.photo_library_outlined, size: 19),
-              label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
-            ),
+            if (!keyboardVisible) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed:
+                    (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+                icon: _isAvatarProcessing
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.photo_library_outlined, size: 19),
+                label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+              ),
+            ],
             if (_saveError != null) ...[
               const SizedBox(height: 12),
               MessageBanner(message: _saveError!, type: BannerType.error),
