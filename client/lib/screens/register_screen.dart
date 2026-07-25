@@ -22,15 +22,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _displayNameController = TextEditingController();
+  final _displayNameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _inputFocused = false;
   String? _errorMessage;
 
   String? get _redirect =>
       safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
 
   @override
+  void initState() {
+    super.initState();
+    _displayNameFocus.addListener(_onInputFocusChanged);
+    _emailFocus.addListener(_onInputFocusChanged);
+    _passwordFocus.addListener(_onInputFocusChanged);
+  }
+
+  void _onInputFocusChanged() {
+    final focused = _displayNameFocus.hasFocus ||
+        _emailFocus.hasFocus ||
+        _passwordFocus.hasFocus;
+    if (focused == _inputFocused || !mounted) return;
+    setState(() => _inputFocused = focused);
+  }
+
+  @override
   void dispose() {
+    _displayNameFocus.removeListener(_onInputFocusChanged);
+    _emailFocus.removeListener(_onInputFocusChanged);
+    _passwordFocus.removeListener(_onInputFocusChanged);
+    _displayNameFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _displayNameController.dispose();
@@ -70,168 +96,160 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
+    // Как «О себе»: при фокусе (клавиатура) прижимаем форму вверх.
+    final liftToTop = _inputFocused;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       // iOS Safari: resize + viewInsets дают пустой «блок» над клавиатурой.
       resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final shortViewport = constraints.maxHeight < 560;
-            return Align(
-              alignment:
-                  shortViewport ? Alignment.topCenter : Alignment.center,
-              child: SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  shortViewport ? 12 : 24,
-                  24,
-                  24,
+        child: Align(
+          alignment: liftToTop ? Alignment.topCenter : Alignment.center,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(24, liftToTop ? 8 : 24, 24, 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: formMaxWidth),
+              child: GradientCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 32,
                 ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: formMaxWidth),
-                  child: GradientCard(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 32,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Регистрация',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Создайте аккаунт для игры',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Регистрация',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
-                          ),
-                          const SizedBox(height: 28),
-                          TextFormField(
-                            controller: _displayNameController,
-                            textInputAction: TextInputAction.next,
-                            maxLength: 20,
-                            scrollPadding: const EdgeInsets.only(bottom: 120),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                              LengthLimitingTextInputFormatter(20),
-                            ],
-                            decoration: const InputDecoration(
-                              labelText: 'Имя (логин)',
-                              hintText: 'Без пробелов, до 20 символов',
-                              prefixIcon: Icon(Icons.person_outline_rounded),
-                              counterText: '',
-                            ),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return 'Введите имя';
-                              }
-                              if (v.contains(RegExp(r'\s'))) {
-                                return 'Имя без пробелов';
-                              }
-                              if (v.length > 20) return 'Максимум 20 символов';
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            scrollPadding: const EdgeInsets.only(bottom: 120),
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'you@example.com',
-                              prefixIcon: Icon(Icons.email_outlined),
-                            ),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return 'Введите email';
-                              }
-                              if (!v.contains('@')) {
-                                return 'Некорректный email';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.done,
-                            scrollPadding: const EdgeInsets.only(bottom: 120),
-                            onFieldSubmitted: (_) => _submit(),
-                            decoration: InputDecoration(
-                              labelText: 'Пароль',
-                              hintText: 'Минимум 6 символов',
-                              prefixIcon:
-                                  const Icon(Icons.lock_outline_rounded),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
-                                ),
-                                onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
-                                ),
-                              ),
-                            ),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return 'Введите пароль';
-                              }
-                              if (v.length < 6) {
-                                return 'Пароль не менее 6 символов';
-                              }
-                              return null;
-                            },
-                          ),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: 16),
-                            MessageBanner(
-                              message: _errorMessage!,
-                              type: BannerType.error,
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          AppButton(
-                            onPressed: _submit,
-                            label: 'Зарегистрироваться',
-                            isLoading: _isLoading,
-                            expanded: true,
-                          ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () => context.go(
-                              appendRedirectQuery('/login', _redirect),
-                            ),
-                            child: const Text('Уже есть аккаунт? Войти'),
-                          ),
-                        ],
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Создайте аккаунт для игры',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      TextFormField(
+                        controller: _displayNameController,
+                        focusNode: _displayNameFocus,
+                        textInputAction: TextInputAction.next,
+                        maxLength: 20,
+                        scrollPadding: const EdgeInsets.only(bottom: 120),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                          LengthLimitingTextInputFormatter(20),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Имя (логин)',
+                          hintText: 'Без пробелов, до 20 символов',
+                          prefixIcon: Icon(Icons.person_outline_rounded),
+                          counterText: '',
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Введите имя';
+                          }
+                          if (v.contains(RegExp(r'\s'))) {
+                            return 'Имя без пробелов';
+                          }
+                          if (v.length > 20) return 'Максимум 20 символов';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        focusNode: _emailFocus,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        scrollPadding: const EdgeInsets.only(bottom: 120),
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'you@example.com',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Введите email';
+                          }
+                          if (!v.contains('@')) {
+                            return 'Некорректный email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        focusNode: _passwordFocus,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        scrollPadding: const EdgeInsets.only(bottom: 120),
+                        onFieldSubmitted: (_) => _submit(),
+                        decoration: InputDecoration(
+                          labelText: 'Пароль',
+                          hintText: 'Минимум 6 символов',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Введите пароль';
+                          }
+                          if (v.length < 6) {
+                            return 'Пароль не менее 6 символов';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        MessageBanner(
+                          message: _errorMessage!,
+                          type: BannerType.error,
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      AppButton(
+                        onPressed: _submit,
+                        label: 'Зарегистрироваться',
+                        isLoading: _isLoading,
+                        expanded: true,
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () => context.go(
+                          appendRedirectQuery('/login', _redirect),
+                        ),
+                        child: const Text('Уже есть аккаунт? Войти'),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
