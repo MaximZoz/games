@@ -109,7 +109,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/',
-                pageBuilder: (_, state) => _noTransitionPage(state, const HomeScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const HomeScreen()),
+              ),
+              GoRoute(
+                path: '/achievements',
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const AchievementsScreen()),
+              ),
+              GoRoute(
+                path: '/coins',
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const CoinsScreen()),
               ),
             ],
           ),
@@ -117,23 +128,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                pageBuilder: (_, state) => _noTransitionPage(state, const ProfileScreen()),
-              ),
-              GoRoute(
-                path: '/achievements',
-                pageBuilder: (_, state) => _noTransitionPage(state, const AchievementsScreen()),
-              ),
-              GoRoute(
-                path: '/coins',
-                pageBuilder: (_, state) => _noTransitionPage(state, const CoinsScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const ProfileScreen()),
               ),
               GoRoute(
                 path: '/login',
-                pageBuilder: (_, state) => _noTransitionPage(state, const LoginScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const LoginScreen()),
               ),
               GoRoute(
                 path: '/register',
-                pageBuilder: (_, state) => _noTransitionPage(state, const RegisterScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const RegisterScreen()),
               ),
             ],
           ),
@@ -141,7 +147,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/friends',
-                pageBuilder: (_, state) => _noTransitionPage(state, const FriendsScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const FriendsScreen()),
               ),
             ],
           ),
@@ -173,7 +180,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/games',
-                pageBuilder: (_, state) => _noTransitionPage(state, const GamesScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const GamesScreen()),
               ),
               GoRoute(
                 path: '/games/tictactoe/lobby/:lobbyId',
@@ -195,11 +203,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/tournaments',
-                pageBuilder: (_, state) => _noTransitionPage(state, const TournamentsScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const TournamentsScreen()),
               ),
               GoRoute(
                 path: '/inventory',
-                pageBuilder: (_, state) => _noTransitionPage(state, const InventoryScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const InventoryScreen()),
               ),
             ],
           ),
@@ -207,11 +217,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/settings',
-                pageBuilder: (_, state) => _noTransitionPage(state, const SettingsScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const SettingsScreen()),
               ),
               GoRoute(
                 path: '/admin',
-                pageBuilder: (_, state) => _noTransitionPage(state, const AdminScreen()),
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const AdminScreen()),
               ),
             ],
           ),

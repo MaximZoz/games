@@ -15,7 +15,7 @@ class AchievementsScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
-          tooltip: 'Назад в профиль',
+          tooltip: 'Назад на главную',
         ),
         title: Text(
           'Достижения',
