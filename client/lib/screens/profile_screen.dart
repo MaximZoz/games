@@ -874,6 +874,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   String? _saveError;
   late TextEditingController _ageController;
   late TextEditingController _aboutController;
+  late FocusNode _aboutFocus;
   late String? _gender;
   late AvatarKind _avatarKind;
   late String? _avatarValue;
@@ -894,11 +895,17 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _aboutController = TextEditingController(
       text: widget.profileExtra.about ?? '',
     );
+    _aboutFocus = FocusNode();
+    _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onFieldsChanged);
     _aboutController.addListener(_onFieldsChanged);
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
+  }
+
+  void _onAboutFocusChanged() {
+    if (mounted) setState(() {});
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -933,6 +940,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     widget.displayNameController.removeListener(_onFieldsChanged);
     _ageController.removeListener(_onFieldsChanged);
     _aboutController.removeListener(_onFieldsChanged);
+    _aboutFocus.removeListener(_onAboutFocusChanged);
+    _aboutFocus.dispose();
     _ageController.dispose();
     _aboutController.dispose();
     super.dispose();
@@ -1165,8 +1174,78 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _swipeDx = 0;
   }
 
+  Widget _buildCompactHeader(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: 'Назад',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            onPressed: _isSaving ? null : widget.onCancel,
+            icon: const Icon(Icons.arrow_back_rounded),
+            color: AppColors.textPrimary,
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              widget.user.email,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactAboutField({required bool expands}) {
+    return TextFormField(
+      controller: _aboutController,
+      focusNode: _aboutFocus,
+      inputFormatters: _aboutFormatters,
+      textAlignVertical: TextAlignVertical.top,
+      expands: expands,
+      maxLines: expands ? null : 4,
+      minLines: expands ? null : 3,
+      maxLength: 100,
+      scrollPadding: const EdgeInsets.only(bottom: 120),
+      decoration: const InputDecoration(
+        labelText: 'О себе',
+        alignLabelWithHint: true,
+        prefixIcon: Padding(
+          padding: EdgeInsets.only(top: 12),
+          child: Icon(Icons.info_outline_rounded),
+        ),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: 48,
+          minHeight: 48,
+        ),
+        counterText: '',
+      ),
+    );
+  }
+
+  Widget _buildCompactSaveButton() {
+    return AppButton(
+      onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+      label: 'Сохранить',
+      isLoading: _isSaving,
+      expanded: true,
+    );
+  }
+
   Widget _buildCompactEditor(BuildContext context) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final aboutFocused = _aboutFocus.hasFocus;
+    // При вводе «О себе» оставляем только поле над клавиатурой.
+    final focusAboutMode = keyboardVisible && aboutFocused;
+
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
         _swipeDx += details.delta.dx;
@@ -1177,34 +1256,86 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 48,
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: 'Назад',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                  onPressed: _isSaving ? null : widget.onCancel,
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  color: AppColors.textPrimary,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    widget.user.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
+          _buildCompactHeader(context),
+          if (focusAboutMode) ...[
+            const SizedBox(height: 12),
+            Expanded(child: _buildCompactAboutField(expands: true)),
+            if (_saveError != null) ...[
+              const SizedBox(height: 8),
+              MessageBanner(message: _saveError!, type: BannerType.error),
+            ],
+            const SizedBox(height: 10),
+            _buildCompactSaveButton(),
+          ] else if (keyboardVisible) ...[
+            // Фокус на имени/возрасте: скролл, без гигантского «О себе».
+            const SizedBox(height: 12),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: widget.displayNameController,
+                      focusNode: widget.focusNode,
+                      inputFormatters: _displayNameFormatters,
+                      decoration: const InputDecoration(
+                        labelText: 'Имя (логин)',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      textCapitalization: TextCapitalization.none,
+                      autocorrect: false,
+                      onFieldSubmitted: (_) => _submit(),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _ageController,
+                            inputFormatters: _ageFormatters,
+                            decoration: InputDecoration(
+                              labelText: 'Возраст',
+                              prefixIcon: const Icon(Icons.cake_outlined),
+                              errorText: _ageError,
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
                         ),
-                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: _openGenderMenu,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.input),
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Пол',
+                                prefixIcon: Icon(Icons.wc_rounded),
+                              ),
+                              child: Text(
+                                _gender ?? 'Не указан',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildCompactAboutField(expands: false),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          if (!keyboardVisible) ...[
+            if (_saveError != null) ...[
+              const SizedBox(height: 8),
+              MessageBanner(message: _saveError!, type: BannerType.error),
+            ],
+            const SizedBox(height: 10),
+            _buildCompactSaveButton(),
+          ] else ...[
             const SizedBox(height: 16),
             SizedBox(
               height: 82,
@@ -1256,80 +1387,56 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 ],
               ),
             ),
-          ],
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: widget.displayNameController,
-            focusNode: widget.focusNode,
-            inputFormatters: _displayNameFormatters,
-            decoration: const InputDecoration(
-              labelText: 'Имя (логин)',
-              prefixIcon: Icon(Icons.person_outline_rounded),
-            ),
-            textCapitalization: TextCapitalization.none,
-            autocorrect: false,
-            onFieldSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _ageController,
-                  inputFormatters: _ageFormatters,
-                  decoration: InputDecoration(
-                    labelText: 'Возраст',
-                    prefixIcon: const Icon(Icons.cake_outlined),
-                    errorText: _ageError,
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: InkWell(
-                  onTap: _openGenderMenu,
-                  borderRadius: BorderRadius.circular(AppRadius.input),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Пол',
-                      prefixIcon: Icon(Icons.wc_rounded),
-                    ),
-                    child: Text(
-                      _gender ?? 'Не указан',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: TextFormField(
-              controller: _aboutController,
-              inputFormatters: _aboutFormatters,
-              textAlignVertical: TextAlignVertical.top,
-              expands: true,
-              maxLines: null,
-              maxLength: 100,
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: widget.displayNameController,
+              focusNode: widget.focusNode,
+              inputFormatters: _displayNameFormatters,
               decoration: const InputDecoration(
-                labelText: 'О себе',
-                alignLabelWithHint: true,
-                prefixIcon: Padding(
-                  padding: EdgeInsets.only(top: 12),
-                  child: Icon(Icons.info_outline_rounded),
-                ),
-                prefixIconConstraints: BoxConstraints(
-                  minWidth: 48,
-                  minHeight: 48,
-                ),
-                counterText: '',
+                labelText: 'Имя (логин)',
+                prefixIcon: Icon(Icons.person_outline_rounded),
               ),
+              textCapitalization: TextCapitalization.none,
+              autocorrect: false,
+              onFieldSubmitted: (_) => _submit(),
             ),
-          ),
-          if (!keyboardVisible) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _ageController,
+                    inputFormatters: _ageFormatters,
+                    decoration: InputDecoration(
+                      labelText: 'Возраст',
+                      prefixIcon: const Icon(Icons.cake_outlined),
+                      errorText: _ageError,
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: _openGenderMenu,
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Пол',
+                        prefixIcon: Icon(Icons.wc_rounded),
+                      ),
+                      child: Text(
+                        _gender ?? 'Не указан',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(child: _buildCompactAboutField(expands: true)),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1342,18 +1449,13 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   : const Icon(Icons.photo_library_outlined, size: 19),
               label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
             ),
+            if (_saveError != null) ...[
+              const SizedBox(height: 12),
+              MessageBanner(message: _saveError!, type: BannerType.error),
+            ],
+            const SizedBox(height: 16),
+            _buildCompactSaveButton(),
           ],
-          if (_saveError != null) ...[
-            const SizedBox(height: 12),
-            MessageBanner(message: _saveError!, type: BannerType.error),
-          ],
-          const SizedBox(height: 16),
-          AppButton(
-            onPressed: (_isSaving || !_hasChanges) ? null : _submit,
-            label: 'Сохранить',
-            isLoading: _isSaving,
-            expanded: true,
-          ),
         ],
       ),
     );
