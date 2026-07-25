@@ -61,6 +61,20 @@ TextTheme _textThemeNoUnderline(TextTheme base) {
   );
 }
 
+/// Без Material-ползунка поверх списков (чат, друзья, поиск и т.д.).
+class _NoScrollbarBehavior extends MaterialScrollBehavior {
+  const _NoScrollbarBehavior();
+
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
 class MultiGamesApp extends ConsumerWidget {
   const MultiGamesApp({super.key});
 
@@ -72,6 +86,7 @@ class MultiGamesApp extends ConsumerWidget {
       child: MaterialApp.router(
       title: 'MultiGames',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const _NoScrollbarBehavior(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.accentStart,

@@ -354,9 +354,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       return;
     }
 
-    final previousMaxScrollExtent = _scrollController.hasClients
-        ? _scrollController.position.maxScrollExtent
-        : 0.0;
     if (mounted) {
       setState(() => _loadingOlder = true);
     }
@@ -377,7 +374,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
 
-      final deduplicated = older.where((m) => !_messageIDs.contains(m.id)).toList();
+      final deduplicated =
+          older.where((m) => !_messageIDs.contains(m.id)).toList();
+      // reverse: true сам удерживает якорь у низа — jumpTo(offset+delta)
+      // сдвигал ленту вверх при подгрузке истории.
       setState(() {
         if (deduplicated.isNotEmpty) {
           _messages = [...deduplicated, ..._messages];
@@ -386,25 +386,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _loadingOlder = false;
         _hasMoreOlder = older.length >= _messagesPageSize;
       });
-
-      void tryRestoreScroll([int attemptsLeft = 3]) {
-        if (attemptsLeft <= 0) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_scrollController.hasClients) return;
-          final pos = _scrollController.position;
-          final newMax = pos.maxScrollExtent;
-          final delta = newMax - previousMaxScrollExtent;
-          if (delta > 0) {
-            final target = (_scrollController.offset + delta)
-                .clamp(0.0, pos.maxScrollExtent);
-            _scrollController.jumpTo(target);
-          }
-          if (delta <= 0 && attemptsLeft > 1) {
-            tryRestoreScroll(attemptsLeft - 1);
-          }
-        });
-      }
-      tryRestoreScroll();
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingOlder = false);
@@ -1146,33 +1127,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   );
                 },
               );
-      Widget scrollChild = isWide(context) && _messages.isNotEmpty
-          ? Scrollbar(
-              controller: _scrollController,
-              thumbVisibility: true,
-              child: listView,
-            )
-          : listView;
-      scrollChild = NotificationListener<ScrollNotification>(
-        onNotification: (_) {
-          if (_scrollController.hasClients) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || !_scrollController.hasClients) return;
-              final pos = _scrollController.position;
-              final nearBottom = pos.pixels <= _scrollToBottomThreshold;
-              if (_showScrollToBottomButton != !nearBottom) {
-                setState(() => _showScrollToBottomButton = !nearBottom);
-              }
-            });
-          }
-          return false;
-        },
-        child: scrollChild,
-      );
-      messagesWidget = RefreshIndicator(
-        onRefresh: _loadMessages,
-        child: scrollChild,
-      );
+      // Без RefreshIndicator: у reverse-списка он цепляется за визуальный верх
+      // и сбрасывает пагинацию при подгрузке старых сообщений.
+      messagesWidget = listView;
     }
 
     final canSwipeBack = !(widget.inSplitView &&
