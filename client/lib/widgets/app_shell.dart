@@ -199,68 +199,72 @@ class AppShell extends ConsumerWidget {
                         ),
                       const Spacer(),
                       Flexible(
-                        child: authState.when(
-                          data: (user) {
-                            if (user != null) {
-                              return Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (user.isAdmin)
-                                    IconButton(
-                                      icon: const Icon(
-                                          Icons.admin_panel_settings),
-                                      onPressed: () => context.go('/admin'),
-                                      tooltip: 'Админка',
-                                    ),
-                                  Flexible(
-                                    child: Tooltip(
-                                      message: user.displayName ?? user.email,
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 4),
-                                        child: Text(
-                                          user.displayName ?? user.email,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textPrimary,
-                                            decoration: TextDecoration.none,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: authState.when(
+                            data: (user) {
+                              if (user != null) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (user.isAdmin)
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.admin_panel_settings),
+                                        onPressed: () => context.go('/admin'),
+                                        tooltip: 'Админка',
+                                      ),
+                                    Flexible(
+                                      child: Tooltip(
+                                        message: user.displayName ?? user.email,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 4),
+                                          child: Text(
+                                            user.displayName ?? user.email,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textPrimary,
+                                              decoration: TextDecoration.none,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.logout),
-                                    onPressed: () async {
-                                      await ref
-                                          .read(authStateProvider.notifier)
-                                          .logout();
-                                    },
-                                    tooltip: 'Выйти',
-                                  ),
-                                ],
+                                    IconButton(
+                                      icon: const Icon(Icons.logout),
+                                      onPressed: () async {
+                                        await ref
+                                            .read(authStateProvider.notifier)
+                                            .logout();
+                                      },
+                                      tooltip: 'Выйти',
+                                    ),
+                                  ],
+                                );
+                              }
+                              return IconButton(
+                                icon: const Icon(Icons.login),
+                                onPressed: () => context.go('/login'),
+                                tooltip: 'Войти',
                               );
-                            }
-                            return IconButton(
+                            },
+                            loading: () => const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                            error: (_, __) => IconButton(
                               icon: const Icon(Icons.login),
                               onPressed: () => context.go('/login'),
                               tooltip: 'Войти',
-                            );
-                          },
-                          loading: () => const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                          ),
-                          error: (_, __) => IconButton(
-                            icon: const Icon(Icons.login),
-                            onPressed: () => context.go('/login'),
-                            tooltip: 'Войти',
                           ),
                         ),
                       ),

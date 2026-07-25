@@ -316,6 +316,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
     }
 
+    Widget centeredBody(Widget child) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: child,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -375,7 +387,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: content,
                     );
                   }
-                  return scrollableBody(content);
+                  return centeredBody(content);
                 }
 
                 return extraAsync.when(
