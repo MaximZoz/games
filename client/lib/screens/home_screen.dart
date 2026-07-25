@@ -1,24 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/core/api_client.dart';
-import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/utils/user_error.dart';
-import 'package:multigames_client/ui/widgets/gradient_card.dart';
-import 'package:multigames_client/ui/widgets/ui_kit.dart';
-
-final homeStartMessageProvider = FutureProvider.autoDispose<String>((ref) async {
-  ref.keepAlive();
-  final response = await ApiClient.get(
-    Uri.parse('$apiBaseUrl/api/start'),
-    operation: 'HomeScreen.fetchServerStart',
-  );
-  if (response.statusCode == 200) {
-    return response.body.trim();
-  }
-  throw Exception('Сервер вернул ошибку: ${response.statusCode}');
-});
+import 'package:multigames_client/ui/widgets/animated_border_box.dart';
 
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
 class HomeScreen extends ConsumerWidget {
@@ -26,98 +11,161 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-    final serverStartAsync = ref.watch(homeStartMessageProvider);
+    final user = ref.watch(authStateProvider).valueOrNull;
+    final rewardAvailable =
+        ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: GradientCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                                const Text(
-                          'MultiGames',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.5,
-                            decoration: TextDecoration.none,
-                          ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    user == null ? 'Главная' : 'Ваш прогресс',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w800,
                         ),
-                        const SizedBox(height: 24),
-                        serverStartAsync.when(
-                          loading: () => const SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.accentStart,
-                            ),
-                          ),
-                          data: (serverMessage) {
-                            if (serverMessage.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Text(
-                              serverMessage,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: AppColors.textSecondary,
-                                decoration: TextDecoration.none,
-                              ),
-                              textAlign: TextAlign.center,
-                            );
-                          },
-                          error: (error, _) {
-                            final message = formatUserError(error, fallback: 'Не удалось загрузить данные.');
-                            return Text(
-                              message,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.red.shade700,
-                                decoration: TextDecoration.none,
-                              ),
-                              textAlign: TextAlign.center,
-                            );
-                          },
-                        ),
-                        authState.when(
-                          data: (user) {
-                            if (user != null) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 28),
-                                child: Text(
-                                  'Вы вошли как ${user.displayName ?? user.email}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
-                                    decoration: TextDecoration.none,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    user == null
+                        ? 'Войдите, чтобы открыть достижения и монеты'
+                        : 'Награды, коллекция и игровой баланс',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  _HomeActionCard(
+                    icon: Icons.emoji_events_rounded,
+                    title: 'Достижения',
+                    subtitle: 'Ваши игровые результаты',
+                    onTap: () => context.push('/achievements'),
+                  ),
+                  const SizedBox(height: 12),
+                  _HomeActionCard(
+                    icon: Icons.monetization_on_rounded,
+                    title: 'Монеты',
+                    subtitle: rewardAvailable
+                        ? 'Доступна ежедневная награда'
+                        : 'Баланс и ежедневные награды',
+                    badgeCount: rewardAvailable ? 1 : 0,
+                    onTap: () => context.push('/coins'),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeActionCard extends StatelessWidget {
+  const _HomeActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.badgeCount = 0,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final int badgeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBorderBox(
+      padding: EdgeInsets.zero,
+      borderRadius: 22,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(icon, color: AppColors.accentStart, size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (badgeCount > 0) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade600,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                '$badgeCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

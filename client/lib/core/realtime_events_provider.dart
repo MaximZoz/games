@@ -30,6 +30,7 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
       });
     });
   }
+
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
@@ -78,7 +79,8 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
         try {
           final payload = jsonDecode(raw);
           if (payload is! Map) return;
-          emitAfterFrame(Map<String, dynamic>.from(payload));
+          final event = Map<String, dynamic>.from(payload);
+          emitAfterFrame(event);
         } catch (_) {
           // Игнорируем невалидные фреймы, чтобы не ронять соединение.
         }

@@ -8,6 +8,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -19,7 +20,8 @@ const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
   _NavItem(path: '/profile', icon: Icons.person, label: 'Профиль'),
   _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
-  _NavItem(path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
+  _NavItem(
+      path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
   _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
   _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
 ];
@@ -42,6 +44,7 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
+    final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
@@ -51,9 +54,21 @@ class AppShell extends ConsumerWidget {
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
-          if (type == 'daily_reward_available' || type == 'daily_reward_claimed') {
+          if (type == 'game_started' || type == 'lobby_updated') {
+            final router = GoRouter.of(context);
+            final gameId = realtimeGameIdForNavigation(
+              event,
+              currentPath: router.routerDelegate.currentConfiguration.uri.path,
+            );
+            if (context.mounted) {
+              navigateToGame(router, gameNavigation, gameId);
+            }
+          }
+          if (type == 'daily_reward_available' ||
+              type == 'daily_reward_claimed') {
             final available = event['available'] == true;
-            ref.read(dailyRewardFromRealtimeProvider.notifier).state = available;
+            ref.read(dailyRewardFromRealtimeProvider.notifier).state =
+                available;
             ref.invalidate(dailyRewardAvailableProvider);
           }
         });
@@ -122,11 +137,15 @@ class AppShell extends ConsumerWidget {
           ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
         );
         unawaited(
-          ref.read(blockedUsersProvider.future).then((_) {}, onError: (_, __) {}),
+          ref
+              .read(blockedUsersProvider.future)
+              .then((_) {}, onError: (_, __) {}),
         );
       } else if (target == '/friends') {
         unawaited(
-          ref.read(friendsSnapshotProvider.future).then((_) {}, onError: (_, __) {}),
+          ref
+              .read(friendsSnapshotProvider.future)
+              .then((_) {}, onError: (_, __) {}),
         );
       }
     }
@@ -179,64 +198,74 @@ class AppShell extends ConsumerWidget {
                           ),
                         ),
                       const Spacer(),
-                      authState.when(
-                        data: (user) {
-                          if (user != null) {
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (user.isAdmin)
-                                  IconButton(
-                                    icon: const Icon(Icons.admin_panel_settings),
-                                    onPressed: () => context.go('/admin'),
-                                    tooltip: 'Админка',
-                                  ),
-                                Flexible(
-                                  child: Tooltip(
-                                    message: user.displayName ?? user.email,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 4),
-                                      child: Text(
-                                        user.displayName ?? user.email,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.textPrimary,
-                                          decoration: TextDecoration.none,
+                      Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: authState.when(
+                            data: (user) {
+                              if (user != null) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (user.isAdmin)
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.admin_panel_settings),
+                                        onPressed: () => context.go('/admin'),
+                                        tooltip: 'Админка',
+                                      ),
+                                    Flexible(
+                                      child: Tooltip(
+                                        message: user.displayName ?? user.email,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 4),
+                                          child: Text(
+                                            user.displayName ?? user.email,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textPrimary,
+                                              decoration: TextDecoration.none,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.logout),
-                                  onPressed: () async {
-                                    await ref.read(authStateProvider.notifier).logout();
-                                  },
-                                  tooltip: 'Выйти',
-                                ),
-                              ],
-                            );
-                          }
-                          return IconButton(
-                            icon: const Icon(Icons.login),
-                            onPressed: () => context.go('/login'),
-                            tooltip: 'Войти',
-                          );
-                        },
-                        loading: () => const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                                    IconButton(
+                                      icon: const Icon(Icons.logout),
+                                      onPressed: () async {
+                                        await ref
+                                            .read(authStateProvider.notifier)
+                                            .logout();
+                                      },
+                                      tooltip: 'Выйти',
+                                    ),
+                                  ],
+                                );
+                              }
+                              return IconButton(
+                                icon: const Icon(Icons.login),
+                                onPressed: () => context.go('/login'),
+                                tooltip: 'Войти',
+                              );
+                            },
+                            loading: () => const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                            error: (_, __) => IconButton(
+                              icon: const Icon(Icons.login),
+                              onPressed: () => context.go('/login'),
+                              tooltip: 'Войти',
+                            ),
                           ),
-                        ),
-                        error: (_, __) => IconButton(
-                          icon: const Icon(Icons.login),
-                          onPressed: () => context.go('/login'),
-                          tooltip: 'Войти',
                         ),
                       ),
                     ],
@@ -253,8 +282,10 @@ class AppShell extends ConsumerWidget {
                           selectedIndex: selectedIndex,
                           onDestinationSelected: navigateWithPrefetch,
                           backgroundColor: Colors.transparent,
-                          selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
-                          unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
+                          selectedIconTheme:
+                              const IconThemeData(color: AppColors.accentStart),
+                          unselectedIconTheme: const IconThemeData(
+                              color: AppColors.textSecondary),
                           labelType: narrowLandscape
                               ? NavigationRailLabelType.none
                               : NavigationRailLabelType.all,
@@ -281,7 +312,10 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow && !narrowLandscape && !keyboardLikelyVisible && !inChatRoom)
+            if (narrow &&
+                !narrowLandscape &&
+                !keyboardLikelyVisible &&
+                !inChatRoom)
               SafeArea(
                 top: false,
                 child: Material(
@@ -301,9 +335,8 @@ class AppShell extends ConsumerWidget {
                       items: _navItems.asMap().entries.map((entry) {
                         final item = entry.value;
                         return BottomNavigationBarItem(
-                          icon: _navIcon(
-                              item, unreadChats, incomingFriends, gamesMyTurn,
-                              gameInvitesCount, dailyRewardCount),
+                          icon: _navIcon(item, unreadChats, incomingFriends,
+                              gamesMyTurn, gameInvitesCount, dailyRewardCount),
                           activeIcon: _navIcon(
                             item,
                             unreadChats,
@@ -344,7 +377,8 @@ Widget _navIcon(
         ? BoxDecoration(
             color: AppColors.accentSoft.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.accentStart.withValues(alpha: 0.35)),
+            border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35)),
           )
         : null,
     child: Icon(item.icon, color: iconColor, size: iconSize),
@@ -357,7 +391,7 @@ Widget _navIcon(
     badgeValue = incomingFriends;
   } else if (item.path == '/games') {
     badgeValue = gamesMyTurn + gameInvitesCount;
-  } else if (item.path == '/profile') {
+  } else if (item.path == '/') {
     badgeValue = dailyRewardCount;
   }
 

@@ -55,13 +55,13 @@ type GamesHandler struct {
 }
 
 type CreateLobbyBody struct {
-	Mode                 string `json:"mode"`                    // "invite" | "matchmake"
-	TurnTimeSec          int    `json:"turn_time_sec"`           // 0=unlimited, 10, 30, 60, 600
+	Mode                 string `json:"mode"`                   // "invite" | "matchmake"
+	TurnTimeSec          int    `json:"turn_time_sec"`          // 0=unlimited, 10, 30, 60, 600
 	GridSize             int    `json:"grid_size"`              // 3, 4, 5
-	SwapRule             bool   `json:"swap_rule"`               // смена сторон после 1-го хода
-	FirstMoveRestriction bool   `json:"first_move_restriction"`  // первый ход не в центр
+	SwapRule             bool   `json:"swap_rule"`              // смена сторон после 1-го хода
+	FirstMoveRestriction bool   `json:"first_move_restriction"` // первый ход не в центр
 	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 1)
-	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`      // в matchmake: через 30 с добавить бота
+	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`     // в matchmake: через 30 с добавить бота
 }
 
 type InviteBody struct {
@@ -110,6 +110,43 @@ type GameStateItem struct {
 	XAvatarValue         *string  `json:"x_avatar_value,omitempty"`
 	OAvatarKind          string   `json:"o_avatar_kind,omitempty"`
 	OAvatarValue         *string  `json:"o_avatar_value,omitempty"`
+}
+
+type gameUserLookup func(context.Context, uuid.UUID) (*store.User, error)
+
+func addGamePlayerMetadata(ctx context.Context, payload map[string]any, xUserID, oUserID string, lookup gameUserLookup) {
+	addPlayerMetadata := func(side, userID string) {
+		if isBot(userID) {
+			payload[side+"_display_name"] = "Бот"
+			return
+		}
+		userUUID, err := uuid.Parse(userID)
+		if err != nil {
+			return
+		}
+		user, err := lookup(ctx, userUUID)
+		if err != nil || user == nil {
+			return
+		}
+		if user.DisplayName != nil && *user.DisplayName != "" {
+			payload[side+"_display_name"] = *user.DisplayName
+		}
+		if user.AvatarKind != "" {
+			payload[side+"_avatar_kind"] = user.AvatarKind
+		}
+		if user.AvatarValue != nil {
+			payload[side+"_avatar_value"] = *user.AvatarValue
+		}
+	}
+
+	addPlayerMetadata("x", xUserID)
+	addPlayerMetadata("o", oUserID)
+}
+
+func (h *GamesHandler) addGamePlayerMetadata(ctx context.Context, payload map[string]any, xUserID, oUserID string) {
+	addGamePlayerMetadata(ctx, payload, xUserID, oUserID, func(ctx context.Context, userID uuid.UUID) (*store.User, error) {
+		return store.GetUserByID(ctx, h.Pool, userID)
+	})
 }
 
 func (h *GamesHandler) requireRedis(w http.ResponseWriter) bool {
@@ -1593,11 +1630,14 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		}
 		board := parseBoard(m["board"], gridSize)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
+		resp := map[string]any{
 			"game_id": gameID, "board": board,
 			"turn": m["turn"], "winner": m["winner"], "status": m["status"],
-			"timeout": true,
-		})
+			"timeout": true, "grid_size": gridSize,
+			"x_user_id": m["x_user_id"], "o_user_id": m["o_user_id"],
+		}
+		h.addGamePlayerMetadata(ctx, resp, m["x_user_id"], m["o_user_id"])
+		_ = json.NewEncoder(w).Encode(resp)
 		return
 	}
 
@@ -1743,6 +1783,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		resp["turn_time_sec"] = turnTimeSec
 		resp["turn_deadline"] = time.Now().UTC().Unix() + int64(turnTimeSec)
 	}
+	h.addGamePlayerMetadata(ctx, resp, xUserID, oUserID)
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
@@ -1842,6 +1883,7 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 		"o_user_id": newOUserID,
 		"swapped":   true,
 	}
+	h.addGamePlayerMetadata(ctx, resp, newXUserID, newOUserID)
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
@@ -2009,6 +2051,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type":       "game",
 				"game_id":    gameID,
+				"lobby_id":   m["lobby_id"],
 				"is_my_turn": isMyTurn,
 			})
 			return

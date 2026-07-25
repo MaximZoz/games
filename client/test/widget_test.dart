@@ -12,7 +12,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
-  testWidgets('App shows MultiGames title', (WidgetTester tester) async {
+  testWidgets('App shows home actions', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -21,7 +21,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('MultiGames'), findsWidgets);
+    expect(find.text('Достижения'), findsOneWidget);
+    expect(find.text('Монеты'), findsOneWidget);
   });
 
   testWidgets('App uses MaterialApp.router', (WidgetTester tester) async {
@@ -35,7 +36,8 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
-  testWidgets('Home shows MultiGames and has scaffold', (WidgetTester tester) async {
+  testWidgets('Home shows progress actions and has scaffold',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -44,11 +46,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('MultiGames'), findsWidgets);
+    expect(find.text('Достижения'), findsOneWidget);
+    expect(find.text('Монеты'), findsOneWidget);
     expect(find.byType(Scaffold), findsWidgets);
   });
 
-  testWidgets('On home, toolbar has login or loading', (WidgetTester tester) async {
+  testWidgets('On home, toolbar has login or loading',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -58,11 +62,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     final hasLogin = find.byTooltip('Войти').evaluate().isNotEmpty;
-    final hasLoading = find.byType(CircularProgressIndicator).evaluate().isNotEmpty;
+    final hasLoading =
+        find.byType(CircularProgressIndicator).evaluate().isNotEmpty;
     expect(hasLogin || hasLoading, isTrue);
   });
 
-  testWidgets('On login page, toolbar shows login button and title', (WidgetTester tester) async {
+  testWidgets('On login page, toolbar shows login button and title',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -82,7 +88,8 @@ void main() {
     expect(find.text('Вход'), findsOneWidget);
   });
 
-  testWidgets('On login page, form is visible and toolbar has auth button', (WidgetTester tester) async {
+  testWidgets('On login page, form is visible and toolbar has auth button',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -100,7 +107,8 @@ void main() {
     expect(find.byTooltip('Войти'), findsOneWidget);
   });
 
-  testWidgets('Navigation rail shows main sections', (WidgetTester tester) async {
+  testWidgets('Navigation rail shows main sections',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -115,7 +123,8 @@ void main() {
     expect(find.text('Чаты'), findsWidgets);
   });
 
-  testWidgets('Profile for unauthenticated user shows login prompt', (WidgetTester tester) async {
+  testWidgets('Profile for unauthenticated user shows login prompt',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -129,12 +138,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Войдите в аккаунт'), findsOneWidget);
-    expect(find.text('Чтобы видеть профиль и достижения'), findsOneWidget);
+    expect(find.text('Чтобы настроить личный профиль'), findsOneWidget);
     expect(find.text('Войти'), findsWidgets);
     expect(find.text('Регистрация'), findsOneWidget);
   });
 
-  testWidgets('Profile → Login → Register → Login navigation', (WidgetTester tester) async {
+  testWidgets('Profile → Login → Register → Login navigation',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -170,7 +180,8 @@ void main() {
     expect(find.text('Вход'), findsOneWidget);
   });
 
-  testWidgets('Login form shows validation errors on empty submit', (WidgetTester tester) async {
+  testWidgets('Login form shows validation errors on empty submit',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -193,7 +204,8 @@ void main() {
     expect(find.text('Введите пароль'), findsOneWidget);
   });
 
-  testWidgets('Unauthenticated user tapping Friends redirects to profile', (WidgetTester tester) async {
+  testWidgets('Unauthenticated user tapping Friends redirects to profile',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),
@@ -210,7 +222,8 @@ void main() {
     expect(find.text('Войдите в аккаунт'), findsOneWidget);
   });
 
-  testWidgets('Register form has title and link to login', (WidgetTester tester) async {
+  testWidgets('Register form has title and link to login',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MultiGamesApp(),

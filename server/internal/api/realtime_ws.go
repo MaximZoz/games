@@ -270,7 +270,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				h.Hub.PublishToUsers(recipients, map[string]any{
 					"type":         "user_offline",
 					"user_id":      userID.String(),
-					"online":      false,
+					"online":       false,
 					"last_seen_at": now,
 				})
 			}

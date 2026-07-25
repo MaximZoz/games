@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -140,15 +141,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     isCreating: _isCreating,
                     isFinding: _isFinding,
                     turnTimeSec: _selectedTurnTimeSec,
-                    onTurnTimeChanged: (v) => setState(() => _selectedTurnTimeSec = v),
+                    onTurnTimeChanged: (v) =>
+                        setState(() => _selectedTurnTimeSec = v),
                     gridSize: _selectedGridSize,
-                    onGridSizeChanged: (v) => setState(() => _selectedGridSize = v),
+                    onGridSizeChanged: (v) =>
+                        setState(() => _selectedGridSize = v),
                     swapRule: _selectedSwapRule,
-                    onSwapRuleChanged: (v) => setState(() => _selectedSwapRule = v),
+                    onSwapRuleChanged: (v) =>
+                        setState(() => _selectedSwapRule = v),
                     firstMoveRestriction: _selectedFirstMoveRestriction,
-                    onFirstMoveRestrictionChanged: (v) => setState(() => _selectedFirstMoveRestriction = v),
+                    onFirstMoveRestrictionChanged: (v) =>
+                        setState(() => _selectedFirstMoveRestriction = v),
                     stakeBronze: _selectedStakeBronze,
-                    onStakeChanged: (v) => setState(() => _selectedStakeBronze = v),
+                    onStakeChanged: (v) =>
+                        setState(() => _selectedStakeBronze = v),
                     onCreateGame: () => _createGame(context, 'invite'),
                     onFindGame: () => _createGame(context, 'matchmake'),
                     invites: invites,
@@ -222,16 +228,28 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
-      if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
-        context.push('/games/tictactoe/game/${result.gameId}');
+        _navigateToJoinedGame(result.gameId!);
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(formatUserError(e))),
-        );
-      }
+      _showInviteError(e);
+    }
+  }
+
+  void _navigateToJoinedGame(String gameId) {
+    if (!mounted) return;
+    navigateToGame(
+      GoRouter.of(context),
+      ref.read(gameNavigationCoordinatorProvider),
+      gameId,
+    );
+  }
+
+  void _showInviteError(Object error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(formatUserError(error))),
+      );
     }
   }
 
@@ -256,120 +274,122 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           ),
           backgroundColor: Colors.transparent,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isDesktop ? 440 : double.infinity),
+            constraints:
+                BoxConstraints(maxWidth: isDesktop ? 440 : double.infinity),
             child: Consumer(
-          builder: (context, ref, _) {
-            final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
-            final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
-            FriendUserItem? user;
-            for (final f in snapshot?.friends ?? []) {
-              if (f.user.id == inv.creatorId) {
-                user = f.user;
-                break;
-              }
-            }
-            if (user == null) {
-              for (final r in snapshot?.incoming ?? []) {
-                if (r.user.id == inv.creatorId) {
-                  user = r.user;
-                  break;
+              builder: (context, ref, _) {
+                final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
+                final presence =
+                    ref.watch(presenceMapProvider).valueOrNull ?? const {};
+                FriendUserItem? user;
+                for (final f in snapshot?.friends ?? []) {
+                  if (f.user.id == inv.creatorId) {
+                    user = f.user;
+                    break;
+                  }
                 }
-              }
-            }
-            if (user == null) {
-              for (final r in snapshot?.outgoing ?? []) {
-                if (r.user.id == inv.creatorId) {
-                  user = r.user;
-                  break;
+                if (user == null) {
+                  for (final r in snapshot?.incoming ?? []) {
+                    if (r.user.id == inv.creatorId) {
+                      user = r.user;
+                      break;
+                    }
+                  }
                 }
-              }
-            }
-            final p = presence[inv.creatorId];
-            final statusText = p == null
-                ? null
-                : (p.online ? 'Онлайн' : formatLastSeen(p.lastSeenAt));
-            final name = user?.displayName?.trim().isNotEmpty == true
-                ? user!.displayName!
-                : inv.creatorName;
-            final about = user?.about?.trim();
-            return GradientCard(
-              animate: false,
-              margin: EdgeInsets.zero,
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                if (user == null) {
+                  for (final r in snapshot?.outgoing ?? []) {
+                    if (r.user.id == inv.creatorId) {
+                      user = r.user;
+                      break;
+                    }
+                  }
+                }
+                final p = presence[inv.creatorId];
+                final statusText = p == null
+                    ? null
+                    : (p.online ? 'Онлайн' : formatLastSeen(p.lastSeenAt));
+                final name = user?.displayName?.trim().isNotEmpty == true
+                    ? user!.displayName!
+                    : inv.creatorName;
+                final about = user?.about?.trim();
+                return GradientCard(
+                  animate: false,
+                  margin: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _InviteCreatorAvatar(
-                        creatorName: name,
-                        avatarKind: user?.avatarKind ?? 'letter',
-                        avatarValue: user?.avatarValue,
-                        creatorId: inv.creatorId,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (statusText != null && statusText.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  statusText,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _InviteCreatorAvatar(
+                            creatorName: name,
+                            avatarKind: user?.avatarKind ?? 'letter',
+                            avatarValue: user?.avatarValue,
+                            creatorId: inv.creatorId,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
                                   style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
+                                    color: AppColors.textPrimary,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                          ],
+                                if (statusText != null && statusText.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      statusText,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Закрыть',
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                      if (about != null && about.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        const Text(
+                          'О себе',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        tooltip: 'Закрыть',
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.of(ctx).pop(),
-                      ),
+                        const SizedBox(height: 4),
+                        Text(
+                          about,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                  if (about != null && about.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    const Text(
-                      'О себе',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      about,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+                );
+              },
+            ),
+          ),
         );
       },
     );
@@ -387,7 +407,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           ),
           backgroundColor: Colors.transparent,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isDesktop ? 380 : double.infinity),
+            constraints:
+                BoxConstraints(maxWidth: isDesktop ? 380 : double.infinity),
             child: GradientCard(
               animate: false,
               margin: EdgeInsets.zero,
@@ -401,10 +422,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       Expanded(
                         child: Text(
                           'Правила игры',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
                         ),
                       ),
                       IconButton(
@@ -474,7 +496,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           ),
           title: const Text('Правила'),
           content: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
+            constraints:
+                BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
             child: SingleChildScrollView(
               child: Text(rulesText),
             ),
@@ -545,6 +568,10 @@ class _GamesPageContent extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
+          primary: false,
+          physics: isDesktop
+              ? const ClampingScrollPhysics()
+              : const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
             contentPadding,
             0,
@@ -555,7 +582,8 @@ class _GamesPageContent extends StatelessWidget {
             alignment: Alignment.topLeft,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: constraints.maxHeight.isFinite && constraints.maxHeight > 100
+                minHeight: constraints.maxHeight.isFinite &&
+                        constraints.maxHeight > 100
                     ? constraints.maxHeight
                     : 400,
               ),
@@ -564,21 +592,47 @@ class _GamesPageContent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              if (isDesktop) {
-                const gap = 16.0;
-                const minCardWidth = 400.0;
-                final availableWidth = constraints.maxWidth;
-                final crossAxisCount = (availableWidth / (minCardWidth + gap)).floor().clamp(1, 4);
-                final cardWidth = (availableWidth - (crossAxisCount - 1) * gap) / crossAxisCount;
-                return SizedBox(
-                  width: availableWidth,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      width: cardWidth,
-                      child: _TictactoeGameCard(
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (isDesktop) {
+                        const gap = 16.0;
+                        const minCardWidth = 400.0;
+                        final availableWidth = constraints.maxWidth;
+                        final crossAxisCount =
+                            (availableWidth / (minCardWidth + gap))
+                                .floor()
+                                .clamp(1, 4);
+                        final cardWidth =
+                            (availableWidth - (crossAxisCount - 1) * gap) /
+                                crossAxisCount;
+                        return SizedBox(
+                          width: availableWidth,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: SizedBox(
+                              width: cardWidth,
+                              child: _TictactoeGameCard(
+                                isCreating: isCreating,
+                                isFinding: isFinding,
+                                turnTimeSec: turnTimeSec,
+                                onTurnTimeChanged: onTurnTimeChanged,
+                                gridSize: gridSize,
+                                onGridSizeChanged: onGridSizeChanged,
+                                swapRule: swapRule,
+                                onSwapRuleChanged: onSwapRuleChanged,
+                                firstMoveRestriction: firstMoveRestriction,
+                                onFirstMoveRestrictionChanged:
+                                    onFirstMoveRestrictionChanged,
+                                stakeBronze: stakeBronze,
+                                onStakeChanged: onStakeChanged,
+                                onCreateGame: onCreateGame,
+                                onFindGame: onFindGame,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return _TictactoeGameCard(
                         isCreating: isCreating,
                         isFinding: isFinding,
                         turnTimeSec: turnTimeSec,
@@ -588,143 +642,137 @@ class _GamesPageContent extends StatelessWidget {
                         swapRule: swapRule,
                         onSwapRuleChanged: onSwapRuleChanged,
                         firstMoveRestriction: firstMoveRestriction,
-                        onFirstMoveRestrictionChanged: onFirstMoveRestrictionChanged,
+                        onFirstMoveRestrictionChanged:
+                            onFirstMoveRestrictionChanged,
                         stakeBronze: stakeBronze,
                         onStakeChanged: onStakeChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
-                      ),
+                      );
+                    },
                   ),
-                ),
-              );
-              }
-              return _TictactoeGameCard(
-                isCreating: isCreating,
-                isFinding: isFinding,
-                turnTimeSec: turnTimeSec,
-                onTurnTimeChanged: onTurnTimeChanged,
-                gridSize: gridSize,
-                onGridSizeChanged: onGridSizeChanged,
-                swapRule: swapRule,
-                onSwapRuleChanged: onSwapRuleChanged,
-                firstMoveRestriction: firstMoveRestriction,
-                onFirstMoveRestrictionChanged: onFirstMoveRestrictionChanged,
-                stakeBronze: stakeBronze,
-                onStakeChanged: onStakeChanged,
-                onCreateGame: onCreateGame,
-                onFindGame: onFindGame,
-              );
-            },
-          ),
-          if (invites.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Center(
-              child: Text(
-                'Вас пригласили',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final inviteContent = invites.map(
-                  (inv) => _InviteCard(
-                    inv: inv,
-                    onShowCreatorInfo: onShowCreatorInfo,
-                    onShowInviteRules: onShowInviteRules,
-                    onDeclineInvite: onDeclineInvite,
-                    onAcceptInvite: onAcceptInvite,
-                  ),
-                );
-                if (isDesktop) {
-                  final width = constraints.maxWidth;
-                  const minCardWidth = 360.0;
-                  const gap = 16.0;
-                  final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
-                  final itemWidth = (width - gap * (crossAxisCount - 1)) / crossAxisCount;
-                  return Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: width),
-                      child: Wrap(
-                        spacing: gap,
-                        runSpacing: gap,
-                        alignment: WrapAlignment.center,
-                        children: inviteContent
-                            .map((w) => SizedBox(
-                                  width: itemWidth,
-                                  child: w,
-                                ))
-                            .toList(),
+                  if (invites.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Text(
+                        'Вас пригласили',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
                       ),
                     ),
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: inviteContent
-                      .map((w) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: w,
-                          ))
-                      .toList(),
-                );
-              },
-            ),
-          ],
-          activeAsync.when(
-            data: (active) {
-              if (active == null) return const SizedBox.shrink();
-              if (active.type == 'game' && active.gameId != null) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: GradientCard(
-                    padding: const EdgeInsets.all(16),
-                    child: InkWell(
-                      onTap: () => context.push('/games/tictactoe/game/${active.gameId}'),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Row(
-                        children: [
-                          Icon(Icons.sports_esports_rounded, size: 40, color: AppColors.accentStart),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  active.isMyTurn ? 'Ваш ход' : 'Ход соперника',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                    fontSize: 16,
+                    const SizedBox(height: 12),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final inviteContent = invites.map(
+                          (inv) => _InviteCard(
+                            inv: inv,
+                            onShowCreatorInfo: onShowCreatorInfo,
+                            onShowInviteRules: onShowInviteRules,
+                            onDeclineInvite: onDeclineInvite,
+                            onAcceptInvite: onAcceptInvite,
+                          ),
+                        );
+                        if (isDesktop) {
+                          final width = constraints.maxWidth;
+                          const minCardWidth = 360.0;
+                          const gap = 16.0;
+                          final crossAxisCount = (width / (minCardWidth + gap))
+                              .floor()
+                              .clamp(1, 4);
+                          final itemWidth =
+                              (width - gap * (crossAxisCount - 1)) /
+                                  crossAxisCount;
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: width),
+                              child: Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                alignment: WrapAlignment.center,
+                                children: inviteContent
+                                    .map((w) => SizedBox(
+                                          width: itemWidth,
+                                          child: w,
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: inviteContent
+                              .map((w) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: w,
+                                  ))
+                              .toList(),
+                        );
+                      },
+                    ),
+                  ],
+                  activeAsync.when(
+                    data: (active) {
+                      if (active == null) return const SizedBox.shrink();
+                      if (active.type == 'game' && active.gameId != null) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: GradientCard(
+                            padding: const EdgeInsets.all(16),
+                            child: InkWell(
+                              onTap: () => context.push(
+                                  '/games/tictactoe/game/${active.gameId}'),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.sports_esports_rounded,
+                                      size: 40, color: AppColors.accentStart),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          active.isMyTurn
+                                              ? 'Ваш ход'
+                                              : 'Ход соперника',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const Text(
+                                          'Текущая игра',
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              color: AppColors.textSecondary),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const Text(
-                                  'Текущая игра',
-                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                                ),
-                              ],
+                                  const Icon(Icons.arrow_forward_ios_rounded,
+                                      size: 16),
+                                ],
+                              ),
                             ),
                           ),
-                          const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                        ],
-                      ),
-                    ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
                   ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
-    ),
-    ),
-    );
+        );
       },
     );
   }
@@ -749,7 +797,8 @@ class _LobbiesPageContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final minH = constraints.maxHeight.isFinite ? constraints.maxHeight : 400.0;
+        final minH =
+            constraints.maxHeight.isFinite ? constraints.maxHeight : 400.0;
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
           child: Align(
@@ -762,192 +811,214 @@ class _LobbiesPageContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   lobbiesAsync.when(
-                  data: (lobbies) {
-                    if (lobbies.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    final lobbyCards = lobbies
-                  .map(
-                    (lobby) => Padding(
-                      padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
-                      child: GradientCard(
-                          padding: EdgeInsets.all(isDesktop ? 20 : 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.grid_3x3_rounded,
-                                size: isDesktop ? 36 : 32,
-                                color: AppColors.accentStart,
-                              ),
-                              SizedBox(width: isDesktop ? 16 : 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                    data: (lobbies) {
+                      if (lobbies.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      final lobbyCards = lobbies
+                          .map(
+                            (lobby) => Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: isDesktop ? 8 : 6),
+                              child: GradientCard(
+                                padding: EdgeInsets.all(isDesktop ? 20 : 16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      lobby.creatorName.trim().isNotEmpty ? lobby.creatorName : 'Игрок',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                        fontSize: isDesktop ? 16 : 14,
-                                      ),
+                                    Icon(
+                                      Icons.grid_3x3_rounded,
+                                      size: isDesktop ? 36 : 32,
+                                      color: AppColors.accentStart,
                                     ),
-                                    Wrap(
-                                      spacing: 12,
-                                      runSpacing: 4,
-                                      children: [
-                                        if (lobby.stakeBronze > 0)
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
+                                    SizedBox(width: isDesktop ? 16 : 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            lobby.creatorName.trim().isNotEmpty
+                                                ? lobby.creatorName
+                                                : 'Игрок',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textPrimary,
+                                              fontSize: isDesktop ? 16 : 14,
+                                            ),
+                                          ),
+                                          Wrap(
+                                            spacing: 12,
+                                            runSpacing: 4,
                                             children: [
-                                              Text(
-                                                '${lobby.stakeBronze}',
-                                                style: TextStyle(
-                                                  fontSize: isDesktop ? 14 : 13,
-                                                  color: AppColors.textSecondary,
+                                              if (lobby.stakeBronze > 0)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      '${lobby.stakeBronze}',
+                                                      style: TextStyle(
+                                                        fontSize:
+                                                            isDesktop ? 14 : 13,
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    CoinIcon(
+                                                      coinType: CoinType.bronze,
+                                                      size: 14,
+                                                      showBorder: true,
+                                                    ),
+                                                  ],
                                                 ),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.timer_outlined,
+                                                    size: 14,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    formatTurnTime(
+                                                        lobby.turnTimeSec),
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          isDesktop ? 14 : 13,
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 4),
-                                              CoinIcon(
-                                                coinType: CoinType.bronze,
-                                                size: 14,
-                                                showBorder: true,
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.grid_on_rounded,
+                                                    size: 14,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    formatGridSize(
+                                                        lobby.gridSize),
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          isDesktop ? 14 : 13,
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
+                                              if (lobby.swapRule)
+                                                Tooltip(
+                                                  message: 'Смена сторон',
+                                                  child: const Icon(
+                                                    Icons.swap_horiz_rounded,
+                                                    size: 14,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                ),
+                                              if (lobby.firstMoveRestriction)
+                                                Tooltip(
+                                                  message: 'Запрет центра',
+                                                  child: const Icon(
+                                                    Icons.block_rounded,
+                                                    size: 14,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                ),
                                             ],
                                           ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.timer_outlined,
-                                              size: 14,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              formatTurnTime(lobby.turnTimeSec),
-                                              style: TextStyle(
-                                                fontSize: isDesktop ? 14 : 13,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.grid_on_rounded,
-                                              size: 14,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              formatGridSize(lobby.gridSize),
-                                              style: TextStyle(
-                                                fontSize: isDesktop ? 14 : 13,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if (lobby.swapRule)
-                                          Tooltip(
-                                            message: 'Смена сторон',
-                                            child: const Icon(
-                                              Icons.swap_horiz_rounded,
-                                              size: 14,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        if (lobby.firstMoveRestriction)
-                                          Tooltip(
-                                            message: 'Запрет центра',
-                                            child: const Icon(
-                                              Icons.block_rounded,
-                                              size: 14,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                      ],
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          onShowLobbyRules(context, lobby),
+                                      icon: const Icon(
+                                          Icons.info_outline_rounded),
+                                      tooltip: 'Правила игры',
+                                    ),
+                                    IconButton.filled(
+                                      onPressed: () =>
+                                          onJoinLobby(context, lobby.id),
+                                      icon: const Icon(Icons.login_rounded),
+                                      tooltip: 'Присоединиться',
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: AppColors.accentStart,
+                                        foregroundColor: Colors.white,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () => onShowLobbyRules(context, lobby),
-                                icon: const Icon(Icons.info_outline_rounded),
-                                tooltip: 'Правила игры',
-                              ),
-                              IconButton.filled(
-                                onPressed: () => onJoinLobby(context, lobby.id),
-                                icon: const Icon(Icons.login_rounded),
-                                tooltip: 'Присоединиться',
-                                style: IconButton.styleFrom(
-                                  backgroundColor: AppColors.accentStart,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
+                            ),
+                          )
+                          .toList();
+                      if (isDesktop) {
+                        final width = constraints.maxWidth;
+                        const minCardWidth = 360.0;
+                        const gap = 16.0;
+                        final crossAxisCount =
+                            (width / (minCardWidth + gap)).floor().clamp(1, 4);
+                        final itemWidth = (width - gap * (crossAxisCount - 1)) /
+                            crossAxisCount;
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: width),
+                            child: Wrap(
+                              spacing: gap,
+                              runSpacing: gap,
+                              alignment: WrapAlignment.start,
+                              children: [
+                                for (var i = 0; i < lobbyCards.length; i++)
+                                  SizedBox(
+                                    width: itemWidth,
+                                    child: lobbyCards[i],
+                                  ),
+                              ],
+                            ),
                           ),
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: lobbyCards,
+                      );
+                    },
+                    loading: () => Padding(
+                      padding: EdgeInsets.all(isDesktop ? 32 : 24),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentStart,
                         ),
                       ),
-                    )
-                    .toList();
-                    if (isDesktop) {
-                    final width = constraints.maxWidth;
-                    const minCardWidth = 360.0;
-                    const gap = 16.0;
-                    final crossAxisCount = (width / (minCardWidth + gap)).floor().clamp(1, 4);
-                    final itemWidth = (width - gap * (crossAxisCount - 1)) / crossAxisCount;
-                    return Align(
-                      alignment: Alignment.topLeft,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: width),
-                        child: Wrap(
-                          spacing: gap,
-                          runSpacing: gap,
-                          alignment: WrapAlignment.start,
-                          children: [
-                            for (var i = 0; i < lobbyCards.length; i++)
-                              SizedBox(
-                                width: itemWidth,
-                                child: lobbyCards[i],
-                              ),
-                          ],
-                        ),
+                    ),
+                    error: (err, _) => Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'Не удалось загрузить лобби. ${formatUserError(err, fallback: 'Попробуйте обновить страницу.')}',
+                        style: const TextStyle(color: Colors.red),
                       ),
-                    );
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: lobbyCards,
-                    );
-                  },
-            loading: () => Padding(
-              padding: EdgeInsets.all(isDesktop ? 32 : 24),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentStart,
-                ),
-              ),
-            ),
-            error: (err, _) => Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Не удалось загрузить лобби. ${formatUserError(err, fallback: 'Попробуйте обновить страницу.')}',
-                style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      ),
-    ),
-  ),
-  );
+        );
       },
     );
   }
@@ -1022,7 +1093,8 @@ class _TictactoeGameCard extends StatelessWidget {
     final padV = compact ? 4.0 : 6.0;
     final padH = compact ? 6.0 : 10.0;
     final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
-    final fontSz = compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+    final fontSz =
+        compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
     return [
       Container(
         padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
@@ -1169,9 +1241,8 @@ class _TictactoeGameCard extends StatelessWidget {
               child: Icon(
                 Icons.swap_horiz_rounded,
                 size: iconSz,
-                color: swapRule
-                    ? AppColors.accentStart
-                    : AppColors.textSecondary,
+                color:
+                    swapRule ? AppColors.accentStart : AppColors.textSecondary,
               ),
             ),
           ),
@@ -1310,7 +1381,8 @@ class _TictactoeGameCard extends StatelessWidget {
                                 children: [
                                   Text(
                                     '$stakeBronze',
-                                    style: theme.textTheme.titleMedium?.copyWith(
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.textPrimary,
                                     ),
@@ -1524,7 +1596,9 @@ class _TabSegment extends StatelessWidget {
                 Icon(
                   icon,
                   size: isDesktop ? 22 : 20,
-                  color: isSelected ? AppColors.accentStart : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.accentStart
+                      : AppColors.textSecondary,
                 ),
                 SizedBox(width: isDesktop ? 10 : 8),
                 Text(
@@ -1532,7 +1606,9 @@ class _TabSegment extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: isDesktop ? 15 : 14,
-                    color: isSelected ? AppColors.accentStart : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.accentStart
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -1631,69 +1707,77 @@ class _InviteCard extends ConsumerWidget {
                       Expanded(
                         child: Wrap(
                           spacing: 8,
-                  runSpacing: 6,
-                  alignment: WrapAlignment.start,
-                  children: [
-                    const Tooltip(
-                      message: 'Время на ход',
-                      child: Icon(Icons.timer_outlined, size: iconSz, color: AppColors.textSecondary),
-                    ),
-                    Text(
-                      formatTurnTime(inv.turnTimeSec),
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(width: 4),
-                    const Tooltip(
-                      message: 'Размер сетки',
-                      child: Icon(Icons.grid_on_rounded, size: iconSz, color: AppColors.textSecondary),
-                    ),
-                    Text(
-                      formatGridSize(inv.gridSize),
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                    if (inv.swapRule)
-                      const Tooltip(
-                        message: 'Смена сторон',
-                        child: Icon(Icons.swap_horiz_rounded, size: iconSz, color: AppColors.textSecondary),
+                          runSpacing: 6,
+                          alignment: WrapAlignment.start,
+                          children: [
+                            const Tooltip(
+                              message: 'Время на ход',
+                              child: Icon(Icons.timer_outlined,
+                                  size: iconSz, color: AppColors.textSecondary),
+                            ),
+                            Text(
+                              formatTurnTime(inv.turnTimeSec),
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(width: 4),
+                            const Tooltip(
+                              message: 'Размер сетки',
+                              child: Icon(Icons.grid_on_rounded,
+                                  size: iconSz, color: AppColors.textSecondary),
+                            ),
+                            Text(
+                              formatGridSize(inv.gridSize),
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                            if (inv.swapRule)
+                              const Tooltip(
+                                message: 'Смена сторон',
+                                child: Icon(Icons.swap_horiz_rounded,
+                                    size: iconSz,
+                                    color: AppColors.textSecondary),
+                              ),
+                            if (inv.firstMoveRestriction)
+                              const Tooltip(
+                                message: 'Запрет центра',
+                                child: Icon(Icons.block_rounded,
+                                    size: iconSz,
+                                    color: AppColors.textSecondary),
+                              ),
+                          ],
+                        ),
                       ),
-                    if (inv.firstMoveRestriction)
-                      const Tooltip(
-                        message: 'Запрет центра',
-                        child: Icon(Icons.block_rounded, size: iconSz, color: AppColors.textSecondary),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () => onDeclineInvite(inv.lobbyId),
+                  icon: const Icon(Icons.close_rounded),
+                  tooltip: 'Отклонить',
+                  style: IconButton.styleFrom(foregroundColor: Colors.red),
+                ),
+                IconButton.filled(
+                  onPressed: () => onAcceptInvite(context, inv.lobbyId),
+                  icon: const Icon(Icons.check_rounded),
+                  tooltip: 'Принять',
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-    Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          onPressed: () => onDeclineInvite(inv.lobbyId),
-          icon: const Icon(Icons.close_rounded),
-          tooltip: 'Отклонить',
-          style: IconButton.styleFrom(foregroundColor: Colors.red),
-        ),
-        IconButton.filled(
-          onPressed: () => onAcceptInvite(context, inv.lobbyId),
-          icon: const Icon(Icons.check_rounded),
-          tooltip: 'Принять',
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.accentStart,
-            foregroundColor: Colors.white,
-          ),
-        ),
-      ],
-    ),
-      ],
-    ),
-  ),
-);
+    );
   }
 }
 
@@ -1786,7 +1870,8 @@ class _InviteCreatorAvatar extends ConsumerWidget {
         avatar = CircleAvatar(
           radius: 22,
           backgroundColor: AppColors.accentSoft,
-          child: Icon(_presetIcons[idx], color: AppColors.accentStart, size: 26),
+          child:
+              Icon(_presetIcons[idx], color: AppColors.accentStart, size: 26),
         );
       } else {
         avatar = _letterAvatar(creatorName);
@@ -1813,4 +1898,3 @@ class _InviteCreatorAvatar extends ConsumerWidget {
     );
   }
 }
-
