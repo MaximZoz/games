@@ -876,6 +876,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   double _swipeDx = 0;
   String? _ageError;
   String? _saveError;
+  late String _lastAboutText;
   late TextEditingController _ageController;
   late TextEditingController _aboutController;
   late FocusNode _aboutFocus;
@@ -899,6 +900,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _aboutController = TextEditingController(
       text: widget.profileExtra.about ?? '',
     );
+    _lastAboutText = _aboutController.text;
     _aboutFocus = FocusNode();
     _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onFieldsChanged);
@@ -917,10 +919,15 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   void _onAboutTextChanged() {
+    final text = _aboutController.text;
+    // TextEditingController дергает listener и при смене selection (повторный тап).
+    // Поднимаем поле только когда реально изменился текст.
+    final textChanged = text != _lastAboutText;
+    _lastAboutText = text;
+    if (!textChanged) return;
+
     _ageError = null;
     _saveError = null;
-    // Режим «поднять поле» — только после реального ввода, без scrollTo
-    // (scrollTo на iOS Safari часто закрывает клавиатуру).
     if (_aboutFocus.hasFocus && !_aboutTypingActive) {
       setState(() => _aboutTypingActive = true);
       return;
