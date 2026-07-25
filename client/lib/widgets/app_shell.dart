@@ -88,6 +88,7 @@ class AppShell extends ConsumerWidget {
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
+    final onAuthScreen = path == '/login' || path == '/register';
     final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
     Future.microtask(() {
       if (!context.mounted) return;
@@ -313,7 +314,10 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow && !narrowLandscape && !inChatRoom)
+            // На логине/регистрации nav не нужен: на iOS при клавиатуре viewport
+            // сжимается, и прозрачный bottom nav остаётся над клавиатурой
+            // лиловым «блоком», перекрывая кнопку «Войти».
+            if (narrow && !narrowLandscape && !inChatRoom && !onAuthScreen)
               SafeArea(
                 top: false,
                 child: Material(
