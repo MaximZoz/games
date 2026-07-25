@@ -252,6 +252,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         }
       });
       unawaited(refreshBlockedUsers(ref, force: true).catchError((_) {}));
+      // Онлайн собеседников — как свайп вниз в друзьях.
+      try {
+        refreshPresence(ref);
+        await ref.read(presenceMapProvider.future);
+      } catch (_) {}
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -1675,17 +1680,26 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-                    : chats.isEmpty
-                        ? const Center(
-                            child: Icon(
-                              Icons.chat_bubble_outline_rounded,
-                              size: 32,
-                              color: AppColors.textSecondary,
-                            ),
-                          )
-                        : RefreshIndicator(
+                    : RefreshIndicator(
                             onRefresh: _loadChats,
-                            child: ListView.builder(
+                            child: chats.isEmpty
+                                ? ListView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(
+                                      parent: ClampingScrollPhysics(),
+                                    ),
+                                    children: const [
+                                      SizedBox(height: 120),
+                                      Center(
+                                        child: Icon(
+                                          Icons.chat_bubble_outline_rounded,
+                                          size: 32,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : ListView.builder(
                               controller: _chatsScrollController,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               itemCount: chats.length,
