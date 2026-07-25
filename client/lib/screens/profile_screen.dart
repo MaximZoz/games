@@ -912,30 +912,23 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
   void _onAboutFocusChanged() {
     if (!mounted) return;
-    // setState только при выходе из режима ввода — иначе rebuild сбрасывает фокус на iOS.
-    if (!_aboutFocus.hasFocus && _aboutTypingActive) {
-      setState(() => _aboutTypingActive = false);
-    }
+    final focused = _aboutFocus.hasFocus;
+    // Поднимаем сразу по фокусу (когда выезжает клавиатура); дерево стабильное
+    // через Visibility — setState здесь не пересоздаёт TextField.
+    if (focused == _aboutTypingActive) return;
+    setState(() => _aboutTypingActive = focused);
   }
 
   void _onAboutTextChanged() {
     final text = _aboutController.text;
-    // TextEditingController дергает listener и при смене selection (повторный тап).
-    // Поднимаем поле только когда реально изменился текст.
-    final textChanged = text != _lastAboutText;
+    // Игнор смены selection (повторный тап) — только реальный текст.
+    if (text == _lastAboutText) return;
     _lastAboutText = text;
-    if (!textChanged) return;
-
-    _ageError = null;
-    _saveError = null;
-    if (_aboutFocus.hasFocus && !_aboutTypingActive) {
-      setState(() => _aboutTypingActive = true);
-      return;
-    }
-    // Уже в режиме ввода: не дергаем setState на каждый символ —
-    // лишний rebuild на iOS Web мигает клавиатурой.
-    if (_saveError != null && mounted) {
-      setState(() => _saveError = null);
+    if ((_ageError != null || _saveError != null) && mounted) {
+      setState(() {
+        _ageError = null;
+        _saveError = null;
+      });
     }
   }
 
@@ -1336,7 +1329,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Widget _buildCompactEditor(BuildContext context) {
-    // Поднимаем «О себе» только после реального ввода, не по одному тапу.
+    // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
     final aboutTypingMode = _aboutTypingActive && _aboutFocus.hasFocus;
 
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
