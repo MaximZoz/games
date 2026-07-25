@@ -1127,8 +1127,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   );
                 },
               );
-      // Без явного Scrollbar(thumbVisibility): на desktop Material уже рисует
-      // ползунок — второй всегда-видимый оказывался поверх всех.
       // Без RefreshIndicator: у reverse-списка он цепляется за визуальный верх
       // и сбрасывает пагинацию при подгрузке старых сообщений.
       messagesWidget = listView;
