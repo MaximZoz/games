@@ -16,6 +16,7 @@ import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/browser_keyboard_inset.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -870,6 +871,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
   double _swipeDx = 0;
+  double _browserKeyboardInset = 0;
+  void Function()? _stopKeyboardInsetListen;
   String? _ageError;
   String? _saveError;
   late TextEditingController _ageController;
@@ -902,6 +905,14 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
+    if (widget.compact) {
+      _browserKeyboardInset = readBrowserKeyboardInset();
+      _stopKeyboardInsetListen = listenBrowserKeyboardInset((inset) {
+        if (!mounted) return;
+        if ((_browserKeyboardInset - inset).abs() < 1) return;
+        setState(() => _browserKeyboardInset = inset);
+      });
+    }
   }
 
   void _onAboutFocusChanged() {
@@ -937,6 +948,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
   @override
   void dispose() {
+    _stopKeyboardInsetListen?.call();
+    _stopKeyboardInsetListen = null;
     widget.displayNameController.removeListener(_onFieldsChanged);
     _ageController.removeListener(_onFieldsChanged);
     _aboutController.removeListener(_onFieldsChanged);
@@ -1241,10 +1254,14 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Widget _buildCompactEditor(BuildContext context) {
-    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final mediaInset = MediaQuery.viewInsetsOf(context).bottom;
+    // На iOS Safari viewInsets часто 0 — берём Visual Viewport.
+    final keyboardInset =
+        mediaInset > 0 ? mediaInset : _browserKeyboardInset;
+    final keyboardVisible = keyboardInset > 64;
     final aboutFocused = _aboutFocus.hasFocus;
-    // При вводе «О себе» оставляем только поле над клавиатурой.
-    final focusAboutMode = keyboardVisible && aboutFocused;
+    // На вебе клавиатура оверлеит canvas: режим по фокусу, не только по inset.
+    final focusAboutMode = aboutFocused;
 
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
@@ -1253,7 +1270,12 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       onHorizontalDragEnd: _handleSwipeEnd,
       onHorizontalDragCancel: () => _swipeDx = 0,
       behavior: HitTestBehavior.opaque,
-      child: Column(
+      child: Padding(
+        // Если Flutter уже уменьшил body через viewInsets — не дублируем.
+        padding: EdgeInsets.only(
+          bottom: mediaInset > 0 ? 0 : keyboardInset,
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCompactHeader(context),
@@ -1457,6 +1479,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             _buildCompactSaveButton(),
           ],
         ],
+        ),
       ),
     );
   }
