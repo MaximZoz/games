@@ -2051,6 +2051,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type":       "game",
 				"game_id":    gameID,
+				"lobby_id":   m["lobby_id"],
 				"is_my_turn": isMyTurn,
 			})
 			return

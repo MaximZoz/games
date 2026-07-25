@@ -117,7 +117,11 @@ void main() {
       );
       expect(
         realtimeGameIdForNavigation(
-          const {'type': 'lobby_updated', 'game_id': 'game-2'},
+          const {
+            'type': 'lobby_updated',
+            'lobby_id': 'lobby-1',
+            'game_id': 'game-2',
+          },
           currentPath: '/games/tictactoe/lobby/lobby-1',
         ),
         'game-2',
@@ -136,6 +140,21 @@ void main() {
         realtimeGameIdForNavigation(
           const {'type': 'lobby_updated', 'left': true},
           currentPath: '/games',
+        ),
+        isNull,
+      );
+    });
+
+    test('ignores an event for a different lobby', () {
+      expect(
+        realtimeGameIdForNavigation(
+          const {
+            'type': 'game_started',
+            'lobby_id': 'lobby-2',
+            'game_id': 'game-2',
+          },
+          currentPath: '/games/tictactoe/lobby/lobby-1',
+          expectedLobbyId: 'lobby-1',
         ),
         isNull,
       );
