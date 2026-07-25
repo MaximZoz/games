@@ -26,6 +26,7 @@ import 'package:multigames_client/widgets/app_shell.dart';
 
 const _publicPaths = <String>{'/login', '/register'};
 const _authRequiredPaths = <String>{
+  '/',
   '/friends',
   '/chats',
   '/tournaments',
