@@ -290,6 +290,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/start", handleStart)
+	// #region agent log
+	mux.HandleFunc("/api/agent-debug", api.AgentDebugLogHandler)
+	// #endregion
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)

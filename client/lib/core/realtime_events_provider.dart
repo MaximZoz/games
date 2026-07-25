@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/agent_debug_log.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/realtime_visibility_stub.dart'
     if (dart.library.html) 'realtime_visibility_web.dart' as visibility;
@@ -30,6 +31,7 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
       });
     });
   }
+
   RealtimeSocket? socket;
   StreamSubscription<String>? socketSubscription;
   Timer? reconnectTimer;
@@ -78,7 +80,22 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
         try {
           final payload = jsonDecode(raw);
           if (payload is! Map) return;
-          emitAfterFrame(Map<String, dynamic>.from(payload));
+          final event = Map<String, dynamic>.from(payload);
+          // #region agent log
+          if (event['type'] == 'lobby_updated' || event['type'] == 'game_started') {
+            agentDebugLog(
+              hypothesisId: 'B',
+              location: 'client/lib/core/realtime_events_provider.dart:socket.messages',
+              message: 'game event decoded from websocket',
+              data: {
+                'type': event['type'],
+                'lobby_id': event['lobby_id'],
+                'game_id': event['game_id'],
+              },
+            );
+          }
+          // #endregion
+          emitAfterFrame(event);
         } catch (_) {
           // Игнорируем невалидные фреймы, чтобы не ронять соединение.
         }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/agent_debug_log.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -55,13 +56,29 @@ class AppShell extends ConsumerWidget {
           final type = event['type'];
           if (type == 'game_started' || type == 'lobby_updated') {
             final router = GoRouter.of(context);
+            final currentPath = router.routerDelegate.currentConfiguration.uri.path;
             final gameId = realtimeGameIdForNavigation(
               event,
-              currentPath:
-                  router.routerDelegate.currentConfiguration.uri.path,
+              currentPath: currentPath,
             );
             if (context.mounted) {
-              navigateToGame(router, gameNavigation, gameId);
+              final navigated = navigateToGame(router, gameNavigation, gameId);
+              // #region agent log
+              agentDebugLog(
+                hypothesisId: 'C,D',
+                location: 'client/lib/widgets/app_shell.dart:realtimeNavigation',
+                message: 'shell processed realtime game navigation',
+                data: {
+                  'type': type,
+                  'lobby_id': event['lobby_id'],
+                  'event_game_id': event['game_id'],
+                  'candidate_game_id': gameId,
+                  'current_path': currentPath,
+                  'navigated': navigated,
+                  'result_path': router.routerDelegate.currentConfiguration.uri.path,
+                },
+              );
+              // #endregion
             }
           }
           if (type == 'daily_reward_available' || type == 'daily_reward_claimed') {
@@ -91,8 +108,7 @@ class AppShell extends ConsumerWidget {
       if (!context.mounted) return;
       try {
         ref.read(currentRoutePathProvider.notifier).state = path;
-        final shouldClearToolbar =
-            !onFriends && !onChatsList && !(inChatRoom && narrowLandscape);
+        final shouldClearToolbar = !onFriends && !onChatsList && !(inChatRoom && narrowLandscape);
         if (shouldClearToolbar) {
           ref.read(mobileToolbarLeadingProvider.notifier).state = null;
         }
@@ -100,8 +116,7 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    final keyboardLikelyVisible =
-        narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
+    final keyboardLikelyVisible = narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
     final selectedIndex = navigationShell.currentIndex;
 
     void navigateWithPrefetch(int i) {
@@ -111,15 +126,9 @@ class AppShell extends ConsumerWidget {
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         ref.read(activeGameProvider.future).then((active) {
           if (!context.mounted) return;
-          if (active != null &&
-              active.type == 'game' &&
-              active.gameId != null &&
-              active.gameId!.isNotEmpty) {
+          if (active != null && active.type == 'game' && active.gameId != null && active.gameId!.isNotEmpty) {
             context.go('/games/tictactoe/game/${active.gameId}');
-          } else if (active != null &&
-              active.type == 'lobby' &&
-              active.lobbyId != null &&
-              active.lobbyId!.isNotEmpty) {
+          } else if (active != null && active.type == 'lobby' && active.lobbyId != null && active.lobbyId!.isNotEmpty) {
             context.go('/games/tictactoe/lobby/${active.lobbyId}');
           } else {
             context.go('/games');
@@ -163,8 +172,7 @@ class AppShell extends ConsumerWidget {
                 child: ClipRect(
                   child: Row(
                     children: [
-                      if ((narrow && (onFriends || onChatsList) ||
-                              (narrowLandscape && inChatRoom)) &&
+                      if ((narrow && (onFriends || onChatsList) || (narrowLandscape && inChatRoom)) &&
                           toolbarLeading != null)
                         narrowLandscape && inChatRoom
                             ? Expanded(
@@ -268,9 +276,7 @@ class AppShell extends ConsumerWidget {
                           backgroundColor: Colors.transparent,
                           selectedIconTheme: const IconThemeData(color: AppColors.accentStart),
                           unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
-                          labelType: narrowLandscape
-                              ? NavigationRailLabelType.none
-                              : NavigationRailLabelType.all,
+                          labelType: narrowLandscape ? NavigationRailLabelType.none : NavigationRailLabelType.all,
                           destinations: _navItems.asMap().entries.map((entry) {
                             final index = entry.key;
                             final item = entry.value;
@@ -315,8 +321,7 @@ class AppShell extends ConsumerWidget {
                         final item = entry.value;
                         return BottomNavigationBarItem(
                           icon: _navIcon(
-                              item, unreadChats, incomingFriends, gamesMyTurn,
-                              gameInvitesCount, dailyRewardCount),
+                              item, unreadChats, incomingFriends, gamesMyTurn, gameInvitesCount, dailyRewardCount),
                           activeIcon: _navIcon(
                             item,
                             unreadChats,

@@ -120,15 +120,42 @@ func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 	}
 	h.mu.RUnlock()
 
+	writeFailures := 0
 	for _, target := range deliveries {
 		if target.client == nil {
 			continue
 		}
 		if err := target.client.writeText(raw); err != nil {
+			writeFailures++
 			_ = target.client.conn.Close()
 			h.Unregister(target.userID, target.client.conn)
 		}
 	}
+	// #region agent log
+	if event, ok := payload.(map[string]any); ok &&
+		(event["type"] == "lobby_updated" || event["type"] == "game_started") {
+		appendAgentDebugLog(agentDebugEntry{
+			HypothesisID: "A",
+			Location:     "server/internal/api/realtime_ws.go:RealtimeHub.PublishToUsers",
+			Message:      "realtime game event delivery attempted",
+			Data: map[string]any{
+				"type":              event["type"],
+				"lobby_id":          event["lobby_id"],
+				"game_id":           event["game_id"],
+				"intended_users":    len(uniqueUsers),
+				"socket_deliveries": len(deliveries),
+				"write_failures":    writeFailures,
+				"connected_recipients": func() int {
+					connected := make(map[uuid.UUID]struct{}, len(deliveries))
+					for _, target := range deliveries {
+						connected[target.userID] = struct{}{}
+					}
+					return len(connected)
+				}(),
+			},
+		})
+	}
+	// #endregion
 }
 
 type RealtimeWSHandler struct {
@@ -270,7 +297,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				h.Hub.PublishToUsers(recipients, map[string]any{
 					"type":         "user_offline",
 					"user_id":      userID.String(),
-					"online":      false,
+					"online":       false,
 					"last_seen_at": now,
 				})
 			}
