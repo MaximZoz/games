@@ -39,13 +39,16 @@ String buildTictactoeRulesText({
   required int turnTimeSec,
   required bool swapRule,
   required bool firstMoveRestriction,
+  int stakeBronze = 1,
 }) {
+  final stake = stakeBronze < 1 ? 1 : stakeBronze;
   final parts = <String>[
     'Крестики-нолики на поле ${formatGridSize(gridSize)}. Ходят по очереди, X начинает.',
     'Победа: нужно выстроить ${gridSize >= 6 ? 5 : gridSize} в ряд по горизонтали, вертикали или диагонали.',
     turnTimeSec == 0
         ? 'Без ограничения по времени на ход.'
         : 'Время на ход: ${formatTurnTime(turnTimeSec)}.',
+    'Ставка: ${formatBalance(stake)}. На столько монет идёт игра.',
   ];
   if (swapRule) {
     parts.add(
@@ -134,6 +137,7 @@ class GameStateItem {
   final bool swapRule;
   final bool firstMoveRestriction;
   final bool canSwap;
+  final int stakeBronze;
   final String? xDisplayName;
   final String? oDisplayName;
   final String xAvatarKind;
@@ -158,6 +162,7 @@ class GameStateItem {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.canSwap = false,
+    this.stakeBronze = 1,
     this.xDisplayName,
     this.oDisplayName,
     this.xAvatarKind = 'letter',
@@ -211,6 +216,7 @@ class GameStateItem {
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       canSwap: json['can_swap'] == true,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
       xDisplayName: json['x_display_name'] as String?,
       oDisplayName: json['o_display_name'] as String?,
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',

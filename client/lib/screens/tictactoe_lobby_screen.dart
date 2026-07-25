@@ -335,6 +335,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       swapRule: lobby.swapRule,
                                       firstMoveRestriction:
                                           lobby.firstMoveRestriction,
+                                      stakeBronze: lobby.stakeBronze,
                                     ),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
@@ -343,17 +344,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       height: 1.35,
                                     ),
                                   ),
-                                  if (lobby.stakeBronze > 0) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Ставка: ${formatBalance(lobby.stakeBronze)}',
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
                                   const SizedBox(height: 20),
                                   FilledButton(
                                     onPressed: _isJoining

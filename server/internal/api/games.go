@@ -104,6 +104,7 @@ type GameStateItem struct {
 	SwapRule             bool     `json:"swap_rule,omitempty"`
 	FirstMoveRestriction bool     `json:"first_move_restriction,omitempty"`
 	CanSwap              bool     `json:"can_swap,omitempty"` // O может сменить стороны
+	StakeBronze          int      `json:"stake_bronze,omitempty"`
 	XDisplayName         *string  `json:"x_display_name,omitempty"`
 	ODisplayName         *string  `json:"o_display_name,omitempty"`
 	XAvatarKind          string   `json:"x_avatar_kind,omitempty"`
@@ -1541,6 +1542,10 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		}
 		canSwap = cnt == 1
 	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	if stakeBronze < 1 {
+		stakeBronze = 1
+	}
 	item := GameStateItem{
 		ID:                   gameID,
 		Board:                board,
@@ -1552,6 +1557,7 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		SwapRule:             swapRule,
 		FirstMoveRestriction: firstMoveRestriction,
 		CanSwap:              canSwap,
+		StakeBronze:          stakeBronze,
 		Forfeit:              m["forfeit"] == "1",
 		Timeout:              m["timeout"] == "1",
 	}
