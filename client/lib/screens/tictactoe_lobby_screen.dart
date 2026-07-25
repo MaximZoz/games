@@ -69,9 +69,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   final Set<String> _invitingFriendIds = {};
   bool _isLeaving = false;
   bool _isJoining = false;
-  bool _linkCopied = false;
   Timer? _chatsRefreshTimer;
-  Timer? _linkCopiedTimer;
 
   @override
   void initState() {
@@ -89,7 +87,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   @override
   void dispose() {
     _chatsRefreshTimer?.cancel();
-    _linkCopiedTimer?.cancel();
     super.dispose();
   }
 
@@ -409,45 +406,43 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _copyInviteLink(context),
+          onTap: _copyInviteLink,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(
               children: [
-                Container(
+                SizedBox(
                   width: 40,
                   height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    _linkCopied ? Icons.check_rounded : Icons.link_rounded,
-                    color: AppColors.accentStart,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.accentSoft,
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                    child: Icon(
+                      Icons.link_rounded,
+                      color: AppColors.accentStart,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _linkCopied
-                            ? 'Ссылка скопирована'
-                            : 'Отправить ссылку на игру',
-                        style: const TextStyle(
+                        'Отправить ссылку на игру',
+                        style: TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
-                        _linkCopied
-                            ? 'Вставьте её в чат или сообщение другу'
-                            : 'Скопировать ссылку в буфер обмена',
-                        style: const TextStyle(
+                        'Скопировать ссылку в буфер обмена',
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
                         ),
@@ -456,7 +451,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                   ),
                 ),
                 Icon(
-                  _linkCopied ? Icons.done_rounded : Icons.copy_rounded,
+                  Icons.copy_rounded,
                   color: AppColors.accentStart,
                 ),
               ],
@@ -467,22 +462,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  Future<void> _copyInviteLink(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
+  Future<void> _copyInviteLink() async {
     final url = buildInviteLobbyShareUrl(
       lobbyId: widget.lobbyId,
       baseUri: Uri.base,
     );
     await Clipboard.setData(ClipboardData(text: url));
-    if (!mounted) return;
-    setState(() => _linkCopied = true);
-    _linkCopiedTimer?.cancel();
-    _linkCopiedTimer = Timer(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _linkCopied = false);
-    });
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Ссылка скопирована в буфер обмена')),
-    );
   }
 
   Future<void> _joinViaLink(BuildContext context) async {
