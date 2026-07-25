@@ -1281,19 +1281,34 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
           _buildCompactHeader(context),
           if (focusAboutMode) ...[
             const SizedBox(height: 12),
-            // Верхняя половина экрана — не на всю высоту над клавиатурой.
-            SizedBox(
-              height: (MediaQuery.sizeOf(context).height * 0.42)
-                  .clamp(180.0, 320.0),
-              child: _buildCompactAboutField(expands: true),
+            // Доступная высота уже над клавиатурой (есть bottom padding).
+            // «О себе» сверху (~половина), «Сохранить» снизу — без overlap.
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final aboutHeight =
+                      (constraints.maxHeight * 0.5).clamp(120.0, 240.0);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: aboutHeight,
+                        child: _buildCompactAboutField(expands: true),
+                      ),
+                      const Spacer(),
+                      if (_saveError != null) ...[
+                        MessageBanner(
+                          message: _saveError!,
+                          type: BannerType.error,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      _buildCompactSaveButton(),
+                    ],
+                  );
+                },
+              ),
             ),
-            if (_saveError != null) ...[
-              const SizedBox(height: 8),
-              MessageBanner(message: _saveError!, type: BannerType.error),
-            ],
-            const SizedBox(height: 12),
-            _buildCompactSaveButton(),
-            const Spacer(),
           ] else if (keyboardVisible) ...[
             // Фокус на имени/возрасте: скролл, без гигантского «О себе».
             const SizedBox(height: 12),
