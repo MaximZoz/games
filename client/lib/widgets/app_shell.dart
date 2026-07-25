@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
-import 'package:multigames_client/core/agent_debug_log.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -56,29 +55,13 @@ class AppShell extends ConsumerWidget {
           final type = event['type'];
           if (type == 'game_started' || type == 'lobby_updated') {
             final router = GoRouter.of(context);
-            final currentPath = router.routerDelegate.currentConfiguration.uri.path;
             final gameId = realtimeGameIdForNavigation(
               event,
-              currentPath: currentPath,
+              currentPath:
+                  router.routerDelegate.currentConfiguration.uri.path,
             );
             if (context.mounted) {
-              final navigated = navigateToGame(router, gameNavigation, gameId);
-              // #region agent log
-              agentDebugLog(
-                hypothesisId: 'C,D',
-                location: 'client/lib/widgets/app_shell.dart:realtimeNavigation',
-                message: 'shell processed realtime game navigation',
-                data: {
-                  'type': type,
-                  'lobby_id': event['lobby_id'],
-                  'event_game_id': event['game_id'],
-                  'candidate_game_id': gameId,
-                  'current_path': currentPath,
-                  'navigated': navigated,
-                  'result_path': router.routerDelegate.currentConfiguration.uri.path,
-                },
-              );
-              // #endregion
+              navigateToGame(router, gameNavigation, gameId);
             }
           }
           if (type == 'daily_reward_available' || type == 'daily_reward_claimed') {

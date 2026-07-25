@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/core/agent_debug_log.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -54,14 +53,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   void initState() {
     super.initState();
     ref.invalidate(lobbyDetailProvider(widget.lobbyId));
-    // #region agent log
-    agentDebugLog(
-      hypothesisId: 'E',
-      location: 'client/lib/screens/tictactoe_lobby_screen.dart:initState',
-      message: 'lobby screen initialized with one-shot detail fetch',
-      data: {'lobby_id': widget.lobbyId},
-    );
-    // #endregion
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(openLobbiesProvider);
       refreshChatsList(ref, force: true).catchError((_) {});

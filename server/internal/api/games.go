@@ -1315,18 +1315,6 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		}
 	}
 
-	// #region agent log
-	appendAgentDebugLog(agentDebugEntry{
-		HypothesisID: "A",
-		Location:     "server/internal/api/games.go:JoinLobby.beforeBroadcast",
-		Message:      "game created before lobby broadcast",
-		Data: map[string]any{
-			"lobby_id": lobbyID,
-			"game_id":  gameID,
-			"mode":     status,
-		},
-	})
-	// #endregion
 	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
 		"type":        "lobby_updated",
 		"lobby_id":    lobbyID,

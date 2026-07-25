@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multigames_client/core/agent_debug_log.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -78,7 +77,7 @@ class _LobbyGameNavigationWatcherState
       (_, next) {
         final lobby = next.valueOrNull;
         if (lobby?.id == widget.lobbyId) {
-          _navigate(lobby?.gameId, source: 'lobby_detail');
+          _navigate(lobby?.gameId);
         }
       },
       fireImmediately: true,
@@ -96,25 +95,17 @@ class _LobbyGameNavigationWatcherState
       currentPath: currentPath,
       expectedLobbyId: widget.lobbyId,
     );
-    _navigate(gameId, source: 'realtime');
+    _navigate(gameId);
   }
 
   Future<void> _poll() async {
     if (!mounted || _pollInFlight) return;
     _pollInFlight = true;
-    // #region agent log
-    agentDebugLog(
-      hypothesisId: 'E',
-      location: 'client/lib/games/lobby_game_navigation.dart:_poll',
-      message: 'waiting lobby fallback poll started',
-      data: {'lobby_id': widget.lobbyId},
-    );
-    // #endregion
     try {
       ref.invalidate(lobbyGameRecoveryProvider(widget.lobbyId));
       final gameId =
           await ref.read(lobbyGameRecoveryProvider(widget.lobbyId).future);
-      if (mounted) _navigate(gameId, source: 'poll');
+      if (mounted) _navigate(gameId);
     } catch (_) {
       // A later poll retries transient lobby/active-game failures.
     } finally {
@@ -122,30 +113,15 @@ class _LobbyGameNavigationWatcherState
     }
   }
 
-  void _navigate(String? gameId, {required String source}) {
+  void _navigate(String? gameId) {
     if (!mounted || gameId == null || gameId.trim().isEmpty) return;
     final router = GoRouter.of(context);
-    final currentPath = router.routerDelegate.currentConfiguration.uri.path;
-    final navigated = navigateToGame(
+    navigateToGame(
       router,
       ref.read(gameNavigationCoordinatorProvider),
       gameId,
       expectedLobbyId: widget.lobbyId,
     );
-    // #region agent log
-    agentDebugLog(
-      hypothesisId: 'D,E',
-      location: 'client/lib/games/lobby_game_navigation.dart:_navigate',
-      message: 'lobby navigation candidate processed',
-      data: {
-        'source': source,
-        'lobby_id': widget.lobbyId,
-        'game_id': gameId,
-        'current_path': currentPath,
-        'navigated': navigated,
-      },
-    );
-    // #endregion
   }
 
   @override
