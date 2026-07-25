@@ -204,7 +204,7 @@ void main() {
     expect(find.text('Введите пароль'), findsOneWidget);
   });
 
-  testWidgets('Unauthenticated user tapping Friends redirects to profile',
+  testWidgets('Unauthenticated user tapping Friends redirects to login',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
@@ -218,8 +218,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Редирект: /friends → /profile (needsAuth)
-    expect(find.text('Войдите в аккаунт'), findsOneWidget);
+    // Редирект: /friends → /login?redirect=/friends (needsAuth)
+    expect(find.text('Вход'), findsOneWidget);
+    expect(find.text('Нет аккаунта? Зарегистрироваться'), findsOneWidget);
   });
 
   testWidgets('Register form has title and link to login',

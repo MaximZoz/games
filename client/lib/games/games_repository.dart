@@ -446,6 +446,7 @@ class GamesRepository {
       'cannot invite yourself': 'Нельзя пригласить самого себя',
       'user is not your friend': 'Этот пользователь не в списке друзей',
       'lobby not in invite mode': 'Лобби не в режиме приглашений',
+      'lobby not joinable': 'В это лобби уже нельзя войти',
       'cannot join own lobby': 'Нельзя присоединиться к своему лобби',
       'game is not over': 'Игра ещё не закончена',
       'game already started': 'Игра уже началась',

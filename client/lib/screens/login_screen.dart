@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -22,6 +23,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
+
+  String? get _redirect =>
+      safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
 
   @override
   void dispose() {
@@ -44,7 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text,
             password: _passwordController.text,
           );
-      if (mounted) context.go('/');
+      if (mounted) context.go(_redirect ?? '/');
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -154,7 +158,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: () => context.push('/register'),
+                          onPressed: () => context.push(
+                            appendRedirectQuery('/register', _redirect),
+                          ),
                           child: const Text('Нет аккаунта? Зарегистрироваться'),
                         ),
                       ],
