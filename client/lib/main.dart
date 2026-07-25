@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'router.dart';
 import 'ui/app_theme.dart';
@@ -11,6 +13,11 @@ import 'src/console_log_stub.dart'
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Иначе deep-link вида /games/tictactoe/lobby/:id открывает «Главную»,
+  // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
   console_log.logToBrowser('main() started');
 
   runZonedGuarded(() {

@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -22,13 +26,30 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
   const TicTacToeLobbyScreen({
     super.key,
     required this.lobbyId,
+    this.initialMode,
   });
 
   final String lobbyId;
+  final String? initialMode;
 
   @override
   ConsumerState<TicTacToeLobbyScreen> createState() =>
       _TicTacToeLobbyScreenState();
+}
+
+/// Заголовок AppBar экрана лобби.
+///
+/// Пока деталь лобби не загружена, опираемся на [initialMode] из query
+/// (`?mode=invite|matchmake`), чтобы не показывать «Лобби» для своей игры.
+String tictactoeLobbyAppBarTitle({
+  String? status,
+  String? initialMode,
+}) {
+  if (status == 'waiting_matchmake') return 'Лобби';
+  if (status == 'waiting_invite') return 'Своя игра';
+  if (initialMode == 'matchmake') return 'Лобби';
+  if (initialMode == 'invite') return 'Своя игра';
+  return '';
 }
 
 const List<IconData> _presetAvatarIcons = [
@@ -47,7 +68,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   final Set<String> _invitedFriendIds = {};
   final Set<String> _invitingFriendIds = {};
   bool _isLeaving = false;
+  bool _isJoining = false;
+  bool _linkCopied = false;
   Timer? _chatsRefreshTimer;
+  Timer? _linkCopiedTimer;
 
   @override
   void initState() {
@@ -65,6 +89,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   @override
   void dispose() {
     _chatsRefreshTimer?.cancel();
+    _linkCopiedTimer?.cancel();
     super.dispose();
   }
 
@@ -90,12 +115,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             onPressed: _isLeaving ? null : () => _leaveLobby(context),
             icon: const Icon(Icons.close_rounded),
           ),
-          title: lobbyAsync.when(
-            data: (lobby) => Text(
-              lobby.status == 'waiting_matchmake' ? 'Лобби' : 'Своя игра',
+          title: Text(
+            tictactoeLobbyAppBarTitle(
+              status: lobbyAsync.valueOrNull?.status,
+              initialMode: widget.initialMode,
             ),
-            loading: () => const Text('Лобби'),
-            error: (_, __) => const Text('Лобби'),
           ),
         ),
         body: lobbyAsync.when(
@@ -124,187 +148,237 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        GradientCard(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            children: [
-                              if (isMatchmakeMode) ...[
-                                const SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.accentStart,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Поиск соперника...',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ] else if (isInviteMode && isCreator) ...[
-                                friendsAsync.when(
-                                  data: (snapshot) {
-                                    final friends = snapshot.friends;
-                                    final presence = ref
-                                            .watch(presenceMapProvider)
-                                            .valueOrNull ??
-                                        const {};
-                                    final onlineFriends = friends
-                                        .where((f) {
-                                          final entry = presence[f.user.id];
-                                          return entry != null && entry.online;
-                                        })
-                                        .where((f) => !_invitedFriendIds
-                                            .contains(f.user.id))
-                                        .toList();
-                                    if (onlineFriends.isEmpty) {
-                                      final onlineInvitedCount = friends
-                                          .where((f) =>
-                                              (presence[f.user.id]?.online ??
-                                                  false) &&
-                                              _invitedFriendIds
-                                                  .contains(f.user.id))
-                                          .length;
-                                      return Text(
-                                        friends.isEmpty
-                                            ? 'У вас пока нет друзей. Добавьте друзей в разделе «Друзья».'
-                                            : onlineInvitedCount > 0
-                                                ? 'Приглашения отправлены. Ожидайте ответа.'
-                                                : 'Нет друзей онлайн. Пригласить можно только тех, кто сейчас в сети.',
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 14,
+                        if (isInviteMode && isCreator) ...[
+                          _buildShareInviteLinkCard(context),
+                          const SizedBox(height: 16),
+                          GradientCard(
+                            padding: const EdgeInsets.all(24),
+                            child: friendsAsync.when(
+                              data: (snapshot) {
+                                final friends = snapshot.friends;
+                                final presence = ref
+                                        .watch(presenceMapProvider)
+                                        .valueOrNull ??
+                                    const {};
+                                final onlineFriends = friends
+                                    .where((f) {
+                                      final entry = presence[f.user.id];
+                                      return entry != null && entry.online;
+                                    })
+                                    .where((f) => !_invitedFriendIds
+                                        .contains(f.user.id))
+                                    .toList();
+                                if (onlineFriends.isEmpty) {
+                                  final onlineInvitedCount = friends
+                                      .where((f) =>
+                                          (presence[f.user.id]?.online ??
+                                              false) &&
+                                          _invitedFriendIds
+                                              .contains(f.user.id))
+                                      .length;
+                                  return Text(
+                                    friends.isEmpty
+                                        ? 'У вас пока нет друзей онлайн. Можно отправить ссылку на игру выше.'
+                                        : onlineInvitedCount > 0
+                                            ? 'Приглашения отправлены. Ожидайте ответа.'
+                                            : 'Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.',
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  );
+                                }
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    ...onlineFriends.map((f) {
+                                      final friendId = f.user.id;
+                                      final isInvited =
+                                          _invitedFriendIds.contains(friendId);
+                                      final isInviting = _invitingFriendIds
+                                          .contains(friendId);
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8),
+                                        child: Row(
+                                          children: [
+                                            _buildFriendAvatar(f.user, 20),
+                                            InkWell(
+                                              onTap: () =>
+                                                  _showFriendInfo(context, f),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(4),
+                                                child: Icon(
+                                                  Icons.info_outline_rounded,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                f.user.displayName
+                                                            ?.trim()
+                                                            .isNotEmpty ==
+                                                        true
+                                                    ? f.user.displayName!
+                                                    : 'Пользователь',
+                                                style: const TextStyle(
+                                                  color: AppColors.textPrimary,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            FilledButton(
+                                              onPressed: isInviting || isInvited
+                                                  ? null
+                                                  : () => _inviteFriend(
+                                                      context, friendId),
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor:
+                                                    AppColors.accentStart,
+                                                foregroundColor: Colors.white,
+                                              ),
+                                              child: Text(
+                                                isInvited
+                                                    ? 'Отправлено'
+                                                    : 'Пригласить',
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       );
-                                    }
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        ...onlineFriends.map((f) {
-                                          final friendId = f.user.id;
-                                          final isInvited = _invitedFriendIds
-                                              .contains(friendId);
-                                          final isInviting = _invitingFriendIds
-                                              .contains(friendId);
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 8),
-                                            child: Row(
-                                              children: [
-                                                _buildFriendAvatar(f.user, 20),
-                                                InkWell(
-                                                  onTap: () => _showFriendInfo(
-                                                      context, f),
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(4),
-                                                    child: Icon(
-                                                      Icons
-                                                          .info_outline_rounded,
-                                                      color: AppColors
-                                                          .textSecondary,
-                                                      size: 20,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    f.user.displayName
-                                                                ?.trim()
-                                                                .isNotEmpty ==
-                                                            true
-                                                        ? f.user.displayName!
-                                                        : 'Пользователь',
-                                                    style: const TextStyle(
-                                                      color:
-                                                          AppColors.textPrimary,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                FilledButton(
-                                                  onPressed: isInviting ||
-                                                          isInvited
-                                                      ? null
-                                                      : () => _inviteFriend(
-                                                          context, friendId),
-                                                  style: FilledButton.styleFrom(
-                                                    backgroundColor:
-                                                        AppColors.accentStart,
-                                                    foregroundColor:
-                                                        Colors.white,
-                                                  ),
-                                                  child: Text(
-                                                    isInvited
-                                                        ? 'Отправлено'
-                                                        : 'Пригласить',
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }),
-                                      ],
-                                    );
-                                  },
-                                  loading: () => const Padding(
-                                    padding: EdgeInsets.all(16),
+                                    }),
+                                  ],
+                                );
+                              },
+                              loading: () => const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.accentStart,
+                                ),
+                              ),
+                              error: (e, _) => Text(
+                                'Не удалось загрузить друзей. ${formatUserError(e, fallback: "Попробуйте позже.")}',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ),
+                        ] else
+                          GradientCard(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              children: [
+                                if (isMatchmakeMode) ...[
+                                  const SizedBox(
+                                    width: 48,
+                                    height: 48,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       color: AppColors.accentStart,
                                     ),
                                   ),
-                                  error: (e, _) => Text(
-                                    'Не удалось загрузить друзей. ${formatUserError(e, fallback: "Попробуйте позже.")}',
-                                    style: const TextStyle(color: Colors.red),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Поиск соперника...',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
                                   ),
-                                ),
-                              ] else if (isInviteMode && !isCreator) ...[
-                                Text(
-                                  'Ожидание хоста',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ] else if (isInviteMode && !isCreator) ...[
+                                  Text(
+                                    'Приглашение в игру',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    lobby.creatorName.trim().isNotEmpty
+                                        ? '${lobby.creatorName} приглашает вас сыграть'
+                                        : 'Вас пригласили сыграть',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    buildTictactoeRulesText(
+                                      gridSize: lobby.gridSize,
+                                      turnTimeSec: lobby.turnTimeSec,
+                                      swapRule: lobby.swapRule,
+                                      firstMoveRestriction:
+                                          lobby.firstMoveRestriction,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                  if (lobby.stakeBronze > 0) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Ставка: ${formatBalance(lobby.stakeBronze)}',
+                                      style: const TextStyle(
                                         color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
                                       ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Хост отправит вам приглашение',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 14,
+                                    ),
+                                  ],
+                                  const SizedBox(height: 20),
+                                  FilledButton(
+                                    onPressed: _isJoining
+                                        ? null
+                                        : () => _joinViaLink(context),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.accentStart,
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size.fromHeight(48),
+                                    ),
+                                    child: _isJoining
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text('Войти в игру'),
                                   ),
-                                ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -327,6 +401,110 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildShareInviteLinkCard(BuildContext context) {
+    return GradientCard(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _copyInviteLink,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              children: [
+                // Левая «скрепка»/link — всегда без изменений.
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.link_rounded,
+                    color: AppColors.accentStart,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _linkCopied
+                            ? 'Ссылка скопирована'
+                            : 'Отправить ссылку на игру',
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _linkCopied
+                            ? 'Вставьте её в чат или сообщение другу'
+                            : 'Скопировать ссылку в буфер обмена',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  _linkCopied ? Icons.check_rounded : Icons.copy_rounded,
+                  color: AppColors.accentStart,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copyInviteLink() async {
+    final url = buildInviteLobbyShareUrl(
+      lobbyId: widget.lobbyId,
+      baseUri: Uri.base,
+    );
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    setState(() => _linkCopied = true);
+    _linkCopiedTimer?.cancel();
+    _linkCopiedTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _linkCopied = false);
+    });
+  }
+
+  Future<void> _joinViaLink(BuildContext context) async {
+    setState(() => _isJoining = true);
+    try {
+      final repo = ref.read(gamesRepositoryProvider);
+      final result = await repo.joinLobby(widget.lobbyId);
+      if (!context.mounted) return;
+      if (result.joined && result.gameId != null) {
+        navigateToGame(
+          GoRouter.of(context),
+          ref.read(gameNavigationCoordinatorProvider),
+          result.gameId,
+          expectedLobbyId: widget.lobbyId,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(formatUserError(e))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isJoining = false);
+    }
   }
 
   Future<void> _inviteFriend(BuildContext context, String friendUserId) async {
