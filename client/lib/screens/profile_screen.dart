@@ -331,6 +331,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // iOS Safari/Flutter Web: resize от клавиатуры сбрасывает фокус TextField.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: ref.watch(authStateProvider).when(
               data: (user) {
@@ -367,15 +369,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   if (mobile && _isEditing) {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-                      child: _ProfileEditForm(
-                        key: const ValueKey('mobile_edit_form'),
-                        user: user,
-                        profileExtra: extra,
-                        displayNameController: _displayNameController,
-                        focusNode: _displayNameFocus,
-                        onCancel: _cancelEditing,
-                        onSave: _saveProfile,
-                        compact: true,
+                      child: SizedBox.expand(
+                        child: _ProfileEditForm(
+                          key: const ValueKey('mobile_edit_form'),
+                          user: user,
+                          profileExtra: extra,
+                          displayNameController: _displayNameController,
+                          focusNode: _displayNameFocus,
+                          onCancel: _cancelEditing,
+                          onSave: _saveProfile,
+                          compact: true,
+                        ),
                       ),
                     );
                   }
@@ -867,10 +871,15 @@ final _aboutFormatters = [
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  bool _aboutTypingActive = false;
+  bool _swipeFromEdge = false;
+  double _swipeDx = 0;
   String? _ageError;
   String? _saveError;
+  late String _lastAboutText;
   late TextEditingController _ageController;
   late TextEditingController _aboutController;
+  late FocusNode _aboutFocus;
   late String? _gender;
   late AvatarKind _avatarKind;
   late String? _avatarValue;
@@ -891,11 +900,36 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _aboutController = TextEditingController(
       text: widget.profileExtra.about ?? '',
     );
+    _lastAboutText = _aboutController.text;
+    _aboutFocus = FocusNode();
+    _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onFieldsChanged);
-    _aboutController.addListener(_onFieldsChanged);
+    _aboutController.addListener(_onAboutTextChanged);
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
+  }
+
+  void _onAboutFocusChanged() {
+    if (!mounted) return;
+    final focused = _aboutFocus.hasFocus;
+    // Поднимаем сразу по фокусу (когда выезжает клавиатура); дерево стабильное
+    // через Visibility — setState здесь не пересоздаёт TextField.
+    if (focused == _aboutTypingActive) return;
+    setState(() => _aboutTypingActive = focused);
+  }
+
+  void _onAboutTextChanged() {
+    final text = _aboutController.text;
+    // Игнор смены selection (повторный тап) — только реальный текст.
+    if (text == _lastAboutText) return;
+    _lastAboutText = text;
+    if ((_ageError != null || _saveError != null) && mounted) {
+      setState(() {
+        _ageError = null;
+        _saveError = null;
+      });
+    }
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -929,7 +963,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   void dispose() {
     widget.displayNameController.removeListener(_onFieldsChanged);
     _ageController.removeListener(_onFieldsChanged);
-    _aboutController.removeListener(_onFieldsChanged);
+    _aboutController.removeListener(_onAboutTextChanged);
+    _aboutFocus.removeListener(_onAboutFocusChanged);
+    _aboutFocus.dispose();
     _ageController.dispose();
     _aboutController.dispose();
     super.dispose();
@@ -1154,85 +1190,92 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     );
   }
 
-  Widget _buildCompactEditor(BuildContext context) {
-    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: 44,
-          child: Row(
-            children: [
-              Text(
-                'Редактирование',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const Spacer(),
-              IconButton(
-                tooltip: 'Закрыть',
-                onPressed: _isSaving ? null : widget.onCancel,
-                icon: const Icon(Icons.close_rounded),
-                color: Colors.red.shade600,
-              ),
-            ],
+  void _handleSwipeEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (_swipeFromEdge &&
+        !_isSaving &&
+        (_swipeDx > 72 || velocity > 400)) {
+      widget.onCancel();
+    }
+    _swipeDx = 0;
+    _swipeFromEdge = false;
+  }
+
+  Widget _buildCompactHeader(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: 'Назад',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            onPressed: _isSaving ? null : widget.onCancel,
+            icon: const Icon(Icons.arrow_back_rounded),
+            color: AppColors.textPrimary,
           ),
-        ),
-        if (!keyboardVisible) ...[
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 82,
-            child: Row(
-              children: [
-                SizedBox(
-                    width: 76, child: Center(child: _buildCurrentAvatar())),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _presetAvatarIcons.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 5),
-                    itemBuilder: (context, index) {
-                      final selected = _avatarKind == AvatarKind.preset &&
-                          _avatarValue == index.toString();
-                      return GestureDetector(
-                        onTap: () => setState(() {
-                          _avatarKind = AvatarKind.preset;
-                          _avatarValue = index.toString();
-                        }),
-                        child: AnimatedContainer(
-                          duration: AppDurations.short,
-                          width: 48,
-                          height: 48,
-                          margin: const EdgeInsets.symmetric(vertical: 15),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selected
-                                  ? AppColors.accentStart
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            _presetAvatarIcons[index],
-                            color: AppColors.accentStart,
-                            size: 25,
-                          ),
-                        ),
-                      );
-                    },
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              widget.user.email,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
                   ),
-                ),
-              ],
             ),
           ),
         ],
-        const SizedBox(height: 8),
+      ),
+    );
+  }
+
+  Widget _buildCompactAboutField({required bool expands}) {
+    return TextFormField(
+      key: const ValueKey('compact_about'),
+      controller: _aboutController,
+      focusNode: _aboutFocus,
+      inputFormatters: _aboutFormatters,
+      textAlignVertical: TextAlignVertical.top,
+      expands: expands,
+      maxLines: expands ? null : 4,
+      minLines: expands ? null : 3,
+      maxLength: 100,
+      scrollPadding: const EdgeInsets.only(bottom: 120),
+      decoration: InputDecoration(
+        labelText: 'О себе',
+        alignLabelWithHint: true,
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        prefixIcon: const Padding(
+          padding: EdgeInsets.only(top: 12),
+          child: Icon(Icons.info_outline_rounded),
+        ),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 48,
+          minHeight: 48,
+        ),
+        counterText: '',
+      ),
+    );
+  }
+
+  Widget _buildCompactSaveButton() {
+    return AppButton(
+      onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+      label: 'Сохранить',
+      isLoading: _isSaving,
+      expanded: true,
+    );
+  }
+
+  Widget _buildCompactNameAgeRow() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         TextFormField(
+          key: const ValueKey('compact_display_name'),
           controller: widget.displayNameController,
           focusNode: widget.focusNode,
           inputFormatters: _displayNameFormatters,
@@ -1242,23 +1285,15 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
           ),
           textCapitalization: TextCapitalization.none,
           autocorrect: false,
+          enableSuggestions: false,
           onFieldSubmitted: (_) => _submit(),
         ),
-        const SizedBox(height: 5),
-        Text(
-          widget.user.email,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: TextFormField(
+                key: const ValueKey('compact_age'),
                 controller: _ageController,
                 inputFormatters: _ageFormatters,
                 decoration: InputDecoration(
@@ -1269,7 +1304,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 keyboardType: TextInputType.number,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
               child: InkWell(
                 onTap: _openGenderMenu,
@@ -1289,42 +1324,168 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _aboutController,
-          inputFormatters: _aboutFormatters,
-          decoration: const InputDecoration(
-            labelText: 'О себе',
-            prefixIcon: Icon(Icons.info_outline_rounded),
-            counterText: '',
-          ),
-          maxLines: keyboardVisible ? 1 : 2,
-          maxLength: 100,
+      ],
+    );
+  }
+
+  Widget _buildCompactEditor(BuildContext context) {
+    // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
+    final aboutTypingMode = _aboutTypingActive && _aboutFocus.hasFocus;
+
+    // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
+    // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
+    // Свайп-назад — полоска слева, не оборачивает поля.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildCompactHeader(context),
+            SizedBox(height: aboutTypingMode ? 10 : 16),
+            Visibility(
+              visible: !aboutTypingMode,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: 82,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 76,
+                          child: Center(child: _buildCurrentAvatar()),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _presetAvatarIcons.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 5),
+                            itemBuilder: (context, index) {
+                              final selected =
+                                  _avatarKind == AvatarKind.preset &&
+                                      _avatarValue == index.toString();
+                              return GestureDetector(
+                                onTap: () => setState(() {
+                                  _avatarKind = AvatarKind.preset;
+                                  _avatarValue = index.toString();
+                                }),
+                                child: AnimatedContainer(
+                                  duration: AppDurations.short,
+                                  width: 48,
+                                  height: 48,
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 15),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentSoft,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: selected
+                                          ? AppColors.accentStart
+                                          : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    _presetAvatarIcons[index],
+                                    color: AppColors.accentStart,
+                                    size: 25,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildCompactNameAgeRow(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final height = aboutTypingMode
+                      ? math.min(168.0, constraints.maxHeight)
+                      : constraints.maxHeight;
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      height: height,
+                      child: _buildCompactAboutField(expands: true),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Visibility(
+              visible: !aboutTypingMode,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: (_isSaving || _isAvatarProcessing)
+                        ? null
+                        : _pickImage,
+                    icon: _isAvatarProcessing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.photo_library_outlined, size: 19),
+                    label:
+                        Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+                  ),
+                  if (_saveError != null) ...[
+                    const SizedBox(height: 12),
+                    MessageBanner(
+                      message: _saveError!,
+                      type: BannerType.error,
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  _buildCompactSaveButton(),
+                ],
+              ),
+            ),
+          ],
         ),
-        if (!keyboardVisible) ...[
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-            icon: _isAvatarProcessing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.photo_library_outlined, size: 19),
-            label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+        Positioned(
+          left: 0,
+          top: 48,
+          bottom: 0,
+          width: 28,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragStart: (details) {
+              _swipeFromEdge = true;
+              _swipeDx = 0;
+            },
+            onHorizontalDragUpdate: (details) {
+              _swipeDx += details.delta.dx;
+            },
+            onHorizontalDragEnd: _handleSwipeEnd,
+            onHorizontalDragCancel: () {
+              _swipeDx = 0;
+              _swipeFromEdge = false;
+            },
           ),
-        ],
-        if (_saveError != null) ...[
-          const SizedBox(height: 6),
-          MessageBanner(message: _saveError!, type: BannerType.error),
-        ],
-        const SizedBox(height: 14),
-        AppButton(
-          onPressed: (_isSaving || !_hasChanges) ? null : _submit,
-          label: 'Сохранить',
-          isLoading: _isSaving,
-          expanded: true,
         ),
       ],
     );

@@ -102,8 +102,9 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    final keyboardLikelyVisible =
-        narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
+    // Не прячем bottom nav при клавиатуре: на iOS Safari viewport сжимается /
+    // viewInsets мигает → nav убирается из дерева → фокус TextField и клавиатура
+    // сбрасываются (мигание ~1с). Клавиатура просто перекрывает nav.
     final selectedIndex = navigationShell.currentIndex;
 
     void navigateWithPrefetch(int i) {
@@ -312,10 +313,7 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow &&
-                !narrowLandscape &&
-                !keyboardLikelyVisible &&
-                !inChatRoom)
+            if (narrow && !narrowLandscape && !inChatRoom)
               SafeArea(
                 top: false,
                 child: Material(
