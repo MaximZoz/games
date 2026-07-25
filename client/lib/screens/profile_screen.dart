@@ -916,7 +916,15 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   void _onAboutFocusChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    if (_aboutFocus.hasFocus) {
+      // iOS Safari уводит страницу вниз к input — возвращаем видимую область.
+      resetBrowserScrollForKeyboard();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        resetBrowserScrollForKeyboard();
+      });
+    }
+    setState(() {});
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -1228,14 +1236,16 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       minLines: expands ? null : 3,
       maxLength: 100,
       scrollPadding: const EdgeInsets.only(bottom: 120),
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'О себе',
         alignLabelWithHint: true,
-        prefixIcon: Padding(
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        prefixIcon: const Padding(
           padding: EdgeInsets.only(top: 12),
           child: Icon(Icons.info_outline_rounded),
         ),
-        prefixIconConstraints: BoxConstraints(
+        prefixIconConstraints: const BoxConstraints(
           minWidth: 48,
           minHeight: 48,
         ),
@@ -1270,45 +1280,25 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       onHorizontalDragEnd: _handleSwipeEnd,
       onHorizontalDragCancel: () => _swipeDx = 0,
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        // Если Flutter уже уменьшил body через viewInsets — не дублируем.
-        padding: EdgeInsets.only(
-          bottom: mediaInset > 0 ? 0 : keyboardInset,
-        ),
-        child: Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCompactHeader(context),
           if (focusAboutMode) ...[
-            const SizedBox(height: 12),
-            // Доступная высота уже над клавиатурой (есть bottom padding).
-            // «О себе» сверху (~половина), «Сохранить» снизу — без overlap.
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final aboutHeight =
-                      (constraints.maxHeight * 0.5).clamp(120.0, 240.0);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        height: aboutHeight,
-                        child: _buildCompactAboutField(expands: true),
-                      ),
-                      const Spacer(),
-                      if (_saveError != null) ...[
-                        MessageBanner(
-                          message: _saveError!,
-                          type: BannerType.error,
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                      _buildCompactSaveButton(),
-                    ],
-                  );
-                },
-              ),
+            // iOS Safari: клавиатура оверлеит canvas и inset часто врёт.
+            // Держим поле и кнопку строго сверху — там они всегда видны.
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 168,
+              child: _buildCompactAboutField(expands: true),
             ),
+            const SizedBox(height: 10),
+            _buildCompactSaveButton(),
+            if (_saveError != null) ...[
+              const SizedBox(height: 8),
+              MessageBanner(message: _saveError!, type: BannerType.error),
+            ],
+            const Spacer(),
           ] else if (keyboardVisible) ...[
             // Фокус на имени/возрасте: скролл, без гигантского «О себе».
             const SizedBox(height: 12),
@@ -1500,7 +1490,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             _buildCompactSaveButton(),
           ],
         ],
-        ),
       ),
     );
   }

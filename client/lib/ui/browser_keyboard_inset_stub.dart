@@ -5,3 +5,6 @@ double readBrowserKeyboardInset() => 0;
 void Function()? listenBrowserKeyboardInset(void Function(double inset) onChanged) {
   return null;
 }
+
+/// Сброс scroll окна (iOS Safari двигает страницу к focused input).
+void resetBrowserScrollForKeyboard() {}

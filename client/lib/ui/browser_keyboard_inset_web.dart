@@ -36,3 +36,15 @@ void Function()? listenBrowserKeyboardInset(
     html.window.removeEventListener('resize', handle);
   };
 }
+
+/// iOS Safari при фокусе скроллит страницу к input — возвращаем вверх.
+void resetBrowserScrollForKeyboard() {
+  html.window.scrollTo(0, 0);
+  html.document.documentElement?.scrollTop = 0;
+  html.document.body?.scrollTop = 0;
+  final viewport = html.window.visualViewport;
+  // offsetTop меняется при «подскролле» visual viewport.
+  if (viewport != null && viewport.offsetTop > 0) {
+    html.window.scrollTo(0, 0);
+  }
+}
