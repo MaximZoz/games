@@ -367,15 +367,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   if (mobile && _isEditing) {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-                      child: _ProfileEditForm(
-                        key: const ValueKey('mobile_edit_form'),
-                        user: user,
-                        profileExtra: extra,
-                        displayNameController: _displayNameController,
-                        focusNode: _displayNameFocus,
-                        onCancel: _cancelEditing,
-                        onSave: _saveProfile,
-                        compact: true,
+                      child: SizedBox.expand(
+                        child: _ProfileEditForm(
+                          key: const ValueKey('mobile_edit_form'),
+                          user: user,
+                          profileExtra: extra,
+                          displayNameController: _displayNameController,
+                          focusNode: _displayNameFocus,
+                          onCancel: _cancelEditing,
+                          onSave: _saveProfile,
+                          compact: true,
+                        ),
                       ),
                     );
                   }
@@ -867,6 +869,7 @@ final _aboutFormatters = [
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  double _swipeDx = 0;
   String? _ageError;
   String? _saveError;
   late TextEditingController _ageController;
@@ -1154,179 +1157,205 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     );
   }
 
+  void _handleSwipeEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (!_isSaving && (_swipeDx > 72 || velocity > 400)) {
+      widget.onCancel();
+    }
+    _swipeDx = 0;
+  }
+
   Widget _buildCompactEditor(BuildContext context) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: 44,
-          child: Row(
-            children: [
-              Text(
-                'Редактирование',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const Spacer(),
-              IconButton(
-                tooltip: 'Закрыть',
-                onPressed: _isSaving ? null : widget.onCancel,
-                icon: const Icon(Icons.close_rounded),
-                color: Colors.red.shade600,
-              ),
-            ],
-          ),
-        ),
-        if (!keyboardVisible) ...[
-          const SizedBox(height: 6),
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        _swipeDx += details.delta.dx;
+      },
+      onHorizontalDragEnd: _handleSwipeEnd,
+      onHorizontalDragCancel: () => _swipeDx = 0,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           SizedBox(
-            height: 82,
+            height: 48,
             child: Row(
               children: [
-                SizedBox(
-                    width: 76, child: Center(child: _buildCurrentAvatar())),
-                const SizedBox(width: 10),
+                IconButton(
+                  tooltip: 'Назад',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  onPressed: _isSaving ? null : widget.onCancel,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  color: AppColors.textPrimary,
+                ),
+                const SizedBox(width: 4),
                 Expanded(
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _presetAvatarIcons.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 5),
-                    itemBuilder: (context, index) {
-                      final selected = _avatarKind == AvatarKind.preset &&
-                          _avatarValue == index.toString();
-                      return GestureDetector(
-                        onTap: () => setState(() {
-                          _avatarKind = AvatarKind.preset;
-                          _avatarValue = index.toString();
-                        }),
-                        child: AnimatedContainer(
-                          duration: AppDurations.short,
-                          width: 48,
-                          height: 48,
-                          margin: const EdgeInsets.symmetric(vertical: 15),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selected
-                                  ? AppColors.accentStart
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            _presetAvatarIcons[index],
-                            color: AppColors.accentStart,
-                            size: 25,
-                          ),
+                  child: Text(
+                    widget.user.email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
                         ),
-                      );
-                    },
                   ),
                 ),
               ],
             ),
           ),
-        ],
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: widget.displayNameController,
-          focusNode: widget.focusNode,
-          inputFormatters: _displayNameFormatters,
-          decoration: const InputDecoration(
-            labelText: 'Имя (логин)',
-            prefixIcon: Icon(Icons.person_outline_rounded),
-          ),
-          textCapitalization: TextCapitalization.none,
-          autocorrect: false,
-          onFieldSubmitted: (_) => _submit(),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          widget.user.email,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _ageController,
-                inputFormatters: _ageFormatters,
-                decoration: InputDecoration(
-                  labelText: 'Возраст',
-                  prefixIcon: const Icon(Icons.cake_outlined),
-                  errorText: _ageError,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: InkWell(
-                onTap: _openGenderMenu,
-                borderRadius: BorderRadius.circular(AppRadius.input),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Пол',
-                    prefixIcon: Icon(Icons.wc_rounded),
+          if (!keyboardVisible) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 82,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 76,
+                    child: Center(child: _buildCurrentAvatar()),
                   ),
-                  child: Text(
-                    _gender ?? 'Не указан',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _presetAvatarIcons.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 5),
+                      itemBuilder: (context, index) {
+                        final selected = _avatarKind == AvatarKind.preset &&
+                            _avatarValue == index.toString();
+                        return GestureDetector(
+                          onTap: () => setState(() {
+                            _avatarKind = AvatarKind.preset;
+                            _avatarValue = index.toString();
+                          }),
+                          child: AnimatedContainer(
+                            duration: AppDurations.short,
+                            width: 48,
+                            height: 48,
+                            margin: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentSoft,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: selected
+                                    ? AppColors.accentStart
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              _presetAvatarIcons[index],
+                              color: AppColors.accentStart,
+                              size: 25,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _aboutController,
-          inputFormatters: _aboutFormatters,
-          decoration: const InputDecoration(
-            labelText: 'О себе',
-            prefixIcon: Icon(Icons.info_outline_rounded),
-            counterText: '',
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: widget.displayNameController,
+            focusNode: widget.focusNode,
+            inputFormatters: _displayNameFormatters,
+            decoration: const InputDecoration(
+              labelText: 'Имя (логин)',
+              prefixIcon: Icon(Icons.person_outline_rounded),
+            ),
+            textCapitalization: TextCapitalization.none,
+            autocorrect: false,
+            onFieldSubmitted: (_) => _submit(),
           ),
-          maxLines: keyboardVisible ? 1 : 2,
-          maxLength: 100,
-        ),
-        if (!keyboardVisible) ...[
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-            icon: _isAvatarProcessing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.photo_library_outlined, size: 19),
-            label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _ageController,
+                  inputFormatters: _ageFormatters,
+                  decoration: InputDecoration(
+                    labelText: 'Возраст',
+                    prefixIcon: const Icon(Icons.cake_outlined),
+                    errorText: _ageError,
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: _openGenderMenu,
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Пол',
+                      prefixIcon: Icon(Icons.wc_rounded),
+                    ),
+                    child: Text(
+                      _gender ?? 'Не указан',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: TextFormField(
+              controller: _aboutController,
+              inputFormatters: _aboutFormatters,
+              textAlignVertical: TextAlignVertical.top,
+              expands: true,
+              maxLines: null,
+              maxLength: 100,
+              decoration: const InputDecoration(
+                labelText: 'О себе',
+                alignLabelWithHint: true,
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Icon(Icons.info_outline_rounded),
+                ),
+                prefixIconConstraints: BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 48,
+                ),
+                counterText: '',
+              ),
+            ),
+          ),
+          if (!keyboardVisible) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+              icon: _isAvatarProcessing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.photo_library_outlined, size: 19),
+              label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+            ),
+          ],
+          if (_saveError != null) ...[
+            const SizedBox(height: 12),
+            MessageBanner(message: _saveError!, type: BannerType.error),
+          ],
+          const SizedBox(height: 16),
+          AppButton(
+            onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+            label: 'Сохранить',
+            isLoading: _isSaving,
+            expanded: true,
           ),
         ],
-        if (_saveError != null) ...[
-          const SizedBox(height: 6),
-          MessageBanner(message: _saveError!, type: BannerType.error),
-        ],
-        const SizedBox(height: 14),
-        AppButton(
-          onPressed: (_isSaving || !_hasChanges) ? null : _submit,
-          label: 'Сохранить',
-          isLoading: _isSaving,
-          expanded: true,
-        ),
-      ],
+      ),
     );
   }
 
