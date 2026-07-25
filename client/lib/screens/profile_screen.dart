@@ -18,6 +18,7 @@ import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -872,8 +873,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
   bool _aboutTypingActive = false;
-  bool _swipeFromEdge = false;
-  double _swipeDx = 0;
   String? _ageError;
   String? _saveError;
   late String _lastAboutText;
@@ -1190,17 +1189,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     );
   }
 
-  void _handleSwipeEnd(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
-    if (_swipeFromEdge &&
-        !_isSaving &&
-        (_swipeDx > 72 || velocity > 400)) {
-      widget.onCancel();
-    }
-    _swipeDx = 0;
-    _swipeFromEdge = false;
-  }
-
   Widget _buildCompactHeader(BuildContext context) {
     return SizedBox(
       height: 48,
@@ -1334,160 +1322,136 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
     // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
-    // Свайп-назад — полоска слева, не оборачивает поля.
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildCompactHeader(context),
-            SizedBox(height: aboutTypingMode ? 10 : 16),
-            Visibility(
-              visible: !aboutTypingMode,
-              maintainState: true,
-              maintainAnimation: true,
-              maintainSize: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: 82,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 76,
-                          child: Center(child: _buildCurrentAvatar()),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _presetAvatarIcons.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 5),
-                            itemBuilder: (context, index) {
-                              final selected =
-                                  _avatarKind == AvatarKind.preset &&
-                                      _avatarValue == index.toString();
-                              return GestureDetector(
-                                onTap: () => setState(() {
-                                  _avatarKind = AvatarKind.preset;
-                                  _avatarValue = index.toString();
-                                }),
-                                child: AnimatedContainer(
-                                  duration: AppDurations.short,
-                                  width: 48,
-                                  height: 48,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 15),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.accentSoft,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: selected
-                                          ? AppColors.accentStart
-                                          : Colors.transparent,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    _presetAvatarIcons[index],
-                                    color: AppColors.accentStart,
-                                    size: 25,
+    return SwipeBackScope(
+      enabled: !_isSaving,
+      topInset: 48,
+      onBack: widget.onCancel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildCompactHeader(context),
+          SizedBox(height: aboutTypingMode ? 10 : 16),
+          Visibility(
+            visible: !aboutTypingMode,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 82,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 76,
+                        child: Center(child: _buildCurrentAvatar()),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _presetAvatarIcons.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 5),
+                          itemBuilder: (context, index) {
+                            final selected =
+                                _avatarKind == AvatarKind.preset &&
+                                    _avatarValue == index.toString();
+                            return GestureDetector(
+                              onTap: () => setState(() {
+                                _avatarKind = AvatarKind.preset;
+                                _avatarValue = index.toString();
+                              }),
+                              child: AnimatedContainer(
+                                duration: AppDurations.short,
+                                width: 48,
+                                height: 48,
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentSoft,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: selected
+                                        ? AppColors.accentStart
+                                        : Colors.transparent,
+                                    width: 2,
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+                                child: Icon(
+                                  _presetAvatarIcons[index],
+                                  color: AppColors.accentStart,
+                                  size: 25,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildCompactNameAgeRow(),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                _buildCompactNameAgeRow(),
+                const SizedBox(height: 16),
+              ],
             ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final height = aboutTypingMode
-                      ? math.min(168.0, constraints.maxHeight)
-                      : constraints.maxHeight;
-                  return Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: constraints.maxWidth,
-                      height: height,
-                      child: _buildCompactAboutField(expands: true),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Visibility(
-              visible: !aboutTypingMode,
-              maintainState: true,
-              maintainAnimation: true,
-              maintainSize: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: (_isSaving || _isAvatarProcessing)
-                        ? null
-                        : _pickImage,
-                    icon: _isAvatarProcessing
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.photo_library_outlined, size: 19),
-                    label:
-                        Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
-                  ),
-                  if (_saveError != null) ...[
-                    const SizedBox(height: 12),
-                    MessageBanner(
-                      message: _saveError!,
-                      type: BannerType.error,
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  _buildCompactSaveButton(),
-                ],
-              ),
-            ),
-          ],
-        ),
-        Positioned(
-          left: 0,
-          top: 48,
-          bottom: 0,
-          width: 28,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: (details) {
-              _swipeFromEdge = true;
-              _swipeDx = 0;
-            },
-            onHorizontalDragUpdate: (details) {
-              _swipeDx += details.delta.dx;
-            },
-            onHorizontalDragEnd: _handleSwipeEnd,
-            onHorizontalDragCancel: () {
-              _swipeDx = 0;
-              _swipeFromEdge = false;
-            },
           ),
-        ),
-      ],
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final height = aboutTypingMode
+                    ? math.min(168.0, constraints.maxHeight)
+                    : constraints.maxHeight;
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    height: height,
+                    child: _buildCompactAboutField(expands: true),
+                  ),
+                );
+              },
+            ),
+          ),
+          Visibility(
+            visible: !aboutTypingMode,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed:
+                      (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+                  icon: _isAvatarProcessing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.photo_library_outlined, size: 19),
+                  label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+                ),
+                if (_saveError != null) ...[
+                  const SizedBox(height: 12),
+                  MessageBanner(
+                    message: _saveError!,
+                    type: BannerType.error,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                _buildCompactSaveButton(),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

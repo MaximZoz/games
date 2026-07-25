@@ -19,6 +19,7 @@ import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 
@@ -107,22 +108,25 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           refreshChatsList(ref, force: true).catchError((_) {});
         }
       },
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+      child: SwipeBackScope(
+        enabled: !_isLeaving,
+        onBack: () => _leaveLobby(context),
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          leading: IconButton(
-            onPressed: _isLeaving ? null : () => _leaveLobby(context),
-            icon: const Icon(Icons.close_rounded),
-          ),
-          title: Text(
-            tictactoeLobbyAppBarTitle(
-              status: lobbyAsync.valueOrNull?.status,
-              initialMode: widget.initialMode,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            leading: IconButton(
+              onPressed: _isLeaving ? null : () => _leaveLobby(context),
+              icon: const Icon(Icons.close_rounded),
+            ),
+            title: Text(
+              tictactoeLobbyAppBarTitle(
+                status: lobbyAsync.valueOrNull?.status,
+                initialMode: widget.initialMode,
+              ),
             ),
           ),
-        ),
-        body: lobbyAsync.when(
+          body: lobbyAsync.when(
           data: (lobby) {
             final isCreator = currentUser?.id == lobby.creatorId;
             final isInviteMode = lobby.status == 'waiting_invite';
@@ -388,6 +392,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               color: AppColors.accentStart,
             ),
           ),
+        ),
         ),
       ),
     );
