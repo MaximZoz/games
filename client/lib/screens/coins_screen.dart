@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class CoinsScreen extends ConsumerStatefulWidget {
@@ -20,67 +21,72 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    void goBack() => context.pop();
+
+    return SwipeBackScope(
+      onBack: goBack,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-          tooltip: 'Назад на главную',
-        ),
-        title: Text(
-          'Монеты',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              shrinkWrap: true,
-              children: [
-                authState.when(
-                  data: (user) {
-                    if (user == null) return const SizedBox.shrink();
-                    return dailyRewardAsync.when(
-                      data: (available) => _DailyRewardCard(
-                        available: available,
-                        isClaiming: _isClaiming,
-                        onClaim: () async {
-                          if (_isClaiming) return;
-                          setState(() => _isClaiming = true);
-                          await ref
-                              .read(authStateProvider.notifier)
-                              .claimDailyReward();
-                          if (mounted) setState(() => _isClaiming = false);
-                        },
-                      ),
-                      loading: () => _DailyRewardCard(
-                        available: false,
-                        isClaiming: false,
-                        onClaim: () async {},
-                      ),
-                      error: (err, _) => _DailyRewardCard(
-                        available: false,
-                        isClaiming: false,
-                        onClaim: () async {},
-                        errorMessage:
-                            'Не удалось проверить. Нажмите «Обновить».',
-                      ),
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => const SizedBox.shrink(),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: goBack,
+            tooltip: 'Назад на главную',
+          ),
+          title: Text(
+            'Монеты',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+          ),
+        ),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                shrinkWrap: true,
+                children: [
+                  authState.when(
+                    data: (user) {
+                      if (user == null) return const SizedBox.shrink();
+                      return dailyRewardAsync.when(
+                        data: (available) => _DailyRewardCard(
+                          available: available,
+                          isClaiming: _isClaiming,
+                          onClaim: () async {
+                            if (_isClaiming) return;
+                            setState(() => _isClaiming = true);
+                            await ref
+                                .read(authStateProvider.notifier)
+                                .claimDailyReward();
+                            if (mounted) setState(() => _isClaiming = false);
+                          },
+                        ),
+                        loading: () => _DailyRewardCard(
+                          available: false,
+                          isClaiming: false,
+                          onClaim: () async {},
+                        ),
+                        error: (err, _) => _DailyRewardCard(
+                          available: false,
+                          isClaiming: false,
+                          onClaim: () async {},
+                          errorMessage:
+                              'Не удалось проверить. Нажмите «Обновить».',
+                        ),
+                      );
+                    },
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

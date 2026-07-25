@@ -17,6 +17,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
@@ -1174,63 +1175,70 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       );
     }
 
+    final canSwipeBack = !(widget.inSplitView &&
+            !widget.fromFriends &&
+            !widget.fromGames) &&
+        !_leavingToChats;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: GestureDetector(
-          onHorizontalDragEnd: (details) {
-            if ((widget.inSplitView && !widget.fromFriends && !widget.fromGames) || _leavingToChats) return;
-            if (details.primaryVelocity != null && details.primaryVelocity! > 200) {
-              _goBackToChats();
-            }
-          },
+        child: SwipeBackScope(
+          enabled: canSwipeBack,
+          onBack: _goBackToChats,
           child: Column(
-          children: [
-            if (!narrowLandscape)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                child: _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence),
-              ),
-            Expanded(
-              child: Stack(
-                children: [
-                  messagesWidget,
-                  if (_showScrollToBottomButton && _messages.isNotEmpty)
-                    Positioned(
-                      bottom: 16,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Tooltip(
-                          message: 'В конец переписки',
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _scrollToBottom,
-                              borderRadius: BorderRadius.circular(28),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  gradient: AppGradients.borderAt(0.22),
-                                  borderRadius: BorderRadius.circular(28),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.accentStart.withValues(alpha: 0.2),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
+            children: [
+              if (!narrowLandscape)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                  child: _buildChatToolbar(
+                    peerUser: peerUser,
+                    title: title,
+                    presence: peerPresence,
+                  ),
+                ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    messagesWidget,
+                    if (_showScrollToBottomButton && _messages.isNotEmpty)
+                      Positioned(
+                        bottom: 16,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Tooltip(
+                            message: 'В конец переписки',
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _scrollToBottom,
+                                borderRadius: BorderRadius.circular(28),
                                 child: Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(26),
+                                    gradient: AppGradients.borderAt(0.22),
+                                    borderRadius: BorderRadius.circular(28),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.accentStart
+                                            .withValues(alpha: 0.2),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  child: Icon(
-                                    Icons.keyboard_double_arrow_down_rounded,
-                                    color: AppColors.accentStart,
-                                    size: 28,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(26),
+                                    ),
+                                    child: Icon(
+                                      Icons.keyboard_double_arrow_down_rounded,
+                                      color: AppColors.accentStart,
+                                      size: 28,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1238,50 +1246,51 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-              child: GradientCard(
-                animate: false,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        focusNode: _composerFocusNode,
-                        minLines: 1,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText: 'Введите сообщение...',
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                        textInputAction: TextInputAction.send,
-                        onTap: _scrollToBottom,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _sending ? null : _sendMessage,
-                      tooltip: 'Отправить',
-                      icon: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.send_rounded),
-                    ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                child: GradientCard(
+                  animate: false,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _composerFocusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onTap: _scrollToBottom,
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _sending ? null : _sendMessage,
+                        tooltip: 'Отправить',
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
