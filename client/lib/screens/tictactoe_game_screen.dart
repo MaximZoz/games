@@ -1042,6 +1042,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       turnTimeSec: game.turnTimeSec,
       swapRule: game.swapRule,
       firstMoveRestriction: game.firstMoveRestriction,
+      stakeBronze: game.stakeBronze,
     );
     final isDesktop = MediaQuery.sizeOf(context).width >= 700;
     showDialog<void>(
