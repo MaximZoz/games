@@ -490,7 +490,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   Future<void> _refreshSnapshot({bool refreshSearch = false}) async {
     try {
       ref.invalidate(friendsSnapshotProvider);
-      await ref.read(friendsSnapshotProvider.future);
+      // Онлайн/last seen — иначе статус друга не меняется без перезагрузки.
+      refreshPresence(ref);
+      await Future.wait([
+        ref.read(friendsSnapshotProvider.future),
+        ref.read(presenceMapProvider.future),
+      ]);
       if (mounted) {
         setState(() {
           _friendsVisibleCount = _pageSize;
@@ -1758,11 +1763,20 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       Map<String, PresenceEntry> presence) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        return _buildFriendsTab(snapshot, presence);
+        return RefreshIndicator(
+          onRefresh: () => _refreshSnapshot(),
+          child: _buildFriendsTab(snapshot, presence),
+        );
       case _FriendsTabKind.incoming:
-        return _buildIncomingTab(snapshot, presence);
+        return RefreshIndicator(
+          onRefresh: () => _refreshSnapshot(),
+          child: _buildIncomingTab(snapshot, presence),
+        );
       case _FriendsTabKind.outgoing:
-        return _buildOutgoingTab(snapshot, presence);
+        return RefreshIndicator(
+          onRefresh: () => _refreshSnapshot(),
+          child: _buildOutgoingTab(snapshot, presence),
+        );
       case _FriendsTabKind.findFriend:
         return RefreshIndicator(
           onRefresh: () => _refreshSnapshot(refreshSearch: true),
@@ -1859,17 +1873,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       Expanded(
                         child: friendsAsync.when(
                           data: (snapshot) {
-                            return RefreshIndicator(
-                              onRefresh: () =>
-                                  _refreshSnapshot(refreshSearch: false),
-                              child: TabBarView(
-                                controller: _tabController,
-                                physics: const PageScrollPhysics(),
-                                children: [
-                                  for (final tab in tabs)
-                                    _tabContent(tab, snapshot, presence),
-                                ],
-                              ),
+                            return TabBarView(
+                              controller: _tabController,
+                              physics: const PageScrollPhysics(),
+                              children: [
+                                for (final tab in tabs)
+                                  _tabContent(tab, snapshot, presence),
+                              ],
                             );
                           },
                           loading: () => const Center(

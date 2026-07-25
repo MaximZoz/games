@@ -17,6 +17,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
@@ -353,9 +354,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       return;
     }
 
-    final previousMaxScrollExtent = _scrollController.hasClients
-        ? _scrollController.position.maxScrollExtent
-        : 0.0;
     if (mounted) {
       setState(() => _loadingOlder = true);
     }
@@ -376,7 +374,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
 
-      final deduplicated = older.where((m) => !_messageIDs.contains(m.id)).toList();
+      final deduplicated =
+          older.where((m) => !_messageIDs.contains(m.id)).toList();
+      // reverse: true сам удерживает якорь у низа — jumpTo(offset+delta)
+      // сдвигал ленту вверх при подгрузке истории.
       setState(() {
         if (deduplicated.isNotEmpty) {
           _messages = [...deduplicated, ..._messages];
@@ -385,25 +386,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _loadingOlder = false;
         _hasMoreOlder = older.length >= _messagesPageSize;
       });
-
-      void tryRestoreScroll([int attemptsLeft = 3]) {
-        if (attemptsLeft <= 0) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_scrollController.hasClients) return;
-          final pos = _scrollController.position;
-          final newMax = pos.maxScrollExtent;
-          final delta = newMax - previousMaxScrollExtent;
-          if (delta > 0) {
-            final target = (_scrollController.offset + delta)
-                .clamp(0.0, pos.maxScrollExtent);
-            _scrollController.jumpTo(target);
-          }
-          if (delta <= 0 && attemptsLeft > 1) {
-            tryRestoreScroll(attemptsLeft - 1);
-          }
-        });
-      }
-      tryRestoreScroll();
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingOlder = false);
@@ -1145,92 +1127,75 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   );
                 },
               );
-      Widget scrollChild = isWide(context) && _messages.isNotEmpty
-          ? Scrollbar(
-              controller: _scrollController,
-              thumbVisibility: true,
-              child: listView,
-            )
-          : listView;
-      scrollChild = NotificationListener<ScrollNotification>(
-        onNotification: (_) {
-          if (_scrollController.hasClients) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || !_scrollController.hasClients) return;
-              final pos = _scrollController.position;
-              final nearBottom = pos.pixels <= _scrollToBottomThreshold;
-              if (_showScrollToBottomButton != !nearBottom) {
-                setState(() => _showScrollToBottomButton = !nearBottom);
-              }
-            });
-          }
-          return false;
-        },
-        child: scrollChild,
-      );
-      messagesWidget = RefreshIndicator(
-        onRefresh: _loadMessages,
-        child: scrollChild,
-      );
+      // Без RefreshIndicator: у reverse-списка он цепляется за визуальный верх
+      // и сбрасывает пагинацию при подгрузке старых сообщений.
+      messagesWidget = listView;
     }
+
+    final canSwipeBack = !(widget.inSplitView &&
+            !widget.fromFriends &&
+            !widget.fromGames) &&
+        !_leavingToChats;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: GestureDetector(
-          onHorizontalDragEnd: (details) {
-            if ((widget.inSplitView && !widget.fromFriends && !widget.fromGames) || _leavingToChats) return;
-            if (details.primaryVelocity != null && details.primaryVelocity! > 200) {
-              _goBackToChats();
-            }
-          },
+        child: SwipeBackScope(
+          enabled: canSwipeBack,
+          onBack: _goBackToChats,
           child: Column(
-          children: [
-            if (!narrowLandscape)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                child: _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence),
-              ),
-            Expanded(
-              child: Stack(
-                children: [
-                  messagesWidget,
-                  if (_showScrollToBottomButton && _messages.isNotEmpty)
-                    Positioned(
-                      bottom: 16,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Tooltip(
-                          message: 'В конец переписки',
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _scrollToBottom,
-                              borderRadius: BorderRadius.circular(28),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  gradient: AppGradients.borderAt(0.22),
-                                  borderRadius: BorderRadius.circular(28),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.accentStart.withValues(alpha: 0.2),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
+            children: [
+              if (!narrowLandscape)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                  child: _buildChatToolbar(
+                    peerUser: peerUser,
+                    title: title,
+                    presence: peerPresence,
+                  ),
+                ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    messagesWidget,
+                    if (_showScrollToBottomButton && _messages.isNotEmpty)
+                      Positioned(
+                        bottom: 16,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Tooltip(
+                            message: 'В конец переписки',
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _scrollToBottom,
+                                borderRadius: BorderRadius.circular(28),
                                 child: Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(26),
+                                    gradient: AppGradients.borderAt(0.22),
+                                    borderRadius: BorderRadius.circular(28),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.accentStart
+                                            .withValues(alpha: 0.2),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  child: Icon(
-                                    Icons.keyboard_double_arrow_down_rounded,
-                                    color: AppColors.accentStart,
-                                    size: 28,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(26),
+                                    ),
+                                    child: Icon(
+                                      Icons.keyboard_double_arrow_down_rounded,
+                                      color: AppColors.accentStart,
+                                      size: 28,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1238,50 +1203,51 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-              child: GradientCard(
-                animate: false,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        focusNode: _composerFocusNode,
-                        minLines: 1,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText: 'Введите сообщение...',
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                        textInputAction: TextInputAction.send,
-                        onTap: _scrollToBottom,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _sending ? null : _sendMessage,
-                      tooltip: 'Отправить',
-                      icon: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.send_rounded),
-                    ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                child: GradientCard(
+                  animate: false,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _composerFocusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onTap: _scrollToBottom,
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _sending ? null : _sendMessage,
+                        tooltip: 'Отправить',
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

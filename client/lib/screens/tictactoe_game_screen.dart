@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
 
 /// Индексы центральных клеток (запрещены для первого хода при first_move_restriction).
@@ -297,24 +298,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.invalidate(gameStateProvider(widget.gameId));
       }
     });
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    void goBack() => _handleClose(effectiveGameAsync.valueOrNull);
+
+    return SwipeBackScope(
+      onBack: goBack,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => _handleClose(effectiveGameAsync.valueOrNull),
-          icon: const Icon(Icons.close_rounded),
-        ),
-        title: const Text('Крестики-нолики'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.rule_rounded),
-            tooltip: 'Правила игры',
-            onPressed: () => _showGameRules(context),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: goBack,
+            icon: const Icon(Icons.close_rounded),
           ),
-        ],
-      ),
-      body: effectiveGameAsync.when(
+          title: const Text('Крестики-нолики'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.rule_rounded),
+              tooltip: 'Правила игры',
+              onPressed: () => _showGameRules(context),
+            ),
+          ],
+        ),
+        body: effectiveGameAsync.when(
         data: (game) {
           final isOver = game.status != 'active';
           final opponentId =
@@ -644,6 +649,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             strokeWidth: 2,
             color: AppColors.accentStart,
           ),
+        ),
         ),
       ),
     );
@@ -1042,6 +1048,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       turnTimeSec: game.turnTimeSec,
       swapRule: game.swapRule,
       firstMoveRestriction: game.firstMoveRestriction,
+      stakeBronze: game.stakeBronze,
     );
     final isDesktop = MediaQuery.sizeOf(context).width >= 700;
     showDialog<void>(

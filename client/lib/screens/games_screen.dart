@@ -261,6 +261,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       turnTimeSec: inv.turnTimeSec,
       swapRule: inv.swapRule,
       firstMoveRestriction: inv.firstMoveRestriction,
+      stakeBronze: inv.stakeBronze,
     );
   }
 
@@ -486,6 +487,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       turnTimeSec: lobby.turnTimeSec,
       swapRule: lobby.swapRule,
       firstMoveRestriction: lobby.firstMoveRestriction,
+      stakeBronze: lobby.stakeBronze,
     );
     showDialog<void>(
       context: context,
@@ -1082,6 +1084,7 @@ class _TictactoeGameCard extends StatelessWidget {
         turnTimeSec: turnTimeSec,
         swapRule: swapRule,
         firstMoveRestriction: firstMoveRestriction,
+        stakeBronze: stakeBronze,
       );
 
   List<Widget> _buildChipList({

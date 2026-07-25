@@ -88,6 +88,7 @@ class AppShell extends ConsumerWidget {
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
+    final onAuthScreen = path == '/login' || path == '/register';
     final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
     Future.microtask(() {
       if (!context.mounted) return;
@@ -102,8 +103,9 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    final keyboardLikelyVisible =
-        narrow && (media.viewInsets.bottom > 0 || media.size.height < 500);
+    // Не прячем bottom nav при клавиатуре: на iOS Safari viewport сжимается /
+    // viewInsets мигает → nav убирается из дерева → фокус TextField и клавиатура
+    // сбрасываются (мигание ~1с). Клавиатура просто перекрывает nav.
     final selectedIndex = navigationShell.currentIndex;
 
     void navigateWithPrefetch(int i) {
@@ -312,10 +314,10 @@ class AppShell extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narrow &&
-                !narrowLandscape &&
-                !keyboardLikelyVisible &&
-                !inChatRoom)
+            // На логине/регистрации nav не нужен: на iOS при клавиатуре viewport
+            // сжимается, и прозрачный bottom nav остаётся над клавиатурой
+            // лиловым «блоком», перекрывая кнопку «Войти».
+            if (narrow && !narrowLandscape && !inChatRoom && !onAuthScreen)
               SafeArea(
                 top: false,
                 child: Material(
