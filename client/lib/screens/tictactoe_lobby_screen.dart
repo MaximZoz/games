@@ -22,9 +22,11 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
   const TicTacToeLobbyScreen({
     super.key,
     required this.lobbyId,
+    this.initialMode,
   });
 
   final String lobbyId;
+  final String? initialMode;
 
   @override
   ConsumerState<TicTacToeLobbyScreen> createState() =>
@@ -94,8 +96,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             data: (lobby) => Text(
               lobby.status == 'waiting_matchmake' ? 'Лобби' : 'Своя игра',
             ),
-            loading: () => const Text('Лобби'),
-            error: (_, __) => const Text('Лобби'),
+            loading: () => Text(
+              widget.initialMode == 'invite'
+                  ? 'Своя игра'
+                  : widget.initialMode == 'matchmake'
+                      ? 'Лобби'
+                      : '',
+            ),
+            error: (_, __) => Text(
+              widget.initialMode == 'invite' ? 'Своя игра' : '',
+            ),
           ),
         ),
         body: lobbyAsync.when(

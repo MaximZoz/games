@@ -205,7 +205,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (result.matched && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
       } else {
-        context.push('/games/tictactoe/lobby/${result.lobbyId}');
+        context.push(
+          '/games/tictactoe/lobby/${result.lobbyId}?mode=$mode',
+        );
       }
     } catch (e) {
       if (context.mounted) {

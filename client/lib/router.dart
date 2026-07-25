@@ -189,6 +189,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   state,
                   TicTacToeLobbyScreen(
                     lobbyId: state.pathParameters['lobbyId'] ?? '',
+                    initialMode: state.uri.queryParameters['mode'],
                   ),
                 ),
               ),
