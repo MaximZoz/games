@@ -69,7 +69,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   final Set<String> _invitingFriendIds = {};
   bool _isLeaving = false;
   bool _isJoining = false;
+  bool _linkCopied = false;
   Timer? _chatsRefreshTimer;
+  Timer? _linkCopiedTimer;
 
   @override
   void initState() {
@@ -87,6 +89,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   @override
   void dispose() {
     _chatsRefreshTimer?.cancel();
+    _linkCopiedTimer?.cancel();
     super.dispose();
   }
 
@@ -408,41 +411,44 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         child: InkWell(
           onTap: _copyInviteLink,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(
               children: [
-                SizedBox(
+                // Левая «скрепка»/link — всегда без изменений.
+                Container(
                   width: 40,
                   height: 40,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.accentSoft,
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    child: Icon(
-                      Icons.link_rounded,
-                      color: AppColors.accentStart,
-                    ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.link_rounded,
+                    color: AppColors.accentStart,
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Отправить ссылку на игру',
-                        style: TextStyle(
+                        _linkCopied
+                            ? 'Ссылка скопирована'
+                            : 'Отправить ссылку на игру',
+                        style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'Скопировать ссылку в буфер обмена',
-                        style: TextStyle(
+                        _linkCopied
+                            ? 'Вставьте её в чат или сообщение другу'
+                            : 'Скопировать ссылку в буфер обмена',
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
                         ),
@@ -451,7 +457,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                   ),
                 ),
                 Icon(
-                  Icons.copy_rounded,
+                  _linkCopied ? Icons.check_rounded : Icons.copy_rounded,
                   color: AppColors.accentStart,
                 ),
               ],
@@ -468,6 +474,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       baseUri: Uri.base,
     );
     await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    setState(() => _linkCopied = true);
+    _linkCopiedTimer?.cancel();
+    _linkCopiedTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _linkCopied = false);
+    });
   }
 
   Future<void> _joinViaLink(BuildContext context) async {
