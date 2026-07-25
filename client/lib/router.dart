@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart' show Widget;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
@@ -89,13 +90,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           if (authState.valueOrNull != null) {
             await ref.read(authStateProvider.notifier).logout();
           }
-          return '/profile';
+          return appendRedirectQuery('/login', locationFromUri(state.uri));
         }
         user ??= await repo.getStoredUser();
       }
 
-      if (isPublic && user != null) return '/';
-      if (needsAuth && user == null) return '/profile';
+      if (isPublic && user != null) {
+        return safeAuthRedirect(state.uri.queryParameters['redirect']) ?? '/';
+      }
+      if (needsAuth && user == null) {
+        return appendRedirectQuery('/login', locationFromUri(state.uri));
+      }
       if (isAdminRoute && user != null && !user.isAdmin) return '/';
       return null;
     },

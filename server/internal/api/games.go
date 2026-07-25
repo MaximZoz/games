@@ -1011,10 +1011,19 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	gameID := m["game_id"]
 	status := m["status"]
 
+	// Участники всегда видят лобби. Для открытого поиска и invite-по-ссылке
+	// любой авторизованный пользователь может просмотреть waiting-лобби.
 	if creatorID != userID.String() && opponentID != userID.String() {
-		if status != lobbyStatusWaitingMatchmake {
+		if status != lobbyStatusWaitingMatchmake && status != lobbyStatusWaitingInvite {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
+		}
+	}
+
+	creatorName := "Игрок"
+	if creatorUUID, err := uuid.Parse(creatorID); err == nil {
+		if creator, _ := store.GetUserByID(ctx, h.Pool, creatorUUID); creator != nil && creator.DisplayName != nil && *creator.DisplayName != "" {
+			creatorName = *creator.DisplayName
 		}
 	}
 
@@ -1029,6 +1038,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	item := LobbyItem{
 		ID:                   lobbyID,
 		CreatorID:            creatorID,
+		CreatorName:          creatorName,
 		Status:               status,
 		CreatedAt:            m["created_at"],
 		TurnTimeSec:          turnTimeSec,
@@ -1177,11 +1187,21 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 
 	creatorID := m["creator_id"]
 	status := m["status"]
-	inviteTarget := m["invite_target_id"]
-	invitedKey := key + ":invited"
 
 	if status == lobbyStatusInGame {
 		http.Error(w, "игра уже началась с другим соперником", http.StatusConflict)
+		return
+	}
+
+	if creatorID == userID.String() {
+		http.Error(w, "cannot join own lobby", http.StatusBadRequest)
+		return
+	}
+
+	// waiting_invite: вход по прямой ссылке или по приглашению друга (UUID лобби — секрет).
+	// waiting_matchmake: любой соперник из очереди/списка открытых лобби.
+	if status != lobbyStatusWaitingInvite && status != lobbyStatusWaitingMatchmake {
+		http.Error(w, "lobby not joinable", http.StatusBadRequest)
 		return
 	}
 
@@ -1205,19 +1225,6 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			return
 		}
 		defer h.Rdb.Del(ctx, lockKey)
-	}
-
-	if status == lobbyStatusWaitingInvite {
-		okInv, _ := h.Rdb.SIsMember(ctx, invitedKey, userID.String()).Result()
-		if !okInv && inviteTarget != userID.String() {
-			http.Error(w, "you are not invited", http.StatusForbidden)
-			return
-		}
-	} else if status == lobbyStatusWaitingMatchmake {
-		if creatorID == userID.String() {
-			http.Error(w, "cannot join own lobby", http.StatusBadRequest)
-			return
-		}
 	}
 
 	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
@@ -1313,6 +1320,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 				break
 			}
 		}
+		h.Rdb.Del(ctx, key+":invited")
 	}
 
 	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{

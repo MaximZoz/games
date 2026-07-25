@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -24,6 +25,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
+
+  String? get _redirect =>
+      safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
 
   @override
   void dispose() {
@@ -49,7 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _passwordController.text,
             displayName: displayName,
           );
-      if (mounted) context.go('/');
+      if (mounted) context.go(_redirect ?? '/');
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -199,7 +203,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: () => context.go('/login'),
+                          onPressed: () => context.go(
+                            appendRedirectQuery('/login', _redirect),
+                          ),
                           child: const Text('Уже есть аккаунт? Войти'),
                         ),
                       ],

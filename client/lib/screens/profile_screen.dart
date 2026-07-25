@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
@@ -337,8 +338,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   return scrollableBody(
                     _ProfileEmptyState(
                       key: const ValueKey('empty'),
-                      onLogin: () => context.go('/login'),
-                      onRegister: () => context.go('/register'),
+                      onLogin: () => context.go(
+                        appendRedirectQuery(
+                          '/login',
+                          GoRouterState.of(context)
+                              .uri
+                              .queryParameters['redirect'],
+                        ),
+                      ),
+                      onRegister: () => context.go(
+                        appendRedirectQuery(
+                          '/register',
+                          GoRouterState.of(context)
+                              .uri
+                              .queryParameters['redirect'],
+                        ),
+                      ),
                     ),
                   );
                 }
