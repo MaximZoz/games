@@ -750,7 +750,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (result.matched && result.gameId != null) {
         context.go('/games/tictactoe/game/${result.gameId}');
       } else {
-        context.go('/games/tictactoe/lobby/${result.lobbyId}');
+        context.go(
+          '/games/tictactoe/lobby/${result.lobbyId}?mode=matchmake',
+        );
       }
     } catch (e) {
       if (context.mounted) _redirectToGamesOnError();

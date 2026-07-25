@@ -22,13 +22,30 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
   const TicTacToeLobbyScreen({
     super.key,
     required this.lobbyId,
+    this.initialMode,
   });
 
   final String lobbyId;
+  final String? initialMode;
 
   @override
   ConsumerState<TicTacToeLobbyScreen> createState() =>
       _TicTacToeLobbyScreenState();
+}
+
+/// Заголовок AppBar экрана лобби.
+///
+/// Пока деталь лобби не загружена, опираемся на [initialMode] из query
+/// (`?mode=invite|matchmake`), чтобы не показывать «Лобби» для своей игры.
+String tictactoeLobbyAppBarTitle({
+  String? status,
+  String? initialMode,
+}) {
+  if (status == 'waiting_matchmake') return 'Лобби';
+  if (status == 'waiting_invite') return 'Своя игра';
+  if (initialMode == 'matchmake') return 'Лобби';
+  if (initialMode == 'invite') return 'Своя игра';
+  return '';
 }
 
 const List<IconData> _presetAvatarIcons = [
@@ -90,12 +107,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             onPressed: _isLeaving ? null : () => _leaveLobby(context),
             icon: const Icon(Icons.close_rounded),
           ),
-          title: lobbyAsync.when(
-            data: (lobby) => Text(
-              lobby.status == 'waiting_matchmake' ? 'Лобби' : 'Своя игра',
+          title: Text(
+            tictactoeLobbyAppBarTitle(
+              status: lobbyAsync.valueOrNull?.status,
+              initialMode: widget.initialMode,
             ),
-            loading: () => const Text('Лобби'),
-            error: (_, __) => const Text('Лобби'),
           ),
         ),
         body: lobbyAsync.when(
