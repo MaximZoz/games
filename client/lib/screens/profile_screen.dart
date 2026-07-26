@@ -1261,6 +1261,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       maxLines: expands ? null : 4,
       minLines: expands ? null : 3,
       maxLength: 100,
+      textCapitalization: TextCapitalization.sentences,
       scrollPadding: const EdgeInsets.only(bottom: 120),
       decoration: InputDecoration(
         labelText: 'О себе',
@@ -1552,6 +1553,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 TextFormField(
                   controller: _aboutController,
                   inputFormatters: _aboutFormatters,
+                  textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
                     labelText: 'О себе',
                     hintText: 'До 100 символов (по желанию)',
