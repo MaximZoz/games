@@ -117,24 +117,32 @@ class AppShell extends ConsumerWidget {
         ref.read(profileExitEditTickProvider.notifier).state++;
       }
       if (target == '/games' && isAuthorized) {
+        final currentPath = path;
         ref.invalidate(activeGameProvider);
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         ref.read(activeGameProvider.future).then((active) {
           if (!context.mounted) return;
           // Не пишем вкладки в history — иначе свайп «назад» в Safari
           // переключает bottom-nav табы.
+          //
+          // Уже на целевом lobby/game — no-op: повторный go без ?mode=
+          // remount'ит экран и даёт мигание спиннера.
           Router.neglect(context, () {
             if (active != null &&
                 active.type == 'game' &&
                 active.gameId != null &&
                 active.gameId!.isNotEmpty) {
-              context.go('/games/tictactoe/game/${active.gameId}');
+              final dest = '/games/tictactoe/game/${active.gameId}';
+              if (currentPath == dest) return;
+              context.go(dest);
             } else if (active != null &&
                 active.type == 'lobby' &&
                 active.lobbyId != null &&
                 active.lobbyId!.isNotEmpty) {
-              context.go('/games/tictactoe/lobby/${active.lobbyId}');
-            } else {
+              final dest = '/games/tictactoe/lobby/${active.lobbyId}';
+              if (currentPath == dest) return;
+              context.go(dest);
+            } else if (currentPath != '/games') {
               context.go('/games');
             }
           });

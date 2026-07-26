@@ -77,7 +77,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   @override
   void initState() {
     super.initState();
-    ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+    // Не инвалидируем lobbyDetail здесь: invalidate → loading без данных →
+    // мигание всего экрана при каждом remount (таб «Игры», query без mode).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(openLobbiesProvider);
       refreshChatsList(ref, force: true).catchError((_) {});
@@ -128,6 +129,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             ),
           ),
           body: lobbyAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (lobby) {
             final isCreator = currentUser?.id == lobby.creatorId;
             final isInviteMode = lobby.status == 'waiting_invite';
@@ -529,19 +532,19 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   }
 
   Future<void> _leaveLobby(BuildContext context) async {
+    if (_isLeaving) return;
     setState(() => _isLeaving = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
       await repo.leaveLobby(widget.lobbyId);
-      if (context.mounted) {
-        ref.invalidate(openLobbiesProvider);
-        context.go('/games');
-      }
-    } catch (e) {
-      if (context.mounted) context.go('/games');
-    } finally {
-      if (mounted) setState(() => _isLeaving = false);
+    } catch (_) {
+      // Всё равно уходим на список — иначе застреваем на мигающем лобби.
     }
+    if (!context.mounted) return;
+    ref.invalidate(openLobbiesProvider);
+    ref.invalidate(activeGameProvider);
+    ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+    context.go('/games');
   }
 
   Widget _buildFriendAvatar(FriendUserItem user, double radius) {
