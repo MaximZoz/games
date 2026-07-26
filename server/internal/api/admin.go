@@ -111,7 +111,7 @@ func (h *AdminHandler) Init(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
-	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, "")
+	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, "", nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique") {
 			http.Error(w, "email already registered", http.StatusConflict)

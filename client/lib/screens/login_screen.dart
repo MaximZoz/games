@@ -30,6 +30,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String? get _redirect =>
       safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
 
+  String? get _ref {
+    final raw = GoRouterState.of(context).uri.queryParameters['ref']?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -198,7 +204,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => context.push(
-                          appendRedirectQuery('/register', _redirect),
+                          appendAuthQuery(
+                            '/register',
+                            redirect: _redirect,
+                            ref: _ref,
+                          ),
                         ),
                         child: const Text('Нет аккаунта? Зарегистрироваться'),
                       ),

@@ -9,6 +9,8 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/screens/achievements_screen.dart';
 import 'package:multigames_client/screens/admin_screen.dart';
+import 'package:multigames_client/screens/coins_friend_screen.dart';
+import 'package:multigames_client/screens/coins_login_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
 import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
@@ -26,6 +28,7 @@ import 'package:multigames_client/widgets/app_shell.dart';
 
 const _publicPaths = <String>{'/login', '/register'};
 const _authRequiredPaths = <String>{
+  '/',
   '/friends',
   '/chats',
   '/tournaments',
@@ -76,6 +79,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isPublic = _publicPaths.contains(path);
       final needsAuth = _authRequiredPaths.contains(path) ||
           path.startsWith('/chats/') ||
+          path.startsWith('/coins/') ||
           path.startsWith('/games');
       final isAdminRoute = path == '/admin';
 
@@ -126,6 +130,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/coins',
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const CoinsScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'login',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const CoinsLoginScreen()),
+                  ),
+                  GoRoute(
+                    path: 'friend',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const CoinsFriendScreen()),
+                  ),
+                ],
               ),
             ],
           ),

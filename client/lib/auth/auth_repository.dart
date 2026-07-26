@@ -77,6 +77,65 @@ class AuthResult {
   });
 }
 
+class DailyRewardStatus {
+  const DailyRewardStatus({
+    required this.available,
+    required this.streak,
+    required this.nextStreak,
+    required this.nextRewardBronze,
+    this.milestonesBronze = const {
+      1: 10,
+      3: 50,
+      7: 1000,
+      30: 3000,
+    },
+  });
+
+  final bool available;
+  final int streak;
+  final int nextStreak;
+  final int nextRewardBronze;
+  final Map<int, int> milestonesBronze;
+
+  factory DailyRewardStatus.fromJson(Map<String, dynamic> json) {
+    final milestonesRaw = json['milestones_bronze'];
+    final milestones = <int, int>{
+      1: 10,
+      3: 50,
+      7: 1000,
+      30: 3000,
+    };
+    if (milestonesRaw is Map) {
+      milestonesRaw.forEach((key, value) {
+        final day = int.tryParse(key.toString());
+        final bronze = value is num ? value.toInt() : null;
+        if (day != null && bronze != null) {
+          milestones[day] = bronze;
+        }
+      });
+    }
+    return DailyRewardStatus(
+      available: (json['available'] as bool?) ?? false,
+      streak: (json['streak'] as num?)?.toInt() ?? 0,
+      nextStreak: (json['next_streak'] as num?)?.toInt() ?? 1,
+      nextRewardBronze: (json['next_reward_bronze'] as num?)?.toInt() ?? 10,
+      milestonesBronze: milestones,
+    );
+  }
+}
+
+class DailyRewardClaimResult {
+  const DailyRewardClaimResult({
+    required this.balanceBronze,
+    required this.rewardBronze,
+    required this.streak,
+  });
+
+  final int balanceBronze;
+  final int rewardBronze;
+  final int streak;
+}
+
 class AuthRepository {
   AuthRepository({SharedPreferences? prefs}) : _prefs = prefs;
 
@@ -109,9 +168,11 @@ class AuthRepository {
     required String email,
     required String password,
     String displayName = '',
+    String? ref,
   }) async {
     await init();
     final uri = Uri.parse('$apiBaseUrl/api/auth/register');
+    final referral = (ref ?? '').trim();
     final response = await ApiClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -119,6 +180,7 @@ class AuthRepository {
         'email': email.trim().toLowerCase(),
         'password': password,
         if (displayName.isNotEmpty) 'display_name': displayName,
+        if (referral.isNotEmpty) 'ref': referral,
       }),
       operation: 'AuthRepository.register',
     );
@@ -292,14 +354,14 @@ class AuthRepository {
     } catch (_) {}
   }
 
-  /// GET /api/coins/daily-available → { "available": bool }
-  Future<bool> getDailyRewardAvailable() async {
+  /// GET /api/coins/daily-available → статус серии и награды
+  Future<DailyRewardStatus> getDailyRewardStatus() async {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     final response = await sendAuthorized(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/coins/daily-available?_=$cacheBuster'),
         headers: {'Authorization': 'Bearer $token'},
-        operation: 'AuthRepository.getDailyRewardAvailable',
+        operation: 'AuthRepository.getDailyRewardStatus',
       ),
     );
     if (response.statusCode != 200) {
@@ -310,14 +372,25 @@ class AuthRepository {
     }
     try {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      return (body['available'] as bool?) ?? false;
+      return DailyRewardStatus.fromJson(body);
     } catch (_) {
-      return false;
+      return const DailyRewardStatus(
+        available: false,
+        streak: 0,
+        nextStreak: 1,
+        nextRewardBronze: 10,
+      );
     }
   }
 
-  /// POST /api/coins/claim-daily → { "balance_bronze": int }
-  Future<int?> claimDailyReward() async {
+  /// Совместимость: только флаг available.
+  Future<bool> getDailyRewardAvailable() async {
+    final status = await getDailyRewardStatus();
+    return status.available;
+  }
+
+  /// POST /api/coins/claim-daily → баланс / награда / серия
+  Future<DailyRewardClaimResult?> claimDailyReward() async {
     final response = await sendAuthorized(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/coins/claim-daily'),
@@ -333,7 +406,12 @@ class AuthRepository {
     try {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final balance = body['balance_bronze'];
-      return balance is num ? balance.toInt() : null;
+      if (balance is! num) return null;
+      return DailyRewardClaimResult(
+        balanceBronze: balance.toInt(),
+        rewardBronze: (body['reward_bronze'] as num?)?.toInt() ?? 0,
+        streak: (body['streak'] as num?)?.toInt() ?? 0,
+      );
     } catch (_) {
       return null;
     }

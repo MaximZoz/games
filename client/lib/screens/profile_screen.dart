@@ -289,6 +289,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _cancelEditing() {
+    // На мобиле закрываем сразу — иначе свайп/назад «не срабатывает» 280мс.
+    if (isNarrow(context)) {
+      _exitEditingImmediate();
+      return;
+    }
     _startClosing();
   }
 
@@ -300,9 +305,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (mounted) _startClosing();
   }
 
+  void _exitEditingImmediate() {
+    if (!_isEditing && !_isClosing) return;
+    setState(() {
+      _isEditing = false;
+      _isClosing = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final mobile = isNarrow(context);
+    final path = ref.watch(currentRoutePathProvider);
+    // Ушли с вкладки профиля — сбрасываем edit (StatefulShell сохраняет State).
+    if (path != '/profile' && (_isEditing || _isClosing)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (ref.read(currentRoutePathProvider) != '/profile') {
+          _exitEditingImmediate();
+        }
+      });
+    }
+    // Повторный тап по табу «Профиль» внизу — тоже выход из редактирования.
+    ref.listen<int>(profileExitEditTickProvider, (_, __) {
+      _exitEditingImmediate();
+    });
 
     Widget scrollableBody(Widget child) {
       return ListView(
@@ -368,18 +395,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 Widget buildProfile(ProfileExtra extra) {
                   if (mobile && _isEditing) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-                      child: SizedBox.expand(
-                        child: _ProfileEditForm(
-                          key: const ValueKey('mobile_edit_form'),
-                          user: user,
-                          profileExtra: extra,
-                          displayNameController: _displayNameController,
-                          focusNode: _displayNameFocus,
-                          onCancel: _cancelEditing,
-                          onSave: _saveProfile,
-                          compact: true,
+                    // SwipeBack снаружи формы — край не перекрывают TextField/ListView.
+                    return SwipeBackScope(
+                      onBack: _cancelEditing,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                        child: SizedBox.expand(
+                          child: _ProfileEditForm(
+                            key: const ValueKey('mobile_edit_form'),
+                            user: user,
+                            profileExtra: extra,
+                            displayNameController: _displayNameController,
+                            focusNode: _displayNameFocus,
+                            onCancel: _cancelEditing,
+                            onSave: _saveProfile,
+                            compact: true,
+                          ),
                         ),
                       ),
                     );
@@ -1322,11 +1353,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
 
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
     // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
-    return SwipeBackScope(
-      enabled: !_isSaving,
-      topInset: 48,
-      onBack: widget.onCancel,
-      child: Column(
+    // SwipeBackScope — снаружи (ProfileScreen), здесь только форма.
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCompactHeader(context),
@@ -1451,7 +1479,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             ),
           ),
         ],
-      ),
     );
   }
 
