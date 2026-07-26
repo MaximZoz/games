@@ -845,7 +845,7 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 	}
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
+		h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
 		for _, u := range humanUserIDs(xUserID, oUserID) {
 			clearUserActiveGame(ctx, h.Rdb, u)
 		}
@@ -1470,7 +1470,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	h.Rdb.HSet(ctx, key, "status", status, "winner", winner, "timeout", "1")
 	h.Rdb.Expire(ctx, key, 24*time.Hour)
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
+	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
 	for _, u := range humanUserIDs(xUserID, oUserID) {
 		clearUserActiveGame(ctx, h.Rdb, u)
 	}
@@ -1737,7 +1737,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
+		h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
 		for _, uid := range []string{xUserID, oUserID} {
 			if !isBot(uid) {
 				if u, e := uuid.Parse(uid); e == nil {
@@ -1944,7 +1944,7 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		return
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
+	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
 	for _, u := range humanUserIDs(xUserID, oUserID) {
 		clearUserActiveGame(ctx, h.Rdb, u)
 	}
@@ -1983,6 +1983,28 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 
 func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
 func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.String() + ":active_lobby" }
+
+// onGameFinished — монеты + счётчик партий/достижения для людей (не ботов).
+func (h *GamesHandler) onGameFinished(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
+	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
+	h.recordGameFinished(ctx, xUserID, oUserID)
+}
+
+func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID string) {
+	for _, raw := range []string{xUserID, oUserID} {
+		if raw == "" || isBot(raw) {
+			continue
+		}
+		uid, err := uuid.Parse(raw)
+		if err != nil {
+			continue
+		}
+		if err := store.IncrementGamesFinished(ctx, h.Pool, uid); err != nil {
+			continue
+		}
+		_ = store.EvaluateAndUnlock(ctx, h.Pool, uid)
+	}
+}
 
 func (h *GamesHandler) settleGameCoins(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
 	if stakeBronze <= 0 || xUserID == "" || oUserID == "" {

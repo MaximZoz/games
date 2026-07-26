@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 
@@ -12,6 +13,10 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final rewardAvailable =
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
+    final unclaimedAchievements =
+        ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    // Прогрев кэша списка — экран «Достижения» открывается без спиннера.
+    ref.watch(achievementsListProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -27,7 +32,10 @@ class HomeScreen extends ConsumerWidget {
                   HomeActionCard(
                     icon: Icons.emoji_events_rounded,
                     title: 'Достижения',
-                    subtitle: 'Ваши игровые результаты',
+                    subtitle: unclaimedAchievements > 0
+                        ? 'Есть награды к получению'
+                        : 'Ваши игровые результаты',
+                    badgeCount: unclaimedAchievements,
                     onTap: () => context.push('/achievements'),
                   ),
                   const SizedBox(height: 12),

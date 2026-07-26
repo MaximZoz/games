@@ -266,6 +266,7 @@ func main() {
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
+	achievementsHandler := &api.AchievementsHandler{Pool: pool}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 		go api.StartBotTimeoutTicker(ctx, gamesHandler)
@@ -318,6 +319,9 @@ func main() {
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
 	mux.Handle("/api/coins/daily-available", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.DailyAvailable)))
 	mux.Handle("/api/coins/claim-daily", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.ClaimDaily)))
+	mux.Handle("/api/achievements", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.List)))
+	mux.Handle("/api/achievements/unclaimed-count", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.UnclaimedCount)))
+	mux.Handle("/api/achievements/claim", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.Claim)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

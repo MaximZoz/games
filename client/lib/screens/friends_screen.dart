@@ -534,17 +534,40 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
   }
 
+  void _clearSearchState({required bool collapseExpanded}) {
+    _searchDebounce?.cancel();
+    _searchRevision++;
+    _searchController.clear();
+    _searchResults = const [];
+    _isSearching = false;
+    _isSearchLoadingMore = false;
+    _searchHasMore = false;
+    if (collapseExpanded) {
+      _isSearchExpanded = false;
+    }
+  }
+
+  /// Тап по bottom-nav «Друзья»: свернуть/очистить поиск и открыть таб «Друзья».
+  void _onFriendsNavTap() {
+    if (!mounted) return;
+    final friendsIndex = _currentTabs.indexOf(_FriendsTabKind.friends);
+    final targetIndex = friendsIndex >= 0 ? friendsIndex : 0;
+    setState(() {
+      _clearSearchState(collapseExpanded: true);
+      if (_tabController.index != targetIndex &&
+          targetIndex < _tabController.length) {
+        _tabController.index = targetIndex;
+      }
+    });
+    _searchFocusNode.unfocus();
+    _syncBottomNavCollapse();
+  }
+
   void _toggleSearch() {
     setState(() {
       _isSearchExpanded = !_isSearchExpanded;
       if (!_isSearchExpanded) {
-        _searchDebounce?.cancel();
-        _searchRevision++;
-        _searchController.clear();
-        _searchResults = const [];
-        _isSearching = false;
-        _isSearchLoadingMore = false;
-        _searchHasMore = false;
+        _clearSearchState(collapseExpanded: false);
       }
     });
 
@@ -1918,6 +1941,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(friendsNavTapTickProvider, (_, __) {
+      _onFriendsNavTap();
+    });
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final totalUsersAsync = ref.watch(totalUsersCountProvider);
