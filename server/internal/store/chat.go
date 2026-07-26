@@ -30,6 +30,7 @@ type ChatMessage struct {
 	SenderUserID uuid.UUID
 	Body         string
 	CreatedAt    time.Time
+	DeliveredAt  *time.Time
 	ReadAt       *time.Time
 }
 
@@ -150,6 +151,7 @@ func ListChatsForUser(
 				m.sender_user_id,
 				m.body,
 				m.created_at,
+				m.delivered_at,
 				m.read_at
 			FROM chat_messages m
 			JOIN my_chats mc ON mc.id = m.chat_id
@@ -168,7 +170,7 @@ func ListChatsForUser(
 			mc.id,
 			mc.created_at,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
-			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.read_at,
+			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at,
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
 		FROM my_chats mc
@@ -192,6 +194,7 @@ func ListChatsForUser(
 		var lastSenderIDRaw sql.NullString
 		var lastBody sql.NullString
 		var lastCreatedAt sql.NullTime
+		var lastDeliveredAt sql.NullTime
 		var lastReadAt sql.NullTime
 
 		if err := rows.Scan(
@@ -209,6 +212,7 @@ func ListChatsForUser(
 			&lastSenderIDRaw,
 			&lastBody,
 			&lastCreatedAt,
+			&lastDeliveredAt,
 			&lastReadAt,
 			&item.UnreadCount,
 			&item.UpdatedAt,
@@ -228,6 +232,10 @@ func ListChatsForUser(
 					SenderUserID: senderID,
 					Body:         strings.TrimSpace(lastBody.String),
 					CreatedAt:    lastCreatedAt.Time.UTC(),
+				}
+				if lastDeliveredAt.Valid {
+					deliveredAt := lastDeliveredAt.Time.UTC()
+					msg.DeliveredAt = &deliveredAt
 				}
 				if lastReadAt.Valid {
 					readAt := lastReadAt.Time.UTC()
@@ -267,7 +275,7 @@ func ListChatMessages(
 	)
 	if before != nil {
 		rows, err = pool.Query(ctx, `
-			SELECT id, chat_id, sender_user_id, body, created_at, read_at
+			SELECT id, chat_id, sender_user_id, body, created_at, delivered_at, read_at
 			FROM chat_messages
 			WHERE chat_id = $1 AND created_at < $3
 			ORDER BY created_at DESC
@@ -275,7 +283,7 @@ func ListChatMessages(
 		`, chatID, limit, before.UTC())
 	} else {
 		rows, err = pool.Query(ctx, `
-			SELECT id, chat_id, sender_user_id, body, created_at, read_at
+			SELECT id, chat_id, sender_user_id, body, created_at, delivered_at, read_at
 			FROM chat_messages
 			WHERE chat_id = $1
 			ORDER BY created_at DESC
@@ -290,6 +298,7 @@ func ListChatMessages(
 	messages := make([]ChatMessage, 0, limit)
 	for rows.Next() {
 		var msg ChatMessage
+		var deliveredAt sql.NullTime
 		var readAt sql.NullTime
 		if err := rows.Scan(
 			&msg.ID,
@@ -297,11 +306,16 @@ func ListChatMessages(
 			&msg.SenderUserID,
 			&msg.Body,
 			&msg.CreatedAt,
+			&deliveredAt,
 			&readAt,
 		); err != nil {
 			return nil, err
 		}
 		msg.CreatedAt = msg.CreatedAt.UTC()
+		if deliveredAt.Valid {
+			value := deliveredAt.Time.UTC()
+			msg.DeliveredAt = &value
+		}
 		if readAt.Valid {
 			value := readAt.Time.UTC()
 			msg.ReadAt = &value
@@ -356,28 +370,56 @@ func SendChatMessage(
 	}
 
 	var msg ChatMessage
+	var deliveredAt sql.NullTime
 	var readAt sql.NullTime
 	err = pool.QueryRow(ctx, `
 		INSERT INTO chat_messages (chat_id, sender_user_id, body)
 		VALUES ($1, $2, $3)
-		RETURNING id, chat_id, sender_user_id, body, created_at, read_at
+		RETURNING id, chat_id, sender_user_id, body, created_at, delivered_at, read_at
 	`, chatID, senderUserID, text).Scan(
 		&msg.ID,
 		&msg.ChatID,
 		&msg.SenderUserID,
 		&msg.Body,
 		&msg.CreatedAt,
+		&deliveredAt,
 		&readAt,
 	)
 	if err != nil {
 		return ChatMessage{}, err
 	}
 	msg.CreatedAt = msg.CreatedAt.UTC()
+	if deliveredAt.Valid {
+		value := deliveredAt.Time.UTC()
+		msg.DeliveredAt = &value
+	}
 	if readAt.Valid {
 		value := readAt.Time.UTC()
 		msg.ReadAt = &value
 	}
 	return msg, nil
+}
+
+func MarkChatDelivered(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID, currentUserID uuid.UUID,
+) (int, error) {
+	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
+		return 0, err
+	}
+
+	tag, err := pool.Exec(ctx, `
+		UPDATE chat_messages
+		SET delivered_at = now()
+		WHERE chat_id = $1
+		  AND sender_user_id <> $2
+		  AND delivered_at IS NULL
+	`, chatID, currentUserID)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
 }
 
 func MarkChatRead(
@@ -391,7 +433,8 @@ func MarkChatRead(
 
 	tag, err := pool.Exec(ctx, `
 		UPDATE chat_messages
-		SET read_at = now()
+		SET read_at = now(),
+		    delivered_at = COALESCE(delivered_at, now())
 		WHERE chat_id = $1
 		  AND sender_user_id <> $2
 		  AND read_at IS NULL

@@ -309,6 +309,7 @@ func main() {
 	mux.Handle("/api/chats/start", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Start)))
 	mux.Handle("/api/chats/messages", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Messages)))
 	mux.Handle("/api/chats/read", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Read)))
+	mux.Handle("/api/chats/delivered", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Delivered)))
 	mux.Handle("/api/chats/clear", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Clear)))
 	mux.Handle("/api/chats/block", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Block)))
 	mux.Handle("/api/chats/unblock", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Unblock)))
@@ -349,7 +350,7 @@ func main() {
 	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
 	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
-	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
+	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/delivered, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
 	log.Printf("Presence API: GET /api/presence?user_ids=... (Bearer)")
 	log.Printf("Games API: POST /api/games/tictactoe/lobby, GET /api/games/tictactoe/lobbies, POST /api/games/tictactoe/lobby/:id/invite|join|leave, GET /api/games/tictactoe/game/:id, POST /api/games/tictactoe/game/:id/move (Bearer, Redis required)")
 	if err := http.ListenAndServe(port, finalHandler); err != nil {

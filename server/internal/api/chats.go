@@ -49,6 +49,7 @@ type ChatMessageItem struct {
 	SenderUserID string  `json:"sender_user_id"`
 	Body         string  `json:"body"`
 	CreatedAt    string  `json:"created_at"`
+	DeliveredAt  *string `json:"delivered_at,omitempty"`
 	ReadAt       *string `json:"read_at,omitempty"`
 }
 
@@ -62,6 +63,10 @@ type SendChatMessageBody struct {
 }
 
 type MarkChatReadBody struct {
+	ChatID string `json:"chat_id"`
+}
+
+type MarkChatDeliveredBody struct {
 	ChatID string `json:"chat_id"`
 }
 
@@ -79,6 +84,11 @@ func currentChatUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
 }
 
 func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
+	var deliveredAt *string
+	if msg.DeliveredAt != nil {
+		value := msg.DeliveredAt.UTC().Format(time.RFC3339Nano)
+		deliveredAt = &value
+	}
 	var readAt *string
 	if msg.ReadAt != nil {
 		value := msg.ReadAt.UTC().Format(time.RFC3339Nano)
@@ -90,6 +100,7 @@ func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 		SenderUserID: msg.SenderUserID.String(),
 		Body:         msg.Body,
 		CreatedAt:    msg.CreatedAt.UTC().Format(time.RFC3339Nano),
+		DeliveredAt:  deliveredAt,
 		ReadAt:       readAt,
 	}
 }
@@ -288,6 +299,18 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Открытие/синхронизация чата = доставка входящих (как в Telegram).
+	if updated, deliverErr := store.MarkChatDelivered(r.Context(), h.Pool, chatID, userID); deliverErr == nil && updated > 0 {
+		if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+			h.publishChatDelivered(
+				[]uuid.UUID{lowID, highID},
+				chatID.String(),
+				userID.String(),
+				updated,
+			)
+		}
+	}
+
 	items := make([]ChatMessageItem, 0, len(messages))
 	for _, msg := range messages {
 		items = append(items, chatMessageToItem(msg))
@@ -377,6 +400,51 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 				updated,
 			)
 			h.publishChatListChanged(lowID, highID)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]int{"updated": updated})
+}
+
+func (h *ChatsHandler) Delivered(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body MarkChatDeliveredBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	chatID, err := uuid.Parse(strings.TrimSpace(body.ChatID))
+	if err != nil {
+		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		return
+	}
+
+	updated, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, userID)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+
+	if updated > 0 {
+		if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+			h.publishChatDelivered(
+				[]uuid.UUID{lowID, highID},
+				chatID.String(),
+				userID.String(),
+				updated,
+			)
 		}
 	}
 
@@ -550,6 +618,25 @@ func (h *ChatsHandler) publishChatRead(
 		"chat_id":        chatID,
 		"reader_user_id": readerUserID,
 		"updated":        updated,
+		"read_at":        time.Now().UTC().Format(time.RFC3339Nano),
+	})
+}
+
+func (h *ChatsHandler) publishChatDelivered(
+	userIDs []uuid.UUID,
+	chatID string,
+	delivererUserID string,
+	updated int,
+) {
+	if h == nil || h.Hub == nil {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type":              "chat_delivered",
+		"chat_id":           chatID,
+		"deliverer_user_id": delivererUserID,
+		"updated":           updated,
+		"delivered_at":      time.Now().UTC().Format(time.RFC3339Nano),
 	})
 }
 

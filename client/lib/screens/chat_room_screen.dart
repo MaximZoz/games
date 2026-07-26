@@ -17,6 +17,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -427,8 +428,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final payload = jsonDecode(raw);
       if (payload is! Map) return;
       final type = payload['type']?.toString() ?? '';
+      final chatID = payload['chat_id']?.toString() ?? '';
       if (type == 'chat_message') {
-        final chatID = payload['chat_id']?.toString() ?? '';
         if (chatID != widget.chatID) return;
         final messageRaw = payload['message'];
         if (messageRaw is! Map) return;
@@ -438,12 +439,68 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         if (!mounted) return;
         final meID = ref.read(authStateProvider).valueOrNull?.id;
         if (item.senderUserID != meID) {
+          unawaited(ref.read(chatsRepositoryProvider).markDelivered(widget.chatID));
           unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
         }
+        return;
       }
-      // chat_read, chat_list_changed, friends_updated — провайдеры обновятся
+      if (type == 'chat_delivered') {
+        if (chatID != widget.chatID) return;
+        final meID = ref.read(authStateProvider).valueOrNull?.id;
+        final delivererID = payload['deliverer_user_id']?.toString();
+        if (meID == null || delivererID == null || delivererID == meID) return;
+        final at = payload['delivered_at']?.toString() ??
+            DateTime.now().toUtc().toIso8601String();
+        _markOwnMessagesDelivered(meID, at);
+        return;
+      }
+      if (type == 'chat_read') {
+        if (chatID != widget.chatID) return;
+        final meID = ref.read(authStateProvider).valueOrNull?.id;
+        final readerID = payload['reader_user_id']?.toString();
+        if (meID == null || readerID == null || readerID == meID) return;
+        final at = payload['read_at']?.toString() ??
+            DateTime.now().toUtc().toIso8601String();
+        _markOwnMessagesRead(meID, at);
+        return;
+      }
+      // chat_list_changed, friends_updated — провайдеры обновятся
       // автоматически через realtimeEventsProvider
     } catch (_) {}
+  }
+
+  void _markOwnMessagesDelivered(String meID, String deliveredAt) {
+    if (!mounted) return;
+    var changed = false;
+    final updated = _messages.map((m) {
+      if (m.senderUserID != meID ||
+          (m.deliveredAt != null && m.deliveredAt!.isNotEmpty)) {
+        return m;
+      }
+      changed = true;
+      return m.copyWith(deliveredAt: deliveredAt);
+    }).toList(growable: false);
+    if (!changed) return;
+    setState(() => _messages = updated);
+  }
+
+  void _markOwnMessagesRead(String meID, String readAt) {
+    if (!mounted) return;
+    var changed = false;
+    final updated = _messages.map((m) {
+      if (m.senderUserID != meID) return m;
+      final needDelivered =
+          m.deliveredAt == null || m.deliveredAt!.isEmpty;
+      final needRead = m.readAt == null || m.readAt!.isEmpty;
+      if (!needDelivered && !needRead) return m;
+      changed = true;
+      return m.copyWith(
+        deliveredAt: needDelivered ? readAt : m.deliveredAt,
+        readAt: needRead ? readAt : m.readAt,
+      );
+    }).toList(growable: false);
+    if (!changed) return;
+    setState(() => _messages = updated);
   }
 
   void _upsertMessage(ChatMessageItem item) {
@@ -476,6 +533,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           left.senderUserID != right.senderUserID ||
           left.body != right.body ||
           left.createdAt != right.createdAt ||
+          left.deliveredAt != right.deliveredAt ||
           left.readAt != right.readAt) {
         return false;
       }
@@ -1112,11 +1170,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              _formatBubbleDateTime(message.createdAt),
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formatBubbleDateTime(message.createdAt),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  if (mine) ...[
+                                    const SizedBox(width: 4),
+                                    MessageStatusTicks(
+                                      deliveredAt: message.deliveredAt,
+                                      readAt: message.readAt,
+                                      size: 14,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],

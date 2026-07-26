@@ -75,10 +75,33 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
   ref.listen<AsyncValue<Map<String, dynamic>>>(
     realtimeEventsProvider,
     (_, next) {
-      final type = next.valueOrNull?['type']?.toString() ?? '';
+      final event = next.valueOrNull;
+      if (event == null) return;
+      final type = event['type']?.toString() ?? '';
+
+      // Получили входящее — сразу отмечаем доставку (даже вне комнаты чата).
+      if (type == 'chat_message') {
+        final chatID = event['chat_id']?.toString() ?? '';
+        final messageRaw = event['message'];
+        final senderID = messageRaw is Map
+            ? messageRaw['sender_user_id']?.toString()
+            : null;
+        if (chatID.isNotEmpty &&
+            senderID != null &&
+            senderID.isNotEmpty &&
+            senderID != user.id) {
+          unawaited(() async {
+            try {
+              await ref.read(chatsRepositoryProvider).markDelivered(chatID);
+            } catch (_) {}
+          }());
+        }
+      }
+
       if (type == 'chat_message' ||
           type == 'chat_list_changed' ||
           type == 'chat_read' ||
+          type == 'chat_delivered' ||
           type == 'realtime_connected') {
         unawaited(load());
       }
