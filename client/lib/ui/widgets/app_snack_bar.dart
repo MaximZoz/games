@@ -1,27 +1,34 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 
 enum AppSnackKind { info, success, error }
 
-OverlayEntry? _activeSnackEntry;
-Timer? _activeSnackTimer;
+class AppSnackMessage {
+  const AppSnackMessage({
+    required this.id,
+    required this.message,
+    required this.kind,
+    this.icon,
+    this.duration = const Duration(seconds: 3),
+  });
 
-/// Нижний отступ над bottom nav / safe-area (AppShell рисует nav вне Scaffold).
-double _snackBottomMargin(BuildContext context) {
-  final media = MediaQuery.of(context);
-  final safeBottom = media.viewPadding.bottom;
-  final narrow = isNarrow(context);
-  final landscape = media.size.width > media.size.height;
-  final showBottomNav = narrow && !landscape;
-  // Реальная высота бара с подписями чуть больше kBottomNavigationBarHeight.
-  final navClearance = showBottomNav ? 72.0 : 0.0;
-  return safeBottom + navClearance + 12;
+  final int id;
+  final String message;
+  final AppSnackKind kind;
+  final IconData? icon;
+  final Duration duration;
 }
 
-/// Фирменный нижний тост поверх всего UI (включая bottom nav).
+/// Текущий тост для [AppSnackHost] в AppShell (поверх bottom nav).
+final appSnackProvider = StateProvider<AppSnackMessage?>((ref) => null);
+
+int _snackSeq = 0;
+
+/// Показать фирменный тост. Рисуется хостом в AppShell над нижним меню.
 void showAppSnackBar(
   BuildContext context, {
   required String message,
@@ -32,72 +39,124 @@ void showAppSnackBar(
   final text = message.trim();
   if (text.isEmpty) return;
 
-  final overlay = Overlay.maybeOf(context, rootOverlay: true);
-  if (overlay == null) {
-    // Фоллбек, если overlay недоступен.
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    messenger
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          padding: EdgeInsets.zero,
-          margin: EdgeInsets.fromLTRB(16, 0, 16, _snackBottomMargin(context)),
-          duration: duration,
-          content: _AppSnackCard(message: text, kind: kind, icon: icon),
-        ),
-      );
-    return;
+  final container = ProviderScope.containerOf(context, listen: false);
+  container.read(appSnackProvider.notifier).state = AppSnackMessage(
+    id: ++_snackSeq,
+    message: text,
+    kind: kind,
+    icon: icon,
+    duration: duration,
+  );
+}
+
+/// Нижний отступ: над bottom nav (если виден) + safe area.
+double appSnackBottomOffset(
+  BuildContext context, {
+  required bool showBottomNav,
+  required bool collapseBottomNav,
+}) {
+  final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
+  final nav = (showBottomNav && !collapseBottomNav) ? 72.0 : 0.0;
+  return safeBottom + nav + 12;
+}
+
+/// Хост тостов — кладётся последним слоем в Stack AppShell.
+class AppSnackHost extends ConsumerStatefulWidget {
+  const AppSnackHost({
+    super.key,
+    required this.showBottomNav,
+    required this.collapseBottomNav,
+  });
+
+  final bool showBottomNav;
+  final bool collapseBottomNav;
+
+  @override
+  ConsumerState<AppSnackHost> createState() => _AppSnackHostState();
+}
+
+class _AppSnackHostState extends ConsumerState<AppSnackHost> {
+  Timer? _hideTimer;
+  int? _shownId;
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    super.dispose();
   }
 
-  _activeSnackTimer?.cancel();
-  _activeSnackEntry?.remove();
-  _activeSnackEntry = null;
+  void _scheduleHide(AppSnackMessage msg) {
+    _hideTimer?.cancel();
+    _shownId = msg.id;
+    _hideTimer = Timer(msg.duration, () {
+      if (!mounted) return;
+      final current = ref.read(appSnackProvider);
+      if (current?.id == msg.id) {
+        ref.read(appSnackProvider.notifier).state = null;
+      }
+    });
+  }
 
-  final bottom = _snackBottomMargin(context);
-  late final OverlayEntry entry;
-  entry = OverlayEntry(
-    builder: (ctx) {
-      return Positioned(
-        left: 16,
-        right: 16,
-        bottom: bottom,
-        child: IgnorePointer(
-          ignoring: false,
-          child: Center(
-            child: _AppSnackCard(
-              message: text,
-              kind: kind,
-              icon: icon,
-              onDismiss: () {
-                _activeSnackTimer?.cancel();
-                if (_activeSnackEntry == entry) {
-                  entry.remove();
-                  _activeSnackEntry = null;
-                }
-              },
-            ),
+  @override
+  Widget build(BuildContext context) {
+    final snack = ref.watch(appSnackProvider);
+    ref.listen<AppSnackMessage?>(appSnackProvider, (prev, next) {
+      if (next != null && next.id != _shownId) {
+        _scheduleHide(next);
+      }
+    });
+    // Если тост уже был в провайдере до первого listen — тоже запускаем таймер.
+    if (snack != null && snack.id != _shownId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final current = ref.read(appSnackProvider);
+        if (current != null && current.id != _shownId) {
+          _scheduleHide(current);
+        }
+      });
+    }
+
+    if (snack == null) return const SizedBox.shrink();
+
+    final bottom = appSnackBottomOffset(
+      context,
+      showBottomNav: widget.showBottomNav,
+      collapseBottomNav: widget.collapseBottomNav,
+    );
+
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: bottom,
+      child: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        // Safe area уже учтён в [appSnackBottomOffset]; здесь только клип по ширине.
+        bottom: false,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: _AppSnackCard(
+            key: ValueKey(snack.id),
+            message: snack.message,
+            kind: snack.kind,
+            icon: snack.icon,
+            onDismiss: () {
+              _hideTimer?.cancel();
+              if (ref.read(appSnackProvider)?.id == snack.id) {
+                ref.read(appSnackProvider.notifier).state = null;
+              }
+            },
           ),
         ),
-      );
-    },
-  );
-
-  _activeSnackEntry = entry;
-  overlay.insert(entry);
-  _activeSnackTimer = Timer(duration, () {
-    if (_activeSnackEntry == entry) {
-      entry.remove();
-      _activeSnackEntry = null;
-    }
-  });
+      ),
+    );
+  }
 }
 
 class _AppSnackCard extends StatefulWidget {
   const _AppSnackCard({
+    super.key,
     required this.message,
     required this.kind,
     this.icon,
@@ -177,6 +236,9 @@ class _AppSnackCardState extends State<_AppSnackCard>
   @override
   Widget build(BuildContext context) {
     final style = _style();
+    // На широком экране без bottom nav isNarrow всё ещё может быть false —
+    // оставляем maxWidth.
+    final _ = isNarrow(context);
 
     return SlideTransition(
       position: _slide,

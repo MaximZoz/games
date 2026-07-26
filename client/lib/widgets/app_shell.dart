@@ -14,6 +14,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
@@ -136,6 +137,8 @@ class AppShell extends ConsumerWidget {
     // heightFactor=0 (поиск друзей и т.п.).
     final collapseBottomNav = ref.watch(collapseMobileBottomNavProvider);
     final selectedIndex = navigationShell.currentIndex;
+    final showBottomNav =
+        narrow && !narrowLandscape && !inChatRoom && !onAuthScreen;
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
@@ -360,7 +363,7 @@ class AppShell extends ConsumerWidget {
             // лиловым «блоком», перекрывая кнопку «Войти».
             // При поиске друзей — схлопываем (не dispose), иначе тот же блок
             // + панель Autofill перекрывают результаты.
-            if (narrow && !narrowLandscape && !inChatRoom && !onAuthScreen)
+            if (showBottomNav)
               ClipRect(
                 child: Align(
                   alignment: Alignment.topCenter,
@@ -413,6 +416,11 @@ class AppShell extends ConsumerWidget {
                 ),
               ),
           ],
+        ),
+        // Поверх всего UI, с отступом над нижней навигацией.
+        AppSnackHost(
+          showBottomNav: showBottomNav,
+          collapseBottomNav: collapseBottomNav,
         ),
       ],
     );
