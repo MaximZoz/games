@@ -9,3 +9,8 @@ final currentRoutePathProvider = StateProvider<String>((ref) => '');
 
 /// Инкремент при тапе по вкладке «Профиль» — выйти из режима редактирования.
 final profileExitEditTickProvider = StateProvider<int>((ref) => 0);
+
+/// Схлопнуть bottom nav (heightFactor=0, виджет остаётся в дереве),
+/// чтобы на iOS Safari он не висел блоком над клавиатурой при поиске.
+/// Нельзя убирать nav из дерева — иначе сбрасывается фокус TextField.
+final collapseMobileBottomNavProvider = StateProvider<bool>((ref) => false);

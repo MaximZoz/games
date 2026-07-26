@@ -131,9 +131,10 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    // Не прячем bottom nav при клавиатуре: на iOS Safari viewport сжимается /
-    // viewInsets мигает → nav убирается из дерева → фокус TextField и клавиатура
-    // сбрасываются (мигание ~1с). Клавиатура просто перекрывает nav.
+    // Не убираем bottom nav из дерева при клавиатуре: на iOS Safari
+    // dispose nav → сброс фокуса TextField. Вместо этого схлопываем
+    // heightFactor=0 (поиск друзей и т.п.).
+    final collapseBottomNav = ref.watch(collapseMobileBottomNavProvider);
     final selectedIndex = navigationShell.currentIndex;
 
     void navigateWithPrefetch(int i) {
@@ -357,40 +358,56 @@ class AppShell extends ConsumerWidget {
             // На логине/регистрации nav не нужен: на iOS при клавиатуре viewport
             // сжимается, и прозрачный bottom nav остаётся над клавиатурой
             // лиловым «блоком», перекрывая кнопку «Войти».
+            // При поиске друзей — схлопываем (не dispose), иначе тот же блок
+            // + панель Autofill перекрывают результаты.
             if (narrow && !narrowLandscape && !inChatRoom && !onAuthScreen)
-              SafeArea(
-                top: false,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: MediaQuery.withNoTextScaling(
-                    child: BottomNavigationBar(
-                      currentIndex: selectedIndex,
-                      onTap: navigateWithPrefetch,
-                      type: BottomNavigationBarType.fixed,
-                      elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      selectedItemColor: AppColors.textPrimary,
-                      unselectedItemColor: AppColors.textSecondary,
-                      selectedFontSize: 10,
-                      unselectedFontSize: 10,
-                      showUnselectedLabels: true,
-                      items: _navItems.asMap().entries.map((entry) {
-                        final item = entry.value;
-                        return BottomNavigationBarItem(
-                          icon: _navIcon(item, unreadChats, incomingFriends,
-                              gamesMyTurn, gameInvitesCount, dailyRewardCount),
-                          activeIcon: _navIcon(
-                            item,
-                            unreadChats,
-                            incomingFriends,
-                            gamesMyTurn,
-                            gameInvitesCount,
-                            dailyRewardCount,
-                            selected: true,
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: collapseBottomNav ? 0.0 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: collapseBottomNav,
+                    child: SafeArea(
+                      top: false,
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: MediaQuery.withNoTextScaling(
+                          child: BottomNavigationBar(
+                            currentIndex: selectedIndex,
+                            onTap: navigateWithPrefetch,
+                            type: BottomNavigationBarType.fixed,
+                            elevation: 0,
+                            backgroundColor: Colors.transparent,
+                            selectedItemColor: AppColors.textPrimary,
+                            unselectedItemColor: AppColors.textSecondary,
+                            selectedFontSize: 10,
+                            unselectedFontSize: 10,
+                            showUnselectedLabels: true,
+                            items: _navItems.asMap().entries.map((entry) {
+                              final item = entry.value;
+                              return BottomNavigationBarItem(
+                                icon: _navIcon(
+                                    item,
+                                    unreadChats,
+                                    incomingFriends,
+                                    gamesMyTurn,
+                                    gameInvitesCount,
+                                    dailyRewardCount),
+                                activeIcon: _navIcon(
+                                  item,
+                                  unreadChats,
+                                  incomingFriends,
+                                  gamesMyTurn,
+                                  gameInvitesCount,
+                                  dailyRewardCount,
+                                  selected: true,
+                                ),
+                                label: item.label,
+                              );
+                            }).toList(),
                           ),
-                          label: item.label,
-                        );
-                      }).toList(),
+                        ),
+                      ),
                     ),
                   ),
                 ),
