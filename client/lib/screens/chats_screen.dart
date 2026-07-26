@@ -1296,6 +1296,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         const SizedBox(height: 10),
         TextField(
           controller: queryController,
+          autofillHints: null,
+          enableSuggestions: false,
+          autocorrect: false,
+          enableIMEPersonalizedLearning: false,
+          textInputAction: TextInputAction.search,
           decoration: const InputDecoration(
             hintText: 'Найти друга по нику',
             prefixIcon: Icon(Icons.search_rounded),
