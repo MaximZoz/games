@@ -10,11 +10,37 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+
+/// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
+void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
+  if (active != null &&
+      active.type == 'game' &&
+      active.gameId != null &&
+      active.gameId!.isNotEmpty) {
+    final dest = '/games/tictactoe/game/${active.gameId}';
+    if (currentPath == dest) return;
+    context.go(dest);
+    return;
+  }
+  if (active != null &&
+      active.type == 'lobby' &&
+      active.lobbyId != null &&
+      active.lobbyId!.isNotEmpty) {
+    final dest = '/games/tictactoe/lobby/${active.lobbyId}';
+    if (currentPath == dest) return;
+    context.go(dest);
+    return;
+  }
+  if (currentPath != '/games') {
+    context.go('/games');
+  }
+}
 
 const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
@@ -116,45 +142,28 @@ class AppShell extends ConsumerWidget {
       if (target == '/profile') {
         ref.read(profileExitEditTickProvider.notifier).state++;
       }
+
+      // Сначала мгновенно меняем вкладку — без ожидания сети.
+      // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
         final currentPath = path;
-        ref.invalidate(activeGameProvider);
-        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-        ref.read(activeGameProvider.future).then((active) {
-          if (!context.mounted) return;
-          // Не пишем вкладки в history — иначе свайп «назад» в Safari
-          // переключает bottom-nav табы.
-          //
-          // Уже на целевом lobby/game — no-op: повторный go без ?mode=
-          // remount'ит экран и даёт мигание спиннера.
-          Router.neglect(context, () {
-            if (active != null &&
-                active.type == 'game' &&
-                active.gameId != null &&
-                active.gameId!.isNotEmpty) {
-              final dest = '/games/tictactoe/game/${active.gameId}';
-              if (currentPath == dest) return;
-              context.go(dest);
-            } else if (active != null &&
-                active.type == 'lobby' &&
-                active.lobbyId != null &&
-                active.lobbyId!.isNotEmpty) {
-              final dest = '/games/tictactoe/lobby/${active.lobbyId}';
-              if (currentPath == dest) return;
-              context.go(dest);
-            } else if (currentPath != '/games') {
-              context.go('/games');
-            }
-          });
+        final cachedActive = ref.read(activeGameProvider).valueOrNull;
+        Router.neglect(context, () {
+          _goGamesTab(context, currentPath, cachedActive);
         });
+        // Фон: обновить active/чаты для бейджей. Без повторного go —
+        // иначе гонка с мгновенным leave из лобби.
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        unawaited(() async {
+          try {
+            ref.invalidate(activeGameProvider);
+            await ref.read(activeGameProvider.future);
+          } catch (_) {}
+        }());
         return;
       }
-      // goBranch + neglect: смена таба без записи в browser history,
-      // чтобы жесты назад/вперёд Safari не прыгали по табам.
-      //
-      // Профиль: всегда initialLocation — /login и /register в той же ветке,
-      // и после входа goBranch иначе восстанавливает /login, а редирект
-      // авторизованного пользователя снова кидает на главную.
+
+      // Профиль: всегда /profile — иначе после логина ветка восстанавливает /login.
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
@@ -164,6 +173,7 @@ class AppShell extends ConsumerWidget {
       });
 
       if (!isAuthorized) return;
+      // Prefetch вкладок только после перехода, строго в фоне.
       if (target == '/chats') {
         unawaited(
           ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
