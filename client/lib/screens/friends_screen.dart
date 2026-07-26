@@ -1523,6 +1523,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 enableSuggestions: false,
                 autocorrect: false,
                 enableIMEPersonalizedLearning: false,
+                spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+                smartDashesType: SmartDashesType.disabled,
+                smartQuotesType: SmartQuotesType.disabled,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
@@ -1743,6 +1746,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
+        autofillHints: null,
+        enableSuggestions: false,
+        autocorrect: false,
+        enableIMEPersonalizedLearning: false,
+        spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+        smartDashesType: SmartDashesType.disabled,
+        smartQuotesType: SmartQuotesType.disabled,
+        keyboardType: TextInputType.text,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: 'Поиск по нику',
