@@ -66,14 +66,14 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
                       _isClaiming = false;
                       if (result != null) {
                         _lastClaimMessage =
-                            'Получено: ${formatRewardBronze(result.rewardBronze)} · день ${result.streak}';
+                            'Получено: ${formatRewardBronze(result.rewardBronze)}';
                       }
                     });
                   },
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => const Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(16),
                   child: Text(
                     'Не удалось загрузить награды',
                     style: TextStyle(color: AppColors.textSecondary),
@@ -106,84 +106,86 @@ class _LoginRewardsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canClaim = status.available && !isClaiming;
+    final statusLine = lastClaimMessage ??
+        (status.available
+            ? 'День ${status.nextStreak} серии · ${formatRewardBronze(status.nextRewardBronze)}'
+            : 'Сегодня получено · серия ${status.streak} дн.');
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Text(
-          status.available
-              ? 'Заберите награду за сегодня — день ${status.nextStreak} серии'
-              : 'Сегодня уже получено · серия ${status.streak} дн.',
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        if (lastClaimMessage != null) ...[
-          const SizedBox(height: 8),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           Text(
-            lastClaimMessage!,
+            statusLine,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.accentStart,
               fontWeight: FontWeight.w600,
+              color: lastClaimMessage != null
+                  ? AppColors.accentStart
+                  : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Column(
+              children: [
+                for (var i = 0; i < _milestones.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 8),
+                  Expanded(
+                    child: _CompactMilestoneCard(
+                      targetDays: _milestones[i],
+                      rewardBronze: status.milestonesBronze[_milestones[i]] ??
+                          (_milestones[i] == 1 ? 10 : 0),
+                      streak: status.streak,
+                      nextStreak: status.nextStreak,
+                      availableToday: status.available,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: canClaim ? () => onClaim() : null,
+              icon: isClaiming
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.card_giftcard, size: 18),
+              label: Text(
+                isClaiming
+                    ? '...'
+                    : (status.available ? 'Забрать награду' : 'Уже получено'),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentStart,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.accentStart.withValues(alpha: 0.45),
+                disabledForegroundColor: Colors.white.withValues(alpha: 0.75),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
             ),
           ),
         ],
-        const SizedBox(height: 16),
-        ..._milestones.map((day) {
-          final bronze = status.milestonesBronze[day] ?? (day == 1 ? 10 : 0);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _MilestoneRewardCard(
-              targetDays: day,
-              rewardBronze: bronze,
-              streak: status.streak,
-              nextStreak: status.nextStreak,
-              availableToday: status.available,
-            ),
-          );
-        }),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: canClaim ? () => onClaim() : null,
-            icon: isClaiming
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.card_giftcard, size: 18),
-            label: Text(
-              isClaiming
-                  ? '...'
-                  : (status.available
-                      ? 'Забрать сегодняшнюю награду'
-                      : 'Уже получено сегодня'),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor:
-                  AppColors.accentStart.withValues(alpha: 0.45),
-              disabledForegroundColor: Colors.white.withValues(alpha: 0.75),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _MilestoneRewardCard extends StatelessWidget {
-  const _MilestoneRewardCard({
+class _CompactMilestoneCard extends StatelessWidget {
+  const _CompactMilestoneCard({
     required this.targetDays,
     required this.rewardBronze,
     required this.streak,
@@ -207,130 +209,86 @@ class _MilestoneRewardCard extends StatelessWidget {
         !completed &&
         nextStreak <= targetDays &&
         nextStreak == doneDays + 1;
-
     final progress = targetDays <= 0
         ? 0.0
         : (doneDays + (pendingToday ? 0.35 : 0)) / targetDays;
 
     final title = targetDays == 1
         ? 'Каждый день'
-        : '$targetDays ${_daysWord(targetDays)} подряд';
+        : '$targetDays ${_daysWord(targetDays)}';
 
-    final statusText = completed
-        ? 'Получено · $targetDays из $targetDays'
+    final progressLabel = completed
+        ? '$targetDays/$targetDays'
         : pendingToday
-            ? '$doneDays из $targetDays · сегодня закроет день ${doneDays + 1}'
+            ? '$doneDays/$targetDays · сегодня'
             : remaining == 1
-                ? '$doneDays из $targetDays · остался 1 день'
-                : '$doneDays из $targetDays · осталось $remaining ${_daysWord(remaining)}';
+                ? '$doneDays/$targetDays · ещё 1 день'
+                : '$doneDays/$targetDays · ещё $remaining';
 
     final borderColor = completed
-        ? const Color(0xFF34B7F1).withValues(alpha: 0.55)
+        ? const Color(0xFF34B7F1).withValues(alpha: 0.5)
         : isTodaysTarget
-            ? AppColors.accentStart.withValues(alpha: 0.65)
+            ? AppColors.accentStart.withValues(alpha: 0.6)
             : Colors.black.withValues(alpha: 0.06);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 220),
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: borderColor, width: isTodaysTarget ? 1.6 : 1),
-        boxShadow: [
-          BoxShadow(
-            color: (isTodaysTarget ? AppColors.accentStart : Colors.black)
-                .withValues(alpha: isTodaysTarget ? 0.12 : 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor, width: isTodaysTarget ? 1.4 : 1),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.accentSoft.withValues(alpha: 0.65),
-                ),
-                alignment: Alignment.center,
-                child: CoinIcon(
-                  coinType: rewardCoinType(rewardBronze),
-                  size: 28,
-                  animate: isTodaysTarget || pendingToday,
-                ),
+              CoinIcon(
+                coinType: rewardCoinType(rewardBronze),
+                size: 22,
+                animate: isTodaysTarget || pendingToday,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      formatRewardBronze(rewardBronze),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accentStart.withValues(alpha: 0.95),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '$title · ${formatRewardBronze(rewardBronze)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
-              _StatusChip(
+              const SizedBox(width: 6),
+              _MiniChip(
                 completed: completed,
                 pendingToday: pendingToday,
                 remaining: remaining,
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const Spacer(),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) {
-                return LinearProgressIndicator(
-                  value: value,
-                  minHeight: 8,
-                  backgroundColor: AppColors.accentSoft.withValues(alpha: 0.55),
-                  color: completed
-                      ? const Color(0xFF34B7F1)
-                      : AppColors.accentStart,
-                );
-              },
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: AppColors.accentSoft.withValues(alpha: 0.55),
+              color: completed ? const Color(0xFF34B7F1) : AppColors.accentStart,
             ),
           ),
-          const SizedBox(height: 10),
-          _DayDotsRow(
-            targetDays: targetDays,
-            doneDays: doneDays,
-            pendingToday: pendingToday,
-            completed: completed,
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
-            statusText,
+            progressLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 12.5,
-              color: AppColors.textSecondary,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -339,8 +297,8 @@ class _MilestoneRewardCard extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({
+class _MiniChip extends StatelessWidget {
+  const _MiniChip({
     required this.completed,
     required this.pendingToday,
     required this.remaining,
@@ -371,7 +329,7 @@ class _StatusChip extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
@@ -380,186 +338,10 @@ class _StatusChip extends StatelessWidget {
         label,
         style: TextStyle(
           color: fg,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _DayDotsRow extends StatelessWidget {
-  const _DayDotsRow({
-    required this.targetDays,
-    required this.doneDays,
-    required this.pendingToday,
-    required this.completed,
-  });
-
-  final int targetDays;
-  final int doneDays;
-  final bool pendingToday;
-  final bool completed;
-
-  @override
-  Widget build(BuildContext context) {
-    if (targetDays > 10) {
-      return _SegmentedDaysBar(
-        targetDays: targetDays,
-        doneDays: doneDays,
-        pendingToday: pendingToday,
-        completed: completed,
-      );
-    }
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: List.generate(targetDays, (index) {
-        final dayNumber = index + 1;
-        final filled = dayNumber <= doneDays;
-        final isPending = pendingToday && dayNumber == doneDays + 1;
-        return _DayDot(
-          dayNumber: dayNumber,
-          filled: filled,
-          pending: isPending,
-          completedMilestone: completed,
-        );
-      }),
-    );
-  }
-}
-
-class _DayDot extends StatelessWidget {
-  const _DayDot({
-    required this.dayNumber,
-    required this.filled,
-    required this.pending,
-    required this.completedMilestone,
-  });
-
-  final int dayNumber;
-  final bool filled;
-  final bool pending;
-  final bool completedMilestone;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color fill;
-    final Color border;
-    final Color textColor;
-
-    if (filled) {
-      fill = completedMilestone ? const Color(0xFF34B7F1) : AppColors.accentStart;
-      border = fill;
-      textColor = Colors.white;
-    } else if (pending) {
-      fill = AppColors.accentSoft;
-      border = AppColors.accentStart;
-      textColor = AppColors.accentStart;
-    } else {
-      fill = Colors.white;
-      border = Colors.black.withValues(alpha: 0.12);
-      textColor = AppColors.textSecondary.withValues(alpha: 0.7);
-    }
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      width: 28,
-      height: 28,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: fill,
-        shape: BoxShape.circle,
-        border: Border.all(color: border, width: pending ? 2 : 1),
-        boxShadow: pending
-            ? [
-                BoxShadow(
-                  color: AppColors.accentStart.withValues(alpha: 0.25),
-                  blurRadius: 8,
-                ),
-              ]
-            : null,
-      ),
-      child: Text(
-        '$dayNumber',
-        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: textColor,
         ),
       ),
-    );
-  }
-}
-
-class _SegmentedDaysBar extends StatelessWidget {
-  const _SegmentedDaysBar({
-    required this.targetDays,
-    required this.doneDays,
-    required this.pendingToday,
-    required this.completed,
-  });
-
-  final int targetDays;
-  final int doneDays;
-  final bool pendingToday;
-  final bool completed;
-
-  @override
-  Widget build(BuildContext context) {
-    const segments = 10;
-    final perSegment = targetDays / segments;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: List.generate(segments, (index) {
-            final start = (index * perSegment).floor();
-            final end = ((index + 1) * perSegment).ceil().clamp(0, targetDays);
-            final segDone = doneDays >= end;
-            final segPartial = !segDone && doneDays > start;
-            final segPending = pendingToday &&
-                doneDays >= start &&
-                doneDays < end &&
-                !segDone;
-
-            Color color;
-            if (segDone) {
-              color =
-                  completed ? const Color(0xFF34B7F1) : AppColors.accentStart;
-            } else if (segPartial || segPending) {
-              color = AppColors.accentStart.withValues(alpha: 0.45);
-            } else {
-              color = AppColors.accentSoft.withValues(alpha: 0.7);
-            }
-
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: index == segments - 1 ? 0 : 3),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '$doneDays / $targetDays дней',
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
     );
   }
 }

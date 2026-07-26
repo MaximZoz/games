@@ -41,28 +41,12 @@ class CoinsScreen extends ConsumerWidget {
         body: SafeArea(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 460),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Выберите награду',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Монеты за вход и за приглашение друзей',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     HomeActionCard(
                       icon: Icons.calendar_today_rounded,
                       title: 'Монеты за вход',

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
@@ -11,7 +10,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateProvider).valueOrNull;
     final rewardAvailable =
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
 
@@ -19,31 +17,13 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    user == null ? 'Главная' : 'Ваш прогресс',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    user == null
-                        ? 'Войдите, чтобы открыть достижения и монеты'
-                        : 'Награды, коллекция и игровой баланс',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
                   HomeActionCard(
                     icon: Icons.emoji_events_rounded,
                     title: 'Достижения',
