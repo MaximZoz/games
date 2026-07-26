@@ -467,13 +467,15 @@ Widget _navIcon(
   if (badgeValue <= 0) {
     return baseIcon;
   }
+  // Бейдж чуть ниже/внутрь иконки: ClipRect у bottom nav обрезает
+  // всё, что торчит выше (top: -8 раньше срезал кружок).
   return Stack(
     clipBehavior: Clip.none,
     children: [
       baseIcon,
       Positioned(
-        right: -10,
-        top: -8,
+        right: -4,
+        top: 0,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
           decoration: BoxDecoration(
