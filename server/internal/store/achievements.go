@@ -48,7 +48,7 @@ func AchievementCatalog() []AchievementDef {
 		{
 			Code:         AchievementGames10,
 			Title:        "10 игр",
-			Description:  "Сыграйте 10 партий в крестики-нолики",
+			Description:  "Сыграйте 10 партий в любые игры",
 			RewardBronze: AchievementRewardBronze,
 			Target:       10,
 		},

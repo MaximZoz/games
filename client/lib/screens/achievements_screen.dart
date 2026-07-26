@@ -89,24 +89,23 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                       ),
                     );
                   }
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      ref.invalidate(achievementsListProvider);
-                      await ref.read(achievementsListProvider.future);
-                    },
-                    child: ListView.separated(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return _AchievementCard(
-                          item: item,
-                          claiming: _claimingCode == item.code,
-                          onClaim: item.isUnlocked ? () => _claim(item) : null,
-                        );
-                      },
+                  // Без ListView/листания: фиксированный столбец карточек.
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < items.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 10),
+                          _AchievementCard(
+                            item: items[i],
+                            claiming: _claimingCode == items[i].code,
+                            onClaim: items[i].isUnlocked
+                                ? () => _claim(items[i])
+                                : null,
+                          ),
+                        ],
+                      ],
                     ),
                   );
                 },
@@ -247,25 +246,31 @@ class _AchievementCard extends StatelessWidget {
               ),
             )
           else
-            SizedBox(
-              height: 42,
-              child: FilledButton(
-                onPressed: claiming ? null : onClaim,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                  foregroundColor: Colors.white,
+            FilledButton(
+              onPressed: claiming ? null : onClaim,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentStart,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                alignment: Alignment.center,
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                  decoration: TextDecoration.none,
                 ),
-                child: claiming
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text('Забрать (+${item.rewardBronze})'),
               ),
+              child: claiming
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Забрать'),
             ),
         ],
       ),
