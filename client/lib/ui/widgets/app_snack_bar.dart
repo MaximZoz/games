@@ -107,24 +107,22 @@ class _AppSnackHostState extends ConsumerState<AppSnackHost> {
     final safe =
         widget.padSafeBottom ? MediaQuery.viewPaddingOf(context).bottom : 0.0;
 
+    // Без Align: у Positioned(bottom) высота unbounded — Align схлопывался в 0.
     return Positioned(
       left: 16,
       right: 16,
       bottom: safe + 12,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: _AppSnackCard(
-          key: ValueKey(snack.id),
-          message: snack.message,
-          kind: snack.kind,
-          icon: snack.icon,
-          onDismiss: () {
-            _hideTimer?.cancel();
-            if (ref.read(appSnackProvider)?.id == snack.id) {
-              ref.read(appSnackProvider.notifier).state = null;
-            }
-          },
-        ),
+      child: _AppSnackCard(
+        key: ValueKey(snack.id),
+        message: snack.message,
+        kind: snack.kind,
+        icon: snack.icon,
+        onDismiss: () {
+          _hideTimer?.cancel();
+          if (ref.read(appSnackProvider)?.id == snack.id) {
+            ref.read(appSnackProvider.notifier).state = null;
+          }
+        },
       ),
     );
   }

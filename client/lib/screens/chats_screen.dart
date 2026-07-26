@@ -1665,6 +1665,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final hasOutgoing =
         snapshot?.outgoing.any((r) => r.user.id == userId) == true;
     if (hasOutgoing && (incomingRequestId == null || incomingRequestId.isEmpty)) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: 'Заявка уже отправлена',
+        kind: AppSnackKind.info,
+      );
       return;
     }
 
