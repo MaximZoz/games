@@ -146,9 +146,13 @@ class AppShell extends ConsumerWidget {
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
-      // Повторный тап по «Профиль» — выйти из редактирования.
+
+      // «Профиль» → главная (достижения и монеты).
       if (target == '/profile') {
-        ref.read(profileExitEditTickProvider.notifier).state++;
+        Router.neglect(context, () {
+          navigationShell.goBranch(0, initialLocation: true);
+        });
+        return;
       }
 
       // Сначала мгновенно меняем вкладку — без ожидания сети.
@@ -171,12 +175,10 @@ class AppShell extends ConsumerWidget {
         return;
       }
 
-      // Профиль: всегда /profile — иначе после логина ветка восстанавливает /login.
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
-          initialLocation: i == navigationShell.currentIndex ||
-              target == '/profile',
+          initialLocation: i == navigationShell.currentIndex,
         );
       });
 
