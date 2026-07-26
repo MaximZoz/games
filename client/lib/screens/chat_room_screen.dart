@@ -1488,6 +1488,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           focusNode: _composerFocusNode,
                           minLines: 1,
                           maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
                           decoration: const InputDecoration(
                             hintText: 'Введите сообщение...',
                             border: InputBorder.none,
