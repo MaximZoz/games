@@ -49,167 +49,164 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
               constraints: const BoxConstraints(maxWidth: 480),
               child: user == null
                   ? const SizedBox.shrink()
-                  : ListView(
+                  : Padding(
                       padding: const EdgeInsets.all(AppSpacing.lg),
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceCard,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.06),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceCard,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 14,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppColors.accentSoft
-                                          .withValues(alpha: 0.7),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.accentSoft
+                                            .withValues(alpha: 0.7),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: const CoinIcon(
+                                        coinType: CoinType.bronze,
+                                        size: 30,
+                                        animate: true,
+                                      ),
                                     ),
-                                    alignment: Alignment.center,
-                                    child: const CoinIcon(
-                                      coinType: CoinType.bronze,
-                                      size: 30,
-                                      animate: true,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Пригласи друга',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Пригласи друга',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textPrimary,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '+${formatRewardBronze(referralBonusBronze)} за каждого, кто зарегистрируется по вашей ссылке',
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: AppColors.textSecondary,
-                                            height: 1.35,
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '+${formatRewardBronze(referralBonusBronze)} за каждого, кто зарегистрируется по вашей ссылке',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: AppColors.textSecondary,
+                                              height: 1.35,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
+                                  ],
                                 ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentSoft
-                                      .withValues(alpha: 0.45),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: SelectableText(
-                                  buildReferralShareUrl(
-                                    userId: user.id,
-                                    baseUri: Uri.base,
+                                const SizedBox(height: 16),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
                                   ),
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w500,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentSoft
+                                        .withValues(alpha: 0.45),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton.icon(
-                                  onPressed: () async {
-                                    final messenger =
-                                        ScaffoldMessenger.of(context);
-                                    final url = buildReferralShareUrl(
+                                  child: SelectableText(
+                                    buildReferralShareUrl(
                                       userId: user.id,
                                       baseUri: Uri.base,
-                                    );
-                                    await Clipboard.setData(
-                                      ClipboardData(text: url),
-                                    );
-                                    if (!mounted) return;
-                                    setState(() => _linkCopied = true);
-                                    messenger.showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Ссылка скопирована'),
-                                      ),
-                                    );
-                                  },
-                                  icon: Icon(
-                                    _linkCopied
-                                        ? Icons.check_rounded
-                                        : Icons.link_rounded,
-                                    size: 18,
-                                  ),
-                                  label: Text(
-                                    _linkCopied
-                                        ? 'Скопировано'
-                                        : 'Скопировать ссылку',
-                                  ),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.accentStart,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                    onPressed: () async {
+                                      final url = buildReferralShareUrl(
+                                        userId: user.id,
+                                        baseUri: Uri.base,
+                                      );
+                                      await Clipboard.setData(
+                                        ClipboardData(text: url),
+                                      );
+                                      if (!mounted) return;
+                                      setState(() => _linkCopied = true);
+                                    },
+                                    icon: Icon(
+                                      _linkCopied
+                                          ? Icons.check_rounded
+                                          : Icons.link_rounded,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      _linkCopied
+                                          ? 'Скопировано'
+                                          : 'Скопировать ссылку',
+                                    ),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.accentStart,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        const Text(
-                          'Как это работает',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                          const SizedBox(height: 14),
+                          const Text(
+                            'Как это работает',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        const _FriendStep(
-                          number: '1',
-                          text: 'Скопируйте ссылку и отправьте другу',
-                        ),
-                        const _FriendStep(
-                          number: '2',
-                          text: 'Друг регистрируется по этой ссылке',
-                        ),
-                        _FriendStep(
-                          number: '3',
-                          text:
-                              'Вам начисляется ${formatRewardBronze(referralBonusBronze)}',
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          const _FriendStep(
+                            number: '1',
+                            text: 'Скопируйте ссылку и отправьте другу',
+                          ),
+                          const _FriendStep(
+                            number: '2',
+                            text: 'Друг регистрируется по этой ссылке',
+                          ),
+                          _FriendStep(
+                            number: '3',
+                            text:
+                                'Вам начисляется ${formatRewardBronze(referralBonusBronze)}',
+                          ),
+                        ],
+                      ),
                     ),
             ),
           ),
