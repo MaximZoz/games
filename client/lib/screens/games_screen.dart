@@ -1316,7 +1316,10 @@ class _TictactoeGameCard extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
     final theme = Theme.of(context);
+    // Без appear-анимации: при возврате из лобби карточка иначе «мигает»
+    // (opacity 0→1), хотя выход уже мгновенный.
     return GradientCard(
+      animate: false,
       padding: EdgeInsets.symmetric(
         horizontal: isMedium ? 18 : (isDesktop ? 24 : 20),
         vertical: isMedium ? 16 : (isDesktop ? 22 : 20),

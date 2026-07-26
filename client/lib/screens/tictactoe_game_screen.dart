@@ -771,15 +771,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (mounted) context.go('/games');
   }
 
-  void _handleClose(GameStateItem? game) async {
+  void _handleClose(GameStateItem? game) {
     final isOver = game?.status != 'active';
     if (isOver) {
-      if (_rematchLobbyId != null) {
-        try {
-          await ref.read(gamesRepositoryProvider).leaveLobby(_rematchLobbyId!);
-        } catch (_) {}
+      final rematchLobbyId = _rematchLobbyId;
+      _rematchLobbyId = null;
+      ref.read(activeGameProvider.notifier).clearLocal();
+      context.go('/games');
+      if (rematchLobbyId != null) {
+        unawaited(
+          ref
+              .read(gamesRepositoryProvider)
+              .leaveLobby(rematchLobbyId)
+              .catchError((_) {}),
+        );
       }
-      if (mounted) context.go('/games');
       return;
     }
     showDialog<bool>(
@@ -803,18 +809,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
         ],
       ),
-    ).then((exit) async {
+    ).then((exit) {
       if (exit != true || !mounted) return;
-      try {
-        await ref.read(gamesRepositoryProvider).forfeitGame(widget.gameId);
-        if (mounted) {
-          ref.invalidate(gameStateProvider(widget.gameId));
-          ref.invalidate(activeGameProvider);
-          context.go('/games');
-        }
-      } catch (e) {
-        if (mounted) _redirectToGamesOnError();
-      }
+      final gameId = widget.gameId;
+      ref.read(activeGameProvider.notifier).clearLocal();
+      context.go('/games');
+      unawaited(() async {
+        try {
+          await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
+        } catch (_) {}
+      }());
     });
   }
 

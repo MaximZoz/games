@@ -186,6 +186,11 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getActive();
   }
+
+  /// Мгновенно сбросить локально (выход из лобби без ожидания сети).
+  void clearLocal() {
+    state = const AsyncValue.data(null);
+  }
 }
 
 /// Количество игр, где мой ход (для badge в меню).
