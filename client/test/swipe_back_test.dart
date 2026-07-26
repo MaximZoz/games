@@ -10,6 +10,7 @@ void main() {
       MaterialApp(
         home: SwipeBackScope(
           triggerDistance: 28,
+          topInset: 0,
           onBack: () => backCount++,
           child: const Scaffold(
             body: SizedBox.expand(child: Text('content')),
@@ -36,6 +37,7 @@ void main() {
       MaterialApp(
         home: SwipeBackScope(
           enabled: false,
+          topInset: 0,
           onBack: () => backCount++,
           child: const Scaffold(
             body: SizedBox.expand(child: Text('content')),
@@ -47,5 +49,35 @@ void main() {
     await tester.dragFrom(const Offset(8, 200), const Offset(80, 0));
     await tester.pump();
     expect(backCount, 0);
+  });
+
+  testWidgets('Кнопка назад в шапке кликабельна поверх зоны свайпа',
+      (tester) async {
+    var backFromButton = 0;
+    var backFromSwipe = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SwipeBackScope(
+          onBack: () => backFromSwipe++,
+          child: Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                tooltip: 'Назад',
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => backFromButton++,
+              ),
+              title: const Text('Test'),
+            ),
+            body: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Назад'));
+    await tester.pump();
+
+    expect(backFromButton, 1);
+    expect(backFromSwipe, 0);
   });
 }
