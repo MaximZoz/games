@@ -142,10 +142,15 @@ class AppShell extends ConsumerWidget {
       }
       // goBranch + neglect: смена таба без записи в browser history,
       // чтобы жесты назад/вперёд Safari не прыгали по табам.
+      //
+      // Профиль: всегда initialLocation — /login и /register в той же ветке,
+      // и после входа goBranch иначе восстанавливает /login, а редирект
+      // авторизованного пользователя снова кидает на главную.
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
-          initialLocation: i == navigationShell.currentIndex,
+          initialLocation: i == navigationShell.currentIndex ||
+              target == '/profile',
         );
       });
 
