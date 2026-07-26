@@ -116,8 +116,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             leading: IconButton(
+              tooltip: 'Назад',
               onPressed: _isLeaving ? null : () => _leaveLobby(context),
-              icon: const Icon(Icons.close_rounded),
+              icon: const Icon(Icons.arrow_back_rounded),
             ),
             title: Text(
               tictactoeLobbyAppBarTitle(

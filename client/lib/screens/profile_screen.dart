@@ -289,6 +289,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _cancelEditing() {
+    // На мобиле закрываем сразу — иначе свайп/назад «не срабатывает» 280мс.
+    if (isNarrow(context)) {
+      setState(() {
+        _isEditing = false;
+        _isClosing = false;
+      });
+      return;
+    }
     _startClosing();
   }
 
@@ -303,6 +311,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final mobile = isNarrow(context);
+    final path = ref.watch(currentRoutePathProvider);
+    // Ушли с вкладки профиля (или вернулись) — всегда показываем просмотр,
+    // а не залипший экран редактирования из StatefulShell.
+    if (path != '/profile' && (_isEditing || _isClosing)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (ref.read(currentRoutePathProvider) != '/profile' &&
+            (_isEditing || _isClosing)) {
+          setState(() {
+            _isEditing = false;
+            _isClosing = false;
+          });
+        }
+      });
+    }
 
     Widget scrollableBody(Widget child) {
       return ListView(
@@ -1324,7 +1347,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
     return SwipeBackScope(
       enabled: !_isSaving,
-      topInset: 48,
       onBack: widget.onCancel,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
