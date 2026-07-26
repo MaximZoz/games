@@ -1077,7 +1077,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildCompactIconButton(
                 icon: Icons.person_remove_alt_1_rounded,
                 tooltip: 'Удалить из друзей',
@@ -1131,7 +1131,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildActionIcon(
                 key: acceptKey,
                 icon: Icons.check_rounded,
@@ -1183,7 +1183,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildActionIcon(
                 key: cancelKey,
                 icon: Icons.close_rounded,
