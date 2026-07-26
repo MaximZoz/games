@@ -400,6 +400,11 @@ func SendChatMessage(
 	return msg, nil
 }
 
+type ChatDeliveryBatch struct {
+	ChatID     uuid.UUID
+	MessageIDs []uuid.UUID
+}
+
 func MarkChatDelivered(
 	ctx context.Context,
 	pool *pgxpool.Pool,
@@ -431,6 +436,54 @@ func MarkChatDelivered(
 		ids = append(ids, id)
 	}
 	return ids, rows.Err()
+}
+
+// MarkIncomingDeliveredForUser отмечает доставку всех входящих сообщений пользователя
+// (увидел превью в списке чатов / подключился онлайн — как в Telegram).
+func MarkIncomingDeliveredForUser(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	userID uuid.UUID,
+) ([]ChatDeliveryBatch, error) {
+	rows, err := pool.Query(ctx, `
+		UPDATE chat_messages AS m
+		SET delivered_at = now()
+		FROM chats AS c
+		WHERE m.chat_id = c.id
+		  AND (c.user_low = $1 OR c.user_high = $1)
+		  AND m.sender_user_id <> $1
+		  AND m.delivered_at IS NULL
+		RETURNING m.chat_id, m.id
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	byChat := make(map[uuid.UUID][]uuid.UUID)
+	order := make([]uuid.UUID, 0)
+	for rows.Next() {
+		var chatID, messageID uuid.UUID
+		if err := rows.Scan(&chatID, &messageID); err != nil {
+			return nil, err
+		}
+		if _, ok := byChat[chatID]; !ok {
+			order = append(order, chatID)
+		}
+		byChat[chatID] = append(byChat[chatID], messageID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	batches := make([]ChatDeliveryBatch, 0, len(order))
+	for _, chatID := range order {
+		batches = append(batches, ChatDeliveryBatch{
+			ChatID:     chatID,
+			MessageIDs: byChat[chatID],
+		})
+	}
+	return batches, nil
 }
 
 func MarkChatRead(

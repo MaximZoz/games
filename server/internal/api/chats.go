@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -180,6 +181,9 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
+
+	// Увидел список чатов (превью) = сообщения доставлены, даже без открытия диалога.
+	syncIncomingDelivered(r.Context(), h.Pool, h.Hub, userID)
 
 	items := make([]ChatPreviewItem, 0, len(chats))
 	for _, c := range chats {
@@ -629,6 +633,38 @@ func uuidSliceToStrings(ids []uuid.UUID) []string {
 		out = append(out, id.String())
 	}
 	return out
+}
+
+// syncIncomingDelivered отмечает доставку входящих и шлёт chat_delivered отправителям.
+func syncIncomingDelivered(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	hub *RealtimeHub,
+	delivererUserID uuid.UUID,
+) {
+	if pool == nil || hub == nil {
+		return
+	}
+	batches, err := store.MarkIncomingDeliveredForUser(ctx, pool, delivererUserID)
+	if err != nil || len(batches) == 0 {
+		return
+	}
+	deliverer := delivererUserID.String()
+	deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
+	for _, batch := range batches {
+		lowID, highID, pairErr := store.ChatParticipantIDs(ctx, pool, batch.ChatID)
+		if pairErr != nil {
+			continue
+		}
+		hub.PublishToUsers([]uuid.UUID{lowID, highID}, map[string]any{
+			"type":              "chat_delivered",
+			"chat_id":           batch.ChatID.String(),
+			"deliverer_user_id": deliverer,
+			"updated":           len(batch.MessageIDs),
+			"message_ids":       uuidSliceToStrings(batch.MessageIDs),
+			"delivered_at":      deliveredAt,
+		})
+	}
 }
 
 func (h *ChatsHandler) publishChatRead(
