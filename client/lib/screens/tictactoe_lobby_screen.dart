@@ -531,20 +531,22 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     }
   }
 
-  Future<void> _leaveLobby(BuildContext context) async {
+  void _leaveLobby(BuildContext context) {
     if (_isLeaving) return;
-    setState(() => _isLeaving = true);
-    try {
-      final repo = ref.read(gamesRepositoryProvider);
-      await repo.leaveLobby(widget.lobbyId);
-    } catch (_) {
-      // Всё равно уходим на список — иначе застреваем на мигающем лобби.
-    }
-    if (!context.mounted) return;
+    _isLeaving = true;
+
+    final lobbyId = widget.lobbyId;
+    final repo = ref.read(gamesRepositoryProvider);
+
+    // Сразу на список игр — не ждём сеть и не трогаем lobbyDetail
+    // (invalidate после leave давал AsyncError → спиннер → мигание карточек).
+    ref.read(activeGameProvider.notifier).clearLocal();
     ref.invalidate(openLobbiesProvider);
-    ref.invalidate(activeGameProvider);
-    ref.invalidate(lobbyDetailProvider(widget.lobbyId));
     context.go('/games');
+
+    unawaited(
+      repo.leaveLobby(lobbyId).catchError((_) {}),
+    );
   }
 
   Widget _buildFriendAvatar(FriendUserItem user, double radius) {
