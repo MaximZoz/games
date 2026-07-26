@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -16,11 +17,12 @@ class CoinsScreen extends ConsumerStatefulWidget {
 
 class _CoinsScreenState extends ConsumerState<CoinsScreen> {
   bool _isClaiming = false;
+  String? _lastClaimMessage;
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
-    final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
+    final dailyRewardAsync = ref.watch(dailyRewardStatusProvider);
     void goBack() => context.pop();
 
     return SwipeBackScope(
@@ -55,25 +57,46 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
                     data: (user) {
                       if (user == null) return const SizedBox.shrink();
                       return dailyRewardAsync.when(
-                        data: (available) => _DailyRewardCard(
-                          available: available,
+                        data: (status) => _DailyRewardCard(
+                          status: status,
                           isClaiming: _isClaiming,
+                          lastClaimMessage: _lastClaimMessage,
                           onClaim: () async {
                             if (_isClaiming) return;
-                            setState(() => _isClaiming = true);
-                            await ref
+                            setState(() {
+                              _isClaiming = true;
+                              _lastClaimMessage = null;
+                            });
+                            final result = await ref
                                 .read(authStateProvider.notifier)
                                 .claimDailyReward();
-                            if (mounted) setState(() => _isClaiming = false);
+                            if (!mounted) return;
+                            setState(() {
+                              _isClaiming = false;
+                              if (result != null) {
+                                _lastClaimMessage =
+                                    'Получено: ${formatRewardBronze(result.rewardBronze)} · день ${result.streak}';
+                              }
+                            });
                           },
                         ),
                         loading: () => _DailyRewardCard(
-                          available: false,
+                          status: const DailyRewardStatus(
+                            available: false,
+                            streak: 0,
+                            nextStreak: 1,
+                            nextRewardBronze: 10,
+                          ),
                           isClaiming: false,
                           onClaim: () async {},
                         ),
                         error: (err, _) => _DailyRewardCard(
-                          available: false,
+                          status: const DailyRewardStatus(
+                            available: false,
+                            streak: 0,
+                            nextStreak: 1,
+                            nextRewardBronze: 10,
+                          ),
                           isClaiming: false,
                           onClaim: () async {},
                           errorMessage:
@@ -97,20 +120,32 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
 
 class _DailyRewardCard extends StatelessWidget {
   const _DailyRewardCard({
-    required this.available,
+    required this.status,
     required this.onClaim,
     this.isClaiming = false,
     this.errorMessage,
+    this.lastClaimMessage,
   });
 
-  final bool available;
+  final DailyRewardStatus status;
   final Future<void> Function() onClaim;
   final bool isClaiming;
   final String? errorMessage;
+  final String? lastClaimMessage;
+
+  static const _milestoneOrder = [1, 3, 7, 30];
 
   @override
   Widget build(BuildContext context) {
+    final available = status.available;
     final canClaim = available && !isClaiming;
+    final rewardType = rewardCoinType(status.nextRewardBronze);
+    final subtitle = errorMessage ??
+        lastClaimMessage ??
+        (available
+            ? '${formatRewardBronze(status.nextRewardBronze)} · день ${status.nextStreak}'
+            : 'Уже получено сегодня · серия ${status.streak} дн.');
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -123,7 +158,7 @@ class _DailyRewardCard extends StatelessWidget {
                 Row(
                   children: [
                     CoinIcon(
-                      coinType: CoinType.bronze,
+                      coinType: rewardType,
                       size: 40,
                       animate: available,
                     ),
@@ -133,7 +168,7 @@ class _DailyRewardCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Ежедневная награда',
+                            'Награда за вход',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -142,10 +177,7 @@ class _DailyRewardCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            errorMessage ??
-                                (available
-                                    ? '20 бронзовых монет'
-                                    : 'Уже получено сегодня'),
+                            subtitle,
                             style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.textSecondary,
@@ -157,6 +189,59 @@ class _DailyRewardCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
+                const Text(
+                  'Серия дней подряд',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ..._milestoneOrder.map((day) {
+                  final bronze =
+                      status.milestonesBronze[day] ?? (day == 1 ? 10 : 0);
+                  final reached = status.streak >= day;
+                  final isNext = available && status.nextStreak == day;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          reached
+                              ? Icons.check_circle
+                              : (isNext
+                                  ? Icons.radio_button_checked
+                                  : Icons.circle_outlined),
+                          size: 18,
+                          color: reached || isNext
+                              ? AppColors.accentStart
+                              : AppColors.textSecondary.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(width: 8),
+                        CoinIcon(
+                          coinType: rewardCoinType(bronze),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            day == 1
+                                ? 'Каждый день: ${formatRewardBronze(bronze)}'
+                                : '$day дней: ${formatRewardBronze(bronze)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight:
+                                  isNext ? FontWeight.w700 : FontWeight.w500,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(

@@ -402,6 +402,26 @@ class _DiamondPainter extends CustomPainter {
 
 enum CoinType { bronze, silver, gold, diamond }
 
+/// Тип монеты для суммы награды в бронзовых единицах.
+CoinType rewardCoinType(int bronze) {
+  if (bronze >= 10000) return CoinType.gold;
+  if (bronze >= 100) return CoinType.silver;
+  return CoinType.bronze;
+}
+
+/// Человекочитаемая сумма награды: «10 бронзовых», «10 серебряных».
+String formatRewardBronze(int bronze) {
+  if (bronze >= 100 && bronze % 100 == 0) {
+    final silver = bronze ~/ 100;
+    if (silver >= 100 && silver % 100 == 0) {
+      final gold = silver ~/ 100;
+      return '$gold золотых';
+    }
+    return '$silver серебряных';
+  }
+  return '$bronze бронзовых';
+}
+
 /// Разбивка баланса: 100 бр=1 с, 100 с=1 з, 100 з=1 ◆.
 (BigInt, BigInt, BigInt, BigInt) parseBalance(int bronze) {
   final b = BigInt.from(bronze);

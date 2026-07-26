@@ -52,9 +52,9 @@ func CreateUser(ctx context.Context, pool *pgxpool.Pool, email, passwordHash, di
 	}
 	row := pool.QueryRow(ctx,
 		`INSERT INTO users (email, password_hash, display_name, balance_bronze)
-		 VALUES ($1, $2, $3, 100)
+		 VALUES ($1, $2, $3, $4)
 		 RETURNING `+selectUserCols,
-		email, passwordHash, displayNamePtr,
+		email, passwordHash, displayNamePtr, RegistrationBonusBronze,
 	)
 	return scanUser(row)
 }
