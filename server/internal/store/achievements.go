@@ -291,6 +291,20 @@ func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID)
 		}
 		out = append(out, item)
 	}
+	// Сначала то, что можно забрать; потом в прогрессе; полученные — в конце.
+	statusRank := map[string]int{
+		"unlocked": 0,
+		"locked":   1,
+		"claimed":  2,
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		ri := statusRank[out[i].Status]
+		rj := statusRank[out[j].Status]
+		if ri != rj {
+			return ri < rj
+		}
+		return false
+	})
 	return out, nil
 }
 
