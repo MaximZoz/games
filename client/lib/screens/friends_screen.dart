@@ -71,6 +71,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     super.initState();
     _tabController = TabController(length: _currentTabs.length, vsync: this);
     _tabController.addListener(_onTabChanged);
+    _searchFocusNode.addListener(_onSearchFocusChanged);
   }
 
   void _onTabChanged() {
@@ -78,6 +79,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       _scheduleSearch(immediate: true);
     }
     if (mounted) setState(() {});
+  }
+
+  void _onSearchFocusChanged() => _syncBottomNavCollapse();
+
+  void _syncBottomNavCollapse() {
+    if (!mounted) return;
+    final collapse = _isSearchExpanded && _searchFocusNode.hasFocus;
+    final notifier = ref.read(collapseMobileBottomNavProvider.notifier);
+    if (notifier.state != collapse) {
+      notifier.state = collapse;
+    }
   }
 
   bool _sameTabs(List<_FriendsTabKind> a, List<_FriendsTabKind> b) {
@@ -116,13 +128,16 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   @override
   void dispose() {
-    final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    final toolbarNotifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    final navNotifier = ref.read(collapseMobileBottomNavProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifier.state = null;
+      toolbarNotifier.state = null;
+      navNotifier.state = false;
     });
     _searchDebounce?.cancel();
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
+    _searchFocusNode.removeListener(_onSearchFocusChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -527,6 +542,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       }
     } else {
       _searchFocusNode.unfocus();
+      _syncBottomNavCollapse();
     }
   }
 
@@ -1500,7 +1516,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               child: TextField(
                 controller: _searchController,
                 focusNode: _searchFocusNode,
-                textInputAction: TextInputAction.done,
+                // null = AutofillConfiguration.disabled → autocomplete=off на web.
+                // Иначе дефолт [] оставляет autocomplete=on и iOS Safari
+                // показывает панель Passwords / Payment / Locations над клавиатурой.
+                autofillHints: null,
+                enableSuggestions: false,
+                autocorrect: false,
+                enableIMEPersonalizedLearning: false,
+                spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+                smartDashesType: SmartDashesType.disabled,
+                smartQuotesType: SmartQuotesType.disabled,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: 'Поиск по нику',
                   prefixIcon: const Icon(Icons.search_rounded),
@@ -1719,6 +1746,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
+        autofillHints: null,
+        enableSuggestions: false,
+        autocorrect: false,
+        enableIMEPersonalizedLearning: false,
+        spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+        smartDashesType: SmartDashesType.disabled,
+        smartQuotesType: SmartQuotesType.disabled,
+        keyboardType: TextInputType.text,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: 'Поиск по нику',

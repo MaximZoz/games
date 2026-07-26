@@ -79,6 +79,28 @@ void markChatReadInChatsCache(WidgetRef ref, String chatId) {
       (chats: chats, at: cache.at);
 }
 
+/// Убрать чат из локального кэша списка (очистка/блок из комнаты на десктопе).
+/// [ChatsScreen] слушает [chatRemovedIdProvider] и сразу обновляет боковую панель.
+void removeChatFromChatsCache(WidgetRef ref, String chatId) {
+  final id = chatId.trim();
+  if (id.isEmpty) return;
+  final cache = ref.read(chatsListCacheProvider);
+  if (cache != null) {
+    final chats =
+        cache.chats.where((c) => c.chatID != id).toList(growable: false);
+    if (chats.length != cache.chats.length) {
+      ref.read(chatsListCacheProvider.notifier).state = (
+        chats: chats,
+        at: DateTime.now(),
+      );
+    }
+  }
+  ref.read(chatRemovedIdProvider.notifier).state = id;
+}
+
+/// Последний локально удалённый chatId (сайдбар десктопа / список).
+final chatRemovedIdProvider = StateProvider<String?>((ref) => null);
+
 /// Состояние свёрнутости боковой панели чатов на десктопе (сохраняется при навигации).
 final chatsSidebarCollapsedProvider = StateProvider<bool>((ref) => false);
 
@@ -219,7 +241,11 @@ Future<void> refreshChatsList(
   late Future<void> request;
   request = () async {
     ref.invalidate(chatsListProvider);
-    await ref.read(chatsListProvider.future);
+    final chats = await ref.read(chatsListProvider.future);
+    ref.read(chatsListCacheProvider.notifier).state = (
+      chats: chats,
+      at: DateTime.now(),
+    );
     _lastChatsRefreshAt = DateTime.now();
   }();
 

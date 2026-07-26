@@ -16,6 +16,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
@@ -771,15 +772,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (mounted) context.go('/games');
   }
 
-  void _handleClose(GameStateItem? game) async {
+  void _handleClose(GameStateItem? game) {
     final isOver = game?.status != 'active';
     if (isOver) {
-      if (_rematchLobbyId != null) {
-        try {
-          await ref.read(gamesRepositoryProvider).leaveLobby(_rematchLobbyId!);
-        } catch (_) {}
+      final rematchLobbyId = _rematchLobbyId;
+      _rematchLobbyId = null;
+      ref.read(activeGameProvider.notifier).clearLocal();
+      context.go('/games');
+      if (rematchLobbyId != null) {
+        unawaited(
+          ref
+              .read(gamesRepositoryProvider)
+              .leaveLobby(rematchLobbyId)
+              .catchError((_) {}),
+        );
       }
-      if (mounted) context.go('/games');
       return;
     }
     showDialog<bool>(
@@ -803,18 +810,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
         ],
       ),
-    ).then((exit) async {
+    ).then((exit) {
       if (exit != true || !mounted) return;
-      try {
-        await ref.read(gamesRepositoryProvider).forfeitGame(widget.gameId);
-        if (mounted) {
-          ref.invalidate(gameStateProvider(widget.gameId));
-          ref.invalidate(activeGameProvider);
-          context.go('/games');
-        }
-      } catch (e) {
-        if (mounted) _redirectToGamesOnError();
-      }
+      final gameId = widget.gameId;
+      ref.read(activeGameProvider.notifier).clearLocal();
+      context.go('/games');
+      unawaited(() async {
+        try {
+          await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
+        } catch (_) {}
+      }());
     });
   }
 
@@ -1020,8 +1025,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         onSuccess?.call();
         ref.invalidate(friendsSnapshotProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Заявка принята')),
+          showAppSnackBar(
+            context,
+            message: 'Заявка принята',
+            kind: AppSnackKind.success,
           );
         }
       } else {
@@ -1030,8 +1037,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         onSuccess?.call();
         ref.invalidate(friendsSnapshotProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Запрос отправлен')),
+          showAppSnackBar(
+            context,
+            message: 'Запрос отправлен',
+            kind: AppSnackKind.success,
           );
         }
       }

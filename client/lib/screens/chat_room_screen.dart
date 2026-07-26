@@ -11,6 +11,7 @@ import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -41,7 +42,12 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
 }
 
-enum _RoomAction { clearChat, blockUser }
+enum _RoomAction {
+  clearChat,
+  blockUser,
+  sendFriendRequest,
+  acceptFriendRequest,
+}
 
 const List<IconData> _chatAvatarIcons = [
   Icons.face_rounded,
@@ -143,16 +149,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
-  Future<void> _goBackToChats() async {
+  void _goBackToChats() {
     if (_leavingToChats) return;
-    setState(() => _leavingToChats = true);
-    if (!mounted) return;
-    try {
-      await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
-    } catch (_) {}
-    if (!mounted) return;
-    // Без force-reload списка: только локальный unread + pop на стек списка.
-    markChatReadInChatsCache(ref, widget.chatID);
+    _leavingToChats = true;
+
+    final chatId = widget.chatID;
+    // Локально сразу сбрасываем unread — список чатов без мигания.
+    markChatReadInChatsCache(ref, chatId);
+
     if (widget.fromGames && widget.gameReturnPath != null) {
       context.go(widget.gameReturnPath!);
     } else if (widget.fromFriends) {
@@ -162,6 +166,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     } else {
       context.go('/chats');
     }
+
+    // markRead на сервере — в фоне, не блокирует «Назад».
+    unawaited(
+      ref.read(chatsRepositoryProvider).markRead(chatId).then<void>(
+            (_) {},
+            onError: (_, __) {},
+          ),
+    );
   }
 
   Future<bool> _confirmAction({
@@ -198,8 +210,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Future<void> _runRoomAction(
     _RoomAction action, {
     required String? peerUserID,
+    String? incomingRequestId,
   }) async {
     if (_roomActionInFlight) return;
+
+    if (action == _RoomAction.sendFriendRequest ||
+        action == _RoomAction.acceptFriendRequest) {
+      final id = (peerUserID ?? '').trim();
+      if (id.isEmpty) return;
+      setState(() => _roomActionInFlight = true);
+      try {
+        final repo = ref.read(friendsRepositoryProvider);
+        if (action == _RoomAction.acceptFriendRequest) {
+          final requestId = (incomingRequestId ?? '').trim();
+          if (requestId.isEmpty) return;
+          await repo.acceptRequest(requestId);
+        } else {
+          await repo.sendRequest(id);
+        }
+        await refreshFriendsSnapshot(ref);
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: action == _RoomAction.acceptFriendRequest
+              ? 'Заявка принята'
+              : 'Заявка отправлена',
+          kind: AppSnackKind.success,
+        );
+      } on FriendsException catch (e) {
+        if (e.statusCode == 401) {
+          await ref.read(authStateProvider.notifier).logout();
+          if (mounted) context.go('/login');
+          return;
+        }
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: e.message,
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: e.toString(),
+          kind: AppSnackKind.error,
+        );
+      } finally {
+        if (mounted) setState(() => _roomActionInFlight = false);
+      }
+      return;
+    }
 
     if (action == _RoomAction.blockUser) {
       final id = (peerUserID ?? '').trim();
@@ -215,11 +276,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
       setState(() => _roomActionInFlight = true);
       try {
+        final chatId = widget.chatID;
         await ref.read(chatsRepositoryProvider).blockUser(id);
-        await refreshChatsList(ref, force: true);
-        await refreshFriendsSnapshot(ref);
+        // Сразу убираем из сайдбара (десктоп split-view) и уходим из комнаты.
+        removeChatFromChatsCache(ref, chatId);
         if (!mounted) return;
         context.go('/chats');
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        unawaited(refreshFriendsSnapshot(ref).catchError((_) {}));
       } on ChatException catch (e) {
         if (e.statusCode == 401) {
           await ref.read(authStateProvider.notifier).logout();
@@ -227,8 +291,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           return;
         }
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
+        showAppSnackBar(
+          context,
+          message: e.message,
+          kind: AppSnackKind.error,
         );
       } finally {
         if (mounted) setState(() => _roomActionInFlight = false);
@@ -246,10 +312,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     setState(() => _roomActionInFlight = true);
     try {
-      await ref.read(chatsRepositoryProvider).clearChat(widget.chatID);
-      await refreshChatsList(ref, force: true);
+      final chatId = widget.chatID;
+      await ref.read(chatsRepositoryProvider).clearChat(chatId);
+      // Сайдбар на десктопе живёт в отдельном State — refreshChatsList его
+      // не трогает. Удаляем локально и сразу закрываем комнату.
+      removeChatFromChatsCache(ref, chatId);
       if (!mounted) return;
       context.go('/chats');
+      unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -257,8 +327,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _roomActionInFlight = false);
@@ -1053,19 +1125,62 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             enabled: !_roomActionInFlight,
             tooltip: 'Действия с чатом',
             onSelected: (action) {
-              unawaited(_runRoomAction(action, peerUserID: peerUser?.id));
+              final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+              final peerId = (peerUser?.id ?? '').trim();
+              String? incomingRequestId;
+              if (snapshot != null && peerId.isNotEmpty) {
+                for (final r in snapshot.incoming) {
+                  if (r.user.id == peerId) {
+                    incomingRequestId = r.requestId;
+                    break;
+                  }
+                }
+              }
+              unawaited(_runRoomAction(
+                action,
+                peerUserID: peerUser?.id,
+                incomingRequestId: incomingRequestId,
+              ));
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem<_RoomAction>(
-                value: _RoomAction.clearChat,
-                child: Text('Очистить переписку'),
-              ),
-              PopupMenuItem<_RoomAction>(
-                value: _RoomAction.blockUser,
-                enabled: (peerUser?.id ?? '').trim().isNotEmpty,
-                child: const Text('Заблокировать пользователя'),
-              ),
-            ],
+            itemBuilder: (context) {
+              final peerId = (peerUser?.id ?? '').trim();
+              final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+              final isFriend = peerId.isNotEmpty &&
+                  snapshot?.friends.any((f) => f.user.id == peerId) == true;
+              final hasOutgoing = peerId.isNotEmpty &&
+                  snapshot?.outgoing.any((r) => r.user.id == peerId) == true;
+              final hasIncoming = peerId.isNotEmpty &&
+                  snapshot?.incoming.any((r) => r.user.id == peerId) == true;
+
+              return <PopupMenuEntry<_RoomAction>>[
+                if (!isFriend && peerId.isNotEmpty)
+                  if (hasIncoming)
+                    const PopupMenuItem<_RoomAction>(
+                      value: _RoomAction.acceptFriendRequest,
+                      child: Text('Принять заявку в друзья'),
+                    )
+                  else if (hasOutgoing)
+                    const PopupMenuItem<_RoomAction>(
+                      enabled: false,
+                      value: _RoomAction.sendFriendRequest,
+                      child: Text('Заявка уже отправлена'),
+                    )
+                  else
+                    const PopupMenuItem<_RoomAction>(
+                      value: _RoomAction.sendFriendRequest,
+                      child: Text('Отправить заявку в друзья'),
+                    ),
+                const PopupMenuItem<_RoomAction>(
+                  value: _RoomAction.clearChat,
+                  child: Text('Очистить переписку'),
+                ),
+                PopupMenuItem<_RoomAction>(
+                  value: _RoomAction.blockUser,
+                  enabled: peerId.isNotEmpty,
+                  child: const Text('Заблокировать пользователя'),
+                ),
+              ];
+            },
             icon: const Icon(Icons.more_vert_rounded),
           ),
         ],

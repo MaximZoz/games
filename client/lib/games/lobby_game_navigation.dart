@@ -10,18 +10,20 @@ import 'package:multigames_client/games/games_repository.dart';
 
 const lobbyGameRecoveryPollInterval = Duration(seconds: 10);
 
+/// Тихий опрос: читает lobby/active через репозиторий, не инвалидируя
+/// [lobbyDetailProvider] / [activeGameProvider] (иначе UI лобби мигает спиннером).
 final lobbyGameRecoveryProvider =
     FutureProvider.autoDispose.family<String?, String>((ref, lobbyId) async {
-  ref.invalidate(lobbyDetailProvider(lobbyId));
-  ref.invalidate(activeGameProvider);
-  final lobbyFuture = ref.read(lobbyDetailProvider(lobbyId).future);
-  final activeFuture = ref.read(activeGameProvider.future);
+  final repo = ref.read(gamesRepositoryProvider);
 
   LobbyItem? lobby;
   ActiveGameItem? active;
   await Future.wait<void>([
-    lobbyFuture.then<void>((value) => lobby = value).catchError((_) {}),
-    activeFuture.then<void>((value) => active = value).catchError((_) {}),
+    repo
+        .getLobby(lobbyId)
+        .then<void>((value) => lobby = value)
+        .catchError((_) {}),
+    repo.getActive().then<void>((value) => active = value).catchError((_) {}),
   ]);
 
   final lobbyGameId = lobby?.gameId?.trim();

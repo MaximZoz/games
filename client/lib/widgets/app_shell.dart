@@ -10,11 +10,37 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+
+/// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
+void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
+  if (active != null &&
+      active.type == 'game' &&
+      active.gameId != null &&
+      active.gameId!.isNotEmpty) {
+    final dest = '/games/tictactoe/game/${active.gameId}';
+    if (currentPath == dest) return;
+    context.go(dest);
+    return;
+  }
+  if (active != null &&
+      active.type == 'lobby' &&
+      active.lobbyId != null &&
+      active.lobbyId!.isNotEmpty) {
+    final dest = '/games/tictactoe/lobby/${active.lobbyId}';
+    if (currentPath == dest) return;
+    context.go(dest);
+    return;
+  }
+  if (currentPath != '/games') {
+    context.go('/games');
+  }
+}
 
 const List<_NavItem> _navItems = [
   _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
@@ -105,10 +131,13 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    // Не прячем bottom nav при клавиатуре: на iOS Safari viewport сжимается /
-    // viewInsets мигает → nav убирается из дерева → фокус TextField и клавиатура
-    // сбрасываются (мигание ~1с). Клавиатура просто перекрывает nav.
+    // Не убираем bottom nav из дерева при клавиатуре: на iOS Safari
+    // dispose nav → сброс фокуса TextField. Вместо этого схлопываем
+    // heightFactor=0 (поиск друзей и т.п.).
+    final collapseBottomNav = ref.watch(collapseMobileBottomNavProvider);
     final selectedIndex = navigationShell.currentIndex;
+    final showBottomNav =
+        narrow && !narrowLandscape && !inChatRoom && !onAuthScreen;
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
@@ -116,37 +145,28 @@ class AppShell extends ConsumerWidget {
       if (target == '/profile') {
         ref.read(profileExitEditTickProvider.notifier).state++;
       }
+
+      // Сначала мгновенно меняем вкладку — без ожидания сети.
+      // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
-        ref.invalidate(activeGameProvider);
-        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-        ref.read(activeGameProvider.future).then((active) {
-          if (!context.mounted) return;
-          // Не пишем вкладки в history — иначе свайп «назад» в Safari
-          // переключает bottom-nav табы.
-          Router.neglect(context, () {
-            if (active != null &&
-                active.type == 'game' &&
-                active.gameId != null &&
-                active.gameId!.isNotEmpty) {
-              context.go('/games/tictactoe/game/${active.gameId}');
-            } else if (active != null &&
-                active.type == 'lobby' &&
-                active.lobbyId != null &&
-                active.lobbyId!.isNotEmpty) {
-              context.go('/games/tictactoe/lobby/${active.lobbyId}');
-            } else {
-              context.go('/games');
-            }
-          });
+        final currentPath = path;
+        final cachedActive = ref.read(activeGameProvider).valueOrNull;
+        Router.neglect(context, () {
+          _goGamesTab(context, currentPath, cachedActive);
         });
+        // Фон: обновить active/чаты для бейджей. Без повторного go —
+        // иначе гонка с мгновенным leave из лобби.
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        unawaited(() async {
+          try {
+            ref.invalidate(activeGameProvider);
+            await ref.read(activeGameProvider.future);
+          } catch (_) {}
+        }());
         return;
       }
-      // goBranch + neglect: смена таба без записи в browser history,
-      // чтобы жесты назад/вперёд Safari не прыгали по табам.
-      //
-      // Профиль: всегда initialLocation — /login и /register в той же ветке,
-      // и после входа goBranch иначе восстанавливает /login, а редирект
-      // авторизованного пользователя снова кидает на главную.
+
+      // Профиль: всегда /profile — иначе после логина ветка восстанавливает /login.
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
@@ -156,6 +176,7 @@ class AppShell extends ConsumerWidget {
       });
 
       if (!isAuthorized) return;
+      // Prefetch вкладок только после перехода, строго в фоне.
       if (target == '/chats') {
         unawaited(
           ref.read(chatsListProvider.future).then((_) {}, onError: (_, __) {}),
@@ -174,6 +195,217 @@ class AppShell extends ConsumerWidget {
       }
     }
 
+    final shellBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(top: padding.top),
+          child: SizedBox(
+            height: kToolbarHeight,
+            child: ClipRect(
+              child: Row(
+                children: [
+                  if ((narrow && (onFriends || onChatsList) ||
+                          (narrowLandscape && inChatRoom)) &&
+                      toolbarLeading != null)
+                    narrowLandscape && inChatRoom
+                        ? Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: toolbarLeading,
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: toolbarLeading,
+                          )
+                  else if (isAuthorized)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: authState.when(
+                        data: (user) => user != null
+                            ? ToolbarBalanceChip(
+                                bronze: user.balanceBronze,
+                                coinSize: 18,
+                              )
+                            : const SizedBox.shrink(),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  const Spacer(),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: authState.when(
+                        data: (user) {
+                          if (user != null) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (user.isAdmin)
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.admin_panel_settings),
+                                    onPressed: () => context.go('/admin'),
+                                    tooltip: 'Админка',
+                                  ),
+                                Flexible(
+                                  child: Tooltip(
+                                    message: user.displayName ?? user.email,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: Text(
+                                        user.displayName ?? user.email,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textPrimary,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.logout),
+                                  onPressed: () async {
+                                    await ref
+                                        .read(authStateProvider.notifier)
+                                        .logout();
+                                  },
+                                  tooltip: 'Выйти',
+                                ),
+                              ],
+                            );
+                          }
+                          return IconButton(
+                            icon: const Icon(Icons.login),
+                            onPressed: () => context.go('/login'),
+                            tooltip: 'Войти',
+                          );
+                        },
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        error: (_, __) => IconButton(
+                          icon: const Icon(Icons.login),
+                          onPressed: () => context.go('/login'),
+                          tooltip: 'Войти',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: narrow && !narrowLandscape
+              ? SizedBox.expand(child: navigationShell)
+              : Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: selectedIndex,
+                      onDestinationSelected: navigateWithPrefetch,
+                      backgroundColor: Colors.transparent,
+                      selectedIconTheme:
+                          const IconThemeData(color: AppColors.accentStart),
+                      unselectedIconTheme:
+                          const IconThemeData(color: AppColors.textSecondary),
+                      labelType: narrowLandscape
+                          ? NavigationRailLabelType.none
+                          : NavigationRailLabelType.all,
+                      destinations: _navItems.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        return NavigationRailDestination(
+                          icon: _navIcon(
+                            item,
+                            unreadChats,
+                            incomingFriends,
+                            gamesMyTurn,
+                            gameInvitesCount,
+                            dailyRewardCount,
+                            selected: index == selectedIndex,
+                          ),
+                          label: Text(item.label),
+                        );
+                      }).toList(),
+                    ),
+                    Expanded(
+                      child: SizedBox.expand(child: navigationShell),
+                    ),
+                  ],
+                ),
+        ),
+      ],
+    );
+
+    // bottomNavigationBar — чтобы ScaffoldMessenger ставил SnackBar над меню
+    // (раньше nav был в Column, тост рисовался у низа экрана и обрезался).
+    final bottomNav = showBottomNav
+        ? ClipRect(
+            child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: collapseBottomNav ? 0.0 : 1.0,
+              child: IgnorePointer(
+                ignoring: collapseBottomNav,
+                child: SafeArea(
+                  top: false,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: MediaQuery.withNoTextScaling(
+                      child: BottomNavigationBar(
+                        currentIndex: selectedIndex,
+                        onTap: navigateWithPrefetch,
+                        type: BottomNavigationBarType.fixed,
+                        elevation: 0,
+                        backgroundColor: Colors.transparent,
+                        selectedItemColor: AppColors.textPrimary,
+                        unselectedItemColor: AppColors.textSecondary,
+                        selectedFontSize: 10,
+                        unselectedFontSize: 10,
+                        showUnselectedLabels: true,
+                        items: _navItems.asMap().entries.map((entry) {
+                          final item = entry.value;
+                          return BottomNavigationBarItem(
+                            icon: _navIcon(
+                              item,
+                              unreadChats,
+                              incomingFriends,
+                              gamesMyTurn,
+                              gameInvitesCount,
+                              dailyRewardCount,
+                            ),
+                            activeIcon: _navIcon(
+                              item,
+                              unreadChats,
+                              incomingFriends,
+                              gamesMyTurn,
+                              gameInvitesCount,
+                              dailyRewardCount,
+                              selected: true,
+                            ),
+                            label: item.label,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        : null;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -183,201 +415,14 @@ class AppShell extends ConsumerWidget {
             child: SizedBox.expand(),
           ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(top: padding.top),
-              child: SizedBox(
-                height: kToolbarHeight,
-                child: ClipRect(
-                  child: Row(
-                    children: [
-                      if ((narrow && (onFriends || onChatsList) ||
-                              (narrowLandscape && inChatRoom)) &&
-                          toolbarLeading != null)
-                        narrowLandscape && inChatRoom
-                            ? Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: toolbarLeading,
-                                ),
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: toolbarLeading,
-                              )
-                      else if (isAuthorized)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: authState.when(
-                            data: (user) => user != null
-                                ? ToolbarBalanceChip(
-                                    bronze: user.balanceBronze,
-                                    coinSize: 18,
-                                  )
-                                : const SizedBox.shrink(),
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
-                        ),
-                      const Spacer(),
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: authState.when(
-                            data: (user) {
-                              if (user != null) {
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (user.isAdmin)
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.admin_panel_settings),
-                                        onPressed: () => context.go('/admin'),
-                                        tooltip: 'Админка',
-                                      ),
-                                    Flexible(
-                                      child: Tooltip(
-                                        message: user.displayName ?? user.email,
-                                        child: Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 4),
-                                          child: Text(
-                                            user.displayName ?? user.email,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: AppColors.textPrimary,
-                                              decoration: TextDecoration.none,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.logout),
-                                      onPressed: () async {
-                                        await ref
-                                            .read(authStateProvider.notifier)
-                                            .logout();
-                                      },
-                                      tooltip: 'Выйти',
-                                    ),
-                                  ],
-                                );
-                              }
-                              return IconButton(
-                                icon: const Icon(Icons.login),
-                                onPressed: () => context.go('/login'),
-                                tooltip: 'Войти',
-                              );
-                            },
-                            loading: () => const Padding(
-                              padding: EdgeInsets.all(16),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            ),
-                            error: (_, __) => IconButton(
-                              icon: const Icon(Icons.login),
-                              onPressed: () => context.go('/login'),
-                              tooltip: 'Войти',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: narrow && !narrowLandscape
-                  ? SizedBox.expand(child: navigationShell)
-                  : Row(
-                      children: [
-                        NavigationRail(
-                          selectedIndex: selectedIndex,
-                          onDestinationSelected: navigateWithPrefetch,
-                          backgroundColor: Colors.transparent,
-                          selectedIconTheme:
-                              const IconThemeData(color: AppColors.accentStart),
-                          unselectedIconTheme: const IconThemeData(
-                              color: AppColors.textSecondary),
-                          labelType: narrowLandscape
-                              ? NavigationRailLabelType.none
-                              : NavigationRailLabelType.all,
-                          destinations: _navItems.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final item = entry.value;
-                            return NavigationRailDestination(
-                              icon: _navIcon(
-                                item,
-                                unreadChats,
-                                incomingFriends,
-                                gamesMyTurn,
-                                gameInvitesCount,
-                                dailyRewardCount,
-                                selected: index == selectedIndex,
-                              ),
-                              label: Text(item.label),
-                            );
-                          }).toList(),
-                        ),
-                        Expanded(
-                          child: SizedBox.expand(child: navigationShell),
-                        ),
-                      ],
-                    ),
-            ),
-            // На логине/регистрации nav не нужен: на iOS при клавиатуре viewport
-            // сжимается, и прозрачный bottom nav остаётся над клавиатурой
-            // лиловым «блоком», перекрывая кнопку «Войти».
-            if (narrow && !narrowLandscape && !inChatRoom && !onAuthScreen)
-              SafeArea(
-                top: false,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: MediaQuery.withNoTextScaling(
-                    child: BottomNavigationBar(
-                      currentIndex: selectedIndex,
-                      onTap: navigateWithPrefetch,
-                      type: BottomNavigationBarType.fixed,
-                      elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      selectedItemColor: AppColors.textPrimary,
-                      unselectedItemColor: AppColors.textSecondary,
-                      selectedFontSize: 10,
-                      unselectedFontSize: 10,
-                      showUnselectedLabels: true,
-                      items: _navItems.asMap().entries.map((entry) {
-                        final item = entry.value;
-                        return BottomNavigationBarItem(
-                          icon: _navIcon(item, unreadChats, incomingFriends,
-                              gamesMyTurn, gameInvitesCount, dailyRewardCount),
-                          activeIcon: _navIcon(
-                            item,
-                            unreadChats,
-                            incomingFriends,
-                            gamesMyTurn,
-                            gameInvitesCount,
-                            dailyRewardCount,
-                            selected: true,
-                          ),
-                          label: item.label,
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+        // Свой Messenger: SnackBar привязан к этому Scaffold с bottom nav,
+        // а не к корневому на весь экран.
+        ScaffoldMessenger(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: shellBody,
+            bottomNavigationBar: bottomNav,
+          ),
         ),
       ],
     );
@@ -422,13 +467,15 @@ Widget _navIcon(
   if (badgeValue <= 0) {
     return baseIcon;
   }
+  // Бейдж чуть ниже/внутрь иконки: ClipRect у bottom nav обрезает
+  // всё, что торчит выше (top: -8 раньше срезал кружок).
   return Stack(
     clipBehavior: Clip.none,
     children: [
       baseIcon,
       Positioned(
-        right: -10,
-        top: -8,
+        right: -4,
+        top: 0,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
           decoration: BoxDecoration(

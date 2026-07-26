@@ -138,6 +138,11 @@ class MultiGamesApp extends ConsumerWidget {
             foregroundColor: AppColors.textPrimary,
           ),
         ),
+        snackBarTheme: const SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
       ),
       routerConfig: router,
       ),
