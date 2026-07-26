@@ -173,6 +173,9 @@ Go (net/http, middleware, auth, friends, chats, games, admin, logging)
   - иконка правил в экране игры.
 - Настройки (`/settings`):
   - опция «Добавлять ботов через 30 с» — при поиске игры: если соперник не найден за 30 секунд, начинается игра с ботом.
+- Telegram Mini App:
+  - при открытии в Telegram вызываются `WebApp.ready()`, `expand()` и `disableVerticalSwipes()` (Bot API 7.7+), чтобы скролл чатов/друзей не сворачивал окно Mini App;
+  - свернуть приложение по-прежнему можно свайпом за шапку Telegram.
 
 ---
 
@@ -307,6 +310,7 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 - [x] Presence, монеты, ежедневная награда
 - [x] Крестики-нолики (лобби, matchmake, игра, бот, ставки)
 - [x] Базовый деплой на Fly.io
+- [x] Telegram Mini App: отключение вертикальных свайпов сворачивания при скролле
 
 ### Ближайшие задачи
 

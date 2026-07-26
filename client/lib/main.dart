@@ -10,6 +10,8 @@ import 'ui/app_theme.dart';
 import 'ui/widgets/shimmer_animation_scope.dart';
 import 'src/console_log_stub.dart'
     if (dart.library.html) 'src/console_log_web.dart' as console_log;
+import 'src/telegram_web_app_stub.dart'
+    if (dart.library.html) 'src/telegram_web_app_web.dart' as telegram_web_app;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +19,8 @@ void main() {
   // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
   if (kIsWeb) {
     usePathUrlStrategy();
+    // Ранний вызов: expand + disableVerticalSwipes (см. client/web/index.html).
+    telegram_web_app.configureTelegramWebApp();
   }
   console_log.logToBrowser('main() started');
 
@@ -29,6 +33,11 @@ void main() {
     console_log.logToBrowser('runApp() called');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       console_log.logToBrowser('first frame built');
+      // Повтор после первого кадра — на части Telegram-клиентов SDK
+      // готов чуть позже старта Flutter.
+      if (kIsWeb) {
+        telegram_web_app.configureTelegramWebApp();
+      }
     });
   }, (error, stack) {
     console_log.logErrorToBrowser(error, stack);

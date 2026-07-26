@@ -32,30 +32,42 @@
 
   <title>multigames_client</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Telegram Mini App SDK: нужен для expand/disableVerticalSwipes -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
+      /* 100dvh стабильнее в Telegram WebView, чем 100% */
       height: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
       overflow: hidden;
       overflow-x: hidden;
       overscroll-behavior: none;
+      overscroll-behavior-y: none;
       overscroll-behavior-x: none;
     }
     body {
       background-color: #F5F5F5;
+      /* Только вертикальный pan — меньше шансов отдать жест Telegram-оболочке */
       touch-action: pan-y;
+      position: fixed;
+      inset: 0;
     }
     flt-glass-pane, flutter-view {
       display: block;
       width: 100%;
       height: 100%;
+      overscroll-behavior: none;
+      touch-action: pan-y;
     }
     flt-glass-pane canvas, flutter-view canvas {
       display: block;
       width: 100%;
       height: 100%;
+      touch-action: pan-y;
     }
   </style>
 </head>
@@ -68,9 +80,34 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
   <script>
     (function () {
+      // Telegram Mini App: разворачиваем на весь экран и отключаем
+      // вертикальные свайпы сворачивания (Bot API 7.7+), чтобы скролл
+      // списков (чаты/друзья) не закрывал bottom sheet.
+      function configureTelegramMiniApp() {
+        var tg = window.Telegram && window.Telegram.WebApp;
+        if (!tg) return false;
+        try {
+          if (typeof tg.ready === 'function') tg.ready();
+          if (typeof tg.expand === 'function') tg.expand();
+          if (typeof tg.disableVerticalSwipes === 'function') {
+            tg.disableVerticalSwipes();
+          }
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      configureTelegramMiniApp();
+      // Повтор после загрузки Flutter — на части клиентов WebApp
+      // становится доступен чуть позже.
+      window.addEventListener('load', configureTelegramMiniApp);
+      setTimeout(configureTelegramMiniApp, 0);
+      setTimeout(configureTelegramMiniApp, 250);
+      setTimeout(configureTelegramMiniApp, 1000);
+
       let startX = 0;
       let startY = 0;
       document.addEventListener('touchstart', function (e) {
@@ -94,5 +131,6 @@
       }, { passive: false, capture: true });
     })();
   </script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
