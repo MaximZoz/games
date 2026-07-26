@@ -230,14 +230,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         }
         await refreshFriendsSnapshot(ref);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              action == _RoomAction.acceptFriendRequest
-                  ? 'Заявка принята'
-                  : 'Заявка отправлена',
-            ),
-          ),
+        showAppSnackBar(
+          context,
+          message: action == _RoomAction.acceptFriendRequest
+              ? 'Заявка принята'
+              : 'Заявка отправлена',
+          kind: AppSnackKind.success,
         );
       } on FriendsException catch (e) {
         if (e.statusCode == 401) {
@@ -246,13 +244,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           return;
         }
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
+        showAppSnackBar(
+          context,
+          message: e.message,
+          kind: AppSnackKind.error,
         );
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        showAppSnackBar(
+          context,
+          message: e.toString(),
+          kind: AppSnackKind.error,
         );
       } finally {
         if (mounted) setState(() => _roomActionInFlight = false);
@@ -289,8 +291,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           return;
         }
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
+        showAppSnackBar(
+          context,
+          message: e.message,
+          kind: AppSnackKind.error,
         );
       } finally {
         if (mounted) setState(() => _roomActionInFlight = false);
@@ -323,8 +327,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _roomActionInFlight = false);

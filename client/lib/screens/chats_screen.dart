@@ -638,8 +638,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                 return;
                               }
                               // ignore: use_build_context_synchronously
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.message)),
+                              showAppSnackBar(
+                                context,
+                                message: e.message,
+                                kind: AppSnackKind.error,
                               );
                             } finally {
                               if (context.mounted) {
@@ -819,8 +821,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
@@ -859,8 +863,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
@@ -1672,14 +1678,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       }
       await refreshFriendsSnapshot(ref);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            incomingRequestId != null && incomingRequestId.isNotEmpty
-                ? 'Заявка принята'
-                : 'Заявка отправлена',
-          ),
-        ),
+      showAppSnackBar(
+        context,
+        message: incomingRequestId != null && incomingRequestId.isNotEmpty
+            ? 'Заявка принята'
+            : 'Заявка отправлена',
+        kind: AppSnackKind.success,
       );
     } on FriendsException catch (e) {
       if (e.statusCode == 401) {
@@ -1688,13 +1692,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(formatUserError(e))),
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _chatActionInFlight.remove(actionKey));

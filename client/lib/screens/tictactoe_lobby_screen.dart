@@ -497,8 +497,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(formatUserError(e))),
+        showAppSnackBar(
+          context,
+          message: formatUserError(e),
+          kind: AppSnackKind.error,
         );
       }
     } finally {
@@ -516,10 +518,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           _invitedFriendIds.add(friendUserId);
           _invitingFriendIds.remove(friendUserId);
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Приглашение отправлено'),
-          ),
+        showAppSnackBar(
+          context,
+          message: 'Приглашение отправлено',
+          kind: AppSnackKind.success,
         );
       }
     } catch (e) {
