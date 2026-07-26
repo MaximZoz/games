@@ -1875,9 +1875,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                           data: (snapshot) {
                             return TabBarView(
                               controller: _tabController,
-                              // Только тапом по TabBar — свайп не должен
-                              // переключать вкладки (мешает свайпу назад и т.п.).
-                              physics: const NeverScrollableScrollPhysics(),
+                              // Свайп между табами друзей нужен; bottom-nav
+                              // от history защищён через Router.neglect.
+                              physics: const PageScrollPhysics(),
                               children: [
                                 for (final tab in tabs)
                                   _tabContent(tab, snapshot, presence),
