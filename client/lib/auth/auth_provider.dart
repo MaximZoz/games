@@ -18,12 +18,25 @@ final authStateProvider = StateNotifierProvider<AuthStateNotifier, AsyncValue<Au
 /// Значение daily_reward из WebSocket (при подключении и после claim). Null = ещё не получено.
 final dailyRewardFromRealtimeProvider = StateProvider<bool?>((ref) => null);
 
-/// Доступна ли ежедневная награда (20 бронзы). Приоритет у значения из WebSocket.
-final dailyRewardAvailableProvider = FutureProvider<bool>((ref) async {
-  final fromWs = ref.watch(dailyRewardFromRealtimeProvider);
-  if (fromWs != null) return fromWs;
+/// Полный статус ежедневной награды (серия, сумма).
+final dailyRewardStatusProvider = FutureProvider<DailyRewardStatus>((ref) async {
   final repo = ref.watch(authRepositoryProvider);
-  return repo.getDailyRewardAvailable();
+  final status = await repo.getDailyRewardStatus();
+  final fromWs = ref.watch(dailyRewardFromRealtimeProvider);
+  if (fromWs == null) return status;
+  return DailyRewardStatus(
+    available: fromWs,
+    streak: status.streak,
+    nextStreak: status.nextStreak,
+    nextRewardBronze: status.nextRewardBronze,
+    milestonesBronze: status.milestonesBronze,
+  );
+});
+
+/// Доступна ли ежедневная награда (из статуса / WebSocket).
+final dailyRewardAvailableProvider = FutureProvider<bool>((ref) async {
+  final status = await ref.watch(dailyRewardStatusProvider.future);
+  return status.available;
 });
 
 /// Расширенные данные профиля — берём напрямую из AuthUser (данные уже в БД).
@@ -68,9 +81,15 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     required String email,
     required String password,
     String displayName = '',
+    String? ref,
   }) async {
     final repo = _ref.read(authRepositoryProvider);
-    final result = await repo.register(email: email, password: password, displayName: displayName);
+    final result = await repo.register(
+      email: email,
+      password: password,
+      displayName: displayName,
+      ref: ref,
+    );
     state = AsyncValue.data(result.user);
   }
 
@@ -100,13 +119,14 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     await updateProfile(displayName: displayName);
   }
 
-  /// Забирает ежедневную награду (20 бронзы). После успеха обновляет состояние и balance.
-  Future<int?> claimDailyReward() async {
+  /// Забирает ежедневную награду по серии дней. После успеха обновляет balance.
+  Future<DailyRewardClaimResult?> claimDailyReward() async {
     final repo = _ref.read(authRepositoryProvider);
-    final newBalance = await repo.claimDailyReward();
+    final result = await repo.claimDailyReward();
     _ref.read(dailyRewardFromRealtimeProvider.notifier).state = false;
+    _ref.invalidate(dailyRewardStatusProvider);
     _ref.invalidate(dailyRewardAvailableProvider);
-    if (newBalance == null) return null;
+    if (result == null) return null;
     final user = state.valueOrNull;
     if (user != null) {
       final updated = AuthUser(
@@ -119,12 +139,12 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         about: user.about,
         avatarKind: user.avatarKind,
         avatarValue: user.avatarValue,
-        balanceBronze: newBalance,
+        balanceBronze: result.balanceBronze,
       );
       state = AsyncValue.data(updated);
       await repo.updateStoredUser(updated);
     }
-    return newBalance;
+    return result;
   }
 
   /// Обновляет профиль пользователя на бэкенде. Все поля сохраняются в БД.

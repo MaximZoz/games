@@ -70,6 +70,7 @@ class AppShell extends ConsumerWidget {
             final available = event['available'] == true;
             ref.read(dailyRewardFromRealtimeProvider.notifier).state =
                 available;
+            ref.invalidate(dailyRewardStatusProvider);
             ref.invalidate(dailyRewardAvailableProvider);
           }
         });

@@ -3,13 +3,10 @@ package store
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-const dailyRewardBronze = 20
 
 // ErrInsufficientFunds returned when user doesn't have enough balance.
 var ErrInsufficientFunds = fmt.Errorf("insufficient funds")
@@ -82,50 +79,6 @@ func DeductCoinsTwo(ctx context.Context, pool *pgxpool.Pool, user1, user2 uuid.U
 		}
 	}
 	return tx.Commit(ctx)
-}
-
-// CanClaimDailyReward returns true if user has not claimed today (by UTC date).
-func CanClaimDailyReward(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (bool, error) {
-	var claimedAt *time.Time
-	err := pool.QueryRow(ctx,
-		`SELECT daily_reward_claimed_at FROM users WHERE id = $1`,
-		userID,
-	).Scan(&claimedAt)
-	if err != nil {
-		return false, err
-	}
-	if claimedAt == nil {
-		return true, nil
-	}
-	now := time.Now().UTC()
-	claimed := claimedAt.UTC()
-	return now.Year() != claimed.Year() || now.YearDay() != claimed.YearDay(), nil
-}
-
-// ClaimDailyReward adds 20 bronze and sets daily_reward_claimed_at. Returns ErrAlreadyClaimed if already claimed today.
-var ErrAlreadyClaimed = fmt.Errorf("daily reward already claimed today")
-
-func ClaimDailyReward(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (newBalance int, err error) {
-	can, err := CanClaimDailyReward(ctx, pool, userID)
-	if err != nil {
-		return 0, err
-	}
-	if !can {
-		return 0, ErrAlreadyClaimed
-	}
-	row := pool.QueryRow(ctx,
-		`UPDATE users SET
-			balance_bronze = balance_bronze + $2,
-			daily_reward_claimed_at = now(),
-			updated_at = now()
-		 WHERE id = $1
-		 RETURNING balance_bronze`,
-		userID, dailyRewardBronze,
-	)
-	if err := row.Scan(&newBalance); err != nil {
-		return 0, err
-	}
-	return newBalance, nil
 }
 
 // SettleGameCoins: winner gets 2*stake, loser gets 0. On draw both get stake back.

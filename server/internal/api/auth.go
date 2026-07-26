@@ -31,6 +31,7 @@ type RegisterRequest struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 	DisplayName string `json:"display_name"`
+	Ref         string `json:"ref,omitempty"` // user id пригласившего
 }
 
 type LoginRequest struct {
@@ -98,7 +99,15 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
-	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName)
+
+	var referredBy *uuid.UUID
+	if refRaw := strings.TrimSpace(req.Ref); refRaw != "" {
+		if id, parseErr := uuid.Parse(refRaw); parseErr == nil {
+			referredBy = &id
+		}
+	}
+
+	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName, referredBy)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique") {
 			http.Error(w, "email already registered", http.StatusConflict)
