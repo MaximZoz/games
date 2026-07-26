@@ -1645,11 +1645,21 @@ class _OpponentCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _OpponentAvatar(
-            displayName: displayName,
-            avatarKind: avatarKind,
-            avatarValue: avatarValue,
-            compact: narrow,
+          Tooltip(
+            message: 'Информация о пользователе',
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onInfoTap,
+                behavior: HitTestBehavior.opaque,
+                child: _OpponentAvatar(
+                  displayName: displayName,
+                  avatarKind: avatarKind,
+                  avatarValue: avatarValue,
+                  compact: narrow,
+                ),
+              ),
+            ),
           ),
           SizedBox(width: narrow ? 10 : 14),
           Flexible(
@@ -1685,11 +1695,6 @@ class _OpponentCard extends StatelessWidget {
                     : null,
               ),
           ],
-          _IconWithBadge(
-            icon: Icons.info_outline_rounded,
-            tooltip: 'Информация о пользователе',
-            onPressed: onInfoTap,
-          ),
         ],
       ),
     );

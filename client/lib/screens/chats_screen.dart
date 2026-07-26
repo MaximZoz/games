@@ -2034,9 +2034,34 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             BorderRadius.circular(AppRadius.card),
                                         child: Row(
                                           children: [
-                                            _AvatarDot(
-                                              user: item.user,
-                                              isOnline: presence[item.user.id]?.online,
+                                            Tooltip(
+                                              message:
+                                                  'Информация о пользователе',
+                                              child: MouseRegion(
+                                                cursor:
+                                                    SystemMouseCursors.click,
+                                                child: GestureDetector(
+                                                  onTap: itemBusy
+                                                      ? null
+                                                      : () {
+                                                          unawaited(
+                                                            _showUserInfoDialog(
+                                                              item.user,
+                                                              presence: presence[
+                                                                  item.user.id],
+                                                            ),
+                                                          );
+                                                        },
+                                                  behavior:
+                                                      HitTestBehavior.opaque,
+                                                  child: _AvatarDot(
+                                                    user: item.user,
+                                                    isOnline: presence[
+                                                            item.user.id]
+                                                        ?.online,
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                             const SizedBox(width: 12),
                                             Expanded(
@@ -2174,18 +2199,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                           ),
                                                         );
                                                       },
-                                                    ),
-                                                    _buildRoundIconButton(
-                                                      icon: Icons
-                                                          .info_outline_rounded,
-                                                      onPressed: itemBusy
-                                                          ? null
-                                                          : () => unawaited(
-                                                                _showUserInfoDialog(
-                                                                    item.user,
-                                                                    presence: presence[item.user.id])),
-                                                      tooltip:
-                                                          'Информация о пользователе',
                                                     ),
                                                     if (unread > 0) ...[
                                                       const SizedBox(width: 6),

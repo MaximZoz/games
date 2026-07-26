@@ -407,7 +407,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
-  Widget _buildAvatar(FriendUserItem user, {bool? isOnline}) {
+  Widget _buildAvatar(
+    FriendUserItem user, {
+    bool? isOnline,
+    VoidCallback? onTap,
+  }) {
     Widget avatar;
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
@@ -436,7 +440,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       avatar = _buildLetterAvatar(user);
     }
     if (isOnline == true) {
-      return Stack(
+      avatar = Stack(
         clipBehavior: Clip.none,
         children: [
           avatar,
@@ -456,7 +460,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       );
     }
-    return avatar;
+    if (onTap == null) return avatar;
+    return Tooltip(
+      message: 'Информация о пользователе',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: avatar,
+        ),
+      ),
+    );
   }
 
   Widget _buildLetterAvatar(FriendUserItem user) {
@@ -817,7 +832,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         children: [
           Row(
             children: [
-              _buildAvatar(user, isOnline: presence?.online),
+              _buildAvatar(
+                user,
+                isOnline: presence?.online,
+                onTap: () => _showRequestInfoDialog(
+                  user: user,
+                  presence: presence,
+                ),
+              ),
               SizedBox(width: compactDesktopCard ? 8 : 10),
               Expanded(
                 child: Column(
@@ -1048,13 +1070,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
-                icon: Icons.info_outline_rounded,
-                tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(
-                    user: item.user, presence: presence[item.user.id]),
-              ),
-              const SizedBox(width: 4),
-              _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 tooltip: 'Написать сообщение',
                 loading: _busy(chatKey),
@@ -1062,7 +1077,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildCompactIconButton(
                 icon: Icons.person_remove_alt_1_rounded,
                 tooltip: 'Удалить из друзей',
@@ -1109,13 +1124,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
-                icon: Icons.info_outline_rounded,
-                tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(
-                    user: item.user, presence: presence[item.user.id]),
-              ),
-              const SizedBox(width: 4),
-              _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 tooltip: 'Написать сообщение',
                 loading: _busy(chatKey),
@@ -1123,7 +1131,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildActionIcon(
                 key: acceptKey,
                 icon: Icons.check_rounded,
@@ -1168,13 +1176,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
-                icon: Icons.info_outline_rounded,
-                tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(
-                    user: item.user, presence: presence[item.user.id]),
-              ),
-              const SizedBox(width: 4),
-              _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 tooltip: 'Написать сообщение',
                 loading: _busy(chatKey),
@@ -1182,7 +1183,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildActionIcon(
                 key: cancelKey,
                 icon: Icons.close_rounded,
@@ -1316,14 +1317,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final removeKey = 'remove_search_${item.user.id}';
     final chatKey = 'chat_search_${item.user.id}';
 
-    final controls = <Widget>[
-      _buildCompactIconButton(
-        icon: Icons.info_outline_rounded,
-        tooltip: 'Информация о пользователе',
-        onPressed: () => _showRequestInfoDialog(
-            user: item.user, presence: presence[item.user.id]),
-      ),
-    ];
+    final controls = <Widget>[];
     if (relation == 'none') {
       final busy = _busy(sendKey);
       controls.add(
@@ -1453,7 +1447,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       animate: false,
       child: Row(
         children: [
-          _buildAvatar(item.user, isOnline: presence[item.user.id]?.online),
+          _buildAvatar(
+            item.user,
+            isOnline: presence[item.user.id]?.online,
+            onTap: () => _showRequestInfoDialog(
+              user: item.user,
+              presence: presence[item.user.id],
+            ),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(

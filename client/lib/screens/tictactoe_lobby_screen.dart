@@ -211,19 +211,19 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                             const EdgeInsets.only(bottom: 8),
                                         child: Row(
                                           children: [
-                                            _buildFriendAvatar(f.user, 20),
-                                            InkWell(
-                                              onTap: () =>
-                                                  _showFriendInfo(context, f),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              child: const Padding(
-                                                padding: EdgeInsets.all(4),
-                                                child: Icon(
-                                                  Icons.info_outline_rounded,
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                  size: 20,
+                                            Tooltip(
+                                              message:
+                                                  'Информация о пользователе',
+                                              child: MouseRegion(
+                                                cursor:
+                                                    SystemMouseCursors.click,
+                                                child: GestureDetector(
+                                                  onTap: () => _showFriendInfo(
+                                                      context, f),
+                                                  behavior:
+                                                      HitTestBehavior.opaque,
+                                                  child: _buildFriendAvatar(
+                                                      f.user, 20),
                                                 ),
                                               ),
                                             ),

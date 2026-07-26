@@ -1077,11 +1077,30 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               icon: const Icon(Icons.arrow_back_rounded),
               tooltip: widget.fromGames ? 'Назад в игру' : 'Назад к чатам',
             ),
-          _buildPeerAvatar(
-            user: peerUser,
-            fallbackTitle: title,
-            radius: 18,
-            isOnline: presence?.online,
+          Tooltip(
+            message: 'Информация о пользователе',
+            child: MouseRegion(
+              cursor: infoUser == null
+                  ? SystemMouseCursors.basic
+                  : SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: infoUser == null
+                    ? null
+                    : () {
+                        final user = infoUser;
+                        unawaited(
+                          _showUserInfoDialog(user, presence: presence),
+                        );
+                      },
+                behavior: HitTestBehavior.opaque,
+                child: _buildPeerAvatar(
+                  user: peerUser,
+                  fallbackTitle: title,
+                  radius: 18,
+                  isOnline: presence?.online,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1110,16 +1129,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
               ],
             ),
-          ),
-          IconButton(
-            onPressed: infoUser == null
-                ? null
-                : () {
-                    final user = infoUser;
-                    unawaited(_showUserInfoDialog(user, presence: presence));
-                  },
-            tooltip: 'Информация о пользователе',
-            icon: const Icon(Icons.info_outline_rounded),
           ),
           PopupMenuButton<_RoomAction>(
             enabled: !_roomActionInFlight,
