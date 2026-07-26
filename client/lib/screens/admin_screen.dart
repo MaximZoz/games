@@ -1169,6 +1169,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
             Expanded(
               child: TabBarView(
                 controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildUsersTab(context, repo, currentUserId, usersAsync),
                   _buildLogsTab(usersAsync),

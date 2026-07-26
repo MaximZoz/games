@@ -1935,7 +1935,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                           data: (snapshot) {
                             return TabBarView(
                               controller: _tabController,
-                              // Свайп влево/вправо переключает табы друзей.
+                              // Свайп между табами друзей; bottom-nav от
+                              // history защищён через Router.neglect.
                               physics: const PageScrollPhysics(),
                               children: [
                                 for (final tab in tabs)
