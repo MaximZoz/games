@@ -16,7 +16,6 @@ class CoinsLoginScreen extends ConsumerStatefulWidget {
 
 class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
   bool _isClaiming = false;
-  String? _lastClaimMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -51,24 +50,12 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
                 data: (status) => _LoginRewardsBody(
                   status: status,
                   isClaiming: _isClaiming,
-                  lastClaimMessage: _lastClaimMessage,
                   onClaim: () async {
                     if (_isClaiming) return;
-                    setState(() {
-                      _isClaiming = true;
-                      _lastClaimMessage = null;
-                    });
-                    final result = await ref
-                        .read(authStateProvider.notifier)
-                        .claimDailyReward();
+                    setState(() => _isClaiming = true);
+                    await ref.read(authStateProvider.notifier).claimDailyReward();
                     if (!mounted) return;
-                    setState(() {
-                      _isClaiming = false;
-                      if (result != null) {
-                        _lastClaimMessage =
-                            'Получено: ${formatRewardBronze(result.rewardBronze)}';
-                      }
-                    });
+                    setState(() => _isClaiming = false);
                   },
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -93,42 +80,23 @@ class _LoginRewardsBody extends StatelessWidget {
     required this.status,
     required this.onClaim,
     required this.isClaiming,
-    this.lastClaimMessage,
   });
 
   final DailyRewardStatus status;
   final Future<void> Function() onClaim;
   final bool isClaiming;
-  final String? lastClaimMessage;
 
   static const _milestones = [1, 3, 7, 30];
 
   @override
   Widget build(BuildContext context) {
     final canClaim = status.available && !isClaiming;
-    final statusLine = lastClaimMessage ??
-        (status.available
-            ? 'День ${status.nextStreak} серии · ${formatRewardBronze(status.nextRewardBronze)}'
-            : 'Сегодня получено · серия ${status.streak} дн.');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            statusLine,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: lastClaimMessage != null
-                  ? AppColors.accentStart
-                  : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
           Expanded(
             child: Column(
               children: [
