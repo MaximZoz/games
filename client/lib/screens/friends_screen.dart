@@ -47,6 +47,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   late TabController _tabController;
+  List<_FriendsTabKind> _currentTabs = const [
+    _FriendsTabKind.friends,
+    _FriendsTabKind.incoming,
+    _FriendsTabKind.outgoing,
+    _FriendsTabKind.findFriend,
+  ];
   final Set<String> _actionsInProgress = <String>{};
   Timer? _searchDebounce;
   int _searchRevision = 0;
@@ -63,7 +69,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: _currentTabs.length, vsync: this);
     _tabController.addListener(_onTabChanged);
   }
 
@@ -72,6 +78,40 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       _scheduleSearch(immediate: true);
     }
     if (mounted) setState(() {});
+  }
+
+  bool _sameTabs(List<_FriendsTabKind> a, List<_FriendsTabKind> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  void _syncTabController(List<_FriendsTabKind> tabs) {
+    if (tabs.isEmpty) return;
+    if (_sameTabs(tabs, _currentTabs) &&
+        _tabController.length == tabs.length) {
+      return;
+    }
+    final oldKind =
+        (_tabController.index >= 0 && _tabController.index < _currentTabs.length)
+            ? _currentTabs[_tabController.index]
+            : _FriendsTabKind.findFriend;
+    final oldController = _tabController;
+    oldController.removeListener(_onTabChanged);
+    var index = tabs.indexOf(oldKind);
+    if (index < 0) index = 0;
+    _currentTabs = List<_FriendsTabKind>.of(tabs);
+    _tabController = TabController(
+      length: tabs.length,
+      vsync: this,
+      initialIndex: index,
+    );
+    _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController.dispose();
+    });
   }
 
   @override
@@ -88,8 +128,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     super.dispose();
   }
 
-  bool get _isFindFriendTab =>
-      _tabController.index == 3; // findFriend всегда последний
+  bool get _isFindFriendTab {
+    final i = _tabController.index;
+    if (i < 0 || i >= _currentTabs.length) return false;
+    return _currentTabs[i] == _FriendsTabKind.findFriend;
+  }
 
   void _showMessage(String? error, String? success) {}
 
@@ -1674,10 +1717,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   List<_FriendsTabKind> _visibleTabs(FriendsSnapshot? snapshot) {
-    return const [
-      _FriendsTabKind.friends,
-      _FriendsTabKind.incoming,
-      _FriendsTabKind.outgoing,
+    // Пока нет данных — все табы, чтобы не дёргать layout на первом кадре.
+    if (snapshot == null) {
+      return const [
+        _FriendsTabKind.friends,
+        _FriendsTabKind.incoming,
+        _FriendsTabKind.outgoing,
+        _FriendsTabKind.findFriend,
+      ];
+    }
+    return [
+      if (snapshot.friends.isNotEmpty) _FriendsTabKind.friends,
+      if (snapshot.incoming.isNotEmpty) _FriendsTabKind.incoming,
+      if (snapshot.outgoing.isNotEmpty) _FriendsTabKind.outgoing,
       _FriendsTabKind.findFriend,
     ];
   }
@@ -1791,6 +1843,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final totalUsersCount = ref.watch(totalUsersCountProvider).valueOrNull;
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
+    if (!_sameTabs(tabs, _currentTabs) ||
+        _tabController.length != tabs.length) {
+      _syncTabController(tabs);
+    }
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
     final path = ref.watch(currentRoutePathProvider);
@@ -1841,21 +1897,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     key: const ValueKey('friends-tabs'),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: TabBar(
                           controller: _tabController,
                           isScrollable: false,
                           tabAlignment: TabAlignment.fill,
                           labelPadding: const EdgeInsets.symmetric(
-                            horizontal: 2,
+                            horizontal: 4,
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,
                           labelStyle: TextStyle(
-                            fontSize: compact ? 12 : 15,
+                            fontSize: compact
+                                ? (tabs.length <= 2 ? 14 : 12)
+                                : 15,
                             fontWeight: FontWeight.w600,
                           ),
                           unselectedLabelStyle: TextStyle(
-                            fontSize: compact ? 12 : 15,
+                            fontSize: compact
+                                ? (tabs.length <= 2 ? 14 : 12)
+                                : 15,
                             fontWeight: FontWeight.w500,
                           ),
                           tabs: [
@@ -1875,6 +1935,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                           data: (snapshot) {
                             return TabBarView(
                               controller: _tabController,
+                              // Свайп влево/вправо переключает табы друзей.
                               physics: const PageScrollPhysics(),
                               children: [
                                 for (final tab in tabs)
