@@ -16,6 +16,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
@@ -1024,8 +1025,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         onSuccess?.call();
         ref.invalidate(friendsSnapshotProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Заявка принята')),
+          showAppSnackBar(
+            context,
+            message: 'Заявка принята',
+            kind: AppSnackKind.success,
           );
         }
       } else {
@@ -1034,8 +1037,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         onSuccess?.call();
         ref.invalidate(friendsSnapshotProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Запрос отправлен')),
+          showAppSnackBar(
+            context,
+            message: 'Запрос отправлен',
+            kind: AppSnackKind.success,
           );
         }
       }

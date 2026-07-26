@@ -131,10 +131,13 @@ class AppShell extends ConsumerWidget {
         // Игнорируем: виджет мог быть disposed (defunct element)
       }
     });
-    // Не прячем bottom nav при клавиатуре: на iOS Safari viewport сжимается /
-    // viewInsets мигает → nav убирается из дерева → фокус TextField и клавиатура
-    // сбрасываются (мигание ~1с). Клавиатура просто перекрывает nav.
+    // Не убираем bottom nav из дерева при клавиатуре: на iOS Safari
+    // dispose nav → сброс фокуса TextField. Вместо этого схлопываем
+    // heightFactor=0 (поиск друзей и т.п.).
+    final collapseBottomNav = ref.watch(collapseMobileBottomNavProvider);
     final selectedIndex = navigationShell.currentIndex;
+    final showBottomNav =
+        narrow && !narrowLandscape && !inChatRoom && !onAuthScreen;
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
@@ -192,6 +195,217 @@ class AppShell extends ConsumerWidget {
       }
     }
 
+    final shellBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(top: padding.top),
+          child: SizedBox(
+            height: kToolbarHeight,
+            child: ClipRect(
+              child: Row(
+                children: [
+                  if ((narrow && (onFriends || onChatsList) ||
+                          (narrowLandscape && inChatRoom)) &&
+                      toolbarLeading != null)
+                    narrowLandscape && inChatRoom
+                        ? Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: toolbarLeading,
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: toolbarLeading,
+                          )
+                  else if (isAuthorized)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: authState.when(
+                        data: (user) => user != null
+                            ? ToolbarBalanceChip(
+                                bronze: user.balanceBronze,
+                                coinSize: 18,
+                              )
+                            : const SizedBox.shrink(),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  const Spacer(),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: authState.when(
+                        data: (user) {
+                          if (user != null) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (user.isAdmin)
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.admin_panel_settings),
+                                    onPressed: () => context.go('/admin'),
+                                    tooltip: 'Админка',
+                                  ),
+                                Flexible(
+                                  child: Tooltip(
+                                    message: user.displayName ?? user.email,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: Text(
+                                        user.displayName ?? user.email,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textPrimary,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.logout),
+                                  onPressed: () async {
+                                    await ref
+                                        .read(authStateProvider.notifier)
+                                        .logout();
+                                  },
+                                  tooltip: 'Выйти',
+                                ),
+                              ],
+                            );
+                          }
+                          return IconButton(
+                            icon: const Icon(Icons.login),
+                            onPressed: () => context.go('/login'),
+                            tooltip: 'Войти',
+                          );
+                        },
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        error: (_, __) => IconButton(
+                          icon: const Icon(Icons.login),
+                          onPressed: () => context.go('/login'),
+                          tooltip: 'Войти',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: narrow && !narrowLandscape
+              ? SizedBox.expand(child: navigationShell)
+              : Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: selectedIndex,
+                      onDestinationSelected: navigateWithPrefetch,
+                      backgroundColor: Colors.transparent,
+                      selectedIconTheme:
+                          const IconThemeData(color: AppColors.accentStart),
+                      unselectedIconTheme:
+                          const IconThemeData(color: AppColors.textSecondary),
+                      labelType: narrowLandscape
+                          ? NavigationRailLabelType.none
+                          : NavigationRailLabelType.all,
+                      destinations: _navItems.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        return NavigationRailDestination(
+                          icon: _navIcon(
+                            item,
+                            unreadChats,
+                            incomingFriends,
+                            gamesMyTurn,
+                            gameInvitesCount,
+                            dailyRewardCount,
+                            selected: index == selectedIndex,
+                          ),
+                          label: Text(item.label),
+                        );
+                      }).toList(),
+                    ),
+                    Expanded(
+                      child: SizedBox.expand(child: navigationShell),
+                    ),
+                  ],
+                ),
+        ),
+      ],
+    );
+
+    // bottomNavigationBar — чтобы ScaffoldMessenger ставил SnackBar над меню
+    // (раньше nav был в Column, тост рисовался у низа экрана и обрезался).
+    final bottomNav = showBottomNav
+        ? ClipRect(
+            child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: collapseBottomNav ? 0.0 : 1.0,
+              child: IgnorePointer(
+                ignoring: collapseBottomNav,
+                child: SafeArea(
+                  top: false,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: MediaQuery.withNoTextScaling(
+                      child: BottomNavigationBar(
+                        currentIndex: selectedIndex,
+                        onTap: navigateWithPrefetch,
+                        type: BottomNavigationBarType.fixed,
+                        elevation: 0,
+                        backgroundColor: Colors.transparent,
+                        selectedItemColor: AppColors.textPrimary,
+                        unselectedItemColor: AppColors.textSecondary,
+                        selectedFontSize: 10,
+                        unselectedFontSize: 10,
+                        showUnselectedLabels: true,
+                        items: _navItems.asMap().entries.map((entry) {
+                          final item = entry.value;
+                          return BottomNavigationBarItem(
+                            icon: _navIcon(
+                              item,
+                              unreadChats,
+                              incomingFriends,
+                              gamesMyTurn,
+                              gameInvitesCount,
+                              dailyRewardCount,
+                            ),
+                            activeIcon: _navIcon(
+                              item,
+                              unreadChats,
+                              incomingFriends,
+                              gamesMyTurn,
+                              gameInvitesCount,
+                              dailyRewardCount,
+                              selected: true,
+                            ),
+                            label: item.label,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        : null;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -201,201 +415,14 @@ class AppShell extends ConsumerWidget {
             child: SizedBox.expand(),
           ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(top: padding.top),
-              child: SizedBox(
-                height: kToolbarHeight,
-                child: ClipRect(
-                  child: Row(
-                    children: [
-                      if ((narrow && (onFriends || onChatsList) ||
-                              (narrowLandscape && inChatRoom)) &&
-                          toolbarLeading != null)
-                        narrowLandscape && inChatRoom
-                            ? Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: toolbarLeading,
-                                ),
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: toolbarLeading,
-                              )
-                      else if (isAuthorized)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: authState.when(
-                            data: (user) => user != null
-                                ? ToolbarBalanceChip(
-                                    bronze: user.balanceBronze,
-                                    coinSize: 18,
-                                  )
-                                : const SizedBox.shrink(),
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
-                        ),
-                      const Spacer(),
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: authState.when(
-                            data: (user) {
-                              if (user != null) {
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (user.isAdmin)
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.admin_panel_settings),
-                                        onPressed: () => context.go('/admin'),
-                                        tooltip: 'Админка',
-                                      ),
-                                    Flexible(
-                                      child: Tooltip(
-                                        message: user.displayName ?? user.email,
-                                        child: Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 4),
-                                          child: Text(
-                                            user.displayName ?? user.email,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: AppColors.textPrimary,
-                                              decoration: TextDecoration.none,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.logout),
-                                      onPressed: () async {
-                                        await ref
-                                            .read(authStateProvider.notifier)
-                                            .logout();
-                                      },
-                                      tooltip: 'Выйти',
-                                    ),
-                                  ],
-                                );
-                              }
-                              return IconButton(
-                                icon: const Icon(Icons.login),
-                                onPressed: () => context.go('/login'),
-                                tooltip: 'Войти',
-                              );
-                            },
-                            loading: () => const Padding(
-                              padding: EdgeInsets.all(16),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            ),
-                            error: (_, __) => IconButton(
-                              icon: const Icon(Icons.login),
-                              onPressed: () => context.go('/login'),
-                              tooltip: 'Войти',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: narrow && !narrowLandscape
-                  ? SizedBox.expand(child: navigationShell)
-                  : Row(
-                      children: [
-                        NavigationRail(
-                          selectedIndex: selectedIndex,
-                          onDestinationSelected: navigateWithPrefetch,
-                          backgroundColor: Colors.transparent,
-                          selectedIconTheme:
-                              const IconThemeData(color: AppColors.accentStart),
-                          unselectedIconTheme: const IconThemeData(
-                              color: AppColors.textSecondary),
-                          labelType: narrowLandscape
-                              ? NavigationRailLabelType.none
-                              : NavigationRailLabelType.all,
-                          destinations: _navItems.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final item = entry.value;
-                            return NavigationRailDestination(
-                              icon: _navIcon(
-                                item,
-                                unreadChats,
-                                incomingFriends,
-                                gamesMyTurn,
-                                gameInvitesCount,
-                                dailyRewardCount,
-                                selected: index == selectedIndex,
-                              ),
-                              label: Text(item.label),
-                            );
-                          }).toList(),
-                        ),
-                        Expanded(
-                          child: SizedBox.expand(child: navigationShell),
-                        ),
-                      ],
-                    ),
-            ),
-            // На логине/регистрации nav не нужен: на iOS при клавиатуре viewport
-            // сжимается, и прозрачный bottom nav остаётся над клавиатурой
-            // лиловым «блоком», перекрывая кнопку «Войти».
-            if (narrow && !narrowLandscape && !inChatRoom && !onAuthScreen)
-              SafeArea(
-                top: false,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: MediaQuery.withNoTextScaling(
-                    child: BottomNavigationBar(
-                      currentIndex: selectedIndex,
-                      onTap: navigateWithPrefetch,
-                      type: BottomNavigationBarType.fixed,
-                      elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      selectedItemColor: AppColors.textPrimary,
-                      unselectedItemColor: AppColors.textSecondary,
-                      selectedFontSize: 10,
-                      unselectedFontSize: 10,
-                      showUnselectedLabels: true,
-                      items: _navItems.asMap().entries.map((entry) {
-                        final item = entry.value;
-                        return BottomNavigationBarItem(
-                          icon: _navIcon(item, unreadChats, incomingFriends,
-                              gamesMyTurn, gameInvitesCount, dailyRewardCount),
-                          activeIcon: _navIcon(
-                            item,
-                            unreadChats,
-                            incomingFriends,
-                            gamesMyTurn,
-                            gameInvitesCount,
-                            dailyRewardCount,
-                            selected: true,
-                          ),
-                          label: item.label,
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+        // Свой Messenger: SnackBar привязан к этому Scaffold с bottom nav,
+        // а не к корневому на весь экран.
+        ScaffoldMessenger(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: shellBody,
+            bottomNavigationBar: bottomNav,
+          ),
         ),
       ],
     );
@@ -440,13 +467,15 @@ Widget _navIcon(
   if (badgeValue <= 0) {
     return baseIcon;
   }
+  // Бейдж чуть ниже/внутрь иконки: ClipRect у bottom nav обрезает
+  // всё, что торчит выше (top: -8 раньше срезал кружок).
   return Stack(
     clipBehavior: Clip.none,
     children: [
       baseIcon,
       Positioned(
-        right: -10,
-        top: -8,
+        right: -4,
+        top: 0,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
           decoration: BoxDecoration(

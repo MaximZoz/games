@@ -211,8 +211,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(formatUserError(e))),
+        showAppSnackBar(
+          context,
+          message: formatUserError(e),
+          kind: AppSnackKind.error,
         );
       }
     } finally {
@@ -249,8 +251,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   void _showInviteError(Object error) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(formatUserError(error))),
+      showAppSnackBar(
+        context,
+        message: formatUserError(error),
+        kind: AppSnackKind.error,
       );
     }
   }
@@ -474,8 +478,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(formatUserError(e))),
+        showAppSnackBar(
+          context,
+          message: formatUserError(e),
+          kind: AppSnackKind.error,
         );
       }
     }
