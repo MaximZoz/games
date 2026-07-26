@@ -15,6 +15,8 @@ class HomeScreen extends ConsumerWidget {
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
     final unclaimedAchievements =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    // Прогрев кэша списка — экран «Достижения» открывается без спиннера.
+    ref.watch(achievementsListProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,

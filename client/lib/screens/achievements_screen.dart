@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,26 +19,80 @@ class AchievementsScreen extends ConsumerStatefulWidget {
 }
 
 class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
-  String? _claimingCode;
+  List<AchievementItem> _items = const [];
+  final Set<String> _claimInFlight = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Сразу рисуем кэш, сортировку обновляем фоном без спиннера.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cached = ref.read(achievementsListProvider).valueOrNull;
+      if (cached != null && cached.isNotEmpty) {
+        setState(() => _items = sortAchievements(cached));
+      }
+      unawaited(_reloadSilent());
+    });
+  }
+
+  Future<void> _reloadSilent() async {
+    try {
+      final items = await ref.read(achievementsRepositoryProvider).list();
+      if (!mounted) return;
+      final sorted = sortAchievements(items);
+      setState(() => _items = sorted);
+      // Обновляем кэш провайдера без loading-состояния.
+      ref.invalidate(achievementsUnclaimedCountProvider);
+    } catch (_) {
+      // Оставляем то, что уже на экране.
+    }
+  }
 
   Future<void> _claim(AchievementItem item) async {
-    if (_claimingCode != null) return;
-    setState(() => _claimingCode = item.code);
+    if (_claimInFlight.contains(item.code) || !item.isUnlocked) return;
+    _claimInFlight.add(item.code);
+
+    // Мгновенно: кнопка → «Получено», карточка остаётся, список пересортируется.
+    final previous = _items;
+    setState(() {
+      _items = sortAchievements([
+        for (final a in _items)
+          if (a.code == item.code)
+            AchievementItem(
+              code: a.code,
+              title: a.title,
+              description: a.description,
+              rewardBronze: a.rewardBronze,
+              progress: a.target,
+              target: a.target,
+              status: 'claimed',
+            )
+          else
+            a,
+      ]);
+    });
+
     try {
       final result =
           await ref.read(achievementsRepositoryProvider).claim(item.code);
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
-      ref.invalidate(achievementsListProvider);
+      await ref
+          .read(authStateProvider.notifier)
+          .applyBalance(result.balanceBronze);
       ref.invalidate(achievementsUnclaimedCountProvider);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Получено: +${result.rewardBronze} бронзы'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      // Тихо подтянуть актуальный список в кэш (без спиннера на UI).
+      unawaited(() async {
+        try {
+          final fresh = await ref.read(achievementsRepositoryProvider).list();
+          // Не дергаем invalidate list — иначе FutureProvider уйдёт в loading.
+          if (mounted) {
+            setState(() => _items = sortAchievements(fresh));
+          }
+        } catch (_) {}
+      }());
     } catch (e) {
       if (!mounted) return;
+      setState(() => _items = previous);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceFirst('Exception: ', '')),
@@ -44,14 +100,19 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _claimingCode = null);
+      _claimInFlight.remove(item.code);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final listAsync = ref.watch(achievementsListProvider);
     void goBack() => context.pop();
+
+    // Подхватываем кэш провайдера, если локальный список ещё пуст.
+    final cached = ref.watch(achievementsListProvider).valueOrNull;
+    final items = _items.isNotEmpty
+        ? _items
+        : (cached != null ? sortAchievements(cached) : const <AchievementItem>[]);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -77,49 +138,25 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520),
-              child: listAsync.when(
-                data: (items) {
-                  if (items.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text(
-                        'Войдите, чтобы видеть достижения',
-                        style: TextStyle(color: AppColors.textSecondary),
-                        textAlign: TextAlign.center,
-                      ),
-                    );
-                  }
-                  // Без ListView/листания: фиксированный столбец карточек.
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (var i = 0; i < items.length; i++) ...[
-                          if (i > 0) const SizedBox(height: 10),
-                          _AchievementCard(
-                            item: items[i],
-                            claiming: _claimingCode == items[i].code,
-                            onClaim: items[i].isUnlocked
-                                ? () => _claim(items[i])
-                                : null,
-                          ),
+              child: items.isEmpty
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < items.length; i++) ...[
+                            if (i > 0) const SizedBox(height: 10),
+                            _AchievementCard(
+                              item: items[i],
+                              onClaim: items[i].isUnlocked
+                                  ? () => unawaited(_claim(items[i]))
+                                  : null,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  );
-                },
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    'Не удалось загрузить достижения',
-                    style: TextStyle(color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
             ),
           ),
         ),
@@ -131,12 +168,10 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
 class _AchievementCard extends StatelessWidget {
   const _AchievementCard({
     required this.item,
-    required this.claiming,
     required this.onClaim,
   });
 
   final AchievementItem item;
-  final bool claiming;
   final VoidCallback? onClaim;
 
   IconData get _icon {
@@ -238,21 +273,23 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
           ] else if (item.isClaimed)
-            const Text(
+            Text(
               'Получено',
               style: TextStyle(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                color: Colors.green.shade700,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
               ),
             )
           else
             FilledButton(
-              onPressed: claiming ? null : onClaim,
+              onPressed: onClaim,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentStart,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 alignment: Alignment.center,
                 textStyle: const TextStyle(
                   fontSize: 15,
@@ -261,16 +298,7 @@ class _AchievementCard extends StatelessWidget {
                   decoration: TextDecoration.none,
                 ),
               ),
-              child: claiming
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Забрать'),
+              child: const Text('Забрать'),
             ),
         ],
       ),
