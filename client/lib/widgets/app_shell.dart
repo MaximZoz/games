@@ -155,6 +155,11 @@ class AppShell extends ConsumerWidget {
         return;
       }
 
+      // «Друзья» → корень вкладки + сброс поиска / таб «Друзья».
+      if (target == '/friends') {
+        ref.read(friendsNavTapTickProvider.notifier).state++;
+      }
+
       // Сначала мгновенно меняем вкладку — без ожидания сети.
       // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
