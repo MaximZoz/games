@@ -80,6 +80,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
+  /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
+  final Set<String> _pendingDeliveredIDs = <String>{};
+  final Set<String> _pendingReadIDs = <String>{};
+  final Map<String, String> _pendingDeliveredAtByID = <String, String>{};
+  final Map<String, String> _pendingReadAtByID = <String, String>{};
+
   @override
   void initState() {
     super.initState();
@@ -455,16 +461,35 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return null;
   }
 
+  bool _messageMatchesStatusEvent(
+    ChatMessageItem message,
+    Set<String> messageIDs,
+    String eventAt,
+  ) {
+    if (messageIDs.isNotEmpty) return messageIDs.contains(message.id);
+    // Fallback без message_ids: не трогаем сообщения новее события.
+    final at = DateTime.tryParse(eventAt)?.toUtc();
+    final created = DateTime.tryParse(message.createdAt)?.toUtc();
+    if (at == null || created == null) return true;
+    return !created.isAfter(at);
+  }
+
   void _markOwnMessagesDelivered(
     String meID,
     String deliveredAt,
     Set<String> messageIDs,
   ) {
     if (!mounted) return;
+    if (messageIDs.isNotEmpty) {
+      _pendingDeliveredIDs.addAll(messageIDs);
+      for (final id in messageIDs) {
+        _pendingDeliveredAtByID[id] = deliveredAt;
+      }
+    }
     var changed = false;
     final updated = _messages.map((m) {
       if (m.senderUserID != meID) return m;
-      if (messageIDs.isNotEmpty && !messageIDs.contains(m.id)) return m;
+      if (!_messageMatchesStatusEvent(m, messageIDs, deliveredAt)) return m;
       if (m.deliveredAt != null && m.deliveredAt!.isNotEmpty) return m;
       changed = true;
       return m.copyWith(deliveredAt: deliveredAt);
@@ -479,10 +504,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     Set<String> messageIDs,
   ) {
     if (!mounted) return;
+    if (messageIDs.isNotEmpty) {
+      _pendingReadIDs.addAll(messageIDs);
+      _pendingDeliveredIDs.addAll(messageIDs);
+      for (final id in messageIDs) {
+        _pendingReadAtByID[id] = readAt;
+        _pendingDeliveredAtByID.putIfAbsent(id, () => readAt);
+      }
+    }
     var changed = false;
     final updated = _messages.map((m) {
       if (m.senderUserID != meID) return m;
-      if (messageIDs.isNotEmpty && !messageIDs.contains(m.id)) return m;
+      if (!_messageMatchesStatusEvent(m, messageIDs, readAt)) return m;
       final needDelivered = m.deliveredAt == null || m.deliveredAt!.isEmpty;
       final needRead = m.readAt == null || m.readAt!.isEmpty;
       if (!needDelivered && !needRead) return m;
@@ -496,29 +529,47 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     setState(() => _messages = updated);
   }
 
+  ChatMessageItem _applyPendingStatus(ChatMessageItem item) {
+    var deliveredAt = item.deliveredAt;
+    var readAt = item.readAt;
+    final pendingDelivered = _pendingDeliveredAtByID[item.id];
+    final pendingRead = _pendingReadAtByID[item.id];
+    if (pendingDelivered != null) {
+      deliveredAt = _preferStatusTs(deliveredAt, pendingDelivered);
+    }
+    if (pendingRead != null) {
+      readAt = _preferStatusTs(readAt, pendingRead);
+      deliveredAt = _preferStatusTs(deliveredAt, pendingRead);
+    }
+    if (deliveredAt == item.deliveredAt && readAt == item.readAt) return item;
+    return item.copyWith(deliveredAt: deliveredAt, readAt: readAt);
+  }
+
   void _upsertMessage(ChatMessageItem item) {
     if (!mounted) return;
 
-    final existingIndex = _messages.indexWhere((m) => m.id == item.id);
+    final withPending = _applyPendingStatus(item);
+    final existingIndex = _messages.indexWhere((m) => m.id == withPending.id);
     if (existingIndex >= 0) {
       final existing = _messages[existingIndex];
       // WS-эхо нового сообщения приходит без delivered/read — не затираем статусы.
-      final merged = item.copyWith(
-        deliveredAt: _preferStatusTs(item.deliveredAt, existing.deliveredAt),
-        readAt: _preferStatusTs(item.readAt, existing.readAt),
+      final merged = withPending.copyWith(
+        deliveredAt:
+            _preferStatusTs(withPending.deliveredAt, existing.deliveredAt),
+        readAt: _preferStatusTs(withPending.readAt, existing.readAt),
       );
       final updated = List<ChatMessageItem>.of(_messages);
       updated[existingIndex] = merged;
       setState(() {
         _messages = updated;
-        _messageIDs.add(item.id);
+        _messageIDs.add(withPending.id);
       });
       return;
     }
 
     setState(() {
-      _messages = [..._messages, item];
-      _messageIDs.add(item.id);
+      _messages = [..._messages, withPending];
+      _messageIDs.add(withPending.id);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }

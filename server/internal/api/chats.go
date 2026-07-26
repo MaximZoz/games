@@ -352,6 +352,25 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 		h.publishChatMessage([]uuid.UUID{lowID, highID}, item)
 		h.publishChatListChanged(lowID, highID)
+
+		// Собеседник онлайн по WS — считаем сообщение доставленным сразу
+		// (не ждём, пока его клиент вызовет /delivered).
+		peerID := highID
+		if userID == highID {
+			peerID = lowID
+		}
+		if h.Hub != nil && h.Hub.IsUserOnline(peerID) {
+			if ids, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, peerID); err == nil && len(ids) > 0 {
+				h.publishChatDelivered(
+					[]uuid.UUID{lowID, highID},
+					chatID.String(),
+					peerID.String(),
+					ids,
+				)
+				deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
+				item.DeliveredAt = &deliveredAt
+			}
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
