@@ -68,21 +68,23 @@ final friendsIncomingCountProvider = Provider<int>((ref) {
 
 /// Общее количество зарегистрированных пользователей. Обновляется каждые 30 сек,
 /// только когда пользователь находится на экране «Друзья».
+///
+/// Вне экрана — `null` (не `0`), иначе при открытии «Друзья» мелькает 0.
 final totalUsersCountProvider =
-    AsyncNotifierProvider.autoDispose<TotalUsersCountNotifier, int>(
+    AsyncNotifierProvider.autoDispose<TotalUsersCountNotifier, int?>(
         TotalUsersCountNotifier.new);
 
-class TotalUsersCountNotifier extends AutoDisposeAsyncNotifier<int> {
+class TotalUsersCountNotifier extends AutoDisposeAsyncNotifier<int?> {
   static const _pollInterval = Duration(seconds: 30);
   Timer? _pollTimer;
 
   @override
-  Future<int> build() async {
+  Future<int?> build() async {
     _pollTimer?.cancel();
     final user = ref.watch(authStateProvider).valueOrNull;
     final path = ref.watch(currentRoutePathProvider);
     final onFriends = path == '/friends';
-    if (user == null || !onFriends) return 0;
+    if (user == null || !onFriends) return null;
     final repo = ref.read(friendsRepositoryProvider);
     final count = await repo.getUsersCount();
     _pollTimer = Timer(_pollInterval, () {
