@@ -6,3 +6,6 @@ final mobileToolbarLeadingProvider = StateProvider<Widget?>((ref) => null);
 
 /// Текущий путь — обновляется shell, экраны смотрят и ставят toolbar только при совпадении.
 final currentRoutePathProvider = StateProvider<String>((ref) => '');
+
+/// Инкремент при тапе по вкладке «Профиль» — выйти из режима редактирования.
+final profileExitEditTickProvider = StateProvider<int>((ref) => 0);

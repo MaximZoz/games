@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 /// Свайп от левого края вправо — то же действие, что у кнопки «Назад».
 ///
 /// Срабатывает сразу при достаточном смещении пальца (не ждёт отпускания).
-/// Жест ловится узкой полосой слева, чтобы не мешать TextField и горизонтальным
-/// спискам.
+/// Крайняя полоса с [HitTestBehavior.opaque] перехватывает жест раньше
+/// горизонтальных ListView / TextField (важно для iOS Safari / Flutter Web).
 class SwipeBackScope extends StatefulWidget {
   const SwipeBackScope({
     super.key,
     required this.onBack,
     required this.child,
     this.enabled = true,
-    this.edgeWidth = 32,
-    this.triggerDistance = 28,
+    this.edgeWidth = 48,
+    this.triggerDistance = 20,
     this.topInset = 0,
   });
 
@@ -42,8 +42,12 @@ class _SwipeBackScopeState extends State<SwipeBackScope> {
     _triggered = false;
   }
 
-  void _maybeTrigger() {
-    if (_triggered || !widget.enabled) return;
+  void _onDragStart(DragStartDetails _) => _reset();
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    if (!widget.enabled || _triggered) return;
+    _dx += details.delta.dx;
+    if (_dx < 0) _dx = 0;
     if (_dx < widget.triggerDistance) return;
     _triggered = true;
     widget.onBack();
@@ -54,6 +58,7 @@ class _SwipeBackScopeState extends State<SwipeBackScope> {
     if (!widget.enabled) return widget.child;
 
     return Stack(
+      fit: StackFit.expand,
       children: [
         widget.child,
         Positioned(
@@ -62,13 +67,10 @@ class _SwipeBackScopeState extends State<SwipeBackScope> {
           bottom: 0,
           width: widget.edgeWidth,
           child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: (_) => _reset(),
-            onHorizontalDragUpdate: (details) {
-              _dx += details.delta.dx;
-              if (_dx < 0) _dx = 0;
-              _maybeTrigger();
-            },
+            // opaque: зона всегда в hit-test, даже будучи прозрачной.
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragStart: _onDragStart,
+            onHorizontalDragUpdate: _onDragUpdate,
             onHorizontalDragEnd: (_) => _reset(),
             onHorizontalDragCancel: _reset,
           ),
