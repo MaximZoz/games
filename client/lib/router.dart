@@ -116,30 +116,34 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
+              // Достижения/монеты — дочерние у `/`, чтобы тап «Главная»
+              // (go('/') / initialLocation) всегда показывал карточки.
               GoRoute(
                 path: '/',
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const HomeScreen()),
-              ),
-              GoRoute(
-                path: '/achievements',
-                pageBuilder: (_, state) =>
-                    _noTransitionPage(state, const AchievementsScreen()),
-              ),
-              GoRoute(
-                path: '/coins',
-                pageBuilder: (_, state) =>
-                    _noTransitionPage(state, const CoinsScreen()),
                 routes: [
                   GoRoute(
-                    path: 'login',
+                    path: 'achievements',
                     pageBuilder: (_, state) =>
-                        _noTransitionPage(state, const CoinsLoginScreen()),
+                        _noTransitionPage(state, const AchievementsScreen()),
                   ),
                   GoRoute(
-                    path: 'friend',
+                    path: 'coins',
                     pageBuilder: (_, state) =>
-                        _noTransitionPage(state, const CoinsFriendScreen()),
+                        _noTransitionPage(state, const CoinsScreen()),
+                    routes: [
+                      GoRoute(
+                        path: 'login',
+                        pageBuilder: (_, state) =>
+                            _noTransitionPage(state, const CoinsLoginScreen()),
+                      ),
+                      GoRoute(
+                        path: 'friend',
+                        pageBuilder: (_, state) =>
+                            _noTransitionPage(state, const CoinsFriendScreen()),
+                      ),
+                    ],
                   ),
                 ],
               ),

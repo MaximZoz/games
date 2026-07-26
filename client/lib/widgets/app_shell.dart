@@ -147,9 +147,10 @@ class AppShell extends ConsumerWidget {
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
 
-      // «Главная» → корень /, не /achievements|/coins.
+      // «Главная» → карточки «Достижения» и «Монеты» (корень ветки).
       if (target == '/') {
         Router.neglect(context, () {
+          navigationShell.goBranch(0, initialLocation: true);
           context.go('/');
         });
         return;
