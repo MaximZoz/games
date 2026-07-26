@@ -168,9 +168,11 @@ class AuthRepository {
     required String email,
     required String password,
     String displayName = '',
+    String? ref,
   }) async {
     await init();
     final uri = Uri.parse('$apiBaseUrl/api/auth/register');
+    final referral = (ref ?? '').trim();
     final response = await ApiClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -178,6 +180,7 @@ class AuthRepository {
         'email': email.trim().toLowerCase(),
         'password': password,
         if (displayName.isNotEmpty) 'display_name': displayName,
+        if (referral.isNotEmpty) 'ref': referral,
       }),
       operation: 'AuthRepository.register',
     );

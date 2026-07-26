@@ -55,8 +55,8 @@ class HomeScreen extends ConsumerWidget {
                     icon: Icons.monetization_on_rounded,
                     title: 'Монеты',
                     subtitle: rewardAvailable
-                        ? 'Доступна ежедневная награда'
-                        : 'Баланс и ежедневные награды',
+                        ? 'Доступна награда за вход'
+                        : 'Баланс и награды',
                     badgeCount: rewardAvailable ? 1 : 0,
                     onTap: () => context.push('/coins'),
                   ),

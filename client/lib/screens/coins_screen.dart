@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/auth/referral_link.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+
+enum _CoinsTab { login, friend }
 
 class CoinsScreen extends ConsumerStatefulWidget {
   const CoinsScreen({super.key});
@@ -17,6 +21,8 @@ class CoinsScreen extends ConsumerStatefulWidget {
 class _CoinsScreenState extends ConsumerState<CoinsScreen> {
   bool _isClaiming = false;
   String? _lastClaimMessage;
+  _CoinsTab _tab = _CoinsTab.login;
+  bool _linkCopied = false;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +43,7 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
             tooltip: 'Назад на главную',
           ),
           title: Text(
-            'Монеты',
+            'Награды',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -51,40 +57,116 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
               child: authState.when(
                 data: (user) {
                   if (user == null) return const SizedBox.shrink();
-                  return dailyRewardAsync.when(
-                    data: (status) => _RewardsBody(
-                      status: status,
-                      isClaiming: _isClaiming,
-                      lastClaimMessage: _lastClaimMessage,
-                      onClaim: () async {
-                        if (_isClaiming) return;
-                        setState(() {
-                          _isClaiming = true;
-                          _lastClaimMessage = null;
-                        });
-                        final result = await ref
-                            .read(authStateProvider.notifier)
-                            .claimDailyReward();
-                        if (!mounted) return;
-                        setState(() {
-                          _isClaiming = false;
-                          if (result != null) {
-                            _lastClaimMessage =
-                                'Получено: ${formatRewardBronze(result.rewardBronze)} · день ${result.streak}';
-                          }
-                        });
-                      },
-                    ),
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    error: (_, __) => const Padding(
-                      padding: EdgeInsets.all(AppSpacing.lg),
-                      child: Text(
-                        'Не удалось загрузить награды',
-                        style: TextStyle(color: AppColors.textSecondary),
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          0,
+                          AppSpacing.lg,
+                          12,
+                        ),
+                        child: SegmentedButton<_CoinsTab>(
+                          segments: const [
+                            ButtonSegment(
+                              value: _CoinsTab.login,
+                              label: Text('Монеты за вход'),
+                              icon: Icon(Icons.calendar_today_rounded, size: 16),
+                            ),
+                            ButtonSegment(
+                              value: _CoinsTab.friend,
+                              label: Text('Монеты за друга'),
+                              icon: Icon(Icons.person_add_alt_1_rounded, size: 16),
+                            ),
+                          ],
+                          selected: {_tab},
+                          onSelectionChanged: (next) {
+                            setState(() {
+                              _tab = next.first;
+                              _linkCopied = false;
+                            });
+                          },
+                          style: ButtonStyle(
+                            backgroundColor:
+                                WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.selected)) {
+                                return AppColors.accentSoft;
+                              }
+                              return AppColors.surfaceCard;
+                            }),
+                            foregroundColor:
+                                WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.selected)) {
+                                return AppColors.accentStart;
+                              }
+                              return AppColors.textSecondary;
+                            }),
+                          ),
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: _tab == _CoinsTab.login
+                            ? dailyRewardAsync.when(
+                                data: (status) => _LoginRewardsBody(
+                                  status: status,
+                                  isClaiming: _isClaiming,
+                                  lastClaimMessage: _lastClaimMessage,
+                                  onClaim: () async {
+                                    if (_isClaiming) return;
+                                    setState(() {
+                                      _isClaiming = true;
+                                      _lastClaimMessage = null;
+                                    });
+                                    final result = await ref
+                                        .read(authStateProvider.notifier)
+                                        .claimDailyReward();
+                                    if (!mounted) return;
+                                    setState(() {
+                                      _isClaiming = false;
+                                      if (result != null) {
+                                        _lastClaimMessage =
+                                            'Получено: ${formatRewardBronze(result.rewardBronze)} · день ${result.streak}';
+                                      }
+                                    });
+                                  },
+                                ),
+                                loading: () => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                error: (_, __) => const Padding(
+                                  padding: EdgeInsets.all(AppSpacing.lg),
+                                  child: Text(
+                                    'Не удалось загрузить награды',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : _FriendRewardsBody(
+                                userId: user.id,
+                                linkCopied: _linkCopied,
+                                onCopyLink: () async {
+                                  final messenger =
+                                      ScaffoldMessenger.of(context);
+                                  final url = buildReferralShareUrl(
+                                    userId: user.id,
+                                    baseUri: Uri.base,
+                                  );
+                                  await Clipboard.setData(
+                                    ClipboardData(text: url),
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _linkCopied = true);
+                                  messenger.showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Ссылка скопирована'),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   );
                 },
                 loading: () =>
@@ -99,8 +181,200 @@ class _CoinsScreenState extends ConsumerState<CoinsScreen> {
   }
 }
 
-class _RewardsBody extends StatelessWidget {
-  const _RewardsBody({
+class _FriendRewardsBody extends StatelessWidget {
+  const _FriendRewardsBody({
+    required this.userId,
+    required this.onCopyLink,
+    required this.linkCopied,
+  });
+
+  final String userId;
+  final VoidCallback onCopyLink;
+  final bool linkCopied;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = buildReferralShareUrl(userId: userId, baseUri: Uri.base);
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCard,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.accentSoft.withValues(alpha: 0.7),
+                    ),
+                    alignment: Alignment.center,
+                    child: const CoinIcon(
+                      coinType: CoinType.bronze,
+                      size: 30,
+                      animate: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Пригласи друга',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '+${formatRewardBronze(referralBonusBronze)} за каждого, кто зарегистрируется по вашей ссылке',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SelectableText(
+                  url,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onCopyLink,
+                  icon: Icon(
+                    linkCopied ? Icons.check_rounded : Icons.link_rounded,
+                    size: 18,
+                  ),
+                  label: Text(linkCopied ? 'Скопировано' : 'Скопировать ссылку'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'Как это работает',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _FriendStep(
+          number: '1',
+          text: 'Скопируйте ссылку и отправьте другу',
+        ),
+        _FriendStep(
+          number: '2',
+          text: 'Друг регистрируется по этой ссылке',
+        ),
+        _FriendStep(
+          number: '3',
+          text: 'Вам начисляется ${formatRewardBronze(referralBonusBronze)}',
+        ),
+      ],
+    );
+  }
+}
+
+class _FriendStep extends StatelessWidget {
+  const _FriendStep({required this.number, required this.text});
+
+  final String number;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accentStart,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoginRewardsBody extends StatelessWidget {
+  const _LoginRewardsBody({
     required this.status,
     required this.onClaim,
     required this.isClaiming,

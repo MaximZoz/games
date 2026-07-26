@@ -33,6 +33,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? get _redirect =>
       safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
 
+  String? get _ref {
+    final raw = GoRouterState.of(context).uri.queryParameters['ref']?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +85,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
             displayName: displayName,
+            ref: _ref,
           );
       if (mounted) context.go(_redirect ?? '/');
     } catch (e) {
@@ -240,7 +247,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => context.go(
-                          appendRedirectQuery('/login', _redirect),
+                          appendAuthQuery(
+                            '/login',
+                            redirect: _redirect,
+                            ref: _ref,
+                          ),
                         ),
                         child: const Text('Уже есть аккаунт? Войти'),
                       ),

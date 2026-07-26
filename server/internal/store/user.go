@@ -45,18 +45,59 @@ func scanUser(row pgx.Row) (*User, error) {
 	return &u, nil
 }
 
-func CreateUser(ctx context.Context, pool *pgxpool.Pool, email, passwordHash, displayName string) (*User, error) {
+func CreateUser(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	email, passwordHash, displayName string,
+	referredBy *uuid.UUID,
+) (*User, error) {
 	displayNamePtr := (*string)(nil)
 	if displayName != "" {
 		displayNamePtr = &displayName
 	}
-	row := pool.QueryRow(ctx,
-		`INSERT INTO users (email, password_hash, display_name, balance_bronze)
-		 VALUES ($1, $2, $3, $4)
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var referrerID *uuid.UUID
+	if referredBy != nil && *referredBy != uuid.Nil {
+		var exists uuid.UUID
+		err = tx.QueryRow(ctx, `SELECT id FROM users WHERE id = $1`, *referredBy).Scan(&exists)
+		if err == nil {
+			referrerID = referredBy
+		}
+		// Невалидный ref игнорируем — регистрация всё равно проходит.
+	}
+
+	row := tx.QueryRow(ctx,
+		`INSERT INTO users (email, password_hash, display_name, balance_bronze, referred_by)
+		 VALUES ($1, $2, $3, $4, $5)
 		 RETURNING `+selectUserCols,
-		email, passwordHash, displayNamePtr, RegistrationBonusBronze,
+		email, passwordHash, displayNamePtr, RegistrationBonusBronze, referrerID,
 	)
-	return scanUser(row)
+	u, err := scanUser(row)
+	if err != nil {
+		return nil, err
+	}
+
+	if referrerID != nil {
+		_, err = tx.Exec(ctx, `
+			UPDATE users
+			SET balance_bronze = balance_bronze + $2, updated_at = now()
+			WHERE id = $1
+		`, *referrerID, ReferralBonusBronze)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 func GetUserByEmail(ctx context.Context, pool *pgxpool.Pool, email string) (*User, error) {

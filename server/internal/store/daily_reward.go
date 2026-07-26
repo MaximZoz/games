@@ -14,6 +14,7 @@ const (
 	BronzePerSilver = 100
 
 	RegistrationBonusBronze = 50
+	ReferralBonusBronze     = 50 // рефереру, если друг зарегистрировался по ссылке
 	DailyBaseRewardBronze   = 10
 	DailyStreakCycleDays    = 30
 )

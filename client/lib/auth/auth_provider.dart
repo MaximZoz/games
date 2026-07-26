@@ -81,9 +81,15 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     required String email,
     required String password,
     String displayName = '',
+    String? ref,
   }) async {
     final repo = _ref.read(authRepositoryProvider);
-    final result = await repo.register(email: email, password: password, displayName: displayName);
+    final result = await repo.register(
+      email: email,
+      password: password,
+      displayName: displayName,
+      ref: ref,
+    );
     state = AsyncValue.data(result.user);
   }
 

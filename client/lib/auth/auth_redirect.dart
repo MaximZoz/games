@@ -18,9 +18,22 @@ String? safeAuthRedirect(String? raw) {
 
 /// Добавляет `?redirect=` к [path], если [redirect] безопасен.
 String appendRedirectQuery(String path, String? redirect) {
+  return appendAuthQuery(path, redirect: redirect);
+}
+
+/// Добавляет query (`redirect`, `ref`) к пути логина/регистрации.
+String appendAuthQuery(
+  String path, {
+  String? redirect,
+  String? ref,
+}) {
+  final params = <String, String>{};
   final safe = safeAuthRedirect(redirect);
-  if (safe == null) return path;
-  return Uri(path: path, queryParameters: {'redirect': safe}).toString();
+  if (safe != null) params['redirect'] = safe;
+  final referral = (ref ?? '').trim();
+  if (referral.isNotEmpty) params['ref'] = referral;
+  if (params.isEmpty) return path;
+  return Uri(path: path, queryParameters: params).toString();
 }
 
 /// Текущий location (path + query) из [uri] для сохранения в redirect.
