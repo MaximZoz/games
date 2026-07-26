@@ -690,6 +690,31 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     });
   }
 
+  Future<bool> _confirmRemoveFriend(FriendUserItem user) async {
+    final name = _displayName(user);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Убрать из друзей?'),
+        content: Text(
+          'Вы уверены, что хотите удалить $name из друзей?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Убрать'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
   Future<void> _runSearchAction({
     required String key,
     required Future<void> Function(FriendsRepository repo) call,
@@ -1022,13 +1047,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
               const SizedBox(width: 4),
-              _buildActionIcon(
-                key: key,
+              _buildCompactIconButton(
                 icon: Icons.person_remove_alt_1_rounded,
                 tooltip: 'Удалить из друзей',
-                call: (repo) => repo.removeFriend(item.user.id),
-                success: 'Пользователь удалён из друзей',
                 danger: true,
+                loading: _busy(key),
+                onPressed: _busy(key)
+                    ? null
+                    : () async {
+                        final ok = await _confirmRemoveFriend(item.user);
+                        if (!ok || !mounted) return;
+                        await _runAction(
+                          key: key,
+                          call: (repo) => repo.removeFriend(item.user.id),
+                          success: 'Пользователь удалён из друзей',
+                        );
+                      },
               ),
             ],
           ),
@@ -1364,13 +1398,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           loading: removeBusy,
           onPressed: removeBusy
               ? null
-              : () => _runSearchAction(
+              : () async {
+                  final ok = await _confirmRemoveFriend(item.user);
+                  if (!ok || !mounted) return;
+                  await _runSearchAction(
                     key: removeKey,
                     call: (repo) => repo.removeFriend(item.user.id),
                     success: 'Пользователь удалён из друзей',
                     userID: item.user.id,
                     nextRelationStatus: 'none',
-                  ),
+                  );
+                },
         ),
       ]);
     }
