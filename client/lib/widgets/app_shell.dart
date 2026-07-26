@@ -147,13 +147,17 @@ class AppShell extends ConsumerWidget {
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
 
-      // «Профиль» / «Главная» → корень главной (карточки), не /achievements|/coins.
-      // goBranch(0) восстанавливает последний путь ветки — поэтому явный go('/').
-      if (target == '/profile' || target == '/') {
+      // «Главная» → корень /, не /achievements|/coins.
+      if (target == '/') {
         Router.neglect(context, () {
           context.go('/');
         });
         return;
+      }
+
+      // Повторный тап по «Профиль» — выйти из редактирования.
+      if (target == '/profile') {
+        ref.read(profileExitEditTickProvider.notifier).state++;
       }
 
       // «Друзья» → корень вкладки + сброс поиска / таб «Друзья».
@@ -181,10 +185,12 @@ class AppShell extends ConsumerWidget {
         return;
       }
 
+      // Профиль: всегда /profile — иначе после логина ветка восстанавливает /login.
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
-          initialLocation: i == navigationShell.currentIndex,
+          initialLocation: i == navigationShell.currentIndex ||
+              target == '/profile',
         );
       });
 
