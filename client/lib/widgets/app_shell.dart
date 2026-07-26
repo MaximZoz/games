@@ -320,43 +320,54 @@ class AppShell extends ConsumerWidget {
               ),
             ),
             Expanded(
-              child: narrow && !narrowLandscape
-                  ? SizedBox.expand(child: navigationShell)
-                  : Row(
-                      children: [
-                        NavigationRail(
-                          selectedIndex: selectedIndex,
-                          onDestinationSelected: navigateWithPrefetch,
-                          backgroundColor: Colors.transparent,
-                          selectedIconTheme:
-                              const IconThemeData(color: AppColors.accentStart),
-                          unselectedIconTheme: const IconThemeData(
-                              color: AppColors.textSecondary),
-                          labelType: narrowLandscape
-                              ? NavigationRailLabelType.none
-                              : NavigationRailLabelType.all,
-                          destinations: _navItems.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final item = entry.value;
-                            return NavigationRailDestination(
-                              icon: _navIcon(
-                                item,
-                                unreadChats,
-                                incomingFriends,
-                                gamesMyTurn,
-                                gameInvitesCount,
-                                dailyRewardCount,
-                                selected: index == selectedIndex,
-                              ),
-                              label: Text(item.label),
-                            );
-                          }).toList(),
+              // Тост в области контента — всегда над bottom nav, без угадывания высоты.
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  narrow && !narrowLandscape
+                      ? SizedBox.expand(child: navigationShell)
+                      : Row(
+                          children: [
+                            NavigationRail(
+                              selectedIndex: selectedIndex,
+                              onDestinationSelected: navigateWithPrefetch,
+                              backgroundColor: Colors.transparent,
+                              selectedIconTheme: const IconThemeData(
+                                  color: AppColors.accentStart),
+                              unselectedIconTheme: const IconThemeData(
+                                  color: AppColors.textSecondary),
+                              labelType: narrowLandscape
+                                  ? NavigationRailLabelType.none
+                                  : NavigationRailLabelType.all,
+                              destinations:
+                                  _navItems.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final item = entry.value;
+                                return NavigationRailDestination(
+                                  icon: _navIcon(
+                                    item,
+                                    unreadChats,
+                                    incomingFriends,
+                                    gamesMyTurn,
+                                    gameInvitesCount,
+                                    dailyRewardCount,
+                                    selected: index == selectedIndex,
+                                  ),
+                                  label: Text(item.label),
+                                );
+                              }).toList(),
+                            ),
+                            Expanded(
+                              child: SizedBox.expand(child: navigationShell),
+                            ),
+                          ],
                         ),
-                        Expanded(
-                          child: SizedBox.expand(child: navigationShell),
-                        ),
-                      ],
-                    ),
+                  AppSnackHost(
+                    padSafeBottom:
+                        !showBottomNav || collapseBottomNav,
+                  ),
+                ],
+              ),
             ),
             // На логине/регистрации nav не нужен: на iOS при клавиатуре viewport
             // сжимается, и прозрачный bottom nav остаётся над клавиатурой
@@ -416,11 +427,6 @@ class AppShell extends ConsumerWidget {
                 ),
               ),
           ],
-        ),
-        // Поверх всего UI, с отступом над нижней навигацией.
-        AppSnackHost(
-          showBottomNav: showBottomNav,
-          collapseBottomNav: collapseBottomNav,
         ),
       ],
     );

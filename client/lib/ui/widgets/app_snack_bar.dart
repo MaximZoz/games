@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/responsive.dart';
 
 enum AppSnackKind { info, success, error }
 
@@ -23,12 +22,12 @@ class AppSnackMessage {
   final Duration duration;
 }
 
-/// Текущий тост для [AppSnackHost] в AppShell (поверх bottom nav).
+/// Текущий тост для [AppSnackHost] в AppShell (над bottom nav).
 final appSnackProvider = StateProvider<AppSnackMessage?>((ref) => null);
 
 int _snackSeq = 0;
 
-/// Показать фирменный тост. Рисуется хостом в AppShell над нижним меню.
+/// Показать фирменный тост. Рисуется хостом в AppShell над нижней навигацией.
 void showAppSnackBar(
   BuildContext context, {
   required String message,
@@ -49,27 +48,15 @@ void showAppSnackBar(
   );
 }
 
-/// Нижний отступ: над bottom nav (если виден) + safe area.
-double appSnackBottomOffset(
-  BuildContext context, {
-  required bool showBottomNav,
-  required bool collapseBottomNav,
-}) {
-  final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
-  final nav = (showBottomNav && !collapseBottomNav) ? 72.0 : 0.0;
-  return safeBottom + nav + 12;
-}
-
-/// Хост тостов — кладётся последним слоем в Stack AppShell.
+/// Хост тостов — в Stack области контента (над bottom nav в Column).
 class AppSnackHost extends ConsumerStatefulWidget {
   const AppSnackHost({
     super.key,
-    required this.showBottomNav,
-    required this.collapseBottomNav,
+    this.padSafeBottom = true,
   });
 
-  final bool showBottomNav;
-  final bool collapseBottomNav;
+  /// Когда bottom nav уже учитывает SafeArea — false, иначе тост над home indicator.
+  final bool padSafeBottom;
 
   @override
   ConsumerState<AppSnackHost> createState() => _AppSnackHostState();
@@ -105,7 +92,6 @@ class _AppSnackHostState extends ConsumerState<AppSnackHost> {
         _scheduleHide(next);
       }
     });
-    // Если тост уже был в провайдере до первого listen — тоже запускаем таймер.
     if (snack != null && snack.id != _shownId) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -118,36 +104,26 @@ class _AppSnackHostState extends ConsumerState<AppSnackHost> {
 
     if (snack == null) return const SizedBox.shrink();
 
-    final bottom = appSnackBottomOffset(
-      context,
-      showBottomNav: widget.showBottomNav,
-      collapseBottomNav: widget.collapseBottomNav,
-    );
+    final safe =
+        widget.padSafeBottom ? MediaQuery.viewPaddingOf(context).bottom : 0.0;
 
     return Positioned(
       left: 16,
       right: 16,
-      bottom: bottom,
-      child: SafeArea(
-        top: false,
-        left: false,
-        right: false,
-        // Safe area уже учтён в [appSnackBottomOffset]; здесь только клип по ширине.
-        bottom: false,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: _AppSnackCard(
-            key: ValueKey(snack.id),
-            message: snack.message,
-            kind: snack.kind,
-            icon: snack.icon,
-            onDismiss: () {
-              _hideTimer?.cancel();
-              if (ref.read(appSnackProvider)?.id == snack.id) {
-                ref.read(appSnackProvider.notifier).state = null;
-              }
-            },
-          ),
+      bottom: safe + 12,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: _AppSnackCard(
+          key: ValueKey(snack.id),
+          message: snack.message,
+          kind: snack.kind,
+          icon: snack.icon,
+          onDismiss: () {
+            _hideTimer?.cancel();
+            if (ref.read(appSnackProvider)?.id == snack.id) {
+              ref.read(appSnackProvider.notifier).state = null;
+            }
+          },
         ),
       ),
     );
@@ -236,9 +212,6 @@ class _AppSnackCardState extends State<_AppSnackCard>
   @override
   Widget build(BuildContext context) {
     final style = _style();
-    // На широком экране без bottom nav isNarrow всё ещё может быть false —
-    // оставляем maxWidth.
-    final _ = isNarrow(context);
 
     return SlideTransition(
       position: _slide,
@@ -337,8 +310,7 @@ class _AppSnackCardState extends State<_AppSnackCard>
                               animation: _shine,
                               builder: (context, _) {
                                 return FractionallySizedBox(
-                                  alignment:
-                                      Alignment(_shine.value * 2 - 1, 0),
+                                  alignment: Alignment(_shine.value * 2 - 1, 0),
                                   widthFactor: 0.28,
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
