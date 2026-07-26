@@ -143,16 +143,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
-  Future<void> _goBackToChats() async {
+  void _goBackToChats() {
     if (_leavingToChats) return;
-    setState(() => _leavingToChats = true);
-    if (!mounted) return;
-    try {
-      await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
-    } catch (_) {}
-    if (!mounted) return;
-    // Без force-reload списка: только локальный unread + pop на стек списка.
-    markChatReadInChatsCache(ref, widget.chatID);
+    _leavingToChats = true;
+
+    final chatId = widget.chatID;
+    // Локально сразу сбрасываем unread — список чатов без мигания.
+    markChatReadInChatsCache(ref, chatId);
+
     if (widget.fromGames && widget.gameReturnPath != null) {
       context.go(widget.gameReturnPath!);
     } else if (widget.fromFriends) {
@@ -162,6 +160,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     } else {
       context.go('/chats');
     }
+
+    // markRead на сервере — в фоне, не блокирует «Назад».
+    unawaited(
+      ref.read(chatsRepositoryProvider).markRead(chatId).then<void>(
+            (_) {},
+            onError: (_, __) {},
+          ),
+    );
   }
 
   Future<bool> _confirmAction({
