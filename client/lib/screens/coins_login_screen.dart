@@ -181,9 +181,7 @@ class _CompactMilestoneCard extends StatelessWidget {
         ? 0.0
         : (doneDays + (pendingToday ? 0.35 : 0)) / targetDays;
 
-    final title = targetDays == 1
-        ? 'Каждый день'
-        : '$targetDays ${_daysWord(targetDays)}';
+    final title = '$targetDays ${_daysWord(targetDays)}';
 
     final progressLabel = completed
         ? '$targetDays/$targetDays'
@@ -230,12 +228,6 @@ class _CompactMilestoneCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
-              _MiniChip(
-                completed: completed,
-                pendingToday: pendingToday,
-                remaining: remaining,
-              ),
             ],
           ),
           const Spacer(),
@@ -260,55 +252,6 @@ class _CompactMilestoneCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MiniChip extends StatelessWidget {
-  const _MiniChip({
-    required this.completed,
-    required this.pendingToday,
-    required this.remaining,
-  });
-
-  final bool completed;
-  final bool pendingToday;
-  final int remaining;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color bg;
-    final Color fg;
-    final String label;
-
-    if (completed) {
-      bg = const Color(0xFF34B7F1).withValues(alpha: 0.16);
-      fg = const Color(0xFF0288D1);
-      label = 'Готово';
-    } else if (pendingToday) {
-      bg = AppColors.accentSoft;
-      fg = AppColors.accentStart;
-      label = 'Сегодня';
-    } else {
-      bg = Colors.black.withValues(alpha: 0.05);
-      fg = AppColors.textSecondary;
-      label = '−$remaining';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: fg,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }
