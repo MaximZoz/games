@@ -40,7 +40,7 @@ class CoinsScreen extends ConsumerWidget {
         ),
         body: SafeArea(
           child: Center(
-            child: SingleChildScrollView(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 460),
