@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -108,6 +109,10 @@ class AppShell extends ConsumerWidget {
     final gameInvitesCount = ref.watch(gameInvitesCountProvider);
     final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
     final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
+    final achievementsUnclaimed =
+        ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    // На «Главной» суммируем daily + незабранные достижения.
+    final homeBadgeCount = dailyRewardCount + achievementsUnclaimed;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
@@ -141,9 +146,24 @@ class AppShell extends ConsumerWidget {
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
+
+      // «Главная» → карточки «Достижения» и «Монеты» (корень ветки).
+      if (target == '/') {
+        Router.neglect(context, () {
+          navigationShell.goBranch(0, initialLocation: true);
+          context.go('/');
+        });
+        return;
+      }
+
       // Повторный тап по «Профиль» — выйти из редактирования.
       if (target == '/profile') {
         ref.read(profileExitEditTickProvider.notifier).state++;
+      }
+
+      // «Друзья» → корень вкладки + сброс поиска / таб «Друзья».
+      if (target == '/friends') {
+        ref.read(friendsNavTapTickProvider.notifier).state++;
       }
 
       // Сначала мгновенно меняем вкладку — без ожидания сети.
@@ -333,7 +353,7 @@ class AppShell extends ConsumerWidget {
                             incomingFriends,
                             gamesMyTurn,
                             gameInvitesCount,
-                            dailyRewardCount,
+                            homeBadgeCount,
                             selected: index == selectedIndex,
                           ),
                           label: Text(item.label),
@@ -383,7 +403,7 @@ class AppShell extends ConsumerWidget {
                               incomingFriends,
                               gamesMyTurn,
                               gameInvitesCount,
-                              dailyRewardCount,
+                              homeBadgeCount,
                             ),
                             activeIcon: _navIcon(
                               item,
@@ -391,7 +411,7 @@ class AppShell extends ConsumerWidget {
                               incomingFriends,
                               gamesMyTurn,
                               gameInvitesCount,
-                              dailyRewardCount,
+                              homeBadgeCount,
                               selected: true,
                             ),
                             label: item.label,
@@ -435,7 +455,7 @@ Widget _navIcon(
   int incomingFriends,
   int gamesMyTurn,
   int gameInvitesCount,
-  int dailyRewardCount, {
+  int homeBadgeCount, {
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
@@ -461,7 +481,7 @@ Widget _navIcon(
   } else if (item.path == '/games') {
     badgeValue = gamesMyTurn + gameInvitesCount;
   } else if (item.path == '/') {
-    badgeValue = dailyRewardCount;
+    badgeValue = homeBadgeCount;
   }
 
   if (badgeValue <= 0) {

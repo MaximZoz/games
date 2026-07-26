@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
@@ -302,6 +303,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           displayName: displayName,
           extra: extra,
         );
+    ref.invalidate(achievementsListProvider);
+    ref.invalidate(achievementsUnclaimedCountProvider);
     if (mounted) _startClosing();
   }
 
@@ -1261,6 +1264,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       maxLines: expands ? null : 4,
       minLines: expands ? null : 3,
       maxLength: 100,
+      textCapitalization: TextCapitalization.sentences,
       scrollPadding: const EdgeInsets.only(bottom: 120),
       decoration: InputDecoration(
         labelText: 'О себе',
@@ -1552,6 +1556,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 TextFormField(
                   controller: _aboutController,
                   inputFormatters: _aboutFormatters,
+                  textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
                     labelText: 'О себе',
                     hintText: 'До 100 символов (по желанию)',

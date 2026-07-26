@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,12 +17,57 @@ class CoinsLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
-  bool _isClaiming = false;
+  bool _claimInFlight = false;
+  /// Локальный статус после клейма — без спиннера на время invalidate.
+  DailyRewardStatus? _optimisticStatus;
+
+  Future<void> _claim(DailyRewardStatus status) async {
+    if (_claimInFlight || !status.available) return;
+    _claimInFlight = true;
+
+    final previous = _optimisticStatus;
+    // Мгновенно: кнопка → «Уже получено», карточки обновляют прогресс.
+    setState(() {
+      _optimisticStatus = DailyRewardStatus(
+        available: false,
+        streak: status.nextStreak,
+        nextStreak: status.nextStreak,
+        nextRewardBronze: status.nextRewardBronze,
+        milestonesBronze: status.milestonesBronze,
+      );
+    });
+
+    try {
+      final result =
+          await ref.read(authStateProvider.notifier).claimDailyReward();
+      if (!mounted) return;
+      if (result != null) {
+        setState(() {
+          _optimisticStatus = DailyRewardStatus(
+            available: false,
+            streak: result.streak,
+            nextStreak: result.streak,
+            nextRewardBronze: status.nextRewardBronze,
+            milestonesBronze: status.milestonesBronze,
+          );
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _optimisticStatus = previous);
+    } finally {
+      _claimInFlight = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final dailyRewardAsync = ref.watch(dailyRewardStatusProvider);
     void goBack() => context.pop();
+
+    // Не уходим в полноэкранный спиннер при refresh после клейма.
+    final cached = dailyRewardAsync.valueOrNull;
+    final status = _optimisticStatus ?? cached;
 
     return SwipeBackScope(
       onBack: goBack,
@@ -46,27 +93,21 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: dailyRewardAsync.when(
-                data: (status) => _LoginRewardsBody(
-                  status: status,
-                  isClaiming: _isClaiming,
-                  onClaim: () async {
-                    if (_isClaiming) return;
-                    setState(() => _isClaiming = true);
-                    await ref.read(authStateProvider.notifier).claimDailyReward();
-                    if (!mounted) return;
-                    setState(() => _isClaiming = false);
-                  },
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Не удалось загрузить награды',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-              ),
+              child: status != null
+                  ? _LoginRewardsBody(
+                      status: status,
+                      onClaim: () => unawaited(_claim(status)),
+                    )
+                  : dailyRewardAsync.hasError
+                      ? const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'Не удалось загрузить награды',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        )
+                      // Только первая загрузка; после клейма спиннера нет.
+                      : const Center(child: CircularProgressIndicator()),
             ),
           ),
         ),
@@ -79,18 +120,16 @@ class _LoginRewardsBody extends StatelessWidget {
   const _LoginRewardsBody({
     required this.status,
     required this.onClaim,
-    required this.isClaiming,
   });
 
   final DailyRewardStatus status;
-  final Future<void> Function() onClaim;
-  final bool isClaiming;
+  final VoidCallback onClaim;
 
   static const _milestones = [1, 3, 7, 30];
 
   @override
   Widget build(BuildContext context) {
-    final canClaim = status.available && !isClaiming;
+    final canClaim = status.available;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -120,21 +159,10 @@ class _LoginRewardsBody extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: canClaim ? () => onClaim() : null,
-              icon: isClaiming
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.card_giftcard, size: 18),
+              onPressed: canClaim ? onClaim : null,
+              icon: const Icon(Icons.card_giftcard, size: 18),
               label: Text(
-                isClaiming
-                    ? '...'
-                    : (status.available ? 'Забрать награду' : 'Уже получено'),
+                status.available ? 'Забрать награду' : 'Уже получено',
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentStart,
@@ -142,7 +170,8 @@ class _LoginRewardsBody extends StatelessWidget {
                 disabledBackgroundColor:
                     AppColors.accentStart.withValues(alpha: 0.45),
                 disabledForegroundColor: Colors.white.withValues(alpha: 0.75),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
           ),

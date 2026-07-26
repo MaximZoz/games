@@ -407,7 +407,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
-  Widget _buildAvatar(FriendUserItem user, {bool? isOnline}) {
+  Widget _buildAvatar(
+    FriendUserItem user, {
+    bool? isOnline,
+    VoidCallback? onTap,
+  }) {
     Widget avatar;
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
@@ -436,7 +440,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       avatar = _buildLetterAvatar(user);
     }
     if (isOnline == true) {
-      return Stack(
+      avatar = Stack(
         clipBehavior: Clip.none,
         children: [
           avatar,
@@ -456,7 +460,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       );
     }
-    return avatar;
+    if (onTap == null) return avatar;
+    return Tooltip(
+      message: 'Информация о пользователе',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: avatar,
+        ),
+      ),
+    );
   }
 
   Widget _buildLetterAvatar(FriendUserItem user) {
@@ -519,17 +534,40 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
   }
 
+  void _clearSearchState({required bool collapseExpanded}) {
+    _searchDebounce?.cancel();
+    _searchRevision++;
+    _searchController.clear();
+    _searchResults = const [];
+    _isSearching = false;
+    _isSearchLoadingMore = false;
+    _searchHasMore = false;
+    if (collapseExpanded) {
+      _isSearchExpanded = false;
+    }
+  }
+
+  /// Тап по bottom-nav «Друзья»: свернуть/очистить поиск и открыть таб «Друзья».
+  void _onFriendsNavTap() {
+    if (!mounted) return;
+    final friendsIndex = _currentTabs.indexOf(_FriendsTabKind.friends);
+    final targetIndex = friendsIndex >= 0 ? friendsIndex : 0;
+    setState(() {
+      _clearSearchState(collapseExpanded: true);
+      if (_tabController.index != targetIndex &&
+          targetIndex < _tabController.length) {
+        _tabController.index = targetIndex;
+      }
+    });
+    _searchFocusNode.unfocus();
+    _syncBottomNavCollapse();
+  }
+
   void _toggleSearch() {
     setState(() {
       _isSearchExpanded = !_isSearchExpanded;
       if (!_isSearchExpanded) {
-        _searchDebounce?.cancel();
-        _searchRevision++;
-        _searchController.clear();
-        _searchResults = const [];
-        _isSearching = false;
-        _isSearchLoadingMore = false;
-        _searchHasMore = false;
+        _clearSearchState(collapseExpanded: false);
       }
     });
 
@@ -817,7 +855,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         children: [
           Row(
             children: [
-              _buildAvatar(user, isOnline: presence?.online),
+              _buildAvatar(
+                user,
+                isOnline: presence?.online,
+                onTap: () => _showRequestInfoDialog(
+                  user: user,
+                  presence: presence,
+                ),
+              ),
               SizedBox(width: compactDesktopCard ? 8 : 10),
               Expanded(
                 child: Column(
@@ -1048,13 +1093,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
-                icon: Icons.info_outline_rounded,
-                tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(
-                    user: item.user, presence: presence[item.user.id]),
-              ),
-              const SizedBox(width: 4),
-              _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 tooltip: 'Написать сообщение',
                 loading: _busy(chatKey),
@@ -1062,7 +1100,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildCompactIconButton(
                 icon: Icons.person_remove_alt_1_rounded,
                 tooltip: 'Удалить из друзей',
@@ -1109,13 +1147,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
-                icon: Icons.info_outline_rounded,
-                tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(
-                    user: item.user, presence: presence[item.user.id]),
-              ),
-              const SizedBox(width: 4),
-              _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 tooltip: 'Написать сообщение',
                 loading: _busy(chatKey),
@@ -1123,7 +1154,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildActionIcon(
                 key: acceptKey,
                 icon: Icons.check_rounded,
@@ -1168,13 +1199,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
-                icon: Icons.info_outline_rounded,
-                tooltip: 'Информация о пользователе',
-                onPressed: () => _showRequestInfoDialog(
-                    user: item.user, presence: presence[item.user.id]),
-              ),
-              const SizedBox(width: 4),
-              _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 tooltip: 'Написать сообщение',
                 loading: _busy(chatKey),
@@ -1182,7 +1206,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ? null
                     : () => _openChatWithUser(item.user, actionKey: chatKey),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 14),
               _buildActionIcon(
                 key: cancelKey,
                 icon: Icons.close_rounded,
@@ -1316,14 +1340,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final removeKey = 'remove_search_${item.user.id}';
     final chatKey = 'chat_search_${item.user.id}';
 
-    final controls = <Widget>[
-      _buildCompactIconButton(
-        icon: Icons.info_outline_rounded,
-        tooltip: 'Информация о пользователе',
-        onPressed: () => _showRequestInfoDialog(
-            user: item.user, presence: presence[item.user.id]),
-      ),
-    ];
+    final controls = <Widget>[];
     if (relation == 'none') {
       final busy = _busy(sendKey);
       controls.add(
@@ -1453,7 +1470,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       animate: false,
       child: Row(
         children: [
-          _buildAvatar(item.user, isOnline: presence[item.user.id]?.online),
+          _buildAvatar(
+            item.user,
+            isOnline: presence[item.user.id]?.online,
+            onTap: () => _showRequestInfoDialog(
+              user: item.user,
+              presence: presence[item.user.id],
+            ),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1851,6 +1875,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         : isFindFriend
             ? Colors.green.shade700
             : AppColors.accentStart;
+    final countStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: countColor,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1862,14 +1891,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               color: AppColors.accentSoft,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: countColor,
-              ),
-            ),
+            child: isFindFriend
+                ? _AnimatedCountText(
+                    value: count,
+                    style: countStyle,
+                    // С нуля при первом появлении; дальше — от старого к новому.
+                    animateFromZeroOnce: true,
+                  )
+                : Text('$count', style: countStyle),
           )
         else
           const SizedBox(height: 22),
@@ -1912,9 +1941,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(friendsNavTapTickProvider, (_, __) {
+      _onFriendsNavTap();
+    });
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    final totalUsersCount = ref.watch(totalUsersCountProvider).valueOrNull;
+    final totalUsersAsync = ref.watch(totalUsersCountProvider);
+    // Не показываем «0» из прошлго/пустого состояния на время загрузки.
+    final totalUsersCount = totalUsersAsync.when(
+      data: (v) => v,
+      loading: () {
+        final prev = totalUsersAsync.valueOrNull;
+        if (prev == null || prev <= 0) return null;
+        return prev;
+      },
+      error: (_, __) => totalUsersAsync.valueOrNull,
+    );
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     if (!_sameTabs(tabs, _currentTabs) ||
         _tabController.length != tabs.length) {
@@ -2054,6 +2096,61 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Плавный счётчик для бейджа «Найти друга»: 0 → N, затем N → M.
+class _AnimatedCountText extends StatefulWidget {
+  const _AnimatedCountText({
+    required this.value,
+    required this.style,
+    this.animateFromZeroOnce = false,
+  });
+
+  final int value;
+  final TextStyle style;
+  final bool animateFromZeroOnce;
+
+  @override
+  State<_AnimatedCountText> createState() => _AnimatedCountTextState();
+}
+
+class _AnimatedCountTextState extends State<_AnimatedCountText> {
+  static const _duration = Duration(milliseconds: 700);
+
+  late int _from;
+  late int _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _to = widget.value;
+    _from = widget.animateFromZeroOnce ? 0 : widget.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedCountText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _from = oldWidget.value;
+      _to = widget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('count-$_from-$_to'),
+      tween: Tween<double>(begin: _from.toDouble(), end: _to.toDouble()),
+      duration: _duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) {
+        return Text(
+          '${value.round()}',
+          style: widget.style,
+        );
+      },
     );
   }
 }

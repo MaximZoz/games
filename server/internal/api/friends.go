@@ -347,6 +347,8 @@ func (h *FriendsHandler) AcceptRequest(w http.ResponseWriter, r *http.Request) {
 		writeFriendError(w, err)
 		return
 	}
+	_ = store.EvaluateAndUnlock(r.Context(), h.Pool, senderID)
+	_ = store.EvaluateAndUnlock(r.Context(), h.Pool, receiverID)
 	h.publishFriendsUpdated(senderID, receiverID)
 	w.WriteHeader(http.StatusNoContent)
 }

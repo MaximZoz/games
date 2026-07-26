@@ -1,14 +1,118 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
+import 'package:multigames_client/achievements/achievements_repository.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
-class AchievementsScreen extends StatelessWidget {
+class AchievementsScreen extends ConsumerStatefulWidget {
   const AchievementsScreen({super.key});
+
+  @override
+  ConsumerState<AchievementsScreen> createState() => _AchievementsScreenState();
+}
+
+class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
+  List<AchievementItem> _items = const [];
+  final Set<String> _claimInFlight = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Сразу рисуем кэш, сортировку обновляем фоном без спиннера.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cached = ref.read(achievementsListProvider).valueOrNull;
+      if (cached != null && cached.isNotEmpty) {
+        setState(() => _items = sortAchievements(cached));
+      }
+      unawaited(_reloadSilent());
+    });
+  }
+
+  Future<void> _reloadSilent() async {
+    try {
+      final items = await ref.read(achievementsRepositoryProvider).list();
+      if (!mounted) return;
+      final sorted = sortAchievements(items);
+      setState(() => _items = sorted);
+      // Обновляем кэш провайдера без loading-состояния.
+      ref.invalidate(achievementsUnclaimedCountProvider);
+    } catch (_) {
+      // Оставляем то, что уже на экране.
+    }
+  }
+
+  Future<void> _claim(AchievementItem item) async {
+    if (_claimInFlight.contains(item.code) || !item.isUnlocked) return;
+    _claimInFlight.add(item.code);
+
+    // Мгновенно: кнопка → «Получено», карточка остаётся, список пересортируется.
+    final previous = _items;
+    setState(() {
+      _items = sortAchievements([
+        for (final a in _items)
+          if (a.code == item.code)
+            AchievementItem(
+              code: a.code,
+              title: a.title,
+              description: a.description,
+              rewardBronze: a.rewardBronze,
+              progress: a.target,
+              target: a.target,
+              status: 'claimed',
+            )
+          else
+            a,
+      ]);
+    });
+
+    try {
+      final result =
+          await ref.read(achievementsRepositoryProvider).claim(item.code);
+      await ref
+          .read(authStateProvider.notifier)
+          .applyBalance(result.balanceBronze);
+      ref.invalidate(achievementsUnclaimedCountProvider);
+      // Тихо подтянуть актуальный список в кэш (без спиннера на UI).
+      unawaited(() async {
+        try {
+          final fresh = await ref.read(achievementsRepositoryProvider).list();
+          // Не дергаем invalidate list — иначе FutureProvider уйдёт в loading.
+          if (mounted) {
+            setState(() => _items = sortAchievements(fresh));
+          }
+        } catch (_) {}
+      }());
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _items = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      _claimInFlight.remove(item.code);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     void goBack() => context.pop();
+
+    // Подхватываем кэш провайдера, если локальный список ещё пуст.
+    final cached = ref.watch(achievementsListProvider).valueOrNull;
+    final items = _items.isNotEmpty
+        ? _items
+        : (cached != null ? sortAchievements(cached) : const <AchievementItem>[]);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -30,11 +134,173 @@ class AchievementsScreen extends StatelessWidget {
                 ),
           ),
         ),
-        body: const SafeArea(
+        body: SafeArea(
           child: Center(
-            child: SizedBox.shrink(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: items.isEmpty
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < items.length; i++) ...[
+                            if (i > 0) const SizedBox(height: 10),
+                            _AchievementCard(
+                              item: items[i],
+                              onClaim: items[i].isUnlocked
+                                  ? () => unawaited(_claim(items[i]))
+                                  : null,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AchievementCard extends StatelessWidget {
+  const _AchievementCard({
+    required this.item,
+    required this.onClaim,
+  });
+
+  final AchievementItem item;
+  final VoidCallback? onClaim;
+
+  IconData get _icon {
+    switch (item.code) {
+      case 'profile_complete':
+        return Icons.badge_outlined;
+      case 'games_10':
+        return Icons.sports_esports_outlined;
+      case 'friends_5':
+        return Icons.group_outlined;
+      default:
+        return Icons.emoji_events_outlined;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progressText = '${item.progress}/${item.target}';
+    return GradientCard(
+      margin: EdgeInsets.zero,
+      animate: false,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(_icon, color: AppColors.accentStart),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.description,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${item.rewardBronze}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const CoinIcon(coinType: CoinType.bronze, size: 18),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (item.isLocked) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: item.target <= 0
+                    ? 0
+                    : (item.progress / item.target).clamp(0.0, 1.0),
+                minHeight: 6,
+                backgroundColor: AppColors.accentSoft,
+                color: AppColors.accentStart,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Прогресс: $progressText',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ] else if (item.isClaimed)
+            Text(
+              'Получено',
+              style: TextStyle(
+                color: Colors.green.shade700,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            )
+          else
+            FilledButton(
+              onPressed: onClaim,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentStart,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                alignment: Alignment.center,
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              child: const Text('Забрать'),
+            ),
+        ],
       ),
     );
   }
