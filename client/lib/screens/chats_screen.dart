@@ -802,8 +802,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final actionKey = 'clear_${item.chatID}';
     setState(() => _chatActionInFlight.add(actionKey));
     try {
-      await ref.read(chatsRepositoryProvider).clearChat(item.chatID);
-      await _loadChats();
+      final chatId = item.chatID;
+      await ref.read(chatsRepositoryProvider).clearChat(chatId);
+      removeChatFromChatsCache(ref, chatId);
+      if (mounted) {
+        setState(() {
+          _chats =
+              _chats.where((c) => c.chatID != chatId).toList(growable: false);
+        });
+      }
+      unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -833,8 +841,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final actionKey = 'block_${item.user.id}';
     setState(() => _chatActionInFlight.add(actionKey));
     try {
+      final chatId = item.chatID;
       await ref.read(chatsRepositoryProvider).blockUser(userID);
-      await _loadChats();
+      removeChatFromChatsCache(ref, chatId);
+      if (mounted) {
+        setState(() {
+          _chats =
+              _chats.where((c) => c.chatID != chatId).toList(growable: false);
+        });
+      }
+      unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
       unawaited(refreshFriendsSnapshot(ref).catchError((_) {}));
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
@@ -1620,6 +1636,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Очистка/блок из комнаты (десктоп split-view): комната не владеет _chats.
+    ref.listen<String?>(chatRemovedIdProvider, (_, chatId) {
+      if (chatId == null || chatId.isEmpty || !mounted) return;
+      if (!_chats.any((c) => c.chatID == chatId)) return;
+      setState(() {
+        _chats =
+            _chats.where((c) => c.chatID != chatId).toList(growable: false);
+      });
+    });
     ref.listen<AsyncValue<Map<String, dynamic>>>(
       realtimeEventsProvider,
       (_, next) {

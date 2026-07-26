@@ -221,11 +221,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
       setState(() => _roomActionInFlight = true);
       try {
+        final chatId = widget.chatID;
         await ref.read(chatsRepositoryProvider).blockUser(id);
-        await refreshChatsList(ref, force: true);
-        await refreshFriendsSnapshot(ref);
+        // Сразу убираем из сайдбара (десктоп split-view) и уходим из комнаты.
+        removeChatFromChatsCache(ref, chatId);
         if (!mounted) return;
         context.go('/chats');
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        unawaited(refreshFriendsSnapshot(ref).catchError((_) {}));
       } on ChatException catch (e) {
         if (e.statusCode == 401) {
           await ref.read(authStateProvider.notifier).logout();
@@ -252,10 +255,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     setState(() => _roomActionInFlight = true);
     try {
-      await ref.read(chatsRepositoryProvider).clearChat(widget.chatID);
-      await refreshChatsList(ref, force: true);
+      final chatId = widget.chatID;
+      await ref.read(chatsRepositoryProvider).clearChat(chatId);
+      // Сайдбар на десктопе живёт в отдельном State — refreshChatsList его
+      // не трогает. Удаляем локально и сразу закрываем комнату.
+      removeChatFromChatsCache(ref, chatId);
       if (!mounted) return;
       context.go('/chats');
+      unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
