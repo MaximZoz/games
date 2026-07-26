@@ -147,10 +147,11 @@ class AppShell extends ConsumerWidget {
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
 
-      // «Профиль» → главная (достижения и монеты).
-      if (target == '/profile') {
+      // «Профиль» / «Главная» → корень главной (карточки), не /achievements|/coins.
+      // goBranch(0) восстанавливает последний путь ветки — поэтому явный go('/').
+      if (target == '/profile' || target == '/') {
         Router.neglect(context, () {
-          navigationShell.goBranch(0, initialLocation: true);
+          context.go('/');
         });
         return;
       }
