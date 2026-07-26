@@ -1852,6 +1852,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         : isFindFriend
             ? Colors.green.shade700
             : AppColors.accentStart;
+    final countStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: countColor,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1863,14 +1868,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               color: AppColors.accentSoft,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: countColor,
-              ),
-            ),
+            child: isFindFriend
+                ? _AnimatedCountText(
+                    value: count,
+                    style: countStyle,
+                    // С нуля при первом появлении; дальше — от старого к новому.
+                    animateFromZeroOnce: true,
+                  )
+                : Text('$count', style: countStyle),
           )
         else
           const SizedBox(height: 22),
@@ -1915,7 +1920,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   Widget build(BuildContext context) {
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    final totalUsersCount = ref.watch(totalUsersCountProvider).valueOrNull;
+    final totalUsersAsync = ref.watch(totalUsersCountProvider);
+    // Не показываем «0» из прошлго/пустого состояния на время загрузки.
+    final totalUsersCount = totalUsersAsync.when(
+      data: (v) => v,
+      loading: () {
+        final prev = totalUsersAsync.valueOrNull;
+        if (prev == null || prev <= 0) return null;
+        return prev;
+      },
+      error: (_, __) => totalUsersAsync.valueOrNull,
+    );
     final tabs = _visibleTabs(friendsAsync.valueOrNull);
     if (!_sameTabs(tabs, _currentTabs) ||
         _tabController.length != tabs.length) {
@@ -2055,6 +2070,61 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Плавный счётчик для бейджа «Найти друга»: 0 → N, затем N → M.
+class _AnimatedCountText extends StatefulWidget {
+  const _AnimatedCountText({
+    required this.value,
+    required this.style,
+    this.animateFromZeroOnce = false,
+  });
+
+  final int value;
+  final TextStyle style;
+  final bool animateFromZeroOnce;
+
+  @override
+  State<_AnimatedCountText> createState() => _AnimatedCountTextState();
+}
+
+class _AnimatedCountTextState extends State<_AnimatedCountText> {
+  static const _duration = Duration(milliseconds: 700);
+
+  late int _from;
+  late int _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _to = widget.value;
+    _from = widget.animateFromZeroOnce ? 0 : widget.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedCountText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _from = oldWidget.value;
+      _to = widget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('count-$_from-$_to'),
+      tween: Tween<double>(begin: _from.toDouble(), end: _to.toDouble()),
+      duration: _duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) {
+        return Text(
+          '${value.round()}',
+          style: widget.style,
+        );
+      },
     );
   }
 }
