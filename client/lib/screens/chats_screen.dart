@@ -61,7 +61,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   List<ChatPreviewItem> _chats = const [];
   DateTime? _friendsCachedAt;
   Timer? _navigationLockTimer;
-  bool _wasRouteCurrent = true;
 
   static const Duration _friendsCacheTTL = Duration(minutes: 2);
 
@@ -93,8 +92,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   @override
   void didPopNext() {
-    // Возврат в список чатов после закрытия экрана чата — обновляем превью.
-    unawaited(_loadChats());
+    // Возврат из комнаты чата: список уже в стеке — только подтянуть кэш
+    // (unread уже сброшен в markChatReadInChatsCache), без полного reload.
+    final cache = ref.read(chatsListCacheProvider);
+    if (cache == null || cache.chats.isEmpty || !mounted) return;
+    setState(() {
+      _chats = _sortChats(cache.chats);
+      _hasMoreChats = cache.chats.length >= _chatsPageSize;
+      _isLoadingChats = false;
+      _error = null;
+    });
   }
 
   @override
@@ -199,31 +206,34 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   static const _chatsCacheTTL = Duration(seconds: 60);
 
   Future<void> _loadChatsOrUseCache() async {
-    if (!widget.inSplitView) {
-      return unawaited(_loadChats());
-    }
     final cache = ref.read(chatsListCacheProvider);
     if (cache != null &&
         DateTime.now().difference(cache.at) <= _chatsCacheTTL &&
         cache.chats.isNotEmpty) {
       if (!mounted) return;
       setState(() {
-        _chats = cache.chats;
+        _chats = _sortChats(cache.chats);
         _hasMoreChats = cache.chats.length >= _chatsPageSize;
         _isLoadingChats = false;
         _error = null;
       });
       return;
     }
-    return unawaited(_loadChats());
+    return unawaited(_loadChats(refreshOnline: true));
   }
 
-  Future<void> _loadChats() async {
+  Future<void> _loadChats({
+    bool showLoading = true,
+    bool refreshOnline = false,
+  }) async {
     if (!mounted || _isChatsRequestInFlight) return;
     _isChatsRequestInFlight = true;
     setState(() {
       _error = null;
-      _isLoadingChats = true;
+      // Не мигаем спиннером, если список уже на экране.
+      if (showLoading && _chats.isEmpty) {
+        _isLoadingChats = true;
+      }
       _isLoadingMoreChats = false;
     });
     try {
@@ -232,9 +242,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
           .listChats(limit: _chatsPageSize, offset: 0);
       if (!mounted) return;
       final chats = _sortChats(raw);
-      if (widget.inSplitView) {
-        ref.read(chatsListCacheProvider.notifier).state = (chats: chats, at: DateTime.now());
-      }
+      ref.read(chatsListCacheProvider.notifier).state =
+          (chats: chats, at: DateTime.now());
       setState(() {
         _chats = chats;
         _hasMoreChats = raw.length >= _chatsPageSize;
@@ -252,11 +261,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         }
       });
       unawaited(refreshBlockedUsers(ref, force: true).catchError((_) {}));
-      // Онлайн собеседников — как свайп вниз в друзьях.
-      try {
-        refreshPresence(ref);
-        await ref.read(presenceMapProvider.future);
-      } catch (_) {}
+      // Онлайн — только по явному pull-to-refresh / первому загрузу.
+      if (refreshOnline) {
+        try {
+          refreshPresence(ref);
+          await ref.read(presenceMapProvider.future);
+        } catch (_) {}
+      }
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -728,6 +739,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       }
     });
     final name = Uri.encodeQueryComponent(peerName);
+    // Сохраняем превью, чтобы при pop не делать полный reload списка.
+    if (_chats.isNotEmpty) {
+      ref.read(chatsListCacheProvider.notifier).state =
+          (chats: _chats, at: DateTime.now());
+    }
     if (widget.inSplitView) {
       context.go('/chats/$chatID?name=$name');
       _navigationLockTimer?.cancel();
@@ -1611,22 +1627,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             type == 'chat_list_changed' ||
             type == 'chat_read' ||
             type == 'realtime_connected') {
-          unawaited(_loadChats());
+          // Фоновый sync без спиннера и без presence-запроса.
+          unawaited(_loadChats(showLoading: false));
         }
       },
     );
-
-    // При возврате в экран списка чатов — принудительно обновить и пересортировать список.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final nowCurrent = ModalRoute.of(context)?.isCurrent ?? false;
-      if (nowCurrent && !_wasRouteCurrent) {
-        _wasRouteCurrent = true;
-        unawaited(_loadChats());
-      } else if (!nowCurrent) {
-        _wasRouteCurrent = false;
-      }
-    });
 
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
@@ -1681,7 +1686,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                 child: loading
                     ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                     : RefreshIndicator(
-                            onRefresh: _loadChats,
+                            onRefresh: () => _loadChats(refreshOnline: true),
                             child: chats.isEmpty
                                 ? ListView(
                                     physics:
@@ -1782,7 +1787,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: _loadChats,
+                onRefresh: () => _loadChats(refreshOnline: true),
                 child: CustomScrollView(
                   controller: _chatsScrollController,
                   physics: const AlwaysScrollableScrollPhysics(

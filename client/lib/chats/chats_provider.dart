@@ -22,8 +22,24 @@ Future<void> _emitAfterFrame(void Function() fn) async {
   return c.future;
 }
 
-/// Кэш списка чатов для переиспользования при переходе список → чат (desktop split).
-final chatsListCacheProvider = StateProvider<({List<ChatPreviewItem> chats, DateTime at})?>((ref) => null);
+/// Кэш списка чатов для переиспользования при переходе список ↔ чат.
+final chatsListCacheProvider =
+    StateProvider<({List<ChatPreviewItem> chats, DateTime at})?>((ref) => null);
+
+/// Локально сбросить unread в кэше списка (без сетевого reload).
+void markChatReadInChatsCache(WidgetRef ref, String chatId) {
+  final cache = ref.read(chatsListCacheProvider);
+  if (cache == null) return;
+  var changed = false;
+  final chats = cache.chats.map((c) {
+    if (c.chatID != chatId || c.unreadCount == 0) return c;
+    changed = true;
+    return c.copyWith(unreadCount: 0);
+  }).toList(growable: false);
+  if (!changed) return;
+  ref.read(chatsListCacheProvider.notifier).state =
+      (chats: chats, at: cache.at);
+}
 
 /// Состояние свёрнутости боковой панели чатов на десктопе (сохраняется при навигации).
 final chatsSidebarCollapsedProvider = StateProvider<bool>((ref) => false);
