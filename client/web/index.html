@@ -92,55 +92,6 @@
           e.preventDefault();
         }
       }, { passive: false, capture: true });
-
-      // iOS Safari часто игнорирует autocomplete=off и рисует панель
-      // Passwords / Payment / Locations над клавиатурой. Усиливаем атрибуты
-      // только для полей, которые Flutter уже пометил как autocomplete=off
-      // (поиск друзей и т.п.) — логин/пароль не трогаем.
-      function hardenOffAutofill(el) {
-        if (!el || el.nodeType !== 1) return;
-        const tag = el.tagName;
-        if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
-        const type = (el.getAttribute('type') || 'text').toLowerCase();
-        if (type === 'password' || type === 'email') return;
-        const ac = (el.getAttribute('autocomplete') || '').toLowerCase();
-        if (ac !== 'off') return;
-        el.setAttribute('autocomplete', 'off');
-        el.setAttribute('autocorrect', 'off');
-        el.setAttribute('autocapitalize', 'none');
-        el.setAttribute('spellcheck', 'false');
-        el.setAttribute('data-lpignore', 'true');
-        el.setAttribute('data-1p-ignore', 'true');
-        el.setAttribute('data-form-type', 'other');
-        if (!el.getAttribute('name') || el.getAttribute('name') === 'on') {
-          el.setAttribute('name', 'mg-nofill-' + Math.random().toString(36).slice(2, 8));
-        }
-      }
-
-      const obs = new MutationObserver(function (mutations) {
-        for (let i = 0; i < mutations.length; i++) {
-          const m = mutations[i];
-          if (m.type === 'attributes' && m.target) {
-            hardenOffAutofill(m.target);
-          }
-          const nodes = m.addedNodes;
-          for (let j = 0; j < nodes.length; j++) {
-            const n = nodes[j];
-            if (n.nodeType !== 1) continue;
-            hardenOffAutofill(n);
-            if (n.querySelectorAll) {
-              const list = n.querySelectorAll('input,textarea');
-              for (let k = 0; k < list.length; k++) hardenOffAutofill(list[k]);
-            }
-          }
-        }
-      });
-      obs.observe(document.documentElement, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['autocomplete'],
-      });
     })();
   </script>
 </body>
