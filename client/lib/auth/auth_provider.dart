@@ -119,6 +119,26 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     await updateProfile(displayName: displayName);
   }
 
+  /// Обновляет баланс в state после клейма достижения / награды.
+  Future<void> applyBalance(int balanceBronze) async {
+    final user = state.valueOrNull;
+    if (user == null) return;
+    final updated = AuthUser(
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      isAdmin: user.isAdmin,
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      avatarKind: user.avatarKind,
+      avatarValue: user.avatarValue,
+      balanceBronze: balanceBronze,
+    );
+    state = AsyncValue.data(updated);
+    await _ref.read(authRepositoryProvider).updateStoredUser(updated);
+  }
+
   /// Забирает ежедневную награду по серии дней. После успеха обновляет balance.
   Future<DailyRewardClaimResult?> claimDailyReward() async {
     final repo = _ref.read(authRepositoryProvider);

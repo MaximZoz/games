@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
@@ -302,6 +303,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           displayName: displayName,
           extra: extra,
         );
+    ref.invalidate(achievementsListProvider);
+    ref.invalidate(achievementsUnclaimedCountProvider);
     if (mounted) _startClosing();
   }
 
