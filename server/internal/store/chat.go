@@ -404,45 +404,67 @@ func MarkChatDelivered(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	chatID, currentUserID uuid.UUID,
-) (int, error) {
+) ([]uuid.UUID, error) {
 	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	tag, err := pool.Exec(ctx, `
+	rows, err := pool.Query(ctx, `
 		UPDATE chat_messages
 		SET delivered_at = now()
 		WHERE chat_id = $1
 		  AND sender_user_id <> $2
 		  AND delivered_at IS NULL
+		RETURNING id
 	`, chatID, currentUserID)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return int(tag.RowsAffected()), nil
+	defer rows.Close()
+
+	ids := make([]uuid.UUID, 0)
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
 }
 
 func MarkChatRead(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	chatID, currentUserID uuid.UUID,
-) (int, error) {
+) ([]uuid.UUID, error) {
 	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	tag, err := pool.Exec(ctx, `
+	rows, err := pool.Query(ctx, `
 		UPDATE chat_messages
 		SET read_at = now(),
 		    delivered_at = COALESCE(delivered_at, now())
 		WHERE chat_id = $1
 		  AND sender_user_id <> $2
 		  AND read_at IS NULL
+		RETURNING id
 	`, chatID, currentUserID)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return int(tag.RowsAffected()), nil
+	defer rows.Close()
+
+	ids := make([]uuid.UUID, 0)
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
 }
 
 func IsUsersBlocked(
