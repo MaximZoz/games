@@ -1601,7 +1601,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     );
   }
 
-  Widget _buildInfoIconButton({
+  Widget _buildRoundIconButton({
+    required IconData icon,
     required VoidCallback? onPressed,
     required String tooltip,
   }) {
@@ -1627,8 +1628,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                   width: 1.5,
                 ),
               ),
-              child: const Icon(
-                Icons.info_outline_rounded,
+              child: Icon(
+                icon,
                 size: 17,
                 color: AppColors.textPrimary,
               ),
@@ -1637,6 +1638,67 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _sendOrAcceptFriendFromChat(ChatPreviewItem item) async {
+    final userId = item.user.id.trim();
+    if (userId.isEmpty) return;
+    final actionKey = 'friend_$userId';
+    if (_chatActionInFlight.contains(actionKey)) return;
+
+    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+    if (snapshot?.friends.any((f) => f.user.id == userId) == true) return;
+
+    String? incomingRequestId;
+    for (final r in snapshot?.incoming ?? const []) {
+      if (r.user.id == userId) {
+        incomingRequestId = r.requestId;
+        break;
+      }
+    }
+    final hasOutgoing =
+        snapshot?.outgoing.any((r) => r.user.id == userId) == true;
+    if (hasOutgoing && (incomingRequestId == null || incomingRequestId.isEmpty)) {
+      return;
+    }
+
+    setState(() => _chatActionInFlight.add(actionKey));
+    try {
+      final repo = ref.read(friendsRepositoryProvider);
+      if (incomingRequestId != null && incomingRequestId.isNotEmpty) {
+        await repo.acceptRequest(incomingRequestId);
+      } else {
+        await repo.sendRequest(userId);
+      }
+      await refreshFriendsSnapshot(ref);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            incomingRequestId != null && incomingRequestId.isNotEmpty
+                ? 'Заявка принята'
+                : 'Заявка отправлена',
+          ),
+        ),
+      );
+    } on FriendsException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(formatUserError(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
+    }
   }
 
   @override
@@ -1667,6 +1729,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
+    final friendsSnapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final chats = _chats;
     final hasBlockedUsers = blockedUsers.isNotEmpty;
@@ -2036,7 +2099,71 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                 Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    _buildInfoIconButton(
+                                                    Builder(
+                                                      builder: (context) {
+                                                        final peerId =
+                                                            item.user.id.trim();
+                                                        final isFriend =
+                                                            peerId.isNotEmpty &&
+                                                                friendsSnapshot
+                                                                        ?.friends
+                                                                        .any((f) =>
+                                                                            f.user.id ==
+                                                                            peerId) ==
+                                                                    true;
+                                                        if (isFriend) {
+                                                          return const SizedBox
+                                                              .shrink();
+                                                        }
+                                                        final hasOutgoing =
+                                                            peerId.isNotEmpty &&
+                                                                friendsSnapshot
+                                                                        ?.outgoing
+                                                                        .any((r) =>
+                                                                            r.user.id ==
+                                                                            peerId) ==
+                                                                    true;
+                                                        final hasIncoming =
+                                                            peerId.isNotEmpty &&
+                                                                friendsSnapshot
+                                                                        ?.incoming
+                                                                        .any((r) =>
+                                                                            r.user.id ==
+                                                                            peerId) ==
+                                                                    true;
+                                                        final friendBusy =
+                                                            _chatActionInFlight
+                                                                .contains(
+                                                                    'friend_$peerId');
+                                                        return Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  right: 6),
+                                                          child:
+                                                              _buildRoundIconButton(
+                                                            icon: Icons
+                                                                .person_add_alt_1_rounded,
+                                                            onPressed: itemBusy ||
+                                                                    friendBusy ||
+                                                                    hasOutgoing
+                                                                ? null
+                                                                : () => unawaited(
+                                                                      _sendOrAcceptFriendFromChat(
+                                                                          item),
+                                                                    ),
+                                                            tooltip: hasIncoming
+                                                                ? 'Принять заявку в друзья'
+                                                                : (hasOutgoing
+                                                                    ? 'Заявка уже отправлена'
+                                                                    : 'Отправить заявку в друзья'),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                    _buildRoundIconButton(
+                                                      icon: Icons
+                                                          .info_outline_rounded,
                                                       onPressed: itemBusy
                                                           ? null
                                                           : () => unawaited(
