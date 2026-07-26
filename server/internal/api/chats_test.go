@@ -166,6 +166,36 @@ func TestChats_Read_InvalidChatID(t *testing.T) {
 	}
 }
 
+func TestChats_Delivered_MethodNotAllowed(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(http.MethodGet, "/api/chats/delivered", nil)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Delivered(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestChats_Delivered_InvalidChatID(t *testing.T) {
+	h := chatsHandlerForValidation()
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/chats/delivered",
+		bytes.NewReader([]byte(`{"chat_id":"bad"}`)),
+	)
+	req = withChatUserID(req)
+	rec := httptest.NewRecorder()
+
+	h.Delivered(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
 func TestChats_Clear_MethodNotAllowed(t *testing.T) {
 	h := chatsHandlerForValidation()
 	req := httptest.NewRequest(http.MethodGet, "/api/chats/clear", nil)

@@ -71,6 +71,7 @@ class ChatMessageItem {
   final String senderUserID;
   final String body;
   final String createdAt;
+  final String? deliveredAt;
   final String? readAt;
 
   ChatMessageItem({
@@ -79,6 +80,7 @@ class ChatMessageItem {
     required this.senderUserID,
     required this.body,
     required this.createdAt,
+    this.deliveredAt,
     this.readAt,
   });
 
@@ -89,7 +91,25 @@ class ChatMessageItem {
       senderUserID: json['sender_user_id'] as String? ?? '',
       body: json['body'] as String? ?? '',
       createdAt: json['created_at'] as String? ?? '',
+      deliveredAt: json['delivered_at'] as String?,
       readAt: json['read_at'] as String?,
+    );
+  }
+
+  ChatMessageItem copyWith({
+    String? deliveredAt,
+    String? readAt,
+    bool clearDeliveredAt = false,
+    bool clearReadAt = false,
+  }) {
+    return ChatMessageItem(
+      id: id,
+      chatID: chatID,
+      senderUserID: senderUserID,
+      body: body,
+      createdAt: createdAt,
+      deliveredAt: clearDeliveredAt ? null : (deliveredAt ?? this.deliveredAt),
+      readAt: clearReadAt ? null : (readAt ?? this.readAt),
     );
   }
 }
@@ -380,6 +400,25 @@ class ChatsRepository {
         },
         body: jsonEncode({'chat_id': chatID}),
         operation: 'ChatsRepository.markRead',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return body['updated'] as int? ?? 0;
+  }
+
+  Future<int> markDelivered(String chatID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/delivered'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'chat_id': chatID}),
+        operation: 'ChatsRepository.markDelivered',
       ),
     );
     if (response.statusCode != 200) {

@@ -10,6 +10,44 @@ final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
   return ChatsRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
+/// Всегда активный ACK доставки входящих по WebSocket (не зависит от экрана чатов).
+final chatDeliveryAckProvider = Provider.autoDispose<void>((ref) {
+  final keepAliveLink = ref.keepAlive();
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user == null) {
+    keepAliveLink.close();
+    return;
+  }
+
+  ref.listen<AsyncValue<Map<String, dynamic>>>(
+    realtimeEventsProvider,
+    (_, next) {
+      final event = next.valueOrNull;
+      if (event == null) return;
+      if (event['type']?.toString() != 'chat_message') return;
+
+      final chatID = event['chat_id']?.toString() ?? '';
+      final messageRaw = event['message'];
+      final senderID =
+          messageRaw is Map ? messageRaw['sender_user_id']?.toString() : null;
+      if (chatID.isEmpty ||
+          senderID == null ||
+          senderID.isEmpty ||
+          senderID == user.id) {
+        return;
+      }
+
+      unawaited(() async {
+        try {
+          await ref.read(chatsRepositoryProvider).markDelivered(chatID);
+        } catch (_) {}
+      }());
+    },
+  );
+
+  ref.onDispose(keepAliveLink.close);
+});
+
 /// Откладывает emit на 2 frame'а, чтобы dispose виджетов успел завершиться.
 Future<void> _emitAfterFrame(void Function() fn) async {
   final c = Completer<void>();
@@ -79,6 +117,7 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
       if (type == 'chat_message' ||
           type == 'chat_list_changed' ||
           type == 'chat_read' ||
+          type == 'chat_delivered' ||
           type == 'realtime_connected') {
         unawaited(load());
       }

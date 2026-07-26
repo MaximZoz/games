@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class ChatsScreen extends ConsumerStatefulWidget {
@@ -1626,6 +1627,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         if (type == 'chat_message' ||
             type == 'chat_list_changed' ||
             type == 'chat_read' ||
+            type == 'chat_delivered' ||
             type == 'realtime_connected') {
           // Фоновый sync без спиннера и без presence-запроса.
           unawaited(_loadChats(showLoading: false));
@@ -1635,6 +1637,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
+    final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final chats = _chats;
     final hasBlockedUsers = blockedUsers.isNotEmpty;
     final errorText = _error;
@@ -1968,13 +1971,36 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                   CrossAxisAlignment.end,
                                               children: [
                                                 if (lastMessage != null)
-                                                  Text(
-                                                    formatChatListDateTime(
-                                                        lastMessage.createdAt),
-                                                    style: const TextStyle(
-                                                      color: AppColors.textSecondary,
-                                                      fontSize: 12,
-                                                    ),
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      if (meID != null &&
+                                                          lastMessage
+                                                                  .senderUserID ==
+                                                              meID) ...[
+                                                        MessageStatusTicks(
+                                                          deliveredAt:
+                                                              lastMessage
+                                                                  .deliveredAt,
+                                                          readAt: lastMessage
+                                                              .readAt,
+                                                          size: 15,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 3),
+                                                      ],
+                                                      Text(
+                                                        formatChatListDateTime(
+                                                            lastMessage
+                                                                .createdAt),
+                                                        style: const TextStyle(
+                                                          color: AppColors
+                                                              .textSecondary,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 const SizedBox(height: 6),
                                                 Row(

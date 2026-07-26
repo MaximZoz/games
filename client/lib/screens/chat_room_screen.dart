@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,16 +6,16 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
-import 'package:multigames_client/core/realtime_ws.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -70,10 +69,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final FocusNode _composerFocusNode = FocusNode();
   final Set<String> _messageIDs = <String>{};
 
-  RealtimeSocket? _socket;
-  StreamSubscription<String>? _socketSubscription;
-  Timer? _reconnectTimer;
-
   bool _loading = true;
   bool _sending = false;
   bool _loadingOlder = false;
@@ -85,6 +80,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
+  /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
+  final Set<String> _pendingDeliveredIDs = <String>{};
+  final Set<String> _pendingReadIDs = <String>{};
+  final Map<String, String> _pendingDeliveredAtByID = <String, String>{};
+  final Map<String, String> _pendingReadAtByID = <String, String>{};
+
   @override
   void initState() {
     super.initState();
@@ -92,7 +93,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _scrollController.addListener(_onMessagesScroll);
     _loadMessages(initial: true);
-    unawaited(_connectRealtime());
   }
 
   @override
@@ -125,13 +125,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
     _scrollController.removeListener(_onMessagesScroll);
-    _reconnectTimer?.cancel();
-    unawaited(_socketSubscription?.cancel());
-    _socket?.close();
     _composerFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Диалог видим в shell (не фоновая вкладка и не уходим назад).
+  /// Для markRead по WS — иначе сообщения помечаются прочитанными «в фоне».
+  bool _isChatRoomVisibleInShell() {
+    if (_leavingToChats || !mounted) return false;
+    return ref.read(currentRoutePathProvider) == '/chats/${widget.chatID}';
   }
 
   void _onComposerFocusChanged() {
@@ -298,14 +302,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         // layout-проходов — повторяем скролл до низа, пока позиция не стабилизируется.
         _scheduleScrollToBottom(retriesLeft: 8);
       }
-      unawaited(() async {
-        try {
-          await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
-          // Список чатов обновится по realtime (chat_read) — не перезагружаем здесь.
-        } catch (_) {
-          // Ошибку чтения не показываем пользователю в фоне.
-        }
-      }());
+      // При открытии комнаты всегда отмечаем прочитанным (экран только что создан).
+      // Повторные фоновые вызовы _loadMessages при уходе — нет (_leavingToChats).
+      if (!_leavingToChats) {
+        unawaited(() async {
+          try {
+            await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
+            // Список чатов обновится по realtime (chat_read) — не перезагружаем здесь.
+          } catch (_) {
+            // Ошибку чтения не показываем пользователю в фоне.
+          }
+        }());
+      }
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -391,78 +399,177 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
   }
 
-  Future<void> _connectRealtime() async {
-    await _socketSubscription?.cancel();
-    _socket?.close();
-    _socket = null;
-
-    final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) return;
-
-    final uri = buildWebSocketUri(
-      '/api/ws',
-      queryParameters: {'access_token': token},
-    );
-    final socket = connectRealtimeSocket(uri);
-    _socket = socket;
-    _socketSubscription = socket.messages.listen(
-      _handleRealtimeMessage,
-      onError: (_) => _scheduleReconnect(),
-      onDone: _scheduleReconnect,
-      cancelOnError: false,
-    );
-  }
-
-  void _scheduleReconnect() {
-    if (!mounted || _reconnectTimer != null) return;
-    _reconnectTimer = Timer(const Duration(seconds: 2), () {
-      _reconnectTimer = null;
-      unawaited(_connectRealtime());
-    });
-  }
-
-  void _handleRealtimeMessage(String raw) {
+  void _handleRealtimeEvent(Map<String, dynamic> payload) {
     if (!mounted) return;
-    try {
-      final payload = jsonDecode(raw);
-      if (payload is! Map) return;
-      final type = payload['type']?.toString() ?? '';
-      if (type == 'chat_message') {
-        final chatID = payload['chat_id']?.toString() ?? '';
-        if (chatID != widget.chatID) return;
-        final messageRaw = payload['message'];
-        if (messageRaw is! Map) return;
-        final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
-        _upsertMessage(item);
-        // chatsListProvider уже слушает realtimeEventsProvider и обновится сам
-        if (!mounted) return;
-        final meID = ref.read(authStateProvider).valueOrNull?.id;
-        if (item.senderUserID != meID) {
-          unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
-        }
+    final type = payload['type']?.toString() ?? '';
+    final chatID = payload['chat_id']?.toString() ?? '';
+    if (type == 'chat_message') {
+      if (chatID != widget.chatID) return;
+      final messageRaw = payload['message'];
+      if (messageRaw is! Map) return;
+      final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
+      _upsertMessage(item);
+      if (!mounted) return;
+      final meID = ref.read(authStateProvider).valueOrNull?.id;
+      if (item.senderUserID != meID && _isChatRoomVisibleInShell()) {
+        // Доставку отмечает chatsListProvider глобально; здесь только прочтение.
+        unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
       }
-      // chat_read, chat_list_changed, friends_updated — провайдеры обновятся
-      // автоматически через realtimeEventsProvider
-    } catch (_) {}
+      return;
+    }
+    if (type == 'chat_delivered') {
+      if (chatID != widget.chatID) return;
+      final meID = ref.read(authStateProvider).valueOrNull?.id;
+      final delivererID = payload['deliverer_user_id']?.toString();
+      if (meID == null || delivererID == null || delivererID == meID) return;
+      final at = payload['delivered_at']?.toString() ??
+          DateTime.now().toUtc().toIso8601String();
+      _markOwnMessagesDelivered(
+        meID,
+        at,
+        _parseMessageIDs(payload['message_ids']),
+      );
+      return;
+    }
+    if (type == 'chat_read') {
+      if (chatID != widget.chatID) return;
+      final meID = ref.read(authStateProvider).valueOrNull?.id;
+      final readerID = payload['reader_user_id']?.toString();
+      if (meID == null || readerID == null || readerID == meID) return;
+      final at = payload['read_at']?.toString() ??
+          DateTime.now().toUtc().toIso8601String();
+      _markOwnMessagesRead(
+        meID,
+        at,
+        _parseMessageIDs(payload['message_ids']),
+      );
+      return;
+    }
+  }
+
+  Set<String> _parseMessageIDs(dynamic raw) {
+    if (raw is! List) return const <String>{};
+    return raw
+        .map((e) => e?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet();
+  }
+
+  String? _preferStatusTs(String? incoming, String? existing) {
+    if (existing != null && existing.isNotEmpty) return existing;
+    if (incoming != null && incoming.isNotEmpty) return incoming;
+    return null;
+  }
+
+  bool _messageMatchesStatusEvent(
+    ChatMessageItem message,
+    Set<String> messageIDs,
+    String eventAt,
+  ) {
+    if (messageIDs.isNotEmpty) return messageIDs.contains(message.id);
+    // Fallback без message_ids: не трогаем сообщения новее события.
+    final at = DateTime.tryParse(eventAt)?.toUtc();
+    final created = DateTime.tryParse(message.createdAt)?.toUtc();
+    if (at == null || created == null) return true;
+    return !created.isAfter(at);
+  }
+
+  void _markOwnMessagesDelivered(
+    String meID,
+    String deliveredAt,
+    Set<String> messageIDs,
+  ) {
+    if (!mounted) return;
+    if (messageIDs.isNotEmpty) {
+      _pendingDeliveredIDs.addAll(messageIDs);
+      for (final id in messageIDs) {
+        _pendingDeliveredAtByID[id] = deliveredAt;
+      }
+    }
+    var changed = false;
+    final updated = _messages.map((m) {
+      if (m.senderUserID != meID) return m;
+      if (!_messageMatchesStatusEvent(m, messageIDs, deliveredAt)) return m;
+      if (m.deliveredAt != null && m.deliveredAt!.isNotEmpty) return m;
+      changed = true;
+      return m.copyWith(deliveredAt: deliveredAt);
+    }).toList(growable: false);
+    if (!changed) return;
+    setState(() => _messages = updated);
+  }
+
+  void _markOwnMessagesRead(
+    String meID,
+    String readAt,
+    Set<String> messageIDs,
+  ) {
+    if (!mounted) return;
+    if (messageIDs.isNotEmpty) {
+      _pendingReadIDs.addAll(messageIDs);
+      _pendingDeliveredIDs.addAll(messageIDs);
+      for (final id in messageIDs) {
+        _pendingReadAtByID[id] = readAt;
+        _pendingDeliveredAtByID.putIfAbsent(id, () => readAt);
+      }
+    }
+    var changed = false;
+    final updated = _messages.map((m) {
+      if (m.senderUserID != meID) return m;
+      if (!_messageMatchesStatusEvent(m, messageIDs, readAt)) return m;
+      final needDelivered = m.deliveredAt == null || m.deliveredAt!.isEmpty;
+      final needRead = m.readAt == null || m.readAt!.isEmpty;
+      if (!needDelivered && !needRead) return m;
+      changed = true;
+      return m.copyWith(
+        deliveredAt: needDelivered ? readAt : m.deliveredAt,
+        readAt: needRead ? readAt : m.readAt,
+      );
+    }).toList(growable: false);
+    if (!changed) return;
+    setState(() => _messages = updated);
+  }
+
+  ChatMessageItem _applyPendingStatus(ChatMessageItem item) {
+    var deliveredAt = item.deliveredAt;
+    var readAt = item.readAt;
+    final pendingDelivered = _pendingDeliveredAtByID[item.id];
+    final pendingRead = _pendingReadAtByID[item.id];
+    if (pendingDelivered != null) {
+      deliveredAt = _preferStatusTs(deliveredAt, pendingDelivered);
+    }
+    if (pendingRead != null) {
+      readAt = _preferStatusTs(readAt, pendingRead);
+      deliveredAt = _preferStatusTs(deliveredAt, pendingRead);
+    }
+    if (deliveredAt == item.deliveredAt && readAt == item.readAt) return item;
+    return item.copyWith(deliveredAt: deliveredAt, readAt: readAt);
   }
 
   void _upsertMessage(ChatMessageItem item) {
     if (!mounted) return;
 
-    final existingIndex = _messages.indexWhere((m) => m.id == item.id);
+    final withPending = _applyPendingStatus(item);
+    final existingIndex = _messages.indexWhere((m) => m.id == withPending.id);
     if (existingIndex >= 0) {
+      final existing = _messages[existingIndex];
+      // WS-эхо нового сообщения приходит без delivered/read — не затираем статусы.
+      final merged = withPending.copyWith(
+        deliveredAt:
+            _preferStatusTs(withPending.deliveredAt, existing.deliveredAt),
+        readAt: _preferStatusTs(withPending.readAt, existing.readAt),
+      );
       final updated = List<ChatMessageItem>.of(_messages);
-      updated[existingIndex] = item;
+      updated[existingIndex] = merged;
       setState(() {
         _messages = updated;
-        _messageIDs.add(item.id);
+        _messageIDs.add(withPending.id);
       });
       return;
     }
 
     setState(() {
-      _messages = [..._messages, item];
-      _messageIDs.add(item.id);
+      _messages = [..._messages, withPending];
+      _messageIDs.add(withPending.id);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
@@ -476,6 +583,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           left.senderUserID != right.senderUserID ||
           left.body != right.body ||
           left.createdAt != right.createdAt ||
+          left.deliveredAt != right.deliveredAt ||
           left.readAt != right.readAt) {
         return false;
       }
@@ -967,6 +1075,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Map<String, dynamic>>>(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        _handleRealtimeEvent(event);
+      },
+    );
+
+    // Вернулись на вкладку с открытым диалогом — дочитываем накопившееся.
+    ref.listen<String>(currentRoutePathProvider, (prev, next) {
+      if (_leavingToChats) return;
+      final roomPath = '/chats/${widget.chatID}';
+      if (next != roomPath || prev == roomPath) return;
+      unawaited(() async {
+        try {
+          await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
+        } catch (_) {}
+      }());
+    });
+
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final media = MediaQuery.of(context);
     final narrowLandscape =
@@ -1112,11 +1241,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              _formatBubbleDateTime(message.createdAt),
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formatBubbleDateTime(message.createdAt),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  if (mine) ...[
+                                    const SizedBox(width: 4),
+                                    MessageStatusTicks(
+                                      deliveredAt: message.deliveredAt,
+                                      readAt: message.readAt,
+                                      size: 14,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],

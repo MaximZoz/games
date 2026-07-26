@@ -195,6 +195,8 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Update last_seen and notify presence on connect
 	if h.Pool != nil {
 		ctx := r.Context()
+		// Клиент снова онлайн — недоставленные входящие считаем доставленными.
+		syncIncomingDelivered(ctx, h.Pool, h.Hub, userID)
 		_ = store.UpdateUserLastSeen(ctx, h.Pool, userID)
 		now := time.Now().UTC().Format(time.RFC3339Nano)
 		recipients, recErr := store.GetPresenceRecipientsForUser(ctx, h.Pool, userID)

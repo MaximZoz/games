@@ -51,6 +51,7 @@ class AppShell extends ConsumerWidget {
     if (isAuthorized) {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
+      ref.watch(chatDeliveryAckProvider);
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
