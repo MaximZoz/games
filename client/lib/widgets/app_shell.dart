@@ -110,28 +110,43 @@ class AppShell extends ConsumerWidget {
 
     void navigateWithPrefetch(int i) {
       final target = _navItems[i].path;
+      // Повторный тап по «Профиль» — выйти из редактирования.
+      if (target == '/profile') {
+        ref.read(profileExitEditTickProvider.notifier).state++;
+      }
       if (target == '/games' && isAuthorized) {
         ref.invalidate(activeGameProvider);
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         ref.read(activeGameProvider.future).then((active) {
           if (!context.mounted) return;
-          if (active != null &&
-              active.type == 'game' &&
-              active.gameId != null &&
-              active.gameId!.isNotEmpty) {
-            context.go('/games/tictactoe/game/${active.gameId}');
-          } else if (active != null &&
-              active.type == 'lobby' &&
-              active.lobbyId != null &&
-              active.lobbyId!.isNotEmpty) {
-            context.go('/games/tictactoe/lobby/${active.lobbyId}');
-          } else {
-            context.go('/games');
-          }
+          // Не пишем вкладки в history — иначе свайп «назад» в Safari
+          // переключает bottom-nav табы.
+          Router.neglect(context, () {
+            if (active != null &&
+                active.type == 'game' &&
+                active.gameId != null &&
+                active.gameId!.isNotEmpty) {
+              context.go('/games/tictactoe/game/${active.gameId}');
+            } else if (active != null &&
+                active.type == 'lobby' &&
+                active.lobbyId != null &&
+                active.lobbyId!.isNotEmpty) {
+              context.go('/games/tictactoe/lobby/${active.lobbyId}');
+            } else {
+              context.go('/games');
+            }
+          });
         });
         return;
       }
-      context.go(target);
+      // goBranch + neglect: смена таба без записи в browser history,
+      // чтобы жесты назад/вперёд Safari не прыгали по табам.
+      Router.neglect(context, () {
+        navigationShell.goBranch(
+          i,
+          initialLocation: i == navigationShell.currentIndex,
+        );
+      });
 
       if (!isAuthorized) return;
       if (target == '/chats') {
