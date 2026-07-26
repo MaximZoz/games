@@ -111,6 +111,21 @@ class ChatPreviewItem {
     required this.updatedAt,
   });
 
+  ChatPreviewItem copyWith({
+    ChatMessageItem? lastMessage,
+    int? unreadCount,
+    String? updatedAt,
+  }) {
+    return ChatPreviewItem(
+      chatID: chatID,
+      user: user,
+      lastMessage: lastMessage ?? this.lastMessage,
+      unreadCount: unreadCount ?? this.unreadCount,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   factory ChatPreviewItem.fromJson(Map<String, dynamic> json) {
     return ChatPreviewItem(
       chatID: json['chat_id'] as String? ?? '',

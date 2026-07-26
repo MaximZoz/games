@@ -147,18 +147,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
     } catch (_) {}
     if (!mounted) return;
-    await refreshChatsList(ref, force: true).catchError((_) {});
-    if (!mounted) return;
+    // Без force-reload списка: только локальный unread + pop на стек списка.
+    markChatReadInChatsCache(ref, widget.chatID);
     if (widget.fromGames && widget.gameReturnPath != null) {
       context.go(widget.gameReturnPath!);
     } else if (widget.fromFriends) {
       context.go('/friends');
+    } else if (context.canPop()) {
+      context.pop();
     } else {
       context.go('/chats');
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      refreshChatsList(ref, force: true).catchError((_) {});
-    });
   }
 
   Future<bool> _confirmAction({
