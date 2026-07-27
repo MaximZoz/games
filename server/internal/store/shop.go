@@ -516,16 +516,50 @@ func GiftCollection(ctx context.Context, pool *pgxpool.Pool, fromUser, toUser uu
 }
 
 type CollectionIncomeInfo struct {
-	Available     bool
-	AmountBronze  int
-	NextClaimAt   *string // RFC3339 UTC, if not available
-	OwnedCount    int
+	Available       bool
+	AmountBronze    int
+	ItemsBronze     int
+	SetBonusBronze  int
+	CompletedSets   int
+	NextClaimAt     *string // RFC3339 UTC, if not available
+	OwnedCount      int
 }
 
-// GetCollectionIncomeInfo returns weekly income status.
-func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (*CollectionIncomeInfo, error) {
-	rows, err := pool.Query(ctx, `
-		SELECT COALESCE((s.payload->>'weekly_bronze')::int, 0)
+type collectionCatalogRow struct {
+	Code         string
+	Set          string
+	WeeklyBronze int
+}
+
+func loadActiveCollectionCatalog(ctx context.Context, q interface {
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+}) ([]collectionCatalogRow, error) {
+	rows, err := q.Query(ctx, `
+		SELECT code,
+		       COALESCE(payload->>'set', 'other'),
+		       COALESCE((payload->>'weekly_bronze')::int, 0)
+		FROM shop_items
+		WHERE kind = 'collection' AND active = TRUE`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []collectionCatalogRow
+	for rows.Next() {
+		var r collectionCatalogRow
+		if err := rows.Scan(&r.Code, &r.Set, &r.WeeklyBronze); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+func ownedCollectionCodes(ctx context.Context, q interface {
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+}, userID uuid.UUID) (map[string]struct{}, error) {
+	rows, err := q.Query(ctx, `
+		SELECT u.item_code
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE`, userID)
@@ -533,25 +567,72 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 		return nil, err
 	}
 	defer rows.Close()
-
-	total := 0
-	count := 0
+	owned := map[string]struct{}{}
 	for rows.Next() {
-		var w int
-		if err := rows.Scan(&w); err != nil {
+		var code string
+		if err := rows.Scan(&code); err != nil {
 			return nil, err
 		}
-		if w > 0 {
-			total += w
-		}
-		count++
+		owned[code] = struct{}{}
 	}
-	if err := rows.Err(); err != nil {
+	return owned, rows.Err()
+}
+
+// calcCollectionWeeklyIncome: сумма weekly по владеемым + бонус за каждую
+// полностью собранную группу (= сумма weekly всех предметов группы).
+func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]struct{}) (items, setBonus, ownedCount, completedSets int) {
+	bySet := map[string][]collectionCatalogRow{}
+	for _, r := range catalog {
+		bySet[r.Set] = append(bySet[r.Set], r)
+		if _, ok := owned[r.Code]; ok {
+			ownedCount++
+			if r.WeeklyBronze > 0 {
+				items += r.WeeklyBronze
+			}
+		}
+	}
+	for _, group := range bySet {
+		if len(group) == 0 {
+			continue
+		}
+		complete := true
+		sum := 0
+		for _, r := range group {
+			sum += r.WeeklyBronze
+			if _, ok := owned[r.Code]; !ok {
+				complete = false
+			}
+		}
+		if complete {
+			completedSets++
+			if sum > 0 {
+				setBonus += sum
+			}
+		}
+	}
+	return items, setBonus, ownedCount, completedSets
+}
+
+// GetCollectionIncomeInfo returns weekly income status.
+func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (*CollectionIncomeInfo, error) {
+	catalog, err := loadActiveCollectionCatalog(ctx, pool)
+	if err != nil {
 		return nil, err
 	}
-
-	info := &CollectionIncomeInfo{OwnedCount: count, AmountBronze: total}
-	if count == 0 || total <= 0 {
+	owned, err := ownedCollectionCodes(ctx, pool, userID)
+	if err != nil {
+		return nil, err
+	}
+	items, setBonus, ownedCount, completedSets := calcCollectionWeeklyIncome(catalog, owned)
+	total := items + setBonus
+	info := &CollectionIncomeInfo{
+		OwnedCount:     ownedCount,
+		AmountBronze:   total,
+		ItemsBronze:    items,
+		SetBonusBronze: setBonus,
+		CompletedSets:  completedSets,
+	}
+	if ownedCount == 0 || total <= 0 {
 		return info, nil
 	}
 
@@ -570,7 +651,7 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 	return info, nil
 }
 
-// ClaimCollectionIncome credits weekly bronze from owned collections.
+// ClaimCollectionIncome credits weekly bronze from owned collections + set bonuses.
 func ClaimCollectionIncome(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (balance int, amount int, err error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -588,26 +669,16 @@ func ClaimCollectionIncome(ctx context.Context, pool *pgxpool.Pool, userID uuid.
 		return 0, 0, ErrIncomeNotReady
 	}
 
-	rows, err := tx.Query(ctx, `
-		SELECT COALESCE((s.payload->>'weekly_bronze')::int, 0)
-		FROM user_inventory u
-		JOIN shop_items s ON s.code = u.item_code
-		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE`, userID)
+	catalog, err := loadActiveCollectionCatalog(ctx, tx)
 	if err != nil {
 		return 0, 0, err
 	}
-	amount = 0
-	for rows.Next() {
-		var w int
-		if err := rows.Scan(&w); err != nil {
-			rows.Close()
-			return 0, 0, err
-		}
-		if w > 0 {
-			amount += w
-		}
+	owned, err := ownedCollectionCodes(ctx, tx, userID)
+	if err != nil {
+		return 0, 0, err
 	}
-	rows.Close()
+	items, setBonus, _, _ := calcCollectionWeeklyIncome(catalog, owned)
+	amount = items + setBonus
 	if amount <= 0 {
 		return 0, 0, ErrNoCollections
 	}

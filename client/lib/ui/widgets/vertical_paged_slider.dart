@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Вертикальный PageView с индикатором-точками справа.
+/// Вертикальный PageView с заметным индикатором-точками справа.
 class VerticalPagedSlider extends StatefulWidget {
   const VerticalPagedSlider({
     super.key,
@@ -55,26 +55,44 @@ class _VerticalPagedSliderState extends State<VerticalPagedSlider> {
         ),
         if (widget.pageCount > 1)
           Padding(
-            padding: const EdgeInsets.only(right: 10, left: 4),
+            padding: const EdgeInsets.only(right: 12, left: 6),
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < widget.pageCount; i++)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      width: 8,
-                      height: i == _pageIndex ? 18 : 8,
-                      margin: const EdgeInsets.symmetric(vertical: 3),
-                      decoration: BoxDecoration(
-                        color: i == _pageIndex
-                            ? AppColors.accentStart
-                            : AppColors.accentSoft,
-                        borderRadius: BorderRadius.circular(999),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < widget.pageCount; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        width: i == _pageIndex ? 12 : 10,
+                        height: i == _pageIndex ? 28 : 10,
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: i == _pageIndex
+                              ? AppColors.accentStart
+                              : const Color(0xFF6B7280),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

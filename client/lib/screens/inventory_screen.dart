@@ -256,7 +256,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       child: Text(
                                         income.available
                                             ? 'Доход: +${income.amountBronze} бронзы'
-                                            : 'Доход через неделю: ${income.amountBronze} бронзы',
+                                                '${income.setBonusBronze > 0 ? ' (группы +${income.setBonusBronze})' : ''}'
+                                            : 'Доход через неделю: ${income.amountBronze} бронзы'
+                                                '${income.setBonusBronze > 0 ? ' (группы +${income.setBonusBronze})' : ''}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.textSecondary,

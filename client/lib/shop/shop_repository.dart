@@ -423,12 +423,18 @@ class CollectionIncomeInfo {
     required this.available,
     required this.amountBronze,
     required this.ownedCount,
+    this.itemsBronze = 0,
+    this.setBonusBronze = 0,
+    this.completedSets = 0,
     this.nextClaimAt,
   });
 
   final bool available;
   final int amountBronze;
   final int ownedCount;
+  final int itemsBronze;
+  final int setBonusBronze;
+  final int completedSets;
   final String? nextClaimAt;
 
   factory CollectionIncomeInfo.fromJson(Map<String, dynamic> json) {
@@ -436,6 +442,9 @@ class CollectionIncomeInfo {
       available: json['available'] == true,
       amountBronze: (json['amount_bronze'] as num?)?.toInt() ?? 0,
       ownedCount: (json['owned_count'] as num?)?.toInt() ?? 0,
+      itemsBronze: (json['items_bronze'] as num?)?.toInt() ?? 0,
+      setBonusBronze: (json['set_bonus_bronze'] as num?)?.toInt() ?? 0,
+      completedSets: (json['completed_sets'] as num?)?.toInt() ?? 0,
       nextClaimAt: json['next_claim_at'] as String?,
     );
   }

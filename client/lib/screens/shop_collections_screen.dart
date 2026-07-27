@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +13,16 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 
-/// Магазин коллекционных предметов — страницы по 4, вертикально, точки справа.
+const _setOrder = [
+  'legends',
+  'cosmic',
+  'jewels',
+  'celebration',
+  'nature',
+  'adventure',
+];
+
+/// Магазин коллекций: одна группа = один экран, сортировка по цене внутри.
 class ShopCollectionsScreen extends ConsumerStatefulWidget {
   const ShopCollectionsScreen({super.key});
 
@@ -24,8 +32,6 @@ class ShopCollectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
-  static const _pageSize = 4;
-
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
 
@@ -60,6 +66,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
           '${item.title}\n\n'
           'Цена: ${item.priceBronze} бронзы\n'
           'Доход: +${item.weeklyBronze} бронзы в неделю\n'
+          'Покупка один раз\n'
           'Продажа: ${item.sellRefundBronze} бронзы (80%)',
         ),
         actions: [
@@ -88,6 +95,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
       ref.invalidate(inventoryListProvider);
       ref.invalidate(shopCatalogProvider);
+      ref.invalidate(collectionIncomeProvider);
       if (!mounted) return;
       await showDialog<void>(
         context: context,
@@ -127,16 +135,25 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     void goBack() => context.pop();
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
-    final collections = items.where((e) => e.kind == 'collection').toList()
-      ..sort((a, b) {
+    final collections = items.where((e) => e.kind == 'collection').toList();
+
+    final bySet = <String, List<ShopItem>>{};
+    for (final e in collections) {
+      final s = (e.collectionSet ?? 'other').trim();
+      bySet.putIfAbsent(s.isEmpty ? 'other' : s, () => []).add(e);
+    }
+    for (final list in bySet.values) {
+      list.sort((a, b) {
         final byPrice = a.priceBronze.compareTo(b.priceBronze);
         if (byPrice != 0) return byPrice;
         return a.sortOrder.compareTo(b.sortOrder);
       });
+    }
 
-    final pageCount = collections.isEmpty
-        ? 0
-        : ((collections.length + _pageSize - 1) / _pageSize).floor();
+    final orderedSets = <String>[
+      ..._setOrder.where(bySet.containsKey),
+      ...bySet.keys.where((k) => !_setOrder.contains(k)),
+    ];
 
     return SwipeBackScope(
       onBack: goBack,
@@ -159,7 +176,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
           ),
         ),
         body: SafeArea(
-          child: collections.isEmpty
+          child: orderedSets.isEmpty
               ? const Center(
                   child: Text(
                     'Пока пусто',
@@ -167,32 +184,73 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                   ),
                 )
               : VerticalPagedSlider(
-                  pageCount: pageCount,
+                  pageCount: orderedSets.length,
                   itemBuilder: (context, page) {
-                    final start = page * _pageSize;
-                    final end =
-                        math.min(start + _pageSize, collections.length);
-                    final pageItems = collections.sublist(start, end);
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 16),
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: pageItems.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final item = pageItems[index];
-                        return _CollectionShopCard(
-                          item: item,
-                          busy: _buyInFlight.contains(item.code),
-                          onBuy: () => _buy(item),
-                          onPreview: () => showCollectionFullscreen(
-                            context,
-                            title: item.title,
-                            animatedName: item.animatedName ?? 'sparkles',
-                            fallback: item.emoji,
-                            subtitle: item.description,
+                    final set = orderedSets[page];
+                    final pageItems = bySet[set]!;
+                    final setWeekly = pageItems.fold<int>(
+                      0,
+                      (sum, e) => sum + e.weeklyBronze,
+                    );
+                    final ownedCount =
+                        pageItems.where((e) => e.owned).length;
+                    final complete = ownedCount == pageItems.length &&
+                        pageItems.isNotEmpty;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                collectionSetTitles[set] ?? set,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 20,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                complete
+                                    ? 'Собрано · бонус группы +$setWeekly бронзы/нед.'
+                                    : 'Собрано $ownedCount/${pageItems.length} · '
+                                        'бонус группы +$setWeekly при полном наборе',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                        Expanded(
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 4, 16),
+                            itemCount: pageItems.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final item = pageItems[index];
+                              return _CollectionShopCard(
+                                item: item,
+                                busy: _buyInFlight.contains(item.code),
+                                onBuy: () => _buy(item),
+                                onPreview: () => showCollectionFullscreen(
+                                  context,
+                                  title: item.title,
+                                  animatedName:
+                                      item.animatedName ?? 'sparkles',
+                                  fallback: item.emoji,
+                                  subtitle: item.description,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),

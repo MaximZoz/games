@@ -363,9 +363,12 @@ func (h *ShopHandler) CollectionIncome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := map[string]any{
-		"available":      info.Available,
-		"amount_bronze":  info.AmountBronze,
-		"owned_count":    info.OwnedCount,
+		"available":         info.Available,
+		"amount_bronze":     info.AmountBronze,
+		"items_bronze":      info.ItemsBronze,
+		"set_bonus_bronze":  info.SetBonusBronze,
+		"completed_sets":    info.CompletedSets,
+		"owned_count":       info.OwnedCount,
 	}
 	if info.NextClaimAt != nil {
 		resp["next_claim_at"] = *info.NextClaimAt
