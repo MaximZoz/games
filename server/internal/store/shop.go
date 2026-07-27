@@ -12,11 +12,13 @@ import (
 )
 
 var (
-	ErrShopItemUnknown   = errors.New("unknown shop item")
-	ErrShopItemInactive  = errors.New("shop item inactive")
-	ErrShopOutOfStock    = errors.New("out of stock")
-	ErrShopAlreadyOwned  = errors.New("already owned")
-	ErrStakeNotAllowed   = errors.New("stake not allowed")
+	ErrShopItemUnknown  = errors.New("unknown shop item")
+	ErrShopItemInactive = errors.New("shop item inactive")
+	ErrShopOutOfStock   = errors.New("out of stock")
+	ErrShopAlreadyOwned = errors.New("already owned")
+	ErrStakeNotAllowed  = errors.New("stake not allowed")
+	ErrEmojiNotOwned    = errors.New("emoji not owned")
+	ErrEmojiDepleted    = errors.New("emoji depleted")
 )
 
 // FreeStakeBronze — бронзовые ставки без покупки в магазине.
@@ -254,6 +256,55 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, err
 	}
 	return &BuyResult{BalanceBronze: balance, Quantity: qty}, nil
+}
+
+// ConsumeEmoji uses one charge of a purchased emoji. Deletes row at 0.
+func ConsumeEmoji(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (remaining int, err error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	var kind string
+	var qty int
+	err = tx.QueryRow(ctx, `
+		SELECT s.kind, u.quantity
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = $1 AND u.item_code = $2
+		FOR UPDATE OF u`, userID, code).Scan(&kind, &qty)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, ErrEmojiNotOwned
+		}
+		return 0, err
+	}
+	if kind != "emoji" {
+		return 0, ErrShopItemUnknown
+	}
+	if qty <= 0 {
+		_, _ = tx.Exec(ctx, `DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code)
+		_ = tx.Commit(ctx)
+		return 0, ErrEmojiDepleted
+	}
+
+	qty--
+	if qty == 0 {
+		if _, err := tx.Exec(ctx, `DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code); err != nil {
+			return 0, err
+		}
+	} else {
+		if _, err := tx.Exec(ctx, `
+			UPDATE user_inventory SET quantity = $3
+			WHERE user_id = $1 AND item_code = $2`, userID, code, qty); err != nil {
+			return 0, err
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return qty, nil
 }
 
 // EquippedFrameColor returns payload color of the latest owned frame, if any.

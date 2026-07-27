@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -12,6 +13,9 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -77,6 +81,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   bool _loading = true;
   bool _sending = false;
+  bool _emojiPickerOpen = false;
   bool _loadingOlder = false;
   bool _hasMoreOlder = true;
   bool _initialScrollDone = false;
@@ -695,6 +700,56 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _error = 'Не удалось отправить сообщение';
         _sending = false;
       });
+    }
+  }
+
+  Future<void> _sendAnimatedEmoji(InventoryItem item) async {
+    final name = item.animatedName;
+    if (name == null || name.isEmpty || _sending) return;
+    if (item.quantity <= 0) return;
+
+    setState(() {
+      _sending = true;
+      _emojiPickerOpen = false;
+    });
+    try {
+      await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
+      ref.invalidate(inventoryListProvider);
+      final body = encodeAnimatedEmojiMessage(name);
+      final sent =
+          await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, body);
+      if (!mounted) return;
+      _upsertMessage(sent);
+      setState(() {
+        _sending = false;
+        _error = null;
+      });
+    } on AuthException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _sending = false;
+      });
+      ref.invalidate(inventoryListProvider);
+    } on ChatException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _sending = false;
+      });
+      ref.invalidate(inventoryListProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Не удалось отправить смайлик';
+        _sending = false;
+      });
+      ref.invalidate(inventoryListProvider);
     }
   }
 
@@ -1357,13 +1412,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              message.body,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                              ),
-                            ),
+                            _ChatMessageBody(body: message.body),
                             const SizedBox(height: 4),
                             Align(
                               alignment: Alignment.centerRight,
@@ -1476,48 +1525,166 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-                child: GradientCard(
-                  animate: false,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _textController,
-                          focusNode: _composerFocusNode,
-                          minLines: 1,
-                          maxLines: 4,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: const InputDecoration(
-                            hintText: 'Введите сообщение...',
-                            border: InputBorder.none,
-                            isDense: true,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_emojiPickerOpen) _buildEmojiPicker(),
+                    GradientCard(
+                      animate: false,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 8),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'Смайлики',
+                            onPressed: _sending
+                                ? null
+                                : () {
+                                    final next = !_emojiPickerOpen;
+                                    setState(() => _emojiPickerOpen = next);
+                                    if (next) {
+                                      _composerFocusNode.unfocus();
+                                      ref.invalidate(inventoryListProvider);
+                                    }
+                                  },
+                            icon: Icon(
+                              _emojiPickerOpen
+                                  ? Icons.keyboard_rounded
+                                  : Icons.emoji_emotions_outlined,
+                              color: AppColors.accentStart,
+                            ),
                           ),
-                          textInputAction: TextInputAction.send,
-                          onTap: _scrollToBottom,
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
+                          Expanded(
+                            child: TextField(
+                              controller: _textController,
+                              focusNode: _composerFocusNode,
+                              minLines: 1,
+                              maxLines: 4,
+                              textCapitalization: TextCapitalization.sentences,
+                              decoration: const InputDecoration(
+                                hintText: 'Введите сообщение...',
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                              textInputAction: TextInputAction.send,
+                              onTap: () {
+                                if (_emojiPickerOpen) {
+                                  setState(() => _emojiPickerOpen = false);
+                                }
+                                _scrollToBottom();
+                              },
+                              onSubmitted: (_) => _sendMessage(),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _sending ? null : _sendMessage,
+                            tooltip: 'Отправить',
+                            icon: _sending
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.send_rounded),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        onPressed: _sending ? null : _sendMessage,
-                        tooltip: 'Отправить',
-                        icon: _sending
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.send_rounded),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmojiPicker() {
+    final items = ref.watch(inventoryListProvider).valueOrNull ?? const [];
+    final emojis = items
+        .where((e) => e.kind == 'emoji' && e.quantity > 0)
+        .toList();
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      child: emojis.isEmpty
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Купите смайлики в магазине на главной',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+            )
+          : Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final it in emojis)
+                  InkWell(
+                    onTap: _sending ? null : () => unawaited(_sendAnimatedEmoji(it)),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: 64,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          ShopAnimatedEmoji(
+                            animatedName: it.animatedName ?? 'smile',
+                            size: 36,
+                            fallback: it.emoji,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${it.quantity}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+}
+
+class _ChatMessageBody extends StatelessWidget {
+  const _ChatMessageBody({required this.body});
+
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = parseAnimatedEmojiName(body);
+    if (name != null) {
+      return ShopAnimatedEmoji(
+        animatedName: name,
+        size: 56,
+        fallback: body,
+      );
+    }
+    return Text(
+      body,
+      style: const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 14,
       ),
     );
   }

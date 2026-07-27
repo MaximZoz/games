@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -70,9 +71,10 @@ class InventoryScreen extends ConsumerWidget {
                           children: [
                             for (final it in emojis)
                               _InvTile(
-                                leading: Text(
-                                  it.emoji ?? '🙂',
-                                  style: const TextStyle(fontSize: 26),
+                                leading: ShopAnimatedEmoji(
+                                  animatedName: it.animatedName ?? 'smile',
+                                  size: 32,
+                                  fallback: it.emoji,
                                 ),
                                 title: it.title,
                                 subtitle: 'Осталось ${it.quantity}',

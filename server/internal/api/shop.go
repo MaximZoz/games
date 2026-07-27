@@ -105,6 +105,41 @@ func (h *ShopHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// POST /api/inventory/consume  {"code":"emoji_fire"}
+func (h *ShopHandler) Consume(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var body buyBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	code := strings.TrimSpace(body.Code)
+	if code == "" {
+		http.Error(w, "code required", http.StatusBadRequest)
+		return
+	}
+	remaining, err := store.ConsumeEmoji(r.Context(), h.Pool, userID, code)
+	if err != nil {
+		switch err {
+		case store.ErrEmojiNotOwned, store.ErrEmojiDepleted, store.ErrShopItemUnknown:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"quantity": remaining})
+}
+
 // GET /api/inventory
 func (h *ShopHandler) Inventory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {

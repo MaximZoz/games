@@ -34,6 +34,7 @@ class ShopItem {
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
+  String? get animatedName => payload['animated_name'] as String?;
 
   ShopItem copyWith({
     bool? owned,
@@ -90,6 +91,7 @@ class InventoryItem {
 
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
+  String? get animatedName => payload['animated_name'] as String?;
   int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
 
@@ -206,6 +208,32 @@ class ShopRepository {
       balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
       quantity: (body['quantity'] as num?)?.toInt() ?? 1,
     );
+  }
+
+  Future<int> consumeEmoji(String code) async {
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/inventory/consume'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'code': code}),
+        operation: 'ShopRepository.consumeEmoji',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401
+            ? 'Сессия истекла'
+            : response.statusCode == 409
+                ? 'Смайлик недоступен'
+                : 'Не удалось использовать смайлик',
+      );
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return (body['quantity'] as num?)?.toInt() ?? 0;
   }
 
   Future<List<InventoryItem>> listInventory() async {

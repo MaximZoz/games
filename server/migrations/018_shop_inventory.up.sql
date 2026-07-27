@@ -25,15 +25,21 @@ CREATE TABLE IF NOT EXISTS user_inventory (
 CREATE INDEX IF NOT EXISTS idx_user_inventory_user
     ON user_inventory (user_id);
 
--- Смайлики (при покупке — 30 использований в инвентаре).
+-- Смайлики (при покупке — 30 использований; Noto animated_emoji).
 INSERT INTO shop_items (code, kind, title, description, price_bronze, payload, stock_remaining, sort_order)
 VALUES
-    ('emoji_fire', 'emoji', 'Огонь', 'Тематический смайлик', 50, '{"emoji":"🔥","uses":30}'::jsonb, NULL, 10),
-    ('emoji_star', 'emoji', 'Звезда', 'Тематический смайлик', 50, '{"emoji":"⭐","uses":30}'::jsonb, NULL, 20),
-    ('emoji_trophy', 'emoji', 'Кубок', 'Тематический смайлик', 80, '{"emoji":"🏆","uses":30}'::jsonb, NULL, 30),
-    ('emoji_crown', 'emoji', 'Корона', 'Тематический смайлик', 100, '{"emoji":"👑","uses":30}'::jsonb, NULL, 40),
-    ('emoji_rocket', 'emoji', 'Ракета', 'Тематический смайлик', 80, '{"emoji":"🚀","uses":30}'::jsonb, NULL, 50),
-    ('emoji_dragon', 'emoji', 'Дракон', 'Тематический смайлик', 150, '{"emoji":"🐉","uses":30}'::jsonb, NULL, 60)
+    ('emoji_smile', 'emoji', 'Улыбка', 'Анимированный смайлик', 30, '{"emoji":"😀","animated_name":"smile","uses":30}'::jsonb, NULL, 10),
+    ('emoji_joy', 'emoji', 'Слёзы радости', 'Анимированный смайлик', 40, '{"emoji":"😂","animated_name":"joy","uses":30}'::jsonb, NULL, 20),
+    ('emoji_rofl', 'emoji', 'ROFL', 'Анимированный смайлик', 50, '{"emoji":"🤣","animated_name":"rofl","uses":30}'::jsonb, NULL, 30),
+    ('emoji_heart_eyes', 'emoji', 'Влюблённый', 'Анимированный смайлик', 50, '{"emoji":"😍","animated_name":"heartEyes","uses":30}'::jsonb, NULL, 40),
+    ('emoji_partying', 'emoji', 'Вечеринка', 'Анимированный смайлик', 60, '{"emoji":"🥳","animated_name":"partyingFace","uses":30}'::jsonb, NULL, 50),
+    ('emoji_thumbs_up', 'emoji', 'Лайк', 'Анимированный смайлик', 40, '{"emoji":"👍","animated_name":"thumbsUp","uses":30}'::jsonb, NULL, 60),
+    ('emoji_fire', 'emoji', 'Огонь', 'Анимированный смайлик', 50, '{"emoji":"🔥","animated_name":"fire","uses":30}'::jsonb, NULL, 70),
+    ('emoji_rocket', 'emoji', 'Ракета', 'Анимированный смайлик', 80, '{"emoji":"🚀","animated_name":"rocket","uses":30}'::jsonb, NULL, 80),
+    ('emoji_trophy', 'emoji', 'Кубок', 'Анимированный смайлик', 100, '{"emoji":"🏆","animated_name":"trophy","uses":30}'::jsonb, NULL, 90),
+    ('emoji_red_heart', 'emoji', 'Сердце', 'Анимированный смайлик', 50, '{"emoji":"❤️","animated_name":"redHeart","uses":30}'::jsonb, NULL, 100),
+    ('emoji_party_popper', 'emoji', 'Хлопушка', 'Анимированный смайлик', 70, '{"emoji":"🎉","animated_name":"partyPopper","uses":30}'::jsonb, NULL, 110),
+    ('emoji_sparkles', 'emoji', 'Блёстки', 'Анимированный смайлик', 40, '{"emoji":"✨","animated_name":"sparkles","uses":30}'::jsonb, NULL, 120)
 ON CONFLICT (code) DO NOTHING;
 
 -- Право на серебряную ставку (цена в серебре → бронза ×100).

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -200,7 +201,11 @@ class _ShopCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final leading = switch (item.kind) {
-      'emoji' => Text(item.emoji ?? '🙂', style: const TextStyle(fontSize: 28)),
+      'emoji' => ShopAnimatedEmoji(
+          animatedName: item.animatedName ?? 'smile',
+          size: 32,
+          fallback: item.emoji,
+        ),
       'stake_unlock' => const CoinIcon(coinType: CoinType.silver, size: 28),
       'frame' => Container(
           width: 28,
