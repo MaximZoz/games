@@ -255,10 +255,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     Expanded(
                                       child: Text(
                                         income.available
-                                            ? 'Доход: +${formatRewardBronze(income.amountBronze)}/день'
-                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronze(income.setBonusBronze)})' : ''}'
-                                            : 'Доход завтра: ${formatRewardBronze(income.amountBronze)}'
-                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronze(income.setBonusBronze)})' : ''}',
+                                            ? 'Доход: +${formatRewardBronzePerDay(income.amountBronze)}'
+                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronzePerDay(income.setBonusBronze)})' : ''}'
+                                            : 'Доход завтра: ${formatRewardBronzePerDay(income.amountBronze)}'
+                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronzePerDay(income.setBonusBronze)})' : ''}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.textSecondary,
@@ -284,7 +284,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   animatedName: it.animatedName ?? 'sparkles',
                                   fallback: it.emoji,
                                   subtitle:
-                                      '+${formatRewardBronze(it.dailyBronze)}/день',
+                                      '+${formatRewardBronzePerDay(it.dailyBronze)}',
                                 ),
                                 onGift: () => _gift(it),
                                 onSell: () => _sell(it),
@@ -416,7 +416,7 @@ class _CollectionInvTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '+${formatRewardBronze(item.dailyBronze)}/день',
+                    '+${formatRewardBronzePerDay(item.dailyBronze)}',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

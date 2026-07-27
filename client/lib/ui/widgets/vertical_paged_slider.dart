@@ -55,7 +55,7 @@ class _VerticalPagedSliderState extends State<VerticalPagedSlider> {
         ),
         if (widget.pageCount > 1)
           Padding(
-            padding: const EdgeInsets.only(right: 10, left: 4),
+            padding: const EdgeInsets.only(right: 6, left: 2),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -64,13 +64,13 @@ class _VerticalPagedSliderState extends State<VerticalPagedSlider> {
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
                       curve: Curves.easeOutCubic,
-                      width: i == _pageIndex ? 11 : 9,
-                      height: i == _pageIndex ? 26 : 9,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      width: i == _pageIndex ? 2.5 : 1.5,
+                      height: i == _pageIndex ? 12 : 1.5,
+                      margin: const EdgeInsets.symmetric(vertical: 2.5),
                       decoration: BoxDecoration(
                         color: i == _pageIndex
-                            ? AppColors.accentStart
-                            : const Color(0xFF6B7280),
+                            ? AppColors.accentStart.withValues(alpha: 0.45)
+                            : const Color(0xFF6B7280).withValues(alpha: 0.22),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),

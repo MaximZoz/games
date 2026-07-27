@@ -148,7 +148,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                     const SizedBox(height: 2),
                                     Text(
                                       '$ownedCount/${groupItems.length} · '
-                                      'бонус группы +${formatRewardBronze(setDaily)}/день',
+                                      'бонус группы +${formatRewardBronzePerDay(setDaily)}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
@@ -220,7 +220,7 @@ class _ShopCollectionGroupScreenState
         content: Text(
           '${item.title}\n\n'
           'Цена: ${formatRewardBronze(item.priceBronze)}\n'
-          'Доход: +${formatRewardBronze(item.dailyBronze)} в день\n'
+          'Доход: +${formatRewardBronzePerDay(item.dailyBronze)}\n'
           'Покупка один раз\n'
           'Продажа: ${formatRewardBronze(item.sellRefundBronze)} (80%)',
         ),
@@ -342,9 +342,9 @@ class _ShopCollectionGroupScreenState
                     if (index == 0) {
                       return Text(
                         complete
-                            ? 'Собрано · бонус группы +${formatRewardBronze(setDaily)}/день'
+                            ? 'Собрано · бонус группы +${formatRewardBronzePerDay(setDaily)}'
                             : 'Собрано $ownedCount/${groupItems.length} · '
-                                'бонус группы +${formatRewardBronze(setDaily)} при полном наборе',
+                                'бонус группы +${formatRewardBronzePerDay(setDaily)} при полном наборе',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -396,15 +396,8 @@ class _CollectionShopCard extends StatelessWidget {
   final VoidCallback onBuy;
   final VoidCallback onPreview;
 
-  static String _priceAmountLabel(int bronze) {
-    if (bronze >= 10000 && bronze % 10000 == 0) {
-      return '${bronze ~/ 10000}';
-    }
-    if (bronze >= 100 && bronze % 100 == 0) {
-      return '${bronze ~/ 100}';
-    }
-    return '$bronze';
-  }
+  static String _priceAmountLabel(int bronze) =>
+      '${rewardCoinAmount(bronze)}';
 
   @override
   Widget build(BuildContext context) {
