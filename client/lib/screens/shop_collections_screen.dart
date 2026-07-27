@@ -12,15 +12,6 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
-const _setOrder = [
-  'legends',
-  'cosmic',
-  'jewels',
-  'celebration',
-  'nature',
-  'adventure',
-];
-
 /// Магазин коллекционных предметов.
 class ShopCollectionsScreen extends ConsumerStatefulWidget {
   const ShopCollectionsScreen({super.key});
@@ -133,17 +124,11 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
     final collections = items.where((e) => e.kind == 'collection').toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-    final bySet = <String, List<ShopItem>>{};
-    for (final e in collections) {
-      final s = e.collectionSet ?? 'other';
-      bySet.putIfAbsent(s, () => []).add(e);
-    }
-    final ordered = [
-      ..._setOrder.where(bySet.containsKey),
-      ...bySet.keys.where((k) => !_setOrder.contains(k)),
-    ];
+      ..sort((a, b) {
+        final byPrice = a.priceBronze.compareTo(b.priceBronze);
+        if (byPrice != 0) return byPrice;
+        return a.sortOrder.compareTo(b.sortOrder);
+      });
 
     return SwipeBackScope(
       onBack: goBack,
@@ -173,38 +158,25 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView(
+              : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  children: [
-                    for (final set in ordered) ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 10, 4, 10),
-                        child: Text(
-                          collectionSetTitles[set] ?? set,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                  itemCount: collections.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final item = collections[index];
+                    return _CollectionShopCard(
+                      item: item,
+                      busy: _buyInFlight.contains(item.code),
+                      onBuy: () => _buy(item),
+                      onPreview: () => showCollectionFullscreen(
+                        context,
+                        title: item.title,
+                        animatedName: item.animatedName ?? 'sparkles',
+                        fallback: item.emoji,
+                        subtitle: item.description,
                       ),
-                      for (final item in bySet[set]!) ...[
-                        _CollectionShopCard(
-                          item: item,
-                          busy: _buyInFlight.contains(item.code),
-                          onBuy: () => _buy(item),
-                          onPreview: () => showCollectionFullscreen(
-                            context,
-                            title: item.title,
-                            animatedName: item.animatedName ?? 'sparkles',
-                            fallback: item.emoji,
-                            subtitle: item.description,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                    ],
-                  ],
+                    );
+                  },
                 ),
         ),
       ),

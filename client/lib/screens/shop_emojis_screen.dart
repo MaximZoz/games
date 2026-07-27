@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,26 +14,12 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 const shopEmojiGroupTitles = <String, String>{
   'emotions': 'Эмоции',
-  'animals': 'Животные',
-  'food': 'Еда и напитки',
-  'travel': 'Путешествия',
-  'party': 'Праздник и спорт',
-  'objects': 'Предметы',
 };
-
-const shopEmojiGroupOrder = [
-  'emotions',
-  'animals',
-  'food',
-  'travel',
-  'party',
-  'objects',
-];
 
 String shopEmojiGroupTitle(String group) =>
     shopEmojiGroupTitles[group] ?? group;
 
-/// Список групп смайликов — клик открывает группу.
+/// Список групп смайликов — сейчас только «Эмоции», один превью-смайлик.
 class ShopEmojisScreen extends ConsumerStatefulWidget {
   const ShopEmojisScreen({super.key});
 
@@ -69,19 +56,11 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
     void goBack() => context.pop();
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
-    final emojis = items.where((e) => e.kind == 'emoji').toList()
+    final emotions = items
+        .where((e) => e.kind == 'emoji' && (e.group ?? '') == 'emotions')
+        .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-    final byGroup = <String, List<ShopItem>>{};
-    for (final e in emojis) {
-      final g = (e.group ?? 'other').trim();
-      byGroup.putIfAbsent(g.isEmpty ? 'other' : g, () => []).add(e);
-    }
-
-    final orderedGroups = <String>[
-      ...shopEmojiGroupOrder.where(byGroup.containsKey),
-      ...byGroup.keys.where((k) => !shopEmojiGroupOrder.contains(k)),
-    ];
+    final preview = emotions.isEmpty ? null : emotions.first;
 
     return SwipeBackScope(
       onBack: goBack,
@@ -104,27 +83,22 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
           ),
         ),
         body: SafeArea(
-          child: emojis.isEmpty
+          child: preview == null
               ? const Center(
                   child: Text(
                     'Пока пусто',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView.separated(
+              : ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: orderedGroups.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final group = orderedGroups[index];
-                    final groupItems = byGroup[group]!;
-                    final preview = groupItems.take(4).toList();
-                    return Material(
+                  children: [
+                    Material(
                       color: AppColors.surfaceCard,
                       borderRadius: BorderRadius.circular(16),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: () => context.push('/shop/emojis/$group'),
+                        onTap: () => context.push('/shop/emojis/emotions'),
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
                           decoration: BoxDecoration(
@@ -135,31 +109,19 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                           ),
                           child: Row(
                             children: [
-                              SizedBox(
-                                width: 96,
-                                height: 40,
-                                child: Row(
-                                  children: [
-                                    for (final it in preview) ...[
-                                      ShopAnimatedEmoji(
-                                        animatedName:
-                                            it.animatedName ?? 'smile',
-                                        size: 28,
-                                        fallback: it.emoji,
-                                      ),
-                                      const SizedBox(width: 2),
-                                    ],
-                                  ],
-                                ),
+                              ShopAnimatedEmoji(
+                                animatedName: preview.animatedName ?? 'smile',
+                                size: 40,
+                                fallback: preview.emoji,
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      shopEmojiGroupTitle(group),
-                                      style: const TextStyle(
+                                    const Text(
+                                      'Эмоции',
+                                      style: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 16,
                                         color: AppColors.textPrimary,
@@ -167,7 +129,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${groupItems.length} смайликов · по 30 бронзы',
+                                      '${emotions.length} смайликов · по 30 бронзы',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
@@ -184,8 +146,8 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
         ),
       ),
@@ -193,7 +155,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
   }
 }
 
-/// Смайлики одной группы — покупка по одному с подтверждением.
+/// Эмоции: страницы по 9 карточек с плавным листанием.
 class ShopEmojiGroupScreen extends ConsumerStatefulWidget {
   const ShopEmojiGroupScreen({super.key, required this.group});
 
@@ -205,8 +167,12 @@ class ShopEmojiGroupScreen extends ConsumerStatefulWidget {
 }
 
 class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
+  static const _pageSize = 9;
+
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
+  final PageController _pageController = PageController();
+  int _pageIndex = 0;
 
   @override
   void initState() {
@@ -219,6 +185,12 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       }
       unawaited(_reloadSilent());
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _reloadSilent() async {
@@ -315,6 +287,9 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
+    final pageCount =
+        emojis.isEmpty ? 0 : ((emojis.length + _pageSize - 1) / _pageSize).floor();
+
     return SwipeBackScope(
       onBack: goBack,
       child: Scaffold(
@@ -343,23 +318,69 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 0.78,
-                  ),
-                  itemCount: emojis.length,
-                  itemBuilder: (context, index) {
-                    final item = emojis[index];
-                    return _EmojiBuyTile(
-                      item: item,
-                      busy: _buyInFlight.contains(item.code),
-                      onBuy: () => _buy(item),
-                    );
-                  },
+              : Column(
+                  children: [
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: pageCount,
+                        onPageChanged: (i) => setState(() => _pageIndex = i),
+                        physics: const BouncingScrollPhysics(
+                          parent: PageScrollPhysics(),
+                        ),
+                        itemBuilder: (context, page) {
+                          final start = page * _pageSize;
+                          final end = math.min(start + _pageSize, emojis.length);
+                          final pageItems = emojis.sublist(start, end);
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: GridView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                mainAxisSpacing: 10,
+                                crossAxisSpacing: 10,
+                                childAspectRatio: 0.78,
+                              ),
+                              itemCount: pageItems.length,
+                              itemBuilder: (context, index) {
+                                final item = pageItems[index];
+                                return _EmojiBuyTile(
+                                  item: item,
+                                  busy: _buyInFlight.contains(item.code),
+                                  onBuy: () => _buy(item),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    if (pageCount > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16, top: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (var i = 0; i < pageCount; i++)
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                                width: i == _pageIndex ? 18 : 8,
+                                height: 8,
+                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                decoration: BoxDecoration(
+                                  color: i == _pageIndex
+                                      ? AppColors.accentStart
+                                      : AppColors.accentSoft,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
         ),
       ),
