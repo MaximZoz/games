@@ -1754,7 +1754,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
     for (final e in widget.emojis) {
       grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
     }
-    final known = const [
+    const known = [
       'emotions',
       'animals',
       'food',
