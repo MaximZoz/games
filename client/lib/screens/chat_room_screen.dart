@@ -1594,13 +1594,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       const EdgeInsets.fromLTRB(0, 8, 6, 8),
                   child: Row(
                     children: [
-                      // Зона тапа шире иконки: захватывает левый край карточки.
+                      // Зона тапа шире иконки: левее / выше / ниже тоже открывает панель.
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: _sending ? null : _openEmojiPicker,
                         child: const SizedBox(
                           width: 72,
-                          height: 56,
+                          height: 72,
                           child: Padding(
                             padding: EdgeInsets.only(left: 12),
                             child: Icon(
