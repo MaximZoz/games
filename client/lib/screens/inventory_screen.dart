@@ -255,10 +255,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     Expanded(
                                       child: Text(
                                         income.available
-                                            ? 'Доход: +${income.amountBronze} бронзы/день'
-                                                '${income.setBonusBronze > 0 ? ' (группы +${income.setBonusBronze})' : ''}'
-                                            : 'Доход завтра: ${income.amountBronze} бронзы'
-                                                '${income.setBonusBronze > 0 ? ' (группы +${income.setBonusBronze})' : ''}',
+                                            ? 'Доход: +${formatRewardBronze(income.amountBronze)}/день'
+                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronze(income.setBonusBronze)})' : ''}'
+                                            : 'Доход завтра: ${formatRewardBronze(income.amountBronze)}'
+                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronze(income.setBonusBronze)})' : ''}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.textSecondary,
@@ -284,7 +284,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   animatedName: it.animatedName ?? 'sparkles',
                                   fallback: it.emoji,
                                   subtitle:
-                                      '+${it.dailyBronze} бронзы в день',
+                                      '+${formatRewardBronze(it.dailyBronze)}/день',
                                 ),
                                 onGift: () => _gift(it),
                                 onSell: () => _sell(it),
@@ -416,7 +416,7 @@ class _CollectionInvTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '+${item.dailyBronze} бронзы / день',
+                    '+${formatRewardBronze(item.dailyBronze)}/день',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

@@ -25,7 +25,13 @@ const collectionSetOrder = [
 String collectionSetTitle(String set) => collectionSetTitles[set] ?? set;
 
 String collectionItemSubtitle(int dailyBronze) =>
-    'Коллекция · витрина · подарок · продажа · +$dailyBronze бронзы/день';
+    'Коллекция · витрина · подарок · продажа · +${formatRewardBronze(dailyBronze)}/день';
+
+String compactRewardAmount(int bronze) {
+  if (bronze >= 10000 && bronze % 10000 == 0) return '${bronze ~/ 10000}';
+  if (bronze >= 100 && bronze % 100 == 0) return '${bronze ~/ 100}';
+  return '$bronze';
+}
 
 /// Полноэкранный просмотр: тап вне «Купить» закрывает; крестика нет.
 Future<void> showCollectionFullscreen(
@@ -164,10 +170,13 @@ class CollectionShowcaseGrid extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const CoinIcon(coinType: CoinType.bronze, size: 10),
+                          CoinIcon(
+                            coinType: rewardCoinType(it.dailyBronze),
+                            size: 10,
+                          ),
                           const SizedBox(width: 2),
                           Text(
-                            '+${it.dailyBronze}/день',
+                            '+${compactRewardAmount(it.dailyBronze)}/день',
                             style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.textSecondary,

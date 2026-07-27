@@ -11,7 +11,6 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
-import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 
 /// Хаб коллекций — список групп (как «Эмоции» у смайликов).
 class ShopCollectionsScreen extends ConsumerStatefulWidget {
@@ -149,7 +148,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                     const SizedBox(height: 2),
                                     Text(
                                       '$ownedCount/${groupItems.length} · '
-                                      'бонус группы +$setDaily/день',
+                                      'бонус группы +${formatRewardBronze(setDaily)}/день',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
@@ -188,8 +187,6 @@ class ShopCollectionGroupScreen extends ConsumerStatefulWidget {
 
 class _ShopCollectionGroupScreenState
     extends ConsumerState<ShopCollectionGroupScreen> {
-  static const _pageSize = 4;
-
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
 
@@ -222,10 +219,10 @@ class _ShopCollectionGroupScreenState
         title: const Text('Купить коллекцию?'),
         content: Text(
           '${item.title}\n\n'
-          'Цена: ${item.priceBronze} бронзы\n'
-          'Доход: +${item.dailyBronze} бронзы в день\n'
+          'Цена: ${formatRewardBronze(item.priceBronze)}\n'
+          'Доход: +${formatRewardBronze(item.dailyBronze)} в день\n'
           'Покупка один раз\n'
-          'Продажа: ${item.sellRefundBronze} бронзы (80%)',
+          'Продажа: ${formatRewardBronze(item.sellRefundBronze)} (80%)',
         ),
         actions: [
           TextButton(
@@ -308,9 +305,6 @@ class _ShopCollectionGroupScreenState
     final ownedCount = groupItems.where((e) => e.owned).length;
     final complete =
         ownedCount == groupItems.length && groupItems.isNotEmpty;
-    final pageCount = groupItems.isEmpty
-        ? 0
-        : ((groupItems.length + _pageSize - 1) / _pageSize).floor();
 
     return SwipeBackScope(
       onBack: goBack,
@@ -340,72 +334,48 @@ class _ShopCollectionGroupScreenState
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                      child: Text(
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  itemCount: groupItems.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Text(
                         complete
-                            ? 'Собрано · бонус группы +$setDaily бронзы/день'
+                            ? 'Собрано · бонус группы +${formatRewardBronze(setDaily)}/день'
                             : 'Собрано $ownedCount/${groupItems.length} · '
-                                'бонус группы +$setDaily при полном наборе',
+                                'бонус группы +${formatRewardBronze(setDaily)} при полном наборе',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: VerticalPagedSlider(
-                        pageCount: pageCount,
-                        itemBuilder: (context, page) {
-                          final start = page * _pageSize;
-                          final end = (start + _pageSize < groupItems.length)
-                              ? start + _pageSize
-                              : groupItems.length;
-                          final pageItems = groupItems.sublist(start, end);
-                          return ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 4, 16),
-                            itemCount: pageItems.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 10),
-                            itemBuilder: (context, index) {
-                              final item = pageItems[index];
-                              return _CollectionShopCard(
-                                item: item,
-                                busy: _buyInFlight.contains(item.code),
-                                onBuy: () => _buy(item),
-                                onPreview: () => showCollectionFullscreen(
-                                  context,
-                                  title: item.title,
-                                  animatedName:
-                                      item.animatedName ?? 'sparkles',
-                                  fallback: item.emoji,
-                                  subtitle: collectionItemSubtitle(
-                                    item.dailyBronze,
-                                  ),
-                                  bottomAction: item.owned
-                                      ? null
-                                      : Builder(
-                                          builder: (dialogContext) =>
-                                              FilledButton(
-                                            onPressed: () {
-                                              Navigator.of(dialogContext)
-                                                  .pop();
-                                              unawaited(_buy(item));
-                                            },
-                                            child: const Text('Купить'),
-                                          ),
-                                        ),
+                      );
+                    }
+                    final item = groupItems[index - 1];
+                    return _CollectionShopCard(
+                      item: item,
+                      busy: _buyInFlight.contains(item.code),
+                      onBuy: () => _buy(item),
+                      onPreview: () => showCollectionFullscreen(
+                        context,
+                        title: item.title,
+                        animatedName: item.animatedName ?? 'sparkles',
+                        fallback: item.emoji,
+                        subtitle: collectionItemSubtitle(item.dailyBronze),
+                        bottomAction: item.owned
+                            ? null
+                            : Builder(
+                                builder: (dialogContext) => FilledButton(
+                                  onPressed: () {
+                                    Navigator.of(dialogContext).pop();
+                                    unawaited(_buy(item));
+                                  },
+                                  child: const Text('Купить'),
                                 ),
-                              );
-                            },
-                          );
-                        },
+                              ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
         ),
       ),
@@ -425,6 +395,16 @@ class _CollectionShopCard extends StatelessWidget {
   final bool busy;
   final VoidCallback onBuy;
   final VoidCallback onPreview;
+
+  static String _priceAmountLabel(int bronze) {
+    if (bronze >= 10000 && bronze % 10000 == 0) {
+      return '${bronze ~/ 10000}';
+    }
+    if (bronze >= 100 && bronze % 100 == 0) {
+      return '${bronze ~/ 100}';
+    }
+    return '$bronze';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -469,10 +449,13 @@ class _CollectionShopCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const CoinIcon(coinType: CoinType.bronze, size: 14),
+                    CoinIcon(
+                      coinType: rewardCoinType(item.priceBronze),
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      '${item.priceBronze}',
+                      _priceAmountLabel(item.priceBronze),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,

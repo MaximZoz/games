@@ -133,3 +133,8 @@ flutter:
     - packages/animated_emoji/lottie/crystalBall.json
     - packages/animated_emoji/lottie/fireHeart.json
     - packages/animated_emoji/lottie/anatomicalHeart.json
+    - packages/animated_emoji/lottie/phoenix.json
+    - packages/animated_emoji/lottie/owl.json
+    - packages/animated_emoji/lottie/snake.json
+    - packages/animated_emoji/lottie/scorpion.json
+    - packages/animated_emoji/lottie/bat.json
