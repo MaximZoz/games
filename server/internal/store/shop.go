@@ -41,11 +41,12 @@ type InventoryItemView struct {
 	Description string
 	Payload     json.RawMessage
 	AcquiredAt  string
+	Quantity    int
 }
 
 type BuyResult struct {
-	BalanceBronze  int
-	StockRemaining *int
+	BalanceBronze int
+	Quantity      int
 }
 
 // ListShopItems returns catalog with owned flag for user.
@@ -85,7 +86,8 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 func ListInventory(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]InventoryItemView, error) {
 	rows, err := pool.Query(ctx, `
 		SELECT s.code, s.kind, s.title, s.description, s.payload,
-		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+		       u.quantity
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1
@@ -99,7 +101,7 @@ func ListInventory(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 	for rows.Next() {
 		var it InventoryItemView
 		var payload []byte
-		if err := rows.Scan(&it.Code, &it.Kind, &it.Title, &it.Description, &payload, &it.AcquiredAt); err != nil {
+		if err := rows.Scan(&it.Code, &it.Kind, &it.Title, &it.Description, &payload, &it.AcquiredAt, &it.Quantity); err != nil {
 			return nil, err
 		}
 		it.Payload = json.RawMessage(payload)
@@ -177,7 +179,8 @@ func UserMayStake(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, sta
 	return ok, err
 }
 
-// BuyShopItem purchases an item: deduct coins, decrease stock, add inventory.
+// BuyShopItem purchases an item: deduct coins and add inventory.
+// Emoji packs grant payload.uses (default 30) as personal quantity.
 func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (*BuyResult, error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -186,13 +189,14 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 	defer tx.Rollback(ctx)
 
 	var price int
-	var stock *int
+	var kind string
+	var payload []byte
 	var active bool
 	err = tx.QueryRow(ctx, `
-		SELECT price_bronze, stock_remaining, active
+		SELECT price_bronze, kind, payload, active
 		FROM shop_items
 		WHERE code = $1
-		FOR UPDATE`, code).Scan(&price, &stock, &active)
+		FOR UPDATE`, code).Scan(&price, &kind, &payload, &active)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrShopItemUnknown
@@ -201,9 +205,6 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 	}
 	if !active {
 		return nil, ErrShopItemInactive
-	}
-	if stock != nil && *stock <= 0 {
-		return nil, ErrShopOutOfStock
 	}
 
 	var owned bool
@@ -217,6 +218,17 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, ErrShopAlreadyOwned
 	}
 
+	qty := 1
+	if kind == "emoji" {
+		qty = 30
+		var meta map[string]any
+		if json.Unmarshal(payload, &meta) == nil {
+			if u, ok := meta["uses"].(float64); ok && int(u) > 0 {
+				qty = int(u)
+			}
+		}
+	}
+
 	r, err := tx.Exec(ctx, `
 		UPDATE users SET balance_bronze = balance_bronze - $2, updated_at = now()
 		WHERE id = $1 AND balance_bronze >= $2`, userID, price)
@@ -227,23 +239,9 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, ErrInsufficientFunds
 	}
 
-	if stock != nil {
-		ur, err := tx.Exec(ctx, `
-			UPDATE shop_items
-			SET stock_remaining = stock_remaining - 1
-			WHERE code = $1 AND stock_remaining > 0`, code)
-		if err != nil {
-			return nil, err
-		}
-		if ur.RowsAffected() == 0 {
-			return nil, ErrShopOutOfStock
-		}
-		n := *stock - 1
-		stock = &n
-	}
-
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO user_inventory (user_id, item_code) VALUES ($1, $2)`, userID, code); err != nil {
+		INSERT INTO user_inventory (user_id, item_code, quantity)
+		VALUES ($1, $2, $3)`, userID, code, qty); err != nil {
 		return nil, err
 	}
 
@@ -255,7 +253,7 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
-	return &BuyResult{BalanceBronze: balance, StockRemaining: stock}, nil
+	return &BuyResult{BalanceBronze: balance, Quantity: qty}, nil
 }
 
 // EquippedFrameColor returns payload color of the latest owned frame, if any.

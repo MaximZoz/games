@@ -37,8 +37,6 @@ class ShopItem {
 
   ShopItem copyWith({
     bool? owned,
-    int? stockRemaining,
-    bool clearStock = false,
   }) {
     return ShopItem(
       code: code,
@@ -47,7 +45,7 @@ class ShopItem {
       description: description,
       priceBronze: priceBronze,
       owned: owned ?? this.owned,
-      stockRemaining: clearStock ? stockRemaining : (stockRemaining ?? this.stockRemaining),
+      stockRemaining: stockRemaining,
       payload: payload,
       sortOrder: sortOrder,
     );
@@ -79,6 +77,7 @@ class InventoryItem {
     required this.description,
     this.payload = const {},
     this.acquiredAt,
+    this.quantity = 1,
   });
 
   final String code;
@@ -87,6 +86,7 @@ class InventoryItem {
   final String description;
   final Map<String, dynamic> payload;
   final String? acquiredAt;
+  final int quantity;
 
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
@@ -104,6 +104,7 @@ class InventoryItem {
           ? Map<String, dynamic>.from(rawPayload)
           : const {},
       acquiredAt: json['acquired_at'] as String?,
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
     );
   }
 }
@@ -138,11 +139,11 @@ class InventoryCapabilities {
 class ShopBuyResult {
   const ShopBuyResult({
     required this.balanceBronze,
-    this.stockRemaining,
+    this.quantity = 1,
   });
 
   final int balanceBronze;
-  final int? stockRemaining;
+  final int quantity;
 }
 
 class ShopRepository {
@@ -203,7 +204,7 @@ class ShopRepository {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
       balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
-      stockRemaining: (body['stock_remaining'] as num?)?.toInt(),
+      quantity: (body['quantity'] as num?)?.toInt() ?? 1,
     );
   }
 

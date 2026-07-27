@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS shop_items (
 CREATE TABLE IF NOT EXISTS user_inventory (
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     item_code TEXT NOT NULL REFERENCES shop_items (code) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity >= 0),
     acquired_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, item_code)
 );
@@ -24,15 +25,15 @@ CREATE TABLE IF NOT EXISTS user_inventory (
 CREATE INDEX IF NOT EXISTS idx_user_inventory_user
     ON user_inventory (user_id);
 
--- Смайлики (лимитированный сток).
+-- Смайлики (при покупке — 30 использований в инвентаре).
 INSERT INTO shop_items (code, kind, title, description, price_bronze, payload, stock_remaining, sort_order)
 VALUES
-    ('emoji_fire', 'emoji', 'Огонь', 'Тематический смайлик', 50, '{"emoji":"🔥"}'::jsonb, 100, 10),
-    ('emoji_star', 'emoji', 'Звезда', 'Тематический смайлик', 50, '{"emoji":"⭐"}'::jsonb, 100, 20),
-    ('emoji_trophy', 'emoji', 'Кубок', 'Тематический смайлик', 80, '{"emoji":"🏆"}'::jsonb, 50, 30),
-    ('emoji_crown', 'emoji', 'Корона', 'Тематический смайлик', 100, '{"emoji":"👑"}'::jsonb, 30, 40),
-    ('emoji_rocket', 'emoji', 'Ракета', 'Тематический смайлик', 80, '{"emoji":"🚀"}'::jsonb, 50, 50),
-    ('emoji_dragon', 'emoji', 'Дракон', 'Тематический смайлик', 150, '{"emoji":"🐉"}'::jsonb, 20, 60)
+    ('emoji_fire', 'emoji', 'Огонь', 'Тематический смайлик', 50, '{"emoji":"🔥","uses":30}'::jsonb, NULL, 10),
+    ('emoji_star', 'emoji', 'Звезда', 'Тематический смайлик', 50, '{"emoji":"⭐","uses":30}'::jsonb, NULL, 20),
+    ('emoji_trophy', 'emoji', 'Кубок', 'Тематический смайлик', 80, '{"emoji":"🏆","uses":30}'::jsonb, NULL, 30),
+    ('emoji_crown', 'emoji', 'Корона', 'Тематический смайлик', 100, '{"emoji":"👑","uses":30}'::jsonb, NULL, 40),
+    ('emoji_rocket', 'emoji', 'Ракета', 'Тематический смайлик', 80, '{"emoji":"🚀","uses":30}'::jsonb, NULL, 50),
+    ('emoji_dragon', 'emoji', 'Дракон', 'Тематический смайлик', 150, '{"emoji":"🐉","uses":30}'::jsonb, NULL, 60)
 ON CONFLICT (code) DO NOTHING;
 
 -- Право на серебряную ставку (цена в серебре → бронза ×100).
@@ -46,10 +47,10 @@ VALUES
     ('stake_silver_100', 'stake_unlock', 'Ставка 100 серебра', 'Право ставить 100 серебра в играх', 3000, '{"stake_bronze":10000,"stake_silver":100}'::jsonb, NULL, 150)
 ON CONFLICT (code) DO NOTHING;
 
--- Рамки аватара.
+-- Рамки аватара: бронза / серебро / золото.
 INSERT INTO shop_items (code, kind, title, description, price_bronze, payload, stock_remaining, sort_order)
 VALUES
-    ('frame_gold', 'frame', 'Золотая рамка', 'Обводка аватара золотом', 200, '{"color":"#D4A600"}'::jsonb, NULL, 200),
-    ('frame_silver', 'frame', 'Серебряная рамка', 'Обводка аватара серебром', 150, '{"color":"#A0A0A0"}'::jsonb, NULL, 210),
-    ('frame_neon', 'frame', 'Неоновая рамка', 'Яркая обводка аватара', 300, '{"color":"#00E5FF"}'::jsonb, 40, 220)
+    ('frame_bronze', 'frame', 'Бронзовая рамка', 'Обводка аватара бронзой', 50, '{"color":"#B87333"}'::jsonb, NULL, 200),
+    ('frame_silver', 'frame', 'Серебряная рамка', 'Обводка аватара серебром', 5000, '{"color":"#A0A0A0"}'::jsonb, NULL, 210),
+    ('frame_gold', 'frame', 'Золотая рамка', 'Обводка аватара золотом', 500000, '{"color":"#D4A600"}'::jsonb, NULL, 220)
 ON CONFLICT (code) DO NOTHING;

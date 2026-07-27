@@ -34,9 +34,6 @@ func shopItemJSON(it store.ShopItemView) map[string]any {
 			m["payload"] = payload
 		}
 	}
-	if it.StockRemaining != nil {
-		m["stock_remaining"] = *it.StockRemaining
-	}
 	return m
 }
 
@@ -100,9 +97,9 @@ func (h *ShopHandler) Buy(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	resp := map[string]any{"balance_bronze": result.BalanceBronze}
-	if result.StockRemaining != nil {
-		resp["stock_remaining"] = *result.StockRemaining
+	resp := map[string]any{
+		"balance_bronze": result.BalanceBronze,
+		"quantity":       result.Quantity,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
@@ -127,11 +124,12 @@ func (h *ShopHandler) Inventory(w http.ResponseWriter, r *http.Request) {
 	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
 		m := map[string]any{
-			"code":         it.Code,
-			"kind":         it.Kind,
-			"title":        it.Title,
-			"description":  it.Description,
-			"acquired_at":  it.AcquiredAt,
+			"code":        it.Code,
+			"kind":        it.Kind,
+			"title":       it.Title,
+			"description": it.Description,
+			"acquired_at": it.AcquiredAt,
+			"quantity":    it.Quantity,
 		}
 		if len(it.Payload) > 0 {
 			var payload any

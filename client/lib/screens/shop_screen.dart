@@ -42,24 +42,23 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     } catch (_) {}
   }
 
+  List<ShopItem> _sortedSection(List<ShopItem> all, String kind) {
+    final section = all.where((e) => e.kind == kind).toList();
+    section.sort((a, b) {
+      if (a.owned != b.owned) return a.owned ? 1 : -1;
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
+    return section;
+  }
+
   Future<void> _buy(ShopItem item) async {
-    if (_buyInFlight.contains(item.code) || item.owned || item.isOutOfStock) {
-      return;
-    }
+    if (_buyInFlight.contains(item.code) || item.owned) return;
     _buyInFlight.add(item.code);
     final previous = _items;
     setState(() {
       _items = [
         for (final it in _items)
-          if (it.code == item.code)
-            it.copyWith(
-              owned: true,
-              stockRemaining: it.stockRemaining == null
-                  ? null
-                  : (it.stockRemaining! - 1).clamp(0, 1 << 30).toInt(),
-            )
-          else
-            it,
+          if (it.code == item.code) it.copyWith(owned: true) else it,
       ];
     });
     try {
@@ -67,17 +66,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
       ref.invalidate(inventoryListProvider);
       ref.invalidate(inventoryCapabilitiesProvider);
-      if (result.stockRemaining != null && mounted) {
-        setState(() {
-          _items = [
-            for (final it in _items)
-              if (it.code == item.code)
-                it.copyWith(owned: true, stockRemaining: result.stockRemaining)
-              else
-                it,
-          ];
-        });
-      }
+      ref.invalidate(shopCatalogProvider);
     } catch (e) {
       if (!mounted) return;
       setState(() => _items = previous);
@@ -97,6 +86,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     void goBack() => context.pop();
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
+    final emojis = _sortedSection(items, 'emoji');
+    final frames = _sortedSection(items, 'frame');
+    final stakes = _sortedSection(items, 'stake_unlock');
 
     return SwipeBackScope(
       onBack: goBack,
@@ -126,22 +118,75 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView.separated(
+              : ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) {
-                    final item = items[i];
-                    return _ShopCard(
-                      item: item,
-                      onBuy: item.owned || item.isOutOfStock
-                          ? null
-                          : () => unawaited(_buy(item)),
-                    );
-                  },
+                  children: [
+                    _ShopSection(
+                      title: 'Смайлики',
+                      items: emojis,
+                      onBuy: _buy,
+                    ),
+                    const SizedBox(height: 16),
+                    _ShopSection(
+                      title: 'Рамки',
+                      items: frames,
+                      onBuy: _buy,
+                    ),
+                    const SizedBox(height: 16),
+                    _ShopSection(
+                      title: 'Ставки',
+                      items: stakes,
+                      onBuy: _buy,
+                    ),
+                  ],
                 ),
         ),
       ),
+    );
+  }
+}
+
+class _ShopSection extends StatelessWidget {
+  const _ShopSection({
+    required this.title,
+    required this.items,
+    required this.onBuy,
+  });
+
+  final String title;
+  final List<ShopItem> items;
+  final Future<void> Function(ShopItem) onBuy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (items.isEmpty)
+          const Text(
+            'Пока нет товаров',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          )
+        else
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            _ShopCard(
+              item: items[i],
+              onBuy: items[i].owned
+                  ? null
+                  : () => unawaited(onBuy(items[i])),
+            ),
+          ],
+      ],
     );
   }
 }
@@ -174,10 +219,6 @@ class _ShopCard extends StatelessWidget {
     final subtitle = switch (item.kind) {
       'stake_unlock' =>
         'Ставка ${item.stakeSilver ?? (item.stakeBronze ?? 0) ~/ 100} серебра',
-      'emoji' when item.stockRemaining != null =>
-        'Осталось ${item.stockRemaining}',
-      'frame' when item.stockRemaining != null =>
-        'Осталось ${item.stockRemaining}',
       _ => item.description,
     };
 
@@ -223,11 +264,6 @@ class _ShopCard extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             )
-          else if (item.isOutOfStock)
-            const Text(
-              'Нет в наличии',
-              style: TextStyle(color: AppColors.textSecondary),
-            )
           else
             FilledButton(
               onPressed: onBuy,
@@ -247,9 +283,7 @@ class _ShopCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   CoinIcon(
-                    coinType: item.priceBronze >= 100
-                        ? CoinType.silver
-                        : CoinType.bronze,
+                    coinType: _priceCoinType(item.priceBronze),
                     size: 16,
                   ),
                 ],
@@ -261,8 +295,15 @@ class _ShopCard extends StatelessWidget {
   }
 
   String _priceLabel(int bronze) {
+    if (bronze >= 10000 && bronze % 10000 == 0) return '${bronze ~/ 10000}';
     if (bronze >= 100 && bronze % 100 == 0) return '${bronze ~/ 100}';
     return '$bronze';
+  }
+
+  CoinType _priceCoinType(int bronze) {
+    if (bronze >= 10000) return CoinType.gold;
+    if (bronze >= 100) return CoinType.silver;
+    return CoinType.bronze;
   }
 }
 

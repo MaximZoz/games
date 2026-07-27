@@ -23,8 +23,8 @@ class InventoryScreen extends ConsumerWidget {
 
     final items = async.valueOrNull ?? const <InventoryItem>[];
     final emojis = items.where((e) => e.kind == 'emoji').toList();
-    final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
     final frames = items.where((e) => e.kind == 'frame').toList();
+    final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
 
     return SwipeBackScope(
       onBack: goBack,
@@ -75,24 +75,7 @@ class InventoryScreen extends ConsumerWidget {
                                   style: const TextStyle(fontSize: 26),
                                 ),
                                 title: it.title,
-                                subtitle: it.description,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _Section(
-                          title: 'Ставки',
-                          empty: 'Нет купленных ставок',
-                          children: [
-                            for (final it in stakes)
-                              _InvTile(
-                                leading: const CoinIcon(
-                                  coinType: CoinType.silver,
-                                  size: 26,
-                                ),
-                                title: it.title,
-                                subtitle:
-                                    'Можно ставить ${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100} серебра',
+                                subtitle: 'Осталось ${it.quantity}',
                               ),
                           ],
                         ),
@@ -117,6 +100,23 @@ class InventoryScreen extends ConsumerWidget {
                                 ),
                                 title: it.title,
                                 subtitle: it.description,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _Section(
+                          title: 'Ставки',
+                          empty: 'Нет купленных ставок',
+                          children: [
+                            for (final it in stakes)
+                              _InvTile(
+                                leading: const CoinIcon(
+                                  coinType: CoinType.silver,
+                                  size: 26,
+                                ),
+                                title: it.title,
+                                subtitle:
+                                    'Можно ставить ${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100} серебра',
                               ),
                           ],
                         ),
