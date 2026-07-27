@@ -1587,68 +1587,64 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 4, 12, 8),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.fromLTRB(0, 0, 12, 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    GradientCard(
-                      animate: false,
-                      padding: const EdgeInsets.fromLTRB(72, 8, 6, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _textController,
-                              focusNode: _composerFocusNode,
-                              minLines: 1,
-                              maxLines: 4,
-                              textCapitalization: TextCapitalization.sentences,
-                              decoration: const InputDecoration(
-                                hintText: 'Введите сообщение...',
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              textInputAction: TextInputAction.send,
-                              onTap: _scrollToBottom,
-                              onSubmitted: (_) => _sendMessage(),
-                            ),
+                    // Крупная зона тапа вокруг смайлика (лево/верх/низ/сам значок).
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _sending ? null : _openEmojiPicker,
+                      child: const SizedBox(
+                        width: 120,
+                        height: 104,
+                        child: Center(
+                          child: Icon(
+                            Icons.emoji_emotions_outlined,
+                            color: AppColors.accentStart,
+                            size: 34,
                           ),
-                          IconButton(
-                            onPressed: _sending ? null : _sendMessage,
-                            tooltip: 'Отправить',
-                            icon: _sending
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.send_rounded),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                    // Широкая зона тапа: левее / выше / ниже иконки.
-                    Positioned(
-                      left: 0,
-                      top: -12,
-                      bottom: -12,
-                      width: 72,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: _sending ? null : _openEmojiPicker,
-                        child: const Align(
-                          alignment: Alignment.center,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child: Icon(
-                              Icons.emoji_emotions_outlined,
-                              color: AppColors.accentStart,
-                              size: 30,
+                    Expanded(
+                      child: GradientCard(
+                        animate: false,
+                        padding: const EdgeInsets.fromLTRB(8, 8, 6, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                focusNode: _composerFocusNode,
+                                minLines: 1,
+                                maxLines: 4,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                decoration: const InputDecoration(
+                                  hintText: 'Введите сообщение...',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                                textInputAction: TextInputAction.send,
+                                onTap: _scrollToBottom,
+                                onSubmitted: (_) => _sendMessage(),
+                              ),
                             ),
-                          ),
+                            IconButton(
+                              onPressed: _sending ? null : _sendMessage,
+                              tooltip: 'Отправить',
+                              icon: _sending
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.send_rounded),
+                            ),
+                          ],
                         ),
                       ),
                     ),

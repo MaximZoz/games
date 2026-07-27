@@ -65,10 +65,27 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       });
     }
 
-    final orderedSets = <String>[
-      ...collectionSetOrder.where(bySet.containsKey),
-      ...bySet.keys.where((k) => !collectionSetOrder.contains(k)),
-    ];
+    final orderedSets = bySet.keys.toList()
+      ..sort((a, b) {
+        final aItems = bySet[a]!;
+        final bItems = bySet[b]!;
+        final aDaily = aItems.fold<int>(0, (s, e) => s + e.dailyBronze);
+        final bDaily = bItems.fold<int>(0, (s, e) => s + e.dailyBronze);
+        final aPrice = aItems.fold<int>(0, (s, e) => s + e.priceBronze);
+        final bPrice = bItems.fold<int>(0, (s, e) => s + e.priceBronze);
+        // Цена за 1 бронзу дохода в день (меньше = выгоднее).
+        final aRatio = aDaily <= 0
+            ? double.infinity
+            : aPrice / aDaily;
+        final bRatio = bDaily <= 0
+            ? double.infinity
+            : bPrice / bDaily;
+        final byRatio = aRatio.compareTo(bRatio);
+        if (byRatio != 0) return byRatio;
+        final ai = collectionSetOrder.indexOf(a);
+        final bi = collectionSetOrder.indexOf(b);
+        return (ai < 0 ? 999 : ai).compareTo(bi < 0 ? 999 : bi);
+      });
 
     return SwipeBackScope(
       onBack: goBack,
