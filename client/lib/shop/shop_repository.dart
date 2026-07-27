@@ -37,7 +37,12 @@ class ShopItem {
   String? get animatedName => payload['animated_name'] as String?;
   String? get group => payload['group'] as String?;
   String? get collectionSet => payload['set'] as String?;
-  int get weeklyBronze => (payload['weekly_bronze'] as num?)?.toInt() ?? 0;
+  int get dailyBronze =>
+      (payload['daily_bronze'] as num?)?.toInt() ??
+      (payload['weekly_bronze'] as num?)?.toInt() ??
+      0;
+  @Deprecated('Use dailyBronze')
+  int get weeklyBronze => dailyBronze;
   int get sellRefundBronze => (priceBronze * 80) ~/ 100;
 
   ShopItem copyWith({
@@ -98,7 +103,12 @@ class InventoryItem {
   String? get animatedName => payload['animated_name'] as String?;
   String? get group => payload['group'] as String?;
   String? get collectionSet => payload['set'] as String?;
-  int get weeklyBronze => (payload['weekly_bronze'] as num?)?.toInt() ?? 0;
+  int get dailyBronze =>
+      (payload['daily_bronze'] as num?)?.toInt() ??
+      (payload['weekly_bronze'] as num?)?.toInt() ??
+      0;
+  @Deprecated('Use dailyBronze')
+  int get weeklyBronze => dailyBronze;
   int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
 

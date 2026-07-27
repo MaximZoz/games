@@ -13,6 +13,21 @@ const collectionSetTitles = <String, String>{
   'adventure': 'Приключения',
 };
 
+const collectionSetOrder = [
+  'legends',
+  'cosmic',
+  'jewels',
+  'celebration',
+  'nature',
+  'adventure',
+];
+
+String collectionSetTitle(String set) => collectionSetTitles[set] ?? set;
+
+String collectionItemSubtitle(int dailyBronze) =>
+    'Коллекция · витрина · подарок · продажа · +$dailyBronze бронзы/день';
+
+/// Полноэкранный просмотр: тап вне «Купить» закрывает; крестика нет.
 Future<void> showCollectionFullscreen(
   BuildContext context, {
   required String title,
@@ -28,58 +43,54 @@ Future<void> showCollectionFullscreen(
       return Dialog.fullscreen(
         backgroundColor: Colors.black,
         child: SafeArea(
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ShopAnimatedEmoji(
-                      animatedName: animatedName,
-                      size: 180,
-                      fallback: fallback,
-                      animate: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.of(dialogContext).pop(),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShopAnimatedEmoji(
+                    animatedName: animatedName,
+                    size: 180,
+                    fallback: fallback,
+                    animate: true,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if ((subtitle ?? '').trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          subtitle!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            fontSize: 14,
-                          ),
+                  ),
+                  if ((subtitle ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        subtitle!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 14,
                         ),
                       ),
-                    ],
-                    if (bottomAction != null) ...[
-                      const SizedBox(height: 24),
-                      bottomAction,
-                    ],
+                    ),
                   ],
-                ),
+                  if (bottomAction != null) ...[
+                    const SizedBox(height: 24),
+                    // Не закрывать при тапе по кнопке «Купить».
+                    GestureDetector(
+                      onTap: () {},
+                      child: bottomAction,
+                    ),
+                  ],
+                ],
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton(
-                  tooltip: 'Закрыть',
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  icon: const Icon(Icons.close_rounded, color: Colors.white),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       );
@@ -120,9 +131,7 @@ class CollectionShowcaseGrid extends StatelessWidget {
                 title: it.title,
                 animatedName: it.animatedName ?? 'sparkles',
                 fallback: it.emoji,
-                subtitle: it.weeklyBronze > 0
-                    ? '+${it.weeklyBronze} бронзы в неделю'
-                    : it.description,
+                subtitle: collectionItemSubtitle(it.dailyBronze),
               ),
               child: Container(
                 width: 88,
@@ -150,7 +159,7 @@ class CollectionShowcaseGrid extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    if (it.weeklyBronze > 0) ...[
+                    if (it.dailyBronze > 0) ...[
                       const SizedBox(height: 2),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -158,7 +167,7 @@ class CollectionShowcaseGrid extends StatelessWidget {
                           const CoinIcon(coinType: CoinType.bronze, size: 10),
                           const SizedBox(width: 2),
                           Text(
-                            '+${it.weeklyBronze}/нед',
+                            '+${it.dailyBronze}/день',
                             style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.textSecondary,

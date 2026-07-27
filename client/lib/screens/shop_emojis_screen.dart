@@ -338,19 +338,37 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                     final end = math.min(start + _pageSize, emojis.length);
                     final pageItems = emojis.sublist(start, end);
                     return Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const _EmojiPageGridDelegate(),
-                        itemCount: pageItems.length,
-                        itemBuilder: (context, index) {
-                          final item = pageItems[index];
-                          return _EmojiBuyTile(
-                            item: item,
-                            busy: _buyInFlight.contains(item.code),
-                            onPreview: () => _openPreview(item),
-                            onBuy: () => _buy(item),
+                      padding: const EdgeInsets.fromLTRB(10, 6, 2, 6),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          const cols = 3;
+                          const rows = 3;
+                          const gap = 8.0;
+                          final cellW =
+                              (constraints.maxWidth - gap * (cols - 1)) / cols;
+                          final cellH =
+                              (constraints.maxHeight - gap * (rows - 1)) / rows;
+                          final ratio =
+                              cellH <= 0 ? 0.78 : (cellW / cellH).clamp(0.55, 1.15);
+                          return GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: cols,
+                              mainAxisSpacing: gap,
+                              crossAxisSpacing: gap,
+                              childAspectRatio: ratio,
+                            ),
+                            itemCount: pageItems.length,
+                            itemBuilder: (context, index) {
+                              final item = pageItems[index];
+                              return _EmojiBuyTile(
+                                item: item,
+                                busy: _buyInFlight.contains(item.code),
+                                onPreview: () => _openPreview(item),
+                                onBuy: () => _buy(item),
+                              );
+                            },
                           );
                         },
                       ),
@@ -361,17 +379,6 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       ),
     );
   }
-}
-
-/// Fixed 3×3 grid without scroll.
-class _EmojiPageGridDelegate extends SliverGridDelegateWithFixedCrossAxisCount {
-  const _EmojiPageGridDelegate()
-      : super(
-          crossAxisCount: 3,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.78,
-        );
 }
 
 class _EmojiBuyTile extends StatelessWidget {
@@ -394,11 +401,12 @@ class _EmojiBuyTile extends StatelessWidget {
 
     return Material(
       color: AppColors.surfaceCard,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+        padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         ),
         child: Column(
@@ -406,13 +414,13 @@ class _EmojiBuyTile extends StatelessWidget {
             Expanded(
               child: InkWell(
                 onTap: onPreview,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 child: Center(
                   child: name.isEmpty
-                      ? Text(fallback, style: const TextStyle(fontSize: 34))
+                      ? Text(fallback, style: const TextStyle(fontSize: 30))
                       : ShopAnimatedEmoji(
                           animatedName: name,
-                          size: 42,
+                          size: 36,
                           fallback: fallback,
                         ),
                 ),
@@ -424,39 +432,38 @@ class _EmojiBuyTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             InkWell(
               onTap: busy ? null : onBuy,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const CoinIcon(coinType: CoinType.bronze, size: 12),
+                        const CoinIcon(coinType: CoinType.bronze, size: 11),
                         const SizedBox(width: 3),
                         Text(
                           '${item.priceBronze}',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
                     Text(
                       busy ? '…' : 'Купить · 10 шт.',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 9,
                         color: AppColors.textSecondary.withValues(alpha: 0.9),
                       ),
                     ),

@@ -255,9 +255,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     Expanded(
                                       child: Text(
                                         income.available
-                                            ? 'Доход: +${income.amountBronze} бронзы'
+                                            ? 'Доход: +${income.amountBronze} бронзы/день'
                                                 '${income.setBonusBronze > 0 ? ' (группы +${income.setBonusBronze})' : ''}'
-                                            : 'Доход через неделю: ${income.amountBronze} бронзы'
+                                            : 'Доход завтра: ${income.amountBronze} бронзы'
                                                 '${income.setBonusBronze > 0 ? ' (группы +${income.setBonusBronze})' : ''}',
                                         style: const TextStyle(
                                           fontSize: 13,
@@ -284,7 +284,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   animatedName: it.animatedName ?? 'sparkles',
                                   fallback: it.emoji,
                                   subtitle:
-                                      '+${it.weeklyBronze} бронзы в неделю',
+                                      '+${it.dailyBronze} бронзы в день',
                                 ),
                                 onGift: () => _gift(it),
                                 onSell: () => _sell(it),
@@ -416,7 +416,7 @@ class _CollectionInvTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '+${item.weeklyBronze} бронзы / нед.',
+                    '+${item.dailyBronze} бронзы / день',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

@@ -163,6 +163,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                           state,
                           const ShopCollectionsScreen(),
                         ),
+                        routes: [
+                          GoRoute(
+                            path: ':set',
+                            pageBuilder: (_, state) {
+                              final set =
+                                  state.pathParameters['set'] ?? 'legends';
+                              return _noTransitionPage(
+                                state,
+                                ShopCollectionGroupScreen(set: set),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'frames',

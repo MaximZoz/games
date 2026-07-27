@@ -578,8 +578,9 @@ func ownedCollectionCodes(ctx context.Context, q interface {
 	return owned, rows.Err()
 }
 
-// calcCollectionWeeklyIncome: сумма weekly по владеемым + бонус за каждую
-// полностью собранную группу (= сумма weekly всех предметов группы).
+// calcCollectionWeeklyIncome: сумма daily по владеемым + бонус за каждую
+// полностью собранную группу (= сумма daily всех предметов группы).
+// Поле payload остаётся weekly_bronze (историческое имя), смысл — дневной бонус.
 func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]struct{}) (items, setBonus, ownedCount, completedSets int) {
 	bySet := map[string][]collectionCatalogRow{}
 	for _, r := range catalog {
@@ -642,11 +643,12 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 		return nil, err
 	}
 	now := time.Now().UTC()
-	if claimedAt == nil || now.Sub(*claimedAt) >= 7*24*time.Hour {
+	if claimedAt == nil || !utcDate(*claimedAt).Equal(utcDate(now)) {
 		info.Available = true
 		return info, nil
 	}
-	next := claimedAt.Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339)
+	nextDay := utcDate(now).AddDate(0, 0, 1)
+	next := nextDay.Format(time.RFC3339)
 	info.NextClaimAt = &next
 	return info, nil
 }
@@ -665,7 +667,7 @@ func ClaimCollectionIncome(ctx context.Context, pool *pgxpool.Pool, userID uuid.
 		return 0, 0, err
 	}
 	now := time.Now().UTC()
-	if claimedAt != nil && now.Sub(*claimedAt) < 7*24*time.Hour {
+	if claimedAt != nil && utcDate(*claimedAt).Equal(utcDate(now)) {
 		return 0, 0, ErrIncomeNotReady
 	}
 
