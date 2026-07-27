@@ -1587,22 +1587,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                padding: const EdgeInsets.fromLTRB(0, 10, 12, 14),
                 child: GradientCard(
                   animate: false,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      const EdgeInsets.fromLTRB(0, 8, 6, 8),
                   child: Row(
                     children: [
-                      // Широкая зона тапа вокруг кнопки смайликов.
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _sending ? null : _openEmojiPicker,
-                          borderRadius: BorderRadius.circular(16),
-                          child: const SizedBox(
-                            width: 64,
-                            height: 56,
+                      // Зона тапа шире иконки: захватывает левый край карточки.
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _sending ? null : _openEmojiPicker,
+                        child: const SizedBox(
+                          width: 72,
+                          height: 56,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 12),
                             child: Icon(
                               Icons.emoji_emotions_outlined,
                               color: AppColors.accentStart,
