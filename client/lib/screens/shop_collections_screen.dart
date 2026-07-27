@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,8 +12,9 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 
-/// Магазин коллекционных предметов.
+/// Магазин коллекционных предметов — страницы по 4, вертикально, точки справа.
 class ShopCollectionsScreen extends ConsumerStatefulWidget {
   const ShopCollectionsScreen({super.key});
 
@@ -22,6 +24,8 @@ class ShopCollectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
+  static const _pageSize = 4;
+
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
 
@@ -130,6 +134,10 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         return a.sortOrder.compareTo(b.sortOrder);
       });
 
+    final pageCount = collections.isEmpty
+        ? 0
+        : ((collections.length + _pageSize - 1) / _pageSize).floor();
+
     return SwipeBackScope(
       onBack: goBack,
       child: Scaffold(
@@ -158,23 +166,33 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: collections.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final item = collections[index];
-                    return _CollectionShopCard(
-                      item: item,
-                      busy: _buyInFlight.contains(item.code),
-                      onBuy: () => _buy(item),
-                      onPreview: () => showCollectionFullscreen(
-                        context,
-                        title: item.title,
-                        animatedName: item.animatedName ?? 'sparkles',
-                        fallback: item.emoji,
-                        subtitle: item.description,
-                      ),
+              : VerticalPagedSlider(
+                  pageCount: pageCount,
+                  itemBuilder: (context, page) {
+                    final start = page * _pageSize;
+                    final end =
+                        math.min(start + _pageSize, collections.length);
+                    final pageItems = collections.sublist(start, end);
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 16),
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: pageItems.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final item = pageItems[index];
+                        return _CollectionShopCard(
+                          item: item,
+                          busy: _buyInFlight.contains(item.code),
+                          onBuy: () => _buy(item),
+                          onPreview: () => showCollectionFullscreen(
+                            context,
+                            title: item.title,
+                            animatedName: item.animatedName ?? 'sparkles',
+                            fallback: item.emoji,
+                            subtitle: item.description,
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

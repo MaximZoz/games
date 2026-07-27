@@ -1767,6 +1767,7 @@ class _ChatMessageBody extends StatelessWidget {
         animatedName: name,
         size: 56,
         fallback: body,
+        animate: true,
       );
     }
     return Text(

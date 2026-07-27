@@ -41,6 +41,7 @@ flutter:
     - packages/animated_emoji/lottie/bicycle.json
     - packages/animated_emoji/lottie/birthdayCake.json
     - packages/animated_emoji/lottie/bottleWithPoppingCork.json
+    - packages/animated_emoji/lottie/blush.json
     - packages/animated_emoji/lottie/burrito.json
     - packages/animated_emoji/lottie/butterfly.json
     - packages/animated_emoji/lottie/clinkingBeerMugs.json

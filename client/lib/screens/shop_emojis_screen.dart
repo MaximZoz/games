@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 
 const shopEmojiGroupTitles = <String, String>{
   'emotions': 'Эмоции',
@@ -155,7 +157,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
   }
 }
 
-/// Эмоции: страницы по 9 карточек с плавным листанием.
+/// Эмоции: вертикальные страницы по 9 карточек, точки справа.
 class ShopEmojiGroupScreen extends ConsumerStatefulWidget {
   const ShopEmojiGroupScreen({super.key, required this.group});
 
@@ -171,8 +173,6 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
 
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
-  final PageController _pageController = PageController();
-  int _pageIndex = 0;
 
   @override
   void initState() {
@@ -185,12 +185,6 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       }
       unawaited(_reloadSilent());
     });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   Future<void> _reloadSilent() async {
@@ -277,6 +271,25 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     }
   }
 
+  Future<void> _openPreview(ShopItem item) async {
+    await showCollectionFullscreen(
+      context,
+      title: item.title,
+      animatedName: item.animatedName ?? 'smile',
+      fallback: item.emoji,
+      subtitle: '${item.priceBronze} бронзы · 10 использований',
+      bottomAction: Builder(
+        builder: (dialogContext) => FilledButton(
+          onPressed: () {
+            Navigator.of(dialogContext).pop();
+            unawaited(_buy(item));
+          },
+          child: const Text('Купить'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     void goBack() => context.pop();
@@ -318,69 +331,31 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: pageCount,
-                        onPageChanged: (i) => setState(() => _pageIndex = i),
-                        physics: const BouncingScrollPhysics(
-                          parent: PageScrollPhysics(),
-                        ),
-                        itemBuilder: (context, page) {
-                          final start = page * _pageSize;
-                          final end = math.min(start + _pageSize, emojis.length);
-                          final pageItems = emojis.sublist(start, end);
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: GridView.builder(
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                mainAxisSpacing: 10,
-                                crossAxisSpacing: 10,
-                                childAspectRatio: 0.78,
-                              ),
-                              itemCount: pageItems.length,
-                              itemBuilder: (context, index) {
-                                final item = pageItems[index];
-                                return _EmojiBuyTile(
-                                  item: item,
-                                  busy: _buyInFlight.contains(item.code),
-                                  onBuy: () => _buy(item),
-                                );
-                              },
-                            ),
+              : VerticalPagedSlider(
+                  pageCount: pageCount,
+                  itemBuilder: (context, page) {
+                    final start = page * _pageSize;
+                    final end = math.min(start + _pageSize, emojis.length);
+                    final pageItems = emojis.sublist(start, end);
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+                      child: GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const _EmojiPageGridDelegate(),
+                        itemCount: pageItems.length,
+                        itemBuilder: (context, index) {
+                          final item = pageItems[index];
+                          return _EmojiBuyTile(
+                            item: item,
+                            busy: _buyInFlight.contains(item.code),
+                            onPreview: () => _openPreview(item),
+                            onBuy: () => _buy(item),
                           );
                         },
                       ),
-                    ),
-                    if (pageCount > 1)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16, top: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (var i = 0; i < pageCount; i++)
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOutCubic,
-                                width: i == _pageIndex ? 18 : 8,
-                                height: 8,
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
-                                decoration: BoxDecoration(
-                                  color: i == _pageIndex
-                                      ? AppColors.accentStart
-                                      : AppColors.accentSoft,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                  ],
+                    );
+                  },
                 ),
         ),
       ),
@@ -388,15 +363,28 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
   }
 }
 
+/// Fixed 3×3 grid without scroll.
+class _EmojiPageGridDelegate extends SliverGridDelegateWithFixedCrossAxisCount {
+  const _EmojiPageGridDelegate()
+      : super(
+          crossAxisCount: 3,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.78,
+        );
+}
+
 class _EmojiBuyTile extends StatelessWidget {
   const _EmojiBuyTile({
     required this.item,
     required this.busy,
+    required this.onPreview,
     required this.onBuy,
   });
 
   final ShopItem item;
   final bool busy;
+  final VoidCallback onPreview;
   final VoidCallback onBuy;
 
   @override
@@ -407,18 +395,18 @@ class _EmojiBuyTile extends StatelessWidget {
     return Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: busy ? null : onBuy,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-          ),
-          child: Column(
-            children: [
-              Expanded(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: onPreview,
+                borderRadius: BorderRadius.circular(10),
                 child: Center(
                   child: name.isEmpty
                       ? Text(fallback, style: const TextStyle(fontSize: 34))
@@ -429,43 +417,54 @@ class _EmojiBuyTile extends StatelessWidget {
                         ),
                 ),
               ),
-              Text(
-                item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+            ),
+            Text(
+              item.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CoinIcon(coinType: CoinType.bronze, size: 12),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${item.priceBronze}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+            ),
+            const SizedBox(height: 4),
+            InkWell(
+              onTap: busy ? null : onBuy,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CoinIcon(coinType: CoinType.bronze, size: 12),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${item.priceBronze}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                busy ? '…' : '10 шт.',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary.withValues(alpha: 0.9),
+                    const SizedBox(height: 2),
+                    Text(
+                      busy ? '…' : 'Купить · 10 шт.',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

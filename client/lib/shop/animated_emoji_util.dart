@@ -23,24 +23,36 @@ AnimatedEmojiData? animatedEmojiDataFromName(String name) {
 }
 
 /// Виджет анимированного смайлика из бандла приложения (без сети).
+///
+/// В списках/сетках держите [animate]=false — иначе десятки Lottie
+/// одновременно едят память и могут «ронять» вкладку.
 class ShopAnimatedEmoji extends StatelessWidget {
   const ShopAnimatedEmoji({
     super.key,
     required this.animatedName,
     this.size = 32,
     this.fallback,
+    this.animate = false,
   });
 
   final String animatedName;
   final double size;
   final String? fallback;
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
+    final fb = fallback ?? '🙂';
+    if (!animate) {
+      return Text(
+        fb,
+        style: TextStyle(fontSize: size * 0.85),
+      );
+    }
     final data = animatedEmojiDataFromName(animatedName);
     if (data == null) {
       return Text(
-        fallback ?? '🙂',
+        fb,
         style: TextStyle(fontSize: size * 0.85),
       );
     }
@@ -48,10 +60,10 @@ class ShopAnimatedEmoji extends StatelessWidget {
       data,
       size: size,
       repeat: true,
-      // Бандл в pubspec — без загрузки с fonts.gstatic.com.
+      animate: true,
       source: AnimatedEmojiSource.asset,
       errorWidget: Text(
-        fallback ?? '🙂',
+        fb,
         style: TextStyle(fontSize: size * 0.85),
       ),
     );

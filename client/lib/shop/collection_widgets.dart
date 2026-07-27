@@ -19,6 +19,7 @@ Future<void> showCollectionFullscreen(
   required String animatedName,
   String? fallback,
   String? subtitle,
+  Widget? bottomAction,
 }) {
   return showDialog<void>(
     context: context,
@@ -37,6 +38,7 @@ Future<void> showCollectionFullscreen(
                       animatedName: animatedName,
                       size: 180,
                       fallback: fallback,
+                      animate: true,
                     ),
                     const SizedBox(height: 20),
                     Text(
@@ -60,6 +62,10 @@ Future<void> showCollectionFullscreen(
                           ),
                         ),
                       ),
+                    ],
+                    if (bottomAction != null) ...[
+                      const SizedBox(height: 24),
+                      bottomAction,
                     ],
                   ],
                 ),
