@@ -22,6 +22,32 @@ AnimatedEmojiData? animatedEmojiDataFromName(String name) {
   }
 }
 
+/// Юникод-символ по имени анимации (для превью без Lottie).
+String? unicodeEmojiFromAnimatedName(String name) {
+  try {
+    return AnimatedEmojis.fromName(name).toUnicodeEmoji();
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Превью текста сообщения: `[ae:smile]` → 😀, иначе исходная строка.
+String formatChatMessagePreview(String body) {
+  final name = parseAnimatedEmojiName(body);
+  if (name == null) return body;
+  return unicodeEmojiFromAnimatedName(name) ?? '🙂';
+}
+
+String _resolvedEmojiChar(String animatedName, String? fallback) {
+  final fromName = unicodeEmojiFromAnimatedName(animatedName);
+  if (fromName != null) return fromName;
+  final fb = fallback?.trim();
+  if (fb != null && fb.isNotEmpty && parseAnimatedEmojiName(fb) == null) {
+    return fb;
+  }
+  return '🙂';
+}
+
 /// Виджет анимированного смайлика из бандла приложения (без сети).
 ///
 /// В списках/сетках держите [animate]=false — иначе десятки Lottie
@@ -42,7 +68,7 @@ class ShopAnimatedEmoji extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fb = fallback ?? '🙂';
+    final fb = _resolvedEmojiChar(animatedName, fallback);
     if (!animate) {
       return Text(
         fb,

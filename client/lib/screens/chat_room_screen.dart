@@ -1415,6 +1415,46 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
                   final message = entry.message!;
                   final mine = message.senderUserID == meID;
+                  final isEmoji = isAnimatedEmojiMessage(message.body);
+                  if (isEmoji) {
+                    return Align(
+                      key: ValueKey(message.id),
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12, top: 4),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ChatMessageBody(
+                              body: message.body,
+                              largeCentered: true,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatBubbleDateTime(message.createdAt),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                if (mine) ...[
+                                  const SizedBox(width: 4),
+                                  MessageStatusTicks(
+                                    deliveredAt: message.deliveredAt,
+                                    readAt: message.readAt,
+                                    size: 14,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   return Align(
                     key: ValueKey(message.id),
                     alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -1632,119 +1672,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             final emojis = items
                 .where((e) => e.kind == 'emoji' && e.quantity > 0)
                 .toList();
-            final grouped = <String, List<InventoryItem>>{};
-            for (final e in emojis) {
-              grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
-            }
-            const groupTitles = {
-              'emotions': 'Эмоции',
-              'animals': 'Животные',
-              'food': 'Еда',
-              'travel': 'Путешествия',
-              'party': 'Праздник',
-              'objects': 'Предметы',
-            };
-            final bottom = MediaQuery.paddingOf(context).bottom;
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.42,
-              minChildSize: 0.28,
-              maxChildSize: 0.92,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.surfaceCard,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: ListView(
-                    controller: scrollController,
-                    padding: EdgeInsets.fromLTRB(16, 10, 16, 16 + bottom),
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 48,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      if (emojis.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 28),
-                          child: Text(
-                            'Купите смайлики в магазине на главной',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                        )
-                      else
-                        for (final entry in grouped.entries) ...[
-                          Text(
-                            groupTitles[entry.key] ?? 'Смайлики',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              for (final it in entry.value)
-                                Material(
-                                  color: AppColors.accentSoft
-                                      .withValues(alpha: 0.45),
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.of(sheetContext).pop();
-                                      unawaited(_sendAnimatedEmoji(it));
-                                    },
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: SizedBox(
-                                      width: 88,
-                                      height: 88,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          ShopAnimatedEmoji(
-                                            animatedName:
-                                                it.animatedName ?? 'smile',
-                                            size: 48,
-                                            fallback: it.emoji,
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            '${it.quantity}',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                    ],
-                  ),
-                );
+            return _ChatEmojiPickerSheet(
+              emojis: emojis,
+              onPick: (it) {
+                Navigator.of(sheetContext).pop();
+                unawaited(_sendAnimatedEmoji(it));
               },
             );
           },
@@ -1754,10 +1686,249 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 }
 
+class _ChatEmojiPickerSheet extends StatefulWidget {
+  const _ChatEmojiPickerSheet({
+    required this.emojis,
+    required this.onPick,
+  });
+
+  final List<InventoryItem> emojis;
+  final ValueChanged<InventoryItem> onPick;
+
+  @override
+  State<_ChatEmojiPickerSheet> createState() => _ChatEmojiPickerSheetState();
+}
+
+class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
+  static const _collapsedSize = 0.14;
+  static const _expandedThreshold = 0.26;
+
+  bool _expanded = false;
+
+  static const _groupTitles = {
+    'emotions': 'Эмоции',
+    'animals': 'Животные',
+    'food': 'Еда',
+    'travel': 'Путешествия',
+    'party': 'Праздник',
+    'objects': 'Предметы',
+  };
+
+  Widget _emojiTile(
+    InventoryItem it, {
+    required double emojiSize,
+    required double qtySize,
+  }) {
+    return InkWell(
+      onTap: () => widget.onPick(it),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ShopAnimatedEmoji(
+              animatedName: it.animatedName ?? 'smile',
+              size: emojiSize,
+              fallback: it.emoji,
+            ),
+            Text(
+              '${it.quantity}',
+              style: TextStyle(
+                fontSize: qtySize,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final grouped = <String, List<InventoryItem>>{};
+    for (final e in widget.emojis) {
+      grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
+    }
+    final known = const [
+      'emotions',
+      'animals',
+      'food',
+      'travel',
+      'party',
+      'objects',
+    ];
+    final groupOrder = [
+      ...known.where(grouped.containsKey),
+      ...grouped.keys.where((k) => !known.contains(k)),
+    ];
+
+    return NotificationListener<DraggableScrollableNotification>(
+      onNotification: (n) {
+        final next = n.extent >= _expandedThreshold;
+        if (next != _expanded) {
+          setState(() => _expanded = next);
+        }
+        return false;
+      },
+      child: DraggableScrollableSheet(
+        expand: false,
+        snap: true,
+        snapSizes: const [_collapsedSize, 0.55],
+        initialChildSize: _collapsedSize,
+        minChildSize: _collapsedSize,
+        maxChildSize: 0.92,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: CustomScrollView(
+              controller: scrollController,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  ),
+                ),
+                if (widget.emojis.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'Купите смайлики в магазине на главной',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else if (!_expanded)
+                  // Одна горизонтальная полоса, без названий групп.
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        height: 72,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          itemCount: widget.emojis.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 2),
+                          itemBuilder: (context, index) {
+                            return SizedBox(
+                              width: 58,
+                              child: _emojiTile(
+                                widget.emojis[index],
+                                emojiSize: 42,
+                                qtySize: 11,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(8, 4, 8, 12 + bottom),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final key = groupOrder[index];
+                          final items = grouped[key]!;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+                                  child: Text(
+                                    _groupTitles[key] ?? 'Смайлики',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final cols = (constraints.maxWidth / 68)
+                                        .floor()
+                                        .clamp(4, 8);
+                                    return GridView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount: items.length,
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: cols,
+                                        mainAxisSpacing: 2,
+                                        crossAxisSpacing: 2,
+                                        childAspectRatio: 0.82,
+                                      ),
+                                      itemBuilder: (context, i) {
+                                        return _emojiTile(
+                                          items[i],
+                                          emojiSize: 48,
+                                          qtySize: 12,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: groupOrder.length,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _ChatMessageBody extends StatelessWidget {
-  const _ChatMessageBody({required this.body});
+  const _ChatMessageBody({
+    required this.body,
+    this.largeCentered = false,
+  });
 
   final String body;
+  final bool largeCentered;
 
   @override
   Widget build(BuildContext context) {
@@ -1765,8 +1936,8 @@ class _ChatMessageBody extends StatelessWidget {
     if (name != null) {
       return ShopAnimatedEmoji(
         animatedName: name,
-        size: 56,
-        fallback: body,
+        size: largeCentered ? 168 : 56,
+        fallback: formatChatMessagePreview(body),
         animate: true,
       );
     }

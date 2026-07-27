@@ -15,6 +15,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -1352,14 +1353,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
+    final preview = formatChatMessagePreview(subtitle);
     if (presence == null) {
-      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+      return preview.isEmpty ? 'Нет сообщений' : preview;
     }
     final statusText = presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt);
     if (statusText.isEmpty) {
-      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+      return preview.isEmpty ? 'Нет сообщений' : preview;
     }
-    return subtitle.isEmpty ? statusText : '$statusText · $subtitle';
+    return preview.isEmpty ? statusText : '$statusText · $preview';
   }
 
   IconData? _genderIcon(String? value) {
