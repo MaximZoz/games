@@ -81,7 +81,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   bool _loading = true;
   bool _sending = false;
-  bool _emojiPickerOpen = false;
   bool _loadingOlder = false;
   bool _hasMoreOlder = true;
   bool _initialScrollDone = false;
@@ -710,7 +709,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     setState(() {
       _sending = true;
-      _emojiPickerOpen = false;
     });
     try {
       await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
@@ -1525,73 +1523,51 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_emojiPickerOpen) _buildEmojiPicker(),
-                    GradientCard(
-                      animate: false,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 8),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            tooltip: 'Смайлики',
-                            onPressed: _sending
-                                ? null
-                                : () {
-                                    final next = !_emojiPickerOpen;
-                                    setState(() => _emojiPickerOpen = next);
-                                    if (next) {
-                                      _composerFocusNode.unfocus();
-                                      ref.invalidate(inventoryListProvider);
-                                    }
-                                  },
-                            icon: Icon(
-                              _emojiPickerOpen
-                                  ? Icons.keyboard_rounded
-                                  : Icons.emoji_emotions_outlined,
-                              color: AppColors.accentStart,
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _textController,
-                              focusNode: _composerFocusNode,
-                              minLines: 1,
-                              maxLines: 4,
-                              textCapitalization: TextCapitalization.sentences,
-                              decoration: const InputDecoration(
-                                hintText: 'Введите сообщение...',
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              textInputAction: TextInputAction.send,
-                              onTap: () {
-                                if (_emojiPickerOpen) {
-                                  setState(() => _emojiPickerOpen = false);
-                                }
-                                _scrollToBottom();
-                              },
-                              onSubmitted: (_) => _sendMessage(),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _sending ? null : _sendMessage,
-                            tooltip: 'Отправить',
-                            icon: _sending
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.send_rounded),
-                          ),
-                        ],
+                child: GradientCard(
+                  animate: false,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: 'Смайлики',
+                        onPressed: _sending ? null : _openEmojiPicker,
+                        icon: const Icon(
+                          Icons.emoji_emotions_outlined,
+                          color: AppColors.accentStart,
+                        ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _composerFocusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onTap: _scrollToBottom,
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _sending ? null : _sendMessage,
+                        tooltip: 'Отправить',
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1601,66 +1577,128 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     );
   }
 
-  Widget _buildEmojiPicker() {
-    final items = ref.watch(inventoryListProvider).valueOrNull ?? const [];
-    final emojis = items
-        .where((e) => e.kind == 'emoji' && e.quantity > 0)
-        .toList();
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+  Future<void> _openEmojiPicker() async {
+    _composerFocusNode.unfocus();
+    // Не invalidate: иначе на мобиле valueOrNull=null и панель «пустая».
+    final cached = ref.read(inventoryListProvider).valueOrNull;
+    if (cached == null) {
+      unawaited(ref.read(inventoryListProvider.future).then((_) {}, onError: (_, __) {}));
+    }
+
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surfaceCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      child: emojis.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Купите смайлики в магазине на главной',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              ),
-            )
-          : Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final it in emojis)
-                  InkWell(
-                    onTap: _sending ? null : () => unawaited(_sendAnimatedEmoji(it)),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: 64,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentSoft.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          ShopAnimatedEmoji(
-                            animatedName: it.animatedName ?? 'smile',
-                            size: 36,
-                            fallback: it.emoji,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${it.quantity}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final items =
+                ref.watch(inventoryListProvider).valueOrNull ?? cached ?? const [];
+            final emojis = items
+                .where((e) => e.kind == 'emoji' && e.quantity > 0)
+                .toList();
+            final bottom = MediaQuery.paddingOf(context).bottom;
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottom),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Мои смайлики',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (emojis.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Text(
+                          'Купите смайлики в магазине на главной',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      )
+                    else
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.sizeOf(context).height * 0.35,
+                        ),
+                        child: SingleChildScrollView(
+                          child: Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              for (final it in emojis)
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.of(sheetContext).pop();
+                                    unawaited(_sendAnimatedEmoji(it));
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    width: 72,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentSoft
+                                          .withValues(alpha: 0.45),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        ShopAnimatedEmoji(
+                                          animatedName:
+                                              it.animatedName ?? 'smile',
+                                          size: 40,
+                                          fallback: it.emoji,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${it.quantity}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
