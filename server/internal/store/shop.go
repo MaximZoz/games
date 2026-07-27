@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -20,6 +21,11 @@ var (
 	ErrStakeNotAllowed  = errors.New("stake not allowed")
 	ErrEmojiNotOwned    = errors.New("emoji not owned")
 	ErrEmojiDepleted    = errors.New("emoji depleted")
+	ErrNotCollection    = errors.New("not a collection item")
+	ErrGiftSelf         = errors.New("cannot gift to self")
+	ErrGiftTargetOwned  = errors.New("target already owns item")
+	ErrIncomeNotReady   = errors.New("collection income not ready")
+	ErrNoCollections    = errors.New("no collections")
 )
 
 // FreeStakeBronze — бронзовые ставки без покупки в магазине.
@@ -369,4 +375,256 @@ func EquippedFrameColor(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 		return nil, nil
 	}
 	return color, nil
+}
+
+// ListCollections returns owned collection items for a user (public showcase).
+func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]InventoryItemView, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT s.code, s.kind, s.title, s.description, s.payload,
+		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+		       u.quantity
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE
+		ORDER BY s.sort_order, u.acquired_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []InventoryItemView
+	for rows.Next() {
+		var it InventoryItemView
+		var payload []byte
+		if err := rows.Scan(
+			&it.Code, &it.Kind, &it.Title, &it.Description, &payload,
+			&it.AcquiredAt, &it.Quantity,
+		); err != nil {
+			return nil, err
+		}
+		it.Payload = json.RawMessage(payload)
+		out = append(out, it)
+	}
+	return out, rows.Err()
+}
+
+// SellCollection refunds 80% of shop price and removes the item.
+func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (balance int, refund int, err error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	var kind string
+	var price int
+	err = tx.QueryRow(ctx, `
+		SELECT s.kind, s.price_bronze
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = $1 AND u.item_code = $2
+		FOR UPDATE OF u`, userID, code).Scan(&kind, &price)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, 0, ErrEmojiNotOwned
+		}
+		return 0, 0, err
+	}
+	if kind != "collection" {
+		return 0, 0, ErrNotCollection
+	}
+	refund = (price * 80) / 100
+	if refund < 0 {
+		refund = 0
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code); err != nil {
+		return 0, 0, err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE users SET balance_bronze = balance_bronze + $2, updated_at = now()
+		WHERE id = $1`, userID, refund); err != nil {
+		return 0, 0, err
+	}
+	if err := tx.QueryRow(ctx, `SELECT balance_bronze FROM users WHERE id = $1`, userID).Scan(&balance); err != nil {
+		return 0, 0, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, 0, err
+	}
+	return balance, refund, nil
+}
+
+// GiftCollection transfers a collection item to another user.
+func GiftCollection(ctx context.Context, pool *pgxpool.Pool, fromUser, toUser uuid.UUID, code string) error {
+	if fromUser == toUser {
+		return ErrGiftSelf
+	}
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var kind string
+	err = tx.QueryRow(ctx, `
+		SELECT s.kind
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = $1 AND u.item_code = $2
+		FOR UPDATE OF u`, fromUser, code).Scan(&kind)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrEmojiNotOwned
+		}
+		return err
+	}
+	if kind != "collection" {
+		return ErrNotCollection
+	}
+
+	var targetOwned bool
+	if err := tx.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM user_inventory WHERE user_id = $1 AND item_code = $2
+		)`, toUser, code).Scan(&targetOwned); err != nil {
+		return err
+	}
+	if targetOwned {
+		return ErrGiftTargetOwned
+	}
+
+	// Ensure target user exists.
+	var exists bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)`, toUser).Scan(&exists); err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("target user not found")
+	}
+
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, fromUser, code); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO user_inventory (user_id, item_code, quantity)
+		VALUES ($1, $2, 1)`, toUser, code); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+type CollectionIncomeInfo struct {
+	Available     bool
+	AmountBronze  int
+	NextClaimAt   *string // RFC3339 UTC, if not available
+	OwnedCount    int
+}
+
+// GetCollectionIncomeInfo returns weekly income status.
+func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (*CollectionIncomeInfo, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT COALESCE((s.payload->>'weekly_bronze')::int, 0)
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	total := 0
+	count := 0
+	for rows.Next() {
+		var w int
+		if err := rows.Scan(&w); err != nil {
+			return nil, err
+		}
+		if w > 0 {
+			total += w
+		}
+		count++
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	info := &CollectionIncomeInfo{OwnedCount: count, AmountBronze: total}
+	if count == 0 || total <= 0 {
+		return info, nil
+	}
+
+	var claimedAt *time.Time
+	if err := pool.QueryRow(ctx, `
+		SELECT collection_income_claimed_at FROM users WHERE id = $1`, userID).Scan(&claimedAt); err != nil {
+		return nil, err
+	}
+	now := time.Now().UTC()
+	if claimedAt == nil || now.Sub(*claimedAt) >= 7*24*time.Hour {
+		info.Available = true
+		return info, nil
+	}
+	next := claimedAt.Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339)
+	info.NextClaimAt = &next
+	return info, nil
+}
+
+// ClaimCollectionIncome credits weekly bronze from owned collections.
+func ClaimCollectionIncome(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (balance int, amount int, err error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	var claimedAt *time.Time
+	if err := tx.QueryRow(ctx, `
+		SELECT collection_income_claimed_at FROM users WHERE id = $1 FOR UPDATE`, userID).Scan(&claimedAt); err != nil {
+		return 0, 0, err
+	}
+	now := time.Now().UTC()
+	if claimedAt != nil && now.Sub(*claimedAt) < 7*24*time.Hour {
+		return 0, 0, ErrIncomeNotReady
+	}
+
+	rows, err := tx.Query(ctx, `
+		SELECT COALESCE((s.payload->>'weekly_bronze')::int, 0)
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE`, userID)
+	if err != nil {
+		return 0, 0, err
+	}
+	amount = 0
+	for rows.Next() {
+		var w int
+		if err := rows.Scan(&w); err != nil {
+			rows.Close()
+			return 0, 0, err
+		}
+		if w > 0 {
+			amount += w
+		}
+	}
+	rows.Close()
+	if amount <= 0 {
+		return 0, 0, ErrNoCollections
+	}
+
+	if _, err := tx.Exec(ctx, `
+		UPDATE users
+		SET balance_bronze = balance_bronze + $2,
+		    collection_income_claimed_at = $3,
+		    updated_at = now()
+		WHERE id = $1`, userID, amount, now); err != nil {
+		return 0, 0, err
+	}
+	if err := tx.QueryRow(ctx, `SELECT balance_bronze FROM users WHERE id = $1`, userID).Scan(&balance); err != nil {
+		return 0, 0, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, 0, err
+	}
+	return balance, amount, nil
 }

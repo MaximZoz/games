@@ -36,15 +36,9 @@ class ShopItem {
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
   String? get group => payload['group'] as String?;
-  int get usesEach => (payload['uses_each'] as num?)?.toInt() ?? 10;
-  List<String> get packEmojiCodes {
-    final raw = payload['emojis'];
-    if (raw is! List) return const [];
-    return [
-      for (final e in raw)
-        if (e is String && e.isNotEmpty) e,
-    ];
-  }
+  String? get collectionSet => payload['set'] as String?;
+  int get weeklyBronze => (payload['weekly_bronze'] as num?)?.toInt() ?? 0;
+  int get sellRefundBronze => (priceBronze * 80) ~/ 100;
 
   ShopItem copyWith({
     bool? owned,
@@ -103,6 +97,8 @@ class InventoryItem {
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
   String? get group => payload['group'] as String?;
+  String? get collectionSet => payload['set'] as String?;
+  int get weeklyBronze => (payload['weekly_bronze'] as num?)?.toInt() ?? 0;
   int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
 
@@ -292,5 +288,155 @@ class ShopRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return InventoryCapabilities.fromJson(body);
+  }
+
+  Future<List<InventoryItem>> listCollectionsShowcase(String userId) async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.get(
+        Uri.parse(
+          '$apiBaseUrl/api/inventory/collections?user_id=$userId&_=$cacheBuster',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ShopRepository.listCollectionsShowcase',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401
+            ? 'Сессия истекла'
+            : 'Не удалось загрузить коллекции',
+      );
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final raw = body['items'];
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(InventoryItem.fromJson)
+        .toList();
+  }
+
+  Future<ShopBuyResult> sellCollection(String code) async {
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/inventory/sell'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'code': code}),
+        operation: 'ShopRepository.sellCollection',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401 ? 'Сессия истекла' : 'Не удалось продать',
+      );
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return ShopBuyResult(
+      balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
+      quantity: (body['refund_bronze'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Future<void> giftCollection(String code, String toUserId) async {
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/inventory/gift'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'code': code, 'to_user_id': toUserId}),
+        operation: 'ShopRepository.giftCollection',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401
+            ? 'Сессия истекла'
+            : response.statusCode == 409
+                ? 'Нельзя подарить (уже есть у друга или предмет недоступен)'
+                : 'Не удалось подарить',
+      );
+    }
+  }
+
+  Future<CollectionIncomeInfo> collectionIncome() async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/inventory/collection-income?_=$cacheBuster'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ShopRepository.collectionIncome',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401
+            ? 'Сессия истекла'
+            : 'Не удалось загрузить доход',
+      );
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return CollectionIncomeInfo.fromJson(body);
+  }
+
+  Future<ShopBuyResult> claimCollectionIncome() async {
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/inventory/claim-collection-income'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: '{}',
+        operation: 'ShopRepository.claimCollectionIncome',
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(
+        response.statusCode,
+        response.statusCode == 401
+            ? 'Сессия истекла'
+            : response.statusCode == 409
+                ? 'Доход пока недоступен'
+                : 'Не удалось забрать доход',
+      );
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return ShopBuyResult(
+      balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
+      quantity: (body['amount_bronze'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class CollectionIncomeInfo {
+  const CollectionIncomeInfo({
+    required this.available,
+    required this.amountBronze,
+    required this.ownedCount,
+    this.nextClaimAt,
+  });
+
+  final bool available;
+  final int amountBronze;
+  final int ownedCount;
+  final String? nextClaimAt;
+
+  factory CollectionIncomeInfo.fromJson(Map<String, dynamic> json) {
+    return CollectionIncomeInfo(
+      available: json['available'] == true,
+      amountBronze: (json['amount_bronze'] as num?)?.toInt() ?? 0,
+      ownedCount: (json['owned_count'] as num?)?.toInt() ?? 0,
+      nextClaimAt: json['next_claim_at'] as String?,
+    );
   }
 }

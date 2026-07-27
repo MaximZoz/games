@@ -97,3 +97,38 @@ flutter:
     - packages/animated_emoji/lottie/wineGlass.json
     - packages/animated_emoji/lottie/wink.json
     - packages/animated_emoji/lottie/wrappedGift.json
+    - packages/animated_emoji/lottie/angry.json
+    - packages/animated_emoji/lottie/cry.json
+    - packages/animated_emoji/lottie/loudlyCrying.json
+    - packages/animated_emoji/lottie/frown.json
+    - packages/animated_emoji/lottie/bigFrown.json
+    - packages/animated_emoji/lottie/flushed.json
+    - packages/animated_emoji/lottie/mindBlown.json
+    - packages/animated_emoji/lottie/melting.json
+    - packages/animated_emoji/lottie/hugFace.json
+    - packages/animated_emoji/lottie/cool.json
+    - packages/animated_emoji/lottie/nerdFace.json
+    - packages/animated_emoji/lottie/dizzyFace.json
+    - packages/animated_emoji/lottie/hotFace.json
+    - packages/animated_emoji/lottie/coldFace.json
+    - packages/animated_emoji/lottie/brokenHeart.json
+    - packages/animated_emoji/lottie/beatingHeart.json
+    - packages/animated_emoji/lottie/holdingBackTears.json
+    - packages/animated_emoji/lottie/smirk.json
+    - packages/animated_emoji/lottie/relieved.json
+    - packages/animated_emoji/lottie/sleepy.json
+    - packages/animated_emoji/lottie/worried.json
+    - packages/animated_emoji/lottie/pensive.json
+    - packages/animated_emoji/lottie/unamused.json
+    - packages/animated_emoji/lottie/grimacing.json
+    - packages/animated_emoji/lottie/shushingFace.json
+    - packages/animated_emoji/lottie/upsideDownFace.json
+    - packages/animated_emoji/lottie/skull.json
+    - packages/animated_emoji/lottie/impFrown.json
+    - packages/animated_emoji/lottie/impSmile.json
+    - packages/animated_emoji/lottie/clown.json
+    - packages/animated_emoji/lottie/halo.json
+    - packages/animated_emoji/lottie/eyes.json
+    - packages/animated_emoji/lottie/crystalBall.json
+    - packages/animated_emoji/lottie/fireHeart.json
+    - packages/animated_emoji/lottie/anatomicalHeart.json

@@ -328,6 +328,11 @@ func main() {
 	mux.Handle("/api/inventory", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Inventory)))
 	mux.Handle("/api/inventory/capabilities", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Capabilities)))
 	mux.Handle("/api/inventory/consume", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Consume)))
+	mux.Handle("/api/inventory/sell", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Sell)))
+	mux.Handle("/api/inventory/gift", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Gift)))
+	mux.Handle("/api/inventory/collections", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionsShowcase)))
+	mux.Handle("/api/inventory/collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionIncome)))
+	mux.Handle("/api/inventory/claim-collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.ClaimCollectionIncome)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

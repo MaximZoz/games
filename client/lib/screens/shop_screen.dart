@@ -50,6 +50,13 @@ class ShopScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     HomeActionCard(
+                      icon: Icons.auto_awesome_outlined,
+                      title: 'Коллекции',
+                      subtitle: 'Витрина профиля, подарки и доход',
+                      onTap: () => context.push('/shop/collections'),
+                    ),
+                    const SizedBox(height: 12),
+                    HomeActionCard(
                       icon: Icons.crop_square_rounded,
                       title: 'Рамки',
                       subtitle: 'Оформление аватара в профиле',

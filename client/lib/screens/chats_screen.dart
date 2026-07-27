@@ -15,6 +15,9 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -1533,6 +1536,30 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                const SizedBox(height: 12),
+                FutureBuilder<List<InventoryItem>>(
+                  future: ref
+                      .read(shopRepositoryProvider)
+                      .listCollectionsShowcase(user.id),
+                  builder: (context, snap) {
+                    final items = snap.data ?? const <InventoryItem>[];
+                    if (items.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Коллекции',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        CollectionShowcaseGrid(items: items),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),

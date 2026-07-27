@@ -14,6 +14,7 @@ import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -1082,6 +1083,30 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                const SizedBox(height: 12),
+                FutureBuilder<List<InventoryItem>>(
+                  future: ref
+                      .read(shopRepositoryProvider)
+                      .listCollectionsShowcase(user.id),
+                  builder: (context, snap) {
+                    final items = snap.data ?? const <InventoryItem>[];
+                    if (items.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Коллекции',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        CollectionShowcaseGrid(items: items),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -1529,18 +1554,21 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                   child: Row(
                     children: [
-                      IconButton(
-                        tooltip: 'Смайлики',
-                        onPressed: _sending ? null : _openEmojiPicker,
-                        iconSize: 30,
-                        style: IconButton.styleFrom(
-                          minimumSize: const Size(56, 56),
-                          tapTargetSize: MaterialTapTargetSize.padded,
-                          padding: const EdgeInsets.all(14),
-                        ),
-                        icon: const Icon(
-                          Icons.emoji_emotions_outlined,
-                          color: AppColors.accentStart,
+                      // Широкая зона тапа вокруг кнопки смайликов.
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _sending ? null : _openEmojiPicker,
+                          borderRadius: BorderRadius.circular(16),
+                          child: const SizedBox(
+                            width: 64,
+                            height: 56,
+                            child: Icon(
+                              Icons.emoji_emotions_outlined,
+                              color: AppColors.accentStart,
+                              size: 30,
+                            ),
+                          ),
                         ),
                       ),
                       Expanded(
@@ -1641,43 +1669,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             color: Colors.black.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                        ),
-                      ),
-                      // Доп. «ручка» для пальца — тянуть панель выше.
-                      const SizedBox(height: 8),
-                      Center(
-                        child: Container(
-                          width: 120,
-                          height: 28,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Icon(
-                            Icons.keyboard_arrow_up_rounded,
-                            color: AppColors.textSecondary.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Мои смайлики',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Потяните вверх, чтобы открыть больше',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.9),
                         ),
                       ),
                       const SizedBox(height: 14),

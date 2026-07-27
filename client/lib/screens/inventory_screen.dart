@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -17,12 +20,158 @@ const _groupTitles = <String, String>{
   'objects': 'Предметы',
 };
 
-class InventoryScreen extends ConsumerWidget {
+class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InventoryScreen> createState() => _InventoryScreenState();
+}
+
+class _InventoryScreenState extends ConsumerState<InventoryScreen> {
+  bool _claimBusy = false;
+
+  Future<void> _claimIncome() async {
+    if (_claimBusy) return;
+    setState(() => _claimBusy = true);
+    try {
+      final result =
+          await ref.read(shopRepositoryProvider).claimCollectionIncome();
+      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Получено +${result.quantity} бронзы'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      ref.invalidate(collectionIncomeProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _claimBusy = false);
+    }
+  }
+
+  Future<void> _sell(InventoryItem item) async {
+    final refund = (await _catalogPrice(item.code) * 80) ~/ 100;
+    if (!mounted) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Продать?'),
+        content: Text('${item.title}\nВернётся около $refund бронзы (80%).'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Продать'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      final result =
+          await ref.read(shopRepositoryProvider).sellCollection(item.code);
+      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      ref.invalidate(inventoryListProvider);
+      ref.invalidate(shopCatalogProvider);
+      ref.invalidate(collectionIncomeProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Продано: +${result.quantity} бронзы'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<int> _catalogPrice(String code) async {
+    final catalog = ref.read(shopCatalogProvider).valueOrNull;
+    final fromCache = catalog?.where((e) => e.code == code).firstOrNull;
+    if (fromCache != null) return fromCache.priceBronze;
+    try {
+      final items = await ref.read(shopRepositoryProvider).listShop();
+      return items.where((e) => e.code == code).firstOrNull?.priceBronze ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> _gift(InventoryItem item) async {
+    final friends =
+        ref.read(friendsSnapshotProvider).valueOrNull?.friends ?? const [];
+    if (friends.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Сначала добавьте друзей'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final toId = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Подарить другу'),
+        children: [
+          for (final f in friends)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(ctx).pop(f.user.id),
+              child: Text(
+                f.user.displayName?.trim().isNotEmpty == true
+                    ? f.user.displayName!
+                    : f.user.email,
+              ),
+            ),
+        ],
+      ),
+    );
+    if (toId == null || toId.isEmpty || !mounted) return;
+    try {
+      await ref.read(shopRepositoryProvider).giftCollection(item.code, toId);
+      ref.invalidate(inventoryListProvider);
+      ref.invalidate(collectionIncomeProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Подарено: ${item.title}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(inventoryListProvider);
+    final incomeAsync = ref.watch(collectionIncomeProvider);
     void goBack() {
       if (context.canPop()) {
         context.pop();
@@ -32,11 +181,12 @@ class InventoryScreen extends ConsumerWidget {
     }
 
     final items = async.valueOrNull ?? const <InventoryItem>[];
-    final emojis = items
-        .where((e) => e.kind == 'emoji' && e.quantity > 0)
-        .toList();
+    final emojis =
+        items.where((e) => e.kind == 'emoji' && e.quantity > 0).toList();
     final frames = items.where((e) => e.kind == 'frame').toList();
     final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
+    final collections = items.where((e) => e.kind == 'collection').toList();
+    final income = incomeAsync.valueOrNull;
 
     final grouped = <String, List<InventoryItem>>{};
     for (final e in emojis) {
@@ -91,6 +241,55 @@ class InventoryScreen extends ConsumerWidget {
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       children: [
+                        _Section(
+                          title: 'Коллекции',
+                          empty: 'Нет коллекций — купите в магазине',
+                          children: [
+                            if (collections.isNotEmpty &&
+                                income != null &&
+                                income.amountBronze > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        income.available
+                                            ? 'Доход: +${income.amountBronze} бронзы'
+                                            : 'Доход через неделю: ${income.amountBronze} бронзы',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    if (income.available)
+                                      FilledButton(
+                                        onPressed:
+                                            _claimBusy ? null : _claimIncome,
+                                        child: Text(
+                                            _claimBusy ? '…' : 'Забрать'),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            for (final it in collections)
+                              _CollectionInvTile(
+                                item: it,
+                                onOpen: () => showCollectionFullscreen(
+                                  context,
+                                  title: it.title,
+                                  animatedName: it.animatedName ?? 'sparkles',
+                                  fallback: it.emoji,
+                                  subtitle:
+                                      '+${it.weeklyBronze} бронзы в неделю',
+                                ),
+                                onGift: () => _gift(it),
+                                onSell: () => _sell(it),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
                         for (final g in groupOrder)
                           if (grouped[g]?.isNotEmpty == true) ...[
                             _Section(
@@ -114,7 +313,7 @@ class InventoryScreen extends ConsumerWidget {
                         if (emojis.isEmpty)
                           const _Section(
                             title: 'Смайлики',
-                            empty: 'Нет смайликов — купите набор в магазине',
+                            empty: 'Нет смайликов — купите в магазине',
                             children: [],
                           ),
                         if (emojis.isEmpty) const SizedBox(height: 16),
@@ -161,6 +360,81 @@ class InventoryScreen extends ConsumerWidget {
                       ],
                     ),
         ),
+      ),
+    );
+  }
+}
+
+class _CollectionInvTile extends StatelessWidget {
+  const _CollectionInvTile({
+    required this.item,
+    required this.onOpen,
+    required this.onGift,
+    required this.onSell,
+  });
+
+  final InventoryItem item;
+  final VoidCallback onOpen;
+  final VoidCallback onGift;
+  final VoidCallback onSell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: onOpen,
+            borderRadius: BorderRadius.circular(10),
+            child: ShopAnimatedEmoji(
+              animatedName: item.animatedName ?? 'sparkles',
+              size: 36,
+              fallback: item.emoji,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: InkWell(
+              onTap: onOpen,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '+${item.weeklyBronze} бронзы / нед.',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Подарить',
+            onPressed: onGift,
+            icon: const Icon(Icons.card_giftcard_outlined),
+          ),
+          IconButton(
+            tooltip: 'Продать',
+            onPressed: onSell,
+            icon: const Icon(Icons.sell_outlined),
+          ),
+        ],
       ),
     );
   }
@@ -247,8 +521,8 @@ class _InvTile extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontSize: 12,
                     color: AppColors.textSecondary,
+                    fontSize: 12,
                   ),
                 ),
               ],

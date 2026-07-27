@@ -20,3 +20,8 @@ final inventoryCapabilitiesProvider =
     FutureProvider<InventoryCapabilities>((ref) async {
   return ref.watch(shopRepositoryProvider).capabilities();
 });
+
+final collectionIncomeProvider =
+    FutureProvider<CollectionIncomeInfo>((ref) async {
+  return ref.watch(shopRepositoryProvider).collectionIncome();
+});

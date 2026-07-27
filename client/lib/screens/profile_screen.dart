@@ -16,7 +16,9 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -818,6 +820,33 @@ class _ProfileView extends ConsumerWidget {
             ),
           ),
         ],
+        Builder(
+          builder: (context) {
+            final inv = ref.watch(inventoryListProvider).valueOrNull ??
+                const <InventoryItem>[];
+            final collections =
+                inv.where((e) => e.kind == 'collection').toList();
+            if (collections.isEmpty) return const SizedBox.shrink();
+            return Column(
+              children: [
+                const SizedBox(height: 20),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Коллекции',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                CollectionShowcaseGrid(items: collections),
+              ],
+            );
+          },
+        ),
         const SizedBox(height: 22),
         OutlinedButton.icon(
           onPressed: onEdit,

@@ -23,6 +23,7 @@ import 'package:multigames_client/screens/login_screen.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
+import 'package:multigames_client/screens/shop_collections_screen.dart';
 import 'package:multigames_client/screens/shop_emojis_screen.dart';
 import 'package:multigames_client/screens/shop_screen.dart';
 import 'package:multigames_client/screens/shop_section_screen.dart';
@@ -155,6 +156,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                             },
                           ),
                         ],
+                      ),
+                      GoRoute(
+                        path: 'collections',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const ShopCollectionsScreen(),
+                        ),
                       ),
                       GoRoute(
                         path: 'frames',

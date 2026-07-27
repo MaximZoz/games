@@ -7,6 +7,7 @@ import (
 
 	"multigames/server/internal/store"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -207,4 +208,197 @@ func (h *ShopHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+type giftBody struct {
+	Code     string `json:"code"`
+	ToUserID string `json:"to_user_id"`
+}
+
+// POST /api/inventory/sell  {"code":"coll_unicorn"}
+func (h *ShopHandler) Sell(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var body buyBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	code := strings.TrimSpace(body.Code)
+	if code == "" {
+		http.Error(w, "code required", http.StatusBadRequest)
+		return
+	}
+	balance, refund, err := store.SellCollection(r.Context(), h.Pool, userID, code)
+	if err != nil {
+		switch err {
+		case store.ErrEmojiNotOwned, store.ErrNotCollection:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"balance_bronze": balance,
+		"refund_bronze":  refund,
+	})
+}
+
+// POST /api/inventory/gift  {"code":"coll_unicorn","to_user_id":"..."}
+func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var body giftBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	code := strings.TrimSpace(body.Code)
+	toRaw := strings.TrimSpace(body.ToUserID)
+	if code == "" || toRaw == "" {
+		http.Error(w, "code and to_user_id required", http.StatusBadRequest)
+		return
+	}
+	toID, err := uuid.Parse(toRaw)
+	if err != nil {
+		http.Error(w, "invalid to_user_id", http.StatusBadRequest)
+		return
+	}
+	if err := store.GiftCollection(r.Context(), h.Pool, userID, toID, code); err != nil {
+		switch err {
+		case store.ErrEmojiNotOwned, store.ErrNotCollection, store.ErrGiftSelf, store.ErrGiftTargetOwned:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			if strings.Contains(err.Error(), "not found") {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+}
+
+// GET /api/inventory/collections?user_id=
+func (h *ShopHandler) CollectionsShowcase(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	_, ok := GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	raw := strings.TrimSpace(r.URL.Query().Get("user_id"))
+	if raw == "" {
+		http.Error(w, "user_id required", http.StatusBadRequest)
+		return
+	}
+	targetID, err := uuid.Parse(raw)
+	if err != nil {
+		http.Error(w, "invalid user_id", http.StatusBadRequest)
+		return
+	}
+	items, err := store.ListCollections(r.Context(), h.Pool, targetID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	out := make([]map[string]any, 0, len(items))
+	for _, it := range items {
+		m := map[string]any{
+			"code":        it.Code,
+			"kind":        it.Kind,
+			"title":       it.Title,
+			"description": it.Description,
+			"acquired_at": it.AcquiredAt,
+			"quantity":    it.Quantity,
+		}
+		if len(it.Payload) > 0 {
+			var payload any
+			if json.Unmarshal(it.Payload, &payload) == nil {
+				m["payload"] = payload
+			}
+		}
+		out = append(out, m)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache")
+	_ = json.NewEncoder(w).Encode(map[string]any{"items": out})
+}
+
+// GET /api/inventory/collection-income
+func (h *ShopHandler) CollectionIncome(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	info, err := store.GetCollectionIncomeInfo(r.Context(), h.Pool, userID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	resp := map[string]any{
+		"available":      info.Available,
+		"amount_bronze":  info.AmountBronze,
+		"owned_count":    info.OwnedCount,
+	}
+	if info.NextClaimAt != nil {
+		resp["next_claim_at"] = *info.NextClaimAt
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// POST /api/inventory/claim-collection-income
+func (h *ShopHandler) ClaimCollectionIncome(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	balance, amount, err := store.ClaimCollectionIncome(r.Context(), h.Pool, userID)
+	if err != nil {
+		switch err {
+		case store.ErrIncomeNotReady, store.ErrNoCollections:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"balance_bronze": balance,
+		"amount_bronze":  amount,
+	})
 }
