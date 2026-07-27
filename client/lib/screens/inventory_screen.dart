@@ -8,6 +8,15 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
+const _groupTitles = <String, String>{
+  'emotions': 'Эмоции',
+  'animals': 'Животные',
+  'food': 'Еда и напитки',
+  'travel': 'Путешествия',
+  'party': 'Праздник и спорт',
+  'objects': 'Предметы',
+};
+
 class InventoryScreen extends ConsumerWidget {
   const InventoryScreen({super.key});
 
@@ -23,9 +32,26 @@ class InventoryScreen extends ConsumerWidget {
     }
 
     final items = async.valueOrNull ?? const <InventoryItem>[];
-    final emojis = items.where((e) => e.kind == 'emoji').toList();
+    final emojis = items
+        .where((e) => e.kind == 'emoji' && e.quantity > 0)
+        .toList();
     final frames = items.where((e) => e.kind == 'frame').toList();
     final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
+
+    final grouped = <String, List<InventoryItem>>{};
+    for (final e in emojis) {
+      final g = e.group ?? 'other';
+      grouped.putIfAbsent(g, () => []).add(e);
+    }
+    final groupOrder = [
+      'emotions',
+      'animals',
+      'food',
+      'travel',
+      'party',
+      'objects',
+      ...grouped.keys.where((k) => !_groupTitles.containsKey(k)),
+    ];
 
     return SwipeBackScope(
       onBack: goBack,
@@ -65,23 +91,33 @@ class InventoryScreen extends ConsumerWidget {
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       children: [
-                        _Section(
-                          title: 'Смайлики',
-                          empty: 'Нет смайликов',
-                          children: [
-                            for (final it in emojis)
-                              _InvTile(
-                                leading: ShopAnimatedEmoji(
-                                  animatedName: it.animatedName ?? 'smile',
-                                  size: 32,
-                                  fallback: it.emoji,
-                                ),
-                                title: it.title,
-                                subtitle: 'Осталось ${it.quantity}',
-                              ),
+                        for (final g in groupOrder)
+                          if (grouped[g]?.isNotEmpty == true) ...[
+                            _Section(
+                              title: _groupTitles[g] ?? 'Смайлики',
+                              empty: '',
+                              children: [
+                                for (final it in grouped[g]!)
+                                  _InvTile(
+                                    leading: ShopAnimatedEmoji(
+                                      animatedName: it.animatedName ?? 'smile',
+                                      size: 32,
+                                      fallback: it.emoji,
+                                    ),
+                                    title: it.title,
+                                    subtitle: 'Осталось ${it.quantity}',
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
                           ],
-                        ),
-                        const SizedBox(height: 16),
+                        if (emojis.isEmpty)
+                          const _Section(
+                            title: 'Смайлики',
+                            empty: 'Нет смайликов — купите набор в магазине',
+                            children: [],
+                          ),
+                        if (emojis.isEmpty) const SizedBox(height: 16),
                         _Section(
                           title: 'Рамки',
                           empty: 'Нет рамок',

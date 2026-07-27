@@ -87,7 +87,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     void goBack() => context.pop();
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
-    final emojis = _sortedSection(items, 'emoji');
+    final packs = _sortedSection(items, 'emoji_pack');
     final frames = _sortedSection(items, 'frame');
     final stakes = _sortedSection(items, 'stake_unlock');
 
@@ -123,8 +123,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   children: [
                     _ShopSection(
-                      title: 'Смайлики',
-                      items: emojis,
+                      title: 'Наборы смайликов',
+                      items: packs,
                       onBuy: _buy,
                     ),
                     const SizedBox(height: 16),
@@ -201,6 +201,7 @@ class _ShopCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final leading = switch (item.kind) {
+      'emoji_pack' => _PackPreview(item: item),
       'emoji' => ShopAnimatedEmoji(
           animatedName: item.animatedName ?? 'smile',
           size: 32,
@@ -222,6 +223,8 @@ class _ShopCard extends StatelessWidget {
     };
 
     final subtitle = switch (item.kind) {
+      'emoji_pack' =>
+        '${item.packEmojiCodes.length} смайликов · по ${item.usesEach} шт.',
       'stake_unlock' =>
         'Ставка ${item.stakeSilver ?? (item.stakeBronze ?? 0) ~/ 100} серебра',
       _ => item.description,
@@ -309,6 +312,56 @@ class _ShopCard extends StatelessWidget {
     if (bronze >= 10000) return CoinType.gold;
     if (bronze >= 100) return CoinType.silver;
     return CoinType.bronze;
+  }
+}
+
+class _PackPreview extends StatelessWidget {
+  const _PackPreview({required this.item});
+
+  final ShopItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final previewNames = _previewNamesForGroup(item.group);
+    if (previewNames.isEmpty) {
+      return const Icon(Icons.emoji_emotions_outlined, size: 32);
+    }
+    return SizedBox(
+      width: 72,
+      height: 32,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (var i = 0; i < previewNames.length && i < 3; i++)
+            Positioned(
+              left: i * 18.0,
+              child: ShopAnimatedEmoji(
+                animatedName: previewNames[i],
+                size: 28,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+List<String> _previewNamesForGroup(String? group) {
+  switch (group) {
+    case 'emotions':
+      return const ['smile', 'joy', 'heartEyes'];
+    case 'animals':
+      return const ['dog', 'dragon', 'unicorn'];
+    case 'food':
+      return const ['popcorn', 'hotBeverage', 'tropicalDrink'];
+    case 'travel':
+      return const ['rocket', 'automobile', 'flyingSaucer'];
+    case 'party':
+      return const ['partyPopper', 'trophy', 'fireworks'];
+    case 'objects':
+      return const ['gemStone', 'coin', 'lightBulb'];
+    default:
+      return const ['smile', 'sparkles', 'fire'];
   }
 }
 

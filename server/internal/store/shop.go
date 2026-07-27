@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -182,7 +183,7 @@ func UserMayStake(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, sta
 }
 
 // BuyShopItem purchases an item: deduct coins and add inventory.
-// Emoji packs grant payload.uses (default 30) as personal quantity.
+// emoji_pack: выдаёт все смайлики пака по uses_each (по умолчанию 10).
 func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (*BuyResult, error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -220,17 +221,6 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, ErrShopAlreadyOwned
 	}
 
-	qty := 1
-	if kind == "emoji" {
-		qty = 30
-		var meta map[string]any
-		if json.Unmarshal(payload, &meta) == nil {
-			if u, ok := meta["uses"].(float64); ok && int(u) > 0 {
-				qty = int(u)
-			}
-		}
-	}
-
 	r, err := tx.Exec(ctx, `
 		UPDATE users SET balance_bronze = balance_bronze - $2, updated_at = now()
 		WHERE id = $1 AND balance_bronze >= $2`, userID, price)
@@ -241,10 +231,58 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, ErrInsufficientFunds
 	}
 
-	if _, err := tx.Exec(ctx, `
-		INSERT INTO user_inventory (user_id, item_code, quantity)
-		VALUES ($1, $2, $3)`, userID, code, qty); err != nil {
-		return nil, err
+	qty := 1
+	switch kind {
+	case "emoji":
+		qty = 10
+		var meta map[string]any
+		if json.Unmarshal(payload, &meta) == nil {
+			if u, ok := meta["uses"].(float64); ok && int(u) > 0 {
+				qty = int(u)
+			}
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO user_inventory (user_id, item_code, quantity)
+			VALUES ($1, $2, $3)`, userID, code, qty); err != nil {
+			return nil, err
+		}
+	case "emoji_pack":
+		var pack struct {
+			UsesEach int      `json:"uses_each"`
+			Emojis   []string `json:"emojis"`
+		}
+		if err := json.Unmarshal(payload, &pack); err != nil {
+			return nil, err
+		}
+		uses := pack.UsesEach
+		if uses <= 0 {
+			uses = 10
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO user_inventory (user_id, item_code, quantity)
+			VALUES ($1, $2, 1)`, userID, code); err != nil {
+			return nil, err
+		}
+		for _, emojiCode := range pack.Emojis {
+			emojiCode = strings.TrimSpace(emojiCode)
+			if emojiCode == "" {
+				continue
+			}
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO user_inventory (user_id, item_code, quantity)
+				VALUES ($1, $2, $3)
+				ON CONFLICT (user_id, item_code) DO UPDATE
+				SET quantity = EXCLUDED.quantity`, userID, emojiCode, uses); err != nil {
+				return nil, err
+			}
+		}
+		qty = uses
+	default:
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO user_inventory (user_id, item_code, quantity)
+			VALUES ($1, $2, 1)`, userID, code); err != nil {
+			return nil, err
+		}
 	}
 
 	var balance int

@@ -35,6 +35,16 @@ class ShopItem {
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
+  String? get group => payload['group'] as String?;
+  int get usesEach => (payload['uses_each'] as num?)?.toInt() ?? 10;
+  List<String> get packEmojiCodes {
+    final raw = payload['emojis'];
+    if (raw is! List) return const [];
+    return [
+      for (final e in raw)
+        if (e is String && e.isNotEmpty) e,
+    ];
+  }
 
   ShopItem copyWith({
     bool? owned,
@@ -92,6 +102,7 @@ class InventoryItem {
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
+  String? get group => payload['group'] as String?;
   int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
 

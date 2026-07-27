@@ -1601,6 +1601,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             final emojis = items
                 .where((e) => e.kind == 'emoji' && e.quantity > 0)
                 .toList();
+            final grouped = <String, List<InventoryItem>>{};
+            for (final e in emojis) {
+              grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
+            }
+            const groupTitles = {
+              'emotions': 'Эмоции',
+              'animals': 'Животные',
+              'food': 'Еда',
+              'travel': 'Путешествия',
+              'party': 'Праздник',
+              'objects': 'Предметы',
+            };
             final bottom = MediaQuery.paddingOf(context).bottom;
             return SafeArea(
               child: Padding(
@@ -1633,7 +1645,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 20),
                         child: Text(
-                          'Купите смайлики в магазине на главной',
+                          'Купите набор смайликов в магазине на главной',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: AppColors.textSecondary,
@@ -1644,50 +1656,69 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     else
                       ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxHeight: MediaQuery.sizeOf(context).height * 0.35,
+                          maxHeight: MediaQuery.sizeOf(context).height * 0.45,
                         ),
                         child: SingleChildScrollView(
-                          child: Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              for (final it in emojis)
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.of(sheetContext).pop();
-                                    unawaited(_sendAnimatedEmoji(it));
-                                  },
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    width: 72,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.accentSoft
-                                          .withValues(alpha: 0.45),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        ShopAnimatedEmoji(
-                                          animatedName:
-                                              it.animatedName ?? 'smile',
-                                          size: 40,
-                                          fallback: it.emoji,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${it.quantity}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              for (final entry in grouped.entries) ...[
+                                Text(
+                                  groupTitles[entry.key] ?? 'Смайлики',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: [
+                                    for (final it in entry.value)
+                                      InkWell(
+                                        onTap: () {
+                                          Navigator.of(sheetContext).pop();
+                                          unawaited(_sendAnimatedEmoji(it));
+                                        },
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          width: 72,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.accentSoft
+                                                .withValues(alpha: 0.45),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              ShopAnimatedEmoji(
+                                                animatedName:
+                                                    it.animatedName ?? 'smile',
+                                                size: 40,
+                                                fallback: it.emoji,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${it.quantity}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                              ],
                             ],
                           ),
                         ),
