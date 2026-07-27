@@ -23,7 +23,9 @@ import 'package:multigames_client/screens/login_screen.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
+import 'package:multigames_client/screens/shop_emojis_screen.dart';
 import 'package:multigames_client/screens/shop_screen.dart';
+import 'package:multigames_client/screens/shop_section_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
@@ -82,6 +84,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final needsAuth = _authRequiredPaths.contains(path) ||
           path.startsWith('/chats/') ||
           path.startsWith('/coins/') ||
+          path.startsWith('/shop/') ||
           path.startsWith('/games');
       final isAdminRoute = path == '/admin';
 
@@ -134,6 +137,33 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     path: 'shop',
                     pageBuilder: (_, state) =>
                         _noTransitionPage(state, const ShopScreen()),
+                    routes: [
+                      GoRoute(
+                        path: 'emojis',
+                        pageBuilder: (_, state) =>
+                            _noTransitionPage(state, const ShopEmojisScreen()),
+                      ),
+                      GoRoute(
+                        path: 'frames',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const ShopSectionScreen(
+                            title: 'Рамки',
+                            kind: 'frame',
+                          ),
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'stakes',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const ShopSectionScreen(
+                            title: 'Ставки',
+                            kind: 'stake_unlock',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'inventory',

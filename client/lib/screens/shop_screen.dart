@@ -1,95 +1,17 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/shop/animated_emoji_util.dart';
-import 'package:multigames_client/shop/shop_provider.dart';
-import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
-class ShopScreen extends ConsumerStatefulWidget {
+/// Хаб магазина — три раздела, как на экране монет.
+class ShopScreen extends ConsumerWidget {
   const ShopScreen({super.key});
 
   @override
-  ConsumerState<ShopScreen> createState() => _ShopScreenState();
-}
-
-class _ShopScreenState extends ConsumerState<ShopScreen> {
-  List<ShopItem> _items = const [];
-  final Set<String> _buyInFlight = {};
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final cached = ref.read(shopCatalogProvider).valueOrNull;
-      if (cached != null && cached.isNotEmpty) {
-        setState(() => _items = cached);
-      }
-      unawaited(_reloadSilent());
-    });
-  }
-
-  Future<void> _reloadSilent() async {
-    try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
-      if (!mounted) return;
-      setState(() => _items = items);
-    } catch (_) {}
-  }
-
-  List<ShopItem> _sortedSection(List<ShopItem> all, String kind) {
-    final section = all.where((e) => e.kind == kind).toList();
-    section.sort((a, b) {
-      if (a.owned != b.owned) return a.owned ? 1 : -1;
-      return a.sortOrder.compareTo(b.sortOrder);
-    });
-    return section;
-  }
-
-  Future<void> _buy(ShopItem item) async {
-    if (_buyInFlight.contains(item.code) || item.owned) return;
-    _buyInFlight.add(item.code);
-    final previous = _items;
-    setState(() {
-      _items = [
-        for (final it in _items)
-          if (it.code == item.code) it.copyWith(owned: true) else it,
-      ];
-    });
-    try {
-      final result = await ref.read(shopRepositoryProvider).buy(item.code);
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
-      ref.invalidate(inventoryListProvider);
-      ref.invalidate(inventoryCapabilitiesProvider);
-      ref.invalidate(shopCatalogProvider);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _items = previous);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      _buyInFlight.remove(item.code);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     void goBack() => context.pop();
-    final cached = ref.watch(shopCatalogProvider).valueOrNull;
-    final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
-    final packs = _sortedSection(items, 'emoji_pack');
-    final frames = _sortedSection(items, 'frame');
-    final stakes = _sortedSection(items, 'stake_unlock');
 
     return SwipeBackScope(
       onBack: goBack,
@@ -112,264 +34,41 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ),
         ),
         body: SafeArea(
-          child: items.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ShopSection(
-                      title: 'Наборы смайликов',
-                      items: packs,
-                      onBuy: _buy,
+                    HomeActionCard(
+                      icon: Icons.emoji_emotions_outlined,
+                      title: 'Смайлики',
+                      subtitle: 'Анимированные эмодзи для чата',
+                      onTap: () => context.push('/shop/emojis'),
                     ),
-                    const SizedBox(height: 16),
-                    _ShopSection(
+                    const SizedBox(height: 12),
+                    HomeActionCard(
+                      icon: Icons.crop_square_rounded,
                       title: 'Рамки',
-                      items: frames,
-                      onBuy: _buy,
+                      subtitle: 'Оформление аватара в профиле',
+                      onTap: () => context.push('/shop/frames'),
                     ),
-                    const SizedBox(height: 16),
-                    _ShopSection(
+                    const SizedBox(height: 12),
+                    HomeActionCard(
+                      icon: Icons.casino_outlined,
                       title: 'Ставки',
-                      items: stakes,
-                      onBuy: _buy,
+                      subtitle: 'Разблокировка серебряных ставок',
+                      onTap: () => context.push('/shop/stakes'),
                     ),
                   ],
                 ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ShopSection extends StatelessWidget {
-  const _ShopSection({
-    required this.title,
-    required this.items,
-    required this.onBuy,
-  });
-
-  final String title;
-  final List<ShopItem> items;
-  final Future<void> Function(ShopItem) onBuy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (items.isEmpty)
-          const Text(
-            'Пока нет товаров',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          )
-        else
-          for (var i = 0; i < items.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
-            _ShopCard(
-              item: items[i],
-              onBuy: items[i].owned
-                  ? null
-                  : () => unawaited(onBuy(items[i])),
-            ),
-          ],
-      ],
-    );
-  }
-}
-
-class _ShopCard extends StatelessWidget {
-  const _ShopCard({required this.item, required this.onBuy});
-
-  final ShopItem item;
-  final VoidCallback? onBuy;
-
-  @override
-  Widget build(BuildContext context) {
-    final leading = switch (item.kind) {
-      'emoji_pack' => _PackPreview(item: item),
-      'emoji' => ShopAnimatedEmoji(
-          animatedName: item.animatedName ?? 'smile',
-          size: 32,
-          fallback: item.emoji,
-        ),
-      'stake_unlock' => const CoinIcon(coinType: CoinType.silver, size: 28),
-      'frame' => Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: _parseColor(item.frameColor) ?? AppColors.accentStart,
-              width: 3,
+              ),
             ),
           ),
         ),
-      _ => const Icon(Icons.shopping_bag_outlined),
-    };
-
-    final subtitle = switch (item.kind) {
-      'emoji_pack' =>
-        '${item.packEmojiCodes.length} смайликов · по ${item.usesEach} шт.',
-      'stake_unlock' =>
-        'Ставка ${item.stakeSilver ?? (item.stakeBronze ?? 0) ~/ 100} серебра',
-      _ => item.description,
-    };
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      child: Row(
-        children: [
-          leading,
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (item.owned)
-            Text(
-              'Куплено',
-              style: TextStyle(
-                color: Colors.green.shade700,
-                fontWeight: FontWeight.w700,
-              ),
-            )
-          else
-            FilledButton(
-              onPressed: onBuy,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentStart,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                minimumSize: const Size(0, 40),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _priceLabel(item.priceBronze),
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(width: 4),
-                  CoinIcon(
-                    coinType: _priceCoinType(item.priceBronze),
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-        ],
       ),
     );
   }
-
-  String _priceLabel(int bronze) {
-    if (bronze >= 10000 && bronze % 10000 == 0) return '${bronze ~/ 10000}';
-    if (bronze >= 100 && bronze % 100 == 0) return '${bronze ~/ 100}';
-    return '$bronze';
-  }
-
-  CoinType _priceCoinType(int bronze) {
-    if (bronze >= 10000) return CoinType.gold;
-    if (bronze >= 100) return CoinType.silver;
-    return CoinType.bronze;
-  }
-}
-
-class _PackPreview extends StatelessWidget {
-  const _PackPreview({required this.item});
-
-  final ShopItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final previewNames = _previewNamesForGroup(item.group);
-    if (previewNames.isEmpty) {
-      return const Icon(Icons.emoji_emotions_outlined, size: 32);
-    }
-    return SizedBox(
-      width: 72,
-      height: 32,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          for (var i = 0; i < previewNames.length && i < 3; i++)
-            Positioned(
-              left: i * 18.0,
-              child: ShopAnimatedEmoji(
-                animatedName: previewNames[i],
-                size: 28,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-List<String> _previewNamesForGroup(String? group) {
-  switch (group) {
-    case 'emotions':
-      return const ['smile', 'joy', 'heartEyes'];
-    case 'animals':
-      return const ['dog', 'dragon', 'unicorn'];
-    case 'food':
-      return const ['popcorn', 'hotBeverage', 'tropicalDrink'];
-    case 'travel':
-      return const ['rocket', 'automobile', 'flyingSaucer'];
-    case 'party':
-      return const ['partyPopper', 'trophy', 'fireworks'];
-    case 'objects':
-      return const ['gemStone', 'coin', 'lightBulb'];
-    default:
-      return const ['smile', 'sparkles', 'fire'];
-  }
-}
-
-Color? _parseColor(String? hex) {
-  if (hex == null || hex.isEmpty) return null;
-  var h = hex.replaceFirst('#', '');
-  if (h.length == 6) h = 'FF$h';
-  final v = int.tryParse(h, radix: 16);
-  if (v == null) return null;
-  return Color(v);
 }

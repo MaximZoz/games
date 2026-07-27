@@ -217,7 +217,8 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		)`, userID, code).Scan(&owned); err != nil {
 		return nil, err
 	}
-	if owned {
+	// Смайлики можно докупать (стекируются по quantity); рамки/ставки — один раз.
+	if owned && kind != "emoji" {
 		return nil, ErrShopAlreadyOwned
 	}
 
@@ -243,7 +244,10 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO user_inventory (user_id, item_code, quantity)
-			VALUES ($1, $2, $3)`, userID, code, qty); err != nil {
+			VALUES ($1, $2, $3)
+			ON CONFLICT (user_id, item_code) DO UPDATE
+			SET quantity = user_inventory.quantity + EXCLUDED.quantity`,
+			userID, code, qty); err != nil {
 			return nil, err
 		}
 	case "emoji_pack":
