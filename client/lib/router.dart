@@ -142,6 +142,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         path: 'emojis',
                         pageBuilder: (_, state) =>
                             _noTransitionPage(state, const ShopEmojisScreen()),
+                        routes: [
+                          GoRoute(
+                            path: ':group',
+                            pageBuilder: (_, state) {
+                              final group =
+                                  state.pathParameters['group'] ?? 'emotions';
+                              return _noTransitionPage(
+                                state,
+                                ShopEmojiGroupScreen(group: group),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'frames',

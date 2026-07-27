@@ -22,7 +22,7 @@ AnimatedEmojiData? animatedEmojiDataFromName(String name) {
   }
 }
 
-/// Виджет анимированного смайлика по имени из каталога Noto.
+/// Виджет анимированного смайлика из бандла приложения (без сети).
 class ShopAnimatedEmoji extends StatelessWidget {
   const ShopAnimatedEmoji({
     super.key,
@@ -48,6 +48,12 @@ class ShopAnimatedEmoji extends StatelessWidget {
       data,
       size: size,
       repeat: true,
+      // Бандл в pubspec — без загрузки с fonts.gstatic.com.
+      source: AnimatedEmojiSource.asset,
+      errorWidget: Text(
+        fallback ?? '🙂',
+        style: TextStyle(fontSize: size * 0.85),
+      ),
     );
   }
 }

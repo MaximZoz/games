@@ -1532,6 +1532,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       IconButton(
                         tooltip: 'Смайлики',
                         onPressed: _sending ? null : _openEmojiPicker,
+                        iconSize: 30,
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(56, 56),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                          padding: const EdgeInsets.all(14),
+                        ),
                         icon: const Icon(
                           Icons.emoji_emotions_outlined,
                           color: AppColors.accentStart,
@@ -1588,11 +1594,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surfaceCard,
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetContext) {
         return Consumer(
           builder: (context, ref, _) {
@@ -1614,118 +1617,144 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               'objects': 'Предметы',
             };
             final bottom = MediaQuery.paddingOf(context).bottom;
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottom),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Мои смайлики',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (emojis.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text(
-                          'Купите набор смайликов в магазине на главной',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.42,
+              minChildSize: 0.28,
+              maxChildSize: 0.92,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    padding: EdgeInsets.fromLTRB(16, 10, 16, 16 + bottom),
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 48,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(999),
                           ),
                         ),
-                      )
-                    else
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                      ),
+                      // Доп. «ручка» для пальца — тянуть панель выше.
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Container(
+                          width: 120,
+                          height: 28,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Icon(
+                            Icons.keyboard_arrow_up_rounded,
+                            color: AppColors.textSecondary.withValues(alpha: 0.7),
+                          ),
                         ),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Мои смайлики',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Потяните вверх, чтобы открыть больше',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      if (emojis.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 28),
+                          child: Text(
+                            'Купите смайлики в магазине на главной',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        )
+                      else
+                        for (final entry in grouped.entries) ...[
+                          Text(
+                            groupTitles[entry.key] ?? 'Смайлики',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
                             children: [
-                              for (final entry in grouped.entries) ...[
-                                Text(
-                                  groupTitles[entry.key] ?? 'Смайлики',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                    color: AppColors.textSecondary,
+                              for (final it in entry.value)
+                                Material(
+                                  color: AppColors.accentSoft
+                                      .withValues(alpha: 0.45),
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.of(sheetContext).pop();
+                                      unawaited(_sendAnimatedEmoji(it));
+                                    },
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: SizedBox(
+                                      width: 88,
+                                      height: 88,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          ShopAnimatedEmoji(
+                                            animatedName:
+                                                it.animatedName ?? 'smile',
+                                            size: 48,
+                                            fallback: it.emoji,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            '${it.quantity}',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children: [
-                                    for (final it in entry.value)
-                                      InkWell(
-                                        onTap: () {
-                                          Navigator.of(sheetContext).pop();
-                                          unawaited(_sendAnimatedEmoji(it));
-                                        },
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Container(
-                                          width: 72,
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.accentSoft
-                                                .withValues(alpha: 0.45),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              ShopAnimatedEmoji(
-                                                animatedName:
-                                                    it.animatedName ?? 'smile',
-                                                size: 40,
-                                                fallback: it.emoji,
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${it.quantity}',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                              ],
                             ],
                           ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+                          const SizedBox(height: 16),
+                        ],
+                    ],
+                  ),
+                );
+              },
             );
           },
         );
