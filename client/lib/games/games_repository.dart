@@ -20,8 +20,22 @@ const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
 /// Размеры сетки: 3x3, 4x4, 5x5, 6x6, 7x7, 8x8
 const List<int> gridSizeOptions = [3, 4, 5, 6, 7, 8];
 
-/// Ставки в бронзовых: 1, 10, 50, 100
-const List<int> stakeOptions = [1, 10, 50, 100];
+/// Базовые ставки в бронзе (без покупки в магазине).
+const List<int> freeStakeOptions = [1, 10, 50];
+
+/// Fallback, если capabilities ещё не загружены.
+const List<int> stakeOptions = freeStakeOptions;
+
+/// Подпись ставки: серебро при >= 100 бронзы.
+String formatStakeAmount(int stakeBronze) {
+  if (stakeBronze >= 100 && stakeBronze % 100 == 0) {
+    return '${stakeBronze ~/ 100}';
+  }
+  return '$stakeBronze';
+}
+
+bool stakeIsSilver(int stakeBronze) =>
+    stakeBronze >= 100 && stakeBronze % 100 == 0;
 
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';

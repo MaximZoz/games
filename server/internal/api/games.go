@@ -249,6 +249,15 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		stakeBronze = 1
 	}
 	ctx := r.Context()
+	mayStake, err := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if !mayStake {
+		http.Error(w, "stake not unlocked", http.StatusForbidden)
+		return
+	}
 	balance, err := store.GetBalance(ctx, h.Pool, userID)
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -287,6 +296,10 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 				}
 				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 				if err != nil {
+					if err == store.ErrStakeNotAllowed {
+						http.Error(w, "stake not unlocked", http.StatusForbidden)
+						return
+					}
 					http.Error(w, "server error", http.StatusInternalServerError)
 					return
 				}
@@ -511,6 +524,15 @@ func emptyBoardJSON(gridSize int) string {
 }
 
 func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
+	for _, uid := range []uuid.UUID{user1, user2} {
+		ok, e := store.UserMayStake(ctx, h.Pool, uid, stakeBronze)
+		if e != nil {
+			return "", "", e
+		}
+		if !ok {
+			return "", "", store.ErrStakeNotAllowed
+		}
+	}
 	if err := store.DeductCoinsTwo(ctx, h.Pool, user1, user2, stakeBronze); err != nil {
 		return "", "", err
 	}
@@ -570,6 +592,13 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 
 // createGameWithBot создаёт игру пользователь vs бот и обновляет существующее лобби.
 func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID string, err error) {
+	ok, e := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
+	if e != nil {
+		return "", e
+	}
+	if !ok {
+		return "", store.ErrStakeNotAllowed
+	}
 	if err := store.DeductCoins(ctx, h.Pool, userID, stakeBronze); err != nil {
 		return "", err
 	}

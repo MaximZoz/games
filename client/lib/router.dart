@@ -23,6 +23,7 @@ import 'package:multigames_client/screens/login_screen.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
+import 'package:multigames_client/screens/shop_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
@@ -35,6 +36,7 @@ const _authRequiredPaths = <String>{
   '/games',
   '/inventory',
   '/achievements',
+  '/shop',
   '/settings',
   '/coins',
   '/admin',
@@ -127,6 +129,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     path: 'achievements',
                     pageBuilder: (_, state) =>
                         _noTransitionPage(state, const AchievementsScreen()),
+                  ),
+                  GoRoute(
+                    path: 'shop',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const ShopScreen()),
+                  ),
+                  GoRoute(
+                    path: 'inventory',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const InventoryScreen()),
                   ),
                   GoRoute(
                     path: 'coins',
@@ -231,11 +243,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/tournaments',
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const TournamentsScreen()),
-              ),
-              GoRoute(
-                path: '/inventory',
-                pageBuilder: (_, state) =>
-                    _noTransitionPage(state, const InventoryScreen()),
               ),
             ],
           ),

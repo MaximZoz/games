@@ -11,6 +11,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -38,7 +39,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   int _selectedGridSize = 3; // 3, 4, 5
   bool _selectedSwapRule = false;
   bool _selectedFirstMoveRestriction = false;
-  int _selectedStakeBronze = 1; // 1, 10, 50, 100
+  int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
   Timer? _lobbyRefreshTimer;
   late PageController _pageController;
 
@@ -94,6 +95,16 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final lobbiesAsync = ref.watch(openLobbiesProvider);
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
+    final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
+    final availableStakes =
+        caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
+    if (!availableStakes.contains(_selectedStakeBronze) &&
+        availableStakes.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _selectedStakeBronze = availableStakes.first);
+      });
+    }
 
     final isDesktop = isWide(context);
     final width = MediaQuery.sizeOf(context).width;
@@ -153,6 +164,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onFirstMoveRestrictionChanged: (v) =>
                         setState(() => _selectedFirstMoveRestriction = v),
                     stakeBronze: _selectedStakeBronze,
+                    stakeOptionsList: availableStakes,
                     onStakeChanged: (v) =>
                         setState(() => _selectedStakeBronze = v),
                     onCreateGame: () => _createGame(context, 'invite'),
@@ -538,6 +550,7 @@ class _GamesPageContent extends StatelessWidget {
     required this.firstMoveRestriction,
     required this.onFirstMoveRestrictionChanged,
     required this.stakeBronze,
+    required this.stakeOptionsList,
     required this.onStakeChanged,
     required this.onCreateGame,
     required this.onFindGame,
@@ -562,6 +575,7 @@ class _GamesPageContent extends StatelessWidget {
   final bool firstMoveRestriction;
   final void Function(bool) onFirstMoveRestrictionChanged;
   final int stakeBronze;
+  final List<int> stakeOptionsList;
   final void Function(int) onStakeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
@@ -634,6 +648,7 @@ class _GamesPageContent extends StatelessWidget {
                                 onFirstMoveRestrictionChanged:
                                     onFirstMoveRestrictionChanged,
                                 stakeBronze: stakeBronze,
+                                stakeOptionsList: stakeOptionsList,
                                 onStakeChanged: onStakeChanged,
                                 onCreateGame: onCreateGame,
                                 onFindGame: onFindGame,
@@ -655,6 +670,7 @@ class _GamesPageContent extends StatelessWidget {
                         onFirstMoveRestrictionChanged:
                             onFirstMoveRestrictionChanged,
                         stakeBronze: stakeBronze,
+                        stakeOptionsList: stakeOptionsList,
                         onStakeChanged: onStakeChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
@@ -867,7 +883,8 @@ class _LobbiesPageContent extends StatelessWidget {
                                                       MainAxisSize.min,
                                                   children: [
                                                     Text(
-                                                      '${lobby.stakeBronze}',
+                                                      formatStakeAmount(
+                                                          lobby.stakeBronze),
                                                       style: TextStyle(
                                                         fontSize:
                                                             isDesktop ? 14 : 13,
@@ -877,7 +894,10 @@ class _LobbiesPageContent extends StatelessWidget {
                                                     ),
                                                     const SizedBox(width: 4),
                                                     CoinIcon(
-                                                      coinType: CoinType.bronze,
+                                                      coinType: stakeIsSilver(
+                                                              lobby.stakeBronze)
+                                                          ? CoinType.silver
+                                                          : CoinType.bronze,
                                                       size: 14,
                                                       showBorder: true,
                                                     ),
@@ -1047,6 +1067,7 @@ class _TictactoeGameCard extends StatelessWidget {
     required this.firstMoveRestriction,
     required this.onFirstMoveRestrictionChanged,
     required this.stakeBronze,
+    required this.stakeOptionsList,
     required this.onStakeChanged,
     required this.onCreateGame,
     required this.onFindGame,
@@ -1063,6 +1084,7 @@ class _TictactoeGameCard extends StatelessWidget {
   final bool firstMoveRestriction;
   final void Function(bool) onFirstMoveRestrictionChanged;
   final int stakeBronze;
+  final List<int> stakeOptionsList;
   final void Function(int) onStakeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
@@ -1080,9 +1102,11 @@ class _TictactoeGameCard extends StatelessWidget {
   }
 
   void _cycleStake() {
-    final idx = stakeOptions.indexOf(stakeBronze);
-    final next = (idx + 1) % stakeOptions.length;
-    onStakeChanged(stakeOptions[next]);
+    final options =
+        stakeOptionsList.isEmpty ? freeStakeOptions : stakeOptionsList;
+    final idx = options.indexOf(stakeBronze);
+    final next = (idx + 1) % options.length;
+    onStakeChanged(options[next]);
   }
 
   String _buildRulesText() => buildTictactoeRulesText(
@@ -1394,7 +1418,7 @@ class _TictactoeGameCard extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '$stakeBronze',
+                                    formatStakeAmount(stakeBronze),
                                     style:
                                         theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
@@ -1402,8 +1426,10 @@ class _TictactoeGameCard extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  const CoinIcon(
-                                    coinType: CoinType.bronze,
+                                  CoinIcon(
+                                    coinType: stakeIsSilver(stakeBronze)
+                                        ? CoinType.silver
+                                        : CoinType.bronze,
                                     size: 20,
                                     showBorder: true,
                                   ),
@@ -1702,7 +1728,7 @@ class _InviteCard extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${inv.stakeBronze}',
+                                formatStakeAmount(inv.stakeBronze),
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1710,8 +1736,10 @@ class _InviteCard extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const CoinIcon(
-                                coinType: CoinType.bronze,
+                              CoinIcon(
+                                coinType: stakeIsSilver(inv.stakeBronze)
+                                    ? CoinType.silver
+                                    : CoinType.bronze,
                                 size: 18,
                                 showBorder: true,
                               ),

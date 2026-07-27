@@ -16,6 +16,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -676,7 +677,7 @@ class _ProfileContent extends StatelessWidget {
   }
 }
 
-class _ProfileView extends StatelessWidget {
+class _ProfileView extends ConsumerWidget {
   const _ProfileView({
     super.key,
     required this.user,
@@ -709,20 +710,38 @@ class _ProfileView extends StatelessWidget {
     );
   }
 
+  Color? _frameColor(WidgetRef ref) {
+    final hex =
+        ref.watch(inventoryCapabilitiesProvider).valueOrNull?.frameColor;
+    if (hex == null || hex.isEmpty) return null;
+    var h = hex.replaceFirst('#', '');
+    if (h.length == 6) h = 'FF$h';
+    final v = int.tryParse(h, radix: 16);
+    if (v == null) return null;
+    return Color(v);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final frame = _frameColor(ref);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.all(4),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [AppColors.accentStart, AppColors.accentEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: frame == null
+                ? const LinearGradient(
+                    colors: [AppColors.accentStart, AppColors.accentEnd],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: frame,
+            border: frame != null
+                ? Border.all(color: frame, width: 3)
+                : null,
           ),
           child: Container(
             padding: const EdgeInsets.all(4),
