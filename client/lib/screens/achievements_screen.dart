@@ -145,22 +145,19 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
               constraints: const BoxConstraints(maxWidth: 520),
               child: items.isEmpty
                   ? const SizedBox.shrink()
-                  : Padding(
+                  : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (var i = 0; i < items.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 10),
-                            _AchievementCard(
-                              item: items[i],
-                              onClaim: items[i].isUnlocked
-                                  ? () => unawaited(_claim(items[i]))
-                                  : null,
-                            ),
-                          ],
-                        ],
-                      ),
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) {
+                        final item = items[i];
+                        return _AchievementCard(
+                          item: item,
+                          onClaim: item.isUnlocked
+                              ? () => unawaited(_claim(item))
+                              : null,
+                        );
+                      },
                     ),
             ),
           ),
