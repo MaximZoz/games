@@ -375,6 +375,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   owned: collectionsBySet[set]?.length ?? 0,
                                   total: catalogBySet[set] ??
                                       (collectionsBySet[set]?.length ?? 0),
+                                  onOpenShop: set == 'other'
+                                      ? null
+                                      : () => context.push(
+                                            '/shop/collections/$set',
+                                          ),
                                   children: [
                                     for (final it
                                         in collectionsBySet[set] ??
@@ -483,16 +488,51 @@ class _CollectionSetFrame extends StatelessWidget {
     required this.owned,
     required this.total,
     required this.children,
+    this.onOpenShop,
   });
 
   final String title;
   final int owned;
   final int total;
   final List<Widget> children;
+  final VoidCallback? onOpenShop;
 
   @override
   Widget build(BuildContext context) {
     final countLabel = total > 0 ? '$owned/$total' : '$owned';
+    final header = Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: onOpenShop != null
+                  ? AppColors.accentStart
+                  : AppColors.textPrimary,
+            ),
+          ),
+        ),
+        Text(
+          countLabel,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        if (onOpenShop != null) ...[
+          const SizedBox(width: 4),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 22,
+            color: AppColors.accentStart.withValues(alpha: 0.9),
+          ),
+        ],
+      ],
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -504,28 +544,20 @@ class _CollectionSetFrame extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                  ),
+          if (onOpenShop != null)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onOpenShop,
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: header,
                 ),
               ),
-              Text(
-                countLabel,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+            )
+          else
+            header,
           if (children.isNotEmpty) ...[
             const SizedBox(height: 10),
             for (var i = 0; i < children.length; i++) ...[
