@@ -109,8 +109,12 @@ type GameStateItem struct {
 	ODisplayName         *string  `json:"o_display_name,omitempty"`
 	XAvatarKind          string   `json:"x_avatar_kind,omitempty"`
 	XAvatarValue         *string  `json:"x_avatar_value,omitempty"`
+	XFrameColor          string   `json:"x_frame_color,omitempty"`
+	XFrameCode           string   `json:"x_frame_code,omitempty"`
 	OAvatarKind          string   `json:"o_avatar_kind,omitempty"`
 	OAvatarValue         *string  `json:"o_avatar_value,omitempty"`
+	OFrameColor          string   `json:"o_frame_color,omitempty"`
+	OFrameCode           string   `json:"o_frame_code,omitempty"`
 }
 
 type gameUserLookup func(context.Context, uuid.UUID) (*store.User, error)
@@ -148,6 +152,44 @@ func (h *GamesHandler) addGamePlayerMetadata(ctx context.Context, payload map[st
 	addGamePlayerMetadata(ctx, payload, xUserID, oUserID, func(ctx context.Context, userID uuid.UUID) (*store.User, error) {
 		return store.GetUserByID(ctx, h.Pool, userID)
 	})
+	h.addGamePlayerFrames(ctx, payload, xUserID, oUserID)
+}
+
+func (h *GamesHandler) addGamePlayerFrames(ctx context.Context, payload map[string]any, xUserID, oUserID string) {
+	ids := make([]uuid.UUID, 0, 2)
+	var xID, oID uuid.UUID
+	var xOK, oOK bool
+	if !isBot(xUserID) {
+		if id, err := uuid.Parse(xUserID); err == nil {
+			xID, xOK = id, true
+			ids = append(ids, id)
+		}
+	}
+	if !isBot(oUserID) {
+		if id, err := uuid.Parse(oUserID); err == nil {
+			oID, oOK = id, true
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		return
+	}
+	frames, err := store.EquippedFramesMap(ctx, h.Pool, ids)
+	if err != nil {
+		return
+	}
+	if xOK {
+		if f, ok := frames[xID]; ok {
+			payload["x_frame_color"] = f.Color
+			payload["x_frame_code"] = f.Code
+		}
+	}
+	if oOK {
+		if f, ok := frames[oID]; ok {
+			payload["o_frame_color"] = f.Color
+			payload["o_frame_code"] = f.Code
+		}
+	}
 }
 
 func (h *GamesHandler) requireRedis(w http.ResponseWriter) bool {
@@ -159,6 +201,11 @@ func (h *GamesHandler) requireRedis(w http.ResponseWriter) bool {
 }
 
 func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Настройки создания игры живут в Postgres и не зависят от Redis.
+	if r.URL.Path == "/api/games/settings" {
+		h.GameSettings(w, r)
+		return
+	}
 	if !h.requireRedis(w) {
 		return
 	}
@@ -249,6 +296,15 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		stakeBronze = 1
 	}
 	ctx := r.Context()
+	mayStake, err := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if !mayStake {
+		http.Error(w, "stake not unlocked", http.StatusForbidden)
+		return
+	}
 	balance, err := store.GetBalance(ctx, h.Pool, userID)
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -287,6 +343,10 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 				}
 				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 				if err != nil {
+					if err == store.ErrStakeNotAllowed {
+						http.Error(w, "stake not unlocked", http.StatusForbidden)
+						return
+					}
 					http.Error(w, "server error", http.StatusInternalServerError)
 					return
 				}
@@ -511,6 +571,15 @@ func emptyBoardJSON(gridSize int) string {
 }
 
 func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
+	for _, uid := range []uuid.UUID{user1, user2} {
+		ok, e := store.UserMayStake(ctx, h.Pool, uid, stakeBronze)
+		if e != nil {
+			return "", "", e
+		}
+		if !ok {
+			return "", "", store.ErrStakeNotAllowed
+		}
+	}
 	if err := store.DeductCoinsTwo(ctx, h.Pool, user1, user2, stakeBronze); err != nil {
 		return "", "", err
 	}
@@ -570,6 +639,13 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 
 // createGameWithBot создаёт игру пользователь vs бот и обновляет существующее лобби.
 func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID string, err error) {
+	ok, e := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
+	if e != nil {
+		return "", e
+	}
+	if !ok {
+		return "", store.ErrStakeNotAllowed
+	}
 	if err := store.DeductCoins(ctx, h.Pool, userID, stakeBronze); err != nil {
 		return "", err
 	}
@@ -1577,10 +1653,15 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	}
 
 	botName := "Бот"
+	frameIDs := make([]uuid.UUID, 0, 2)
+	var xUUID, oUUID uuid.UUID
+	var xParsed, oParsed bool
 	if isBot(xUserID) {
 		item.XDisplayName = &botName
-	} else if xUUID, err := uuid.Parse(xUserID); err == nil {
-		if xu, err := store.GetUserByID(ctx, h.Pool, xUUID); err == nil {
+	} else if id, err := uuid.Parse(xUserID); err == nil {
+		xUUID, xParsed = id, true
+		frameIDs = append(frameIDs, id)
+		if xu, err := store.GetUserByID(ctx, h.Pool, id); err == nil {
 			if xu.DisplayName != nil && *xu.DisplayName != "" {
 				item.XDisplayName = xu.DisplayName
 			}
@@ -1590,13 +1671,29 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	}
 	if isBot(oUserID) {
 		item.ODisplayName = &botName
-	} else if oUUID, err := uuid.Parse(oUserID); err == nil {
-		if ou, err := store.GetUserByID(ctx, h.Pool, oUUID); err == nil {
+	} else if id, err := uuid.Parse(oUserID); err == nil {
+		oUUID, oParsed = id, true
+		frameIDs = append(frameIDs, id)
+		if ou, err := store.GetUserByID(ctx, h.Pool, id); err == nil {
 			if ou.DisplayName != nil && *ou.DisplayName != "" {
 				item.ODisplayName = ou.DisplayName
 			}
 			item.OAvatarKind = ou.AvatarKind
 			item.OAvatarValue = ou.AvatarValue
+		}
+	}
+	if frames, err := store.EquippedFramesMap(ctx, h.Pool, frameIDs); err == nil {
+		if xParsed {
+			if f, ok := frames[xUUID]; ok {
+				item.XFrameColor = f.Color
+				item.XFrameCode = f.Code
+			}
+		}
+		if oParsed {
+			if f, ok := frames[oUUID]; ok {
+				item.OFrameColor = f.Color
+				item.OFrameCode = f.Code
+			}
 		}
 	}
 
@@ -1988,6 +2085,30 @@ func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.Strin
 func (h *GamesHandler) onGameFinished(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
 	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
 	h.recordGameFinished(ctx, xUserID, oUserID)
+	h.recordGameWin(ctx, xUserID, oUserID, stakeBronze, status)
+}
+
+func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
+	winnerID := ""
+	switch status {
+	case gameStatusXWon:
+		winnerID = xUserID
+	case gameStatusOWon:
+		winnerID = oUserID
+	default:
+		return
+	}
+	if winnerID == "" || isBot(winnerID) {
+		return
+	}
+	uid, err := uuid.Parse(winnerID)
+	if err != nil {
+		return
+	}
+	if err := store.IncrementWinsByStake(ctx, h.Pool, uid, stakeBronze); err != nil {
+		return
+	}
+	_ = store.EvaluateAndUnlock(ctx, h.Pool, uid)
 }
 
 func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID string) {

@@ -17,6 +17,8 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
@@ -79,6 +81,10 @@ class AppShell extends ConsumerWidget {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
       ref.watch(chatDeliveryAckProvider);
+      // Лениво подтягиваем конфиг игр из БД после входа/старта.
+      ref.watch(userGameSettingsProvider);
+      // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
+      ref.watch(giftedCollectionsBadgeSyncProvider);
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
@@ -111,8 +117,15 @@ class AppShell extends ConsumerWidget {
     final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
     final achievementsUnclaimed =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
-    // На «Главной» суммируем daily + незабранные достижения.
-    final homeBadgeCount = dailyRewardCount + achievementsUnclaimed;
+    final collectionIncomeAvailable =
+        ref.watch(collectionIncomeAvailableProvider);
+    final unreadGiftedCollections =
+        ref.watch(unreadGiftedCollectionsCountProvider);
+    // На «Главной» суммируем daily + достижения + доход + подарки коллекций.
+    final homeBadgeCount = dailyRewardCount +
+        achievementsUnclaimed +
+        (collectionIncomeAvailable ? 1 : 0) +
+        unreadGiftedCollections;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);
@@ -240,21 +253,31 @@ class AppShell extends ConsumerWidget {
                             child: toolbarLeading,
                           )
                   else if (isAuthorized)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: authState.when(
-                        data: (user) => user != null
-                            ? ToolbarBalanceChip(
-                                bronze: user.balanceBronze,
-                                coinSize: 18,
-                              )
-                            : const SizedBox.shrink(),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
+                    Flexible(
+                      flex: 5,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: authState.when(
+                          data: (user) => user != null
+                              ? Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: ToolbarBalanceChip(
+                                      bronze: user.balanceBronze,
+                                      coinSize: 16,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
                       ),
                     ),
-                  const Spacer(),
+                  const SizedBox(width: 6),
                   Flexible(
+                    flex: 4,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: authState.when(
@@ -269,21 +292,23 @@ class AppShell extends ConsumerWidget {
                                         Icons.admin_panel_settings),
                                     onPressed: () => context.go('/admin'),
                                     tooltip: 'Админка',
+                                    visualDensity: VisualDensity.compact,
                                   ),
                                 Flexible(
                                   child: Tooltip(
                                     message: user.displayName ?? user.email,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(right: 4),
+                                      padding: const EdgeInsets.only(right: 2),
                                       child: Text(
                                         user.displayName ?? user.email,
                                         style: const TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 13,
                                           color: AppColors.textPrimary,
                                           decoration: TextDecoration.none,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.right,
                                       ),
                                     ),
                                   ),
@@ -296,6 +321,7 @@ class AppShell extends ConsumerWidget {
                                         .logout();
                                   },
                                   tooltip: 'Выйти',
+                                  visualDensity: VisualDensity.compact,
                                 ),
                               ],
                             );

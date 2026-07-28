@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -12,10 +13,16 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_repository.dart';
+import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -374,6 +381,28 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         // layout-проходов — повторяем скролл до низа, пока позиция не стабилизируется.
         _scheduleScrollToBottom(retriesLeft: 8);
       }
+      // Подарки коллекций: бейдж на Главной/Предметах, даже если подарок
+      // пришёл офлайн и пользователь сразу открыл чат (до sync списка).
+      // Только ещё не прочитанные — чтобы старые подарки не поднимали бейдж снова.
+      final me = ref.read(authStateProvider).valueOrNull?.id;
+      if (me != null && me.isNotEmpty) {
+        final giftCodes = <String>{};
+        for (final m in list) {
+          if (m.senderUserID == me) continue;
+          if (m.readAt != null && m.readAt!.trim().isNotEmpty) continue;
+          final code = giftCollectionCodeFromBody(m.body);
+          if (code != null) giftCodes.add(code);
+        }
+        if (giftCodes.isNotEmpty) {
+          unawaited(
+            ref
+                .read(unreadGiftedCollectionsProvider.notifier)
+                .addCodes(giftCodes),
+          );
+          ref.invalidate(inventoryListProvider);
+          ref.invalidate(collectionIncomeProvider);
+        }
+      }
       // При открытии комнаты всегда отмечаем прочитанным (экран только что создан).
       // Повторные фоновые вызовы _loadMessages при уходе — нет (_leavingToChats).
       if (!_leavingToChats) {
@@ -698,6 +727,55 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
   }
 
+  Future<void> _sendAnimatedEmoji(InventoryItem item) async {
+    final name = item.animatedName;
+    if (name == null || name.isEmpty || _sending) return;
+    if (item.quantity <= 0) return;
+
+    setState(() {
+      _sending = true;
+    });
+    try {
+      await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
+      ref.invalidate(inventoryListProvider);
+      final body = encodeAnimatedEmojiMessage(name);
+      final sent =
+          await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, body);
+      if (!mounted) return;
+      _upsertMessage(sent);
+      setState(() {
+        _sending = false;
+        _error = null;
+      });
+    } on AuthException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _sending = false;
+      });
+      ref.invalidate(inventoryListProvider);
+    } on ChatException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _sending = false;
+      });
+      ref.invalidate(inventoryListProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Не удалось отправить смайлик';
+        _sending = false;
+      });
+      ref.invalidate(inventoryListProvider);
+    }
+  }
+
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
     const target = 0.0;
@@ -873,6 +951,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
       avatar = _buildLetterAvatar(raw: raw, radius: radius);
     }
+    avatar = FramedAvatar(
+      size: radius * 2,
+      borderWidth: radius < 18 ? 2.2 : 2.8,
+      frameCode: user?.frameCode,
+      frameColor: user?.frameColor,
+      child: avatar,
+    );
     if (isOnline == true) {
       return Stack(
         clipBehavior: Clip.none,
@@ -1029,6 +1114,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                PeerCollectionsSection(userId: user.id),
               ],
             ),
           ),
@@ -1337,6 +1423,83 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
                   final message = entry.message!;
                   final mine = message.senderUserID == meID;
+                  final isEmoji = isAnimatedEmojiMessage(message.body);
+                  final isGift = isGiftCollectionMessage(message.body);
+                  if (isGift) {
+                    return Align(
+                      key: ValueKey(message.id),
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 14, top: 6),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ChatGiftCard(body: message.body),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatBubbleDateTime(message.createdAt),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                if (mine) ...[
+                                  const SizedBox(width: 4),
+                                  MessageStatusTicks(
+                                    deliveredAt: message.deliveredAt,
+                                    readAt: message.readAt,
+                                    size: 14,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  if (isEmoji) {
+                    return Align(
+                      key: ValueKey(message.id),
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12, top: 4),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ChatMessageBody(
+                              body: message.body,
+                              largeCentered: true,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatBubbleDateTime(message.createdAt),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                if (mine) ...[
+                                  const SizedBox(width: 4),
+                                  MessageStatusTicks(
+                                    deliveredAt: message.deliveredAt,
+                                    readAt: message.readAt,
+                                    size: 14,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   return Align(
                     key: ValueKey(message.id),
                     alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -1357,13 +1520,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              message.body,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                              ),
-                            ),
+                            _ChatMessageBody(body: message.body),
                             const SizedBox(height: 4),
                             Align(
                               alignment: Alignment.centerRight,
@@ -1411,6 +1568,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         child: SwipeBackScope(
           enabled: canSwipeBack,
           onBack: _goBackToChats,
+          // Композер слева (смайлик) не должен перекрываться edge-зоной свайпа.
+          bottomInset: 72,
           child: Column(
             children: [
               if (!narrowLandscape)
@@ -1475,13 +1634,26 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
                 child: GradientCard(
                   animate: false,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
                   child: Row(
                     children: [
+                      IconButton(
+                        onPressed: _sending ? null : _openEmojiPicker,
+                        tooltip: 'Смайлики',
+                        padding: const EdgeInsets.all(10),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: const Icon(
+                          Icons.emoji_emotions_outlined,
+                          color: AppColors.accentStart,
+                          size: 28,
+                        ),
+                      ),
                       Expanded(
                         child: TextField(
                           controller: _textController,
@@ -1506,8 +1678,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.send_rounded),
                       ),
@@ -1518,6 +1691,448 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openEmojiPicker() async {
+    _composerFocusNode.unfocus();
+    // Не invalidate: иначе на мобиле valueOrNull=null и панель «пустая».
+    final cached = ref.read(inventoryListProvider).valueOrNull;
+    if (cached == null) {
+      unawaited(ref.read(inventoryListProvider.future).then((_) {}, onError: (_, __) {}));
+    }
+
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final items =
+                ref.watch(inventoryListProvider).valueOrNull ?? cached ?? const [];
+            final emojis = items
+                .where((e) => e.kind == 'emoji' && e.quantity > 0)
+                .toList();
+            return _ChatEmojiPickerSheet(
+              emojis: emojis,
+              onPick: (it) {
+                Navigator.of(sheetContext).pop();
+                unawaited(_sendAnimatedEmoji(it));
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ChatEmojiPickerSheet extends StatefulWidget {
+  const _ChatEmojiPickerSheet({
+    required this.emojis,
+    required this.onPick,
+  });
+
+  final List<InventoryItem> emojis;
+  final ValueChanged<InventoryItem> onPick;
+
+  @override
+  State<_ChatEmojiPickerSheet> createState() => _ChatEmojiPickerSheetState();
+}
+
+class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
+  static const _collapsedSize = 0.14;
+  static const _expandedThreshold = 0.26;
+
+  bool _expanded = false;
+
+  static const _groupTitles = {
+    'emotions': 'Эмоции',
+    'game': 'Игровые',
+    'flags': 'Флажки',
+    'animals': 'Животные',
+    'food': 'Еда',
+    'travel': 'Путешествия',
+    'party': 'Праздник',
+    'objects': 'Предметы',
+  };
+
+  Widget _emojiTile(
+    InventoryItem it, {
+    required double emojiSize,
+    required double qtySize,
+  }) {
+    return InkWell(
+      onTap: () => widget.onPick(it),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ShopAnimatedEmoji(
+              animatedName: it.animatedName ?? 'smile',
+              size: emojiSize,
+              fallback: it.emoji,
+            ),
+            Text(
+              '${it.quantity}',
+              style: TextStyle(
+                fontSize: qtySize,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final grouped = <String, List<InventoryItem>>{};
+    for (final e in widget.emojis) {
+      grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
+    }
+    const known = [
+      'emotions',
+      'game',
+      'flags',
+      'animals',
+      'food',
+      'travel',
+      'party',
+      'objects',
+    ];
+    final groupOrder = [
+      ...known.where(grouped.containsKey),
+      ...grouped.keys.where((k) => !known.contains(k)),
+    ];
+
+    return NotificationListener<DraggableScrollableNotification>(
+      onNotification: (n) {
+        final next = n.extent >= _expandedThreshold;
+        if (next != _expanded) {
+          setState(() => _expanded = next);
+        }
+        return false;
+      },
+      child: DraggableScrollableSheet(
+        expand: false,
+        snap: true,
+        snapSizes: const [_collapsedSize, 0.55],
+        initialChildSize: _collapsedSize,
+        minChildSize: _collapsedSize,
+        maxChildSize: 0.92,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: CustomScrollView(
+              controller: scrollController,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  ),
+                ),
+                if (widget.emojis.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'Купите смайлики в магазине на главной',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else if (!_expanded)
+                  // Одна горизонтальная полоса, без названий групп.
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        height: 72,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          itemCount: widget.emojis.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 2),
+                          itemBuilder: (context, index) {
+                            return SizedBox(
+                              width: 58,
+                              child: _emojiTile(
+                                widget.emojis[index],
+                                emojiSize: 42,
+                                qtySize: 11,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(8, 4, 8, 12 + bottom),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final key = groupOrder[index];
+                          final items = grouped[key]!;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+                                  child: Text(
+                                    _groupTitles[key] ?? 'Смайлики',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final cols = (constraints.maxWidth / 68)
+                                        .floor()
+                                        .clamp(4, 8);
+                                    return GridView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount: items.length,
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: cols,
+                                        mainAxisSpacing: 2,
+                                        crossAxisSpacing: 2,
+                                        childAspectRatio: 0.82,
+                                      ),
+                                      itemBuilder: (context, i) {
+                                        return _emojiTile(
+                                          items[i],
+                                          emojiSize: 48,
+                                          qtySize: 12,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: groupOrder.length,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ChatGiftCard extends StatelessWidget {
+  const _ChatGiftCard({required this.body});
+
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final gift = parseGiftCollectionMessage(body);
+    if (gift == null) {
+      return _ChatMessageBody(body: body, largeCentered: true);
+    }
+    final title = gift.title.isNotEmpty ? gift.title : 'Коллекция';
+    final name =
+        gift.animatedName.isNotEmpty ? gift.animatedName : 'sparkles';
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 260),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => showCollectionFullscreen(
+            context,
+            title: title,
+            animatedName: name,
+            fallback: gift.emoji.isNotEmpty ? gift.emoji : null,
+            subtitle: 'Подарок · коллекция',
+          ),
+          child: Ink(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accentStart.withValues(alpha: 0.10),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.surfaceCard,
+                  AppColors.accentSoft.withValues(alpha: 0.55),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.card_giftcard_rounded,
+                        size: 15,
+                        color: AppColors.accentStart,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Подарок',
+                        style: TextStyle(
+                          color: AppColors.accentStart,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.accentStart.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  child: ShopAnimatedEmoji(
+                    animatedName: name,
+                    size: 112,
+                    fallback: gift.emoji.isNotEmpty ? gift.emoji : null,
+                    animate: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Коллекция в инвентаре',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatMessageBody extends StatelessWidget {
+  const _ChatMessageBody({
+    required this.body,
+    this.largeCentered = false,
+  });
+
+  final String body;
+  final bool largeCentered;
+
+  @override
+  Widget build(BuildContext context) {
+    final gift = parseGiftCollectionMessage(body);
+    if (gift != null) {
+      // Запасной путь — основная отрисовка через [_ChatGiftCard].
+      return _ChatGiftCard(body: body);
+    }
+    final name = parseAnimatedEmojiName(body);
+    if (name != null) {
+      return ShopAnimatedEmoji(
+        animatedName: name,
+        size: largeCentered ? 168 : 56,
+        fallback: formatChatMessagePreview(body),
+        animate: true,
+      );
+    }
+    return Text(
+      body,
+      style: const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 14,
       ),
     );
   }

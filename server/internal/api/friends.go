@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -29,6 +30,8 @@ type FriendUserItem struct {
 	Age         *int    `json:"age,omitempty"`
 	Gender      *string `json:"gender,omitempty"`
 	About       *string `json:"about,omitempty"`
+	FrameColor  string  `json:"frame_color,omitempty"`
+	FrameCode   string  `json:"frame_code,omitempty"`
 }
 
 type FriendItem struct {
@@ -70,6 +73,27 @@ func friendUserToItem(u store.FriendUser) FriendUserItem {
 		Gender:      u.Gender,
 		About:       u.About,
 	}
+}
+
+func friendUserToItemWithFrame(u store.FriendUser, frames map[uuid.UUID]store.EquippedFrame) FriendUserItem {
+	item := friendUserToItem(u)
+	if f, ok := frames[u.ID]; ok {
+		item.FrameColor = f.Color
+		item.FrameCode = f.Code
+	}
+	return item
+}
+
+func loadFriendFrames(ctx context.Context, pool *pgxpool.Pool, users ...store.FriendUser) map[uuid.UUID]store.EquippedFrame {
+	ids := make([]uuid.UUID, 0, len(users))
+	for _, u := range users {
+		ids = append(ids, u.ID)
+	}
+	frames, err := store.EquippedFramesMap(ctx, pool, ids)
+	if err != nil {
+		return map[uuid.UUID]store.EquippedFrame{}
+	}
+	return frames
 }
 
 func currentUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
@@ -154,10 +178,22 @@ func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	friendUsers := make([]store.FriendUser, 0, len(friends)+len(incoming)+len(outgoing))
+	for _, item := range friends {
+		friendUsers = append(friendUsers, item.User)
+	}
+	for _, item := range incoming {
+		friendUsers = append(friendUsers, item.User)
+	}
+	for _, item := range outgoing {
+		friendUsers = append(friendUsers, item.User)
+	}
+	frames := loadFriendFrames(r.Context(), h.Pool, friendUsers...)
+
 	friendItems := make([]FriendItem, 0, len(friends))
 	for _, item := range friends {
 		friendItems = append(friendItems, FriendItem{
-			User:      friendUserToItem(item.User),
+			User:      friendUserToItemWithFrame(item.User, frames),
 			CreatedAt: item.CreatedAt.UTC().Format(time.RFC3339Nano),
 		})
 	}
@@ -166,7 +202,7 @@ func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
 	for _, item := range incoming {
 		incomingItems = append(incomingItems, FriendRequestItem{
 			RequestID: item.ID.String(),
-			User:      friendUserToItem(item.User),
+			User:      friendUserToItemWithFrame(item.User, frames),
 			CreatedAt: item.CreatedAt.UTC().Format(time.RFC3339Nano),
 		})
 	}
@@ -175,7 +211,7 @@ func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
 	for _, item := range outgoing {
 		outgoingItems = append(outgoingItems, FriendRequestItem{
 			RequestID: item.ID.String(),
-			User:      friendUserToItem(item.User),
+			User:      friendUserToItemWithFrame(item.User, frames),
 			CreatedAt: item.CreatedAt.UTC().Format(time.RFC3339Nano),
 		})
 	}
@@ -254,6 +290,12 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	searchUsers := make([]store.FriendUser, 0, len(users))
+	for _, u := range users {
+		searchUsers = append(searchUsers, u.User)
+	}
+	frames := loadFriendFrames(r.Context(), h.Pool, searchUsers...)
+
 	items := make([]FriendSearchItem, 0, len(users))
 	for _, u := range users {
 		var requestID *string
@@ -262,7 +304,7 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 			requestID = &s
 		}
 		items = append(items, FriendSearchItem{
-			User:           friendUserToItem(u.User),
+			User:           friendUserToItemWithFrame(u.User, frames),
 			RelationStatus: u.RelationStatus,
 			RequestID:      requestID,
 		})

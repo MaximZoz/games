@@ -267,6 +267,7 @@ func main() {
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	achievementsHandler := &api.AchievementsHandler{Pool: pool}
+	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 		go api.StartBotTimeoutTicker(ctx, gamesHandler)
@@ -322,6 +323,16 @@ func main() {
 	mux.Handle("/api/achievements", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.List)))
 	mux.Handle("/api/achievements/unclaimed-count", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.UnclaimedCount)))
 	mux.Handle("/api/achievements/claim", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.Claim)))
+	mux.Handle("/api/shop", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.List)))
+	mux.Handle("/api/shop/buy", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Buy)))
+	mux.Handle("/api/inventory", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Inventory)))
+	mux.Handle("/api/inventory/capabilities", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Capabilities)))
+	mux.Handle("/api/inventory/consume", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Consume)))
+	mux.Handle("/api/inventory/sell", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Sell)))
+	mux.Handle("/api/inventory/gift", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.Gift)))
+	mux.Handle("/api/inventory/collections", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionsShowcase)))
+	mux.Handle("/api/inventory/collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionIncome)))
+	mux.Handle("/api/inventory/claim-collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.ClaimCollectionIncome)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 /// горизонтальных ListView / TextField (важно для iOS Safari / Flutter Web).
 ///
 /// Сверху оставляем зону под AppBar / стрелку «Назад», иначе opaque-полоса
-/// перехватывает тапы по кнопке.
+/// перехватывает тапы по кнопке. Снизу — [bottomInset] под композер / нижние
+/// кнопки (иначе тап по смайлику слева «проглатывается»).
 class SwipeBackScope extends StatefulWidget {
   const SwipeBackScope({
     super.key,
@@ -17,6 +18,7 @@ class SwipeBackScope extends StatefulWidget {
     this.edgeWidth = 48,
     this.triggerDistance = 20,
     this.topInset,
+    this.bottomInset = 0,
   });
 
   final VoidCallback onBack;
@@ -32,6 +34,9 @@ class SwipeBackScope extends StatefulWidget {
   /// Отступ сверху под кнопку «Назад» / AppBar.
   /// `null` — автоматически `padding.top + kToolbarHeight`.
   final double? topInset;
+
+  /// Отступ снизу под композер / нижние контролы.
+  final double bottomInset;
 
   @override
   State<SwipeBackScope> createState() => _SwipeBackScopeState();
@@ -63,6 +68,7 @@ class _SwipeBackScopeState extends State<SwipeBackScope> {
 
     final excludedTop = widget.topInset ??
         (MediaQuery.paddingOf(context).top + kToolbarHeight);
+    final excludedBottom = widget.bottomInset < 0 ? 0.0 : widget.bottomInset;
 
     return Stack(
       fit: StackFit.expand,
@@ -71,7 +77,7 @@ class _SwipeBackScopeState extends State<SwipeBackScope> {
         Positioned(
           left: 0,
           top: excludedTop,
-          bottom: 0,
+          bottom: excludedBottom,
           width: widget.edgeWidth,
           child: GestureDetector(
             // opaque: зона всегда в hit-test, даже будучи прозрачной.

@@ -15,10 +15,13 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -1349,14 +1352,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
+    final preview = formatChatMessagePreview(subtitle);
     if (presence == null) {
-      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+      return preview.isEmpty ? 'Нет сообщений' : preview;
     }
     final statusText = presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt);
     if (statusText.isEmpty) {
-      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+      return preview.isEmpty ? 'Нет сообщений' : preview;
     }
-    return subtitle.isEmpty ? statusText : '$statusText · $subtitle';
+    return preview.isEmpty ? statusText : '$statusText · $preview';
   }
 
   IconData? _genderIcon(String? value) {
@@ -1533,6 +1537,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                PeerCollectionsSection(userId: user.id),
               ],
             ),
           ),
@@ -2328,6 +2333,13 @@ class _AvatarDot extends StatelessWidget {
     } else {
       avatar = _buildLetterAvatar();
     }
+    avatar = FramedAvatar(
+      size: radius * 2,
+      borderWidth: radius < 18 ? 2.2 : 2.8,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      child: avatar,
+    );
     if (isOnline == true) {
       return Stack(
         clipBehavior: Clip.none,

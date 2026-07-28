@@ -1,0 +1,16 @@
+package store
+
+import "testing"
+
+func TestDefaultUserGameSettings(t *testing.T) {
+	s := DefaultUserGameSettings("")
+	if s.GameType != GameTypeTicTacToe {
+		t.Fatalf("game_type=%q", s.GameType)
+	}
+	if s.TurnTimeSec != 0 || s.GridSize != 3 || s.StakeBronze != 1 {
+		t.Fatalf("unexpected defaults: %+v", s)
+	}
+	if s.SwapRule || s.FirstMoveRestriction {
+		t.Fatal("bool defaults must be false")
+	}
+}
