@@ -16,10 +16,13 @@ class HomeScreen extends ConsumerWidget {
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
     final unclaimedAchievements =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final collectionIncomeAvailable =
+        ref.watch(collectionIncomeAvailableProvider);
     // Прогрев кэша — экраны открываются без спиннера.
     ref.watch(achievementsListProvider);
     ref.watch(shopCatalogProvider);
     ref.watch(inventoryListProvider);
+    ref.watch(collectionIncomeProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -61,7 +64,10 @@ class HomeScreen extends ConsumerWidget {
                   HomeActionCard(
                     icon: Icons.inventory_2_rounded,
                     title: 'Предметы',
-                    subtitle: 'Ваши покупки',
+                    subtitle: collectionIncomeAvailable
+                        ? 'Можно забрать доход коллекций'
+                        : 'Ваши покупки',
+                    badgeCount: collectionIncomeAvailable ? 1 : 0,
                     onTap: () => context.push('/inventory'),
                   ),
                 ],

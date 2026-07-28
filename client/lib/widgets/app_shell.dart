@@ -17,6 +17,7 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
@@ -111,8 +112,12 @@ class AppShell extends ConsumerWidget {
     final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
     final achievementsUnclaimed =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
-    // На «Главной» суммируем daily + незабранные достижения.
-    final homeBadgeCount = dailyRewardCount + achievementsUnclaimed;
+    final collectionIncomeAvailable =
+        ref.watch(collectionIncomeAvailableProvider);
+    // На «Главной» суммируем daily + достижения + доход коллекций.
+    final homeBadgeCount = dailyRewardCount +
+        achievementsUnclaimed +
+        (collectionIncomeAvailable ? 1 : 0);
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);

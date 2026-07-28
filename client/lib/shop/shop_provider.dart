@@ -39,3 +39,8 @@ final collectionIncomeProvider =
   }
   return ref.watch(shopRepositoryProvider).collectionIncome();
 });
+
+/// Можно ли забрать дневной доход коллекций (для бейджей).
+final collectionIncomeAvailableProvider = Provider<bool>((ref) {
+  return ref.watch(collectionIncomeProvider).valueOrNull?.available == true;
+});
