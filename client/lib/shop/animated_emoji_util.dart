@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import 'package:animated_emoji/animated_emoji.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:multigames_client/shop/emoji_asset_catalog.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
@@ -18,23 +19,11 @@ String? parseAnimatedEmojiName(String body) {
 bool isAnimatedEmojiMessage(String body) =>
     parseAnimatedEmojiName(body) != null;
 
-AnimatedEmojiData? animatedEmojiDataFromName(String name) {
-  try {
-    return AnimatedEmojis.fromName(name);
-  } catch (_) {
-    return null;
-  }
-}
-
-/// Юникод-символ по имени анимации (для превью без Lottie).
+/// Юникод-символ по имени анимации (из `assets/emojis/`, без сети).
 String? unicodeEmojiFromAnimatedName(String name) {
   final flag = countryFlagUnicodeFromName(name);
   if (flag != null) return flag;
-  try {
-    return AnimatedEmojis.fromName(name).toUnicodeEmoji();
-  } catch (_) {
-    return null;
-  }
+  return kBundledEmojiUnicode[name];
 }
 
 /// Токен подарка коллекции: `[gift_coll:code|Title|emoji|animatedName]`.
@@ -222,10 +211,10 @@ class CountryFlagImage extends StatelessWidget {
   }
 }
 
-/// Виджет смайлика из бандла приложения (без сети для Noto Lottie).
+/// Виджет смайлика из `client/assets/emojis/` (Lottie + unicode, без сети).
 ///
-/// Пока ассет/картинка не готовы — только [EmojiIconPlaceholder], без «битых»
-/// иконок. В списках/сетках держите [animate]=false.
+/// Каталог магазина и владение — на бэкенде; ассеты рисуются локально.
+/// Пока ассет не готов — [EmojiIconPlaceholder]. В списках: [animate]=false.
 class ShopAnimatedEmoji extends StatefulWidget {
   const ShopAnimatedEmoji({
     super.key,
@@ -279,9 +268,8 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     if (isCountryFlagAnimatedName(widget.animatedName)) {
       return;
     }
-    final data =
-        widget.animate ? animatedEmojiDataFromName(widget.animatedName) : null;
-    final useLottie = widget.animate && data != null;
+    final useLottie =
+        widget.animate && hasBundledEmojiLottie(widget.animatedName);
     if (useLottie) {
       _loadTimeout?.cancel();
       _loadTimeout = Timer(const Duration(milliseconds: 2500), () {
@@ -350,8 +338,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       );
     }
 
-    final data = animatedEmojiDataFromName(widget.animatedName);
-    if (data == null) {
+    if (!hasBundledEmojiLottie(widget.animatedName)) {
       if (!_ready) {
         return EmojiIconPlaceholder(size: widget.size);
       }
@@ -362,8 +349,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       );
     }
 
-    // Пока Lottie не загрузился — только лоадер. Чуть уменьшаем анимацию,
-    // чтобы края глифа не обрезались родительским клипом.
+    // Lottie из client/assets/emojis/lottie/ — без сети и без package assets.
     final lottieSize = widget.size * 0.92;
     return SizedBox(
       width: widget.size,
@@ -377,21 +363,19 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
             opacity: _ready ? 1 : 0,
             child: IgnorePointer(
               ignoring: !_ready,
-              child: AnimatedEmoji(
-                data,
-                size: lottieSize,
+              child: Lottie.asset(
+                bundledEmojiLottieAsset(widget.animatedName),
+                width: lottieSize,
+                height: lottieSize,
                 repeat: true,
                 animate: true,
-                source: AnimatedEmojiSource.asset,
                 onLoaded: (_) => _markReady(),
-                errorWidget: Builder(
-                  builder: (context) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _markFailed();
-                    });
-                    return staticChild;
-                  },
-                ),
+                errorBuilder: (context, error, stackTrace) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _markFailed();
+                  });
+                  return staticChild;
+                },
               ),
             ),
           ),
