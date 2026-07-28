@@ -60,8 +60,38 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
     return section;
   }
 
+  Future<bool> _confirmBuy(ShopItem item) async {
+    final isStake = item.kind == 'stake_unlock';
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(isStake ? 'Купить ставку?' : 'Купить?'),
+          content: Text(
+            '${item.title}\n\n'
+            'Цена: ${formatRewardBronze(item.priceBronze)}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Купить'),
+            ),
+          ],
+        );
+      },
+    );
+    return result == true;
+  }
+
   Future<void> _buy(ShopItem item) async {
     if (_buyInFlight.contains(item.code) || item.owned) return;
+    final ok = await _confirmBuy(item);
+    if (!ok || !mounted) return;
+
     _buyInFlight.add(item.code);
     final previous = _items;
     setState(() {
@@ -92,6 +122,7 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       );
     } finally {
       _buyInFlight.remove(item.code);
+      if (mounted) setState(() {});
     }
   }
 
@@ -195,18 +226,11 @@ class _ShopItemCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const CoinIcon(coinType: CoinType.bronze, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.priceBronze}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                BalanceDisplay(
+                  bronze: item.priceBronze,
+                  coinSize: 14,
+                  fontSize: 13,
+                  spacing: 6,
                 ),
               ],
             ),

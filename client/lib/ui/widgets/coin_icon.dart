@@ -402,62 +402,45 @@ class _DiamondPainter extends CustomPainter {
 
 enum CoinType { bronze, silver, gold, diamond }
 
-/// Тип монеты для суммы: всегда вверх до большей монеты (100 бр→серебро, 100 с→золото).
+/// Тип монеты для суммы: старший номинал после разбиения баланса.
 CoinType rewardCoinType(int bronze) {
   if (bronze <= 0) return CoinType.bronze;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) return CoinType.diamond;
-      return CoinType.gold;
-    }
-    return CoinType.silver;
-  }
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  if (diamond > BigInt.zero) return CoinType.diamond;
+  if (gold > BigInt.zero) return CoinType.gold;
+  if (silver > BigInt.zero) return CoinType.silver;
   return CoinType.bronze;
 }
 
-/// Человекочитаемая сумма: округление вверх до большей монеты.
-/// 150 бр → «2 серебряных», 10001 бр → «2 золотых».
+/// Человекочитаемая сумма по номиналам: «5 серебряных 4 бронзовых».
 String formatRewardBronze(int bronze) {
   if (bronze <= 0) return '0 бронзовых';
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) {
-        final diamond = (gold + 99) ~/ 100;
-        return '$diamond бриллиантов';
-      }
-      return '$gold золотых';
-    }
-    return '$silver серебряных';
-  }
-  return '$bronze бронзовых';
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  final parts = <String>[];
+  if (diamond > BigInt.zero) parts.add('$diamond бриллиантов');
+  if (gold > BigInt.zero) parts.add('$gold золотых');
+  if (silver > BigInt.zero) parts.add('$silver серебряных');
+  if (bronzeRest > BigInt.zero) parts.add('$bronzeRest бронзовых');
+  return parts.isEmpty ? '0 бронзовых' : parts.join(' ');
 }
 
 /// Сумма дохода с явным «в день».
 String formatRewardBronzePerDay(int bronze) =>
     '${formatRewardBronze(bronze)} в день';
 
-/// Число монет после округления вверх (для иконки + цифры).
+/// Число монет старшего номинала (для одиночной иконки + цифры).
 int rewardCoinAmount(int bronze) {
   if (bronze <= 0) return 0;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) return (gold + 99) ~/ 100;
-      return gold;
-    }
-    return silver;
-  }
-  return bronze;
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  if (diamond > BigInt.zero) return diamond.toInt();
+  if (gold > BigInt.zero) return gold.toInt();
+  if (silver > BigInt.zero) return silver.toInt();
+  return bronzeRest.toInt();
 }
 
 /// Разбивка баланса: 100 бр=1 с, 100 с=1 з, 100 з=1 ◆.
 (BigInt, BigInt, BigInt, BigInt) parseBalance(int bronze) {
-  final b = BigInt.from(bronze);
+  final b = BigInt.from(bronze < 0 ? 0 : bronze);
   final diamond = b ~/ BigInt.from(1000000);
   final gold = (b ~/ BigInt.from(10000)) % BigInt.from(100);
   final silver = (b ~/ BigInt.from(100)) % BigInt.from(100);
@@ -504,6 +487,15 @@ class ToolbarBalanceChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
                 children: [
+                  Text(
+                    e.value.toString(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   CoinIcon(coinType: e.type, size: 28, showBorder: true, animate: true),
                   const SizedBox(width: 12),
                   Text(
@@ -511,15 +503,6 @@ class ToolbarBalanceChip extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    e.value.toString(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -533,33 +516,6 @@ class ToolbarBalanceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
-    final parts = <Widget>[];
-    void add(CoinType type, BigInt value) {
-      if (value > BigInt.zero) {
-        if (parts.isNotEmpty) parts.add(const SizedBox(width: 4));
-        parts.add(CoinIcon(coinType: type, size: coinSize, showBorder: true, animate: true));
-        parts.add(const SizedBox(width: 2));
-        parts.add(Text(
-          value.toString(),
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ));
-      }
-    }
-    add(CoinType.diamond, diamond);
-    add(CoinType.gold, gold);
-    add(CoinType.silver, silver);
-    add(CoinType.bronze, bronzeRest);
-    if (parts.isEmpty) {
-      parts.add(CoinIcon(coinType: CoinType.bronze, size: coinSize, showBorder: true, animate: true));
-      parts.add(const SizedBox(width: 2));
-      parts.add(const Text('0', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)));
-    }
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -575,9 +531,13 @@ class ToolbarBalanceChip extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: parts,
+          child: BalanceDisplay(
+            bronze: bronze,
+            coinSize: coinSize,
+            fontSize: 12,
+            spacing: 4,
+            fontWeight: FontWeight.w600,
+            animate: true,
           ),
         ),
       ),
@@ -591,7 +551,7 @@ class _BalancePopupItem {
   final BigInt value;
 }
 
-/// Виджет баланса: число + монета для каждого номинала (только ненулевые).
+/// Сумма монет: `5` + серебро + `4` + бронза (только ненулевые номиналы).
 class BalanceDisplay extends StatelessWidget {
   const BalanceDisplay({
     super.key,
@@ -599,34 +559,56 @@ class BalanceDisplay extends StatelessWidget {
     this.coinSize = 18,
     this.fontSize = 14,
     this.spacing = 6,
+    this.fontWeight = FontWeight.w600,
+    this.prefix,
+    this.animate = false,
+    this.color = AppColors.textPrimary,
   });
 
   final int bronze;
   final double coinSize;
   final double fontSize;
   final double spacing;
+  final FontWeight fontWeight;
+  final String? prefix;
+  final bool animate;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
 
     final parts = <Widget>[];
+    if (prefix != null && prefix!.isNotEmpty) {
+      parts.add(Text(
+        prefix!,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+      ));
+    }
 
     void add(CoinType type, BigInt value) {
-      if (value > BigInt.zero) {
-        if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
-        parts.add(CoinIcon(coinType: type, size: coinSize, showBorder: true));
-        parts.add(SizedBox(width: 4));
-        parts.add(Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w400,
-            color: AppColors.textPrimary,
-          ),
-          overflow: TextOverflow.clip,
-        ));
-      }
+      if (value <= BigInt.zero) return;
+      if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
+      parts.add(Text(
+        value.toString(),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+        overflow: TextOverflow.clip,
+      ));
+      parts.add(SizedBox(width: 3));
+      parts.add(CoinIcon(
+        coinType: type,
+        size: coinSize,
+        showBorder: true,
+        animate: animate,
+      ));
     }
 
     add(CoinType.diamond, diamond);
@@ -634,13 +616,25 @@ class BalanceDisplay extends StatelessWidget {
     add(CoinType.silver, silver);
     add(CoinType.bronze, bronzeRest);
 
-    if (parts.isEmpty) {
-      parts.add(CoinIcon(coinType: CoinType.bronze, size: coinSize, showBorder: true));
-      parts.add(SizedBox(width: 4));
+    if (parts.isEmpty || (prefix != null && parts.length == 1)) {
+      if (prefix == null || prefix!.isEmpty) {
+        parts.clear();
+      }
       parts.add(Text(
         '0',
-        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400, color: AppColors.textPrimary),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
         overflow: TextOverflow.clip,
+      ));
+      parts.add(SizedBox(width: 3));
+      parts.add(CoinIcon(
+        coinType: CoinType.bronze,
+        size: coinSize,
+        showBorder: true,
+        animate: animate,
       ));
     }
 
@@ -654,3 +648,4 @@ class BalanceDisplay extends StatelessWidget {
     );
   }
 }
+

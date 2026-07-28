@@ -132,7 +132,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${emotions.length} смайликов · по 30 бронзы',
+                                      '${emotions.length} смайликов · по ${formatRewardBronze(30)}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
@@ -204,7 +204,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
           title: const Text('Купить смайлик?'),
           content: Text(
             '${item.title}\n\n'
-            'Цена: ${item.priceBronze} бронзы\n'
+            'Цена: ${formatRewardBronze(item.priceBronze)}\n'
             'Получите: 10 использований',
           ),
           actions: [
@@ -267,7 +267,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       title: item.title,
       animatedName: item.animatedName ?? 'smile',
       fallback: item.emoji,
-      subtitle: '${item.priceBronze} бронзы · 10 использований',
+      subtitle: '${formatRewardBronze(item.priceBronze)} · 10 использований',
       bottomAction: Builder(
         builder: (dialogContext) => FilledButton(
           onPressed: () {
@@ -438,15 +438,11 @@ class _EmojiBuyTile extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const CoinIcon(coinType: CoinType.bronze, size: 11),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${item.priceBronze}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                        BalanceDisplay(
+                          bronze: item.priceBronze,
+                          coinSize: 11,
+                          fontSize: 11,
+                          spacing: 4,
                         ),
                       ],
                     ),

@@ -43,7 +43,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: 'Получено +${result.quantity} бронзы',
+        message: 'Получено +${formatRewardBronze(result.quantity)}',
         kind: AppSnackKind.success,
       );
       ref.invalidate(collectionIncomeProvider);
@@ -66,7 +66,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Продать?'),
-        content: Text('${item.title}\nВернётся около $refund бронзы (80%).'),
+        content: Text(
+          '${item.title}\nВернётся около ${formatRewardBronze(refund)} (80%).',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -90,7 +92,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: 'Продано: +${result.quantity} бронзы',
+        message: 'Продано: +${formatRewardBronze(result.quantity)}',
         kind: AppSnackKind.success,
       );
     } catch (e) {

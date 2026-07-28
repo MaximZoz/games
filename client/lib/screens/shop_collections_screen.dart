@@ -423,9 +423,6 @@ class _CollectionShopCard extends StatelessWidget {
   final VoidCallback onBuy;
   final VoidCallback onPreview;
 
-  static String _priceAmountLabel(int bronze) =>
-      '${rewardCoinAmount(bronze)}';
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -467,21 +464,11 @@ class _CollectionShopCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    CoinIcon(
-                      coinType: rewardCoinType(item.priceBronze),
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _priceAmountLabel(item.priceBronze),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                BalanceDisplay(
+                  bronze: item.priceBronze,
+                  coinSize: 14,
+                  fontSize: 13,
+                  spacing: 6,
                 ),
               ],
             ),
