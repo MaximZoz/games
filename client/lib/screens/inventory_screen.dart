@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 const _groupTitles = <String, String>{
   'emotions': 'Эмоции',
   'game': 'Игровые',
+  'flags': 'Флажки',
   'animals': 'Животные',
   'food': 'Еда и напитки',
   'travel': 'Путешествия',
@@ -265,6 +266,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final groupOrder = [
       'emotions',
       'game',
+      'flags',
       'animals',
       'food',
       'travel',

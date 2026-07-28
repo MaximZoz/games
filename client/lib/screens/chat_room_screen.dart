@@ -1744,6 +1744,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   static const _groupTitles = {
     'emotions': 'Эмоции',
     'game': 'Игровые',
+    'flags': 'Флажки',
     'animals': 'Животные',
     'food': 'Еда',
     'travel': 'Путешествия',
@@ -1794,6 +1795,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
     const known = [
       'emotions',
       'game',
+      'flags',
       'animals',
       'food',
       'travel',

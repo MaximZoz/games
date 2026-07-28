@@ -18,10 +18,11 @@ import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 const shopEmojiGroupTitles = <String, String>{
   'emotions': 'Эмоции',
   'game': 'Игровые',
+  'flags': 'Флажки',
 };
 
 /// Порядок групп на витрине смайликов.
-const shopEmojiGroupOrder = <String>['emotions', 'game'];
+const shopEmojiGroupOrder = <String>['emotions', 'game', 'flags'];
 
 String shopEmojiGroupTitle(String group) =>
     shopEmojiGroupTitles[group] ?? group;

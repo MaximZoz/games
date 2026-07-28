@@ -1,5 +1,6 @@
 import 'package:animated_emoji/animated_emoji.dart';
 import 'package:flutter/material.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 
 /// Токен сообщения с анимированным смайликом: `[ae:rocket]`.
 final RegExp animatedEmojiTokenRe = RegExp(r'^\[ae:([A-Za-z0-9_]+)\]$');
@@ -24,6 +25,8 @@ AnimatedEmojiData? animatedEmojiDataFromName(String name) {
 
 /// Юникод-символ по имени анимации (для превью без Lottie).
 String? unicodeEmojiFromAnimatedName(String name) {
+  final flag = countryFlagUnicodeFromName(name);
+  if (flag != null) return flag;
   try {
     return AnimatedEmojis.fromName(name).toUnicodeEmoji();
   } catch (_) {
