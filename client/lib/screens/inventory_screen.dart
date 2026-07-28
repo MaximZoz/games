@@ -190,6 +190,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
     final collections = items.where((e) => e.kind == 'collection').toList();
     final income = incomeAsync.valueOrNull;
+    final incomeAvailable = income?.available == true;
 
     final grouped = <String, List<InventoryItem>>{};
     for (final e in emojis) {
@@ -218,12 +219,35 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             onPressed: goBack,
             tooltip: 'Назад',
           ),
-          title: Text(
-            'Предметы',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+          title: Row(
+            children: [
+              Text(
+                'Предметы',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              if (incomeAvailable) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentStart,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text(
+                    '1',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
+              ],
+            ],
           ),
         ),
         body: SafeArea(
