@@ -201,6 +201,11 @@ func (h *GamesHandler) requireRedis(w http.ResponseWriter) bool {
 }
 
 func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Настройки создания игры живут в Postgres и не зависят от Redis.
+	if r.URL.Path == "/api/games/settings" {
+		h.GameSettings(w, r)
+		return
+	}
 	if !h.requireRedis(w) {
 		return
 	}

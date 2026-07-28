@@ -81,6 +81,8 @@ class AppShell extends ConsumerWidget {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
       ref.watch(chatDeliveryAckProvider);
+      // Лениво подтягиваем конфиг игр из БД после входа/старта.
+      ref.watch(userGameSettingsProvider);
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
       ref.listen(realtimeEventsProvider, (_, next) {

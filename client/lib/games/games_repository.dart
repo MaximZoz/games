@@ -27,6 +27,90 @@ const List<int> freeStakeOptions = [1, 10, 50];
 /// Fallback, если capabilities ещё не загружены.
 const List<int> stakeOptions = freeStakeOptions;
 
+/// Сохранённая в БД конфигурация создания игры.
+class UserGameSettings {
+  const UserGameSettings({
+    this.gameType = 'tictactoe',
+    this.turnTimeSec = 0,
+    this.gridSize = 3,
+    this.swapRule = false,
+    this.firstMoveRestriction = false,
+    this.stakeBronze = 1,
+  });
+
+  final String gameType;
+  final int turnTimeSec;
+  final int gridSize;
+  final bool swapRule;
+  final bool firstMoveRestriction;
+  final int stakeBronze;
+
+  static const defaults = UserGameSettings();
+
+  UserGameSettings copyWith({
+    String? gameType,
+    int? turnTimeSec,
+    int? gridSize,
+    bool? swapRule,
+    bool? firstMoveRestriction,
+    int? stakeBronze,
+  }) {
+    return UserGameSettings(
+      gameType: gameType ?? this.gameType,
+      turnTimeSec: turnTimeSec ?? this.turnTimeSec,
+      gridSize: gridSize ?? this.gridSize,
+      swapRule: swapRule ?? this.swapRule,
+      firstMoveRestriction:
+          firstMoveRestriction ?? this.firstMoveRestriction,
+      stakeBronze: stakeBronze ?? this.stakeBronze,
+    );
+  }
+
+  factory UserGameSettings.fromJson(Map<String, dynamic> json) {
+    final turn = (json['turn_time_sec'] as num?)?.toInt() ?? 0;
+    final grid = (json['grid_size'] as num?)?.toInt() ?? 3;
+    final stake = (json['stake_bronze'] as num?)?.toInt() ?? 1;
+    return UserGameSettings(
+      gameType: json['game_type'] as String? ?? 'tictactoe',
+      turnTimeSec: turnTimeOptions.contains(turn) ? turn : 0,
+      gridSize: gridSizeOptions.contains(grid) ? grid : 3,
+      swapRule: json['swap_rule'] == true,
+      firstMoveRestriction: json['first_move_restriction'] == true,
+      stakeBronze: stake < 1 ? 1 : stake,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'game_type': gameType,
+        'turn_time_sec': turnTimeSec,
+        'grid_size': gridSize,
+        'swap_rule': swapRule,
+        'first_move_restriction': firstMoveRestriction,
+        'stake_bronze': stakeBronze,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserGameSettings &&
+          gameType == other.gameType &&
+          turnTimeSec == other.turnTimeSec &&
+          gridSize == other.gridSize &&
+          swapRule == other.swapRule &&
+          firstMoveRestriction == other.firstMoveRestriction &&
+          stakeBronze == other.stakeBronze;
+
+  @override
+  int get hashCode => Object.hash(
+        gameType,
+        turnTimeSec,
+        gridSize,
+        swapRule,
+        firstMoveRestriction,
+        stakeBronze,
+      );
+}
+
 /// Подпись ставки в единицах старшего номинала.
 String formatStakeAmount(int stakeBronze) {
   if (stakeBronze >= 10000 && stakeBronze % 10000 == 0) {
@@ -790,5 +874,44 @@ class GamesRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return GameStateItem.fromJson(body);
+  }
+
+  Future<UserGameSettings> getGameSettings({
+    String gameType = 'tictactoe',
+  }) async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse(
+          '$apiBaseUrl/api/games/settings?game_type=$gameType&_=$cacheBuster',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.getGameSettings',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return UserGameSettings.fromJson(body);
+  }
+
+  Future<UserGameSettings> saveGameSettings(UserGameSettings settings) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.put(
+        Uri.parse('$apiBaseUrl/api/games/settings'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(settings.toJson()),
+        operation: 'GamesRepository.saveGameSettings',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return UserGameSettings.fromJson(body);
   }
 }

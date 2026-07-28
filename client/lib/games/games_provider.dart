@@ -204,3 +204,65 @@ final gamesMyTurnCountProvider = Provider.autoDispose<int>((ref) {
 final gameInvitesCountProvider = Provider.autoDispose<int>((ref) {
   return ref.watch(gameInvitesProvider).length;
 });
+
+/// Ленивая загрузка конфигурации игр из БД (при старте/входе).
+final userGameSettingsProvider =
+    AsyncNotifierProvider<UserGameSettingsNotifier, UserGameSettings>(
+  UserGameSettingsNotifier.new,
+);
+
+class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
+  Timer? _saveTimer;
+  UserGameSettings? _pending;
+  GamesRepository? _repo;
+
+  @override
+  Future<UserGameSettings> build() async {
+    ref.onDispose(() {
+      _saveTimer?.cancel();
+      final pending = _pending;
+      final repo = _repo;
+      _pending = null;
+      if (pending != null && repo != null) {
+        unawaited(repo.saveGameSettings(pending));
+      }
+    });
+    final user = ref.watch(authStateProvider).valueOrNull;
+    if (user == null) return UserGameSettings.defaults;
+    try {
+      return await ref.read(gamesRepositoryProvider).getGameSettings();
+    } catch (_) {
+      return UserGameSettings.defaults;
+    }
+  }
+
+  /// Локально применяет настройки и с задержкой пишет в БД.
+  void updateLocal(UserGameSettings next) {
+    state = AsyncData(next);
+    _pending = next;
+    _repo = ref.read(gamesRepositoryProvider);
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 450), () {
+      final toSave = _pending;
+      final repo = _repo;
+      _pending = null;
+      if (toSave == null || repo == null) return;
+      unawaited(_persist(repo, toSave));
+    });
+  }
+
+  Future<void> _persist(GamesRepository repo, UserGameSettings settings) async {
+    final user = ref.read(authStateProvider).valueOrNull;
+    if (user == null) return;
+    try {
+      final saved = await repo.saveGameSettings(settings);
+      // Не затираем более новые локальные правки.
+      final current = state.valueOrNull;
+      if (current == null || current == settings || current == saved) {
+        state = AsyncData(saved);
+      }
+    } catch (_) {
+      // Оставляем локальное значение; повтор при следующей смене.
+    }
+  }
+}

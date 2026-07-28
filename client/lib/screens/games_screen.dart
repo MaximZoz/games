@@ -41,6 +41,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   bool _selectedSwapRule = false;
   bool _selectedFirstMoveRestriction = false;
   int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
+  bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
   late PageController _pageController;
 
@@ -52,8 +53,35 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (mounted) {
         ref.read(mobileToolbarLeadingProvider.notifier).state = null;
         ref.read(authStateProvider.notifier).refresh();
+        _hydrateFromSavedSettings();
       }
     });
+  }
+
+  void _hydrateFromSavedSettings() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _selectedTurnTimeSec = saved.turnTimeSec;
+      _selectedGridSize = saved.gridSize;
+      _selectedSwapRule = saved.swapRule;
+      _selectedFirstMoveRestriction = saved.firstMoveRestriction;
+      _selectedStakeBronze = saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider.notifier).updateLocal(
+          UserGameSettings(
+            turnTimeSec: _selectedTurnTimeSec,
+            gridSize: _selectedGridSize,
+            swapRule: _selectedSwapRule,
+            firstMoveRestriction: _selectedFirstMoveRestriction,
+            stakeBronze: _selectedStakeBronze,
+          ),
+        );
   }
 
   @override
@@ -97,6 +125,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
+    // Подхватываем конфиг из БД, когда он лениво догрузится.
+    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider,
+        (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _selectedTurnTimeSec = saved.turnTimeSec;
+        _selectedGridSize = saved.gridSize;
+        _selectedSwapRule = saved.swapRule;
+        _selectedFirstMoveRestriction = saved.firstMoveRestriction;
+        _selectedStakeBronze = saved.stakeBronze;
+      });
+    });
     final availableStakes =
         caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
     if (!availableStakes.contains(_selectedStakeBronze) &&
@@ -104,6 +146,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         setState(() => _selectedStakeBronze = availableStakes.first);
+        if (_settingsHydrated) _persistSettings();
       });
     }
 
@@ -153,21 +196,31 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     isCreating: _isCreating,
                     isFinding: _isFinding,
                     turnTimeSec: _selectedTurnTimeSec,
-                    onTurnTimeChanged: (v) =>
-                        setState(() => _selectedTurnTimeSec = v),
+                    onTurnTimeChanged: (v) {
+                      setState(() => _selectedTurnTimeSec = v);
+                      _persistSettings();
+                    },
                     gridSize: _selectedGridSize,
-                    onGridSizeChanged: (v) =>
-                        setState(() => _selectedGridSize = v),
+                    onGridSizeChanged: (v) {
+                      setState(() => _selectedGridSize = v);
+                      _persistSettings();
+                    },
                     swapRule: _selectedSwapRule,
-                    onSwapRuleChanged: (v) =>
-                        setState(() => _selectedSwapRule = v),
+                    onSwapRuleChanged: (v) {
+                      setState(() => _selectedSwapRule = v);
+                      _persistSettings();
+                    },
                     firstMoveRestriction: _selectedFirstMoveRestriction,
-                    onFirstMoveRestrictionChanged: (v) =>
-                        setState(() => _selectedFirstMoveRestriction = v),
+                    onFirstMoveRestrictionChanged: (v) {
+                      setState(() => _selectedFirstMoveRestriction = v);
+                      _persistSettings();
+                    },
                     stakeBronze: _selectedStakeBronze,
                     stakeOptionsList: availableStakes,
-                    onStakeChanged: (v) =>
-                        setState(() => _selectedStakeBronze = v),
+                    onStakeChanged: (v) {
+                      setState(() => _selectedStakeBronze = v);
+                      _persistSettings();
+                    },
                     onCreateGame: () => _createGame(context, 'invite'),
                     onFindGame: () => _createGame(context, 'matchmake'),
                     invites: invites,

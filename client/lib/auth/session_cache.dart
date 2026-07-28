@@ -23,5 +23,6 @@ void clearUserScopedCaches(Ref ref) {
   ref.invalidate(collectionIncomeProvider);
   ref.invalidate(achievementsListProvider);
   ref.invalidate(achievementsUnclaimedCountProvider);
+  ref.invalidate(userGameSettingsProvider);
   ref.read(unreadGiftedCollectionsProvider.notifier).clear();
 }
