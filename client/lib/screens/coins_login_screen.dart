@@ -239,15 +239,6 @@ class _CompactMilestoneCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              BalanceDisplay(
-                bronze: rewardBronze,
-                coinSize: 18,
-                fontSize: 13,
-                spacing: 4,
-                prefix: '+',
-                animate: isTodaysTarget || pendingToday,
-              ),
-              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
@@ -259,6 +250,14 @@ class _CompactMilestoneCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              BalanceDisplay(
+                bronze: rewardBronze,
+                coinSize: 18,
+                fontSize: 13,
+                spacing: 4,
+                animate: isTodaysTarget || pendingToday,
               ),
             ],
           ),
