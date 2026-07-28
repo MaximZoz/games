@@ -403,9 +403,14 @@ class AppShell extends ConsumerWidget {
     // bottomNavigationBar — чтобы ScaffoldMessenger ставил SnackBar над меню
     // (раньше nav был в Column, тост рисовался у низа экрана и обрезался).
     //
-    // Scaffold обнуляет padding.bottom у bottomNavigationBar — обычный SafeArea
-    // не видит inset и на iPhone PWA подписи «Главная»/«Настройки» срезаются
-    // home indicator. maintainBottomViewPadding читает viewPadding.
+    // iPhone (скруглённый экран + home indicator): фон панели должен идти
+    // full-bleed до физического низа. Если красить только зону иконок, под
+    // ней виден другой цвет — и из‑за скругления углов панель кажется
+    // «закруглённой таблеткой». Иконки/подписи — над viewPadding, цвет — под ним.
+    //
+    // Scaffold обнуляет padding.bottom у bottomNavigationBar — поэтому inset
+    // берём из viewPadding, а не из SafeArea(padding).
+    final bottomInset = media.viewPadding.bottom;
     final bottomNav = showBottomNav
         ? ClipRect(
             child: Align(
@@ -413,67 +418,73 @@ class AppShell extends ConsumerWidget {
               heightFactor: collapseBottomNav ? 0.0 : 1.0,
               child: IgnorePointer(
                 ignoring: collapseBottomNav,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceUnified.withValues(alpha: 0.94),
-                    border: Border(
-                      top: BorderSide(
-                        color: AppColors.accentSoft.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    maintainBottomViewPadding: true,
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: MediaQuery.withNoTextScaling(
-                        child: BottomNavigationBar(
-                          currentIndex: selectedIndex,
-                          onTap: navigateWithPrefetch,
-                          type: BottomNavigationBarType.fixed,
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          selectedItemColor: AppColors.textPrimary,
-                          unselectedItemColor: AppColors.textSecondary,
-                          selectedFontSize: 10,
-                          unselectedFontSize: 10,
-                          selectedLabelStyle: const TextStyle(
-                            fontSize: 10,
-                            height: 1.15,
-                            fontWeight: FontWeight.w600,
+                child: ColoredBox(
+                  color: AppColors.surfaceUnified,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color:
+                                  AppColors.accentSoft.withValues(alpha: 0.7),
+                            ),
                           ),
-                          unselectedLabelStyle: const TextStyle(
-                            fontSize: 10,
-                            height: 1.15,
+                        ),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: MediaQuery.withNoTextScaling(
+                            child: BottomNavigationBar(
+                              currentIndex: selectedIndex,
+                              onTap: navigateWithPrefetch,
+                              type: BottomNavigationBarType.fixed,
+                              elevation: 0,
+                              backgroundColor: Colors.transparent,
+                              selectedItemColor: AppColors.textPrimary,
+                              unselectedItemColor: AppColors.textSecondary,
+                              selectedFontSize: 10,
+                              unselectedFontSize: 10,
+                              selectedLabelStyle: const TextStyle(
+                                fontSize: 10,
+                                height: 1.15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              unselectedLabelStyle: const TextStyle(
+                                fontSize: 10,
+                                height: 1.15,
+                              ),
+                              showUnselectedLabels: true,
+                              items: _navItems.asMap().entries.map((entry) {
+                                final item = entry.value;
+                                return BottomNavigationBarItem(
+                                  icon: _navIcon(
+                                    item,
+                                    unreadChats,
+                                    incomingFriends,
+                                    gamesMyTurn,
+                                    gameInvitesCount,
+                                    homeBadgeCount,
+                                  ),
+                                  activeIcon: _navIcon(
+                                    item,
+                                    unreadChats,
+                                    incomingFriends,
+                                    gamesMyTurn,
+                                    gameInvitesCount,
+                                    homeBadgeCount,
+                                    selected: true,
+                                  ),
+                                  label: item.label,
+                                );
+                              }).toList(),
+                            ),
                           ),
-                          showUnselectedLabels: true,
-                          items: _navItems.asMap().entries.map((entry) {
-                            final item = entry.value;
-                            return BottomNavigationBarItem(
-                              icon: _navIcon(
-                                item,
-                                unreadChats,
-                                incomingFriends,
-                                gamesMyTurn,
-                                gameInvitesCount,
-                                homeBadgeCount,
-                              ),
-                              activeIcon: _navIcon(
-                                item,
-                                unreadChats,
-                                incomingFriends,
-                                gamesMyTurn,
-                                gameInvitesCount,
-                                homeBadgeCount,
-                                selected: true,
-                              ),
-                              label: item.label,
-                            );
-                          }).toList(),
                         ),
                       ),
-                    ),
+                      // Заливка под home indicator — до скруглённых углов экрана.
+                      SizedBox(height: bottomInset),
+                    ],
                   ),
                 ),
               ),

@@ -23,8 +23,10 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- black-translucent: контент под status bar; фон body совпадает с панелью -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="multigames_client">
+  <meta name="theme-color" content="#E8ECF4">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -42,9 +44,11 @@
       overflow-x: hidden;
       overscroll-behavior: none;
       overscroll-behavior-x: none;
+      /* surfaceUnified — иначе у скруглённых углов iPhone виден чужой цвет */
+      background-color: #E8ECF4;
     }
     body {
-      background-color: #F5F5F5;
+      background-color: #E8ECF4;
       touch-action: pan-y;
     }
     flt-glass-pane, flutter-view {
