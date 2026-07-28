@@ -31,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
         ? 'Вам подарили коллекцию'
         : (collectionIncomeAvailable
             ? 'Можно забрать доход коллекций'
-            : 'Ваши покупки');
+            : 'Ваш инвентарь');
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -66,7 +66,7 @@ class HomeScreen extends ConsumerWidget {
                   HomeActionCard(
                     icon: Icons.storefront_rounded,
                     title: 'Магазин',
-                    subtitle: 'Смайлики, ставки и рамки',
+                    subtitle: 'Смайлы, ставки, коллекции',
                     onTap: () => context.push('/shop'),
                   ),
                   const SizedBox(height: 12),
