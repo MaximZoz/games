@@ -175,7 +175,7 @@ class _NeutralGroupBadge extends StatelessWidget {
   }
 }
 
-/// PNG-флаг с лоадером (unicode-флаги на Flutter Web часто дают «битую» картинку).
+/// PNG-флаг из бандла приложения с лоадером на время декодирования.
 class CountryFlagImage extends StatelessWidget {
   const CountryFlagImage({
     super.key,
@@ -190,24 +190,17 @@ class CountryFlagImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final px = (size * MediaQuery.devicePixelRatioOf(context))
-        .round()
-        .clamp(40, 160);
     return SizedBox(
       width: size,
       height: size,
-      child: Image.network(
-        countryFlagImageUrl(iso, width: px),
+      child: Image.asset(
+        countryFlagAssetPath(iso),
         fit: BoxFit.contain,
         filterQuality: FilterQuality.medium,
         gaplessPlayback: true,
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) {
-            return AnimatedOpacity(
-              opacity: 1,
-              duration: AppDurations.short,
-              child: child,
-            );
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) {
+            return child;
           }
           return EmojiIconPlaceholder(size: size);
         },
@@ -282,7 +275,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
   }
 
   void _scheduleStaticReveal() {
-    // Флаги грузятся через Image.network со своим loadingBuilder.
+    // Флаги грузятся через Image.asset со своим frameBuilder.
     if (isCountryFlagAnimatedName(widget.animatedName)) {
       return;
     }

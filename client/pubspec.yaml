@@ -33,6 +33,7 @@ flutter:
         - asset: web/assets/fonts/MaterialIcons-Regular.woff2
   # Анимированные смайлики магазина — бандл приложения (без сети).
   assets:
+    - assets/flags/
     - packages/animated_emoji/lottie/airplaneDeparture.json
     - packages/animated_emoji/lottie/alien.json
     - packages/animated_emoji/lottie/automobile.json

@@ -1,7 +1,7 @@
-/// Флаги стран для группы магазина «Флажки».
-///
-/// В Noto Animated Emoji нет анимаций флагов стран. В UI рисуем PNG с CDN
-/// (надежнее unicode-флагов на Flutter Web), unicode — запасной fallback.
+// Флаги стран для группы магазина «Флажки».
+//
+// PNG лежат в client/assets/flags/ (бандл приложения). Unicode — запасной
+// fallback, если ассет не найден.
 
 class CountryFlagInfo {
   const CountryFlagInfo({
@@ -74,7 +74,6 @@ String? countryFlagUnicodeFromName(String name) =>
 
 String? countryFlagIsoFromName(String name) => countryFlagsByName[name]?.iso;
 
-String countryFlagImageUrl(String iso, {int width = 80}) {
-  final w = width.clamp(20, 160);
-  return 'https://flagcdn.com/w$w/${iso.toLowerCase()}.png';
-}
+String countryFlagAssetPath(String iso) =>
+    'assets/flags/${iso.toLowerCase()}.png';
+
