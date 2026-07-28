@@ -231,124 +231,129 @@ class AppShell extends ConsumerWidget {
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: padding.top),
-          child: SizedBox(
-            height: kToolbarHeight,
-            child: ClipRect(
-              child: Row(
-                children: [
-                  if ((narrow && (onFriends || onChatsList) ||
-                          (narrowLandscape && inChatRoom)) &&
-                      toolbarLeading != null)
-                    narrowLandscape && inChatRoom
-                        ? Expanded(
-                            child: Padding(
+        // Непрозрачный тулбар: тени карточек списка не дают линию среза
+        // на границе с контентом (iPhone PWA).
+        ColoredBox(
+          color: AppColors.surfaceUnified.withValues(alpha: 0.97),
+          child: Padding(
+            padding: EdgeInsets.only(top: padding.top),
+            child: SizedBox(
+              height: kToolbarHeight,
+              child: ClipRect(
+                child: Row(
+                  children: [
+                    if ((narrow && (onFriends || onChatsList) ||
+                            (narrowLandscape && inChatRoom)) &&
+                        toolbarLeading != null)
+                      narrowLandscape && inChatRoom
+                          ? Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: toolbarLeading,
+                              ),
+                            )
+                          : Padding(
                               padding: const EdgeInsets.only(left: 8),
                               child: toolbarLeading,
-                            ),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: toolbarLeading,
-                          )
-                  else if (isAuthorized)
-                    Flexible(
-                      flex: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: authState.when(
-                          data: (user) => user != null
-                              ? Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: ToolbarBalanceChip(
-                                      bronze: user.balanceBronze,
-                                      coinSize: 16,
+                            )
+                    else if (isAuthorized)
+                      Flexible(
+                        flex: 5,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: authState.when(
+                            data: (user) => user != null
+                                ? Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: ToolbarBalanceChip(
+                                        bronze: user.balanceBronze,
+                                        coinSize: 16,
+                                      ),
                                     ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
+                                  )
+                                : const SizedBox.shrink(),
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
                         ),
                       ),
-                    ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    flex: 4,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: authState.when(
-                        data: (user) {
-                          if (user != null) {
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (user.isAdmin)
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.admin_panel_settings),
-                                    onPressed: () => context.go('/admin'),
-                                    tooltip: 'Админка',
-                                    visualDensity: VisualDensity.compact,
-                                  ),
-                                Flexible(
-                                  child: Tooltip(
-                                    message: user.displayName ?? user.email,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 2),
-                                      child: Text(
-                                        user.displayName ?? user.email,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.textPrimary,
-                                          decoration: TextDecoration.none,
+                    const SizedBox(width: 6),
+                    Flexible(
+                      flex: 4,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: authState.when(
+                          data: (user) {
+                            if (user != null) {
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (user.isAdmin)
+                                    IconButton(
+                                      icon: const Icon(
+                                          Icons.admin_panel_settings),
+                                      onPressed: () => context.go('/admin'),
+                                      tooltip: 'Админка',
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  Flexible(
+                                    child: Tooltip(
+                                      message: user.displayName ?? user.email,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 2),
+                                        child: Text(
+                                          user.displayName ?? user.email,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textPrimary,
+                                            decoration: TextDecoration.none,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.right,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.right,
                                       ),
                                     ),
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.logout),
-                                  onPressed: () async {
-                                    await ref
-                                        .read(authStateProvider.notifier)
-                                        .logout();
-                                  },
-                                  tooltip: 'Выйти',
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ],
+                                  IconButton(
+                                    icon: const Icon(Icons.logout),
+                                    onPressed: () async {
+                                      await ref
+                                          .read(authStateProvider.notifier)
+                                          .logout();
+                                    },
+                                    tooltip: 'Выйти',
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ],
+                              );
+                            }
+                            return IconButton(
+                              icon: const Icon(Icons.login),
+                              onPressed: () => context.go('/login'),
+                              tooltip: 'Войти',
                             );
-                          }
-                          return IconButton(
+                          },
+                          loading: () => const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          error: (_, __) => IconButton(
                             icon: const Icon(Icons.login),
                             onPressed: () => context.go('/login'),
                             tooltip: 'Войти',
-                          );
-                        },
-                        loading: () => const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                        ),
-                        error: (_, __) => IconButton(
-                          icon: const Icon(Icons.login),
-                          onPressed: () => context.go('/login'),
-                          tooltip: 'Войти',
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -397,6 +402,10 @@ class AppShell extends ConsumerWidget {
 
     // bottomNavigationBar — чтобы ScaffoldMessenger ставил SnackBar над меню
     // (раньше nav был в Column, тост рисовался у низа экрана и обрезался).
+    //
+    // Scaffold обнуляет padding.bottom у bottomNavigationBar — обычный SafeArea
+    // не видит inset и на iPhone PWA подписи «Главная»/«Настройки» срезаются
+    // home indicator. maintainBottomViewPadding читает viewPadding.
     final bottomNav = showBottomNav
         ? ClipRect(
             child: Align(
@@ -404,45 +413,65 @@ class AppShell extends ConsumerWidget {
               heightFactor: collapseBottomNav ? 0.0 : 1.0,
               child: IgnorePointer(
                 ignoring: collapseBottomNav,
-                child: SafeArea(
-                  top: false,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: MediaQuery.withNoTextScaling(
-                      child: BottomNavigationBar(
-                        currentIndex: selectedIndex,
-                        onTap: navigateWithPrefetch,
-                        type: BottomNavigationBarType.fixed,
-                        elevation: 0,
-                        backgroundColor: Colors.transparent,
-                        selectedItemColor: AppColors.textPrimary,
-                        unselectedItemColor: AppColors.textSecondary,
-                        selectedFontSize: 10,
-                        unselectedFontSize: 10,
-                        showUnselectedLabels: true,
-                        items: _navItems.asMap().entries.map((entry) {
-                          final item = entry.value;
-                          return BottomNavigationBarItem(
-                            icon: _navIcon(
-                              item,
-                              unreadChats,
-                              incomingFriends,
-                              gamesMyTurn,
-                              gameInvitesCount,
-                              homeBadgeCount,
-                            ),
-                            activeIcon: _navIcon(
-                              item,
-                              unreadChats,
-                              incomingFriends,
-                              gamesMyTurn,
-                              gameInvitesCount,
-                              homeBadgeCount,
-                              selected: true,
-                            ),
-                            label: item.label,
-                          );
-                        }).toList(),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceUnified.withValues(alpha: 0.94),
+                    border: Border(
+                      top: BorderSide(
+                        color: AppColors.accentSoft.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    maintainBottomViewPadding: true,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: MediaQuery.withNoTextScaling(
+                        child: BottomNavigationBar(
+                          currentIndex: selectedIndex,
+                          onTap: navigateWithPrefetch,
+                          type: BottomNavigationBarType.fixed,
+                          elevation: 0,
+                          backgroundColor: Colors.transparent,
+                          selectedItemColor: AppColors.textPrimary,
+                          unselectedItemColor: AppColors.textSecondary,
+                          selectedFontSize: 10,
+                          unselectedFontSize: 10,
+                          selectedLabelStyle: const TextStyle(
+                            fontSize: 10,
+                            height: 1.15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontSize: 10,
+                            height: 1.15,
+                          ),
+                          showUnselectedLabels: true,
+                          items: _navItems.asMap().entries.map((entry) {
+                            final item = entry.value;
+                            return BottomNavigationBarItem(
+                              icon: _navIcon(
+                                item,
+                                unreadChats,
+                                incomingFriends,
+                                gamesMyTurn,
+                                gameInvitesCount,
+                                homeBadgeCount,
+                              ),
+                              activeIcon: _navIcon(
+                                item,
+                                unreadChats,
+                                incomingFriends,
+                                gamesMyTurn,
+                                gameInvitesCount,
+                                homeBadgeCount,
+                                selected: true,
+                              ),
+                              label: item.label,
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),
@@ -485,13 +514,14 @@ Widget _navIcon(
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
-  final iconSize = selected ? 25.0 : 22.0;
+  final iconSize = selected ? 24.0 : 22.0;
+  // Без «таблетки» 999: на PWA нижняя панель выглядела пузырьками со скруглением.
   final baseIcon = Container(
-    padding: const EdgeInsets.all(5),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
     decoration: selected
         ? BoxDecoration(
             color: AppColors.accentSoft.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
                 color: AppColors.accentStart.withValues(alpha: 0.35)),
           )

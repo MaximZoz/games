@@ -1948,7 +1948,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                       )
                     else
                       SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // Сверху запас под фиолетовую тень GradientCard —
+                        // иначе CustomScrollView обрезает её о хедер (линия среза).
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -1965,7 +1967,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   _chatActionInFlight.contains(blockKey);
                               final itemBusy = clearBusy || blockBusy;
                               return Padding(
-                                padding: const EdgeInsets.only(top: 10),
+                                padding: EdgeInsets.only(
+                                  top: index == 0 ? 0 : 10,
+                                ),
                                 child: Slidable(
                                   key: ValueKey('chat_${item.chatID}'),
                                   enabled: !itemBusy,

@@ -87,26 +87,18 @@ class _GradientCardState extends State<GradientCard>
         gradient: gradient,
         borderRadius: BorderRadius.circular(r),
         boxShadow: [
-          // Основная градиентная тень: accentStart (холодный фиолетовый)
+          // Тень в основном вниз — меньше обрезания у хедера списков.
           BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.25),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-            spreadRadius: -6,
+            color: AppColors.accentStart.withValues(alpha: 0.22),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+            spreadRadius: -8,
           ),
-          // Вторая тень: accentEnd (тёплый фиолетовый) — градиентный переход
           BoxShadow(
-            color: AppColors.accentEnd.withValues(alpha: 0.18),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-            spreadRadius: -3,
-          ),
-          // Мягкое свечение по контуру
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.1),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-            spreadRadius: 0,
+            color: AppColors.accentEnd.withValues(alpha: 0.14),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+            spreadRadius: -4,
           ),
         ],
       ),
