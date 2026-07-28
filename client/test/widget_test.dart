@@ -66,15 +66,16 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Профиль доступен без auth — там видна навигация
+    // Профиль доступен без auth — там видна навигация (иконки + подпись таба).
     await tester.tap(find.byIcon(Icons.person));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Главная'), findsWidgets);
+    expect(find.byIcon(Icons.home), findsOneWidget);
+    expect(find.byIcon(Icons.person), findsWidgets);
+    expect(find.byIcon(Icons.people), findsOneWidget);
+    expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsOneWidget);
     expect(find.text('Профиль'), findsWidgets);
-    expect(find.text('Друзья'), findsWidgets);
-    expect(find.text('Чаты'), findsWidgets);
   });
 
   testWidgets('Unauthenticated user tapping Home redirects to login',

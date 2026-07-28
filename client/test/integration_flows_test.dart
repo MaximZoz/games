@@ -215,7 +215,8 @@ void main() {
   });
 
   group('Desktop vs phone nav consistency', () {
-    testWidgets('Tablet rail labels match phone bottom labels', (tester) async {
+    testWidgets('Tablet rail has labels; phone shows one caption under icons',
+        (tester) async {
       const labels = [
         'Главная',
         'Профиль',
@@ -235,10 +236,11 @@ void main() {
       setPhonePortrait(tester);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      for (final label in labels) {
-        expect(find.text(label), findsWidgets, reason: 'bottom: $label');
-      }
-      expect(find.byType(BottomNavigationBar), findsOneWidget);
+      expect(find.byKey(const ValueKey('mobile-bottom-nav')), findsOneWidget);
+      // На phone одна подпись — текущий таб.
+      expect(find.text('Профиль'), findsWidgets);
+      expect(find.byIcon(Icons.home), findsOneWidget);
+      expect(find.byIcon(Icons.settings), findsOneWidget);
     });
   });
 }

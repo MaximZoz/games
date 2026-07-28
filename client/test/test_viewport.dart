@@ -51,5 +51,5 @@ Future<void> openGuestProfileOnPhone(WidgetTester tester) async {
   setPhonePortrait(tester);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
-  expect(find.byType(BottomNavigationBar), findsOneWidget);
+  expect(find.byKey(const ValueKey('mobile-bottom-nav')), findsOneWidget);
 }

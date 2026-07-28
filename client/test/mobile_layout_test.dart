@@ -4,34 +4,34 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'test_viewport.dart';
 
+Finder mobileBottomNav() => find.byKey(const ValueKey('mobile-bottom-nav'));
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Phone portrait: BottomNavigationBar, no NavigationRail',
+  testWidgets('Phone portrait: icon-only bottom nav, no NavigationRail',
       (tester) async {
-    // С /login на phone нет nav — заходим в профиль через tablet→phone.
     await openGuestProfileOnPhone(tester);
 
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
+    expect(mobileBottomNav(), findsOneWidget);
+    expect(find.byType(BottomNavigationBar), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
-    expect(find.text('Главная'), findsWidgets);
+    // Одна подпись — текущий таб (Профиль).
     expect(find.text('Профиль'), findsWidgets);
-    expect(find.text('Друзья'), findsWidgets);
-    expect(find.text('Чаты'), findsWidgets);
-    expect(find.text('Игры'), findsWidgets);
-    expect(find.text('Настройки'), findsWidgets);
+    expect(find.byIcon(Icons.home), findsOneWidget);
+    expect(find.byIcon(Icons.people), findsOneWidget);
+    expect(find.byIcon(Icons.settings), findsOneWidget);
   });
 
-  testWidgets('Tablet: NavigationRail, no BottomNavigationBar',
-      (tester) async {
+  testWidgets('Tablet: NavigationRail, no mobile bottom nav', (tester) async {
     setTablet(tester);
     await pumpMultiGamesApp(tester);
     await goToProfileTab(tester);
 
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsNothing);
+    expect(mobileBottomNav(), findsNothing);
     expect(find.text('Главная'), findsWidgets);
     expect(find.text('Профиль'), findsWidgets);
   });
@@ -43,7 +43,7 @@ void main() {
     await goToProfileTab(tester);
 
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsNothing);
+    expect(mobileBottomNav(), findsNothing);
   });
 
   testWidgets('Phone on login: bottom nav hidden', (tester) async {
@@ -51,7 +51,7 @@ void main() {
     await pumpMultiGamesApp(tester);
 
     expect(find.text('Вход'), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsNothing);
+    expect(mobileBottomNav(), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
   });
 
@@ -81,13 +81,25 @@ void main() {
       (tester) async {
     await openGuestProfileOnPhone(tester);
 
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
+    expect(mobileBottomNav(), findsOneWidget);
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Вход'), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsNothing);
+    expect(mobileBottomNav(), findsNothing);
+  });
+
+  testWidgets('Phone bottom nav label follows selected tab', (tester) async {
+    await openGuestProfileOnPhone(tester);
+    expect(find.text('Профиль'), findsWidgets);
+
+    // Друзья → редирект на login, nav скрыт. Остаёмся на профиле и
+    // проверяем, что активная иконка без заливки (просто Icon).
+    final personIcons = find.byIcon(Icons.person);
+    expect(personIcons, findsWidgets);
+    final iconWidget = tester.widget<Icon>(personIcons.first);
+    expect(iconWidget.color, isNotNull);
   });
 
   testWidgets('Phone bottom nav: Profile stays on guest profile',
@@ -99,6 +111,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Войдите в аккаунт'), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
+    expect(mobileBottomNav(), findsOneWidget);
+    expect(find.text('Профиль'), findsWidgets);
   });
 }
