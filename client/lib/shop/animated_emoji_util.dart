@@ -326,9 +326,17 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     }
 
     final fb = resolvedEmojiChar(widget.animatedName, widget.fallback);
-    final staticChild = Text(
-      fb,
-      style: TextStyle(fontSize: widget.size * 0.85),
+    final staticChild = FittedBox(
+      fit: BoxFit.contain,
+      child: Text(
+        fb,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: widget.size,
+          height: 1.0,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+      ),
     );
 
     if (!widget.animate || _failed) {
@@ -338,11 +346,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       return SizedBox(
         width: widget.size,
         height: widget.size,
-        child: AnimatedOpacity(
-          opacity: 1,
-          duration: AppDurations.short,
-          child: Center(child: staticChild),
-        ),
+        child: Center(child: staticChild),
       );
     }
 
@@ -358,13 +362,15 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       );
     }
 
-    // Пока Lottie не загрузился — только лоадер, сам AnimatedEmoji под ним
-    // с opacity 0 всё равно начнёт грузить ассет.
+    // Пока Lottie не загрузился — только лоадер. Чуть уменьшаем анимацию,
+    // чтобы края глифа не обрезались родительским клипом.
+    final lottieSize = widget.size * 0.92;
     return SizedBox(
       width: widget.size,
       height: widget.size,
       child: Stack(
         alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
           if (!_ready) EmojiIconPlaceholder(size: widget.size),
           Opacity(
@@ -373,7 +379,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
               ignoring: !_ready,
               child: AnimatedEmoji(
                 data,
-                size: widget.size,
+                size: lottieSize,
                 repeat: true,
                 animate: true,
                 source: AnimatedEmojiSource.asset,

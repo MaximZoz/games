@@ -384,7 +384,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                     final end = math.min(start + _pageSize, emojis.length);
                     final pageItems = emojis.sublist(start, end);
                     return Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 6, 2, 6),
+                      padding: const EdgeInsets.fromLTRB(10, 8, 2, 10),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           const cols = 3;
@@ -448,27 +448,51 @@ class _EmojiBuyTile extends StatelessWidget {
     return Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
+      // Не клипаем жёстко содержимое: Lottie/emoji часто чуть выходят за бокс.
+      clipBehavior: Clip.none,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
+        padding: const EdgeInsets.fromLTRB(6, 6, 6, 5),
         decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         ),
         child: Column(
           children: [
             Expanded(
-              child: InkWell(
-                onTap: onPreview,
-                borderRadius: BorderRadius.circular(12),
-                child: Center(
-                  child: name.isEmpty
-                      ? Text(fallback, style: const TextStyle(fontSize: 30))
-                      : ShopAnimatedEmoji(
-                          animatedName: name,
-                          size: 36,
-                          fallback: fallback,
-                        ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onPreview,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final side = math.min(
+                          constraints.maxWidth,
+                          constraints.maxHeight,
+                        );
+                        // Чуть меньше ячейки — запас снизу/сверху, без обрезки.
+                        final emojiSize = (side * 0.82).clamp(20.0, 56.0);
+                        return Center(
+                          child: name.isEmpty
+                              ? Text(
+                                  fallback,
+                                  style: TextStyle(
+                                    fontSize: emojiSize * 0.85,
+                                    height: 1,
+                                  ),
+                                )
+                              : ShopAnimatedEmoji(
+                                  animatedName: name,
+                                  size: emojiSize,
+                                  fallback: fallback,
+                                ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -480,6 +504,7 @@ class _EmojiBuyTile extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
+                height: 1.1,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -488,24 +513,21 @@ class _EmojiBuyTile extends StatelessWidget {
               onTap: busy ? null : onBuy,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        BalanceDisplay(
-                          bronze: item.priceBronze,
-                          coinSize: 11,
-                          fontSize: 11,
-                          spacing: 4,
-                        ),
-                      ],
+                    BalanceDisplay(
+                      bronze: item.priceBronze,
+                      coinSize: 11,
+                      fontSize: 11,
+                      spacing: 4,
                     ),
                     Text(
                       busy ? '…' : 'Купить · 10 шт.',
                       style: TextStyle(
                         fontSize: 9,
+                        height: 1.1,
                         color: AppColors.textSecondary.withValues(alpha: 0.9),
                       ),
                     ),
