@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -95,6 +97,48 @@ Future<void> showCollectionFullscreen(
       );
     },
   );
+}
+
+/// Секция коллекций в карточке пользователя (по клику на аватар).
+/// Загружает витрину по [userId]; если пусто — ничего не рисует.
+class PeerCollectionsSection extends ConsumerWidget {
+  const PeerCollectionsSection({
+    super.key,
+    required this.userId,
+    this.topPadding = 12,
+  });
+
+  final String userId;
+  final double topPadding;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (userId.trim().isEmpty) return const SizedBox.shrink();
+    return FutureBuilder<List<InventoryItem>>(
+      future: ref.read(shopRepositoryProvider).listCollectionsShowcase(userId),
+      builder: (context, snap) {
+        final items = snap.data ?? const <InventoryItem>[];
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: EdgeInsets.only(top: topPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Коллекции',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              CollectionShowcaseGrid(items: items),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// Горизонтальная полоса картинок коллекций (без карточек и подписей).

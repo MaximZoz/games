@@ -11,6 +11,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -403,6 +404,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                           ),
                         ),
                       ],
+                      PeerCollectionsSection(userId: inv.creatorId),
                     ],
                   ),
                 );

@@ -1538,30 +1538,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                const SizedBox(height: 12),
-                FutureBuilder<List<InventoryItem>>(
-                  future: ref
-                      .read(shopRepositoryProvider)
-                      .listCollectionsShowcase(user.id),
-                  builder: (context, snap) {
-                    final items = snap.data ?? const <InventoryItem>[];
-                    if (items.isEmpty) return const SizedBox.shrink();
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Коллекции',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        CollectionShowcaseGrid(items: items),
-                      ],
-                    );
-                  },
-                ),
+                PeerCollectionsSection(userId: user.id),
               ],
             ),
           ),

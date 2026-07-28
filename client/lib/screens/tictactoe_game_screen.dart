@@ -15,6 +15,7 @@ import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -1001,6 +1002,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                    PeerCollectionsSection(userId: opponentId),
                   ],
                 );
               },
