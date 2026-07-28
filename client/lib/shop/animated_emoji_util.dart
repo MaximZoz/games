@@ -133,36 +133,20 @@ class ShopEmojiGroupIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    switch (group) {
-      case 'flags':
-        // Без флага конкретной страны — общий символ «флажки».
-        return _NeutralGroupBadge(
-          size: size,
-          child: Icon(
-            Icons.flag_rounded,
-            size: size * 0.58,
-            color: AppColors.accentStart,
-          ),
-        );
-      case 'game':
-        return ShopAnimatedEmoji(
-          animatedName: 'clinkingBeerMugs',
-          size: size,
-          fallback: '🍻',
-        );
-      case 'emotions':
-        return ShopAnimatedEmoji(
-          animatedName: 'smile',
-          size: size,
-          fallback: '😀',
-        );
-      default:
-        return ShopAnimatedEmoji(
-          animatedName: 'sparkles',
-          size: size,
-          fallback: '✨',
-        );
-    }
+    final icon = switch (group) {
+      'flags' => Icons.flag_rounded,
+      'game' => Icons.sports_esports_rounded,
+      'emotions' => Icons.emoji_emotions_rounded,
+      _ => Icons.auto_awesome_rounded,
+    };
+    return _NeutralGroupBadge(
+      size: size,
+      child: Icon(
+        icon,
+        size: size * 0.58,
+        color: AppColors.accentStart,
+      ),
+    );
   }
 }
 
@@ -191,11 +175,64 @@ class _NeutralGroupBadge extends StatelessWidget {
   }
 }
 
-/// Виджет смайлика из бандла приложения (без сети).
+/// PNG-флаг с лоадером (unicode-флаги на Flutter Web часто дают «битую» картинку).
+class CountryFlagImage extends StatelessWidget {
+  const CountryFlagImage({
+    super.key,
+    required this.iso,
+    required this.size,
+    this.fallbackUnicode,
+  });
+
+  final String iso;
+  final double size;
+  final String? fallbackUnicode;
+
+  @override
+  Widget build(BuildContext context) {
+    final px = (size * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(40, 160);
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Image.network(
+        countryFlagImageUrl(iso, width: px),
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        gaplessPlayback: true,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) {
+            return AnimatedOpacity(
+              opacity: 1,
+              duration: AppDurations.short,
+              child: child,
+            );
+          }
+          return EmojiIconPlaceholder(size: size);
+        },
+        errorBuilder: (context, error, stackTrace) {
+          final fb = (fallbackUnicode ?? '').trim();
+          if (fb.isNotEmpty) {
+            return Center(
+              child: Text(fb, style: TextStyle(fontSize: size * 0.72)),
+            );
+          }
+          return Icon(
+            Icons.flag_outlined,
+            size: size * 0.7,
+            color: AppColors.textSecondary,
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Виджет смайлика из бандла приложения (без сети для Noto Lottie).
 ///
-/// Lottie подгружается с плейсхолдером-лоадером и лёгким fade-in.
-/// В списках/сетках держите [animate]=false — иначе десятки Lottie
-/// одновременно едят память и могут «ронять» вкладку.
+/// Пока ассет/картинка не готовы — только [EmojiIconPlaceholder], без «битых»
+/// иконок. В списках/сетках держите [animate]=false.
 class ShopAnimatedEmoji extends StatefulWidget {
   const ShopAnimatedEmoji({
     super.key,
@@ -244,9 +281,11 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     }
   }
 
-  /// Статичные unicode/флаги: отложить кадр, чтобы сетка не блокировала UI,
-  /// и показать короткий лоадер → fade-in (best practice для тяжёлых emoji-шрифтов).
   void _scheduleStaticReveal() {
+    // Флаги грузятся через Image.network со своим loadingBuilder.
+    if (isCountryFlagAnimatedName(widget.animatedName)) {
+      return;
+    }
     final data =
         widget.animate ? animatedEmojiDataFromName(widget.animatedName) : null;
     final useLottie = widget.animate && data != null;
@@ -258,6 +297,8 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       });
       return;
     }
+    // Статичный unicode: один кадр лоадера, затем fade-in — без мигания
+    // «битых» глифов до готовности текстового layout.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _ready) return;
       setState(() => _ready = true);
@@ -281,6 +322,16 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
 
   @override
   Widget build(BuildContext context) {
+    final flagIso = countryFlagIsoFromName(widget.animatedName);
+    if (flagIso != null) {
+      return CountryFlagImage(
+        iso: flagIso,
+        size: widget.size,
+        fallbackUnicode:
+            countryFlagUnicodeFromName(widget.animatedName) ?? widget.fallback,
+      );
+    }
+
     final fb = resolvedEmojiChar(widget.animatedName, widget.fallback);
     final staticChild = Text(
       fb,
@@ -288,30 +339,34 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     );
 
     if (!widget.animate || _failed) {
+      if (!_ready) {
+        return EmojiIconPlaceholder(size: widget.size);
+      }
       return SizedBox(
         width: widget.size,
         height: widget.size,
         child: AnimatedOpacity(
-          opacity: _ready ? 1 : 0,
+          opacity: 1,
           duration: AppDurations.short,
-          child: _ready ? Center(child: staticChild) : EmojiIconPlaceholder(size: widget.size),
+          child: Center(child: staticChild),
         ),
       );
     }
 
     final data = animatedEmojiDataFromName(widget.animatedName);
     if (data == null) {
+      if (!_ready) {
+        return EmojiIconPlaceholder(size: widget.size);
+      }
       return SizedBox(
         width: widget.size,
         height: widget.size,
-        child: AnimatedOpacity(
-          opacity: _ready ? 1 : 0,
-          duration: AppDurations.short,
-          child: _ready ? Center(child: staticChild) : EmojiIconPlaceholder(size: widget.size),
-        ),
+        child: Center(child: staticChild),
       );
     }
 
+    // Пока Lottie не загрузился — только лоадер, сам AnimatedEmoji под ним
+    // с opacity 0 всё равно начнёт грузить ассет.
     return SizedBox(
       width: widget.size,
       height: widget.size,
@@ -319,23 +374,25 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
         alignment: Alignment.center,
         children: [
           if (!_ready) EmojiIconPlaceholder(size: widget.size),
-          AnimatedOpacity(
+          Opacity(
             opacity: _ready ? 1 : 0,
-            duration: AppDurations.short,
-            child: AnimatedEmoji(
-              data,
-              size: widget.size,
-              repeat: true,
-              animate: true,
-              source: AnimatedEmojiSource.asset,
-              onLoaded: (_) => _markReady(),
-              errorWidget: Builder(
-                builder: (context) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _markFailed();
-                  });
-                  return staticChild;
-                },
+            child: IgnorePointer(
+              ignoring: !_ready,
+              child: AnimatedEmoji(
+                data,
+                size: widget.size,
+                repeat: true,
+                animate: true,
+                source: AnimatedEmojiSource.asset,
+                onLoaded: (_) => _markReady(),
+                errorWidget: Builder(
+                  builder: (context) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _markFailed();
+                    });
+                    return staticChild;
+                  },
+                ),
               ),
             ),
           ),
