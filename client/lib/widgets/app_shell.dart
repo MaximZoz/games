@@ -501,40 +501,25 @@ class _MobileBottomNav extends StatelessWidget {
                     onTap: () => onTap(i),
                     customBorder: const CircleBorder(),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _navIcon(
-                            _navItems[i],
-                            unreadChats,
-                            incomingFriends,
-                            gamesMyTurn,
-                            gameInvitesCount,
-                            homeBadgeCount,
-                            selected: i == safeIndex,
-                          ),
-                          const SizedBox(height: 5),
-                          // Индикатор под активной иконкой (симметрично).
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeOut,
-                            width: i == safeIndex ? 18 : 0,
-                            height: 2.5,
-                            decoration: BoxDecoration(
-                              color: AppColors.accentStart,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                        ],
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Center(
+                        child: _navIcon(
+                          _navItems[i],
+                          unreadChats,
+                          incomingFriends,
+                          gamesMyTurn,
+                          gameInvitesCount,
+                          homeBadgeCount,
+                          selected: i == safeIndex,
+                        ),
                       ),
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 8),
-          // Симметричная подпись: линия — текст — линия.
+          const SizedBox(height: 6),
+          // Симметричная подпись: линия — текст — линия (фиолет. как иконка).
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
             switchInCurve: Curves.easeOut,
@@ -542,8 +527,13 @@ class _MobileBottomNav extends StatelessWidget {
             child: Row(
               key: ValueKey(label),
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _captionHairline(),
+                // Чуть выше центра строки — visually на уровне середины букв.
+                Transform.translate(
+                  offset: const Offset(0, -1),
+                  child: _captionHairline(),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
@@ -552,12 +542,15 @@ class _MobileBottomNav extends StatelessWidget {
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
-                      color: AppColors.textPrimary,
+                      color: AppColors.accentStart,
                       height: 1.0,
                     ),
                   ),
                 ),
-                _captionHairline(),
+                Transform.translate(
+                  offset: const Offset(0, -1),
+                  child: _captionHairline(),
+                ),
               ],
             ),
           ),
@@ -568,10 +561,10 @@ class _MobileBottomNav extends StatelessWidget {
 
   Widget _captionHairline() {
     return Container(
-      width: 22,
-      height: 1,
+      width: 33, // ×1.5 от прежних 22
+      height: 1.5,
       decoration: BoxDecoration(
-        color: AppColors.accentStart.withValues(alpha: 0.45),
+        color: AppColors.accentStart.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(999),
       ),
     );
