@@ -17,7 +17,9 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
@@ -101,6 +103,26 @@ class AppShell extends ConsumerWidget {
             ref.invalidate(dailyRewardStatusProvider);
             ref.invalidate(dailyRewardAvailableProvider);
           }
+          if (type == 'chat_message') {
+            final me = ref.read(authStateProvider).valueOrNull?.id;
+            final messageRaw = event['message'];
+            if (me != null && me.isNotEmpty && messageRaw is Map) {
+              final map = Map<String, dynamic>.from(messageRaw);
+              final sender = map['sender_user_id']?.toString() ?? '';
+              if (sender.isNotEmpty && sender != me) {
+                final gift = parseGiftCollectionMessage(
+                  map['body']?.toString() ?? '',
+                );
+                if (gift != null && gift.code.trim().isNotEmpty) {
+                  ref
+                      .read(unreadGiftedCollectionsProvider.notifier)
+                      .addCode(gift.code);
+                  ref.invalidate(inventoryListProvider);
+                  ref.invalidate(collectionIncomeProvider);
+                }
+              }
+            }
+          }
         });
       });
     }
@@ -114,10 +136,13 @@ class AppShell extends ConsumerWidget {
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncomeAvailable =
         ref.watch(collectionIncomeAvailableProvider);
-    // На «Главной» суммируем daily + достижения + доход коллекций.
+    final unreadGiftedCollections =
+        ref.watch(unreadGiftedCollectionsCountProvider);
+    // На «Главной» суммируем daily + достижения + доход + подарки коллекций.
     final homeBadgeCount = dailyRewardCount +
         achievementsUnclaimed +
-        (collectionIncomeAvailable ? 1 : 0);
+        (collectionIncomeAvailable ? 1 : 0) +
+        unreadGiftedCollections;
     final media = MediaQuery.of(context);
     final padding = media.padding;
     final narrow = isNarrow(context);

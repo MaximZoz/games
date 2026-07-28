@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
@@ -18,11 +19,19 @@ class HomeScreen extends ConsumerWidget {
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncomeAvailable =
         ref.watch(collectionIncomeAvailableProvider);
+    final unreadGifts = ref.watch(unreadGiftedCollectionsCountProvider);
     // Прогрев кэша — экраны открываются без спиннера.
     ref.watch(achievementsListProvider);
     ref.watch(shopCatalogProvider);
     ref.watch(inventoryListProvider);
     ref.watch(collectionIncomeProvider);
+
+    final itemsBadge = (collectionIncomeAvailable ? 1 : 0) + unreadGifts;
+    final itemsSubtitle = unreadGifts > 0
+        ? 'Вам подарили коллекцию'
+        : (collectionIncomeAvailable
+            ? 'Можно забрать доход коллекций'
+            : 'Ваши покупки');
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -64,10 +73,8 @@ class HomeScreen extends ConsumerWidget {
                   HomeActionCard(
                     icon: Icons.inventory_2_rounded,
                     title: 'Предметы',
-                    subtitle: collectionIncomeAvailable
-                        ? 'Можно забрать доход коллекций'
-                        : 'Ваши покупки',
-                    badgeCount: collectionIncomeAvailable ? 1 : 0,
+                    subtitle: itemsSubtitle,
+                    badgeCount: itemsBadge,
                     onTap: () => context.push('/inventory'),
                   ),
                 ],

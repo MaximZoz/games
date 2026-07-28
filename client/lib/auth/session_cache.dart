@@ -5,6 +5,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
 /// Полный сброс пользовательских кэшей при logout/login.
 void clearUserScopedCaches(Ref ref) {
@@ -22,4 +23,5 @@ void clearUserScopedCaches(Ref ref) {
   ref.invalidate(collectionIncomeProvider);
   ref.invalidate(achievementsListProvider);
   ref.invalidate(achievementsUnclaimedCountProvider);
+  ref.read(unreadGiftedCollectionsProvider.notifier).clear();
 }
