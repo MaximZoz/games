@@ -224,20 +224,11 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
 
   Future<void> _showPurchased(ShopItem item) async {
     if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Куплено'),
-          content: Text('${item.title}: +10 использований'),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('ОК'),
-            ),
-          ],
-        );
-      },
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.title}: +10 использований'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 

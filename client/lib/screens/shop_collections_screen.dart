@@ -48,8 +48,16 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
   @override
   Widget build(BuildContext context) {
     void goBack() => context.pop();
+    // Слушаем каталог: после покупки в группе хаб остаётся в стеке и должен
+    // сразу подхватить owned, а не держать устаревший _items.
+    ref.listen<AsyncValue<List<ShopItem>>>(shopCatalogProvider, (prev, next) {
+      final data = next.asData?.value;
+      if (data != null && mounted) {
+        setState(() => _items = data);
+      }
+    });
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
-    final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
+    final items = cached ?? _items;
     final collections = items.where((e) => e.kind == 'collection').toList();
 
     final bySet = <String, List<ShopItem>>{};
@@ -135,10 +143,9 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                         borderRadius: BorderRadius.circular(16),
                         onTap: () async {
                           await context.push('/shop/collections/$set');
-                          if (mounted) {
-                            ref.invalidate(shopCatalogProvider);
-                            unawaited(_reloadSilent());
-                          }
+                          if (!mounted) return;
+                          ref.invalidate(shopCatalogProvider);
+                          await _reloadSilent();
                         },
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
@@ -274,18 +281,16 @@ class _ShopCollectionGroupScreenState
       ref.invalidate(inventoryListProvider);
       ref.invalidate(shopCatalogProvider);
       ref.invalidate(collectionIncomeProvider);
+      // Дождаться свежего каталога, чтобы хаб групп сразу увидел счётчик.
+      try {
+        final fresh = await ref.read(shopCatalogProvider.future);
+        if (mounted) setState(() => _items = fresh);
+      } catch (_) {}
       if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Куплено'),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text('${item.title} добавлен в профиль'),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('ОК'),
-            ),
-          ],
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
