@@ -1564,22 +1564,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ],
                 ),
               ),
-              // Крупная зона тапа слева (шире/выше карточки) — сложно промахнуться.
+              // Крупная зона тапа слева; иконка прижата к левому краю карточки.
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 12, 2),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
                 child: SizedBox(
-                  height: 100,
+                  height: 72,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Positioned(
-                        left: 12,
+                        left: 0,
                         right: 0,
-                        top: 14,
-                        bottom: 14,
+                        top: 8,
+                        bottom: 8,
                         child: GradientCard(
                           animate: false,
-                          padding: const EdgeInsets.fromLTRB(56, 4, 4, 4),
+                          padding: const EdgeInsets.fromLTRB(44, 4, 4, 4),
                           child: Row(
                             children: [
                               Expanded(
@@ -1618,21 +1618,24 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         ),
                       ),
                       Positioned(
-                        left: 0,
+                        left: -8,
                         top: 0,
                         bottom: 0,
-                        width: 100,
+                        width: 64,
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: _sending ? null : _openEmojiPicker,
                             borderRadius: BorderRadius.circular(20),
                             child: const Align(
-                              alignment: Alignment(0.15, 0),
-                              child: Icon(
-                                Icons.emoji_emotions_outlined,
-                                color: AppColors.accentStart,
-                                size: 32,
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 18),
+                                child: Icon(
+                                  Icons.emoji_emotions_outlined,
+                                  color: AppColors.accentStart,
+                                  size: 28,
+                                ),
                               ),
                             ),
                           ),
