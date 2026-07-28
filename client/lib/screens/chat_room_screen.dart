@@ -1603,14 +1603,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   decoration: BoxDecoration(
                                     gradient: AppGradients.borderAt(0.22),
                                     borderRadius: BorderRadius.circular(28),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.accentStart
-                                            .withValues(alpha: 0.2),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
                                   ),
                                   child: Container(
                                     padding: const EdgeInsets.all(10),
@@ -2005,13 +1997,6 @@ class _ChatGiftCard extends StatelessWidget {
                 color: AppColors.accentStart.withValues(alpha: 0.35),
                 width: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentStart.withValues(alpha: 0.10),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

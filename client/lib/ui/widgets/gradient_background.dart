@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'floating_clouds.dart';
-import 'shimmer_gradient.dart';
+import '../app_theme.dart';
 
-/// Фон с переливающимся градиентом и плывущими облаками.
+/// Однородный фон приложения (без shimmer и облаков).
 class GradientBackground extends StatelessWidget {
   const GradientBackground({
     super.key,
@@ -12,16 +11,14 @@ class GradientBackground extends StatelessWidget {
   });
 
   final Widget child;
+  /// Устарело: оставлено для совместимости вызовов, игнорируется.
   final double cloudIntensity;
 
   @override
   Widget build(BuildContext context) {
-    return FloatingClouds(
-      intensity: cloudIntensity,
-      child: ShimmeringGradient(
-        duration: const Duration(seconds: 28),
-        child: child,
-      ),
+    return ColoredBox(
+      color: AppColors.surfaceUnified,
+      child: child,
     );
   }
 }

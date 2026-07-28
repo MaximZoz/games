@@ -228,46 +228,6 @@ class AppShell extends ConsumerWidget {
       }
     }
 
-    // Общий GradientBackground на весь экран. Тулбар прозрачный — без
-    // плоского «перепада» цвета. Мягкий veil сверху сглаживает тени карточек.
-    final contentNav = narrow && !narrowLandscape
-        ? SizedBox.expand(child: navigationShell)
-        : Row(
-            children: [
-              NavigationRail(
-                selectedIndex: selectedIndex,
-                onDestinationSelected: navigateWithPrefetch,
-                backgroundColor: Colors.transparent,
-                selectedIconTheme:
-                    const IconThemeData(color: AppColors.accentStart),
-                unselectedIconTheme:
-                    const IconThemeData(color: AppColors.textSecondary),
-                labelType: narrowLandscape
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.all,
-                destinations: _navItems.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  return NavigationRailDestination(
-                    icon: _navIcon(
-                      item,
-                      unreadChats,
-                      incomingFriends,
-                      gamesMyTurn,
-                      gameInvitesCount,
-                      homeBadgeCount,
-                      selected: index == selectedIndex,
-                    ),
-                    label: Text(item.label),
-                  );
-                }).toList(),
-              ),
-              Expanded(
-                child: SizedBox.expand(child: navigationShell),
-              ),
-            ],
-          );
-
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -394,35 +354,43 @@ class AppShell extends ConsumerWidget {
           ),
         ),
         Expanded(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              contentNav,
-              // Плавный переход от тулбара к контенту (без резкой полосы).
-              const Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 36,
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x66E8ECF4),
-                          Color(0x33E8ECF4),
-                          Color(0x00E8ECF4),
-                        ],
-                        stops: [0.0, 0.45, 1.0],
-                      ),
+          child: narrow && !narrowLandscape
+              ? SizedBox.expand(child: navigationShell)
+              : Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: selectedIndex,
+                      onDestinationSelected: navigateWithPrefetch,
+                      backgroundColor: Colors.transparent,
+                      selectedIconTheme:
+                          const IconThemeData(color: AppColors.accentStart),
+                      unselectedIconTheme:
+                          const IconThemeData(color: AppColors.textSecondary),
+                      labelType: narrowLandscape
+                          ? NavigationRailLabelType.none
+                          : NavigationRailLabelType.all,
+                      destinations: _navItems.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        return NavigationRailDestination(
+                          icon: _navIcon(
+                            item,
+                            unreadChats,
+                            incomingFriends,
+                            gamesMyTurn,
+                            gameInvitesCount,
+                            homeBadgeCount,
+                            selected: index == selectedIndex,
+                          ),
+                          label: Text(item.label),
+                        );
+                      }).toList(),
                     ),
-                  ),
+                    Expanded(
+                      child: SizedBox.expand(child: navigationShell),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -445,90 +413,64 @@ class AppShell extends ConsumerWidget {
               heightFactor: collapseBottomNav ? 0.0 : 1.0,
               child: IgnorePointer(
                 ignoring: collapseBottomNav,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Плавный вход в нижнюю панель (без жёсткой линии).
-                    const IgnorePointer(
-                      child: SizedBox(
-                        height: 20,
-                        width: double.infinity,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0x00E8ECF4),
-                                Color(0x99E8ECF4),
-                                Color(0xFFE8ECF4),
-                              ],
-                              stops: [0.0, 0.55, 1.0],
+                child: ColoredBox(
+                  color: AppColors.surfaceUnified,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Material(
+                        type: MaterialType.transparency,
+                        child: MediaQuery.withNoTextScaling(
+                          child: BottomNavigationBar(
+                            currentIndex: selectedIndex,
+                            onTap: navigateWithPrefetch,
+                            type: BottomNavigationBarType.fixed,
+                            elevation: 0,
+                            backgroundColor: Colors.transparent,
+                            selectedItemColor: AppColors.textPrimary,
+                            unselectedItemColor: AppColors.textSecondary,
+                            selectedFontSize: 10,
+                            unselectedFontSize: 10,
+                            selectedLabelStyle: const TextStyle(
+                              fontSize: 10,
+                              height: 1.15,
+                              fontWeight: FontWeight.w600,
                             ),
+                            unselectedLabelStyle: const TextStyle(
+                              fontSize: 10,
+                              height: 1.15,
+                            ),
+                            showUnselectedLabels: true,
+                            items: _navItems.asMap().entries.map((entry) {
+                              final item = entry.value;
+                              return BottomNavigationBarItem(
+                                icon: _navIcon(
+                                  item,
+                                  unreadChats,
+                                  incomingFriends,
+                                  gamesMyTurn,
+                                  gameInvitesCount,
+                                  homeBadgeCount,
+                                ),
+                                activeIcon: _navIcon(
+                                  item,
+                                  unreadChats,
+                                  incomingFriends,
+                                  gamesMyTurn,
+                                  gameInvitesCount,
+                                  homeBadgeCount,
+                                  selected: true,
+                                ),
+                                label: item.label,
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
-                    ),
-                    ColoredBox(
-                      color: AppColors.surfaceUnified,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Material(
-                            type: MaterialType.transparency,
-                            child: MediaQuery.withNoTextScaling(
-                              child: BottomNavigationBar(
-                                currentIndex: selectedIndex,
-                                onTap: navigateWithPrefetch,
-                                type: BottomNavigationBarType.fixed,
-                                elevation: 0,
-                                backgroundColor: Colors.transparent,
-                                selectedItemColor: AppColors.textPrimary,
-                                unselectedItemColor: AppColors.textSecondary,
-                                selectedFontSize: 10,
-                                unselectedFontSize: 10,
-                                selectedLabelStyle: const TextStyle(
-                                  fontSize: 10,
-                                  height: 1.15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                unselectedLabelStyle: const TextStyle(
-                                  fontSize: 10,
-                                  height: 1.15,
-                                ),
-                                showUnselectedLabels: true,
-                                items: _navItems.asMap().entries.map((entry) {
-                                  final item = entry.value;
-                                  return BottomNavigationBarItem(
-                                    icon: _navIcon(
-                                      item,
-                                      unreadChats,
-                                      incomingFriends,
-                                      gamesMyTurn,
-                                      gameInvitesCount,
-                                      homeBadgeCount,
-                                    ),
-                                    activeIcon: _navIcon(
-                                      item,
-                                      unreadChats,
-                                      incomingFriends,
-                                      gamesMyTurn,
-                                      gameInvitesCount,
-                                      homeBadgeCount,
-                                      selected: true,
-                                    ),
-                                    label: item.label,
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ),
-                          // Заливка под home indicator — до скруглённых углов.
-                          SizedBox(height: bottomInset),
-                        ],
-                      ),
-                    ),
-                  ],
+                      // Заливка под home indicator — до скруглённых углов.
+                      SizedBox(height: bottomInset),
+                    ],
+                  ),
                 ),
               ),
             ),

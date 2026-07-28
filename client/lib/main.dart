@@ -7,7 +7,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'router.dart';
 import 'ui/app_theme.dart';
-import 'ui/widgets/shimmer_animation_scope.dart';
 import 'src/console_log_stub.dart'
     if (dart.library.html) 'src/console_log_web.dart' as console_log;
 
@@ -81,9 +80,7 @@ class MultiGamesApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
-    return ShimmerAnimationScope(
-      duration: const Duration(seconds: 28),
-      child: MaterialApp.router(
+    return MaterialApp.router(
       title: 'MultiGames',
       debugShowCheckedModeBanner: false,
       scrollBehavior: const _NoScrollbarBehavior(),
@@ -92,10 +89,10 @@ class MultiGamesApp extends ConsumerWidget {
           seedColor: AppColors.accentStart,
           brightness: Brightness.light,
           primary: AppColors.accentStart,
-          surface: Colors.transparent,
+          surface: AppColors.surfaceUnified,
         ),
         useMaterial3: true,
-        scaffoldBackgroundColor: Colors.transparent,
+        scaffoldBackgroundColor: AppColors.surfaceUnified,
         textSelectionTheme: TextSelectionThemeData(
           selectionColor: AppColors.accentSoft.withValues(alpha: 0.5),
           cursorColor: AppColors.textPrimary,
@@ -145,7 +142,6 @@ class MultiGamesApp extends ConsumerWidget {
         ),
       ),
       routerConfig: router,
-      ),
     );
   }
 }

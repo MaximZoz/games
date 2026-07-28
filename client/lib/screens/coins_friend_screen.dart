@@ -62,13 +62,6 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                               border: Border.all(
                                 color: Colors.black.withValues(alpha: 0.06),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
