@@ -1416,7 +1416,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   final message = entry.message!;
                   final mine = message.senderUserID == meID;
                   final isEmoji = isAnimatedEmojiMessage(message.body);
-                  if (isEmoji) {
+                  final isGift = isGiftCollectionMessage(message.body);
+                  if (isEmoji || isGift) {
                     return Align(
                       key: ValueKey(message.id),
                       alignment: Alignment.center,
@@ -1587,68 +1588,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 12, 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Крупная зона тапа вокруг смайлика (лево/верх/низ/сам значок).
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _sending ? null : _openEmojiPicker,
-                      child: const SizedBox(
-                        width: 120,
-                        height: 104,
-                        child: Center(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                child: GradientCard(
+                  animate: false,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _sending ? null : _openEmojiPicker,
+                        child: const SizedBox(
+                          width: 52,
+                          height: 48,
                           child: Icon(
                             Icons.emoji_emotions_outlined,
                             color: AppColors.accentStart,
-                            size: 34,
+                            size: 28,
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: GradientCard(
-                        animate: false,
-                        padding: const EdgeInsets.fromLTRB(8, 8, 6, 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _textController,
-                                focusNode: _composerFocusNode,
-                                minLines: 1,
-                                maxLines: 4,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                decoration: const InputDecoration(
-                                  hintText: 'Введите сообщение...',
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                ),
-                                textInputAction: TextInputAction.send,
-                                onTap: _scrollToBottom,
-                                onSubmitted: (_) => _sendMessage(),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _sending ? null : _sendMessage,
-                              tooltip: 'Отправить',
-                              icon: _sending
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.send_rounded),
-                            ),
-                          ],
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _composerFocusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onTap: _scrollToBottom,
+                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-                    ),
-                  ],
+                      IconButton(
+                        onPressed: _sending ? null : _sendMessage,
+                        tooltip: 'Отправить',
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1939,6 +1929,33 @@ class _ChatMessageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gift = parseGiftCollectionMessage(body);
+    if (gift != null) {
+      final title = gift.title.isNotEmpty ? gift.title : 'Коллекция';
+      final name =
+          gift.animatedName.isNotEmpty ? gift.animatedName : 'sparkles';
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ShopAnimatedEmoji(
+            animatedName: name,
+            size: largeCentered ? 140 : 56,
+            fallback: gift.emoji.isNotEmpty ? gift.emoji : null,
+            animate: true,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Подарок: $title',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      );
+    }
     final name = parseAnimatedEmojiName(body);
     if (name != null) {
       return ShopAnimatedEmoji(

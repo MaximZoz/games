@@ -133,7 +133,13 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                       borderRadius: BorderRadius.circular(16),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: () => context.push('/shop/collections/$set'),
+                        onTap: () async {
+                          await context.push('/shop/collections/$set');
+                          if (mounted) {
+                            ref.invalidate(shopCatalogProvider);
+                            unawaited(_reloadSilent());
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
                           decoration: BoxDecoration(
@@ -481,7 +487,7 @@ class _CollectionShopCard extends StatelessWidget {
               'Куплено',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+                color: Color(0xFF2E7D32),
               ),
             )
           else

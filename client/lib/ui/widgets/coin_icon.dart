@@ -537,14 +537,14 @@ class ToolbarBalanceChip extends StatelessWidget {
     final parts = <Widget>[];
     void add(CoinType type, BigInt value) {
       if (value > BigInt.zero) {
-        if (parts.isNotEmpty) parts.add(const SizedBox(width: 8));
+        if (parts.isNotEmpty) parts.add(const SizedBox(width: 4));
         parts.add(CoinIcon(coinType: type, size: coinSize, showBorder: true, animate: true));
-        parts.add(const SizedBox(width: 4));
+        parts.add(const SizedBox(width: 2));
         parts.add(Text(
           value.toString(),
           style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ));
@@ -556,8 +556,8 @@ class ToolbarBalanceChip extends StatelessWidget {
     add(CoinType.bronze, bronzeRest);
     if (parts.isEmpty) {
       parts.add(CoinIcon(coinType: CoinType.bronze, size: coinSize, showBorder: true, animate: true));
-      parts.add(const SizedBox(width: 4));
-      parts.add(const Text('0', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)));
+      parts.add(const SizedBox(width: 2));
+      parts.add(const Text('0', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)));
     }
 
     return Material(
@@ -566,7 +566,7 @@ class ToolbarBalanceChip extends StatelessWidget {
         onTap: () => _showBalancePopup(context, bronze),
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(999),

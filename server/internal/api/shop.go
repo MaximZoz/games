@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"multigames/server/internal/store"
 
@@ -13,6 +14,7 @@ import (
 
 type ShopHandler struct {
 	Pool *pgxpool.Pool
+	Hub  *RealtimeHub
 }
 
 type buyBody struct {
@@ -293,6 +295,35 @@ func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	// Сообщение получателю о подарке коллекции.
+	title, emoji, animatedName, metaErr := store.GetCollectionGiftMeta(r.Context(), h.Pool, code)
+	if metaErr == nil {
+		chatID, chatErr := store.EnsureDirectChat(r.Context(), h.Pool, userID, toID)
+		if chatErr == nil {
+			body := store.EncodeGiftCollectionMessage(code, title, emoji, animatedName)
+			if msg, msgErr := store.SendChatMessage(r.Context(), h.Pool, chatID, userID, body); msgErr == nil {
+				if h.Hub != nil {
+					item := ChatMessageItem{
+						ID:           msg.ID.String(),
+						ChatID:       msg.ChatID.String(),
+						SenderUserID: msg.SenderUserID.String(),
+						Body:         msg.Body,
+						CreatedAt:    msg.CreatedAt.UTC().Format(time.RFC3339Nano),
+					}
+					h.Hub.PublishToUsers([]uuid.UUID{userID, toID}, map[string]any{
+						"type":    "chat_message",
+						"chat_id": item.ChatID,
+						"message": item,
+					})
+					h.Hub.PublishToUsers([]uuid.UUID{userID, toID}, map[string]any{
+						"type": "chat_list_changed",
+					})
+				}
+			}
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }

@@ -211,7 +211,7 @@ class _ShopItemCard extends StatelessWidget {
               'Куплено',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+                color: Color(0xFF2E7D32),
               ),
             )
           else

@@ -515,6 +515,48 @@ func GiftCollection(ctx context.Context, pool *pgxpool.Pool, fromUser, toUser uu
 	return tx.Commit(ctx)
 }
 
+// GetCollectionGiftMeta returns title/emoji/animated_name for a collection item.
+func GetCollectionGiftMeta(ctx context.Context, pool *pgxpool.Pool, code string) (title, emoji, animatedName string, err error) {
+	var payload []byte
+	err = pool.QueryRow(ctx, `
+		SELECT title, payload
+		FROM shop_items
+		WHERE code = $1 AND kind = 'collection'`, code).Scan(&title, &payload)
+	if err != nil {
+		return "", "", "", err
+	}
+	var m map[string]any
+	if len(payload) > 0 {
+		_ = json.Unmarshal(payload, &m)
+	}
+	if m != nil {
+		if v, ok := m["emoji"].(string); ok {
+			emoji = v
+		}
+		if v, ok := m["animated_name"].(string); ok {
+			animatedName = v
+		}
+	}
+	if animatedName == "" {
+		animatedName = "sparkles"
+	}
+	if emoji == "" {
+		emoji = "🎁"
+	}
+	return title, emoji, animatedName, nil
+}
+
+// EncodeGiftCollectionMessage builds a chat body token for a gifted collection.
+func EncodeGiftCollectionMessage(code, title, emoji, animatedName string) string {
+	safe := func(s string) string {
+		s = strings.ReplaceAll(s, "|", "/")
+		s = strings.ReplaceAll(s, "]", "")
+		return strings.TrimSpace(s)
+	}
+	return fmt.Sprintf("[gift_coll:%s|%s|%s|%s]",
+		safe(code), safe(title), safe(emoji), safe(animatedName))
+}
+
 type CollectionIncomeInfo struct {
 	Available       bool
 	AmountBronze    int

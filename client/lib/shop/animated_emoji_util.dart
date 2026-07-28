@@ -31,8 +31,48 @@ String? unicodeEmojiFromAnimatedName(String name) {
   }
 }
 
-/// Превью текста сообщения: `[ae:smile]` → 😀, иначе исходная строка.
+/// Токен подарка коллекции: `[gift_coll:code|Title|emoji|animatedName]`.
+final RegExp giftCollectionTokenRe = RegExp(
+  r'^\[gift_coll:([^|\]]+)\|([^|\]]*)\|([^|\]]*)\|([^\]]*)\]$',
+);
+
+({String code, String title, String emoji, String animatedName})?
+    parseGiftCollectionMessage(String body) {
+  final m = giftCollectionTokenRe.firstMatch(body.trim());
+  if (m == null) return null;
+  return (
+    code: m.group(1)!.trim(),
+    title: m.group(2)!.trim(),
+    emoji: m.group(3)!.trim(),
+    animatedName: m.group(4)!.trim(),
+  );
+}
+
+bool isGiftCollectionMessage(String body) =>
+    parseGiftCollectionMessage(body) != null;
+
+String encodeGiftCollectionMessage({
+  required String code,
+  required String title,
+  required String emoji,
+  required String animatedName,
+}) {
+  final safeTitle = title.replaceAll('|', '/').replaceAll(']', '');
+  final safeEmoji = emoji.replaceAll('|', '').replaceAll(']', '');
+  final safeName = animatedName.replaceAll('|', '').replaceAll(']', '');
+  return '[gift_coll:$code|$safeTitle|$safeEmoji|$safeName]';
+}
+
+/// Превью текста сообщения: `[ae:smile]` → 😀, подарок → 🎁 Название.
 String formatChatMessagePreview(String body) {
+  final gift = parseGiftCollectionMessage(body);
+  if (gift != null) {
+    final title = gift.title.isNotEmpty ? gift.title : 'коллекция';
+    final emoji = gift.emoji.isNotEmpty
+        ? gift.emoji
+        : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');
+    return '🎁 $emoji $title';
+  }
   final name = parseAnimatedEmojiName(body);
   if (name == null) return body;
   return unicodeEmojiFromAnimatedName(name) ?? '🙂';

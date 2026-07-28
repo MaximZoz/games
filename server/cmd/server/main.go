@@ -267,7 +267,7 @@ func main() {
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	achievementsHandler := &api.AchievementsHandler{Pool: pool}
-	shopHandler := &api.ShopHandler{Pool: pool}
+	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 		go api.StartBotTimeoutTicker(ctx, gamesHandler)

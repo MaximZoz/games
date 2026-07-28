@@ -240,21 +240,31 @@ class AppShell extends ConsumerWidget {
                             child: toolbarLeading,
                           )
                   else if (isAuthorized)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: authState.when(
-                        data: (user) => user != null
-                            ? ToolbarBalanceChip(
-                                bronze: user.balanceBronze,
-                                coinSize: 18,
-                              )
-                            : const SizedBox.shrink(),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
+                    Flexible(
+                      flex: 5,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: authState.when(
+                          data: (user) => user != null
+                              ? Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: ToolbarBalanceChip(
+                                      bronze: user.balanceBronze,
+                                      coinSize: 16,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
                       ),
                     ),
-                  const Spacer(),
+                  const SizedBox(width: 6),
                   Flexible(
+                    flex: 4,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: authState.when(
@@ -269,21 +279,23 @@ class AppShell extends ConsumerWidget {
                                         Icons.admin_panel_settings),
                                     onPressed: () => context.go('/admin'),
                                     tooltip: 'Админка',
+                                    visualDensity: VisualDensity.compact,
                                   ),
                                 Flexible(
                                   child: Tooltip(
                                     message: user.displayName ?? user.email,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(right: 4),
+                                      padding: const EdgeInsets.only(right: 2),
                                       child: Text(
                                         user.displayName ?? user.email,
                                         style: const TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 13,
                                           color: AppColors.textPrimary,
                                           decoration: TextDecoration.none,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.right,
                                       ),
                                     ),
                                   ),
@@ -296,6 +308,7 @@ class AppShell extends ConsumerWidget {
                                         .logout();
                                   },
                                   tooltip: 'Выйти',
+                                  visualDensity: VisualDensity.compact,
                                 ),
                               ],
                             );

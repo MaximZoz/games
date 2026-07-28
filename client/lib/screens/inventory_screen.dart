@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -150,6 +151,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       await ref.read(shopRepositoryProvider).giftCollection(item.code, toId);
       ref.invalidate(inventoryListProvider);
       ref.invalidate(collectionIncomeProvider);
+      ref.invalidate(chatsListProvider);
+      ref.read(chatsListCacheProvider.notifier).state = null;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

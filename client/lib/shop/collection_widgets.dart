@@ -82,7 +82,6 @@ Future<void> showCollectionFullscreen(
                   ],
                   if (bottomAction != null) ...[
                     const SizedBox(height: 24),
-                    // Не закрывать при тапе по кнопке «Купить».
                     GestureDetector(
                       onTap: () {},
                       child: bottomAction,
@@ -98,15 +97,18 @@ Future<void> showCollectionFullscreen(
   );
 }
 
+/// Горизонтальная полоса картинок коллекций (без карточек и подписей).
 class CollectionShowcaseGrid extends StatelessWidget {
   const CollectionShowcaseGrid({
     super.key,
     required this.items,
     this.emptyText = 'Коллекций пока нет',
+    this.titleOnlyOnTap = true,
   });
 
   final List<InventoryItem> items;
   final String emptyText;
+  final bool titleOnlyOnTap;
 
   @override
   Widget build(BuildContext context) {
@@ -116,75 +118,40 @@ class CollectionShowcaseGrid extends StatelessWidget {
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
       );
     }
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final it in items)
-          Material(
-            color: AppColors.surfaceCard,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: () => showCollectionFullscreen(
-                context,
-                title: it.title,
-                animatedName: it.animatedName ?? 'sparkles',
-                fallback: it.emoji,
-                subtitle: collectionItemSubtitle(it.dailyBronze),
-              ),
-              child: Container(
-                width: 88,
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-                ),
-                child: Column(
-                  children: [
-                    ShopAnimatedEmoji(
-                      animatedName: it.animatedName ?? 'sparkles',
-                      size: 42,
-                      fallback: it.emoji,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      it.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    if (it.dailyBronze > 0) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CoinIcon(
-                            coinType: rewardCoinType(it.dailyBronze),
-                            size: 10,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '+${rewardCoinAmount(it.dailyBronze)}/день',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+    return SizedBox(
+      height: 56,
+      width: double.infinity,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final it = items[index];
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => showCollectionFullscreen(
+              context,
+              title: it.title,
+              animatedName: it.animatedName ?? 'sparkles',
+              fallback: it.emoji,
+              subtitle: titleOnlyOnTap
+                  ? null
+                  : collectionItemSubtitle(it.dailyBronze),
+            ),
+            child: SizedBox(
+              width: 52,
+              height: 56,
+              child: Center(
+                child: ShopAnimatedEmoji(
+                  animatedName: it.animatedName ?? 'sparkles',
+                  size: 44,
+                  fallback: it.emoji,
                 ),
               ),
             ),
-          ),
-      ],
+          );
+        },
+      ),
     );
   }
 }

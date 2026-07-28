@@ -97,6 +97,13 @@ class DailyRewardStatus {
   final int nextRewardBronze;
   final Map<int, int> milestonesBronze;
 
+  static const empty = DailyRewardStatus(
+    available: false,
+    streak: 0,
+    nextStreak: 1,
+    nextRewardBronze: 10,
+  );
+
   factory DailyRewardStatus.fromJson(Map<String, dynamic> json) {
     final milestonesRaw = json['milestones_bronze'];
     final milestones = <int, int>{
