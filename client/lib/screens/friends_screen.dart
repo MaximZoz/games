@@ -16,6 +16,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -441,6 +442,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     } else {
       avatar = _buildLetterAvatar(user);
     }
+    avatar = FramedAvatar(
+      size: 40,
+      borderWidth: 2.8,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      child: avatar,
+    );
     if (isOnline == true) {
       avatar = Stack(
         clipBehavior: Clip.none,

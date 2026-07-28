@@ -57,13 +57,6 @@ class ShopScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     HomeActionCard(
-                      icon: Icons.crop_square_rounded,
-                      title: 'Рамки',
-                      subtitle: 'Оформление аватара в профиле',
-                      onTap: () => context.push('/shop/frames'),
-                    ),
-                    const SizedBox(height: 12),
-                    HomeActionCard(
                       icon: Icons.casino_outlined,
                       title: 'Ставки',
                       subtitle: 'Разблокировка серебряных ставок',

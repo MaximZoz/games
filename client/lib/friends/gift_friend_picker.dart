@@ -7,6 +7,7 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 
@@ -259,6 +260,13 @@ class _GiftFriendPickerDialogState
     } else {
       avatar = _letterAvatar(user);
     }
+    avatar = FramedAvatar(
+      size: 40,
+      borderWidth: 2.8,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      child: avatar,
+    );
     if (isOnline == true) {
       avatar = Stack(
         clipBehavior: Clip.none,

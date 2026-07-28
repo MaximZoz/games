@@ -198,14 +198,15 @@ func (h *ShopHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
-	frameColor, err := store.EquippedFrameColor(r.Context(), h.Pool, userID)
+	frame, err := store.EquippedFrameForUser(r.Context(), h.Pool, userID)
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 	resp := map[string]any{"allowed_stake_bronze": stakes}
-	if frameColor != nil {
-		resp["frame_color"] = *frameColor
+	if frame != nil {
+		resp["frame_color"] = frame.Color
+		resp["frame_code"] = frame.Code
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")

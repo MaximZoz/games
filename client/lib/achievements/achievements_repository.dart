@@ -13,12 +13,14 @@ class AchievementItem {
     required this.progress,
     required this.target,
     required this.status,
+    this.rewardItemCode,
   });
 
   final String code;
   final String title;
   final String description;
   final int rewardBronze;
+  final String? rewardItemCode;
   final int progress;
   final int target;
   final String status; // locked | unlocked | claimed
@@ -26,6 +28,8 @@ class AchievementItem {
   bool get isLocked => status == 'locked';
   bool get isUnlocked => status == 'unlocked';
   bool get isClaimed => status == 'claimed';
+  bool get hasFrameReward =>
+      rewardItemCode != null && rewardItemCode!.startsWith('frame_');
 
   factory AchievementItem.fromJson(Map<String, dynamic> json) {
     return AchievementItem(
@@ -33,6 +37,7 @@ class AchievementItem {
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       rewardBronze: (json['reward_bronze'] as num?)?.toInt() ?? 0,
+      rewardItemCode: json['reward_item_code'] as String?,
       progress: (json['progress'] as num?)?.toInt() ?? 0,
       target: (json['target'] as num?)?.toInt() ?? 0,
       status: json['status'] as String? ?? 'locked',

@@ -46,6 +46,9 @@ func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
 			"target":        it.Target,
 			"status":        it.Status,
 		}
+		if it.RewardItemCode != "" {
+			m["reward_item_code"] = it.RewardItemCode
+		}
 		if it.UnlockedAt != nil {
 			m["unlocked_at"] = it.UnlockedAt.UTC().Format(time.RFC3339)
 		}
@@ -116,9 +119,13 @@ func (h *AchievementsHandler) Claim(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
+	resp := map[string]any{
 		"balance_bronze": result.BalanceBronze,
 		"reward_bronze":  result.RewardBronze,
 		"code":           result.Code,
-	})
+	}
+	if result.RewardItemCode != "" {
+		resp["reward_item_code"] = result.RewardItemCode
+	}
+	_ = json.NewEncoder(w).Encode(resp)
 }

@@ -174,8 +174,12 @@ class GameStateItem {
   final String? oDisplayName;
   final String xAvatarKind;
   final String? xAvatarValue;
+  final String? xFrameColor;
+  final String? xFrameCode;
   final String oAvatarKind;
   final String? oAvatarValue;
+  final String? oFrameColor;
+  final String? oFrameCode;
   final List<int>? winningCells;
 
   GameStateItem({
@@ -199,8 +203,12 @@ class GameStateItem {
     this.oDisplayName,
     this.xAvatarKind = 'letter',
     this.xAvatarValue,
+    this.xFrameColor,
+    this.xFrameCode,
     this.oAvatarKind = 'letter',
     this.oAvatarValue,
+    this.oFrameColor,
+    this.oFrameCode,
     this.winningCells,
   });
 
@@ -253,8 +261,12 @@ class GameStateItem {
       oDisplayName: json['o_display_name'] as String?,
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',
       xAvatarValue: json['x_avatar_value'] as String?,
+      xFrameColor: json['x_frame_color'] as String?,
+      xFrameCode: json['x_frame_code'] as String?,
       oAvatarKind: json['o_avatar_kind'] as String? ?? 'letter',
       oAvatarValue: json['o_avatar_value'] as String?,
+      oFrameColor: json['o_frame_color'] as String?,
+      oFrameCode: json['o_frame_code'] as String?,
       winningCells: _parseWinningCells(json['winning_cells']),
     );
   }

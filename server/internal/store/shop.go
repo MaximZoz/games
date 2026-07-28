@@ -355,16 +355,44 @@ func ConsumeEmoji(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, cod
 	return qty, nil
 }
 
-// EquippedFrameColor returns payload color of the latest owned frame, if any.
-func EquippedFrameColor(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (*string, error) {
+// EquippedFrame — активная рамка пользователя (лучшая из имеющихся).
+type EquippedFrame struct {
+	Code  string
+	Color string
+}
+
+func frameRank(code string) int {
+	switch code {
+	case FrameGoldCode:
+		return 3
+	case FrameSilverCode:
+		return 2
+	case FrameBronzeCode:
+		return 1
+	default:
+		return 0
+	}
+}
+
+// EquippedFrameForUser returns the best owned frame (gold > silver > bronze).
+// Frames may be inactive in the shop (achievement rewards) and still apply.
+func EquippedFrameForUser(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (*EquippedFrame, error) {
+	var code string
 	var color *string
 	err := pool.QueryRow(ctx, `
-		SELECT s.payload->>'color'
+		SELECT s.code, s.payload->>'color'
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
-		WHERE u.user_id = $1 AND s.kind = 'frame' AND s.active = TRUE
-		ORDER BY u.acquired_at DESC
-		LIMIT 1`, userID).Scan(&color)
+		WHERE u.user_id = $1 AND s.kind = 'frame'
+		ORDER BY
+			CASE s.code
+				WHEN 'frame_gold' THEN 3
+				WHEN 'frame_silver' THEN 2
+				WHEN 'frame_bronze' THEN 1
+				ELSE 0
+			END DESC,
+			u.acquired_at DESC
+		LIMIT 1`, userID).Scan(&code, &color)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -374,7 +402,58 @@ func EquippedFrameColor(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 	if color == nil || *color == "" {
 		return nil, nil
 	}
-	return color, nil
+	return &EquippedFrame{Code: code, Color: *color}, nil
+}
+
+// EquippedFrameColor returns payload color of the best owned frame, if any.
+func EquippedFrameColor(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (*string, error) {
+	f, err := EquippedFrameForUser(ctx, pool, userID)
+	if err != nil || f == nil {
+		return nil, err
+	}
+	c := f.Color
+	return &c, nil
+}
+
+// EquippedFramesMap returns best frame per user id.
+func EquippedFramesMap(ctx context.Context, pool *pgxpool.Pool, userIDs []uuid.UUID) (map[uuid.UUID]EquippedFrame, error) {
+	out := make(map[uuid.UUID]EquippedFrame)
+	if len(userIDs) == 0 {
+		return out, nil
+	}
+	rows, err := pool.Query(ctx, `
+		SELECT DISTINCT ON (u.user_id)
+			u.user_id, s.code, s.payload->>'color'
+		FROM user_inventory u
+		JOIN shop_items s ON s.code = u.item_code
+		WHERE u.user_id = ANY($1) AND s.kind = 'frame'
+		ORDER BY
+			u.user_id,
+			CASE s.code
+				WHEN 'frame_gold' THEN 3
+				WHEN 'frame_silver' THEN 2
+				WHEN 'frame_bronze' THEN 1
+				ELSE 0
+			END DESC,
+			u.acquired_at DESC
+	`, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var uid uuid.UUID
+		var code string
+		var color *string
+		if err := rows.Scan(&uid, &code, &color); err != nil {
+			return nil, err
+		}
+		if color == nil || *color == "" {
+			continue
+		}
+		out[uid] = EquippedFrame{Code: code, Color: *color}
+	}
+	return out, rows.Err()
 }
 
 // ListCollections returns owned collection items for a user (public showcase).

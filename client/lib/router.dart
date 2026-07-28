@@ -178,16 +178,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         ],
                       ),
                       GoRoute(
-                        path: 'frames',
-                        pageBuilder: (_, state) => _noTransitionPage(
-                          state,
-                          const ShopSectionScreen(
-                            title: 'Рамки',
-                            kind: 'frame',
-                          ),
-                        ),
-                      ),
-                      GoRoute(
                         path: 'stakes',
                         pageBuilder: (_, state) => _noTransitionPage(
                           state,

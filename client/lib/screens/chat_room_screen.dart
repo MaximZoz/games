@@ -22,6 +22,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -950,6 +951,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final raw = user?.displayName?.trim() ?? fallbackTitle.trim();
       avatar = _buildLetterAvatar(raw: raw, radius: radius);
     }
+    avatar = FramedAvatar(
+      size: radius * 2,
+      borderWidth: radius < 18 ? 2.2 : 2.8,
+      frameCode: user?.frameCode,
+      frameColor: user?.frameColor,
+      child: avatar,
+    );
     if (isOnline == true) {
       return Stack(
         clipBehavior: Clip.none,

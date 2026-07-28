@@ -14,6 +14,7 @@ import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 const _groupTitles = <String, String>{
@@ -440,21 +441,14 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         if (emojis.isEmpty) const SizedBox(height: 16),
                         _Section(
                           title: 'Рамки',
-                          empty: 'Нет рамок',
+                          empty:
+                              'Нет рамок — выиграйте 10 игр в лиге (достижения)',
                           children: [
                             for (final it in frames)
                               _InvTile(
-                                leading: Container(
-                                  width: 26,
-                                  height: 26,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: _parseColor(it.frameColor) ??
-                                          AppColors.accentStart,
-                                      width: 3,
-                                    ),
-                                  ),
+                                leading: FramePreviewBadge(
+                                  frameCode: it.code,
+                                  size: 36,
                                 ),
                                 title: it.title,
                                 subtitle: it.description,
@@ -797,13 +791,4 @@ class _InvTile extends StatelessWidget {
       ),
     );
   }
-}
-
-Color? _parseColor(String? hex) {
-  if (hex == null || hex.isEmpty) return null;
-  var h = hex.replaceFirst('#', '');
-  if (h.length == 6) h = 'FF$h';
-  final v = int.tryParse(h, radix: 16);
-  if (v == null) return null;
-  return Color(v);
 }

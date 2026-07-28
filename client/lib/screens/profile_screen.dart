@@ -22,6 +22,7 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -705,52 +706,49 @@ class _ProfileView extends ConsumerWidget {
     );
   }
 
-  Color? _frameColor(WidgetRef ref) {
-    final hex =
-        ref.watch(inventoryCapabilitiesProvider).valueOrNull?.frameColor;
-    if (hex == null || hex.isEmpty) return null;
-    var h = hex.replaceFirst('#', '');
-    if (h.length == 6) h = 'FF$h';
-    final v = int.tryParse(h, radix: 16);
-    if (v == null) return null;
-    return Color(v);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final frame = _frameColor(ref);
+    final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gapAfterAvatar = shortScreen ? 12.0 : 16.0;
     final gapSection = shortScreen ? 12.0 : 14.0;
+    final hasFrame = AvatarFrameStyle.resolve(
+          code: caps?.frameCode,
+          colorHex: caps?.frameColor,
+        ) !=
+        null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: frame == null
-                ? const LinearGradient(
-                    colors: [AppColors.accentStart, AppColors.accentEnd],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: frame,
-            border: frame != null
-                ? Border.all(color: frame, width: 3)
-                : null,
-          ),
-          child: Container(
+        if (hasFrame)
+          FramedAvatar(
+            size: 80,
+            borderWidth: 4.5,
+            frameCode: caps?.frameCode,
+            frameColor: caps?.frameColor,
+            child: _buildAvatar(),
+          )
+        else
+          Container(
             padding: const EdgeInsets.all(3),
             decoration: const BoxDecoration(
-              color: AppColors.surfaceCard,
               shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppColors.accentStart, AppColors.accentEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
-            child: _buildAvatar(),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceCard,
+                shape: BoxShape.circle,
+              ),
+              child: _buildAvatar(),
+            ),
           ),
-        ),
         SizedBox(height: gapAfterAvatar),
         Text(
           _displayTitle,

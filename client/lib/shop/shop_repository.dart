@@ -169,14 +169,18 @@ class InventoryItem {
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     final rawPayload = json['payload'];
+    final Map<String, dynamic> payload;
+    if (rawPayload is Map) {
+      payload = Map<String, dynamic>.from(rawPayload);
+    } else {
+      payload = const {};
+    }
     return InventoryItem(
       code: json['code'] as String? ?? '',
       kind: json['kind'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      payload: rawPayload is Map<String, dynamic>
-          ? Map<String, dynamic>.from(rawPayload)
-          : const {},
+      payload: payload,
       acquiredAt: json['acquired_at'] as String?,
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
     );
@@ -187,10 +191,12 @@ class InventoryCapabilities {
   const InventoryCapabilities({
     required this.allowedStakeBronze,
     this.frameColor,
+    this.frameCode,
   });
 
   final List<int> allowedStakeBronze;
   final String? frameColor;
+  final String? frameCode;
 
   factory InventoryCapabilities.fromJson(Map<String, dynamic> json) {
     final raw = json['allowed_stake_bronze'];
@@ -206,6 +212,7 @@ class InventoryCapabilities {
     return InventoryCapabilities(
       allowedStakeBronze: stakes,
       frameColor: json['frame_color'] as String?,
+      frameCode: json['frame_code'] as String?,
     );
   }
 }
