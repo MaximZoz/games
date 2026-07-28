@@ -37,6 +37,7 @@ class ShopEmojisScreen extends ConsumerStatefulWidget {
 
 class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
   List<ShopItem> _items = const [];
+  bool _loading = true;
 
   @override
   void initState() {
@@ -45,7 +46,10 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
       if (!mounted) return;
       final cached = ref.read(shopCatalogProvider).valueOrNull;
       if (cached != null && cached.isNotEmpty) {
-        setState(() => _items = cached);
+        setState(() {
+          _items = cached;
+          _loading = false;
+        });
       }
       unawaited(_reloadSilent());
     });
@@ -55,8 +59,14 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
     try {
       final items = await ref.read(shopRepositoryProvider).listShop();
       if (!mounted) return;
-      setState(() => _items = items);
-    } catch (_) {}
+      setState(() {
+        _items = items;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 
   @override
@@ -100,80 +110,86 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
           ),
         ),
         body: SafeArea(
-          child: groupKeys.isEmpty
+          child: _loading && groupKeys.isEmpty
               ? const Center(
-                  child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2.4),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: groupKeys.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final group = groupKeys[index];
-                    final groupItems = byGroup[group]!;
-                    final preview = groupItems.first;
-                    final price = groupItems
-                        .map((e) => e.priceBronze)
-                        .fold<int>(groupItems.first.priceBronze, math.min);
-                    return Material(
-                      color: AppColors.surfaceCard,
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => context.push('/shop/emojis/$group'),
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-                          decoration: BoxDecoration(
+              : groupKeys.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Пока пусто',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: groupKeys.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final group = groupKeys[index];
+                        final groupItems = byGroup[group]!;
+                        final price = groupItems
+                            .map((e) => e.priceBronze)
+                            .fold<int>(
+                                groupItems.first.priceBronze, math.min);
+                        return Material(
+                          color: AppColors.surfaceCard,
+                          borderRadius: BorderRadius.circular(16),
+                          child: InkWell(
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.06),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              ShopAnimatedEmoji(
-                                animatedName: preview.animatedName ?? 'smile',
-                                size: 40,
-                                fallback: preview.emoji,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      shopEmojiGroupTitle(group),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${groupItems.length} смайликов · по ${formatRewardBronze(price)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
+                            onTap: () => context.push('/shop/emojis/$group'),
+                            child: Container(
+                              padding:
+                                  const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.black.withValues(alpha: 0.06),
                                 ),
                               ),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                color: AppColors.textSecondary,
+                              child: Row(
+                                children: [
+                                  ShopEmojiGroupIcon(group: group, size: 40),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          shopEmojiGroupTitle(group),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${groupItems.length} смайликов · по ${formatRewardBronze(price)}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
         ),
       ),
     );
@@ -196,6 +212,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
 
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
+  bool _loading = true;
 
   @override
   void initState() {
@@ -204,7 +221,10 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       if (!mounted) return;
       final cached = ref.read(shopCatalogProvider).valueOrNull;
       if (cached != null && cached.isNotEmpty) {
-        setState(() => _items = cached);
+        setState(() {
+          _items = cached;
+          _loading = false;
+        });
       }
       unawaited(_reloadSilent());
     });
@@ -214,8 +234,14 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     try {
       final items = await ref.read(shopRepositoryProvider).listShop();
       if (!mounted) return;
-      setState(() => _items = items);
-    } catch (_) {}
+      setState(() {
+        _items = items;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 
   Future<bool> _confirmBuy(ShopItem item) async {
@@ -336,14 +362,22 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
           ),
         ),
         body: SafeArea(
-          child: emojis.isEmpty
+          child: _loading && emojis.isEmpty
               ? const Center(
-                  child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2.4),
                   ),
                 )
-              : VerticalPagedSlider(
+              : emojis.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Пока пусто',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    )
+                  : VerticalPagedSlider(
                   pageCount: pageCount,
                   itemBuilder: (context, page) {
                     final start = page * _pageSize;
