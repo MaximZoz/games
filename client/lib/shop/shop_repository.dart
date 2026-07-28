@@ -32,6 +32,7 @@ class ShopItem {
 
   int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
+  int? get stakeGold => (payload['stake_gold'] as num?)?.toInt();
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
@@ -111,6 +112,7 @@ class InventoryItem {
   int get weeklyBronze => dailyBronze;
   int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
   int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
+  int? get stakeGold => (payload['stake_gold'] as num?)?.toInt();
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     final rawPayload = json['payload'];

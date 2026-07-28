@@ -468,13 +468,16 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           children: [
                             for (final it in stakes)
                               _InvTile(
-                                leading: const CoinIcon(
-                                  coinType: CoinType.silver,
+                                leading: CoinIcon(
+                                  coinType: it.stakeGold != null
+                                      ? CoinType.gold
+                                      : CoinType.silver,
                                   size: 26,
                                 ),
                                 title: it.title,
-                                subtitle:
-                                    'Можно ставить ${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100} серебра',
+                                subtitle: it.stakeGold != null
+                                    ? 'Можно ставить ${it.stakeGold} золота'
+                                    : 'Можно ставить ${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100} серебра',
                               ),
                           ],
                         ),

@@ -270,7 +270,10 @@ class _ShopItemCard extends StatelessWidget {
       );
     }
     if (item.kind == 'stake_unlock') {
-      final stake = item.stakeSilver ?? item.stakeBronze ?? '?';
+      final stake = item.stakeGold ??
+          item.stakeSilver ??
+          item.stakeBronze ??
+          '?';
       return Container(
         width: 48,
         height: 48,

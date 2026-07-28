@@ -896,10 +896,8 @@ class _LobbiesPageContent extends StatelessWidget {
                                                     ),
                                                     const SizedBox(width: 4),
                                                     CoinIcon(
-                                                      coinType: stakeIsSilver(
-                                                              lobby.stakeBronze)
-                                                          ? CoinType.silver
-                                                          : CoinType.bronze,
+                                                      coinType: stakeCoinType(
+                                                          lobby.stakeBronze),
                                                       size: 14,
                                                       showBorder: true,
                                                     ),
@@ -1429,9 +1427,7 @@ class _TictactoeGameCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   CoinIcon(
-                                    coinType: stakeIsSilver(stakeBronze)
-                                        ? CoinType.silver
-                                        : CoinType.bronze,
+                                    coinType: stakeCoinType(stakeBronze),
                                     size: 20,
                                     showBorder: true,
                                   ),
@@ -1739,9 +1735,7 @@ class _InviteCard extends ConsumerWidget {
                               ),
                               const SizedBox(width: 4),
                               CoinIcon(
-                                coinType: stakeIsSilver(inv.stakeBronze)
-                                    ? CoinType.silver
-                                    : CoinType.bronze,
+                                coinType: stakeCoinType(inv.stakeBronze),
                                 size: 18,
                                 showBorder: true,
                               ),

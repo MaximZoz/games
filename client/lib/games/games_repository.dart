@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
   GamesException(this.statusCode, this.message);
@@ -26,16 +27,33 @@ const List<int> freeStakeOptions = [1, 10, 50];
 /// Fallback, если capabilities ещё не загружены.
 const List<int> stakeOptions = freeStakeOptions;
 
-/// Подпись ставки: серебро при >= 100 бронзы.
+/// Подпись ставки в единицах старшего номинала.
 String formatStakeAmount(int stakeBronze) {
+  if (stakeBronze >= 10000 && stakeBronze % 10000 == 0) {
+    return '${stakeBronze ~/ 10000}';
+  }
   if (stakeBronze >= 100 && stakeBronze % 100 == 0) {
     return '${stakeBronze ~/ 100}';
   }
   return '$stakeBronze';
 }
 
+/// Тип монеты для отображения ставки.
+CoinType stakeCoinType(int stakeBronze) {
+  if (stakeBronze >= 10000 && stakeBronze % 10000 == 0) {
+    return CoinType.gold;
+  }
+  if (stakeBronze >= 100 && stakeBronze % 100 == 0) {
+    return CoinType.silver;
+  }
+  return CoinType.bronze;
+}
+
 bool stakeIsSilver(int stakeBronze) =>
-    stakeBronze >= 100 && stakeBronze % 100 == 0;
+    stakeCoinType(stakeBronze) == CoinType.silver;
+
+bool stakeIsGold(int stakeBronze) =>
+    stakeCoinType(stakeBronze) == CoinType.gold;
 
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';
