@@ -486,9 +486,10 @@ class _MobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = _navItems[selectedIndex.clamp(0, _navItems.length - 1)].label;
+    final safeIndex = selectedIndex.clamp(0, _navItems.length - 1);
+    final label = _navItems[safeIndex].label;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -500,57 +501,78 @@ class _MobileBottomNav extends StatelessWidget {
                     onTap: () => onTap(i),
                     customBorder: const CircleBorder(),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Center(
-                        child: _navIcon(
-                          _navItems[i],
-                          unreadChats,
-                          incomingFriends,
-                          gamesMyTurn,
-                          gameInvitesCount,
-                          homeBadgeCount,
-                          selected: i == selectedIndex,
-                        ),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _navIcon(
+                            _navItems[i],
+                            unreadChats,
+                            incomingFriends,
+                            gamesMyTurn,
+                            gameInvitesCount,
+                            homeBadgeCount,
+                            selected: i == safeIndex,
+                          ),
+                          const SizedBox(height: 5),
+                          // Индикатор под активной иконкой (симметрично).
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOut,
+                            width: i == safeIndex ? 18 : 0,
+                            height: 2.5,
+                            decoration: BoxDecoration(
+                              color: AppColors.accentStart,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 4),
-          // Линия слева от подписи + подпись + линия снизу по центру.
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 28,
-                    height: 1.5,
-                    color: AppColors.accentStart.withValues(alpha: 0.55),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
+          const SizedBox(height: 8),
+          // Симметричная подпись: линия — текст — линия.
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: Row(
+              key: ValueKey(label),
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _captionHairline(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
                     label,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
                       color: AppColors.textPrimary,
-                      height: 1.1,
+                      height: 1.0,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Container(
-                width: 36,
-                height: 1.5,
-                color: AppColors.accentStart.withValues(alpha: 0.55),
-              ),
-            ],
+                ),
+                _captionHairline(),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _captionHairline() {
+    return Container(
+      width: 22,
+      height: 1,
+      decoration: BoxDecoration(
+        color: AppColors.accentStart.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(999),
       ),
     );
   }
