@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/friends/gift_friend_picker.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -125,23 +126,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       );
       return;
     }
-    final toId = await showDialog<String>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Подарить другу'),
-        children: [
-          for (final f in friends)
-            SimpleDialogOption(
-              onPressed: () => Navigator.of(ctx).pop(f.user.id),
-              child: Text(
-                f.user.displayName?.trim().isNotEmpty == true
-                    ? f.user.displayName!
-                    : f.user.email,
-              ),
-            ),
-        ],
-      ),
-    );
+    final toId = await showGiftFriendPicker(context);
     if (toId == null || toId.isEmpty || !mounted) return;
     try {
       await ref.read(shopRepositoryProvider).giftCollection(item.code, toId);
