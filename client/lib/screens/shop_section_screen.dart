@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -237,16 +238,26 @@ class _ShopItemCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           if (item.owned)
-            const Text(
+            Text(
               'Куплено',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2E7D32),
-              ),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2E7D32),
+                  ) ??
+                  const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E7D32),
+                  ),
             )
           else
-            FilledButton(
+            TextButton(
               onPressed: busy ? null : onBuy,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
               child: Text(busy ? '…' : 'Купить'),
             ),
         ],
@@ -270,23 +281,40 @@ class _ShopItemCard extends StatelessWidget {
       );
     }
     if (item.kind == 'stake_unlock') {
-      final stake = item.stakeGold ??
+      final bronze = item.stakeBronze ?? 0;
+      final coin = stakeCoinType(bronze);
+      final amount = item.stakeGold ??
           item.stakeSilver ??
-          item.stakeBronze ??
-          '?';
+          formatStakeAmount(bronze);
+      final frameColor = switch (coin) {
+        CoinType.gold => CoinColors.gold,
+        CoinType.silver => CoinColors.silver,
+        CoinType.diamond => CoinColors.diamondBlue,
+        CoinType.bronze => CoinColors.bronze,
+      };
+      final fillColor = switch (coin) {
+        CoinType.gold => CoinColors.goldLight.withValues(alpha: 0.22),
+        CoinType.silver => CoinColors.silverLight.withValues(alpha: 0.45),
+        CoinType.diamond => CoinColors.diamondLight.withValues(alpha: 0.2),
+        CoinType.bronze => CoinColors.bronzeLight.withValues(alpha: 0.22),
+      };
       return Container(
         width: 48,
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: fillColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          border: Border.all(color: frameColor, width: 1.6),
         ),
         child: Text(
-          '$stake',
-          style: const TextStyle(
+          '$amount',
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
             fontWeight: FontWeight.w800,
+            fontSize: amount.toString().length > 2 ? 14 : 16,
             color: AppColors.textPrimary,
           ),
         ),

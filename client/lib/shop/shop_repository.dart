@@ -30,9 +30,34 @@ class ShopItem {
   bool get isOutOfStock =>
       stockRemaining != null && stockRemaining! <= 0 && !owned;
 
-  int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
-  int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
-  int? get stakeGold => (payload['stake_gold'] as num?)?.toInt();
+  int? get stakeBronze => _payloadInt('stake_bronze');
+  int? get stakeSilver {
+    final explicit = _payloadInt('stake_silver');
+    if (explicit != null) return explicit;
+    final b = stakeBronze;
+    if (b != null && b >= 100 && b < 10000 && b % 100 == 0) {
+      return b ~/ 100;
+    }
+    return null;
+  }
+
+  int? get stakeGold {
+    final explicit = _payloadInt('stake_gold');
+    if (explicit != null) return explicit;
+    final b = stakeBronze;
+    if (b != null && b >= 10000 && b % 10000 == 0) {
+      return b ~/ 10000;
+    }
+    return null;
+  }
+
+  int? _payloadInt(String key) {
+    final v = payload[key];
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v.trim());
+    return null;
+  }
+
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
@@ -64,6 +89,12 @@ class ShopItem {
 
   factory ShopItem.fromJson(Map<String, dynamic> json) {
     final rawPayload = json['payload'];
+    final Map<String, dynamic> payload;
+    if (rawPayload is Map) {
+      payload = Map<String, dynamic>.from(rawPayload);
+    } else {
+      payload = const {};
+    }
     return ShopItem(
       code: json['code'] as String? ?? '',
       kind: json['kind'] as String? ?? '',
@@ -72,9 +103,7 @@ class ShopItem {
       priceBronze: (json['price_bronze'] as num?)?.toInt() ?? 0,
       owned: json['owned'] == true,
       stockRemaining: (json['stock_remaining'] as num?)?.toInt(),
-      payload: rawPayload is Map<String, dynamic>
-          ? Map<String, dynamic>.from(rawPayload)
-          : const {},
+      payload: payload,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
     );
   }
@@ -110,9 +139,33 @@ class InventoryItem {
       0;
   @Deprecated('Use dailyBronze')
   int get weeklyBronze => dailyBronze;
-  int? get stakeBronze => (payload['stake_bronze'] as num?)?.toInt();
-  int? get stakeSilver => (payload['stake_silver'] as num?)?.toInt();
-  int? get stakeGold => (payload['stake_gold'] as num?)?.toInt();
+  int? get stakeBronze => _payloadInt('stake_bronze');
+  int? get stakeSilver {
+    final explicit = _payloadInt('stake_silver');
+    if (explicit != null) return explicit;
+    final b = stakeBronze;
+    if (b != null && b >= 100 && b < 10000 && b % 100 == 0) {
+      return b ~/ 100;
+    }
+    return null;
+  }
+
+  int? get stakeGold {
+    final explicit = _payloadInt('stake_gold');
+    if (explicit != null) return explicit;
+    final b = stakeBronze;
+    if (b != null && b >= 10000 && b % 10000 == 0) {
+      return b ~/ 10000;
+    }
+    return null;
+  }
+
+  int? _payloadInt(String key) {
+    final v = payload[key];
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v.trim());
+    return null;
+  }
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     final rawPayload = json['payload'];
