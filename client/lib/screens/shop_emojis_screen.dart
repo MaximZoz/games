@@ -10,6 +10,7 @@ import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
@@ -222,13 +223,12 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     return result == true;
   }
 
-  Future<void> _showPurchased(ShopItem item) async {
+  void _showPurchased(ShopItem item) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${item.title}: +10 использований'),
-        behavior: SnackBarBehavior.floating,
-      ),
+    showAppSnackBar(
+      context,
+      message: '${item.title}: +10 использований',
+      kind: AppSnackKind.success,
     );
   }
 
@@ -246,15 +246,14 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       ref.invalidate(inventoryCapabilitiesProvider);
       ref.invalidate(shopCatalogProvider);
       if (!mounted) return;
-      await _showPurchased(item);
+      _showPurchased(item);
       unawaited(_reloadSilent());
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        kind: AppSnackKind.error,
       );
     } finally {
       _buyInFlight.remove(item.code);

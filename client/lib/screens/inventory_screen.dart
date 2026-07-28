@@ -9,6 +9,7 @@ import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
@@ -39,20 +40,18 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           await ref.read(shopRepositoryProvider).claimCollectionIncome();
       await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Получено +${result.quantity} бронзы'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: 'Получено +${result.quantity} бронзы',
+        kind: AppSnackKind.success,
       );
       ref.invalidate(collectionIncomeProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _claimBusy = false);
@@ -88,19 +87,17 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       ref.invalidate(shopCatalogProvider);
       ref.invalidate(collectionIncomeProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Продано: +${result.quantity} бронзы'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: 'Продано: +${result.quantity} бронзы',
+        kind: AppSnackKind.success,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        kind: AppSnackKind.error,
       );
     }
   }
@@ -121,11 +118,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final friends =
         ref.read(friendsSnapshotProvider).valueOrNull?.friends ?? const [];
     if (friends.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Сначала добавьте друзей'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: 'Сначала добавьте друзей',
+        kind: AppSnackKind.info,
       );
       return;
     }
@@ -154,19 +150,17 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       ref.invalidate(chatsListProvider);
       ref.read(chatsListCacheProvider.notifier).state = null;
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Подарено: ${item.title}'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: 'Подарено: ${item.title}',
+        kind: AppSnackKind.success,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        kind: AppSnackKind.error,
       );
     }
   }

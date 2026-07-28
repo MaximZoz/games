@@ -7,6 +7,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
@@ -75,14 +76,19 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       ref.invalidate(inventoryListProvider);
       ref.invalidate(inventoryCapabilitiesProvider);
       ref.invalidate(shopCatalogProvider);
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: '${item.title} куплен',
+        kind: AppSnackKind.success,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _items = previous);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        kind: AppSnackKind.error,
       );
     } finally {
       _buyInFlight.remove(item.code);

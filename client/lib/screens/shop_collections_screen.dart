@@ -9,6 +9,7 @@ import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
@@ -287,11 +288,10 @@ class _ShopCollectionGroupScreenState
         if (mounted) setState(() => _items = fresh);
       } catch (_) {}
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${item.title} добавлен в профиль'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: '${item.title} добавлен в профиль',
+        kind: AppSnackKind.success,
       );
     } catch (e) {
       if (!mounted) return;
@@ -301,11 +301,10 @@ class _ShopCollectionGroupScreenState
             if (it.code == item.code) it.copyWith(owned: false) else it,
         ];
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '')),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        kind: AppSnackKind.error,
       );
     } finally {
       _buyInFlight.remove(item.code);
