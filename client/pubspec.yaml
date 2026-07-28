@@ -138,3 +138,34 @@ flutter:
     - packages/animated_emoji/lottie/snake.json
     - packages/animated_emoji/lottie/scorpion.json
     - packages/animated_emoji/lottie/bat.json
+    - packages/animated_emoji/lottie/clinkingGlasses.json
+    - packages/animated_emoji/lottie/baseball.json
+    - packages/animated_emoji/lottie/tennis.json
+    - packages/animated_emoji/lottie/bowling.json
+    - packages/animated_emoji/lottie/badminton.json
+    - packages/animated_emoji/lottie/pingPong.json
+    - packages/animated_emoji/lottie/flyingDisc.json
+    - packages/animated_emoji/lottie/eightBall.json
+    - packages/animated_emoji/lottie/bomb.json
+    - packages/animated_emoji/lottie/die.json
+    - packages/animated_emoji/lottie/slotMachine.json
+    - packages/animated_emoji/lottie/chequeredFlag.json
+    - packages/animated_emoji/lottie/bronzeMedal.json
+    - packages/animated_emoji/lottie/silverMedal.json
+    - packages/animated_emoji/lottie/flagInHole.json
+    - packages/animated_emoji/lottie/clap.json
+    - packages/animated_emoji/lottie/crossedFingers.json
+    - packages/animated_emoji/lottie/handshake.json
+    - packages/animated_emoji/lottie/foldedHands.json
+    - packages/animated_emoji/lottie/raisingHands.json
+    - packages/animated_emoji/lottie/callMeHand.json
+    - packages/animated_emoji/lottie/ok.json
+    - packages/animated_emoji/lottie/victory.json
+    - packages/animated_emoji/lottie/muscle.json
+    - packages/animated_emoji/lottie/fist.json
+    - packages/animated_emoji/lottie/thumbsDown.json
+    - packages/animated_emoji/lottie/wave.json
+    - packages/animated_emoji/lottie/thinkingFace.json
+    - packages/animated_emoji/lottie/zanyFace.json
+    - packages/animated_emoji/lottie/cowboy.json
+    - packages/animated_emoji/lottie/poop.json

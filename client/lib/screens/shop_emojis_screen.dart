@@ -17,12 +17,16 @@ import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 
 const shopEmojiGroupTitles = <String, String>{
   'emotions': 'Эмоции',
+  'game': 'Игровые',
 };
+
+/// Порядок групп на витрине смайликов.
+const shopEmojiGroupOrder = <String>['emotions', 'game'];
 
 String shopEmojiGroupTitle(String group) =>
     shopEmojiGroupTitles[group] ?? group;
 
-/// Список групп смайликов — сейчас только «Эмоции», один превью-смайлик.
+/// Список групп смайликов с превью.
 class ShopEmojisScreen extends ConsumerStatefulWidget {
   const ShopEmojisScreen({super.key});
 
@@ -59,11 +63,20 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
     void goBack() => context.pop();
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
-    final emotions = items
-        .where((e) => e.kind == 'emoji' && (e.group ?? '') == 'emotions')
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final preview = emotions.isEmpty ? null : emotions.first;
+    final byGroup = <String, List<ShopItem>>{};
+    for (final e in items) {
+      if (e.kind != 'emoji') continue;
+      final g = (e.group ?? '').trim();
+      if (g.isEmpty) continue;
+      byGroup.putIfAbsent(g, () => []).add(e);
+    }
+    for (final list in byGroup.values) {
+      list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    }
+    final groupKeys = [
+      ...shopEmojiGroupOrder.where(byGroup.containsKey),
+      ...byGroup.keys.where((k) => !shopEmojiGroupOrder.contains(k)),
+    ];
 
     return SwipeBackScope(
       onBack: goBack,
@@ -86,22 +99,30 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
           ),
         ),
         body: SafeArea(
-          child: preview == null
+          child: groupKeys.isEmpty
               ? const Center(
                   child: Text(
                     'Пока пусто',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView(
+              : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  children: [
-                    Material(
+                  itemCount: groupKeys.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final group = groupKeys[index];
+                    final groupItems = byGroup[group]!;
+                    final preview = groupItems.first;
+                    final price = groupItems
+                        .map((e) => e.priceBronze)
+                        .fold<int>(groupItems.first.priceBronze, math.min);
+                    return Material(
                       color: AppColors.surfaceCard,
                       borderRadius: BorderRadius.circular(16),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: () => context.push('/shop/emojis/emotions'),
+                        onTap: () => context.push('/shop/emojis/$group'),
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
                           decoration: BoxDecoration(
@@ -122,9 +143,9 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Эмоции',
-                                      style: TextStyle(
+                                    Text(
+                                      shopEmojiGroupTitle(group),
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 16,
                                         color: AppColors.textPrimary,
@@ -132,7 +153,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${emotions.length} смайликов · по ${formatRewardBronze(30)}',
+                                      '${groupItems.length} смайликов · по ${formatRewardBronze(price)}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
@@ -149,8 +170,8 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
         ),
       ),
