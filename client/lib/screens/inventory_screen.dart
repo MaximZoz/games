@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/friends/gift_friend_picker.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -146,6 +147,44 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     }
     final toId = await showGiftFriendPicker(context);
     if (toId == null || toId.isEmpty || !mounted) return;
+
+    FriendUserItem? friend;
+    for (final f in friends) {
+      if (f.user.id == toId) {
+        friend = f.user;
+        break;
+      }
+    }
+    final friendName = () {
+      final name = friend?.displayName?.trim();
+      if (name != null && name.isNotEmpty) return name;
+      return 'другу';
+    }();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Подарить коллекцию?'),
+          content: Text(
+            'Подарить «${item.title}» пользователю $friendName?\n\n'
+            'Предмет исчезнет из вашего инвентаря.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Подарить'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) return;
+
     try {
       await ref.read(shopRepositoryProvider).giftCollection(item.code, toId);
       ref.invalidate(inventoryListProvider);
