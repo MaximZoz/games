@@ -17,6 +17,7 @@ import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
+import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -378,6 +379,28 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         // ListView.builder строит элементы лениво. Длинные сообщения требуют нескольких
         // layout-проходов — повторяем скролл до низа, пока позиция не стабилизируется.
         _scheduleScrollToBottom(retriesLeft: 8);
+      }
+      // Подарки коллекций: бейдж на Главной/Предметах, даже если подарок
+      // пришёл офлайн и пользователь сразу открыл чат (до sync списка).
+      // Только ещё не прочитанные — чтобы старые подарки не поднимали бейдж снова.
+      final me = ref.read(authStateProvider).valueOrNull?.id;
+      if (me != null && me.isNotEmpty) {
+        final giftCodes = <String>{};
+        for (final m in list) {
+          if (m.senderUserID == me) continue;
+          if (m.readAt != null && m.readAt!.trim().isNotEmpty) continue;
+          final code = giftCollectionCodeFromBody(m.body);
+          if (code != null) giftCodes.add(code);
+        }
+        if (giftCodes.isNotEmpty) {
+          unawaited(
+            ref
+                .read(unreadGiftedCollectionsProvider.notifier)
+                .addCodes(giftCodes),
+          );
+          ref.invalidate(inventoryListProvider);
+          ref.invalidate(collectionIncomeProvider);
+        }
       }
       // При открытии комнаты всегда отмечаем прочитанным (экран только что создан).
       // Повторные фоновые вызовы _loadMessages при уходе — нет (_leavingToChats).

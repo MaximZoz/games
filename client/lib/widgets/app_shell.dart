@@ -17,7 +17,6 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
-import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
@@ -82,6 +81,8 @@ class AppShell extends ConsumerWidget {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
       ref.watch(chatDeliveryAckProvider);
+      // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
+      ref.watch(giftedCollectionsBadgeSyncProvider);
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
@@ -102,26 +103,6 @@ class AppShell extends ConsumerWidget {
                 available;
             ref.invalidate(dailyRewardStatusProvider);
             ref.invalidate(dailyRewardAvailableProvider);
-          }
-          if (type == 'chat_message') {
-            final me = ref.read(authStateProvider).valueOrNull?.id;
-            final messageRaw = event['message'];
-            if (me != null && me.isNotEmpty && messageRaw is Map) {
-              final map = Map<String, dynamic>.from(messageRaw);
-              final sender = map['sender_user_id']?.toString() ?? '';
-              if (sender.isNotEmpty && sender != me) {
-                final gift = parseGiftCollectionMessage(
-                  map['body']?.toString() ?? '',
-                );
-                if (gift != null && gift.code.trim().isNotEmpty) {
-                  ref
-                      .read(unreadGiftedCollectionsProvider.notifier)
-                      .addCode(gift.code);
-                  ref.invalidate(inventoryListProvider);
-                  ref.invalidate(collectionIncomeProvider);
-                }
-              }
-            }
           }
         });
       });

@@ -319,6 +319,18 @@ func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 					h.Hub.PublishToUsers([]uuid.UUID{userID, toID}, map[string]any{
 						"type": "chat_list_changed",
 					})
+					// Отдельное событие получателю — бейдж на Главной/Предметах
+					// даже если клиент пропустил разбор тела chat_message.
+					h.Hub.PublishToUsers([]uuid.UUID{toID}, map[string]any{
+						"type":           "collection_gifted",
+						"code":           code,
+						"title":          title,
+						"emoji":          emoji,
+						"animated_name":  animatedName,
+						"from_user_id":   userID.String(),
+						"chat_id":        item.ChatID,
+						"message_id":     item.ID,
+					})
 				}
 			}
 		}
