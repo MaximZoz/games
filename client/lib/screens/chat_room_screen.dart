@@ -1501,6 +1501,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         child: SwipeBackScope(
           enabled: canSwipeBack,
           onBack: _goBackToChats,
+          // Композер слева (смайлик) не должен перекрываться edge-зоной свайпа.
+          bottomInset: 72,
           child: Column(
             children: [
               if (!narrowLandscape)
@@ -1564,82 +1566,56 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ],
                 ),
               ),
-              // Крупная зона тапа слева; иконка прижата к левому краю карточки.
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
-                child: SizedBox(
-                  height: 72,
-                  child: Stack(
-                    clipBehavior: Clip.none,
+                child: GradientCard(
+                  animate: false,
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+                  child: Row(
                     children: [
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        top: 8,
-                        bottom: 8,
-                        child: GradientCard(
-                          animate: false,
-                          padding: const EdgeInsets.fromLTRB(44, 4, 4, 4),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _textController,
-                                  focusNode: _composerFocusNode,
-                                  minLines: 1,
-                                  maxLines: 4,
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Введите сообщение...',
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                  ),
-                                  textInputAction: TextInputAction.send,
-                                  onTap: _scrollToBottom,
-                                  onSubmitted: (_) => _sendMessage(),
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: _sending ? null : _sendMessage,
-                                tooltip: 'Отправить',
-                                icon: _sending
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.send_rounded),
-                              ),
-                            ],
-                          ),
+                      IconButton(
+                        onPressed: _sending ? null : _openEmojiPicker,
+                        tooltip: 'Смайлики',
+                        padding: const EdgeInsets.all(10),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: const Icon(
+                          Icons.emoji_emotions_outlined,
+                          color: AppColors.accentStart,
+                          size: 28,
                         ),
                       ),
-                      Positioned(
-                        left: -8,
-                        top: 0,
-                        bottom: 0,
-                        width: 64,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _sending ? null : _openEmojiPicker,
-                            borderRadius: BorderRadius.circular(20),
-                            child: const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 18),
-                                child: Icon(
-                                  Icons.emoji_emotions_outlined,
-                                  color: AppColors.accentStart,
-                                  size: 28,
-                                ),
-                              ),
-                            ),
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _composerFocusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: InputBorder.none,
+                            isDense: true,
                           ),
+                          textInputAction: TextInputAction.send,
+                          onTap: _scrollToBottom,
+                          onSubmitted: (_) => _sendMessage(),
                         ),
+                      ),
+                      IconButton(
+                        onPressed: _sending ? null : _sendMessage,
+                        tooltip: 'Отправить',
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded),
                       ),
                     ],
                   ),
