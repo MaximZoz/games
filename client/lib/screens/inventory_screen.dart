@@ -288,7 +288,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             onPressed: goBack,
             tooltip: 'Назад',
           ),
+          centerTitle: true,
           title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Предметы',

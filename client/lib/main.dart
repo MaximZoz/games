@@ -93,6 +93,13 @@ class MultiGamesApp extends ConsumerWidget {
         ),
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.surfaceUnified,
+        // «Предметы», «Монеты за вход» и все AppBar-заголовки — по центру.
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
         textSelectionTheme: TextSelectionThemeData(
           selectionColor: AppColors.accentSoft.withValues(alpha: 0.5),
           cursorColor: AppColors.textPrimary,
