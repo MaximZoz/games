@@ -83,7 +83,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     if (mounted) setState(() {});
   }
 
-  void _onSearchFocusChanged() => _syncBottomNavCollapse();
+  void _onSearchFocusChanged() {
+    if (mounted) setState(() {});
+    _syncBottomNavCollapse();
+  }
 
   void _syncBottomNavCollapse() {
     if (!mounted) return;
@@ -1310,29 +1313,27 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
-    bool redFrame = false,
+    bool active = false,
   }) {
-    final gradient =
-        redFrame ? null : AppGradients.borderAt(_isSearchExpanded ? 0.68 : 0.2);
-    final redBorderColor = Colors.red.shade400;
-    final iconColor = redFrame ? Colors.red.shade700 : AppColors.textPrimary;
+    // Активный поиск: фиолетовая рамка как у обычной лупы, без белой заливки.
+    // Неактивный: та же рамка + белый фон.
+    final iconColor = active ? Colors.red.shade700 : AppColors.textPrimary;
     return Tooltip(
       message: tooltip,
-      child: Container(
-        width: 40,
-        height: 40,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          gradient: gradient,
-          border: redFrame ? Border.all(color: redBorderColor, width: 2) : null,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: active ? Colors.transparent : AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.accentStart, width: 2),
+            ),
             child: Icon(icon, size: 20, color: iconColor),
           ),
         ),
@@ -1538,67 +1539,67 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   Widget _buildSearchPanel() {
+    final focused = _searchFocusNode.hasFocus;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: GradientCard(
-        margin: EdgeInsets.zero,
-        padding: const EdgeInsets.all(10),
-        animate: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-                // null = AutofillConfiguration.disabled → autocomplete=off на web.
-                // Иначе дефолт [] оставляет autocomplete=on и iOS Safari
-                // показывает панель Passwords / Payment / Locations над клавиатурой.
-                autofillHints: null,
-                enableSuggestions: false,
-                autocorrect: false,
-                enableIMEPersonalizedLearning: false,
-                spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
-                smartDashesType: SmartDashesType.disabled,
-                smartQuotesType: SmartQuotesType.disabled,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: 'Поиск по нику',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : Container(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 6),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: Colors.red.shade400, width: 1.8),
-                          ),
-                          child: IconButton(
-                            tooltip: 'Очистить поиск',
-                            onPressed: () {
-                              _searchDebounce?.cancel();
-                              _searchRevision++;
-                              _searchController.clear();
-                              setState(() {
-                                _searchResults = const [];
-                                _isSearching = false;
-                                _isSearchLoadingMore = false;
-                                _searchHasMore = false;
-                              });
-                              _searchFocusNode.requestFocus();
-                            },
-                            icon: const Icon(Icons.close_rounded,
-                                color: Colors.red),
-                          ),
-                        ),
-                ),
-                onChanged: _onSearchTextChanged,
-                onSubmitted: (_) => _scheduleSearch(immediate: true),
-              ),
-            ),
-          ],
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(
+            // В фокусе — тот же фиолет, что у рамки лупы.
+            color: focused
+                ? AppColors.accentStart
+                : AppColors.accentStart.withValues(alpha: 0.45),
+            width: focused ? 2 : 1.5,
+          ),
+        ),
+        child: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          // null = AutofillConfiguration.disabled → autocomplete=off на web.
+          // Иначе дефолт [] оставляет autocomplete=on и iOS Safari
+          // показывает панель Passwords / Payment / Locations над клавиатурой.
+          autofillHints: null,
+          enableSuggestions: false,
+          autocorrect: false,
+          enableIMEPersonalizedLearning: false,
+          spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Поиск по нику',
+            prefixIcon: const Icon(Icons.search_rounded),
+            // Красный крестик без собственной рамки.
+            suffixIcon: _searchController.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Очистить поиск',
+                    onPressed: () {
+                      _searchDebounce?.cancel();
+                      _searchRevision++;
+                      _searchController.clear();
+                      setState(() {
+                        _searchResults = const [];
+                        _isSearching = false;
+                        _isSearchLoadingMore = false;
+                        _searchHasMore = false;
+                      });
+                      _searchFocusNode.requestFocus();
+                    },
+                    icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
+                  ),
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+          onChanged: _onSearchTextChanged,
+          onSubmitted: (_) => _scheduleSearch(immediate: true),
         ),
       ),
     );
@@ -1772,11 +1773,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   Widget _buildInlineSearchField() {
-    return AnimatedBorderBox(
-      animateBorder: true,
-      borderWidth: 2,
-      borderRadius: AppRadius.input,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    final focused = _searchFocusNode.hasFocus;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        border: Border.all(
+          color: focused
+              ? AppColors.accentStart
+              : AppColors.accentStart.withValues(alpha: 0.45),
+          width: focused ? 2 : 1.5,
+        ),
+      ),
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
@@ -1808,7 +1816,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     });
                     _searchFocusNode.requestFocus();
                   },
-                  icon: const Icon(Icons.close_rounded, size: 20),
+                  icon: Icon(Icons.close_rounded,
+                      size: 20, color: Colors.red.shade600),
                 ),
           filled: false,
           border: InputBorder.none,
@@ -1986,7 +1995,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 : Icons.search_rounded,
             tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
             onPressed: _toggleSearch,
-            redFrame: _isSearchExpanded,
+            active: _isSearchExpanded,
           );
         });
       });

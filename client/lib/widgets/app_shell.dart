@@ -531,24 +531,27 @@ class _MobileBottomNav extends StatelessWidget {
               children: [
                 // Чуть выше центра строки — visually на уровне середины букв.
                 Transform.translate(
-                  offset: const Offset(0, -1),
+                  offset: const Offset(0, -3),
                   child: _captionHairline(),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                      color: AppColors.accentStart,
-                      height: 1.0,
+                Transform.translate(
+                  offset: const Offset(0, -2),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                        color: AppColors.accentStart,
+                        height: 1.0,
+                      ),
                     ),
                   ),
                 ),
                 Transform.translate(
-                  offset: const Offset(0, -1),
+                  offset: const Offset(0, -3),
                   child: _captionHairline(),
                 ),
               ],
