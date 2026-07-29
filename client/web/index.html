@@ -108,11 +108,29 @@
       background-clip: text;
       color: transparent;
     }
+    #zozu-boot .games-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55em;
+    }
     #zozu-boot .line {
-      width: min(42vw, 180px);
+      width: clamp(28px, 8vw, 56px);
       height: 2.5px;
       border-radius: 99px;
-      background: linear-gradient(90deg, transparent, #6366F1 28%, #8B5CF6 72%, transparent);
+      flex-shrink: 0;
+      transform-origin: center;
+      animation: zozu-line-draw 0.78s cubic-bezier(0.33, 1, 0.68, 1) both;
+    }
+    #zozu-boot .line-left {
+      background: linear-gradient(90deg, transparent, #6366F1 42%, #8B5CF6 100%);
+      transform-origin: right center;
+      animation-delay: 0.12s;
+    }
+    #zozu-boot .line-right {
+      background: linear-gradient(90deg, #8B5CF6 0%, #6366F1 58%, transparent);
+      transform-origin: left center;
+      animation-delay: 0.2s;
     }
     #zozu-boot .games {
       display: flex;
@@ -129,6 +147,10 @@
       0%, 100% { transform: translateY(-2vh) scale(1); opacity: 1; }
       50% { transform: translateY(-2vh) scale(1.02); opacity: 0.92; }
     }
+    @keyframes zozu-line-draw {
+      0% { opacity: 0; transform: scaleX(0.08); }
+      100% { opacity: 1; transform: scaleX(1); }
+    }
   </style>
 </head>
 <body>
@@ -137,9 +159,12 @@
       <div class="zozu" aria-label="Zozu">
         <span>Z</span><span>o</span><span>z</span><span>u</span>
       </div>
-      <div class="line"></div>
-      <div class="games" aria-label="Games">
-        <span>G</span><span>a</span><span>m</span><span>e</span><span>s</span>
+      <div class="games-row" aria-label="Games">
+        <div class="line line-left" aria-hidden="true"></div>
+        <div class="games">
+          <span>G</span><span>a</span><span>m</span><span>e</span><span>s</span>
+        </div>
+        <div class="line line-right" aria-hidden="true"></div>
       </div>
     </div>
   </div>

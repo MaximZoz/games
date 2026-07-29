@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
 
 /// В тестах отключаем оверлей, чтобы не ломать pump-тайминги.
 final bootSplashEnabledProvider = Provider<bool>((ref) => true);
@@ -124,7 +125,7 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
       duration: const Duration(milliseconds: 5200),
     )..repeat(reverse: true);
 
-    // Intro: staggered letters + line + subtitle ≈ 1.75s, затем hold.
+    // Intro: staggered letters + flanking lines ≈ 1.85s, затем hold.
     Future<void>.delayed(const Duration(milliseconds: 1850), () {
       if (!mounted || _notified) return;
       _notified = true;
@@ -138,12 +139,47 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
     super.dispose();
   }
 
+  Widget _flankingLine({
+    required double width,
+    required BrandAccentHairlineSide side,
+    required Alignment scaleAlign,
+    required Duration delay,
+  }) {
+    return BrandAccentHairline(
+      width: width,
+      height: 2.5,
+      side: side,
+    )
+        .animate()
+        .fadeIn(
+          delay: delay,
+          duration: 520.ms,
+          curve: Curves.easeOutCubic,
+        )
+        .scaleX(
+          begin: 0.08,
+          end: 1,
+          delay: delay,
+          duration: 780.ms,
+          curve: Curves.easeOutCubic,
+          alignment: scaleAlign,
+        )
+        .moveX(
+          begin: scaleAlign == Alignment.centerRight ? 10 : -10,
+          end: 0,
+          delay: delay,
+          duration: 780.ms,
+          curve: Curves.easeOutCubic,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final shortest = math.min(size.width, size.height);
     final zozuSize = (shortest * 0.168).clamp(42.0, 78.0);
     final gamesSize = (zozuSize * 0.38).clamp(16.0, 28.0);
+    final lineWidth = (gamesSize * 2.15).clamp(28.0, 56.0);
 
     return ColoredBox(
       color: AppColors.surfaceUnified,
@@ -180,32 +216,43 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
                     stops: [0.0, 0.35, 0.7, 1.0],
                   ),
                 ),
-                SizedBox(height: zozuSize * 0.22),
-                _DrawAccentLine(width: zozuSize * 2.35)
-                    .animate()
-                    .fadeIn(
-                      delay: 420.ms,
-                      duration: 500.ms,
-                      curve: Curves.easeOutCubic,
-                    )
-                    .scaleX(
-                      begin: 0.15,
-                      end: 1,
-                      delay: 420.ms,
-                      duration: 700.ms,
-                      curve: Curves.easeOutCubic,
-                      alignment: Alignment.center,
+                SizedBox(height: zozuSize * 0.28),
+                // Стрелки слева и справа от GAMES — плавно «вырастают» только на intro.
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Transform.translate(
+                      offset: Offset(0, -gamesSize * 0.06),
+                      child: _flankingLine(
+                        width: lineWidth,
+                        side: BrandAccentHairlineSide.fadeOutsideLeft,
+                        scaleAlign: Alignment.centerRight,
+                        delay: 560.ms,
+                      ),
                     ),
-                SizedBox(height: zozuSize * 0.2),
-                _StaggeredBrandRow(
-                  text: _sub,
-                  fontSize: gamesSize,
-                  letterSpacing: gamesSize * 0.42,
-                  delayBase: 620.ms,
-                  stagger: 55.ms,
-                  weight: FontWeight.w600,
-                  color: AppColors.textPrimary.withValues(alpha: 0.78),
-                  uppercase: true,
+                    SizedBox(width: gamesSize * 0.55),
+                    _StaggeredBrandRow(
+                      text: _sub,
+                      fontSize: gamesSize,
+                      letterSpacing: gamesSize * 0.42,
+                      delayBase: 620.ms,
+                      stagger: 55.ms,
+                      weight: FontWeight.w600,
+                      color: AppColors.textPrimary.withValues(alpha: 0.78),
+                      uppercase: true,
+                    ),
+                    SizedBox(width: gamesSize * 0.55),
+                    Transform.translate(
+                      offset: Offset(0, -gamesSize * 0.06),
+                      child: _flankingLine(
+                        width: lineWidth,
+                        side: BrandAccentHairlineSide.fadeOutsideRight,
+                        scaleAlign: Alignment.centerLeft,
+                        delay: 640.ms,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -333,32 +380,6 @@ class _LetterGlyph extends StatelessWidget {
         Rect.fromLTWH(0, 0, bounds.width, bounds.height),
       ),
       child: text,
-    );
-  }
-}
-
-class _DrawAccentLine extends StatelessWidget {
-  const _DrawAccentLine({required this.width});
-
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: 2.5,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(99),
-        gradient: const LinearGradient(
-          colors: [
-            Color(0x006366F1),
-            Color(0xFF6366F1),
-            Color(0xFF8B5CF6),
-            Color(0x008B5CF6),
-          ],
-          stops: [0.0, 0.28, 0.72, 1.0],
-        ),
-      ),
     );
   }
 }
