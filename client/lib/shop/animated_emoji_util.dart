@@ -214,8 +214,9 @@ class CountryFlagImage extends StatelessWidget {
 /// Виджет смайлика из `client/assets/emojis/` (Lottie + unicode, без сети).
 ///
 /// Каталог магазина и владение — на бэкенде; ассеты рисуются локально.
-/// Пока ассет не готов — [EmojiIconPlaceholder].
-/// В магазине/инвентаре: [animate]=true (Lottie + лоадер).
+/// Пока Lottie не готов — [EmojiIconPlaceholder].
+/// [animate]=false: статичный кадр Lottie (магазин/инвентарь);
+/// [animate]=true: зацикленная анимация (превью по клику, чат).
 class ShopAnimatedEmoji extends StatefulWidget {
   const ShopAnimatedEmoji({
     super.key,
@@ -242,7 +243,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
   @override
   void initState() {
     super.initState();
-    _scheduleStaticReveal();
+    _scheduleLoad();
   }
 
   @override
@@ -260,18 +261,16 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       _loadTimeout?.cancel();
       _ready = false;
       _failed = false;
-      _scheduleStaticReveal();
+      _scheduleLoad();
     }
   }
 
-  void _scheduleStaticReveal() {
+  void _scheduleLoad() {
     // Флаги грузятся через Image.asset со своим frameBuilder.
     if (isCountryFlagAnimatedName(widget.animatedName)) {
       return;
     }
-    final useLottie =
-        widget.animate && hasBundledEmojiLottie(widget.animatedName);
-    if (useLottie) {
+    if (hasBundledEmojiLottie(widget.animatedName)) {
       _loadTimeout?.cancel();
       _loadTimeout = Timer(const Duration(milliseconds: 2500), () {
         if (!mounted || _ready) return;
@@ -279,8 +278,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       });
       return;
     }
-    // Статичный unicode: один кадр лоадера, затем fade-in — без мигания
-    // «битых» глифов до готовности текстового layout.
+    // Нет Lottie — unicode после одного кадра (layout текста).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _ready) return;
       setState(() => _ready = true);
@@ -328,18 +326,9 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       ),
     );
 
-    if (!widget.animate || _failed) {
-      if (!_ready) {
-        return EmojiIconPlaceholder(size: widget.size);
-      }
-      return SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: Center(child: staticChild),
-      );
-    }
-
-    if (!hasBundledEmojiLottie(widget.animatedName)) {
+    final useLottie =
+        !_failed && hasBundledEmojiLottie(widget.animatedName);
+    if (!useLottie) {
       if (!_ready) {
         return EmojiIconPlaceholder(size: widget.size);
       }
@@ -352,6 +341,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
 
     // Lottie из client/assets/emojis/lottie/ — без сети и без package assets.
     final lottieSize = widget.size * 0.92;
+    final play = widget.animate;
     return SizedBox(
       width: widget.size,
       height: widget.size,
@@ -368,8 +358,8 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
                 bundledEmojiLottieAsset(widget.animatedName),
                 width: lottieSize,
                 height: lottieSize,
-                repeat: true,
-                animate: true,
+                repeat: play,
+                animate: play,
                 onLoaded: (_) => _markReady(),
                 errorBuilder: (context, error, stackTrace) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {

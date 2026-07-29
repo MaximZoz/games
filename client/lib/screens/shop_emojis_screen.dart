@@ -488,7 +488,6 @@ class _EmojiBuyTile extends StatelessWidget {
                                   animatedName: name,
                                   size: emojiSize,
                                   fallback: fallback,
-                                  animate: true,
                                 ),
                         );
                       },
