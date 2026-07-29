@@ -1,5 +1,5 @@
 /* Web Push service worker for Zozu Games PWA.
- * v2: deep-link через tag + Cache (iOS часто теряет notification.data).
+ * v3: game_turn push + не показывать, если уже смотрим этот матч.
  */
 /* eslint-disable no-undef */
 
@@ -27,6 +27,14 @@ function appPathFromUrl(url) {
   return path;
 }
 
+function pathOnly(path) {
+  try {
+    return new URL(path, self.location.origin).pathname;
+  } catch (_) {
+    return String(path || '').split('?')[0].split('#')[0];
+  }
+}
+
 /** Fallback, когда iOS отдаёт пустой notification.data при клике. */
 function pathFromTag(tag) {
   const t = (tag && String(tag)) || '';
@@ -38,6 +46,10 @@ function pathFromTag(tag) {
   if (t.startsWith('game_invite_')) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
+  }
+  if (t.startsWith('game_turn_')) {
+    const gameId = t.slice('game_turn_'.length);
+    return gameId ? `/games/tictactoe/game/${gameId}` : '/games';
   }
   if (t.startsWith('achievement_')) return '/achievements';
   if (t.startsWith('reward_gift_')) return '/inventory';
@@ -72,6 +84,52 @@ function resolveClickPath(notification) {
   return '/';
 }
 
+/**
+ * Не показывать «Ваш ход», если в этом же браузере/PWA уже открыт
+ * и видим именно этот матч. Свёрнутое приложение / другой таб — показывать.
+ */
+async function shouldSuppressGameTurn(data) {
+  const kind = data && data.kind != null ? String(data.kind) : '';
+  const tag = data && data.tag != null ? String(data.tag) : '';
+  if (kind !== 'game_turn' && !tag.startsWith('game_turn_')) {
+    return false;
+  }
+  const targetPath = pathOnly(
+    data.url || pathFromTag(tag) || '/games',
+  );
+  if (!targetPath.startsWith('/games/tictactoe/game/')) {
+    return false;
+  }
+
+  const clientsList = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+  for (const client of clientsList) {
+    let sameOrigin = false;
+    let clientPath = '';
+    try {
+      const u = new URL(client.url);
+      sameOrigin = u.origin === self.location.origin;
+      clientPath = u.pathname;
+    } catch (_) {
+      continue;
+    }
+    if (!sameOrigin) continue;
+    if (clientPath !== targetPath) continue;
+    // Свёрнуто / в фоне — уведомление нужно.
+    if (client.visibilityState && client.visibilityState !== 'visible') {
+      continue;
+    }
+    // Другая вкладка браузера без фокуса — уведомление нужно.
+    if ('focused' in client && client.focused === false) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
 self.addEventListener('push', (event) => {
   let data = {
     title: 'Zozu Games',
@@ -99,7 +157,7 @@ self.addEventListener('push', (event) => {
     body: body,
     icon: '/icons/Icon-192.png',
     badge: '/icons/Icon-192.png',
-    data: { url: url },
+    data: { url: url, kind: data.kind || '' },
     tag: tag,
     renotify: true,
     silent: false,
@@ -108,6 +166,9 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     (async () => {
+      if (await shouldSuppressGameTurn(data)) {
+        return;
+      }
       const path = appPathFromUrl(resolveTargetUrl(url));
       // Заранее кладём deep-link: на iOS data при клике часто пустой.
       if (path && path !== '/') {

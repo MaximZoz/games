@@ -930,6 +930,19 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 			"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
 			"board": board, "turn": nextTurn, "winner": winner, "status": status,
 		})
+	} else {
+		gameID := strings.TrimPrefix(key, "game:")
+		payload := map[string]any{
+			"type": "game_state", "game_id": gameID,
+			"board": board, "turn": nextTurn, "status": status,
+		}
+		if turnTimeSec > 0 {
+			deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
+			payload["turn_deadline"] = deadline
+			payload["turn_time_sec"] = turnTimeSec
+		}
+		h.broadcast(humanUserIDs(xUserID, oUserID), payload)
+		h.notifyYourTurn(gameID, nextTurn, xUserID, oUserID)
 	}
 	return true
 }
@@ -1894,6 +1907,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		broadcastPayload["turn_time_sec"] = turnTimeSec
 	}
 	h.broadcast(humanUserIDs(xUserID, oUserID), broadcastPayload)
+	if status == gameStatusActive {
+		h.notifyYourTurn(gameID, nextTurn, xUserID, oUserID)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
@@ -2002,6 +2018,7 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 		broadcastPayload["turn_time_sec"] = turnTimeSec
 	}
 	h.broadcast([]uuid.UUID{xUUID, oUUID}, broadcastPayload)
+	h.notifyYourTurn(gameID, "o", newXUserID, newOUserID)
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
@@ -2089,6 +2106,32 @@ func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID s
 	})
 }
 
+// notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).
+// Показ на клиенте подавляется SW, если пользователь уже смотрит этот матч.
+func (h *GamesHandler) notifyYourTurn(gameID, nextTurn, xUserID, oUserID string) {
+	if h.Push == nil || strings.TrimSpace(gameID) == "" {
+		return
+	}
+	nextID := xUserID
+	if nextTurn == "o" {
+		nextID = oUserID
+	}
+	if nextID == "" || isBot(nextID) {
+		return
+	}
+	uid, err := uuid.Parse(nextID)
+	if err != nil {
+		return
+	}
+	h.Push.NotifyUsers([]uuid.UUID{uid}, store.WebPushCategoryGames, PushPayload{
+		Title: "Ваш ход",
+		Body:  "Соперник сделал ход — ваша очередь",
+		URL:   "/games/tictactoe/game/" + gameID,
+		Tag:   "game_turn_" + gameID,
+		Kind:  "game_turn",
+	})
+}
+
 func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	if h.Broadcaster != nil && h.Broadcaster.Rdb != nil {
 		h.Broadcaster.Publish(userIDs, payload)
@@ -2116,6 +2159,7 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 		Body:  name + " приглашает сыграть",
 		URL:   url,
 		Tag:   "game_invite_" + lobbyID,
+		Kind:  "game_invite",
 	})
 }
 
