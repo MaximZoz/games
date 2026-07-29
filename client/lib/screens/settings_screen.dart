@@ -85,42 +85,58 @@ class SettingsScreen extends ConsumerWidget {
                           if (webPushEnabled) ...[
                             const SizedBox(height: 8),
                             const Divider(height: 1, color: AppColors.accentSoft),
-                            const SizedBox(height: 4),
-                            _CategoryCheck(
-                              title: 'Чат',
-                              value: pushCategories.chat,
-                              onChanged: (v) => setCategory(
-                                () => ref
-                                    .read(webPushCategoriesProvider.notifier)
-                                    .setCategory(chat: v),
-                              ),
-                            ),
-                            _CategoryCheck(
-                              title: 'Друзья',
-                              value: pushCategories.friends,
-                              onChanged: (v) => setCategory(
-                                () => ref
-                                    .read(webPushCategoriesProvider.notifier)
-                                    .setCategory(friends: v),
-                              ),
-                            ),
-                            _CategoryCheck(
-                              title: 'Игры',
-                              value: pushCategories.games,
-                              onChanged: (v) => setCategory(
-                                () => ref
-                                    .read(webPushCategoriesProvider.notifier)
-                                    .setCategory(games: v),
-                              ),
-                            ),
-                            _CategoryCheck(
-                              title: 'Награды',
-                              value: pushCategories.rewards,
-                              onChanged: (v) => setCategory(
-                                () => ref
-                                    .read(webPushCategoriesProvider.notifier)
-                                    .setCategory(rewards: v),
-                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _CategoryCheck(
+                                    title: 'Чат',
+                                    value: pushCategories.chat,
+                                    onChanged: (v) => setCategory(
+                                      () => ref
+                                          .read(
+                                              webPushCategoriesProvider.notifier)
+                                          .setCategory(chat: v),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _CategoryCheck(
+                                    title: 'Друзья',
+                                    value: pushCategories.friends,
+                                    onChanged: (v) => setCategory(
+                                      () => ref
+                                          .read(
+                                              webPushCategoriesProvider.notifier)
+                                          .setCategory(friends: v),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _CategoryCheck(
+                                    title: 'Игры',
+                                    value: pushCategories.games,
+                                    onChanged: (v) => setCategory(
+                                      () => ref
+                                          .read(
+                                              webPushCategoriesProvider.notifier)
+                                          .setCategory(games: v),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _CategoryCheck(
+                                    title: 'Награды',
+                                    value: pushCategories.rewards,
+                                    onChanged: (v) => setCategory(
+                                      () => ref
+                                          .read(
+                                              webPushCategoriesProvider.notifier)
+                                          .setCategory(rewards: v),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ],
@@ -225,12 +241,13 @@ class _CategoryCheck extends StatelessWidget {
       onTap: () => onChanged(!value),
       borderRadius: BorderRadius.circular(10),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 28,
-              height: 28,
+              width: 24,
+              height: 24,
               child: Checkbox(
                 value: value,
                 onChanged: (v) => onChanged(v ?? false),
@@ -243,15 +260,16 @@ class _CategoryCheck extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ],
         ),
