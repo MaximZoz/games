@@ -76,7 +76,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
   ref.onDispose(refreshListenable.dispose);
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/games',
     refreshListenable: refreshListenable,
     observers: [chatsRouteObserver],
     redirect: (context, state) async {
@@ -106,12 +106,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (isPublic && user != null) {
-        return safeAuthRedirect(state.uri.queryParameters['redirect']) ?? '/';
+        return safeAuthRedirect(state.uri.queryParameters['redirect']) ??
+            '/games';
       }
       if (needsAuth && user == null) {
         return appendRedirectQuery('/login', locationFromUri(state.uri));
       }
-      if (isAdminRoute && user != null && !user.isAdmin) return '/';
+      if (isAdminRoute && user != null && !user.isAdmin) return '/games';
       return null;
     },
     routes: [

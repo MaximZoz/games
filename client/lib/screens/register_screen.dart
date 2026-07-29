@@ -87,7 +87,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             displayName: displayName,
             ref: _ref,
           );
-      if (mounted) context.go(_redirect ?? '/');
+      if (mounted) context.go(_redirect ?? '/games');
     } catch (e) {
       if (mounted) {
         setState(() {

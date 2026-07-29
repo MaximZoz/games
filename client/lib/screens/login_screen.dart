@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text,
             password: _passwordController.text,
           );
-      if (mounted) context.go(_redirect ?? '/');
+      if (mounted) context.go(_redirect ?? '/games');
     } catch (e) {
       if (mounted) {
         setState(() {
