@@ -1640,57 +1640,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
-                child: GradientCard(
-                  animate: false,
-                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: _sending ? null : _openEmojiPicker,
-                        tooltip: 'Смайлики',
-                        padding: const EdgeInsets.all(10),
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                        icon: const Icon(
-                          Icons.emoji_emotions_outlined,
-                          color: AppColors.accentStart,
-                          size: 28,
-                        ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _sending ? null : _openEmojiPicker,
+                      tooltip: 'Смайлики',
+                      padding: const EdgeInsets.all(10),
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
-                      Expanded(
-                        child: TextField(
-                          controller: _textController,
-                          focusNode: _composerFocusNode,
-                          minLines: 1,
-                          maxLines: 4,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: const InputDecoration(
-                            hintText: 'Введите сообщение...',
-                            border: InputBorder.none,
-                            isDense: true,
-                          ),
-                          textInputAction: TextInputAction.send,
-                          onTap: _scrollToBottom,
-                          onSubmitted: (_) => _sendMessage(),
+                      icon: const Icon(
+                        Icons.emoji_emotions_outlined,
+                        color: AppColors.accentStart,
+                        size: 28,
+                      ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        focusNode: _composerFocusNode,
+                        minLines: 1,
+                        maxLines: 4,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: const InputDecoration(
+                          hintText: 'Введите сообщение...',
+                          border: InputBorder.none,
+                          isDense: true,
                         ),
+                        textInputAction: TextInputAction.send,
+                        onTap: _scrollToBottom,
+                        onSubmitted: (_) => _sendMessage(),
                       ),
-                      IconButton(
-                        onPressed: _sending ? null : _sendMessage,
-                        tooltip: 'Отправить',
-                        icon: _sending
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.send_rounded),
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      onPressed: _sending ? null : _sendMessage,
+                      tooltip: 'Отправить',
+                      icon: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accentStart,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.send_rounded,
+                              color: AppColors.accentStart,
+                            ),
+                    ),
+                  ],
                 ),
               ),
             ],
