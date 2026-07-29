@@ -86,54 +86,44 @@ class SettingsScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             const Divider(height: 1, color: AppColors.accentSoft),
                             const SizedBox(height: 8),
-                            Row(
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 4,
                               children: [
-                                Expanded(
-                                  child: _CategoryCheck(
-                                    title: 'Чат',
-                                    value: pushCategories.chat,
-                                    onChanged: (v) => setCategory(
-                                      () => ref
-                                          .read(
-                                              webPushCategoriesProvider.notifier)
-                                          .setCategory(chat: v),
-                                    ),
+                                _CategoryCheck(
+                                  title: 'Чат',
+                                  value: pushCategories.chat,
+                                  onChanged: (v) => setCategory(
+                                    () => ref
+                                        .read(webPushCategoriesProvider.notifier)
+                                        .setCategory(chat: v),
                                   ),
                                 ),
-                                Expanded(
-                                  child: _CategoryCheck(
-                                    title: 'Друзья',
-                                    value: pushCategories.friends,
-                                    onChanged: (v) => setCategory(
-                                      () => ref
-                                          .read(
-                                              webPushCategoriesProvider.notifier)
-                                          .setCategory(friends: v),
-                                    ),
+                                _CategoryCheck(
+                                  title: 'Друзья',
+                                  value: pushCategories.friends,
+                                  onChanged: (v) => setCategory(
+                                    () => ref
+                                        .read(webPushCategoriesProvider.notifier)
+                                        .setCategory(friends: v),
                                   ),
                                 ),
-                                Expanded(
-                                  child: _CategoryCheck(
-                                    title: 'Игры',
-                                    value: pushCategories.games,
-                                    onChanged: (v) => setCategory(
-                                      () => ref
-                                          .read(
-                                              webPushCategoriesProvider.notifier)
-                                          .setCategory(games: v),
-                                    ),
+                                _CategoryCheck(
+                                  title: 'Игры',
+                                  value: pushCategories.games,
+                                  onChanged: (v) => setCategory(
+                                    () => ref
+                                        .read(webPushCategoriesProvider.notifier)
+                                        .setCategory(games: v),
                                   ),
                                 ),
-                                Expanded(
-                                  child: _CategoryCheck(
-                                    title: 'Награды',
-                                    value: pushCategories.rewards,
-                                    onChanged: (v) => setCategory(
-                                      () => ref
-                                          .read(
-                                              webPushCategoriesProvider.notifier)
-                                          .setCategory(rewards: v),
-                                    ),
+                                _CategoryCheck(
+                                  title: 'Награды',
+                                  value: pushCategories.rewards,
+                                  onChanged: (v) => setCategory(
+                                    () => ref
+                                        .read(webPushCategoriesProvider.notifier)
+                                        .setCategory(rewards: v),
                                   ),
                                 ),
                               ],
@@ -243,7 +233,7 @@ class _CategoryCheck extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: 22,
@@ -261,16 +251,12 @@ class _CategoryCheck extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ],
         ),
