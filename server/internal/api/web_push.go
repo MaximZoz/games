@@ -22,6 +22,7 @@ type PushPayload struct {
 	Body  string `json:"body"`
 	URL   string `json:"url,omitempty"`
 	Tag   string `json:"tag,omitempty"`
+	Kind  string `json:"kind,omitempty"`
 }
 
 // WebPushSender рассылает уведомления подписчикам.

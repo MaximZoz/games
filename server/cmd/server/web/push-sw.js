@@ -1,5 +1,6 @@
 /* Web Push service worker for Zozu Games PWA.
- * v2: deep-link через tag + Cache (iOS часто теряет notification.data).
+ * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
+ * В открытом приложении — без пушей на телефон (бейджи/realtime в UI).
  */
 /* eslint-disable no-undef */
 
@@ -39,6 +40,10 @@ function pathFromTag(tag) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
   }
+  if (t.startsWith('game_turn_')) {
+    const gameId = t.slice('game_turn_'.length);
+    return gameId ? `/games/tictactoe/game/${gameId}` : '/games';
+  }
   if (t.startsWith('achievement_')) return '/achievements';
   if (t.startsWith('reward_gift_')) return '/inventory';
   if (t === 'daily_reward') return '/coins/login';
@@ -72,6 +77,41 @@ function resolveClickPath(notification) {
   return '/';
 }
 
+/**
+ * PWA реально на экране и в фокусе.
+ * На iOS при сворачивании visibility часто остаётся visible, а focused=false —
+ * поэтому для подавления пуша требуем focused === true.
+ */
+function clientIsFocusedForeground(client) {
+  if (!client) return false;
+  if (client.visibilityState && client.visibilityState !== 'visible') {
+    return false;
+  }
+  if ('focused' in client) {
+    return client.focused === true;
+  }
+  // Старые движки без focused: ориентируемся только на visibility.
+  return client.visibilityState === 'visible';
+}
+
+async function isPwaFocusedForeground() {
+  const clientsList = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+  for (const client of clientsList) {
+    let sameOrigin = false;
+    try {
+      sameOrigin = new URL(client.url).origin === self.location.origin;
+    } catch (_) {
+      continue;
+    }
+    if (!sameOrigin) continue;
+    if (clientIsFocusedForeground(client)) return true;
+  }
+  return false;
+}
+
 self.addEventListener('push', (event) => {
   let data = {
     title: 'Zozu Games',
@@ -99,7 +139,7 @@ self.addEventListener('push', (event) => {
     body: body,
     icon: '/icons/Icon-192.png',
     badge: '/icons/Icon-192.png',
-    data: { url: url },
+    data: { url: url, kind: data.kind || '' },
     tag: tag,
     renotify: true,
     silent: false,
@@ -108,6 +148,11 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     (async () => {
+      // Любые системные пуши только когда приложение свёрнуто / не в фокусе.
+      // В открытом PWA (чаты, игры, другой таб) — без баннера на iPhone.
+      if (await isPwaFocusedForeground()) {
+        return;
+      }
       const path = appPathFromUrl(resolveTargetUrl(url));
       // Заранее кладём deep-link: на iOS data при клике часто пустой.
       if (path && path !== '/') {
