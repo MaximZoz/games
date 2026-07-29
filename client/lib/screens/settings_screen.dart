@@ -57,78 +57,86 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                   ),
                   const SizedBox(height: 24),
-                  _SettingsTile(
-                    title: 'Добавлять ботов через 30 с',
-                    subtitle:
-                        'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)',
-                    value: addBotsAfter30s,
-                    onChanged: (v) =>
-                        ref.read(addBotsAfter30sProvider.notifier).set(v),
+                  _SettingsCard(
+                    child: _SwitchRow(
+                      title: 'Добавлять ботов через 30 с',
+                      subtitle:
+                          'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)',
+                      value: addBotsAfter30s,
+                      onChanged: (v) =>
+                          ref.read(addBotsAfter30sProvider.notifier).set(v),
+                    ),
                   ),
                   if (kIsWeb) ...[
                     const SizedBox(height: 12),
-                    _SettingsTile(
-                      title: 'Уведомления',
-                      subtitle: pushSubtitle(),
-                      value: webPushEnabled,
-                      onChanged: isWebPushSupported
-                          ? (v) async {
-                              final err = await ref
-                                  .read(webPushEnabledProvider.notifier)
-                                  .setEnabled(v);
-                              if (!context.mounted) return;
-                              if (err != null) {
-                                showAppSnackBar(
-                                  context,
-                                  message: err,
-                                  kind: AppSnackKind.error,
-                                );
-                              }
-                            }
-                          : null,
+                    _SettingsCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _SwitchRow(
+                            title: 'Уведомления',
+                            subtitle: pushSubtitle(),
+                            value: webPushEnabled,
+                            onChanged: isWebPushSupported
+                                ? (v) async {
+                                    final err = await ref
+                                        .read(webPushEnabledProvider.notifier)
+                                        .setEnabled(v);
+                                    if (!context.mounted) return;
+                                    if (err != null) {
+                                      showAppSnackBar(
+                                        context,
+                                        message: err,
+                                        kind: AppSnackKind.error,
+                                      );
+                                    }
+                                  }
+                                : null,
+                          ),
+                          if (webPushEnabled && isWebPushSupported) ...[
+                            const SizedBox(height: 8),
+                            const Divider(height: 1, color: AppColors.accentSoft),
+                            const SizedBox(height: 4),
+                            _CategoryCheck(
+                              title: 'Чат',
+                              value: pushCategories.chat,
+                              onChanged: (v) => setCategory(
+                                () => ref
+                                    .read(webPushCategoriesProvider.notifier)
+                                    .setCategory(chat: v),
+                              ),
+                            ),
+                            _CategoryCheck(
+                              title: 'Друзья',
+                              value: pushCategories.friends,
+                              onChanged: (v) => setCategory(
+                                () => ref
+                                    .read(webPushCategoriesProvider.notifier)
+                                    .setCategory(friends: v),
+                              ),
+                            ),
+                            _CategoryCheck(
+                              title: 'Игры',
+                              value: pushCategories.games,
+                              onChanged: (v) => setCategory(
+                                () => ref
+                                    .read(webPushCategoriesProvider.notifier)
+                                    .setCategory(games: v),
+                              ),
+                            ),
+                            _CategoryCheck(
+                              title: 'Награды',
+                              value: pushCategories.rewards,
+                              onChanged: (v) => setCategory(
+                                () => ref
+                                    .read(webPushCategoriesProvider.notifier)
+                                    .setCategory(rewards: v),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                    if (webPushEnabled && isWebPushSupported) ...[
-                      const SizedBox(height: 12),
-                      _SettingsTile(
-                        title: 'Чат',
-                        value: pushCategories.chat,
-                        onChanged: (v) => setCategory(
-                          () => ref
-                              .read(webPushCategoriesProvider.notifier)
-                              .setCategory(chat: v),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _SettingsTile(
-                        title: 'Друзья',
-                        value: pushCategories.friends,
-                        onChanged: (v) => setCategory(
-                          () => ref
-                              .read(webPushCategoriesProvider.notifier)
-                              .setCategory(friends: v),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _SettingsTile(
-                        title: 'Игры',
-                        value: pushCategories.games,
-                        onChanged: (v) => setCategory(
-                          () => ref
-                              .read(webPushCategoriesProvider.notifier)
-                              .setCategory(games: v),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _SettingsTile(
-                        title: 'Награды',
-                        value: pushCategories.rewards,
-                        onChanged: (v) => setCategory(
-                          () => ref
-                              .read(webPushCategoriesProvider.notifier)
-                              .setCategory(rewards: v),
-                        ),
-                      ),
-                    ],
                   ],
                 ],
               ),
@@ -140,8 +148,27 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppRadius.card),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.accentSoft),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
     required this.title,
     this.subtitle,
     required this.value,
@@ -156,44 +183,89 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitleText = subtitle;
-    return Container(
-      padding: const EdgeInsets.all(AppRadius.card),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.accentSoft),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              if (subtitleText != null && subtitleText.isNotEmpty) ...[
+                const SizedBox(height: 4),
                 Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                  subtitleText,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                 ),
-                if (subtitleText != null && subtitleText.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitleText,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                ],
               ],
+            ],
+          ),
+        ),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+          activeTrackColor: AppColors.accentStart,
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryCheck extends StatelessWidget {
+  const _CategoryCheck({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: Checkbox(
+                value: value,
+                onChanged: (v) => onChanged(v ?? false),
+                activeColor: AppColors.accentStart,
+                side: const BorderSide(color: AppColors.accentSoft, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: AppColors.accentStart,
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
