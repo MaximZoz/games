@@ -1936,7 +1936,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               final lastMessage = item.lastMessage;
                               final unread = item.unreadCount;
                               final subtitle =
-                                  (lastMessage?.body ?? '').trim();
+                                  lastMessage?.previewText.trim() ?? '';
                               final clearKey = 'clear_${item.chatID}';
                               final blockKey = 'block_${item.user.id}';
                               final clearBusy =

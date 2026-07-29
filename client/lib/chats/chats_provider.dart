@@ -193,6 +193,11 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
         unawaited(load());
         return;
       }
+      if (type == 'chat_message_updated') {
+        // Правка текста — обновить превью в списке чатов.
+        unawaited(load());
+        return;
+      }
       if (type == 'chat_list_changed' ||
           type == 'chat_read' ||
           type == 'chat_delivered' ||
