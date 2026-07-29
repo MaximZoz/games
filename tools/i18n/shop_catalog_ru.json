@@ -1,0 +1,1212 @@
+{
+  "emoji_smile": {
+    "kind": "emoji",
+    "title_ru": "Улыбка",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_joy": {
+    "kind": "emoji",
+    "title_ru": "Слёзы радости",
+    "description_ru": ""
+  },
+  "emoji_rofl": {
+    "kind": "emoji",
+    "title_ru": "ROFL",
+    "description_ru": ""
+  },
+  "emoji_heart_eyes": {
+    "kind": "emoji",
+    "title_ru": "Влюблённый",
+    "description_ru": ""
+  },
+  "emoji_partying": {
+    "kind": "emoji",
+    "title_ru": "Вечеринка",
+    "description_ru": ""
+  },
+  "emoji_thumbs_up": {
+    "kind": "emoji",
+    "title_ru": "Лайк",
+    "description_ru": ""
+  },
+  "emoji_fire": {
+    "kind": "emoji",
+    "title_ru": "Огонь",
+    "description_ru": ""
+  },
+  "emoji_rocket": {
+    "kind": "emoji",
+    "title_ru": "Ракета",
+    "description_ru": ""
+  },
+  "emoji_trophy": {
+    "kind": "emoji",
+    "title_ru": "Кубок",
+    "description_ru": ""
+  },
+  "emoji_red_heart": {
+    "kind": "emoji",
+    "title_ru": "Сердце",
+    "description_ru": ""
+  },
+  "emoji_party_popper": {
+    "kind": "emoji",
+    "title_ru": "Хлопушка",
+    "description_ru": ""
+  },
+  "emoji_sparkles": {
+    "kind": "emoji",
+    "title_ru": "Блёстки",
+    "description_ru": ""
+  },
+  "stake_silver_2": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 2 серебра",
+    "description_ru": "Право ставить 2 серебра в играх"
+  },
+  "stake_silver_5": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 5 серебра",
+    "description_ru": "Право ставить 5 серебра в играх"
+  },
+  "stake_silver_10": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 10 серебра",
+    "description_ru": "Право ставить 10 серебра в играх"
+  },
+  "stake_silver_25": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 25 серебра",
+    "description_ru": "Право ставить 25 серебра в играх"
+  },
+  "stake_silver_50": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 50 серебра",
+    "description_ru": "Право ставить 50 серебра в играх"
+  },
+  "stake_silver_100": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 100 серебра",
+    "description_ru": "Право ставить 100 серебра в играх"
+  },
+  "frame_bronze": {
+    "kind": "frame",
+    "title_ru": "Бронзовая рамка",
+    "description_ru": "Обводка аватара бронзой"
+  },
+  "frame_silver": {
+    "kind": "frame",
+    "title_ru": "Серебряная рамка",
+    "description_ru": "Обводка аватара серебром"
+  },
+  "frame_gold": {
+    "kind": "frame",
+    "title_ru": "Золотая рамка",
+    "description_ru": "Обводка аватара золотом"
+  },
+  "emoji_wink": {
+    "kind": "emoji",
+    "title_ru": "Подмигивание",
+    "description_ru": ""
+  },
+  "emoji_kissing_heart": {
+    "kind": "emoji",
+    "title_ru": "Поцелуй",
+    "description_ru": ""
+  },
+  "emoji_star_struck": {
+    "kind": "emoji",
+    "title_ru": "Звёзды в глазах",
+    "description_ru": ""
+  },
+  "emoji_dog": {
+    "kind": "emoji",
+    "title_ru": "Собака",
+    "description_ru": ""
+  },
+  "emoji_tiger": {
+    "kind": "emoji",
+    "title_ru": "Тигр",
+    "description_ru": ""
+  },
+  "emoji_dragon": {
+    "kind": "emoji",
+    "title_ru": "Дракон",
+    "description_ru": ""
+  },
+  "emoji_unicorn": {
+    "kind": "emoji",
+    "title_ru": "Единорог",
+    "description_ru": ""
+  },
+  "emoji_ghost": {
+    "kind": "emoji",
+    "title_ru": "Привидение",
+    "description_ru": ""
+  },
+  "emoji_alien": {
+    "kind": "emoji",
+    "title_ru": "Пришелец",
+    "description_ru": ""
+  },
+  "emoji_robot": {
+    "kind": "emoji",
+    "title_ru": "Робот",
+    "description_ru": ""
+  },
+  "emoji_smiley_cat": {
+    "kind": "emoji",
+    "title_ru": "Кот",
+    "description_ru": ""
+  },
+  "emoji_frog": {
+    "kind": "emoji",
+    "title_ru": "Лягушка",
+    "description_ru": ""
+  },
+  "emoji_octopus": {
+    "kind": "emoji",
+    "title_ru": "Осьминог",
+    "description_ru": ""
+  },
+  "emoji_butterfly": {
+    "kind": "emoji",
+    "title_ru": "Бабочка",
+    "description_ru": ""
+  },
+  "emoji_eagle": {
+    "kind": "emoji",
+    "title_ru": "Орёл",
+    "description_ru": ""
+  },
+  "emoji_popcorn": {
+    "kind": "emoji",
+    "title_ru": "Попкорн",
+    "description_ru": ""
+  },
+  "emoji_pizza_cook": {
+    "kind": "emoji",
+    "title_ru": "Готовка",
+    "description_ru": ""
+  },
+  "emoji_burrito": {
+    "kind": "emoji",
+    "title_ru": "Буррито",
+    "description_ru": ""
+  },
+  "emoji_spaghetti": {
+    "kind": "emoji",
+    "title_ru": "Спагетти",
+    "description_ru": ""
+  },
+  "emoji_ramen": {
+    "kind": "emoji",
+    "title_ru": "Рамэн",
+    "description_ru": ""
+  },
+  "emoji_coffee": {
+    "kind": "emoji",
+    "title_ru": "Кофе",
+    "description_ru": ""
+  },
+  "emoji_beer": {
+    "kind": "emoji",
+    "title_ru": "Пиво",
+    "description_ru": ""
+  },
+  "emoji_champagne": {
+    "kind": "emoji",
+    "title_ru": "Шампанское",
+    "description_ru": ""
+  },
+  "emoji_wine": {
+    "kind": "emoji",
+    "title_ru": "Вино",
+    "description_ru": ""
+  },
+  "emoji_tropical": {
+    "kind": "emoji",
+    "title_ru": "Коктейль",
+    "description_ru": ""
+  },
+  "emoji_car": {
+    "kind": "emoji",
+    "title_ru": "Авто",
+    "description_ru": ""
+  },
+  "emoji_race_car": {
+    "kind": "emoji",
+    "title_ru": "Гоночная",
+    "description_ru": ""
+  },
+  "emoji_bike": {
+    "kind": "emoji",
+    "title_ru": "Велосипед",
+    "description_ru": ""
+  },
+  "emoji_sailboat": {
+    "kind": "emoji",
+    "title_ru": "Парусник",
+    "description_ru": ""
+  },
+  "emoji_ufo": {
+    "kind": "emoji",
+    "title_ru": "НЛО",
+    "description_ru": ""
+  },
+  "emoji_plane": {
+    "kind": "emoji",
+    "title_ru": "Самолёт",
+    "description_ru": ""
+  },
+  "emoji_coaster": {
+    "kind": "emoji",
+    "title_ru": "Американские горки",
+    "description_ru": ""
+  },
+  "emoji_ferris": {
+    "kind": "emoji",
+    "title_ru": "Колесо обозрения",
+    "description_ru": ""
+  },
+  "emoji_taxi": {
+    "kind": "emoji",
+    "title_ru": "Такси",
+    "description_ru": ""
+  },
+  "emoji_balloon": {
+    "kind": "emoji",
+    "title_ru": "Шарик",
+    "description_ru": ""
+  },
+  "emoji_cake": {
+    "kind": "emoji",
+    "title_ru": "Торт",
+    "description_ru": ""
+  },
+  "emoji_gift": {
+    "kind": "emoji",
+    "title_ru": "Подарок",
+    "description_ru": ""
+  },
+  "emoji_fireworks": {
+    "kind": "emoji",
+    "title_ru": "Фейерверк",
+    "description_ru": ""
+  },
+  "emoji_gold_medal": {
+    "kind": "emoji",
+    "title_ru": "Золото",
+    "description_ru": ""
+  },
+  "emoji_soccer": {
+    "kind": "emoji",
+    "title_ru": "Футбол",
+    "description_ru": ""
+  },
+  "emoji_confetti": {
+    "kind": "emoji",
+    "title_ru": "Конфетти",
+    "description_ru": ""
+  },
+  "emoji_direct_hit": {
+    "kind": "emoji",
+    "title_ru": "В яблочко",
+    "description_ru": ""
+  },
+  "emoji_collision": {
+    "kind": "emoji",
+    "title_ru": "Взрыв",
+    "description_ru": ""
+  },
+  "emoji_glowing_star": {
+    "kind": "emoji",
+    "title_ru": "Звезда",
+    "description_ru": ""
+  },
+  "emoji_gem": {
+    "kind": "emoji",
+    "title_ru": "Алмаз",
+    "description_ru": ""
+  },
+  "emoji_coin": {
+    "kind": "emoji",
+    "title_ru": "Монета",
+    "description_ru": ""
+  },
+  "emoji_money_wings": {
+    "kind": "emoji",
+    "title_ru": "Деньги",
+    "description_ru": ""
+  },
+  "emoji_bulb": {
+    "kind": "emoji",
+    "title_ru": "Лампочка",
+    "description_ru": ""
+  },
+  "emoji_grad_cap": {
+    "kind": "emoji",
+    "title_ru": "Шапочка",
+    "description_ru": ""
+  },
+  "emoji_ring": {
+    "kind": "emoji",
+    "title_ru": "Кольцо",
+    "description_ru": ""
+  },
+  "emoji_battery": {
+    "kind": "emoji",
+    "title_ru": "Батарея",
+    "description_ru": ""
+  },
+  "emoji_pencil": {
+    "kind": "emoji",
+    "title_ru": "Карандаш",
+    "description_ru": ""
+  },
+  "pack_emotions": {
+    "kind": "emoji_pack",
+    "title_ru": "Эмоции",
+    "description_ru": "12 анимированных смайликов · по 10 шт."
+  },
+  "pack_animals": {
+    "kind": "emoji_pack",
+    "title_ru": "Животные",
+    "description_ru": "12 анимированных смайликов · по 10 шт."
+  },
+  "pack_food": {
+    "kind": "emoji_pack",
+    "title_ru": "Еда и напитки",
+    "description_ru": "10 анимированных смайликов · по 10 шт."
+  },
+  "pack_travel": {
+    "kind": "emoji_pack",
+    "title_ru": "Путешествия",
+    "description_ru": "10 анимированных смайликов · по 10 шт."
+  },
+  "pack_party": {
+    "kind": "emoji_pack",
+    "title_ru": "Праздник и спорт",
+    "description_ru": "12 анимированных смайликов · по 10 шт."
+  },
+  "pack_objects": {
+    "kind": "emoji_pack",
+    "title_ru": "Предметы",
+    "description_ru": "8 анимированных смайликов · по 10 шт."
+  },
+  "emoji_angry": {
+    "kind": "emoji",
+    "title_ru": "Злой",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_cry": {
+    "kind": "emoji",
+    "title_ru": "Плач",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_loudly_crying": {
+    "kind": "emoji",
+    "title_ru": "Рёв",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_frown": {
+    "kind": "emoji",
+    "title_ru": "Грустный",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_big_frown": {
+    "kind": "emoji",
+    "title_ru": "Очень грустный",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_flushed": {
+    "kind": "emoji",
+    "title_ru": "Смущённый",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_mind_blown": {
+    "kind": "emoji",
+    "title_ru": "Взрыв мозга",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_melting": {
+    "kind": "emoji",
+    "title_ru": "Тает",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_hug_face": {
+    "kind": "emoji",
+    "title_ru": "Обнимашки",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_cool": {
+    "kind": "emoji",
+    "title_ru": "Крутой",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_nerd": {
+    "kind": "emoji",
+    "title_ru": "Ботаник",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_dizzy": {
+    "kind": "emoji",
+    "title_ru": "Головокружение",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_hot_face": {
+    "kind": "emoji",
+    "title_ru": "Жара",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_cold_face": {
+    "kind": "emoji",
+    "title_ru": "Мороз",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_broken_heart": {
+    "kind": "emoji",
+    "title_ru": "Разбитое сердце",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_beating_heart": {
+    "kind": "emoji",
+    "title_ru": "Бьётся сердце",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_holding_tears": {
+    "kind": "emoji",
+    "title_ru": "Сдерживает слёзы",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_smirk": {
+    "kind": "emoji",
+    "title_ru": "Ухмылка",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_relieved": {
+    "kind": "emoji",
+    "title_ru": "Облегчение",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_sleepy": {
+    "kind": "emoji",
+    "title_ru": "Сонный",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_worried": {
+    "kind": "emoji",
+    "title_ru": "Волнение",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_pensive": {
+    "kind": "emoji",
+    "title_ru": "Задумчивый",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_unamused": {
+    "kind": "emoji",
+    "title_ru": "Не впечатлён",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_grimacing": {
+    "kind": "emoji",
+    "title_ru": "Гримаса",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_shushing": {
+    "kind": "emoji",
+    "title_ru": "Тсс",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_upside_down": {
+    "kind": "emoji",
+    "title_ru": "Вверх ногами",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_skull_emo": {
+    "kind": "emoji",
+    "title_ru": "Череп",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_imp_frown": {
+    "kind": "emoji",
+    "title_ru": "Чёртик злой",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_imp_smile": {
+    "kind": "emoji",
+    "title_ru": "Чёртик",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_clown": {
+    "kind": "emoji",
+    "title_ru": "Клоун",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_halo": {
+    "kind": "emoji",
+    "title_ru": "Нимб",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_eyes_emo": {
+    "kind": "emoji",
+    "title_ru": "Глаза",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "coll_unicorn": {
+    "kind": "collection",
+    "title_ru": "Единорог",
+    "description_ru": "Коллекция · витрина профиля · +12 бронзы/нед."
+  },
+  "coll_dragon": {
+    "kind": "collection",
+    "title_ru": "Дракон",
+    "description_ru": "Коллекция · витрина профиля · +15 бронзы/нед."
+  },
+  "coll_ghost": {
+    "kind": "collection",
+    "title_ru": "Привидение",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_alien": {
+    "kind": "collection",
+    "title_ru": "Пришелец",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_robot": {
+    "kind": "collection",
+    "title_ru": "Робот",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_ufo": {
+    "kind": "collection",
+    "title_ru": "НЛО",
+    "description_ru": "Коллекция · витрина профиля · +12 бронзы/нед."
+  },
+  "coll_rocket": {
+    "kind": "collection",
+    "title_ru": "Ракета",
+    "description_ru": "Коллекция · витрина профиля · +12 бронзы/нед."
+  },
+  "coll_crystal": {
+    "kind": "collection",
+    "title_ru": "Кристалл",
+    "description_ru": "Коллекция · витрина профиля · +14 бронзы/нед."
+  },
+  "coll_gem": {
+    "kind": "collection",
+    "title_ru": "Алмаз",
+    "description_ru": "Коллекция · витрина профиля · +16 бронзы/нед."
+  },
+  "coll_ring": {
+    "kind": "collection",
+    "title_ru": "Кольцо",
+    "description_ru": "Коллекция · витрина профиля · +11 бронзы/нед."
+  },
+  "coll_fire_heart": {
+    "kind": "collection",
+    "title_ru": "Огненное сердце",
+    "description_ru": "Коллекция · витрина профиля · +13 бронзы/нед."
+  },
+  "coll_anatomical": {
+    "kind": "collection",
+    "title_ru": "Сердце",
+    "description_ru": "Коллекция · витрина профиля · +12 бронзы/нед."
+  },
+  "coll_fireworks": {
+    "kind": "collection",
+    "title_ru": "Фейерверк",
+    "description_ru": "Коллекция · витрина профиля · +11 бронзы/нед."
+  },
+  "coll_party": {
+    "kind": "collection",
+    "title_ru": "Хлопушка",
+    "description_ru": "Коллекция · витрина профиля · +9 бронзы/нед."
+  },
+  "coll_confetti": {
+    "kind": "collection",
+    "title_ru": "Конфетти",
+    "description_ru": "Коллекция · витрина профиля · +9 бронзы/нед."
+  },
+  "coll_trophy": {
+    "kind": "collection",
+    "title_ru": "Кубок",
+    "description_ru": "Коллекция · витрина профиля · +14 бронзы/нед."
+  },
+  "coll_gold_medal": {
+    "kind": "collection",
+    "title_ru": "Золото",
+    "description_ru": "Коллекция · витрина профиля · +13 бронзы/нед."
+  },
+  "coll_glowing_star": {
+    "kind": "collection",
+    "title_ru": "Звезда",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_butterfly": {
+    "kind": "collection",
+    "title_ru": "Бабочка",
+    "description_ru": "Коллекция · витрина профиля · +9 бронзы/нед."
+  },
+  "coll_eagle": {
+    "kind": "collection",
+    "title_ru": "Орёл",
+    "description_ru": "Коллекция · витрина профиля · +11 бронзы/нед."
+  },
+  "coll_octopus": {
+    "kind": "collection",
+    "title_ru": "Осьминог",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_coaster": {
+    "kind": "collection",
+    "title_ru": "Американские горки",
+    "description_ru": "Коллекция · витрина профиля · +11 бронзы/нед."
+  },
+  "coll_ferris": {
+    "kind": "collection",
+    "title_ru": "Колесо обозрения",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_sailboat": {
+    "kind": "collection",
+    "title_ru": "Парусник",
+    "description_ru": "Коллекция · витрина профиля · +10 бронзы/нед."
+  },
+  "coll_race_car": {
+    "kind": "collection",
+    "title_ru": "Гоночная",
+    "description_ru": "Коллекция · витрина профиля · +11 бронзы/нед."
+  },
+  "coll_gift": {
+    "kind": "collection",
+    "title_ru": "Подарок",
+    "description_ru": "Коллекция · витрина профиля · +8 бронзы/нед."
+  },
+  "coll_sparkles": {
+    "kind": "collection",
+    "title_ru": "Блёстки",
+    "description_ru": "Коллекция · витрина профиля · +8 бронзы/нед."
+  },
+  "coll_money_wings": {
+    "kind": "collection",
+    "title_ru": "Деньги",
+    "description_ru": "Коллекция · витрина профиля · +12 бронзы/нед."
+  },
+  "emoji_blush": {
+    "kind": "emoji",
+    "title_ru": "Смущение",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "coll_phoenix": {
+    "kind": "collection",
+    "title_ru": "Феникс",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "coll_owl": {
+    "kind": "collection",
+    "title_ru": "Сова",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "coll_snake": {
+    "kind": "collection",
+    "title_ru": "Змея",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "coll_scorpion": {
+    "kind": "collection",
+    "title_ru": "Скорпион",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "coll_skull": {
+    "kind": "collection",
+    "title_ru": "Череп",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "coll_bat": {
+    "kind": "collection",
+    "title_ru": "Летучая мышь",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "coll_tiger": {
+    "kind": "collection",
+    "title_ru": "Тигр",
+    "description_ru": "Коллекция · витрина · подарок · продажа · +10 бронзы/день"
+  },
+  "emoji_game_beer": {
+    "kind": "emoji",
+    "title_ru": "Пиво",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_toast": {
+    "kind": "emoji",
+    "title_ru": "Тост",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_wine": {
+    "kind": "emoji",
+    "title_ru": "Вино",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_cocktail": {
+    "kind": "emoji",
+    "title_ru": "Коктейль",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_champagne": {
+    "kind": "emoji",
+    "title_ru": "Шампанское",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_coffee": {
+    "kind": "emoji",
+    "title_ru": "Кофе",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_popcorn": {
+    "kind": "emoji",
+    "title_ru": "Попкорн",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_burrito": {
+    "kind": "emoji",
+    "title_ru": "Буррито",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_cake": {
+    "kind": "emoji",
+    "title_ru": "Торт",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_cooking": {
+    "kind": "emoji",
+    "title_ru": "Готовка",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_ramen": {
+    "kind": "emoji",
+    "title_ru": "Лапша",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_spaghetti": {
+    "kind": "emoji",
+    "title_ru": "Спагетти",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_soccer": {
+    "kind": "emoji",
+    "title_ru": "Футбол",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_baseball": {
+    "kind": "emoji",
+    "title_ru": "Бейсбол",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_tennis": {
+    "kind": "emoji",
+    "title_ru": "Теннис",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_bowling": {
+    "kind": "emoji",
+    "title_ru": "Боулинг",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_badminton": {
+    "kind": "emoji",
+    "title_ru": "Бадминтон",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_ping_pong": {
+    "kind": "emoji",
+    "title_ru": "Пинг-понг",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_frisbee": {
+    "kind": "emoji",
+    "title_ru": "Фрисби",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_eight_ball": {
+    "kind": "emoji",
+    "title_ru": "Бильярд",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_direct_hit": {
+    "kind": "emoji",
+    "title_ru": "В яблочко",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_collision": {
+    "kind": "emoji",
+    "title_ru": "Бах",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_bomb": {
+    "kind": "emoji",
+    "title_ru": "Бомба",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_die": {
+    "kind": "emoji",
+    "title_ru": "Кубик",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_slots": {
+    "kind": "emoji",
+    "title_ru": "Слоты",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_finish": {
+    "kind": "emoji",
+    "title_ru": "Финиш",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_bronze": {
+    "kind": "emoji",
+    "title_ru": "Бронза",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_silver": {
+    "kind": "emoji",
+    "title_ru": "Серебро",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_golf": {
+    "kind": "emoji",
+    "title_ru": "Гольф",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_clap": {
+    "kind": "emoji",
+    "title_ru": "Аплодисменты",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_luck": {
+    "kind": "emoji",
+    "title_ru": "На удачу",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_handshake": {
+    "kind": "emoji",
+    "title_ru": "Рукопожатие",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_pray": {
+    "kind": "emoji",
+    "title_ru": "Молюсь",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_hurrah": {
+    "kind": "emoji",
+    "title_ru": "Ура",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_call_me": {
+    "kind": "emoji",
+    "title_ru": "Позвони",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_ok": {
+    "kind": "emoji",
+    "title_ru": "Ок",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_victory": {
+    "kind": "emoji",
+    "title_ru": "Победа",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_muscle": {
+    "kind": "emoji",
+    "title_ru": "Сила",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_fist": {
+    "kind": "emoji",
+    "title_ru": "Кулак",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_thumbs_down": {
+    "kind": "emoji",
+    "title_ru": "Дизлайк",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_wave": {
+    "kind": "emoji",
+    "title_ru": "Привет",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_thinking": {
+    "kind": "emoji",
+    "title_ru": "Думаю",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_zany": {
+    "kind": "emoji",
+    "title_ru": "Крейзи",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_cowboy": {
+    "kind": "emoji",
+    "title_ru": "Ковбой",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_game_poop": {
+    "kind": "emoji",
+    "title_ru": "Какашка",
+    "description_ru": "Анимированный смайлик · 10 использований"
+  },
+  "emoji_flag_ru": {
+    "kind": "emoji",
+    "title_ru": "Россия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_us": {
+    "kind": "emoji",
+    "title_ru": "США",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_gb": {
+    "kind": "emoji",
+    "title_ru": "Великобритания",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_de": {
+    "kind": "emoji",
+    "title_ru": "Германия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_fr": {
+    "kind": "emoji",
+    "title_ru": "Франция",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_it": {
+    "kind": "emoji",
+    "title_ru": "Италия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_es": {
+    "kind": "emoji",
+    "title_ru": "Испания",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_pt": {
+    "kind": "emoji",
+    "title_ru": "Португалия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_nl": {
+    "kind": "emoji",
+    "title_ru": "Нидерланды",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_pl": {
+    "kind": "emoji",
+    "title_ru": "Польша",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ua": {
+    "kind": "emoji",
+    "title_ru": "Украина",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_by": {
+    "kind": "emoji",
+    "title_ru": "Беларусь",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_kz": {
+    "kind": "emoji",
+    "title_ru": "Казахстан",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_uz": {
+    "kind": "emoji",
+    "title_ru": "Узбекистан",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_tr": {
+    "kind": "emoji",
+    "title_ru": "Турция",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_cn": {
+    "kind": "emoji",
+    "title_ru": "Китай",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_jp": {
+    "kind": "emoji",
+    "title_ru": "Япония",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_kr": {
+    "kind": "emoji",
+    "title_ru": "Корея",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_in": {
+    "kind": "emoji",
+    "title_ru": "Индия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_br": {
+    "kind": "emoji",
+    "title_ru": "Бразилия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ar": {
+    "kind": "emoji",
+    "title_ru": "Аргентина",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_mx": {
+    "kind": "emoji",
+    "title_ru": "Мексика",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ca": {
+    "kind": "emoji",
+    "title_ru": "Канада",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_au": {
+    "kind": "emoji",
+    "title_ru": "Австралия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_nz": {
+    "kind": "emoji",
+    "title_ru": "Новая Зеландия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_se": {
+    "kind": "emoji",
+    "title_ru": "Швеция",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_no": {
+    "kind": "emoji",
+    "title_ru": "Норвегия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_fi": {
+    "kind": "emoji",
+    "title_ru": "Финляндия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_dk": {
+    "kind": "emoji",
+    "title_ru": "Дания",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ch": {
+    "kind": "emoji",
+    "title_ru": "Швейцария",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_at": {
+    "kind": "emoji",
+    "title_ru": "Австрия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_be": {
+    "kind": "emoji",
+    "title_ru": "Бельгия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_cz": {
+    "kind": "emoji",
+    "title_ru": "Чехия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_gr": {
+    "kind": "emoji",
+    "title_ru": "Греция",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ie": {
+    "kind": "emoji",
+    "title_ru": "Ирландия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_il": {
+    "kind": "emoji",
+    "title_ru": "Израиль",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_sa": {
+    "kind": "emoji",
+    "title_ru": "Саудовская Аравия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ae": {
+    "kind": "emoji",
+    "title_ru": "ОАЭ",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_eg": {
+    "kind": "emoji",
+    "title_ru": "Египет",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_za": {
+    "kind": "emoji",
+    "title_ru": "ЮАР",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_ng": {
+    "kind": "emoji",
+    "title_ru": "Нигерия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_th": {
+    "kind": "emoji",
+    "title_ru": "Таиланд",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_vn": {
+    "kind": "emoji",
+    "title_ru": "Вьетнам",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_id": {
+    "kind": "emoji",
+    "title_ru": "Индонезия",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "emoji_flag_sg": {
+    "kind": "emoji",
+    "title_ru": "Сингапур",
+    "description_ru": "Флаг страны · 10 использований"
+  },
+  "stake_gold_2": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 2 золота",
+    "description_ru": "Право ставить 2 золота в играх"
+  },
+  "stake_gold_5": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 5 золота",
+    "description_ru": "Право ставить 5 золота в играх"
+  },
+  "stake_gold_10": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 10 золота",
+    "description_ru": "Право ставить 10 золота в играх"
+  },
+  "stake_gold_25": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 25 золота",
+    "description_ru": "Право ставить 25 золота в играх"
+  },
+  "stake_gold_50": {
+    "kind": "stake_unlock",
+    "title_ru": "Ставка 50 золота",
+    "description_ru": "Право ставить 50 золота в играх"
+  }
+}
