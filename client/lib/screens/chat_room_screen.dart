@@ -172,7 +172,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   void _onComposerFocusChanged() {
     if (!_composerFocusNode.hasFocus) return;
+    unawaited(_loadCapabilities());
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_loadCapabilities());
+    }
   }
 
   void _goBackToChats() {
@@ -430,10 +439,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final caps =
           await ref.read(chatsRepositoryProvider).getCapabilities(widget.chatID);
       if (!mounted) return;
-      if (_emojiOnly != caps.emojiOnly) {
+      if (_emojiOnly != caps.emojiOnly ||
+          (!caps.emojiOnly && _composerAlert == _friendsOnlyAlert)) {
         setState(() {
           _emojiOnly = caps.emojiOnly;
-          if (!caps.emojiOnly) _composerAlert = null;
+          if (!caps.emojiOnly && _composerAlert == _friendsOnlyAlert) {
+            _composerAlert = null;
+          }
         });
       }
     } catch (_) {
@@ -457,11 +469,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final text = _textController.text.trim();
     if (text.isEmpty || _sending) return;
 
-    if (_emojiOnly) {
-      setState(() => _composerAlert = _friendsOnlyAlert);
-      return;
-    }
-
+    // Всегда спрашиваем сервер: собеседник мог снять ограничение,
+    // пока чат оставался открытым (_emojiOnly иначе устаревает).
     setState(() {
       _sending = true;
       _composerAlert = null;
@@ -474,6 +483,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       // chatsListProvider обновится через realtimeEventsProvider
       setState(() {
         _sending = false;
+        _emojiOnly = false;
         _composerAlert = null;
       });
     } on ChatException catch (e) {
@@ -483,17 +493,23 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
       if (!mounted) return;
+      final friendsOnly = _isFriendsOnlySendError(e);
       setState(() {
         _sending = false;
-        _composerAlert =
-            _isFriendsOnlySendError(e) ? _friendsOnlyAlert : e.message;
+        if (friendsOnly) _emojiOnly = true;
+        _composerAlert = friendsOnly ? _friendsOnlyAlert : e.message;
       });
+      if (!friendsOnly) {
+        // На случай смены настроек у собеседника — подтянуть актуальные.
+        unawaited(_loadCapabilities());
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _sending = false;
         _composerAlert = 'Не удалось отправить сообщение';
       });
+      unawaited(_loadCapabilities());
     }
   }
 

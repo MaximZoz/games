@@ -7,7 +7,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyAddBotsAfter30s = 'add_bots_after_30s';
-const _keyMessagesFriendsOnly = 'messages_friends_only';
+const _keyMessagesFriendsOnlyPrefix = 'messages_friends_only';
 
 /// Настройка: если включена, в режиме «поиск игры» ждём 30 секунд,
 /// и если соперник не найден — добавляем бота и начинаем игру.
@@ -41,20 +41,36 @@ final messagesFriendsOnlyProvider =
 
 class MessagesFriendsOnlyNotifier extends StateNotifier<bool> {
   MessagesFriendsOnlyNotifier(this._ref) : super(false) {
-    _loadLocal();
-    refresh();
+    _bootstrap();
   }
 
   final Ref _ref;
 
+  String _prefsKey(String? userId) {
+    final id = (userId ?? '').trim();
+    if (id.isEmpty) return _keyMessagesFriendsOnlyPrefix;
+    return '${_keyMessagesFriendsOnlyPrefix}_$id';
+  }
+
+  Future<void> _bootstrap() async {
+    await _loadLocal();
+    await refresh();
+  }
+
   Future<void> _loadLocal() async {
     final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_keyMessagesFriendsOnly) ?? false;
+    final user = _ref.read(authStateProvider).valueOrNull;
+    final key = _prefsKey(user?.id);
+    // Сначала per-user, затем legacy-ключ без user id.
+    state = prefs.getBool(key) ??
+        prefs.getBool(_keyMessagesFriendsOnlyPrefix) ??
+        false;
   }
 
   Future<void> _persistLocal(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyMessagesFriendsOnly, value);
+    final user = _ref.read(authStateProvider).valueOrNull;
+    await prefs.setBool(_prefsKey(user?.id), value);
   }
 
   Future<void> refresh() async {
