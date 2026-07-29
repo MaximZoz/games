@@ -18,16 +18,6 @@ class SettingsScreen extends ConsumerWidget {
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
-    String? pushSubtitle() {
-      if (!isWebPushSupported) {
-        return 'На iPhone установите приложение на экран «Домой» и откройте с иконки.';
-      }
-      if (!isWebPushStandalone) {
-        return 'Откройте приложение с экрана «Домой». В обычной вкладке Safari пуши недоступны.';
-      }
-      return null;
-    }
-
     Future<void> setCategory(Future<String?> Function() save) async {
       final err = await save();
       if (!context.mounted || err == null) return;
@@ -75,7 +65,6 @@ class SettingsScreen extends ConsumerWidget {
                         children: [
                           _SwitchRow(
                             title: 'Уведомления',
-                            subtitle: pushSubtitle(),
                             value: webPushEnabled,
                             onChanged: isWebPushSupported
                                 ? (v) async {
@@ -93,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                                   }
                                 : null,
                           ),
-                          if (webPushEnabled && isWebPushSupported) ...[
+                          if (webPushEnabled) ...[
                             const SizedBox(height: 8),
                             const Divider(height: 1, color: AppColors.accentSoft),
                             const SizedBox(height: 4),
