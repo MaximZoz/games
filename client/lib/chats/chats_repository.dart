@@ -210,6 +210,9 @@ class ChatsRepository {
 
   static String _translateMessage(String msg) {
     final m = msg.toLowerCase().trim();
+    if (m.contains('only friends can send text')) {
+      return 'Только друзья могут отправлять сообщения';
+    }
     const Map<String, String> map = {
       'cannot chat with yourself': 'Нельзя написать самому себе',
       'message is empty': 'Сообщение не может быть пустым',
@@ -219,8 +222,6 @@ class ChatsRepository {
       'user is blocked': 'Пользователь заблокирован',
       'user not found': 'Пользователь не найден',
       'not found': 'Не найдено',
-      'only friends can send text messages':
-          'Можно отправлять только смайлики',
       'server error': 'Ошибка сервера. Попробуйте позже.',
     };
     return map[m] ?? msg;

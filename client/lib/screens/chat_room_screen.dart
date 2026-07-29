@@ -371,6 +371,115 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
   }
 
+  bool _isFriendsOnlySendError(ChatException e) {
+    if (e.statusCode != 403) return false;
+    final m = e.message.toLowerCase();
+    return m.contains('only friends') ||
+        m.contains('только друзья') ||
+        m.contains('только смайлик') ||
+        m.contains('friends can send');
+  }
+
+  Future<void> _sendMessage() async {
+    if (_emojiOnly) {
+      unawaited(_openEmojiPicker());
+      return;
+    }
+    final text = _textController.text.trim();
+    if (text.isEmpty || _sending) return;
+
+    setState(() => _sending = true);
+    try {
+      final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
+      if (!mounted) return;
+      _textController.clear();
+      _upsertMessage(sent);
+      // chatsListProvider обновится через realtimeEventsProvider
+      setState(() {
+        _sending = false;
+      });
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _sending = false);
+      showAppSnackBar(
+        context,
+        message: _isFriendsOnlySendError(e)
+            ? 'Только друзья могут отправлять сообщения'
+            : e.message,
+        kind: _isFriendsOnlySendError(e)
+            ? AppSnackKind.info
+            : AppSnackKind.error,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _sending = false);
+      showAppSnackBar(
+        context,
+        message: 'Не удалось отправить сообщение',
+        kind: AppSnackKind.error,
+      );
+    }
+  }
+
+  Future<void> _sendAnimatedEmoji(InventoryItem item) async {
+    final name = item.animatedName;
+    if (name == null || name.isEmpty || _sending) return;
+    if (item.quantity <= 0) return;
+
+    setState(() {
+      _sending = true;
+    });
+    try {
+      await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
+      ref.invalidate(inventoryListProvider);
+      final body = encodeAnimatedEmojiMessage(name);
+      final sent =
+          await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, body);
+      if (!mounted) return;
+      _upsertMessage(sent);
+      setState(() {
+        _sending = false;
+      });
+    } on AuthException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _sending = false);
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
+      );
+      ref.invalidate(inventoryListProvider);
+    } on ChatException catch (e) {
+      if (!mounted) return;
+      setState(() => _sending = false);
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
+      );
+      ref.invalidate(inventoryListProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _sending = false);
+      showAppSnackBar(
+        context,
+        message: 'Не удалось отправить смайлик',
+        kind: AppSnackKind.error,
+      );
+      ref.invalidate(inventoryListProvider);
+    }
+  }
+
   Future<void> _loadMessages({bool initial = false, bool surfaceErrors = true}) async {
     try {
       final list = await ref.read(chatsRepositoryProvider).listMessages(
@@ -725,94 +834,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }
     }
     return true;
-  }
-
-  Future<void> _sendMessage() async {
-    if (_emojiOnly) {
-      unawaited(_openEmojiPicker());
-      return;
-    }
-    final text = _textController.text.trim();
-    if (text.isEmpty || _sending) return;
-
-    setState(() => _sending = true);
-    try {
-      final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
-      if (!mounted) return;
-      _textController.clear();
-      _upsertMessage(sent);
-      // chatsListProvider обновится через realtimeEventsProvider
-      setState(() {
-        _sending = false;
-        _error = null;
-      });
-    } on ChatException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _sending = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось отправить сообщение';
-        _sending = false;
-      });
-    }
-  }
-
-  Future<void> _sendAnimatedEmoji(InventoryItem item) async {
-    final name = item.animatedName;
-    if (name == null || name.isEmpty || _sending) return;
-    if (item.quantity <= 0) return;
-
-    setState(() {
-      _sending = true;
-    });
-    try {
-      await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
-      ref.invalidate(inventoryListProvider);
-      final body = encodeAnimatedEmojiMessage(name);
-      final sent =
-          await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, body);
-      if (!mounted) return;
-      _upsertMessage(sent);
-      setState(() {
-        _sending = false;
-        _error = null;
-      });
-    } on AuthException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _sending = false;
-      });
-      ref.invalidate(inventoryListProvider);
-    } on ChatException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _sending = false;
-      });
-      ref.invalidate(inventoryListProvider);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось отправить смайлик';
-        _sending = false;
-      });
-      ref.invalidate(inventoryListProvider);
-    }
   }
 
   void _scrollToBottom() {
