@@ -40,7 +40,7 @@ double bundledEmojiStaticPreviewProgress(String animatedName) {
   }
 }
 
-/// Имена, у которых статичный Lottie-превью ненадёжен — рисуем unicode.
+/// Только baseball: статичный Lottie-кадр почти невидим — рисуем unicode.
 bool usesUnicodeStaticEmojiPreview(String animatedName) =>
     animatedName == 'baseball';
 
@@ -300,7 +300,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
     if (isCountryFlagAnimatedName(widget.animatedName)) {
       return;
     }
-    // Статичный unicode-превью (baseball и т.п.) — без ожидания Lottie.
+    // Статичный unicode для baseball — без ожидания Lottie.
     if (!widget.animate && usesUnicodeStaticEmojiPreview(widget.animatedName)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _ready) return;
