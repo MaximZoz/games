@@ -426,6 +426,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       animatedName: it.animatedName ?? 'smile',
                                       size: 32,
                                       fallback: it.emoji,
+                                      animate: true,
                                     ),
                                     title: it.title,
                                     subtitle: 'Осталось ${it.quantity}',
@@ -615,6 +616,7 @@ class _CollectionInvTile extends StatelessWidget {
                   animatedName: item.animatedName ?? 'sparkles',
                   size: 36,
                   fallback: item.emoji,
+                  animate: true,
                 ),
               ),
               if (highlightGift)

@@ -214,7 +214,8 @@ class CountryFlagImage extends StatelessWidget {
 /// Виджет смайлика из `client/assets/emojis/` (Lottie + unicode, без сети).
 ///
 /// Каталог магазина и владение — на бэкенде; ассеты рисуются локально.
-/// Пока ассет не готов — [EmojiIconPlaceholder]. В списках: [animate]=false.
+/// Пока ассет не готов — [EmojiIconPlaceholder].
+/// В магазине/инвентаре: [animate]=true (Lottie + лоадер).
 class ShopAnimatedEmoji extends StatefulWidget {
   const ShopAnimatedEmoji({
     super.key,
