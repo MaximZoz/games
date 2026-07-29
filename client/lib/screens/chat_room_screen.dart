@@ -100,7 +100,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   List<ChatMessageItem> _messages = const [];
   ChatMessageItem? _replyTo;
   ChatMessageItem? _editingMessage;
-  PickedChatImage? _pendingImage;
+  final List<PickedChatImage> _pendingImages = [];
+  static const int _maxPendingImages = 3;
+  static const Color _composerIconPurple = Color(0xFF8B5CF6);
 
   /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
   final Set<String> _pendingDeliveredIDs = <String>{};
@@ -513,29 +515,55 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       return;
     }
 
-    if (text.isEmpty && _pendingImage == null) return;
+    if (text.isEmpty && _pendingImages.isEmpty) return;
 
     setState(() {
       _sending = true;
       _composerAlert = null;
     });
     try {
-      final sent = await ref.read(chatsRepositoryProvider).sendMessage(
-            widget.chatID,
-            text,
-            replyToMessageID: _replyTo?.id,
-            imageBase64: _pendingImage?.base64,
-            imageMime: _pendingImage?.mime,
-          );
+      final images = List<PickedChatImage>.of(_pendingImages);
+      final replyID = _replyTo?.id;
+      if (images.isEmpty) {
+        final sent = await ref.read(chatsRepositoryProvider).sendMessage(
+              widget.chatID,
+              text,
+              replyToMessageID: replyID,
+            );
+        if (!mounted) return;
+        _upsertMessage(sent);
+      } else {
+        for (var i = 0; i < images.length; i++) {
+          final img = images[i];
+          final body = i == 0 ? text : '';
+          final sent = await ref.read(chatsRepositoryProvider).sendMessage(
+                widget.chatID,
+                body,
+                replyToMessageID: i == 0 ? replyID : null,
+                imageBase64: img.base64,
+                imageMime: img.mime,
+              );
+          if (!mounted) return;
+          _upsertMessage(sent);
+          setState(() {
+            if (_pendingImages.isNotEmpty) {
+              _pendingImages.removeAt(0);
+            }
+            if (i == 0) {
+              _replyTo = null;
+              if (text.isNotEmpty) _textController.clear();
+            }
+          });
+        }
+      }
       if (!mounted) return;
       _textController.clear();
-      _upsertMessage(sent);
       setState(() {
         _sending = false;
         _emojiOnly = false;
         _composerAlert = null;
         _replyTo = null;
-        _pendingImage = null;
+        _pendingImages.clear();
       });
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
@@ -576,7 +604,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     setState(() {
       _editingMessage = message;
       _replyTo = null;
-      _pendingImage = null;
+      _pendingImages.clear();
       _composerAlert = null;
       _textController.text = message.body;
       _textController.selection = TextSelection.collapsed(
@@ -591,7 +619,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     setState(() {
       _replyTo = null;
       _editingMessage = null;
-      _pendingImage = null;
       if (wasEditing) {
         _textController.clear();
       }
@@ -599,15 +626,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _pickPhoto() async {
-    if (_sending || _editingMessage != null || _emojiOnly) return;
+    if (_sending ||
+        _editingMessage != null ||
+        _emojiOnly ||
+        _pendingImages.length >= _maxPendingImages) {
+      return;
+    }
     // Сразу галерея/фото, без нижней панели и без «файл».
     final picked = await pickAndCompressChatImage(ImageSource.gallery);
     if (!mounted) return;
     if (picked == null) return;
     setState(() {
-      _pendingImage = picked;
+      if (_pendingImages.length < _maxPendingImages) {
+        _pendingImages.add(picked);
+      }
       _composerAlert = null;
     });
+  }
+
+  void _removePendingImage(int index) {
+    if (index < 0 || index >= _pendingImages.length) return;
+    setState(() => _pendingImages.removeAt(index));
+  }
+
+  void _previewPendingImage(PickedChatImage image) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: Colors.black.withValues(alpha: 0.92),
+        pageBuilder: (_, __, ___) =>
+            ChatImageFullscreenViewer(bytes: image.bytes),
+      ),
+    );
   }
 
   Future<void> _showMessageActions(ChatMessageItem message) async {
@@ -2124,27 +2174,65 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
-              if (_pendingImage != null)
+              if (_pendingImages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.memory(
-                          _pendingImage!.bytes,
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () =>
-                            setState(() => _pendingImage = null),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: [
+                        for (var i = 0; i < _pendingImages.length; i++)
+                          SizedBox(
+                            width: 64,
+                            height: 64,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned.fill(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => _previewPendingImage(
+                                        _pendingImages[i],
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.memory(
+                                          _pendingImages[i].bytes,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: Material(
+                                    color: Colors.white,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: () => _removePendingImage(i),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(2),
+                                        child: Icon(
+                                          Icons.close_rounded,
+                                          size: 16,
+                                          color: _composerIconPurple,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               Padding(
@@ -2159,7 +2247,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         child: InkWell(
                           onTap: (_sending ||
                                   _editingMessage != null ||
-                                  _emojiOnly)
+                                  _emojiOnly ||
+                                  _pendingImages.length >= _maxPendingImages)
                               ? null
                               : _pickPhoto,
                           borderRadius: BorderRadius.circular(12),
@@ -2169,19 +2258,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             decoration: BoxDecoration(
                               color: (_sending ||
                                       _editingMessage != null ||
-                                      _emojiOnly)
-                                  ? AppColors.textSecondary
-                                      .withValues(alpha: 0.2)
-                                  : const Color(0xFF8B5CF6),
+                                      _emojiOnly ||
+                                      _pendingImages.length >=
+                                          _maxPendingImages)
+                                  ? _composerIconPurple.withValues(alpha: 0.35)
+                                  : _composerIconPurple,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.image_rounded,
-                              color: (_sending ||
-                                      _editingMessage != null ||
-                                      _emojiOnly)
-                                  ? Colors.white70
-                                  : Colors.white,
+                              color: Colors.white,
                               size: 22,
                             ),
                           ),
@@ -2209,7 +2295,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                       width: 3,
                                       height: 34,
                                       decoration: BoxDecoration(
-                                        color: AppColors.accentStart,
+                                        color: _composerIconPurple,
                                         borderRadius:
                                             BorderRadius.circular(2),
                                       ),
@@ -2225,7 +2311,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                                 ? 'Редактирование'
                                                 : 'В ответ ${_replyAuthorLabel(_replyTo!)}',
                                             style: const TextStyle(
-                                              color: AppColors.accentStart,
+                                              color: _composerIconPurple,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 12,
                                             ),
@@ -2250,6 +2336,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                       icon: const Icon(
                                         Icons.close_rounded,
                                         size: 18,
+                                        color: _composerIconPurple,
                                       ),
                                     ),
                                   ],
@@ -2296,7 +2383,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                     ),
                                     icon: const Icon(
                                       Icons.emoji_emotions_outlined,
-                                      color: AppColors.textSecondary,
+                                      color: _composerIconPurple,
                                       size: 24,
                                     ),
                                   ),
@@ -2318,14 +2405,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.accentStart,
+                                color: _composerIconPurple,
                               ),
                             )
                           : Icon(
                               _editingMessage != null
                                   ? Icons.check_rounded
                                   : Icons.send_rounded,
-                              color: AppColors.accentStart,
+                              color: _composerIconPurple,
                             ),
                     ),
                   ],
