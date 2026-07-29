@@ -35,4 +35,3 @@ preferred-supported-locales:
   - da
   - fi
 use-deferred-loading: false
-synthetic-package: false

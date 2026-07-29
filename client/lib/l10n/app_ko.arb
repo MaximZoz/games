@@ -555,10 +555,10 @@
   "@shopSetProgress": {
     "placeholders": {
       "owned": {
-        "type": "String"
+        "type": "int"
       },
       "total": {
-        "type": "String"
+        "type": "int"
       }
     }
   },
@@ -729,7 +729,7 @@
   "@gameSecondsLeft": {
     "placeholders": {
       "seconds": {
-        "type": "String"
+        "type": "int"
       }
     }
   },
@@ -749,7 +749,7 @@
   "@timeSecondsShort": {
     "placeholders": {
       "seconds": {
-        "type": "String"
+        "type": "int"
       }
     }
   },
