@@ -51,14 +51,6 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    l10n.settingsTitle,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 24),
                   _SettingsCard(
                     child: InkWell(
                       onTap: () => _openLanguagePicker(
