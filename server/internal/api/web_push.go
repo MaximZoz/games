@@ -195,18 +195,10 @@ func (h *WebPushHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to save subscription", http.StatusInternalServerError)
 		return
 	}
-	// Сразу шлём тестовый push — на iOS сразу видно, доходит ли APNs.
-	h.Sender.NotifyUsers([]uuid.UUID{userID}, PushPayload{
-		Title: "Zozu Games",
-		Body:  "Уведомления включены. Сверните приложение, чтобы проверить доставку.",
-		URL:   "/settings",
-		Tag:   "push_test",
-	})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"ok":     true,
-		"apple":  strings.Contains(endpoint, "web.push.apple.com"),
-		"tested": true,
+		"ok":    true,
+		"apple": strings.Contains(endpoint, "web.push.apple.com"),
 	})
 }
 
@@ -235,31 +227,6 @@ func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	if h.Pool != nil {
 		_ = store.DeleteWebPushSubscriptionByEndpoint(r.Context(), h.Pool, userID, endpoint)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
-}
-
-// Test шлёт одно уведомление текущему пользователю (ручная проверка).
-func (h *WebPushHandler) Test(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	if h == nil || h.Sender == nil || !h.Sender.Enabled() {
-		writeJSONError(w, "web push disabled", http.StatusServiceUnavailable)
-		return
-	}
-	userID, ok := currentUserIDFromContext(r)
-	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-	h.Sender.NotifyUsers([]uuid.UUID{userID}, PushPayload{
-		Title: "Zozu Games",
-		Body:  "Тестовое уведомление. Если видите это — push работает.",
-		URL:   "/settings",
-		Tag:   "push_test",
-	})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 }

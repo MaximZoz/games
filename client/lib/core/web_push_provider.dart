@@ -145,31 +145,6 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     state = value;
     return null;
   }
-
-  /// Ручной тест доставки (сервер → APNs/FCM → устройство).
-  Future<String?> sendTestPush() async {
-    if (!state) return 'Сначала включите уведомления';
-    try {
-      final auth = _ref.read(authRepositoryProvider);
-      final resp = await auth.sendAuthorized((token) {
-        return ApiClient.post(
-          Uri.parse('$apiBaseUrl/api/push/test'),
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-          body: '{}',
-          operation: 'push_test',
-        );
-      });
-      if (resp.statusCode < 200 || resp.statusCode >= 300) {
-        return 'Не удалось отправить тест';
-      }
-      return null;
-    } catch (e) {
-      return e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '');
-    }
-  }
 }
 
 /// Поддержка Web Push (для UI).

@@ -17,14 +17,14 @@ class SettingsScreen extends ConsumerWidget {
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
-    String pushSubtitle() {
+    String? pushSubtitle() {
       if (!isWebPushSupported) {
-        return 'В этом браузере Web Push недоступен (на iPhone установите приложение на экран «Домой» и откройте с иконки).';
+        return 'На iPhone установите приложение на экран «Домой» и откройте с иконки.';
       }
       if (!isWebPushStandalone) {
-        return 'Откройте приложение с экрана «Домой» (PWA). В обычной вкладке Safari на iPhone пуши не работают.';
+        return 'Откройте приложение с экрана «Домой». В обычной вкладке Safari пуши недоступны.';
       }
-      return 'Push: сообщения, заявки в друзья, приглашения. После включения придёт тест — сверните приложение. Если нет — кнопка «Тест» ниже.';
+      return null;
     }
 
     return Scaffold(
@@ -57,7 +57,7 @@ class SettingsScreen extends ConsumerWidget {
                   if (kIsWeb) ...[
                     const SizedBox(height: 12),
                     _SettingsTile(
-                      title: 'Уведомления в браузере',
+                      title: 'Уведомления',
                       subtitle: pushSubtitle(),
                       value: webPushEnabled,
                       onChanged: isWebPushSupported
@@ -72,45 +72,10 @@ class SettingsScreen extends ConsumerWidget {
                                   message: err,
                                   kind: AppSnackKind.error,
                                 );
-                                return;
-                              }
-                              if (v) {
-                                showAppSnackBar(
-                                  context,
-                                  message:
-                                      'Подписка сохранена. Сверните приложение — должно прийти тестовое уведомление.',
-                                  kind: AppSnackKind.success,
-                                );
                               }
                             }
                           : null,
                     ),
-                    if (webPushEnabled && isWebPushSupported) ...[
-                      const SizedBox(height: 12),
-                      OutlinedButton(
-                        onPressed: () async {
-                          final err = await ref
-                              .read(webPushEnabledProvider.notifier)
-                              .sendTestPush();
-                          if (!context.mounted) return;
-                          if (err != null) {
-                            showAppSnackBar(
-                              context,
-                              message: err,
-                              kind: AppSnackKind.error,
-                            );
-                            return;
-                          }
-                          showAppSnackBar(
-                            context,
-                            message:
-                                'Тест отправлен. Сверните приложение на пару секунд.',
-                            kind: AppSnackKind.success,
-                          );
-                        },
-                        child: const Text('Отправить тестовое уведомление'),
-                      ),
-                    ],
                   ],
                 ],
               ),
@@ -125,18 +90,19 @@ class SettingsScreen extends ConsumerWidget {
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.value,
     required this.onChanged,
   });
 
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final bool value;
   final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final subtitleText = subtitle;
     return Container(
       padding: const EdgeInsets.all(AppRadius.card),
       decoration: BoxDecoration(
@@ -157,13 +123,15 @@ class _SettingsTile extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
+                if (subtitleText != null && subtitleText.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitleText,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                ],
               ],
             ),
           ),

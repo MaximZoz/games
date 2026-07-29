@@ -360,7 +360,6 @@ func main() {
 	mux.Handle("/api/push/vapid-key", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.VapidPublicKey)))
 	mux.Handle("/api/push/subscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Subscribe)))
 	mux.Handle("/api/push/unsubscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Unsubscribe)))
-	mux.Handle("/api/push/test", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Test)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
