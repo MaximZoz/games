@@ -27,14 +27,6 @@ function appPathFromUrl(url) {
   return path;
 }
 
-function pathOnly(path) {
-  try {
-    return new URL(path, self.location.origin).pathname;
-  } catch (_) {
-    return String(path || '').split('?')[0].split('#')[0];
-  }
-}
-
 /** Fallback, когда iOS отдаёт пустой notification.data при клике. */
 function pathFromTag(tag) {
   const t = (tag && String(tag)) || '';
