@@ -662,10 +662,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.input),
           elevation: 8,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 220),
+          clipBehavior: Clip.antiAlias,
+          child: IntrinsicWidth(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _messageActionTile(
                   ctx,
@@ -711,16 +712,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return InkWell(
       onTap: () => Navigator.of(ctx).pop(value),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: SizedBox(
-          width: double.infinity,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: danger ? Colors.red.shade700 : AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: danger ? Colors.red.shade700 : AppColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
