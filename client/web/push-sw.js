@@ -1,8 +1,10 @@
 /* Web Push service worker for Zozu Games PWA.
- * Не зависит от Flutter cache SW — регистрируется из Dart.
- * iOS (установленная PWA): push обязан всегда показать user-visible notification.
+ * v2: deep-link через tag + Cache (iOS часто теряет notification.data).
  */
 /* eslint-disable no-undef */
+
+const PENDING_CACHE = 'zozu-push-pending-v1';
+const PENDING_KEY = '/__pending_nav';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -18,6 +20,53 @@ function resolveTargetUrl(raw) {
   } catch (_) {
     return new URL('/', self.location.origin);
   }
+}
+
+function appPathFromUrl(url) {
+  const path = `${url.pathname}${url.search}${url.hash}` || '/';
+  return path;
+}
+
+/** Fallback, когда iOS отдаёт пустой notification.data при клике. */
+function pathFromTag(tag) {
+  const t = (tag && String(tag)) || '';
+  if (t.startsWith('chat_')) {
+    const id = t.slice('chat_'.length);
+    return id ? `/chats/${id}` : '/chats';
+  }
+  if (t === 'friend_request') return '/friends';
+  if (t.startsWith('game_invite_')) {
+    const lobbyId = t.slice('game_invite_'.length);
+    return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
+  }
+  return null;
+}
+
+async function setPendingPath(path) {
+  try {
+    const cache = await caches.open(PENDING_CACHE);
+    await cache.put(
+      PENDING_KEY,
+      new Response(JSON.stringify({ path, ts: Date.now() }), {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+  } catch (err) {
+    console.warn('[push-sw] setPendingPath failed', err);
+  }
+}
+
+function resolveClickPath(notification) {
+  const dataUrl =
+    notification.data && notification.data.url
+      ? String(notification.data.url)
+      : '';
+  const fromTag = pathFromTag(notification.tag);
+  if (dataUrl && dataUrl !== '/') {
+    return appPathFromUrl(resolveTargetUrl(dataUrl));
+  }
+  if (fromTag) return fromTag;
+  return '/';
 }
 
 self.addEventListener('push', (event) => {
@@ -39,37 +88,44 @@ self.addEventListener('push', (event) => {
     } catch (__) {}
   }
 
-  // На iOS push без showNotification дропается / считается silent.
   const title = (data.title && String(data.title)) || 'Zozu Games';
   const body = data.body != null ? String(data.body) : '';
+  const tag = data.tag || 'zozu';
+  const url = data.url || pathFromTag(tag) || '/';
   const options = {
     body: body,
     icon: '/icons/Icon-192.png',
     badge: '/icons/Icon-192.png',
-    data: { url: data.url || '/' },
-    tag: data.tag || 'zozu',
+    data: { url: url },
+    tag: tag,
     renotify: true,
     silent: false,
     requireInteraction: false,
   };
 
   event.waitUntil(
-    self.registration.showNotification(title, options).catch((err) => {
-      console.warn('[push-sw] showNotification failed', err);
+    (async () => {
+      const path = appPathFromUrl(resolveTargetUrl(url));
+      // Заранее кладём deep-link: на iOS data при клике часто пустой.
+      if (path && path !== '/') {
+        await setPendingPath(path);
+      }
+      await self.registration.showNotification(title, options);
+    })().catch((err) => {
+      console.warn('[push-sw] push handler failed', err);
     }),
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = resolveTargetUrl(
-    (event.notification.data && event.notification.data.url) || '/',
-  );
-  // Path для go_router (без полной перезагрузки SPA).
-  const appPath = `${target.pathname}${target.search}${target.hash}` || '/';
+  const appPath = resolveClickPath(event.notification);
+  const target = resolveTargetUrl(appPath);
 
   event.waitUntil(
     (async () => {
+      await setPendingPath(appPath);
+
       const all = await self.clients.matchAll({
         type: 'window',
         includeUncontrolled: true,
@@ -81,10 +137,14 @@ self.addEventListener('notificationclick', (event) => {
         } catch (_) {}
         if (!sameOrigin) continue;
         if ('focus' in client) {
-          await client.focus();
+          try {
+            await client.focus();
+          } catch (_) {}
         }
-        // Не вызывать client.navigate() — на iOS это reload + splash «Zozu Games».
-        client.postMessage({ type: 'notification_click', url: appPath });
+        // Не navigate() — reload + splash. postMessage + pending cache.
+        try {
+          client.postMessage({ type: 'notification_click', url: appPath });
+        } catch (_) {}
         return;
       }
       if (self.clients.openWindow) {
