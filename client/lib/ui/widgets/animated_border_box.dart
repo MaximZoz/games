@@ -48,14 +48,7 @@ class _AnimatedBorderBoxState extends State<AnimatedBorderBox>
   }
 
   void _syncAnimation() {
-    if (widget.animateBorder) {
-      _controller ??= AnimationController(
-        vsync: this,
-        duration: const Duration(seconds: 5),
-      )..repeat();
-      _animation ??= CurvedAnimation(parent: _controller!, curve: Curves.linear);
-      return;
-    }
+    // Анимация рамки отключена — без «перелива» градиента.
     _controller?.dispose();
     _controller = null;
     _animation = null;
@@ -67,13 +60,6 @@ class _AnimatedBorderBoxState extends State<AnimatedBorderBox>
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(r + widget.borderWidth),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Container(
         padding: widget.padding ?? const EdgeInsets.all(24),

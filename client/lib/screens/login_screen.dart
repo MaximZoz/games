@@ -148,7 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         scrollPadding: const EdgeInsets.only(bottom: 120),
                         decoration: const InputDecoration(
                           labelText: 'Email или логин',
-                          hintText: 'you@example.com или имя',
+                          hintText: 'Email или логин',
                           prefixIcon: Icon(Icons.person_outline_rounded),
                         ),
                         validator: (v) {

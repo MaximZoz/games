@@ -69,14 +69,6 @@ class _MessageBannerState extends State<MessageBanner>
             color: bgColor,
             borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(color: borderColor, width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: (isError ? Colors.red : Colors.green)
-                    .withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           child: Row(
             children: [

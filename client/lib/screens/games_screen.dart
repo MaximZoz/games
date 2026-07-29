@@ -1424,13 +1424,6 @@ class _TictactoeGameCard extends StatelessWidget {
                     colors: [AppColors.accentStart, AppColors.accentEnd],
                   ),
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accentStart.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
@@ -1614,13 +1607,6 @@ class _GamesTabSwitcher extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(AppRadius.button + 4),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -1893,13 +1879,6 @@ class _InviteGameIcon extends StatelessWidget {
           colors: [AppColors.accentStart, AppColors.accentEnd],
         ),
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       alignment: Alignment.center,
       child: Icon(icon, color: Colors.white, size: 26),

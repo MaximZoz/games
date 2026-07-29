@@ -127,7 +127,9 @@ class AppShell extends ConsumerWidget {
         (collectionIncomeAvailable ? 1 : 0) +
         unreadGiftedCollections;
     final media = MediaQuery.of(context);
-    final padding = media.padding;
+    // Как и для нижней панели: Scaffold может обнулять padding — для
+    // челки/status bar берём viewPadding, чтобы цвет шёл full-bleed.
+    final topInset = media.viewPadding.top;
     final narrow = isNarrow(context);
     final isLandscape = media.size.width > media.size.height;
     final narrowLandscape = narrow && isLandscape;
@@ -231,13 +233,18 @@ class AppShell extends ConsumerWidget {
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: padding.top),
-          child: SizedBox(
-            height: kToolbarHeight,
-            child: ClipRect(
-              child: Row(
-                children: [
+        // Одна заливка: status bar (чёлка) + тулбар — тот же цвет, что низ.
+        ColoredBox(
+          color: AppColors.surfaceUnified,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: topInset),
+              SizedBox(
+                height: kToolbarHeight,
+                child: ClipRect(
+                  child: Row(
+                    children: [
                   if ((narrow && (onFriends || onChatsList) ||
                           (narrowLandscape && inChatRoom)) &&
                       toolbarLeading != null)
@@ -348,9 +355,11 @@ class AppShell extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ),
         Expanded(
@@ -397,6 +406,15 @@ class AppShell extends ConsumerWidget {
 
     // bottomNavigationBar — чтобы ScaffoldMessenger ставил SnackBar над меню
     // (раньше nav был в Column, тост рисовался у низа экрана и обрезался).
+    //
+    // iPhone (скруглённый экран + home indicator): фон панели должен идти
+    // full-bleed до физического низа. Если красить только зону иконок, под
+    // ней виден другой цвет — и из‑за скругления углов панель кажется
+    // «закруглённой таблеткой». Иконки/подписи — над viewPadding, цвет — под ним.
+    //
+    // Scaffold обнуляет padding.bottom у bottomNavigationBar — поэтому inset
+    // берём из viewPadding, а не из SafeArea(padding).
+    final bottomInset = media.viewPadding.bottom;
     final bottomNav = showBottomNav
         ? ClipRect(
             child: Align(
@@ -404,47 +422,26 @@ class AppShell extends ConsumerWidget {
               heightFactor: collapseBottomNav ? 0.0 : 1.0,
               child: IgnorePointer(
                 ignoring: collapseBottomNav,
-                child: SafeArea(
-                  top: false,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: MediaQuery.withNoTextScaling(
-                      child: BottomNavigationBar(
-                        currentIndex: selectedIndex,
-                        onTap: navigateWithPrefetch,
-                        type: BottomNavigationBarType.fixed,
-                        elevation: 0,
-                        backgroundColor: Colors.transparent,
-                        selectedItemColor: AppColors.textPrimary,
-                        unselectedItemColor: AppColors.textSecondary,
-                        selectedFontSize: 10,
-                        unselectedFontSize: 10,
-                        showUnselectedLabels: true,
-                        items: _navItems.asMap().entries.map((entry) {
-                          final item = entry.value;
-                          return BottomNavigationBarItem(
-                            icon: _navIcon(
-                              item,
-                              unreadChats,
-                              incomingFriends,
-                              gamesMyTurn,
-                              gameInvitesCount,
-                              homeBadgeCount,
-                            ),
-                            activeIcon: _navIcon(
-                              item,
-                              unreadChats,
-                              incomingFriends,
-                              gamesMyTurn,
-                              gameInvitesCount,
-                              homeBadgeCount,
-                              selected: true,
-                            ),
-                            label: item.label,
-                          );
-                        }).toList(),
+                child: ColoredBox(
+                  color: AppColors.surfaceUnified,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      MediaQuery.withNoTextScaling(
+                        child: _MobileBottomNav(
+                          key: const ValueKey('mobile-bottom-nav'),
+                          selectedIndex: selectedIndex,
+                          onTap: navigateWithPrefetch,
+                          unreadChats: unreadChats,
+                          incomingFriends: incomingFriends,
+                          gamesMyTurn: gamesMyTurn,
+                          gameInvitesCount: gameInvitesCount,
+                          homeBadgeCount: homeBadgeCount,
+                        ),
                       ),
-                    ),
+                      // Заливка под home indicator — до скруглённых углов.
+                      SizedBox(height: bottomInset),
+                    ],
                   ),
                 ),
               ),
@@ -465,12 +462,124 @@ class AppShell extends ConsumerWidget {
         // а не к корневому на весь экран.
         ScaffoldMessenger(
           child: Scaffold(
-            backgroundColor: Colors.transparent,
+            // Тот же цвет, что чёлка и низ — без «шва» после splash.
+            backgroundColor: AppColors.surfaceUnified,
             body: shellBody,
             bottomNavigationBar: bottomNav,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Нижняя панель: только иконки + одна подпись по центру с двумя линиями.
+class _MobileBottomNav extends StatelessWidget {
+  const _MobileBottomNav({
+    super.key,
+    required this.selectedIndex,
+    required this.onTap,
+    required this.unreadChats,
+    required this.incomingFriends,
+    required this.gamesMyTurn,
+    required this.gameInvitesCount,
+    required this.homeBadgeCount,
+  });
+
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
+  final int unreadChats;
+  final int incomingFriends;
+  final int gamesMyTurn;
+  final int gameInvitesCount;
+  final int homeBadgeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final safeIndex = selectedIndex.clamp(0, _navItems.length - 1);
+    final label = _navItems[safeIndex].label;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              for (var i = 0; i < _navItems.length; i++)
+                Expanded(
+                  child: InkWell(
+                    onTap: () => onTap(i),
+                    customBorder: const CircleBorder(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Center(
+                        child: _navIcon(
+                          _navItems[i],
+                          unreadChats,
+                          incomingFriends,
+                          gamesMyTurn,
+                          gameInvitesCount,
+                          homeBadgeCount,
+                          selected: i == safeIndex,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // Симметричная подпись: линия — текст — линия (фиолет. как иконка).
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: Row(
+              key: ValueKey(label),
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Чуть выше центра строки — visually на уровне середины букв.
+                Transform.translate(
+                  offset: const Offset(0, -3),
+                  child: _captionHairline(),
+                ),
+                Transform.translate(
+                  offset: const Offset(0, -2),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                        color: AppColors.accentStart,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+                Transform.translate(
+                  offset: const Offset(0, -3),
+                  child: _captionHairline(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _captionHairline() {
+    return Container(
+      width: 33, // ×1.5 от прежних 22
+      height: 1.5,
+      decoration: BoxDecoration(
+        color: AppColors.accentStart.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(999),
+      ),
     );
   }
 }
@@ -485,19 +594,9 @@ Widget _navIcon(
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
-  final iconSize = selected ? 25.0 : 22.0;
-  final baseIcon = Container(
-    padding: const EdgeInsets.all(5),
-    decoration: selected
-        ? BoxDecoration(
-            color: AppColors.accentSoft.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-                color: AppColors.accentStart.withValues(alpha: 0.35)),
-          )
-        : null,
-    child: Icon(item.icon, color: iconColor, size: iconSize),
-  );
+  final iconSize = selected ? 24.0 : 22.0;
+  // Без рамки/заливки у активного — только цвет иконки.
+  final baseIcon = Icon(item.icon, color: iconColor, size: iconSize);
 
   var badgeValue = 0;
   if (item.path == '/chats') {
@@ -513,15 +612,13 @@ Widget _navIcon(
   if (badgeValue <= 0) {
     return baseIcon;
   }
-  // Бейдж чуть ниже/внутрь иконки: ClipRect у bottom nav обрезает
-  // всё, что торчит выше (top: -8 раньше срезал кружок).
   return Stack(
     clipBehavior: Clip.none,
     children: [
       baseIcon,
       Positioned(
-        right: -4,
-        top: 0,
+        right: -6,
+        top: -4,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
           decoration: BoxDecoration(

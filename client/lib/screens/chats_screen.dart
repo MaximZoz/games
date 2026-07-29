@@ -1556,44 +1556,60 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       children: [
         Padding(
           padding: const EdgeInsets.only(right: 4),
-          child: AnimatedBorderBox(
-            animateBorder: true,
-            padding: const EdgeInsets.all(6),
-            borderRadius: 999,
-            margin: EdgeInsets.zero,
-            child: IconButton(
-              onPressed: actionBusy ? null : _openStartChatDialog,
-              tooltip: 'Новый чат',
-              icon: const Icon(Icons.add_comment_rounded),
-              style: IconButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(28, 28),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
+          child: _buildHeaderFrameIconButton(
+            icon: Icons.add_comment_rounded,
+            tooltip: 'Новый чат',
+            onPressed: actionBusy ? null : _openStartChatDialog,
           ),
         ),
         if (hasBlockedUsers)
           Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: AnimatedBorderBox(
-              animateBorder: true,
-              padding: const EdgeInsets.all(6),
-              borderRadius: 999,
-              margin: EdgeInsets.zero,
-              child: IconButton(
-                onPressed: actionBusy ? null : _openBlockedUsersDialog,
-                tooltip: 'Заблокированные пользователи',
-                icon: const Icon(Icons.block_rounded),
-                style: IconButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(28, 28),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
+            child: _buildHeaderFrameIconButton(
+              icon: Icons.block_rounded,
+              tooltip: 'Заблокированные пользователи',
+              onPressed: actionBusy ? null : _openBlockedUsersDialog,
             ),
           ),
       ],
+    );
+  }
+
+  /// Рамка как у лупы поиска друзей: скруглённый квадрат, фиолетовый бордер.
+  Widget _buildHeaderFrameIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    Color? iconColor,
+  }) {
+    final enabled = onPressed != null;
+    return Tooltip(
+      message: tooltip,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.6,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accentStart, width: 2),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: iconColor ?? AppColors.accentStart,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1617,37 +1633,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required VoidCallback? onPressed,
     required String tooltip,
   }) {
-    final enabled = onPressed != null;
-    return Tooltip(
-      message: tooltip,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.6,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            onTap: enabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
-              ),
-              child: Icon(
-                icon,
-                size: 17,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-      ),
+    // Та же форма рамки, что у лупы / кнопок тулбара чатов.
+    return _buildHeaderFrameIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      iconColor: AppColors.textPrimary,
     );
   }
 
@@ -1948,7 +1939,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                       )
                     else
                       SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // Сверху запас под фиолетовую тень GradientCard —
+                        // иначе CustomScrollView обрезает её о хедер (линия среза).
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -1965,7 +1958,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   _chatActionInFlight.contains(blockKey);
                               final itemBusy = clearBusy || blockBusy;
                               return Padding(
-                                padding: const EdgeInsets.only(top: 10),
+                                padding: EdgeInsets.only(
+                                  top: index == 0 ? 0 : 10,
+                                ),
                                 child: Slidable(
                                   key: ValueKey('chat_${item.chatID}'),
                                   enabled: !itemBusy,

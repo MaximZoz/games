@@ -1847,20 +1847,6 @@ class _GameBoard extends StatelessWidget {
             height: boardSize,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentStart.withValues(alpha: 0.12),
-                  blurRadius: 20,
-                  offset: Offset.zero,
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: Offset.zero,
-                  spreadRadius: 0,
-                ),
-              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),

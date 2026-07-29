@@ -331,7 +331,8 @@ class _DiamondPainter extends CustomPainter {
     final s = size.width;
     final cx = s / 2;
     final cy = s / 2;
-    final r = s * 0.46;
+    // Чуть крупнее, чтобы визуально совпадать с круглыми монетами в одном слоте.
+    final r = s * 0.50;
 
     // Тень.
     final shadow = Path()
@@ -584,6 +585,13 @@ class ToolbarBalanceChip extends StatelessWidget {
       _BalancePopupItem(CoinType.silver, silver),
       _BalancePopupItem(CoinType.bronze, bronzeRest),
     ];
+    // Фиксированная ширина колонки чисел — иначе «0» сдвигает иконку/подпись.
+    final amountWidth = items
+        .map((e) => e.value.toString().length)
+        .fold<int>(1, math.max)
+        .clamp(2, 8)
+        .toDouble() *
+        11;
 
     showDialog<void>(
       context: context,
@@ -591,33 +599,47 @@ class ToolbarBalanceChip extends StatelessWidget {
         title: const Text('Баланс'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: items.map((e) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    e.value.toString(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                  SizedBox(
+                    width: amountWidth,
+                    child: Text(
+                      e.value.toString(),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  CoinIcon(
-                    coinType: e.type,
-                    size: 28,
-                    showBorder: true,
-                    animate: true,
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Center(
+                      child: CoinIcon(
+                        coinType: e.type,
+                        size: 28,
+                        showBorder: true,
+                        animate: true,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    _coinLabels[e.type] ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
+                  Expanded(
+                    child: Text(
+                      _coinLabels[e.type] ?? '',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],

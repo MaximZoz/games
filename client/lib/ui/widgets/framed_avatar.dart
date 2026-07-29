@@ -184,13 +184,6 @@ class _FramedAvatarState extends State<FramedAvatar>
             startAngle: t * math.pi * 2,
             colors: style.colors,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: style.glow,
-              blurRadius: 10,
-              spreadRadius: 0.5,
-            ),
-          ],
         ),
         padding: EdgeInsets.all(ring),
         child: DecoratedBox(

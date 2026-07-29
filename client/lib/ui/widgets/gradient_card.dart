@@ -61,13 +61,7 @@ class _GradientCardState extends State<GradientCard>
   }
 
   void _syncBorderAnimation() {
-    if (widget.animateBorder) {
-      _borderController ??= AnimationController(
-        vsync: this,
-        duration: const Duration(seconds: 5),
-      )..repeat();
-      return;
-    }
+    // Анимация рамки отключена — статичный бордер без «перелива».
     _borderController?.dispose();
     _borderController = null;
   }
@@ -86,29 +80,6 @@ class _GradientCardState extends State<GradientCard>
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(r),
-        boxShadow: [
-          // Основная градиентная тень: accentStart (холодный фиолетовый)
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.25),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-            spreadRadius: -6,
-          ),
-          // Вторая тень: accentEnd (тёплый фиолетовый) — градиентный переход
-          BoxShadow(
-            color: AppColors.accentEnd.withValues(alpha: 0.18),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-            spreadRadius: -3,
-          ),
-          // Мягкое свечение по контуру
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.1),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-            spreadRadius: 0,
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.card),
