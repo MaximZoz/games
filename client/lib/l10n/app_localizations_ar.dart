@@ -1423,10 +1423,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'للمحاور';
-
-  @override
-  String get pickPhotoGallery => 'مكتبة الصور';
-
-  @override
-  String get pickPhotoCamera => 'التقاط صورة';
 }

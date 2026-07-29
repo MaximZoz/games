@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "ตัวคุณ",
-  "chatReplyPeer": "อีกฝ่าย",
-  "pickPhotoGallery": "คลังรูปภาพ",
-  "pickPhotoCamera": "ถ่ายรูป"
+  "chatReplyPeer": "อีกฝ่าย"
 }

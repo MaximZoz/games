@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "{n} gümüş bahis hakkını açar",
   "shopStakeDescGold": "{n} altın bahis hakkını açar",
   "chatReplySelf": "kendine",
-  "chatReplyPeer": "karşı tarafa",
-  "pickPhotoGallery": "Fotoğraf kitaplığı",
-  "pickPhotoCamera": "Fotoğraf çek"
+  "chatReplyPeer": "karşı tarafa"
 }

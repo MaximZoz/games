@@ -1423,10 +1423,4 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'suhbatdoshga';
-
-  @override
-  String get pickPhotoGallery => 'Media kutubxona';
-
-  @override
-  String get pickPhotoCamera => 'Suratga olish';
 }

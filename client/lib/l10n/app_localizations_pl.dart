@@ -1423,10 +1423,4 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'rozmówcy';
-
-  @override
-  String get pickPhotoGallery => 'Biblioteka zdjęć';
-
-  @override
-  String get pickPhotoCamera => 'Zrób zdjęcie';
 }

@@ -1423,10 +1423,4 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chatReplyPeer => '상대방';
-
-  @override
-  String get pickPhotoGallery => '사진 보관함';
-
-  @override
-  String get pickPhotoCamera => '사진 찍기';
 }

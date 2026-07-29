@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "Право ставити {n} срібла в іграх",
   "shopStakeDescGold": "Право ставити {n} золота в іграх",
   "chatReplySelf": "собі",
-  "chatReplyPeer": "співрозмовнику",
-  "pickPhotoGallery": "Медіатека",
-  "pickPhotoCamera": "Зробити знімок"
+  "chatReplyPeer": "співрозмовнику"
 }

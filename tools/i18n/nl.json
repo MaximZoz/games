@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "Ontgrendel inzet van {n} zilver",
   "shopStakeDescGold": "Ontgrendel inzet van {n} goud",
   "chatReplySelf": "jezelf",
-  "chatReplyPeer": "de gesprekspartner",
-  "pickPhotoGallery": "Fotobibliotheek",
-  "pickPhotoCamera": "Foto maken"
+  "chatReplyPeer": "de gesprekspartner"
 }

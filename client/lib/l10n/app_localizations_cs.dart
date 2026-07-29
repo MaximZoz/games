@@ -1423,10 +1423,4 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'protějšku';
-
-  @override
-  String get pickPhotoGallery => 'Knihovna fotek';
-
-  @override
-  String get pickPhotoCamera => 'Pořídit fotku';
 }

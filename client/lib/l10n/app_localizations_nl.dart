@@ -1423,10 +1423,4 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'de gesprekspartner';
-
-  @override
-  String get pickPhotoGallery => 'Fotobibliotheek';
-
-  @override
-  String get pickPhotoCamera => 'Foto maken';
 }

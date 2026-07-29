@@ -1423,10 +1423,4 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chatReplyPeer => '相手';
-
-  @override
-  String get pickPhotoGallery => '写真ライブラリ';
-
-  @override
-  String get pickPhotoCamera => '写真を撮る';
 }

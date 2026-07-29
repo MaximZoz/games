@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "Unlock betting {n} silver in games",
   "shopStakeDescGold": "Unlock betting {n} gold in games",
   "chatReplySelf": "yourself",
-  "chatReplyPeer": "the other person",
-  "pickPhotoGallery": "Photo library",
-  "pickPhotoCamera": "Take photo"
+  "chatReplyPeer": "the other person"
 }

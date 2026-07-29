@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "Ойындарда {n} күміс қою құқығы",
   "shopStakeDescGold": "Ойындарда {n} алтын қою құқығы",
   "chatReplySelf": "өзіңізге",
-  "chatReplyPeer": "әңгімелесушіге",
-  "pickPhotoGallery": "Медиатека",
-  "pickPhotoCamera": "Суретке түсіру"
+  "chatReplyPeer": "әңгімелесушіге"
 }

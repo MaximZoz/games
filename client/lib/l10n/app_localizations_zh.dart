@@ -1423,10 +1423,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatReplyPeer => '对方';
-
-  @override
-  String get pickPhotoGallery => '图库';
-
-  @override
-  String get pickPhotoCamera => '拍照';
 }

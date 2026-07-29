@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "解锁以 {n} 银下注",
   "shopStakeDescGold": "解锁以 {n} 金下注",
   "chatReplySelf": "自己",
-  "chatReplyPeer": "对方",
-  "pickPhotoGallery": "图库",
-  "pickPhotoCamera": "拍照"
+  "chatReplyPeer": "对方"
 }

@@ -1423,10 +1423,4 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'lawan bicara';
-
-  @override
-  String get pickPhotoGallery => 'Perpustakaan foto';
-
-  @override
-  String get pickPhotoCamera => 'Ambil foto';
 }

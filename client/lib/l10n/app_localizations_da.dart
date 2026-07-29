@@ -1423,10 +1423,4 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'modparten';
-
-  @override
-  String get pickPhotoGallery => 'Fotobibliotek';
-
-  @override
-  String get pickPhotoCamera => 'Tag foto';
 }

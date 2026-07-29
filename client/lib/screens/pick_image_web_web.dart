@@ -9,16 +9,10 @@ import 'image_pick_completion.dart';
 const _resumeGracePeriod = Duration(milliseconds: 700);
 const _hardPickerTimeout = Duration(minutes: 3);
 
-/// [capture] — `'user'` / `'environment'` открывает камеру напрямую
-/// (без системного sheet «Медиатека / Снимок / Файл» на iOS).
-/// `null` — обычный выбор файла/галереи.
-Future<Uint8List?> pickImageBytesWeb({String? capture}) async {
+Future<Uint8List?> pickImageBytesWeb() async {
   final input = html.FileUploadInputElement()
     ..accept = 'image/*'
     ..style.display = 'none';
-  if (capture != null && capture.isNotEmpty) {
-    input.setAttribute('capture', capture);
-  }
   final completion = ImagePickCompletion<Uint8List>(
     resumeGracePeriod: _resumeGracePeriod,
     hardTimeout: _hardPickerTimeout,

@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "vous-même",
-  "chatReplyPeer": "l'interlocuteur",
-  "pickPhotoGallery": "Photothèque",
-  "pickPhotoCamera": "Prendre une photo"
+  "chatReplyPeer": "l'interlocuteur"
 }

@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "自己",
-  "chatReplyPeer": "对方",
-  "pickPhotoGallery": "图库",
-  "pickPhotoCamera": "拍照"
+  "chatReplyPeer": "对方"
 }

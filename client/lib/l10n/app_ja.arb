@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "自分",
-  "chatReplyPeer": "相手",
-  "pickPhotoGallery": "写真ライブラリ",
-  "pickPhotoCamera": "写真を撮る"
+  "chatReplyPeer": "相手"
 }

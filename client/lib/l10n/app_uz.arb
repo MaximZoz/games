@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "oʻzingizga",
-  "chatReplyPeer": "suhbatdoshga",
-  "pickPhotoGallery": "Media kutubxona",
-  "pickPhotoCamera": "Suratga olish"
+  "chatReplyPeer": "suhbatdoshga"
 }

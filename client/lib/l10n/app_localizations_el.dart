@@ -1423,10 +1423,4 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'στον συνομιλητή';
-
-  @override
-  String get pickPhotoGallery => 'Βιβλιοθήκη φωτογραφιών';
-
-  @override
-  String get pickPhotoCamera => 'Λήψη φωτογραφίας';
 }

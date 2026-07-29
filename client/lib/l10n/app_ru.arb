@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "себе",
-  "chatReplyPeer": "собеседнику",
-  "pickPhotoGallery": "Медиатека",
-  "pickPhotoCamera": "Сделать снимок"
+  "chatReplyPeer": "собеседнику"
 }

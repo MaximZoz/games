@@ -1423,10 +1423,4 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'әңгімелесушіге';
-
-  @override
-  String get pickPhotoGallery => 'Медиатека';
-
-  @override
-  String get pickPhotoCamera => 'Суретке түсіру';
 }

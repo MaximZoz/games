@@ -1423,10 +1423,4 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'співрозмовнику';
-
-  @override
-  String get pickPhotoGallery => 'Медіатека';
-
-  @override
-  String get pickPhotoCamera => 'Зробити знімок';
 }

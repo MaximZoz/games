@@ -882,7 +882,5 @@
     }
   },
   "chatReplySelf": "itsellesi",
-  "chatReplyPeer": "keskustelukumppanille",
-  "pickPhotoGallery": "Valokuvakirjasto",
-  "pickPhotoCamera": "Ota kuva"
+  "chatReplyPeer": "keskustelukumppanille"
 }

@@ -430,7 +430,5 @@
   "shopStakeDescSilver": "Odemkne sázku {n} stříbra",
   "shopStakeDescGold": "Odemkne sázku {n} zlata",
   "chatReplySelf": "sobě",
-  "chatReplyPeer": "protějšku",
-  "pickPhotoGallery": "Knihovna fotek",
-  "pickPhotoCamera": "Pořídit fotku"
+  "chatReplyPeer": "protějšku"
 }
