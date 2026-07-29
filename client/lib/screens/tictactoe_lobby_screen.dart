@@ -22,6 +22,8 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
   const TicTacToeLobbyScreen({
@@ -46,10 +48,11 @@ String tictactoeLobbyAppBarTitle({
   String? status,
   String? initialMode,
 }) {
-  if (status == 'waiting_matchmake') return 'Лобби';
-  if (status == 'waiting_invite') return 'Своя игра';
-  if (initialMode == 'matchmake') return 'Лобби';
-  if (initialMode == 'invite') return 'Своя игра';
+  final l10n = LocaleService.l10n;
+  if (status == 'waiting_matchmake') return l10n.lobbyMatchmake;
+  if (status == 'waiting_invite') return l10n.lobbyPrivateGame;
+  if (initialMode == 'matchmake') return l10n.lobbyMatchmake;
+  if (initialMode == 'invite') return l10n.lobbyPrivateGame;
   return '';
 }
 
@@ -120,7 +123,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             leading: IconButton(
-              tooltip: 'Назад',
+              tooltip: context.l10n.commonBack,
               onPressed: _isLeaving ? null : () => _leaveLobby(context),
               icon: const Icon(Icons.arrow_back_rounded),
             ),
@@ -189,10 +192,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       .length;
                                   return Text(
                                     friends.isEmpty
-                                        ? 'У вас пока нет друзей онлайн. Можно отправить ссылку на игру выше.'
+                                        ? context.l10n.lobbyNoFriendsOnline
                                         : onlineInvitedCount > 0
-                                            ? 'Приглашения отправлены. Ожидайте ответа.'
-                                            : 'Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.',
+                                            ? context.l10n.lobbyInvitesSentWaiting
+                                            : context.l10n.lobbyNoFriendsOnline,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 14,
@@ -216,7 +219,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                           children: [
                                             Tooltip(
                                               message:
-                                                  'Информация о пользователе',
+                                                  context.l10n.userInfoTitle,
                                               child: MouseRegion(
                                                 cursor:
                                                     SystemMouseCursors.click,
@@ -238,7 +241,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                                             .isNotEmpty ==
                                                         true
                                                     ? f.user.displayName!
-                                                    : 'Пользователь',
+                                                    : context.l10n.commonUser,
                                                 style: const TextStyle(
                                                   color: AppColors.textPrimary,
                                                   fontWeight: FontWeight.w500,
@@ -258,8 +261,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                               ),
                                               child: Text(
                                                 isInvited
-                                                    ? 'Отправлено'
-                                                    : 'Пригласить',
+                                                    ? context
+                                                        .l10n.lobbyInviteSentShort
+                                                    : context.l10n.lobbyInvite,
                                               ),
                                             ),
                                           ],
@@ -277,7 +281,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                 ),
                               ),
                               error: (e, _) => Text(
-                                'Не удалось загрузить друзей. ${formatUserError(e, fallback: "Попробуйте позже.")}',
+                                '${context.l10n.friendsLoadFailed}. ${formatUserError(e, fallback: context.l10n.commonTryLater)}',
                                 style: const TextStyle(color: Colors.red),
                               ),
                             ),
@@ -298,7 +302,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Поиск соперника...',
+                                    context.l10n.lobbySearchingOpponent,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -308,17 +312,17 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 8),
-                                  const Text(
-                                    'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»',
+                                  Text(
+                                    context.l10n.lobbyWaitingJoin,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 14,
                                     ),
                                   ),
                                 ] else if (isInviteMode && !isCreator) ...[
                                   Text(
-                                    'Приглашение в игру',
+                                    context.l10n.lobbyInviteTitle,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -330,8 +334,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   const SizedBox(height: 8),
                                   Text(
                                     lobby.creatorName.trim().isNotEmpty
-                                        ? '${lobby.creatorName} приглашает вас сыграть'
-                                        : 'Вас пригласили сыграть',
+                                        ? context.l10n
+                                            .lobbyCreatorInvites(lobby.creatorName)
+                                        : context.l10n.lobbyInvitedToPlay,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
@@ -374,7 +379,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                               color: Colors.white,
                                             ),
                                           )
-                                        : const Text('Войти в игру'),
+                                        : Text(context.l10n.lobbyEnterGame),
                                   ),
                                 ],
                               ],
@@ -437,8 +442,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     children: [
                       Text(
                         _linkCopied
-                            ? 'Ссылка скопирована'
-                            : 'Отправить ссылку на игру',
+                            ? context.l10n.lobbyLinkCopied
+                            : context.l10n.lobbyCopyLink,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
@@ -448,8 +453,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                       const SizedBox(height: 2),
                       Text(
                         _linkCopied
-                            ? 'Вставьте её в чат или сообщение другу'
-                            : 'Скопировать ссылку в буфер обмена',
+                            ? context.l10n.lobbyLinkCopiedHint
+                            : context.l10n.lobbyCopyLinkHint,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
@@ -524,7 +529,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         });
         showAppSnackBar(
           context,
-          message: 'Приглашение отправлено',
+          message: context.l10n.lobbyInviteSent,
           kind: AppSnackKind.success,
         );
       }
@@ -613,7 +618,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                 final statusText = presenceEntry == null
                     ? null
                     : (presenceEntry.online
-                        ? 'Онлайн'
+                        ? context.l10n.commonOnlineCap
                         : formatLastSeen(presenceEntry.lastSeenAt));
                 final about = user.about?.trim();
                 final genderIcon = _genderIcon(user.gender);
@@ -636,7 +641,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                 Text(
                                   user.displayName?.trim().isNotEmpty == true
                                       ? user.displayName!
-                                      : 'Пользователь',
+                                      : context.l10n.commonUser,
                                   style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 17,
@@ -660,7 +665,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Закрыть',
+                            tooltip: context.l10n.commonClose,
                             icon: const Icon(Icons.close_rounded),
                             onPressed: () => Navigator.of(ctx).pop(),
                           ),
@@ -675,7 +680,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           children: [
                             if (user.age != null && user.age! > 0)
                               _buildInfoPill(
-                                text: '${user.age} лет',
+                                text: context.l10n.profileAgeYears(user.age!),
                                 minWidth: 72,
                               ),
                             if (genderIcon != null)
@@ -694,9 +699,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                       ],
                       if (about != null && about.isNotEmpty) ...[
                         const SizedBox(height: 10),
-                        const Text(
-                          'О себе',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.commonAboutMe,
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),

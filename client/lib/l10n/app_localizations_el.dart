@@ -229,17 +229,17 @@ class AppLocalizationsEl extends AppLocalizations {
   String get timeYesterday => 'χθες';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return 'πριν $count λεπ.';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return 'πριν $count ώρ.';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return 'πριν $count ημ.';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get timeWeekAgo => 'πριν μία εβδομάδα';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return 'πριν $count εβδ.';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get timeMonthAgo => 'πριν έναν μήνα';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return 'πριν $count μήν.';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get timeYearAgo => 'πριν έναν χρόνο';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return 'πριν $count χρ.';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 λεπτά';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Τρίλιζα σε πίνακα $grid. Εναλλάξ· ξεκινά ο X.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Νίκη: σχηματίστε $n στη σειρά οριζόντια, κάθετα ή διαγώνια.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Χωρίς χρονικό όριο ανά κίνηση.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Χρόνος ανά κίνηση: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Ποντάρισμα: $stake. Τόσα νομίσματα παίζονται.';
+  }
+
+  @override
+  String get rulesSwap => 'Αλλαγή πλευρών: ο O μπορεί να αλλάξει με τον X μετά την πρώτη κίνηση του X.';
+
+  @override
+  String get rulesNoCenter => 'Απαγόρευση κέντρου: ο X δεν μπορεί να παίξει στο κέντρο στην πρώτη κίνηση.';
+
+  @override
+  String get collectionSetLegends => 'Θρύλοι';
+
+  @override
+  String get collectionSetSpace => 'Διάστημα';
+
+  @override
+  String get collectionSetGems => 'Πετράδια';
+
+  @override
+  String get collectionSetParty => 'Γιορτή';
+
+  @override
+  String get collectionSetNature => 'Φύση';
+
+  @override
+  String get collectionSetAdventures => 'Περιπέτειες';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Συλλογή · βιτρίνα · δώρο · πώληση · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'ημέρα';
+
+  @override
+  String get coinsDayFew => 'ημέρες';
+
+  @override
+  String get coinsDayMany => 'ημέρες';
+
+  @override
+  String get giftFriendTitle => 'Δώρο σε φίλο';
+
+  @override
+  String photoCount(int count) {
+    return 'Φωτο ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Φωτο ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Φωτο: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Ανάπτυξη πίνακα';
+
+  @override
+  String get chatsCollapsePanel => 'Σύμπτυξη πίνακα';
+
+  @override
+  String get chatReplySourceMissing => 'Το αρχικό μήνυμα δεν βρέθηκε';
 }

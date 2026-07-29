@@ -229,17 +229,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get timeYesterday => 'ontem';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return 'há $count min';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return 'há $count h';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return 'há $count d';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get timeWeekAgo => 'há uma semana';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return 'há $count sem.';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get timeMonthAgo => 'há um mês';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return 'há $count mês.';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get timeYearAgo => 'há um ano';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return 'há $count a.';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Jogo da velha em um tabuleiro $grid. Em turnos; X começa.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Vitória: alinhe $n em linha na horizontal, vertical ou diagonal.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Sem limite de tempo por jogada.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Tempo por jogada: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Aposta: $stake. O jogo vale tantas moedas.';
+  }
+
+  @override
+  String get rulesSwap => 'Troca de lados: O pode trocar com X após o primeiro lance de X.';
+
+  @override
+  String get rulesNoCenter => 'Sem centro: X não pode jogar no centro no primeiro lance.';
+
+  @override
+  String get collectionSetLegends => 'Lendas';
+
+  @override
+  String get collectionSetSpace => 'Espaço';
+
+  @override
+  String get collectionSetGems => 'Gemas';
+
+  @override
+  String get collectionSetParty => 'Festa';
+
+  @override
+  String get collectionSetNature => 'Natureza';
+
+  @override
+  String get collectionSetAdventures => 'Aventuras';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Coleção · vitrine · presente · venda · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'dia';
+
+  @override
+  String get coinsDayFew => 'dias';
+
+  @override
+  String get coinsDayMany => 'dias';
+
+  @override
+  String get giftFriendTitle => 'Presentear um amigo';
+
+  @override
+  String photoCount(int count) {
+    return 'Foto ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Foto ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Foto: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emojis · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Expandir painel';
+
+  @override
+  String get chatsCollapsePanel => 'Recolher painel';
+
+  @override
+  String get chatReplySourceMissing => 'Mensagem original não encontrada';
 }

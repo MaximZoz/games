@@ -229,17 +229,17 @@ class AppLocalizationsFi extends AppLocalizations {
   String get timeYesterday => 'eilen';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count min sitten';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count t sitten';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count pv sitten';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get timeWeekAgo => 'viikko sitten';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count vk sitten';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get timeMonthAgo => 'kuukausi sitten';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count kk sitten';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get timeYearAgo => 'vuosi sitten';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count v sitten';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Ristinolla $grid-laudalla. Vuorotellen; X aloittaa.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Voitto: saa $n putkeen vaaka-, pysty- tai vinorivissä.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Ei aikarajaa siirrolle.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Aika per siirto: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Panos: $stake. Peli käydään näillä kolikoilla.';
+  }
+
+  @override
+  String get rulesSwap => 'Puolenvaihto: O voi vaihtaa X:n kanssa X:n ensimmäisen siirron jälkeen.';
+
+  @override
+  String get rulesNoCenter => 'Kielto keskelle: X ei saa pelata keskelle ensimmäisellä siirrolla.';
+
+  @override
+  String get collectionSetLegends => 'Legendat';
+
+  @override
+  String get collectionSetSpace => 'Avaruus';
+
+  @override
+  String get collectionSetGems => 'Jalokivet';
+
+  @override
+  String get collectionSetParty => 'Juhla';
+
+  @override
+  String get collectionSetNature => 'Luonto';
+
+  @override
+  String get collectionSetAdventures => 'Seikkailut';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Kokoelma · näyteikkuna · lahja · myynti · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'päivä';
+
+  @override
+  String get coinsDayFew => 'päivää';
+
+  @override
+  String get coinsDayMany => 'päivää';
+
+  @override
+  String get giftFriendTitle => 'Anna kaverille';
+
+  @override
+  String photoCount(int count) {
+    return 'Kuva ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Kuva ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Kuva: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emojia · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Laajenna paneeli';
+
+  @override
+  String get chatsCollapsePanel => 'Pienennä paneeli';
+
+  @override
+  String get chatReplySourceMissing => 'Alkuperäistä viestiä ei löydy';
 }

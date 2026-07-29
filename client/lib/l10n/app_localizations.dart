@@ -597,19 +597,19 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} мин назад'**
-  String timeMinutesAgo(Object count);
+  String timeMinutesAgo(int count);
 
   /// No description provided for @timeHoursAgo.
   ///
   /// In ru, this message translates to:
   /// **'{count} ч назад'**
-  String timeHoursAgo(Object count);
+  String timeHoursAgo(int count);
 
   /// No description provided for @timeDaysAgo.
   ///
   /// In ru, this message translates to:
   /// **'{count} дн. назад'**
-  String timeDaysAgo(Object count);
+  String timeDaysAgo(int count);
 
   /// No description provided for @timeWeekAgo.
   ///
@@ -621,7 +621,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} нед. назад'**
-  String timeWeeksAgo(Object count);
+  String timeWeeksAgo(int count);
 
   /// No description provided for @timeMonthAgo.
   ///
@@ -633,7 +633,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} мес. назад'**
-  String timeMonthsAgo(Object count);
+  String timeMonthsAgo(int count);
 
   /// No description provided for @timeYearAgo.
   ///
@@ -645,7 +645,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} г. назад'**
-  String timeYearsAgo(Object count);
+  String timeYearsAgo(int count);
 
   /// No description provided for @weekdaySun.
   ///
@@ -2554,6 +2554,156 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'10 мин'**
   String get timeTenMin;
+
+  /// No description provided for @rulesIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Крестики-нолики на поле {grid}. Ходят по очереди, X начинает.'**
+  String rulesIntro(String grid);
+
+  /// No description provided for @rulesWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победа: нужно выстроить {n} в ряд по горизонтали, вертикали или диагонали.'**
+  String rulesWin(int n);
+
+  /// No description provided for @rulesNoTimeLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без ограничения по времени на ход.'**
+  String get rulesNoTimeLimit;
+
+  /// No description provided for @rulesTurnTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход: {time}.'**
+  String rulesTurnTime(String time);
+
+  /// No description provided for @rulesStake.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ставка: {stake}. На столько монет идёт игра.'**
+  String rulesStake(String stake);
+
+  /// No description provided for @rulesSwap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Смена сторон: O может поменяться местами с X после первого хода X.'**
+  String get rulesSwap;
+
+  /// No description provided for @rulesNoCenter.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запрет центра: X не может ходить в центр первым ходом.'**
+  String get rulesNoCenter;
+
+  /// No description provided for @collectionSetLegends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Легенды'**
+  String get collectionSetLegends;
+
+  /// No description provided for @collectionSetSpace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Космос'**
+  String get collectionSetSpace;
+
+  /// No description provided for @collectionSetGems.
+  ///
+  /// In ru, this message translates to:
+  /// **'Драгоценности'**
+  String get collectionSetGems;
+
+  /// No description provided for @collectionSetParty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Праздник'**
+  String get collectionSetParty;
+
+  /// No description provided for @collectionSetNature.
+  ///
+  /// In ru, this message translates to:
+  /// **'Природа'**
+  String get collectionSetNature;
+
+  /// No description provided for @collectionSetAdventures.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приключения'**
+  String get collectionSetAdventures;
+
+  /// No description provided for @collectionCardMeta.
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекция · витрина · подарок · продажа · +{amount}'**
+  String collectionCardMeta(String amount);
+
+  /// No description provided for @coinsDayOne.
+  ///
+  /// In ru, this message translates to:
+  /// **'день'**
+  String get coinsDayOne;
+
+  /// No description provided for @coinsDayFew.
+  ///
+  /// In ru, this message translates to:
+  /// **'дня'**
+  String get coinsDayFew;
+
+  /// No description provided for @coinsDayMany.
+  ///
+  /// In ru, this message translates to:
+  /// **'дней'**
+  String get coinsDayMany;
+
+  /// No description provided for @giftFriendTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарить другу'**
+  String get giftFriendTitle;
+
+  /// No description provided for @photoCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото ({count})'**
+  String photoCount(int count);
+
+  /// No description provided for @photoCountWithText.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото ({count}): {text}'**
+  String photoCountWithText(int count, String text);
+
+  /// No description provided for @photoWithText.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото: {text}'**
+  String photoWithText(String text);
+
+  /// No description provided for @shopEmojiGroupMeta.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} смайликов · по {price}'**
+  String shopEmojiGroupMeta(int count, String price);
+
+  /// No description provided for @chatsExpandPanel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Развернуть панель'**
+  String get chatsExpandPanel;
+
+  /// No description provided for @chatsCollapsePanel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свернуть панель'**
+  String get chatsCollapsePanel;
+
+  /// No description provided for @chatReplySourceMissing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Исходное сообщение не найдено'**
+  String get chatReplySourceMissing;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

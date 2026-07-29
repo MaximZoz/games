@@ -229,17 +229,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeYesterday => 'yesterday';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count min ago';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count h ago';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count d ago';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeWeekAgo => 'a week ago';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count wk ago';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeMonthAgo => 'a month ago';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count mo ago';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeYearAgo => 'a year ago';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count yr ago';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Tic-tac-toe on a $grid board. Players take turns; X goes first.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Win: get $n in a row horizontally, vertically, or diagonally.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'No time limit per turn.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Time per turn: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Stake: $stake. That’s how many coins the game is for.';
+  }
+
+  @override
+  String get rulesSwap => 'Side swap: O may swap with X after X’s first move.';
+
+  @override
+  String get rulesNoCenter => 'No center: X cannot play in the center on the first move.';
+
+  @override
+  String get collectionSetLegends => 'Legends';
+
+  @override
+  String get collectionSetSpace => 'Space';
+
+  @override
+  String get collectionSetGems => 'Gems';
+
+  @override
+  String get collectionSetParty => 'Party';
+
+  @override
+  String get collectionSetNature => 'Nature';
+
+  @override
+  String get collectionSetAdventures => 'Adventures';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Collection · showcase · gift · sell · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'day';
+
+  @override
+  String get coinsDayFew => 'days';
+
+  @override
+  String get coinsDayMany => 'days';
+
+  @override
+  String get giftFriendTitle => 'Gift a friend';
+
+  @override
+  String photoCount(int count) {
+    return 'Photo ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Photo ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Photo: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emojis · $price each';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Expand panel';
+
+  @override
+  String get chatsCollapsePanel => 'Collapse panel';
+
+  @override
+  String get chatReplySourceMissing => 'Original message not found';
 }

@@ -229,17 +229,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get timeYesterday => 'hôm qua';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count phút trước';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count giờ trước';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count ngày trước';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get timeWeekAgo => 'một tuần trước';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count tuần trước';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get timeMonthAgo => 'một tháng trước';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count tháng trước';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get timeYearAgo => 'một năm trước';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count năm trước';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 phút';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Cờ caro trên bàn $grid. Đi lần lượt, X đi trước.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Thắng: xếp $n ô liên tiếp ngang, dọc hoặc chéo.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Không giới hạn thời gian mỗi lượt.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Thời gian mỗi lượt: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Cược: $stake. Ván chơi với số xu này.';
+  }
+
+  @override
+  String get rulesSwap => 'Đổi bên: O có thể đổi chỗ với X sau nước đầu của X.';
+
+  @override
+  String get rulesNoCenter => 'Cấm giữa: X không được đánh ô giữa ở nước đầu.';
+
+  @override
+  String get collectionSetLegends => 'Huyền thoại';
+
+  @override
+  String get collectionSetSpace => 'Không gian';
+
+  @override
+  String get collectionSetGems => 'Đá quý';
+
+  @override
+  String get collectionSetParty => 'Tiệc';
+
+  @override
+  String get collectionSetNature => 'Thiên nhiên';
+
+  @override
+  String get collectionSetAdventures => 'Phiêu lưu';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Bộ sưu tập · trưng bày · quà · bán · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'ngày';
+
+  @override
+  String get coinsDayFew => 'ngày';
+
+  @override
+  String get coinsDayMany => 'ngày';
+
+  @override
+  String get giftFriendTitle => 'Tặng bạn bè';
+
+  @override
+  String photoCount(int count) {
+    return 'Ảnh ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Ảnh ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Ảnh: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Mở rộng bảng';
+
+  @override
+  String get chatsCollapsePanel => 'Thu gọn bảng';
+
+  @override
+  String get chatReplySourceMissing => 'Không tìm thấy tin nhắn gốc';
 }

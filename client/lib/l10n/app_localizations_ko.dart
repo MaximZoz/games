@@ -229,17 +229,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get timeYesterday => '어제';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count분 전';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count시간 전';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count일 전';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get timeWeekAgo => '일주일 전';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count주 전';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get timeMonthAgo => '한 달 전';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count개월 전';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get timeYearAgo => '1년 전';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count년 전';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get timeTenMin => '10분';
+
+  @override
+  String rulesIntro(String grid) {
+    return '$grid 판에서 틱택토. 번갈아 두며 X가 선공.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return '승리: 가로, 세로 또는 대각선으로 $n개를 잇습니다.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => '수당 시간 제한 없음.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return '수당 시간: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return '판돈: $stake. 이만큼의 코인으로 진행됩니다.';
+  }
+
+  @override
+  String get rulesSwap => '진영 교체: X의 첫 수 이후 O가 X와 자리를 바꿀 수 있습니다.';
+
+  @override
+  String get rulesNoCenter => '중앙 금지: X는 첫 수에 중앙에 둘 수 없습니다.';
+
+  @override
+  String get collectionSetLegends => '전설';
+
+  @override
+  String get collectionSetSpace => '우주';
+
+  @override
+  String get collectionSetGems => '보석';
+
+  @override
+  String get collectionSetParty => '파티';
+
+  @override
+  String get collectionSetNature => '자연';
+
+  @override
+  String get collectionSetAdventures => '모험';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return '컬렉션 · 진열 · 선물 · 판매 · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => '일';
+
+  @override
+  String get coinsDayFew => '일';
+
+  @override
+  String get coinsDayMany => '일';
+
+  @override
+  String get giftFriendTitle => '친구에게 선물';
+
+  @override
+  String photoCount(int count) {
+    return '사진 ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return '사진 ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return '사진: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '이모지 $count개 · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => '패널 펼치기';
+
+  @override
+  String get chatsCollapsePanel => '패널 접기';
+
+  @override
+  String get chatReplySourceMissing => '원본 메시지를 찾을 수 없습니다';
 }

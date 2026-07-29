@@ -334,7 +334,7 @@ class AppShell extends ConsumerWidget {
                                     icon: const Icon(
                                         Icons.admin_panel_settings),
                                     onPressed: () => context.go('/admin'),
-                                    tooltip: 'Админка',
+                                    tooltip: context.l10n.adminTitle,
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 Flexible(
@@ -363,7 +363,7 @@ class AppShell extends ConsumerWidget {
                                         .read(authStateProvider.notifier)
                                         .logout();
                                   },
-                                  tooltip: 'Выйти',
+                                  tooltip: context.l10n.logoutTooltip,
                                   visualDensity: VisualDensity.compact,
                                 ),
                               ],
@@ -372,7 +372,7 @@ class AppShell extends ConsumerWidget {
                           return IconButton(
                             icon: const Icon(Icons.login),
                             onPressed: () => context.go('/login'),
-                            tooltip: 'Войти',
+                            tooltip: context.l10n.loginTooltip,
                           );
                         },
                         loading: () => const Padding(
@@ -386,7 +386,7 @@ class AppShell extends ConsumerWidget {
                         error: (_, __) => IconButton(
                           icon: const Icon(Icons.login),
                           onPressed: () => context.go('/login'),
-                          tooltip: 'Войти',
+                          tooltip: context.l10n.loginTooltip,
                         ),
                       ),
                     ),

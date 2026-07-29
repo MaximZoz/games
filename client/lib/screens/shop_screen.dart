@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -11,6 +12,7 @@ class ShopScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     void goBack() => context.pop();
 
     return SwipeBackScope(
@@ -23,10 +25,10 @@ class ShopScreen extends ConsumerWidget {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: l10n.commonBack,
           ),
           title: Text(
-            'Магазин',
+            l10n.shopTitle,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -44,22 +46,22 @@ class ShopScreen extends ConsumerWidget {
                   children: [
                     HomeActionCard(
                       icon: Icons.emoji_emotions_outlined,
-                      title: 'Смайлики',
-                      subtitle: 'Анимированные эмодзи для чата',
+                      title: l10n.shopEmojis,
+                      subtitle: l10n.shopEmojisSubtitle,
                       onTap: () => context.push('/shop/emojis'),
                     ),
                     const SizedBox(height: 12),
                     HomeActionCard(
                       icon: Icons.auto_awesome_outlined,
-                      title: 'Коллекции',
-                      subtitle: 'Витрина профиля, подарки и доход',
+                      title: l10n.shopCollections,
+                      subtitle: l10n.shopCollectionsSubtitle,
                       onTap: () => context.push('/shop/collections'),
                     ),
                     const SizedBox(height: 12),
                     HomeActionCard(
                       icon: Icons.casino_outlined,
-                      title: 'Ставки',
-                      subtitle: 'Разблокировка серебряных ставок',
+                      title: l10n.shopStakes,
+                      subtitle: l10n.shopStakesSubtitle,
                       onTap: () => context.push('/shop/stakes'),
                     ),
                   ],

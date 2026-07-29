@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 
+import 'test_locale.dart';
+
 void main() {
+  setUp(setUpTestLocaleRu);
+
   ChatMessageItem msg({
     String body = '',
     bool hasImage = false,

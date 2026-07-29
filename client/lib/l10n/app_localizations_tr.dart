@@ -229,17 +229,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get timeYesterday => 'dün';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count dk önce';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count sa önce';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count g önce';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get timeWeekAgo => 'bir hafta önce';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count hf önce';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get timeMonthAgo => 'bir ay önce';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count ay önce';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get timeYearAgo => 'bir yıl önce';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count yıl önce';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 dk';
+
+  @override
+  String rulesIntro(String grid) {
+    return '$grid tahtasında XOX. Sırayla oynanır; X başlar.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Zafer: yatay, dikey veya çapraz $n’yi sıraya dizin.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Hamle başına süre sınırı yok.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Hamle süresi: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Bahis: $stake. Oyun bu kadar jeton içindir.';
+  }
+
+  @override
+  String get rulesSwap => 'Taraf değişimi: X’in ilk hamlesinden sonra O, X ile yer değiştirebilir.';
+
+  @override
+  String get rulesNoCenter => 'Merkez yasağı: X ilk hamlede merkeze oynayamaz.';
+
+  @override
+  String get collectionSetLegends => 'Efsaneler';
+
+  @override
+  String get collectionSetSpace => 'Uzay';
+
+  @override
+  String get collectionSetGems => 'Mücevherler';
+
+  @override
+  String get collectionSetParty => 'Parti';
+
+  @override
+  String get collectionSetNature => 'Doğa';
+
+  @override
+  String get collectionSetAdventures => 'Maceralar';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Koleksiyon · vitrin · hediye · satış · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'gün';
+
+  @override
+  String get coinsDayFew => 'gün';
+
+  @override
+  String get coinsDayMany => 'gün';
+
+  @override
+  String get giftFriendTitle => 'Arkadaşa hediye et';
+
+  @override
+  String photoCount(int count) {
+    return 'Fotoğraf ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Fotoğraf ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Fotoğraf: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Paneli genişlet';
+
+  @override
+  String get chatsCollapsePanel => 'Paneli daralt';
+
+  @override
+  String get chatReplySourceMissing => 'Orijinal mesaj bulunamadı';
 }

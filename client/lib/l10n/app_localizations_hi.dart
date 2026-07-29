@@ -229,17 +229,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timeYesterday => 'कल';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count मि पहले';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count घं पहले';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count दि पहले';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timeWeekAgo => 'एक सप्ताह पहले';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count सप्ताह पहले';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timeMonthAgo => 'एक महीना पहले';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count माह पहले';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timeYearAgo => 'एक वर्ष पहले';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count वर्ष पहले';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 मि';
+
+  @override
+  String rulesIntro(String grid) {
+    return '$grid बोर्ड पर टिक-टैक-टो। बारी-बारी से; X पहले।';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'जीत: क्षैतिज, लंबवत या तिरछे $n एक पंक्ति में लगाएँ।';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'चाल पर समय सीमा नहीं।';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'चाल का समय: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'दाँव: $stake. इतने सिक्कों पर खेल है।';
+  }
+
+  @override
+  String get rulesSwap => 'पक्ष बदल: X की पहली चाल के बाद O, X से स्थान बदल सकता है।';
+
+  @override
+  String get rulesNoCenter => 'केंद्र वर्जित: X पहली चाल में केंद्र में नहीं खेल सकता।';
+
+  @override
+  String get collectionSetLegends => 'किंवदंतियाँ';
+
+  @override
+  String get collectionSetSpace => 'अंतरिक्ष';
+
+  @override
+  String get collectionSetGems => 'रत्न';
+
+  @override
+  String get collectionSetParty => 'पार्टी';
+
+  @override
+  String get collectionSetNature => 'प्रकृति';
+
+  @override
+  String get collectionSetAdventures => 'साहसिक';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'संग्रह · प्रदर्शन · उपहार · बिक्री · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'दिन';
+
+  @override
+  String get coinsDayFew => 'दिन';
+
+  @override
+  String get coinsDayMany => 'दिन';
+
+  @override
+  String get giftFriendTitle => 'मित्र को उपहार दें';
+
+  @override
+  String photoCount(int count) {
+    return 'फ़ोटो ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'फ़ोटो ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'फ़ोटो: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count इमोजी · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'पैनल फैलाएँ';
+
+  @override
+  String get chatsCollapsePanel => 'पैनल समेटें';
+
+  @override
+  String get chatReplySourceMissing => 'मूल संदेश नहीं मिला';
 }

@@ -21,6 +21,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 class GamesScreen extends ConsumerStatefulWidget {
   const GamesScreen({super.key});
@@ -379,7 +380,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 final p = presence[inv.creatorId];
                 final statusText = p == null
                     ? null
-                    : (p.online ? 'Онлайн' : formatLastSeen(p.lastSeenAt));
+                    : (p.online ? context.l10n.commonOnlineCap : formatLastSeen(p.lastSeenAt));
                 final name = user?.displayName?.trim().isNotEmpty == true
                     ? user!.displayName!
                     : inv.creatorName;
@@ -431,7 +432,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Закрыть',
+                            tooltip: context.l10n.commonClose,
                             icon: const Icon(Icons.close_rounded),
                             onPressed: () => Navigator.of(ctx).pop(),
                           ),
@@ -439,9 +440,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       ),
                       if (about != null && about.isNotEmpty) ...[
                         const SizedBox(height: 10),
-                        const Text(
-                          'О себе',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.commonAboutMe,
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
@@ -494,7 +495,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Правила игры',
+                          context.l10n.gamesRulesTitle,
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
@@ -503,7 +504,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Закрыть',
+                        tooltip: context.l10n.commonClose,
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.of(ctx).pop(),
                       ),
@@ -576,7 +577,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             horizontal: isDesktop ? 80 : 24,
             vertical: isDesktop ? 40 : 24,
           ),
-          title: const Text('Правила'),
+          title: Text(context.l10n.gamesRules),
           content: ConstrainedBox(
             constraints:
                 BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
@@ -587,7 +588,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Закрыть'),
+              child: Text(context.l10n.commonClose),
             ),
           ],
         );
@@ -741,7 +742,7 @@ class _GamesPageContent extends StatelessWidget {
                     const SizedBox(height: 20),
                     Center(
                       child: Text(
-                        'Вас пригласили',
+                        context.l10n.gamesInvitedYou,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
@@ -824,17 +825,17 @@ class _GamesPageContent extends StatelessWidget {
                                       children: [
                                         Text(
                                           active.isMyTurn
-                                              ? 'Ваш ход'
-                                              : 'Ход соперника',
+                                              ? context.l10n.gamesMyTurn
+                                              : context.l10n.gamesOpponentTurn,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w600,
                                             color: AppColors.textPrimary,
                                             fontSize: 16,
                                           ),
                                         ),
-                                        const Text(
-                                          'Текущая игра',
-                                          style: TextStyle(
+                                        Text(
+                                          context.l10n.gamesCurrentGame,
+                                          style: const TextStyle(
                                               fontSize: 13,
                                               color: AppColors.textSecondary),
                                         ),
@@ -926,7 +927,7 @@ class _LobbiesPageContent extends StatelessWidget {
                                           Text(
                                             lobby.creatorName.trim().isNotEmpty
                                                 ? lobby.creatorName
-                                                : 'Игрок',
+                                                : context.l10n.commonPlayer,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: AppColors.textPrimary,
@@ -1007,7 +1008,7 @@ class _LobbiesPageContent extends StatelessWidget {
                                               ),
                                               if (lobby.swapRule)
                                                 Tooltip(
-                                                  message: 'Смена сторон',
+                                                  message: context.l10n.gamesSwapSides,
                                                   child: const Icon(
                                                     Icons.swap_horiz_rounded,
                                                     size: 14,
@@ -1017,7 +1018,7 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 ),
                                               if (lobby.firstMoveRestriction)
                                                 Tooltip(
-                                                  message: 'Запрет центра',
+                                                  message: context.l10n.gamesNoCenter,
                                                   child: const Icon(
                                                     Icons.block_rounded,
                                                     size: 14,
@@ -1035,13 +1036,13 @@ class _LobbiesPageContent extends StatelessWidget {
                                           onShowLobbyRules(context, lobby),
                                       icon: const Icon(
                                           Icons.info_outline_rounded),
-                                      tooltip: 'Правила игры',
+                                      tooltip: context.l10n.gamesRulesTitle,
                                     ),
                                     IconButton.filled(
                                       onPressed: () =>
                                           onJoinLobby(context, lobby.id),
                                       icon: const Icon(Icons.login_rounded),
-                                      tooltip: 'Присоединиться',
+                                      tooltip: context.l10n.gamesJoin,
                                       style: IconButton.styleFrom(
                                         backgroundColor: AppColors.accentStart,
                                         foregroundColor: Colors.white,
@@ -1097,7 +1098,7 @@ class _LobbiesPageContent extends StatelessWidget {
                     error: (err, _) => Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'Не удалось загрузить лобби. ${formatUserError(err, fallback: 'Попробуйте обновить страницу.')}',
+                        '${context.l10n.gamesLobbyLoadFailed} ${formatUserError(err, fallback: context.l10n.commonTryRefresh)}',
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),
@@ -1176,6 +1177,7 @@ class _TictactoeGameCard extends StatelessWidget {
       );
 
   List<Widget> _buildChipList({
+    required BuildContext context,
     required TextTheme? theme,
     required bool isCreating,
     required bool isFinding,
@@ -1228,7 +1230,7 @@ class _TictactoeGameCard extends StatelessWidget {
           splashColor: AppColors.accentStart.withValues(alpha: 0.2),
           highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
           child: Tooltip(
-            message: 'Нажмите для смены времени на ход',
+            message: context.l10n.gamesTapChangeTurnTime,
             child: Container(
               padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
               decoration: BoxDecoration(
@@ -1271,7 +1273,7 @@ class _TictactoeGameCard extends StatelessWidget {
           splashColor: AppColors.accentStart.withValues(alpha: 0.2),
           highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
           child: Tooltip(
-            message: 'Нажмите для смены размера сетки',
+            message: context.l10n.gamesTapChangeGrid,
             child: Container(
               padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
               decoration: BoxDecoration(
@@ -1316,7 +1318,7 @@ class _TictactoeGameCard extends StatelessWidget {
           splashColor: AppColors.accentStart.withValues(alpha: 0.2),
           highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
           child: Tooltip(
-            message: 'O может стать X после 1-го хода',
+            message: context.l10n.gamesSwapSidesHint,
             child: Container(
               padding: EdgeInsets.all(compact ? 4 : 6),
               decoration: BoxDecoration(
@@ -1351,7 +1353,7 @@ class _TictactoeGameCard extends StatelessWidget {
           splashColor: AppColors.accentStart.withValues(alpha: 0.2),
           highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
           child: Tooltip(
-            message: 'Первый ход не в центр',
+            message: context.l10n.gamesNoCenterHint,
             child: Container(
               padding: EdgeInsets.all(compact ? 4 : 6),
               decoration: BoxDecoration(
@@ -1384,14 +1386,14 @@ class _TictactoeGameCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Правила игры'),
+        title: Text(context.l10n.gamesRulesTitle),
         content: SingleChildScrollView(
           child: Text(_buildRulesText()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Закрыть'),
+            child: Text(context.l10n.commonClose),
           ),
         ],
       ),
@@ -1443,7 +1445,7 @@ class _TictactoeGameCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Крестики-нолики',
+                        context.l10n.gamesTicTacToe,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -1462,7 +1464,7 @@ class _TictactoeGameCard extends StatelessWidget {
                           onTap: isCreating || isFinding ? null : _cycleStake,
                           borderRadius: BorderRadius.circular(8),
                           child: Tooltip(
-                            message: 'Нажмите для смены ставки',
+                            message: context.l10n.gamesTapChangeStake,
                             child: Padding(
                               padding: const EdgeInsets.only(right: 4),
                               child: Row(
@@ -1498,7 +1500,7 @@ class _TictactoeGameCard extends StatelessWidget {
                         size: 22,
                         color: AppColors.textSecondary,
                       ),
-                      tooltip: 'Правила игры',
+                      tooltip: context.l10n.gamesRulesTitle,
                       style: IconButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                         minimumSize: const Size(36, 36),
@@ -1517,6 +1519,7 @@ class _TictactoeGameCard extends StatelessWidget {
               runSpacing: 6,
               alignment: WrapAlignment.start,
               children: _buildChipList(
+                context: context,
                 theme: theme.textTheme,
                 isCreating: isCreating,
                 isFinding: isFinding,
@@ -1542,7 +1545,7 @@ class _TictactoeGameCard extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.add_rounded, size: 20),
-                  label: Text(isCreating ? 'Создание...' : 'Создать игру'),
+                  label: Text(isCreating ? context.l10n.commonCreating : context.l10n.gamesCreate),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accentStart,
                     foregroundColor: Colors.white,
@@ -1571,7 +1574,7 @@ class _TictactoeGameCard extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.search_rounded, size: 20),
-                  label: Text(isFinding ? 'Поиск...' : 'Найти игру'),
+                  label: Text(isFinding ? context.l10n.commonSearching : context.l10n.gamesFindMatch),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accentStart,
                     side: BorderSide(
@@ -1621,14 +1624,14 @@ class _GamesTabSwitcher extends StatelessWidget {
         child: Row(
           children: [
             _TabSegment(
-              label: 'Игры',
+              label: context.l10n.gamesTitle,
               icon: Icons.sports_esports_rounded,
               isSelected: selectedTab == _GamesTab.games,
               onTap: () => onTabChanged(_GamesTab.games),
               isDesktop: isDesktop,
             ),
             _TabSegment(
-              label: 'Лобби',
+              label: context.l10n.gamesLobbyTab,
               icon: Icons.group_rounded,
               isSelected: selectedTab == _GamesTab.lobbies,
               onTap: () => onTabChanged(_GamesTab.lobbies),
@@ -1751,7 +1754,7 @@ class _InviteCard extends ConsumerWidget {
                       IconButton(
                         onPressed: () => onShowInviteRules(context, inv),
                         icon: const Icon(Icons.rule_rounded, size: 20),
-                        tooltip: 'Правила игры',
+                        tooltip: context.l10n.gamesRulesTitle,
                         style: IconButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                           minimumSize: const Size(32, 32),
@@ -1792,8 +1795,8 @@ class _InviteCard extends ConsumerWidget {
                           runSpacing: 6,
                           alignment: WrapAlignment.start,
                           children: [
-                            const Tooltip(
-                              message: 'Время на ход',
+                            Tooltip(
+                              message: context.l10n.gamesTurnTime,
                               child: Icon(Icons.timer_outlined,
                                   size: iconSz, color: AppColors.textSecondary),
                             ),
@@ -1803,8 +1806,8 @@ class _InviteCard extends ConsumerWidget {
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
                             const SizedBox(width: 4),
-                            const Tooltip(
-                              message: 'Размер сетки',
+                            Tooltip(
+                              message: context.l10n.gamesGridSize,
                               child: Icon(Icons.grid_on_rounded,
                                   size: iconSz, color: AppColors.textSecondary),
                             ),
@@ -1814,15 +1817,15 @@ class _InviteCard extends ConsumerWidget {
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
                             if (inv.swapRule)
-                              const Tooltip(
-                                message: 'Смена сторон',
+                              Tooltip(
+                                message: context.l10n.gamesSwapSides,
                                 child: Icon(Icons.swap_horiz_rounded,
                                     size: iconSz,
                                     color: AppColors.textSecondary),
                               ),
                             if (inv.firstMoveRestriction)
-                              const Tooltip(
-                                message: 'Запрет центра',
+                              Tooltip(
+                                message: context.l10n.gamesNoCenter,
                                 child: Icon(Icons.block_rounded,
                                     size: iconSz,
                                     color: AppColors.textSecondary),
@@ -1842,13 +1845,13 @@ class _InviteCard extends ConsumerWidget {
                 IconButton(
                   onPressed: () => onDeclineInvite(inv.lobbyId),
                   icon: const Icon(Icons.close_rounded),
-                  tooltip: 'Отклонить',
+                  tooltip: context.l10n.commonDecline,
                   style: IconButton.styleFrom(foregroundColor: Colors.red),
                 ),
                 IconButton.filled(
                   onPressed: () => onAcceptInvite(context, inv.lobbyId),
                   icon: const Icon(Icons.check_rounded),
-                  tooltip: 'Принять',
+                  tooltip: context.l10n.commonAccept,
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.accentStart,
                     foregroundColor: Colors.white,

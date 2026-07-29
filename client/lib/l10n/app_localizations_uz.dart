@@ -229,17 +229,17 @@ class AppLocalizationsUz extends AppLocalizations {
   String get timeYesterday => 'kecha';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count daq oldin';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count soat oldin';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count kun oldin';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get timeWeekAgo => 'bir hafta oldin';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count hafta oldin';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get timeMonthAgo => 'bir oy oldin';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count oy oldin';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get timeYearAgo => 'bir yil oldin';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count yil oldin';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 daq';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'X-O o‘yini $grid maydonda. Navbat bilan yuriladi, X boshlaydi.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'G‘alaba: gorizontal, vertikal yoki diagonal bo‘ylab $n qator qilish kerak.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Yurish uchun vaqt cheklovi yo‘q.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Yurish vaqti: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Stavka: $stake. O‘yin shu qancha tangaga.';
+  }
+
+  @override
+  String get rulesSwap => 'Tomonlar almashuvi: X ning birinchi yurishidan so‘ng O X bilan joy almashishi mumkin.';
+
+  @override
+  String get rulesNoCenter => 'Markaz taqiqi: X birinchi yurishda markazga yura olmaydi.';
+
+  @override
+  String get collectionSetLegends => 'Afsonalar';
+
+  @override
+  String get collectionSetSpace => 'Kosmos';
+
+  @override
+  String get collectionSetGems => 'Qimmatbaho toshlar';
+
+  @override
+  String get collectionSetParty => 'Bayram';
+
+  @override
+  String get collectionSetNature => 'Tabiat';
+
+  @override
+  String get collectionSetAdventures => 'Sarguzashtlar';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Kolleksiya · vitrina · sovg‘a · sotish · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'kun';
+
+  @override
+  String get coinsDayFew => 'kun';
+
+  @override
+  String get coinsDayMany => 'kun';
+
+  @override
+  String get giftFriendTitle => 'Do‘stga sovg‘a qilish';
+
+  @override
+  String photoCount(int count) {
+    return 'Foto ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Foto ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Foto: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Panelni yoyish';
+
+  @override
+  String get chatsCollapsePanel => 'Panelni yig‘ish';
+
+  @override
+  String get chatReplySourceMissing => 'Asl xabar topilmadi';
 }

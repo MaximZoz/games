@@ -16,17 +16,22 @@ import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
-const _groupTitles = <String, String>{
-  'emotions': 'Эмоции',
-  'game': 'Игровые',
-  'flags': 'Флажки',
-  'animals': 'Животные',
-  'food': 'Еда и напитки',
-  'travel': 'Путешествия',
-  'party': 'Праздник и спорт',
-  'objects': 'Предметы',
-};
+Map<String, String> get _groupTitles {
+  final l10n = LocaleService.l10n;
+  return {
+    'emotions': l10n.emojiGroupEmotions,
+    'game': l10n.emojiGroupGame,
+    'flags': l10n.emojiGroupFlags,
+    'animals': l10n.emojiGroupAnimals,
+    'food': l10n.emojiGroupFood,
+    'travel': l10n.emojiGroupTravel,
+    'party': l10n.emojiGroupParty,
+    'objects': l10n.emojiGroupObjects,
+  };
+}
 
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
@@ -63,7 +68,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: 'Получено +${formatRewardBronze(result.quantity)}',
+        message: context.l10n.inventoryClaimedAmount(
+          formatRewardBronze(result.quantity),
+        ),
         kind: AppSnackKind.success,
       );
       ref.invalidate(collectionIncomeProvider);
@@ -82,21 +89,22 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Future<void> _sell(InventoryItem item) async {
     final refund = (await _catalogPrice(item.code) * 80) ~/ 100;
     if (!mounted) return;
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Продать?'),
+        title: Text(l10n.inventorySellTitle),
         content: Text(
-          '${item.title}\nВернётся около ${formatRewardBronze(refund)} (80%).',
+          '${item.title}\n${l10n.inventorySellDesc(formatRewardBronze(refund))}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Продать'),
+            child: Text(l10n.inventorySell),
           ),
         ],
       ),
@@ -112,7 +120,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: 'Продано: +${formatRewardBronze(result.quantity)}',
+        message: context.l10n.inventorySold(
+          formatRewardBronze(result.quantity),
+        ),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -140,10 +150,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Future<void> _gift(InventoryItem item) async {
     final friends =
         ref.read(friendsSnapshotProvider).valueOrNull?.friends ?? const [];
+    final l10n = context.l10n;
     if (friends.isEmpty) {
       showAppSnackBar(
         context,
-        message: 'Сначала добавьте друзей',
+        message: l10n.inventoryNeedFriends,
         kind: AppSnackKind.info,
       );
       return;
@@ -161,26 +172,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final friendName = () {
       final name = friend?.displayName?.trim();
       if (name != null && name.isNotEmpty) return name;
-      return 'другу';
+      return l10n.commonUser;
     }();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Подарить коллекцию?'),
+          title: Text(l10n.inventoryGiftTitle),
           content: Text(
-            'Подарить «${item.title}» пользователю $friendName?\n\n'
-            'Предмет исчезнет из вашего инвентаря.',
+            l10n.inventoryGiftDesc(item.title, friendName),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Подарить'),
+              child: Text(l10n.inventoryGift),
             ),
           ],
         );
@@ -197,7 +207,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: 'Подарено: ${item.title}',
+        message: context.l10n.inventoryGifted(item.title),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -286,14 +296,14 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           centerTitle: true,
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Предметы',
+                context.l10n.inventoryTitle,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -323,25 +333,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         ),
         body: SafeArea(
           child: async.hasError && items.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Не удалось загрузить предметы',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    context.l10n.inventoryLoadFailed,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
               : items.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Пока ничего нет — загляните в магазин',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        context.l10n.inventoryEmpty,
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       children: [
                         _Section(
-                          title: 'Коллекции',
-                          empty: 'Нет коллекций — купите в магазине',
+                          title: context.l10n.shopCollections,
+                          empty: context.l10n.inventoryNoCollections,
                           children: [
                             if (collections.isNotEmpty &&
                                 income != null &&
@@ -353,10 +363,17 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     Expanded(
                                       child: Text(
                                         income.available
-                                            ? 'Доход: +${formatRewardBronzePerDay(income.amountBronze)}'
-                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronzePerDay(income.setBonusBronze)})' : ''}'
-                                            : 'Доход завтра: ${formatRewardBronzePerDay(income.amountBronze)}'
-                                                '${income.setBonusBronze > 0 ? ' (группы +${formatRewardBronzePerDay(income.setBonusBronze)})' : ''}',
+                                            ? context.l10n.inventoryIncomeReady(
+                                                formatRewardBronzePerDay(
+                                                  income.amountBronze,
+                                                ),
+                                              )
+                                            : context.l10n
+                                                .inventoryIncomeTomorrow(
+                                                formatRewardBronzePerDay(
+                                                  income.amountBronze,
+                                                ),
+                                              ),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.textSecondary,
@@ -368,7 +385,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                         onPressed:
                                             _claimBusy ? null : _claimIncome,
                                         child: Text(
-                                            _claimBusy ? '…' : 'Забрать'),
+                                            _claimBusy ? '…' : context.l10n.inventoryClaim),
                                       ),
                                   ],
                                 ),
@@ -417,7 +434,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         for (final g in groupOrder)
                           if (grouped[g]?.isNotEmpty == true) ...[
                             _Section(
-                              title: _groupTitles[g] ?? 'Смайлики',
+                              title: _groupTitles[g] ?? context.l10n.shopEmojis,
                               empty: '',
                               children: [
                                 for (final it in grouped[g]!)
@@ -428,23 +445,23 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       fallback: it.emoji,
                                     ),
                                     title: it.title,
-                                    subtitle: 'Осталось ${it.quantity}',
+                                    subtitle: context.l10n
+                                        .inventoryEmojiLeft(it.quantity),
                                   ),
                               ],
                             ),
                             const SizedBox(height: 16),
                           ],
                         if (emojis.isEmpty)
-                          const _Section(
-                            title: 'Смайлики',
-                            empty: 'Нет смайликов — купите в магазине',
-                            children: [],
+                          _Section(
+                            title: context.l10n.shopEmojis,
+                            empty: context.l10n.inventoryNoEmojis,
+                            children: const [],
                           ),
                         if (emojis.isEmpty) const SizedBox(height: 16),
                         _Section(
-                          title: 'Рамки',
-                          empty:
-                              'Нет рамок — выиграйте 10 игр в лиге (достижения)',
+                          title: context.l10n.inventoryFrames,
+                          empty: context.l10n.inventoryNoFrames,
                           children: [
                             for (final it in frames)
                               _InvTile(
@@ -459,8 +476,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         ),
                         const SizedBox(height: 16),
                         _Section(
-                          title: 'Ставки',
-                          empty: 'Нет купленных ставок',
+                          title: context.l10n.shopStakes,
+                          empty: context.l10n.inventoryNoStakes,
                           children: [
                             for (final it in stakes)
                               _InvTile(
@@ -472,8 +489,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 ),
                                 title: it.title,
                                 subtitle: it.stakeGold != null
-                                    ? 'Можно ставить ${it.stakeGold} золота'
-                                    : 'Можно ставить ${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100} серебра',
+                                    ? context.l10n.inventoryStakeGold(
+                                        '${it.stakeGold}',
+                                      )
+                                    : context.l10n.inventoryStakeSilver(
+                                        '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
+                                      ),
                               ),
                           ],
                         ),
@@ -662,9 +683,9 @@ class _CollectionInvTile extends StatelessWidget {
                             color: AppColors.accentSoft,
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Text(
-                            'Подарок',
-                            style: TextStyle(
+                          child: Text(
+                            context.l10n.chatGift,
+                            style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: AppColors.accentStart,
@@ -686,12 +707,12 @@ class _CollectionInvTile extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Подарить',
+            tooltip: context.l10n.inventoryGift,
             onPressed: onGift,
             icon: const Icon(Icons.card_giftcard_outlined),
           ),
           IconButton(
-            tooltip: 'Продать',
+            tooltip: context.l10n.inventorySell,
             onPressed: onSell,
             icon: const Icon(Icons.sell_outlined),
           ),

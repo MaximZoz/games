@@ -229,17 +229,17 @@ class AppLocalizationsTh extends AppLocalizations {
   String get timeYesterday => 'เมื่อวาน';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count นาทีที่แล้ว';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count ชม. ที่แล้ว';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count วันที่แล้ว';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get timeWeekAgo => 'หนึ่งสัปดาห์ที่แล้ว';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count สัปดาห์ที่แล้ว';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get timeMonthAgo => 'หนึ่งเดือนที่แล้ว';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count เดือนที่แล้ว';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get timeYearAgo => 'หนึ่งปีที่แล้ว';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count ปีที่แล้ว';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 นาที';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'XO บนกระดาน $grid สลับกันเดิน X เริ่มก่อน';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'ชนะ: เรียง $n แนวตั้ง แนวนอน หรือแนวทแยง';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'ไม่จำกัดเวลาต่อตา';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'เวลาต่อตา: $time';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'เดิมพัน: $stake เกมนี้เล่นด้วยเหรียญจำนวนนี้';
+  }
+
+  @override
+  String get rulesSwap => 'สลับฝ่าย: O สลับกับ X ได้หลังตาแรกของ X';
+
+  @override
+  String get rulesNoCenter => 'ห้ามกลาง: X ห้ามลงกลางในตาแรก';
+
+  @override
+  String get collectionSetLegends => 'ตำนาน';
+
+  @override
+  String get collectionSetSpace => 'อวกาศ';
+
+  @override
+  String get collectionSetGems => 'อัญมณี';
+
+  @override
+  String get collectionSetParty => 'ปาร์ตี้';
+
+  @override
+  String get collectionSetNature => 'ธรรมชาติ';
+
+  @override
+  String get collectionSetAdventures => 'ผจญภัย';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'คอลเลกชัน · โชว์เคส · ของขวัญ · ขาย · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'วัน';
+
+  @override
+  String get coinsDayFew => 'วัน';
+
+  @override
+  String get coinsDayMany => 'วัน';
+
+  @override
+  String get giftFriendTitle => 'มอบให้เพื่อน';
+
+  @override
+  String photoCount(int count) {
+    return 'รูป ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'รูป ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'รูป: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count อีโมจิ · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'ขยายแผง';
+
+  @override
+  String get chatsCollapsePanel => 'ย่อแผง';
+
+  @override
+  String get chatReplySourceMissing => 'ไม่พบข้อความต้นฉบับ';
 }

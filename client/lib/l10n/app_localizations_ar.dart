@@ -229,17 +229,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get timeYesterday => 'أمس';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return 'منذ $count د';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return 'منذ $count س';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return 'منذ $count ي';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get timeWeekAgo => 'منذ أسبوع';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return 'منذ $count أسابيع';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get timeMonthAgo => 'منذ شهر';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return 'منذ $count أشهر';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get timeYearAgo => 'منذ سنة';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return 'منذ $count سنوات';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 د';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'إكس-أو على لوحة $grid. بالتناوب، ويبدأ X.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'الفوز: صفّ $n أفقياً أو عمودياً أو قطرياً.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'لا يوجد حد زمني لكل نقلة.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'وقت النقلة: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'الرهان: $stake. اللعبة بهذا العدد من العملات.';
+  }
+
+  @override
+  String get rulesSwap => 'تبديل الجوانب: يمكن لـ O التبادل مع X بعد أول نقلة لـ X.';
+
+  @override
+  String get rulesNoCenter => 'منع الوسط: لا يمكن لـ X اللعب في الوسط في النقلة الأولى.';
+
+  @override
+  String get collectionSetLegends => 'أساطير';
+
+  @override
+  String get collectionSetSpace => 'الفضاء';
+
+  @override
+  String get collectionSetGems => 'جواهر';
+
+  @override
+  String get collectionSetParty => 'احتفال';
+
+  @override
+  String get collectionSetNature => 'الطبيعة';
+
+  @override
+  String get collectionSetAdventures => 'مغامرات';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'مجموعة · واجهة · هدية · بيع · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'يوم';
+
+  @override
+  String get coinsDayFew => 'أيام';
+
+  @override
+  String get coinsDayMany => 'أيام';
+
+  @override
+  String get giftFriendTitle => 'أهدِ صديقاً';
+
+  @override
+  String photoCount(int count) {
+    return 'صورة ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'صورة ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'صورة: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count رموز · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'توسيع اللوحة';
+
+  @override
+  String get chatsCollapsePanel => 'طي اللوحة';
+
+  @override
+  String get chatReplySourceMissing => 'لم يتم العثور على الرسالة الأصلية';
 }

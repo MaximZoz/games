@@ -229,17 +229,17 @@ class AppLocalizationsHe extends AppLocalizations {
   String get timeYesterday => 'אתמול';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return 'לפני $count דק׳';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return 'לפני $count שע׳';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return 'לפני $count ימ׳';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get timeWeekAgo => 'לפני שבוע';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return 'לפני $count שב׳';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get timeMonthAgo => 'לפני חודש';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return 'לפני $count חוד׳';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get timeYearAgo => 'לפני שנה';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return 'לפני $count שנ׳';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 דק׳';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'איקס-עיגול על לוח $grid. בתורות; X מתחיל.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'ניצחון: יש לסדר $n ברצף אופקית, אנכית או באלכסון.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'אין מגבלת זמן לכל מהלך.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'זמן למהלך: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'הימור: $stake. המשחק על מספר מטבעות זה.';
+  }
+
+  @override
+  String get rulesSwap => 'החלפת צדדים: O יכול להחליף עם X אחרי המהלך הראשון של X.';
+
+  @override
+  String get rulesNoCenter => 'איסור מרכז: X לא יכול לשחק במרכז במהלך הראשון.';
+
+  @override
+  String get collectionSetLegends => 'אגדות';
+
+  @override
+  String get collectionSetSpace => 'חלל';
+
+  @override
+  String get collectionSetGems => 'אבני חן';
+
+  @override
+  String get collectionSetParty => 'מסיבה';
+
+  @override
+  String get collectionSetNature => 'טבע';
+
+  @override
+  String get collectionSetAdventures => 'הרפתקאות';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'אוסף · חלון ראווה · מתנה · מכירה · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'יום';
+
+  @override
+  String get coinsDayFew => 'ימים';
+
+  @override
+  String get coinsDayMany => 'ימים';
+
+  @override
+  String get giftFriendTitle => 'מתנה לחבר';
+
+  @override
+  String photoCount(int count) {
+    return 'תמונה ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'תמונה ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'תמונה: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count אימוג\'ים · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'הרחב לוח';
+
+  @override
+  String get chatsCollapsePanel => 'כווץ לוח';
+
+  @override
+  String get chatReplySourceMissing => 'ההודעה המקורית לא נמצאה';
 }

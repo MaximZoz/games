@@ -229,17 +229,17 @@ class AppLocalizationsNl extends AppLocalizations {
   String get timeYesterday => 'gisteren';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count min geleden';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count u geleden';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count d geleden';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get timeWeekAgo => 'een week geleden';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count wkn geleden';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get timeMonthAgo => 'een maand geleden';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count mnd geleden';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get timeYearAgo => 'een jaar geleden';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count jr geleden';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Boter-kaas-eieren op een $grid-bord. Om de beurt; X begint.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Winst: zet $n op een rij horizontaal, verticaal of diagonaal.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Geen tijdslimiet per beurt.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Tijd per beurt: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Inzet: $stake. Het spel gaat om zoveel munten.';
+  }
+
+  @override
+  String get rulesSwap => 'Kant wisselen: O mag met X wisselen na de eerste zet van X.';
+
+  @override
+  String get rulesNoCenter => 'Geen midden: X mag niet in het midden beginnen.';
+
+  @override
+  String get collectionSetLegends => 'Legendes';
+
+  @override
+  String get collectionSetSpace => 'Ruimte';
+
+  @override
+  String get collectionSetGems => 'Edelstenen';
+
+  @override
+  String get collectionSetParty => 'Feest';
+
+  @override
+  String get collectionSetNature => 'Natuur';
+
+  @override
+  String get collectionSetAdventures => 'Avonturen';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Collectie · etalage · cadeau · verkoop · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'dag';
+
+  @override
+  String get coinsDayFew => 'dagen';
+
+  @override
+  String get coinsDayMany => 'dagen';
+
+  @override
+  String get giftFriendTitle => 'Cadeau aan een vriend';
+
+  @override
+  String photoCount(int count) {
+    return 'Foto ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Foto ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Foto: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji\'s · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Paneel uitklappen';
+
+  @override
+  String get chatsCollapsePanel => 'Paneel inklappen';
+
+  @override
+  String get chatReplySourceMissing => 'Oorspronkelijk bericht niet gevonden';
 }

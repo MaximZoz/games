@@ -229,17 +229,17 @@ class AppLocalizationsBe extends AppLocalizations {
   String get timeYesterday => 'учора';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count хв таму';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count гадз таму';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count дз. таму';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get timeWeekAgo => 'тыдзень таму';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count тыд. таму';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get timeMonthAgo => 'месяц таму';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count мес. таму';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get timeYearAgo => 'год таму';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count г. таму';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 хв';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Крыжыкі-нулікі на полі $grid. Ходзяць па чарзе, X пачынае.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Перамога: трэба выбудаваць $n у шэраг па гарызанталі, вертыкалі ці дыяганалі.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Без абмежавання часу на ход.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Час на ход: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Стаўка: $stake. На столькі манет ідзе гульня.';
+  }
+
+  @override
+  String get rulesSwap => 'Змена бакоў: O можа памяняцца месцамі з X пасля першага ходу X.';
+
+  @override
+  String get rulesNoCenter => 'Забарона цэнтра: X не можа хадзіць у цэнтр першым ходам.';
+
+  @override
+  String get collectionSetLegends => 'Легенды';
+
+  @override
+  String get collectionSetSpace => 'Космас';
+
+  @override
+  String get collectionSetGems => 'Каштоўнасці';
+
+  @override
+  String get collectionSetParty => 'Свята';
+
+  @override
+  String get collectionSetNature => 'Прырода';
+
+  @override
+  String get collectionSetAdventures => 'Прыгоды';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Калекцыя · вітрына · падарунак · продаж · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'дзень';
+
+  @override
+  String get coinsDayFew => 'дні';
+
+  @override
+  String get coinsDayMany => 'дзён';
+
+  @override
+  String get giftFriendTitle => 'Падарыць сябру';
+
+  @override
+  String photoCount(int count) {
+    return 'Фота ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Фота ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Фота: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count смайлікаў · па $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Разгарнуць панэль';
+
+  @override
+  String get chatsCollapsePanel => 'Згарнуць панэль';
+
+  @override
+  String get chatReplySourceMissing => 'Зыходнае паведамленне не знойдзена';
 }

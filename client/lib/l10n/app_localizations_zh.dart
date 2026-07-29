@@ -229,17 +229,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get timeYesterday => '昨天';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count 分钟前';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count 小时前';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count 天前';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get timeWeekAgo => '一周前';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count 周前';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get timeMonthAgo => '一个月前';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count 个月前';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get timeYearAgo => '一年前';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count 年前';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 分钟';
+
+  @override
+  String rulesIntro(String grid) {
+    return '在 $grid 棋盘上玩井字棋。轮流落子，X 先行。';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return '获胜：在横向、纵向或对角线连成 $n 个。';
+  }
+
+  @override
+  String get rulesNoTimeLimit => '每步不限时。';
+
+  @override
+  String rulesTurnTime(String time) {
+    return '每步时间：$time。';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return '赌注：$stake。本局押这么多硬币。';
+  }
+
+  @override
+  String get rulesSwap => '换边：X 首步之后，O 可与 X 互换。';
+
+  @override
+  String get rulesNoCenter => '禁中：X 首步不能下在中心。';
+
+  @override
+  String get collectionSetLegends => '传奇';
+
+  @override
+  String get collectionSetSpace => '太空';
+
+  @override
+  String get collectionSetGems => '宝石';
+
+  @override
+  String get collectionSetParty => '派对';
+
+  @override
+  String get collectionSetNature => '自然';
+
+  @override
+  String get collectionSetAdventures => '冒险';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return '收藏 · 展示 · 赠送 · 出售 · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => '天';
+
+  @override
+  String get coinsDayFew => '天';
+
+  @override
+  String get coinsDayMany => '天';
+
+  @override
+  String get giftFriendTitle => '送给好友';
+
+  @override
+  String photoCount(int count) {
+    return '照片（$count）';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return '照片（$count）：$text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return '照片：$text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count 个表情 · 每个 $price';
+  }
+
+  @override
+  String get chatsExpandPanel => '展开面板';
+
+  @override
+  String get chatsCollapsePanel => '收起面板';
+
+  @override
+  String get chatReplySourceMissing => '找不到原消息';
 }

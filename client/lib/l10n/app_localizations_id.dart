@@ -229,17 +229,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get timeYesterday => 'kemarin';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count mnt lalu';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count jam lalu';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count hr lalu';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get timeWeekAgo => 'seminggu lalu';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count mgg lalu';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get timeMonthAgo => 'sebulan lalu';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count bln lalu';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get timeYearAgo => 'setahun lalu';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count thn lalu';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 mnt';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Tic-tac-toe di papan $grid. Bergiliran; X duluan.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Menang: susun $n beruntun horizontal, vertikal, atau diagonal.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Tanpa batas waktu per giliran.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Waktu per giliran: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Taruhan: $stake. Game ini seharga koin sebanyak itu.';
+  }
+
+  @override
+  String get rulesSwap => 'Tukar sisi: O boleh bertukar dengan X setelah langkah pertama X.';
+
+  @override
+  String get rulesNoCenter => 'Larangan tengah: X tidak boleh main di tengah pada langkah pertama.';
+
+  @override
+  String get collectionSetLegends => 'Legenda';
+
+  @override
+  String get collectionSetSpace => 'Antariksa';
+
+  @override
+  String get collectionSetGems => 'Permata';
+
+  @override
+  String get collectionSetParty => 'Pesta';
+
+  @override
+  String get collectionSetNature => 'Alam';
+
+  @override
+  String get collectionSetAdventures => 'Petualangan';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Koleksi · etalase · hadiah · jual · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'hari';
+
+  @override
+  String get coinsDayFew => 'hari';
+
+  @override
+  String get coinsDayMany => 'hari';
+
+  @override
+  String get giftFriendTitle => 'Hadiah ke teman';
+
+  @override
+  String photoCount(int count) {
+    return 'Foto ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Foto ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Foto: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Perluas panel';
+
+  @override
+  String get chatsCollapsePanel => 'Ciutkan panel';
+
+  @override
+  String get chatReplySourceMissing => 'Pesan asli tidak ditemukan';
 }

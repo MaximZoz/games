@@ -11,6 +11,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 /// Раздел магазина для рамок или ставок (одноразовая покупка).
 class ShopSectionScreen extends ConsumerStatefulWidget {
@@ -66,20 +67,21 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final l10n = context.l10n;
         return AlertDialog(
-          title: Text(isStake ? 'Купить ставку?' : 'Купить?'),
+          title: Text(isStake ? l10n.shopBuyStakeTitle : l10n.shopBuyTitle),
           content: Text(
             '${item.title}\n\n'
-            'Цена: ${formatRewardBronze(item.priceBronze)}',
+            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Купить'),
+              child: Text(l10n.shopBuy),
             ),
           ],
         );
@@ -110,7 +112,7 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: '${item.title} куплен',
+        message: context.l10n.shopPurchased(item.title),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -144,7 +146,7 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           title: Text(
             widget.title,
@@ -156,10 +158,10 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
         ),
         body: SafeArea(
           child: section.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    context.l10n.shopEmpty,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
               : ListView.separated(
@@ -194,6 +196,7 @@ class _ShopItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -239,7 +242,7 @@ class _ShopItemCard extends StatelessWidget {
           const SizedBox(width: 8),
           if (item.owned)
             Text(
-              'Куплено',
+              l10n.shopOwned,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF2E7D32),
@@ -258,7 +261,7 @@ class _ShopItemCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
               ),
-              child: Text(busy ? '…' : 'Купить'),
+              child: Text(busy ? '…' : l10n.shopBuy),
             ),
         ],
       ),

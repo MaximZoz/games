@@ -229,17 +229,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeYesterday => 'вчера';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count мин назад';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count ч назад';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count дн. назад';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeWeekAgo => 'неделю назад';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count нед. назад';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeMonthAgo => 'месяц назад';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count мес. назад';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeYearAgo => 'год назад';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count г. назад';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 мин';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Крестики-нолики на поле $grid. Ходят по очереди, X начинает.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Победа: нужно выстроить $n в ряд по горизонтали, вертикали или диагонали.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Без ограничения по времени на ход.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Время на ход: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Ставка: $stake. На столько монет идёт игра.';
+  }
+
+  @override
+  String get rulesSwap => 'Смена сторон: O может поменяться местами с X после первого хода X.';
+
+  @override
+  String get rulesNoCenter => 'Запрет центра: X не может ходить в центр первым ходом.';
+
+  @override
+  String get collectionSetLegends => 'Легенды';
+
+  @override
+  String get collectionSetSpace => 'Космос';
+
+  @override
+  String get collectionSetGems => 'Драгоценности';
+
+  @override
+  String get collectionSetParty => 'Праздник';
+
+  @override
+  String get collectionSetNature => 'Природа';
+
+  @override
+  String get collectionSetAdventures => 'Приключения';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Коллекция · витрина · подарок · продажа · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'день';
+
+  @override
+  String get coinsDayFew => 'дня';
+
+  @override
+  String get coinsDayMany => 'дней';
+
+  @override
+  String get giftFriendTitle => 'Подарить другу';
+
+  @override
+  String photoCount(int count) {
+    return 'Фото ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Фото ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Фото: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count смайликов · по $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Развернуть панель';
+
+  @override
+  String get chatsCollapsePanel => 'Свернуть панель';
+
+  @override
+  String get chatReplySourceMissing => 'Исходное сообщение не найдено';
 }

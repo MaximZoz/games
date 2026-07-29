@@ -229,17 +229,17 @@ class AppLocalizationsCs extends AppLocalizations {
   String get timeYesterday => 'včera';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return 'před $count min';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return 'před $count h';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return 'před $count d';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get timeWeekAgo => 'před týdnem';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return 'před $count týd.';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get timeMonthAgo => 'před měsícem';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return 'před $count měs.';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get timeYearAgo => 'před rokem';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return 'před $count r.';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Piškvorky na poli $grid. Střídavě; začíná X.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Výhra: sestavte $n v řadě vodorovně, svisle nebo úhlopříčně.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Bez časového limitu na tah.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Čas na tah: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Sázka: $stake. O tolik mincí se hraje.';
+  }
+
+  @override
+  String get rulesSwap => 'Výměna stran: O se může prohodit s X po prvním tahu X.';
+
+  @override
+  String get rulesNoCenter => 'Zákaz středu: X nesmí v prvním tahu hrát do středu.';
+
+  @override
+  String get collectionSetLegends => 'Legendy';
+
+  @override
+  String get collectionSetSpace => 'Vesmír';
+
+  @override
+  String get collectionSetGems => 'Drahokamy';
+
+  @override
+  String get collectionSetParty => 'Oslava';
+
+  @override
+  String get collectionSetNature => 'Příroda';
+
+  @override
+  String get collectionSetAdventures => 'Dobrodružství';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Kolekce · výloha · dárek · prodej · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'den';
+
+  @override
+  String get coinsDayFew => 'dny';
+
+  @override
+  String get coinsDayMany => 'dní';
+
+  @override
+  String get giftFriendTitle => 'Darovat příteli';
+
+  @override
+  String photoCount(int count) {
+    return 'Foto ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Foto ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Foto: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · po $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Rozbalit panel';
+
+  @override
+  String get chatsCollapsePanel => 'Sbalit panel';
+
+  @override
+  String get chatReplySourceMissing => 'Původní zpráva nenalezena';
 }

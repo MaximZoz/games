@@ -26,6 +26,7 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -52,15 +53,6 @@ const List<IconData> _presetAvatarIcons = [
 
 /// Декодирование base64 в отдельном isolate, чтобы не блокировать UI.
 Uint8List _decodeBase64Isolate(String s) => base64Decode(s);
-
-/// Склонение: «год» / «года» / «лет» для возраста.
-String _ageYearsWord(int n) {
-  final mod10 = n % 10;
-  final mod100 = n % 100;
-  if (mod10 == 1 && mod100 != 11) return 'год';
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'года';
-  return 'лет';
-}
 
 final Map<int, Uint8List> _base64AvatarCache = {};
 
@@ -518,7 +510,7 @@ class _ProfileErrorState extends StatelessWidget {
           const SizedBox(height: 16),
           AppButton(
             onPressed: onRetry,
-            label: 'Повторить',
+            label: context.l10n.commonRetry,
             expanded: true,
           ),
         ],
@@ -559,16 +551,16 @@ class _ProfileEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Войдите в аккаунт',
+              context.l10n.profileSignInPrompt,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Чтобы настроить личный профиль',
-              style: TextStyle(
+            Text(
+              context.l10n.profileSignInHint,
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14,
               ),
@@ -577,14 +569,14 @@ class _ProfileEmptyState extends StatelessWidget {
             const SizedBox(height: 24),
             AppButton(
               onPressed: onLogin,
-              label: 'Войти',
+              label: context.l10n.loginSubmit,
               expanded: true,
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: onRegister,
               icon: const Icon(Icons.person_add_alt_1_rounded),
-              label: const Text('Регистрация'),
+              label: Text(context.l10n.registerTitle),
             ),
           ],
         ),
@@ -785,8 +777,7 @@ class _ProfileView extends ConsumerWidget {
               if (profileExtra.age != null)
                 _ProfileInfoChip(
                   icon: Icons.cake_outlined,
-                  label:
-                      '${profileExtra.age} ${_ageYearsWord(profileExtra.age!)}',
+                  label: context.l10n.profileAgeYears(profileExtra.age!),
                 ),
               if (profileExtra.gender != null &&
                   profileExtra.gender!.isNotEmpty)
@@ -833,11 +824,11 @@ class _ProfileView extends ConsumerWidget {
             return Column(
               children: [
                 SizedBox(height: gapSection + 2),
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Коллекции',
-                    style: TextStyle(
+                    context.l10n.profileCollections,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                       color: AppColors.textPrimary,
@@ -854,9 +845,9 @@ class _ProfileView extends ConsumerWidget {
         OutlinedButton.icon(
           onPressed: onEdit,
           icon: const Icon(Icons.edit_outlined, size: 18),
-          label: const Text(
-            'Редактировать',
-            style: TextStyle(
+          label: Text(
+            context.l10n.profileEdit,
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1193,7 +1184,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     final ageRaw = _ageController.text.trim();
     final age = ageRaw.isEmpty ? null : int.tryParse(ageRaw);
     if (age != null && (age < 1 || age > 111)) {
-      setState(() => _ageError = 'Введите возраст от 1 до 111');
+      setState(() => _ageError = context.l10n.profileAgeInvalid);
       return;
     }
     final extra = ProfileExtra(
@@ -1221,7 +1212,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
         setState(() {
           _isSaving = false;
           _saveError =
-              formatUserError(e, fallback: 'Не удалось сохранить профиль');
+              formatUserError(e, fallback: context.l10n.profileSaveFailed);
         });
       }
     }
@@ -1243,6 +1234,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               mainAxisSize: MainAxisSize.min,
               children: _genderOptions.map((value) {
                 final selected = _gender == value;
+                final label = value == 'Женский'
+                    ? context.l10n.profileGenderFemale
+                    : context.l10n.profileGenderMale;
                 return InkWell(
                   onTap: () {
                     setState(() => _gender = value);
@@ -1255,7 +1249,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                       children: [
                         Expanded(
                           child: Text(
-                            value,
+                            label,
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 15,
@@ -1283,7 +1277,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
             onPressed: _isSaving ? null : widget.onCancel,
@@ -1321,7 +1315,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       textCapitalization: TextCapitalization.sentences,
       scrollPadding: const EdgeInsets.only(bottom: 120),
       decoration: InputDecoration(
-        labelText: 'О себе',
+        labelText: context.l10n.commonAboutMe,
         alignLabelWithHint: true,
         filled: true,
         fillColor: AppColors.surfaceCard,
@@ -1341,7 +1335,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   Widget _buildCompactSaveButton() {
     return AppButton(
       onPressed: (_isSaving || !_hasChanges) ? null : _submit,
-      label: 'Сохранить',
+      label: context.l10n.commonSave,
       isLoading: _isSaving,
       expanded: true,
     );
@@ -1356,9 +1350,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
           controller: widget.displayNameController,
           focusNode: widget.focusNode,
           inputFormatters: _displayNameFormatters,
-          decoration: const InputDecoration(
-            labelText: 'Имя (логин)',
-            prefixIcon: Icon(Icons.person_outline_rounded),
+          decoration: InputDecoration(
+            labelText: context.l10n.registerNameLabel,
+            prefixIcon: const Icon(Icons.person_outline_rounded),
           ),
           textCapitalization: TextCapitalization.none,
           autocorrect: false,
@@ -1374,7 +1368,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 controller: _ageController,
                 inputFormatters: _ageFormatters,
                 decoration: InputDecoration(
-                  labelText: 'Возраст',
+                  labelText: context.l10n.profileAge,
                   prefixIcon: const Icon(Icons.cake_outlined),
                   errorText: _ageError,
                 ),
@@ -1387,12 +1381,12 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 onTap: _openGenderMenu,
                 borderRadius: BorderRadius.circular(AppRadius.input),
                 child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Пол',
-                    prefixIcon: Icon(Icons.wc_rounded),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.profileGender,
+                    prefixIcon: const Icon(Icons.wc_rounded),
                   ),
                   child: Text(
-                    _gender ?? 'Не указан',
+                    _gender ?? context.l10n.profileGenderUnset,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1522,7 +1516,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.photo_library_outlined, size: 19),
-                  label: Text(_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+                  label: Text(_hasPhoto ? context.l10n.profileChangePhoto : context.l10n.profileUploadPhoto),
                 ),
                 if (_saveError != null) ...[
                   const SizedBox(height: 12),
@@ -1559,9 +1553,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   controller: widget.displayNameController,
                   focusNode: widget.focusNode,
                   inputFormatters: _displayNameFormatters,
-                  decoration: const InputDecoration(
-                    labelText: 'Имя (логин)',
-                    hintText: 'Латиница, цифры, _ до 10 символов',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.registerNameLabel,
+                    hintText: context.l10n.profileNameHint,
                     prefixIcon: Icon(Icons.person_outline_rounded),
                   ),
                   textCapitalization: TextCapitalization.none,
@@ -1581,8 +1575,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   controller: _ageController,
                   inputFormatters: _ageFormatters,
                   decoration: InputDecoration(
-                    labelText: 'Возраст',
-                    hintText: 'От 1 до 111',
+                    labelText: context.l10n.profileAge,
+                    hintText: context.l10n.profileAgeHint,
                     prefixIcon: const Icon(Icons.cake_outlined),
                     errorText: _ageError,
                   ),
@@ -1593,14 +1587,14 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   onTap: _openGenderMenu,
                   borderRadius: BorderRadius.circular(AppRadius.input),
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Пол',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.profileGender,
                       prefixIcon: Icon(Icons.wc_rounded),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_gender ?? 'Не указан'),
+                        Text(_gender ?? context.l10n.profileGenderUnset),
                         const Icon(Icons.arrow_drop_down),
                       ],
                     ),
@@ -1611,9 +1605,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   controller: _aboutController,
                   inputFormatters: _aboutFormatters,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'О себе',
-                    hintText: 'До 100 символов (по желанию)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.commonAboutMe,
+                    hintText: context.l10n.profileAboutHint,
                     prefixIcon: Icon(Icons.info_outline_rounded),
                     alignLabelWithHint: true,
                     counterText: '',
@@ -1623,7 +1617,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Аватар',
+                  context.l10n.profileAvatar,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -1714,8 +1708,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                         ),
                   label: Text(
                     _isAvatarProcessing
-                        ? 'Обработка фото...'
-                        : (_hasPhoto ? 'Поменять фото' : 'Загрузить фото'),
+                        ? context.l10n.profileProcessingPhoto
+                        : (_hasPhoto ? context.l10n.profileChangePhoto : context.l10n.profileUploadPhoto),
                   ),
                 ),
                 if (_saveError != null) ...[
@@ -1725,7 +1719,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 const SizedBox(height: 24),
                 AppButton(
                   onPressed: (_isSaving || !_hasChanges) ? null : _submit,
-                  label: 'Сохранить',
+                  label: context.l10n.commonSave,
                   isLoading: _isSaving,
                   expanded: true,
                 ),
@@ -1854,13 +1848,13 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Выбери область аватара'),
+      title: Text(context.l10n.profileCropTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Масштабируй и двигай фото внутри круга',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          Text(
+            context.l10n.profileCropHint,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 12),
           RepaintBoundary(
@@ -1905,7 +1899,7 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
       actions: [
         TextButton(
           onPressed: _exporting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(context.l10n.commonCancel),
         ),
         FilledButton.icon(
           onPressed: (!_ready || _exporting) ? null : _applyCrop,
@@ -1916,7 +1910,7 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.check_rounded),
-          label: Text(_exporting ? 'Подготовка...' : 'Применить'),
+          label: Text(_exporting ? context.l10n.profilePreparing : context.l10n.profileApply),
         ),
       ],
     );

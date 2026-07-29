@@ -229,17 +229,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get timeYesterday => '昨日';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count分前';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count時間前';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count日前';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get timeWeekAgo => '1週間前';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count週間前';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get timeMonthAgo => '1か月前';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$countか月前';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get timeYearAgo => '1年前';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count年前';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get timeTenMin => '10分';
+
+  @override
+  String rulesIntro(String grid) {
+    return '$grid の盤で三目並べ。交互に打ち、X が先手。';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return '勝利：縦・横・斜めに $n 個並べます。';
+  }
+
+  @override
+  String get rulesNoTimeLimit => '一手の制限時間なし。';
+
+  @override
+  String rulesTurnTime(String time) {
+    return '一手の時間：$time。';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return '掛け金：$stake。このコイン数で対戦します。';
+  }
+
+  @override
+  String get rulesSwap => 'サイド交代：X の初手の後、O は X と交代できます。';
+
+  @override
+  String get rulesNoCenter => '中央禁止：X は初手で中央に打てません。';
+
+  @override
+  String get collectionSetLegends => '伝説';
+
+  @override
+  String get collectionSetSpace => '宇宙';
+
+  @override
+  String get collectionSetGems => '宝石';
+
+  @override
+  String get collectionSetParty => 'パーティー';
+
+  @override
+  String get collectionSetNature => '自然';
+
+  @override
+  String get collectionSetAdventures => '冒険';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'コレクション · 展示 · ギフト · 売却 · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => '日';
+
+  @override
+  String get coinsDayFew => '日';
+
+  @override
+  String get coinsDayMany => '日';
+
+  @override
+  String get giftFriendTitle => '友達に贈る';
+
+  @override
+  String photoCount(int count) {
+    return '写真（$count）';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return '写真（$count）：$text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return '写真：$text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count 個の絵文字 · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'パネルを展開';
+
+  @override
+  String get chatsCollapsePanel => 'パネルを折りたたむ';
+
+  @override
+  String get chatReplySourceMissing => '元のメッセージが見つかりません';
 }

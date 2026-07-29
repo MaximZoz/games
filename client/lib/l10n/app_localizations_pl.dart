@@ -229,17 +229,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get timeYesterday => 'wczoraj';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count min temu';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count godz. temu';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count dn. temu';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get timeWeekAgo => 'tydzień temu';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count tyg. temu';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get timeMonthAgo => 'miesiąc temu';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count mies. temu';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get timeYearAgo => 'rok temu';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count lat temu';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Kółko i krzyżyk na planszy $grid. Na przemian; zaczyna X.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Wygrana: ułóż $n w rzędzie w poziomie, pionie lub po przekątnej.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Bez limitu czasu na ruch.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Czas na ruch: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Stawka: $stake. Tyle monet stoi na grze.';
+  }
+
+  @override
+  String get rulesSwap => 'Zmiana stron: O może zamienić się z X po pierwszym ruchu X.';
+
+  @override
+  String get rulesNoCenter => 'Zakaz środka: X nie może zagrać w środek pierwszym ruchem.';
+
+  @override
+  String get collectionSetLegends => 'Legendy';
+
+  @override
+  String get collectionSetSpace => 'Kosmos';
+
+  @override
+  String get collectionSetGems => 'Klejnoty';
+
+  @override
+  String get collectionSetParty => 'Święto';
+
+  @override
+  String get collectionSetNature => 'Natura';
+
+  @override
+  String get collectionSetAdventures => 'Przygody';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Kolekcja · wystawa · prezent · sprzedaż · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'dzień';
+
+  @override
+  String get coinsDayFew => 'dni';
+
+  @override
+  String get coinsDayMany => 'dni';
+
+  @override
+  String get giftFriendTitle => 'Podaruj przyjacielowi';
+
+  @override
+  String photoCount(int count) {
+    return 'Zdjęcie ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Zdjęcie ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Zdjęcie: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emoji · po $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Rozwiń panel';
+
+  @override
+  String get chatsCollapsePanel => 'Zwiń panel';
+
+  @override
+  String get chatReplySourceMissing => 'Nie znaleziono oryginalnej wiadomości';
 }

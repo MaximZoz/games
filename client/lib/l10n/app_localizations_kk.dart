@@ -229,17 +229,17 @@ class AppLocalizationsKk extends AppLocalizations {
   String get timeYesterday => 'кеше';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count мин бұрын';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count сағ бұрын';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count күн бұрын';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get timeWeekAgo => 'бір апта бұрын';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count апт. бұрын';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get timeMonthAgo => 'бір ай бұрын';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count ай бұрын';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get timeYearAgo => 'бір жыл бұрын';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count ж. бұрын';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 мин';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'X-O ойыны $grid өрісінде. Кезекпен жүреді, X бастайды.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Жеңіс: көлденең, тік немесе диагональ бойынша $n қатарға тізу керек.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Жүріске уақыт шектеуі жоқ.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Жүріс уақыты: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Ставка: $stake. Ойын осы монеталарға жүреді.';
+  }
+
+  @override
+  String get rulesSwap => 'Жақтарды ауыстыру: X-тің бірінші жүрісінен кейін O X-пен орын алмасуы мүмкін.';
+
+  @override
+  String get rulesNoCenter => 'Ортаға тыйым: X бірінші жүрісте ортаға жүре алмайды.';
+
+  @override
+  String get collectionSetLegends => 'Аңыздар';
+
+  @override
+  String get collectionSetSpace => 'Ғарыш';
+
+  @override
+  String get collectionSetGems => 'Асыл тастар';
+
+  @override
+  String get collectionSetParty => 'Мейрам';
+
+  @override
+  String get collectionSetNature => 'Табиғат';
+
+  @override
+  String get collectionSetAdventures => 'Шытырман оқиғалар';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Жинақ · витрина · сыйлық · сату · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'күн';
+
+  @override
+  String get coinsDayFew => 'күн';
+
+  @override
+  String get coinsDayMany => 'күн';
+
+  @override
+  String get giftFriendTitle => 'Досыңа сыйлау';
+
+  @override
+  String photoCount(int count) {
+    return 'Фото ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Фото ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Фото: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count эмодзи · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Панельді жазу';
+
+  @override
+  String get chatsCollapsePanel => 'Панельді жию';
+
+  @override
+  String get chatReplySourceMissing => 'Бастапқы хабар табылмады';
 }

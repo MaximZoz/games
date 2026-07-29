@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyAccessToken = 'access_token';
@@ -212,34 +213,21 @@ class AuthRepository {
     return _handleAuthResponse(response);
   }
 
-  static String _translateMessage(String msg) {
-    final m = msg.toLowerCase().trim();
-    const Map<String, String> map = {
-      'invalid email or password': 'Неверный email или пароль',
-      'email already registered': 'Такой email уже зарегистрирован',
-      'login already taken': 'Такой логин уже занят',
-      'login or email already registered': 'Такой логин или email уже зарегистрирован',
-      'invalid or expired token': 'Сессия истекла. Войдите заново.',
-      'invalid token': 'Сессия истекла. Войдите заново.',
-      'missing authorization header': 'Требуется авторизация',
-      'invalid authorization header': 'Неверный формат авторизации',
-      'user not found': 'Пользователь не найден',
-      'email required, password at least 6 characters': 'Укажите email, пароль — минимум 6 символов',
-      'email or login and password required': 'Укажите email и пароль',
-      'refresh_token required': 'Сессия истекла. Войдите заново.',
-      'server error': 'Ошибка сервера. Попробуйте позже.',
-    };
-    return map[m] ?? msg;
+  static String _messageFromResponse(http.Response response) {
+    var msg = response.body.trim();
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        msg = (body['message'] ?? body['error'] ?? msg).toString().trim();
+      }
+    } catch (_) {}
+    if (msg.isEmpty) return LocaleService.l10n.commonServerErrorShort;
+    return msg;
   }
 
   Future<AuthResult> _handleAuthResponse(http.Response response) async {
     if (response.statusCode != 200) {
-      String msg = response.body;
-      try {
-        final body = jsonDecode(response.body);
-        if (body is Map) msg = (body['message'] ?? body['error'] ?? msg).toString();
-      } catch (_) {}
-      throw AuthException(response.statusCode, _translateMessage(msg));
+      throw AuthException(response.statusCode, _messageFromResponse(response));
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final accessToken = body['access_token'] as String;
@@ -374,9 +362,12 @@ class AuthRepository {
       ),
     );
     if (response.statusCode != 200) {
+      final l10n = LocaleService.l10n;
       throw AuthException(
         response.statusCode,
-        response.statusCode == 401 ? 'Сессия истекла' : 'Ошибка: ${response.statusCode}',
+        response.statusCode == 401
+            ? l10n.sessionExpired
+            : _messageFromResponse(response),
       );
     }
     try {
@@ -431,7 +422,7 @@ class AuthRepository {
   ) async {
     var token = await getAccessToken();
     if (token == null || token.isEmpty) {
-      throw AuthException(401, 'Сессия истекла. Войдите заново.');
+      throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
 
     var response = await request(token);
@@ -439,13 +430,13 @@ class AuthRepository {
 
     token = await _refreshAccessToken();
     if (token == null || token.isEmpty) {
-      throw AuthException(401, 'Сессия истекла. Войдите заново.');
+      throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
 
     response = await request(token);
     if (response.statusCode == 401) {
       await logout();
-      throw AuthException(401, 'Сессия истекла. Войдите заново.');
+      throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
 
     return response;
@@ -462,7 +453,9 @@ class AuthRepository {
   }) async {
     await init();
     final current = await getStoredUser();
-    if (current == null) throw AuthException(401, 'Не авторизован');
+    if (current == null) {
+      throw AuthException(401, LocaleService.l10n.sessionExpired);
+    }
 
     final name = displayName?.trim().isEmpty == true ? null : displayName?.trim();
 
@@ -487,12 +480,7 @@ class AuthRepository {
     );
 
     if (response.statusCode != 200) {
-      String msg = response.body;
-      try {
-        final body = jsonDecode(response.body);
-        if (body is Map) msg = (body['message'] ?? body['error'] ?? msg).toString();
-      } catch (_) {}
-      throw AuthException(response.statusCode, _translateMessage(msg));
+      throw AuthException(response.statusCode, _messageFromResponse(response));
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;

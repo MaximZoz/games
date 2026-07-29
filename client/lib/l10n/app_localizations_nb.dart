@@ -229,17 +229,17 @@ class AppLocalizationsNb extends AppLocalizations {
   String get timeYesterday => 'i går';
 
   @override
-  String timeMinutesAgo(Object count) {
+  String timeMinutesAgo(int count) {
     return '$count min siden';
   }
 
   @override
-  String timeHoursAgo(Object count) {
+  String timeHoursAgo(int count) {
     return '$count t siden';
   }
 
   @override
-  String timeDaysAgo(Object count) {
+  String timeDaysAgo(int count) {
     return '$count d siden';
   }
 
@@ -247,7 +247,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get timeWeekAgo => 'en uke siden';
 
   @override
-  String timeWeeksAgo(Object count) {
+  String timeWeeksAgo(int count) {
     return '$count u siden';
   }
 
@@ -255,7 +255,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get timeMonthAgo => 'en måned siden';
 
   @override
-  String timeMonthsAgo(Object count) {
+  String timeMonthsAgo(int count) {
     return '$count md. siden';
   }
 
@@ -263,7 +263,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get timeYearAgo => 'et år siden';
 
   @override
-  String timeYearsAgo(Object count) {
+  String timeYearsAgo(int count) {
     return '$count år siden';
   }
 
@@ -1304,4 +1304,97 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Tripp-trapp-tresko på $grid-brett. På tur; X starter.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Seier: få $n på rad horisontalt, vertikalt eller diagonalt.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Ingen tidsgrense per trekk.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Tid per trekk: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Innsats: $stake. Spillet gjelder så mange mynter.';
+  }
+
+  @override
+  String get rulesSwap => 'Sidebytte: O kan bytte med X etter X sitt første trekk.';
+
+  @override
+  String get rulesNoCenter => 'Ikke midten: X kan ikke spille i midten på første trekk.';
+
+  @override
+  String get collectionSetLegends => 'Legender';
+
+  @override
+  String get collectionSetSpace => 'Rommet';
+
+  @override
+  String get collectionSetGems => 'Edelstener';
+
+  @override
+  String get collectionSetParty => 'Fest';
+
+  @override
+  String get collectionSetNature => 'Natur';
+
+  @override
+  String get collectionSetAdventures => 'Eventyr';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Samling · utstilling · gave · salg · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'dag';
+
+  @override
+  String get coinsDayFew => 'dager';
+
+  @override
+  String get coinsDayMany => 'dager';
+
+  @override
+  String get giftFriendTitle => 'Gi til en venn';
+
+  @override
+  String photoCount(int count) {
+    return 'Foto ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Foto ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Foto: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emojier · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Utvid panel';
+
+  @override
+  String get chatsCollapsePanel => 'Skjul panel';
+
+  @override
+  String get chatReplySourceMissing => 'Opprinnelig melding ikke funnet';
 }
