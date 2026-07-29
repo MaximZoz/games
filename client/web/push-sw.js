@@ -1,5 +1,5 @@
 /* Web Push service worker for Zozu Games PWA.
- * v3: game_turn push + не показывать, если уже смотрим этот матч.
+ * v4: game_turn только при свёрнутом PWA; в приложении — бейдж на «Игры».
  */
 /* eslint-disable no-undef */
 
@@ -85,19 +85,15 @@ function resolveClickPath(notification) {
 }
 
 /**
- * Не показывать «Ваш ход», если в этом же браузере/PWA уже открыт
- * и видим именно этот матч. Свёрнутое приложение / другой таб — показывать.
+ * «Ваш ход» на iPhone только если приложение свёрнуто.
+ * Если PWA на переднем плане (любой таб) — системный пуш не показываем:
+ * на табе «Игры» ход виден в партии, на другом табе — бейдж на «Игры».
+ * Приглашения в новую игру (game_invite) этой проверкой не режутся.
  */
 async function shouldSuppressGameTurn(data) {
   const kind = data && data.kind != null ? String(data.kind) : '';
   const tag = data && data.tag != null ? String(data.tag) : '';
   if (kind !== 'game_turn' && !tag.startsWith('game_turn_')) {
-    return false;
-  }
-  const targetPath = pathOnly(
-    data.url || pathFromTag(tag) || '/games',
-  );
-  if (!targetPath.startsWith('/games/tictactoe/game/')) {
     return false;
   }
 
@@ -107,24 +103,17 @@ async function shouldSuppressGameTurn(data) {
   });
   for (const client of clientsList) {
     let sameOrigin = false;
-    let clientPath = '';
     try {
-      const u = new URL(client.url);
-      sameOrigin = u.origin === self.location.origin;
-      clientPath = u.pathname;
+      sameOrigin = new URL(client.url).origin === self.location.origin;
     } catch (_) {
       continue;
     }
     if (!sameOrigin) continue;
-    if (clientPath !== targetPath) continue;
-    // Свёрнуто / в фоне — уведомление нужно.
+    // Свёрнуто / в фоне — нужен пуш на устройство.
     if (client.visibilityState && client.visibilityState !== 'visible') {
       continue;
     }
-    // Другая вкладка браузера без фокуса — уведомление нужно.
-    if ('focused' in client && client.focused === false) {
-      continue;
-    }
+    // Приложение открыто на экране (любой таб) — без системного пуша.
     return true;
   }
   return false;
