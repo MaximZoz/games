@@ -214,7 +214,7 @@ class CountryFlagImage extends StatelessWidget {
 /// Виджет смайлика из `client/assets/emojis/` (Lottie + unicode, без сети).
 ///
 /// Каталог магазина и владение — на бэкенде; ассеты рисуются локально.
-/// Пока Lottie не готов — [EmojiIconPlaceholder].
+/// Пока Lottie не распарсен и не отрисован — [EmojiIconPlaceholder].
 /// [animate]=false: статичный кадр Lottie (магазин/инвентарь);
 /// [animate]=true: зацикленная анимация (превью по клику, чат).
 class ShopAnimatedEmoji extends StatefulWidget {
@@ -238,6 +238,7 @@ class ShopAnimatedEmoji extends StatefulWidget {
 class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
   bool _ready = false;
   bool _failed = false;
+  bool _revealArmed = false;
   Timer? _loadTimeout;
 
   @override
@@ -261,6 +262,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       _loadTimeout?.cancel();
       _ready = false;
       _failed = false;
+      _revealArmed = false;
       _scheduleLoad();
     }
   }
@@ -272,7 +274,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     }
     if (hasBundledEmojiLottie(widget.animatedName)) {
       _loadTimeout?.cancel();
-      _loadTimeout = Timer(const Duration(milliseconds: 2500), () {
+      _loadTimeout = Timer(const Duration(milliseconds: 5000), () {
         if (!mounted || _ready) return;
         _markFailed();
       });
@@ -282,6 +284,19 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _ready) return;
       setState(() => _ready = true);
+    });
+  }
+
+  /// Composition уже есть: даём кадру отрисоваться, затем снимаем лоадер.
+  void _armRevealAfterPaint() {
+    if (_revealArmed || _ready) return;
+    _revealArmed = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _ready) return;
+      // Второй кадр — после фактического paint почти невидимого Lottie.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _markReady();
+      });
     });
   }
 
@@ -340,37 +355,43 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     }
 
     // Lottie из client/assets/emojis/lottie/ — без сети и без package assets.
+    // Лоадер держим, пока composition не готов и кадр не успел отрисоваться.
+    // Opacity(0) пропускает paint — поэтому 0.01, чтобы первый кадр реально
+    // растеризовался под плейсхолдером.
     final lottieSize = widget.size * 0.92;
     final play = widget.animate;
     return SizedBox(
       width: widget.size,
       height: widget.size,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          if (!_ready) EmojiIconPlaceholder(size: widget.size),
-          Opacity(
-            opacity: _ready ? 1 : 0,
-            child: IgnorePointer(
-              ignoring: !_ready,
-              child: Lottie.asset(
-                bundledEmojiLottieAsset(widget.animatedName),
-                width: lottieSize,
-                height: lottieSize,
-                repeat: play,
-                animate: play,
-                onLoaded: (_) => _markReady(),
-                errorBuilder: (context, error, stackTrace) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _markFailed();
-                  });
-                  return staticChild;
-                },
-              ),
-            ),
-          ),
-        ],
+      child: Lottie.asset(
+        bundledEmojiLottieAsset(widget.animatedName),
+        width: lottieSize,
+        height: lottieSize,
+        repeat: play,
+        animate: play,
+        frameBuilder: (context, child, composition) {
+          if (composition == null) {
+            return EmojiIconPlaceholder(size: widget.size);
+          }
+          if (!_ready) {
+            _armRevealAfterPaint();
+            return Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                Opacity(opacity: 0.01, child: child),
+                EmojiIconPlaceholder(size: widget.size),
+              ],
+            );
+          }
+          return child;
+        },
+        errorBuilder: (context, error, stackTrace) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _markFailed();
+          });
+          return staticChild;
+        },
       ),
     );
   }
