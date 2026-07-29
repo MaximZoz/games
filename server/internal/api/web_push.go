@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -25,11 +26,11 @@ type PushPayload struct {
 
 // WebPushSender рассылает уведомления подписчикам.
 type WebPushSender struct {
-	Pool        *pgxpool.Pool
-	PublicKey   string
-	PrivateKey  string
-	Subject     string // mailto: или https://
-	TTLSeconds  int
+	Pool       *pgxpool.Pool
+	PublicKey  string
+	PrivateKey string
+	Subject    string // email, mailto:email или https://…
+	TTLSeconds int
 }
 
 func (s *WebPushSender) Enabled() bool {
@@ -37,6 +38,24 @@ func (s *WebPushSender) Enabled() bool {
 		s.Pool != nil &&
 		strings.TrimSpace(s.PublicKey) != "" &&
 		strings.TrimSpace(s.PrivateKey) != ""
+}
+
+// normalizeVapidSubscriber готовит claim `sub` для webpush-go.
+// Библиотека сама добавляет префикс "mailto:", если значение не https:// —
+// поэтому "mailto:a@b.c" превращалось бы в "mailto:mailto:a@b.c", и Apple
+// (web.push.apple.com) отвечает 403. Сюда передаём голый email или https URL.
+func normalizeVapidSubscriber(raw string) string {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return "admin@zozu.games"
+	}
+	if strings.HasPrefix(strings.ToLower(s), "mailto:") {
+		s = strings.TrimSpace(s[len("mailto:"):])
+	}
+	if s == "" {
+		return "admin@zozu.games"
+	}
+	return s
 }
 
 // NotifyUsers шлёт push выбранным пользователям (асинхронно).
@@ -67,10 +86,7 @@ func (s *WebPushSender) send(userIDs []uuid.UUID, payload PushPayload) {
 		return
 	}
 
-	subject := strings.TrimSpace(s.Subject)
-	if subject == "" {
-		subject = "mailto:admin@zozu.games"
-	}
+	subject := normalizeVapidSubscriber(s.Subject)
 	ttl := s.TTLSeconds
 	if ttl <= 0 {
 		// Короткий TTL (секунды) часто роняет доставку на iOS, если устройство
@@ -98,15 +114,19 @@ func (s *WebPushSender) send(userIDs []uuid.UUID, payload PushPayload) {
 			continue
 		}
 		status := resp.StatusCode
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 		_ = resp.Body.Close()
+		apple := strings.Contains(sub.Endpoint, "web.push.apple.com")
 		// Протухшая подписка — удаляем.
 		if status == http.StatusGone || status == http.StatusNotFound {
-			log.Printf("web push: drop stale subscription %s status=%d apple=%v",
-				sub.ID, status, strings.Contains(sub.Endpoint, "web.push.apple.com"))
+			log.Printf("web push: drop stale subscription %s status=%d apple=%v body=%q",
+				sub.ID, status, apple, string(respBody))
 			_ = store.DeleteWebPushSubscriptionByID(ctx, s.Pool, sub.ID)
 		} else if status < 200 || status >= 300 {
-			log.Printf("web push: unexpected status %d for %s apple=%v",
-				status, sub.ID, strings.Contains(sub.Endpoint, "web.push.apple.com"))
+			log.Printf("web push: unexpected status %d for %s apple=%v body=%q",
+				status, sub.ID, apple, string(respBody))
+		} else if apple {
+			log.Printf("web push: apple ok status=%d sub=%s", status, sub.ID)
 		}
 	}
 }
@@ -175,8 +195,19 @@ func (h *WebPushHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to save subscription", http.StatusInternalServerError)
 		return
 	}
+	// Сразу шлём тестовый push — на iOS сразу видно, доходит ли APNs.
+	h.Sender.NotifyUsers([]uuid.UUID{userID}, PushPayload{
+		Title: "Zozu Games",
+		Body:  "Уведомления включены. Сверните приложение, чтобы проверить доставку.",
+		URL:   "/settings",
+		Tag:   "push_test",
+	})
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"ok":     true,
+		"apple":  strings.Contains(endpoint, "web.push.apple.com"),
+		"tested": true,
+	})
 }
 
 func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
@@ -204,6 +235,31 @@ func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	if h.Pool != nil {
 		_ = store.DeleteWebPushSubscriptionByEndpoint(r.Context(), h.Pool, userID, endpoint)
 	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+}
+
+// Test шлёт одно уведомление текущему пользователю (ручная проверка).
+func (h *WebPushHandler) Test(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if h == nil || h.Sender == nil || !h.Sender.Enabled() {
+		writeJSONError(w, "web push disabled", http.StatusServiceUnavailable)
+		return
+	}
+	userID, ok := currentUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	h.Sender.NotifyUsers([]uuid.UUID{userID}, PushPayload{
+		Title: "Zozu Games",
+		Body:  "Тестовое уведомление. Если видите это — push работает.",
+		URL:   "/settings",
+		Tag:   "push_test",
+	})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 }

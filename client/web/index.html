@@ -154,6 +154,12 @@
   -->
   <script src="flutter_bootstrap.js" async></script>
   <script>
+    // Ранняя регистрация push SW (до Flutter) — критично для iOS PWA.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/push-sw.js', { scope: '/' }).catch(function () {});
+    }
+  </script>
+  <script>
     (function () {
       function hideBoot() {
         var el = document.getElementById('zozu-boot');

@@ -31,7 +31,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     state = prefs.getBool(_keyWebPushEnabled) ?? false;
   }
 
-  Future<String?> _subscribeAndSave() async {
+  Future<String?> _subscribeAndSave({required bool forceRefresh}) async {
     final auth = _ref.read(authRepositoryProvider);
     final keyResp = await auth.sendAuthorized((token) {
       return ApiClient.get(
@@ -51,6 +51,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
 
     final sub = await browser_push.subscribeBrowserPush(
       vapidPublicKey: publicKey,
+      forceRefresh: forceRefresh,
     );
     final saveResp = await auth.sendAuthorized((token) {
       return ApiClient.post(
@@ -86,7 +87,8 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     // Один attempt за сессию, даже при ошибке — иначе AppShell spam'ит на каждый rebuild.
     _boundThisSession = true;
     try {
-      await _subscribeAndSave();
+      // Не forceRefresh: на iOS лишний unsubscribe/subscribe даёт InvalidStateError.
+      await _subscribeAndSave(forceRefresh: false);
     } catch (_) {
       // Тихий rebind — пользователь уже видел ошибку при ручном включении.
     } finally {
@@ -110,7 +112,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
       }
 
       try {
-        final err = await _subscribeAndSave();
+        final err = await _subscribeAndSave(forceRefresh: true);
         if (err != null) return err;
       } catch (e) {
         return e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '');
@@ -143,7 +145,34 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     state = value;
     return null;
   }
+
+  /// Ручной тест доставки (сервер → APNs/FCM → устройство).
+  Future<String?> sendTestPush() async {
+    if (!state) return 'Сначала включите уведомления';
+    try {
+      final auth = _ref.read(authRepositoryProvider);
+      final resp = await auth.sendAuthorized((token) {
+        return ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/push/test'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+          operation: 'push_test',
+        );
+      });
+      if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        return 'Не удалось отправить тест';
+      }
+      return null;
+    } catch (e) {
+      return e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '');
+    }
+  }
 }
 
 /// Поддержка Web Push (для UI).
 bool get isWebPushSupported => browser_push.browserPushSupported();
+
+bool get isWebPushStandalone => browser_push.browserPushStandalone();

@@ -20,6 +20,22 @@ bool browserPushSupported() {
   }
 }
 
+/// iOS: Push доступен только в установленной PWA (standalone).
+bool browserPushStandalone() {
+  if (!kIsWeb) return false;
+  try {
+    if (web.window.matchMedia('(display-mode: standalone)').matches) {
+      return true;
+    }
+  } catch (_) {}
+  try {
+    if (web.window.matchMedia('(display-mode: fullscreen)').matches) {
+      return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
 String browserNotificationPermission() {
   try {
     return web.Notification.permission;
@@ -91,29 +107,45 @@ class BrowserPushSubscriptionData {
   final String endpoint;
   final String p256dh;
   final String auth;
+
+  bool get isApple => endpoint.contains('web.push.apple.com');
 }
 
-/// Всегда пересоздаёт подписку на нашем SW + текущем VAPID
-/// (старый endpoint после смены SW на iOS часто «мёртвый»).
-Future<web.PushSubscription> _createFreshSubscription({
+Future<web.PushSubscription> _subscribeWithKey({
   required web.PushManager pushManager,
   required Uint8List applicationServerKey,
+}) {
+  // Явный Uint8Array — Safari надёжнее принимает его, чем generic BufferSource.
+  final key = applicationServerKey.toJS;
+  return pushManager
+      .subscribe(
+        web.PushSubscriptionOptionsInit(
+          userVisibleOnly: true,
+          applicationServerKey: key,
+        ),
+      )
+      .toDart;
+}
+
+/// Получает или создаёт подписку. [forceRefresh] — снять старую (после смены SW/VAPID).
+Future<web.PushSubscription> _getOrCreateSubscription({
+  required web.PushManager pushManager,
+  required Uint8List applicationServerKey,
+  required bool forceRefresh,
 }) async {
   final existing = await pushManager.getSubscription().toDart;
+  if (existing != null && !forceRefresh) {
+    return existing;
+  }
   if (existing != null) {
     try {
       await existing.unsubscribe().toDart;
     } catch (_) {}
   }
-
-  return pushManager
-      .subscribe(
-        web.PushSubscriptionOptionsInit(
-          userVisibleOnly: true,
-          applicationServerKey: applicationServerKey.toJS,
-        ),
-      )
-      .toDart;
+  return _subscribeWithKey(
+    pushManager: pushManager,
+    applicationServerKey: applicationServerKey,
+  );
 }
 
 BrowserPushSubscriptionData _subscriptionData(web.PushSubscription subscription) {
@@ -136,6 +168,7 @@ BrowserPushSubscriptionData _subscriptionData(web.PushSubscription subscription)
 /// Подписывается на Web Push с [vapidPublicKey] (URL-safe base64).
 Future<BrowserPushSubscriptionData> subscribeBrowserPush({
   required String vapidPublicKey,
+  bool forceRefresh = true,
 }) async {
   final permission = browserNotificationPermission();
   if (permission != 'granted') {
@@ -144,9 +177,10 @@ Future<BrowserPushSubscriptionData> subscribeBrowserPush({
 
   final registration = await _ensurePushServiceWorker();
   final applicationServerKey = _urlBase64ToUint8List(vapidPublicKey);
-  final subscription = await _createFreshSubscription(
+  final subscription = await _getOrCreateSubscription(
     pushManager: registration.pushManager,
     applicationServerKey: applicationServerKey,
+    forceRefresh: forceRefresh,
   );
   return _subscriptionData(subscription);
 }

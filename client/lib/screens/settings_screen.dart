@@ -17,6 +17,16 @@ class SettingsScreen extends ConsumerWidget {
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
+    String pushSubtitle() {
+      if (!isWebPushSupported) {
+        return 'В этом браузере Web Push недоступен (на iPhone установите приложение на экран «Домой» и откройте с иконки).';
+      }
+      if (!isWebPushStandalone) {
+        return 'Откройте приложение с экрана «Домой» (PWA). В обычной вкладке Safari на iPhone пуши не работают.';
+      }
+      return 'Push: сообщения, заявки в друзья, приглашения. После включения придёт тест — сверните приложение. Если нет — кнопка «Тест» ниже.';
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -48,9 +58,7 @@ class SettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     _SettingsTile(
                       title: 'Уведомления в браузере',
-                      subtitle: isWebPushSupported
-                          ? 'Push: сообщения, заявки в друзья, приглашения. На iPhone — только из PWA с экрана «Домой»; приложение должно быть свёрнуто или закрыто. После обновления приложения выключите и снова включите переключатель.'
-                          : 'В этом браузере Web Push недоступен (на iPhone установите приложение на экран «Домой»).',
+                      subtitle: pushSubtitle(),
                       value: webPushEnabled,
                       onChanged: isWebPushSupported
                           ? (v) async {
@@ -64,10 +72,45 @@ class SettingsScreen extends ConsumerWidget {
                                   message: err,
                                   kind: AppSnackKind.error,
                                 );
+                                return;
+                              }
+                              if (v) {
+                                showAppSnackBar(
+                                  context,
+                                  message:
+                                      'Подписка сохранена. Сверните приложение — должно прийти тестовое уведомление.',
+                                  kind: AppSnackKind.success,
+                                );
                               }
                             }
                           : null,
                     ),
+                    if (webPushEnabled && isWebPushSupported) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: () async {
+                          final err = await ref
+                              .read(webPushEnabledProvider.notifier)
+                              .sendTestPush();
+                          if (!context.mounted) return;
+                          if (err != null) {
+                            showAppSnackBar(
+                              context,
+                              message: err,
+                              kind: AppSnackKind.error,
+                            );
+                            return;
+                          }
+                          showAppSnackBar(
+                            context,
+                            message:
+                                'Тест отправлен. Сверните приложение на пару секунд.',
+                            kind: AppSnackKind.success,
+                          );
+                        },
+                        child: const Text('Отправить тестовое уведомление'),
+                      ),
+                    ],
                   ],
                 ],
               ),

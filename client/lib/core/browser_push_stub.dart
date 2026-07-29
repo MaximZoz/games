@@ -1,6 +1,8 @@
 /// Stub для non-web платформ.
 bool browserPushSupported() => false;
 
+bool browserPushStandalone() => false;
+
 String browserNotificationPermission() => 'denied';
 
 Future<String> requestBrowserNotificationPermission() async => 'denied';
@@ -15,10 +17,13 @@ class BrowserPushSubscriptionData {
   final String endpoint;
   final String p256dh;
   final String auth;
+
+  bool get isApple => false;
 }
 
 Future<BrowserPushSubscriptionData> subscribeBrowserPush({
   required String vapidPublicKey,
+  bool forceRefresh = true,
 }) async {
   throw UnsupportedError('Web Push только в браузере / PWA');
 }
