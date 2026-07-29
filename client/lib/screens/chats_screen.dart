@@ -1628,6 +1628,76 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     );
   }
 
+  Future<void> _sendOrAcceptFriendFromChat(ChatPreviewItem item) async {
+    final userId = item.user.id.trim();
+    if (userId.isEmpty) return;
+    final actionKey = 'friend_$userId';
+    if (_chatActionInFlight.contains(actionKey)) return;
+
+    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+    if (snapshot?.friends.any((f) => f.user.id == userId) == true) return;
+
+    String? incomingRequestId;
+    for (final r in snapshot?.incoming ?? const []) {
+      if (r.user.id == userId) {
+        incomingRequestId = r.requestId;
+        break;
+      }
+    }
+    final hasOutgoing =
+        snapshot?.outgoing.any((r) => r.user.id == userId) == true;
+    if (hasOutgoing &&
+        (incomingRequestId == null || incomingRequestId.isEmpty)) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: 'Заявка уже отправлена',
+        kind: AppSnackKind.info,
+      );
+      return;
+    }
+
+    setState(() => _chatActionInFlight.add(actionKey));
+    try {
+      final repo = ref.read(friendsRepositoryProvider);
+      if (incomingRequestId != null && incomingRequestId.isNotEmpty) {
+        await repo.acceptRequest(incomingRequestId);
+      } else {
+        await repo.sendRequest(userId);
+      }
+      await refreshFriendsSnapshot(ref);
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: incomingRequestId != null && incomingRequestId.isNotEmpty
+            ? 'Заявка принята'
+            : 'Заявка отправлена',
+        kind: AppSnackKind.success,
+      );
+    } on FriendsException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Очистка/блок из комнаты (десктоп split-view): комната не владеет _chats.
@@ -1656,6 +1726,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
+    final friendsSnapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final chats = _chats;
     final hasBlockedUsers = blockedUsers.isNotEmpty;
@@ -1873,6 +1944,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               final blockBusy =
                                   _chatActionInFlight.contains(blockKey);
                               final itemBusy = clearBusy || blockBusy;
+                              final peerId = item.user.id.trim();
+                              final isFriend = peerId.isNotEmpty &&
+                                  friendsSnapshot?.friends
+                                          .any((f) => f.user.id == peerId) ==
+                                      true;
+                              final hasOutgoing = peerId.isNotEmpty &&
+                                  friendsSnapshot?.outgoing
+                                          .any((r) => r.user.id == peerId) ==
+                                      true;
+                              final hasIncoming = peerId.isNotEmpty &&
+                                  friendsSnapshot?.incoming
+                                          .any((r) => r.user.id == peerId) ==
+                                      true;
+                              final friendBusy = _chatActionInFlight
+                                  .contains('friend_$peerId');
+                              final showAddFriend =
+                                  peerId.isNotEmpty && !isFriend;
                               return Padding(
                                 padding: EdgeInsets.only(
                                   top: index == 0 ? 0 : 10,
@@ -1934,7 +2022,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       ),
                                     ],
                                   ),
-                                  child: Opacity(
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Opacity(
                                     opacity: itemBusy ? 0.65 : 1,
                                     child: GradientCard(
                                       margin: EdgeInsets.zero,
@@ -2084,6 +2175,78 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                         ),
                                       ),
                                     ),
+                                  ),
+                                      if (showAddFriend)
+                                        Positioned(
+                                          top: -7,
+                                          right: -7,
+                                          child: Tooltip(
+                                            message: hasIncoming
+                                                ? 'Принять заявку в друзья'
+                                                : (hasOutgoing
+                                                    ? 'Заявка уже отправлена'
+                                                    : 'Отправить заявку в друзья'),
+                                            child: Material(
+                                              color: AppColors.surfaceCard,
+                                              elevation: 0,
+                                              shape: const CircleBorder(
+                                                side: BorderSide(
+                                                  color: AppColors.accentSoft,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: InkWell(
+                                                customBorder:
+                                                    const CircleBorder(),
+                                                onTap: itemBusy ||
+                                                        friendBusy ||
+                                                        hasOutgoing
+                                                    ? null
+                                                    : () => unawaited(
+                                                          _sendOrAcceptFriendFromChat(
+                                                            item,
+                                                          ),
+                                                        ),
+                                                child: SizedBox(
+                                                  width: 26,
+                                                  height: 26,
+                                                  child: Center(
+                                                    child: friendBusy
+                                                        ? const SizedBox(
+                                                            width: 12,
+                                                            height: 12,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              strokeWidth: 1.5,
+                                                              color: AppColors
+                                                                  .accentStart,
+                                                            ),
+                                                          )
+                                                        : Icon(
+                                                            hasIncoming
+                                                                ? Icons
+                                                                    .person_add_alt_1_rounded
+                                                                : Icons
+                                                                    .person_add_alt_1_rounded,
+                                                            size: 15,
+                                                            color: hasOutgoing
+                                                                ? AppColors
+                                                                    .accentStart
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.35,
+                                                                    )
+                                                                : AppColors
+                                                                    .accentStart,
+                                                          ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               );
