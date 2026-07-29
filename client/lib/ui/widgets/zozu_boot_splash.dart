@@ -541,19 +541,31 @@ class _LoginFrameDrawPainter extends CustomPainter {
     return path;
   }
 
-  Path _trim(Path path, double t) {
-    if (t <= 0) return Path();
-    if (t >= 1) return path;
+  Path _trim(Path path, double t) => _trimRange(path, 0, t);
+
+  /// Отрезок пути [startT, endT] по доле длины (для «змеи»: хвост съедается с start).
+  Path _trimRange(Path path, double startT, double endT) {
+    final a = startT.clamp(0.0, 1.0);
+    final b = endT.clamp(0.0, 1.0);
+    if (b <= a) return Path();
+    if (a <= 0 && b >= 1) return path;
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return Path();
     final total = metrics.fold<double>(0, (s, m) => s + m.length);
-    var remain = total * t;
+    if (total <= 0) return Path();
+    final startLen = total * a;
+    final endLen = total * b;
+    var cursor = 0.0;
     final out = Path();
     for (final m in metrics) {
-      if (remain <= 0) break;
-      final take = math.min(m.length, remain);
-      out.addPath(m.extractPath(0, take), Offset.zero);
-      remain -= take;
+      final segStart = cursor;
+      final segEnd = cursor + m.length;
+      cursor = segEnd;
+      final from = math.max(startLen, segStart);
+      final to = math.min(endLen, segEnd);
+      if (to > from) {
+        out.addPath(m.extractPath(from - segStart, to - segStart), Offset.zero);
+      }
     }
     return out;
   }
@@ -585,11 +597,15 @@ class _LoginFrameDrawPainter extends CustomPainter {
       return;
     }
 
-    // Полные дуги подхода + половинки рамки.
-    canvas.drawPath(approachLeft, paint);
-    canvas.drawPath(approachRight, paint);
-    final frameT = Curves.easeInOutCubic
-        .transform(((t - _approachEnd) / (1 - _approachEnd)).clamp(0.0, 1.0));
+    final framePhase =
+        ((t - _approachEnd) / (1 - _approachEnd)).clamp(0.0, 1.0);
+    final frameT = Curves.easeInOutCubic.transform(framePhase);
+    // Хвост подходной дуги «съедается» с начала до точки касания рамки.
+    final retractT = Curves.easeInOutCubic
+        .transform((framePhase / 0.38).clamp(0.0, 1.0));
+
+    canvas.drawPath(_trimRange(approachLeft, retractT, 1.0), paint);
+    canvas.drawPath(_trimRange(approachRight, retractT, 1.0), paint);
     canvas.drawPath(_trim(leftFrame, frameT), paint);
     canvas.drawPath(_trim(rightFrame, frameT), paint);
   }
