@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:web/web.dart' as web;
 
-const _swUrl = '/push-sw.js?v=6';
+const _swUrl = '/push-sw.js?v=7';
 
 /// Поддержка Web Push в текущем браузере.
 bool browserPushSupported() {
@@ -201,5 +201,19 @@ Future<void> unsubscribeBrowserPush() async {
     final sub = await registration.pushManager.getSubscription().toDart;
     if (sub == null) return;
     await sub.unsubscribe().toDart;
+  } catch (_) {}
+}
+
+/// Снять баннеры в шторке и pending deep-link после выхода из аккаунта.
+Future<void> clearPushUiOnLogout() async {
+  try {
+    final cache = await web.window.caches.open('zozu-push-pending-v1').toDart;
+    await cache.delete('/__pending_nav'.toJS).toDart;
+  } catch (_) {}
+  try {
+    final reg = await web.window.navigator.serviceWorker.ready.toDart;
+    final worker = reg.active;
+    if (worker == null) return;
+    worker.postMessage({'type': 'clear_all_notifications'}.jsify());
   } catch (_) {}
 }

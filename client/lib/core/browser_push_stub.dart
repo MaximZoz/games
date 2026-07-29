@@ -31,3 +31,5 @@ Future<BrowserPushSubscriptionData> subscribeBrowserPush({
 Future<String?> currentBrowserPushEndpoint() async => null;
 
 Future<void> unsubscribeBrowserPush() async {}
+
+Future<void> clearPushUiOnLogout() async {}
