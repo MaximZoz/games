@@ -15,6 +15,7 @@ import (
 type ShopHandler struct {
 	Pool *pgxpool.Pool
 	Hub  *RealtimeHub
+	Push *WebPushSender
 }
 
 type buyBody struct {
@@ -331,6 +332,19 @@ func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 						"from_user_id":   userID.String(),
 						"chat_id":        item.ChatID,
 						"message_id":     item.ID,
+					})
+				}
+				if h.Push != nil {
+					from := pushUserLabel(r.Context(), h.Pool, userID)
+					body := "Вам подарили коллекцию"
+					if strings.TrimSpace(title) != "" {
+						body = "Вам подарили: " + strings.TrimSpace(title)
+					}
+					h.Push.NotifyUsers([]uuid.UUID{toID}, store.WebPushCategoryRewards, PushPayload{
+						Title: from,
+						Body:  body,
+						URL:   "/inventory",
+						Tag:   "reward_gift_" + code,
 					})
 				}
 			}

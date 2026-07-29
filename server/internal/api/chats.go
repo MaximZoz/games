@@ -658,7 +658,7 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 	if body == "" {
 		body = "Новое сообщение"
 	}
-	h.Push.NotifyUsers(recipients, PushPayload{
+	h.Push.NotifyUsers(recipients, store.WebPushCategoryChat, PushPayload{
 		Title: from,
 		Body:  body,
 		URL:   "/chats/" + item.ChatID,

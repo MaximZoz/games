@@ -255,15 +255,6 @@ func main() {
 		log.Printf("App logs: disabled (APP_LOG_ENABLED=false or unset)")
 	}
 
-	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
-	realtimeHub := api.NewRealtimeHub()
-	wsHandler := &api.RealtimeWSHandler{
-		Hub:           realtimeHub,
-		Pool:          pool,
-		JWTSecret:     []byte(jwtSecret),
-		LogWriter:     logWriter,
-		AppLogEnabled: appLogEnabled,
-	}
 	pushSender := &api.WebPushSender{
 		Pool:       pool,
 		PublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
@@ -275,6 +266,17 @@ func main() {
 		log.Printf("Web Push: enabled")
 	} else {
 		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
+	}
+
+	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret), Push: pushSender}
+	realtimeHub := api.NewRealtimeHub()
+	wsHandler := &api.RealtimeWSHandler{
+		Hub:           realtimeHub,
+		Pool:          pool,
+		JWTSecret:     []byte(jwtSecret),
+		LogWriter:     logWriter,
+		AppLogEnabled: appLogEnabled,
+		Push:          pushSender,
 	}
 	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
@@ -290,7 +292,7 @@ func main() {
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	achievementsHandler := &api.AchievementsHandler{Pool: pool}
-	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub}
+	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 		go api.StartBotTimeoutTicker(ctx, gamesHandler)
@@ -360,6 +362,7 @@ func main() {
 	mux.Handle("/api/push/vapid-key", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.VapidPublicKey)))
 	mux.Handle("/api/push/subscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Subscribe)))
 	mux.Handle("/api/push/unsubscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Unsubscribe)))
+	mux.Handle("/api/push/preferences", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Preferences)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

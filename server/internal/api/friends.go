@@ -351,7 +351,7 @@ func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 	h.publishFriendsUpdated(userID, targetID)
 	if h.Push != nil {
 		from := pushUserLabel(r.Context(), h.Pool, userID)
-		h.Push.NotifyUsers([]uuid.UUID{targetID}, PushPayload{
+		h.Push.NotifyUsers([]uuid.UUID{targetID}, store.WebPushCategoryFriends, PushPayload{
 			Title: "Новая заявка в друзья",
 			Body:  from + " хочет добавить вас в друзья",
 			URL:   "/friends",
@@ -399,8 +399,10 @@ func (h *FriendsHandler) AcceptRequest(w http.ResponseWriter, r *http.Request) {
 		writeFriendError(w, err)
 		return
 	}
-	_ = store.EvaluateAndUnlock(r.Context(), h.Pool, senderID)
-	_ = store.EvaluateAndUnlock(r.Context(), h.Pool, receiverID)
+	unlockedSender, _ := store.EvaluateAndUnlock(r.Context(), h.Pool, senderID)
+	unlockedReceiver, _ := store.EvaluateAndUnlock(r.Context(), h.Pool, receiverID)
+	notifyAchievementUnlocks(h.Push, senderID, unlockedSender)
+	notifyAchievementUnlocks(h.Push, receiverID, unlockedReceiver)
 	h.publishFriendsUpdated(senderID, receiverID)
 	w.WriteHeader(http.StatusNoContent)
 }

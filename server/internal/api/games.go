@@ -2093,7 +2093,7 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	if lobbyID != "" {
 		url = "/games/tictactoe/lobby/" + lobbyID
 	}
-	h.Push.NotifyUsers(userIDs, PushPayload{
+	h.Push.NotifyUsers(userIDs, store.WebPushCategoryGames, PushPayload{
 		Title: "Приглашение в игру",
 		Body:  name + " приглашает сыграть",
 		URL:   url,
@@ -2131,7 +2131,8 @@ func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID strin
 	if err := store.IncrementWinsByStake(ctx, h.Pool, uid, stakeBronze); err != nil {
 		return
 	}
-	_ = store.EvaluateAndUnlock(ctx, h.Pool, uid)
+	unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
+	notifyAchievementUnlocks(h.Push, uid, unlocked)
 }
 
 func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID string) {
@@ -2146,7 +2147,8 @@ func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID 
 		if err := store.IncrementGamesFinished(ctx, h.Pool, uid); err != nil {
 			continue
 		}
-		_ = store.EvaluateAndUnlock(ctx, h.Pool, uid)
+		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
+		notifyAchievementUnlocks(h.Push, uid, unlocked)
 	}
 }
 

@@ -58,21 +58,30 @@ func normalizeVapidSubscriber(raw string) string {
 	return s
 }
 
-// NotifyUsers шлёт push выбранным пользователям (асинхронно).
-func (s *WebPushSender) NotifyUsers(userIDs []uuid.UUID, payload PushPayload) {
+// NotifyUsers шлёт push выбранным пользователям (асинхронно), с учётом категории prefs.
+func (s *WebPushSender) NotifyUsers(userIDs []uuid.UUID, category string, payload PushPayload) {
 	if !s.Enabled() || len(userIDs) == 0 {
 		return
 	}
 	// Копия среза — вызывающий может переиспользовать буфер.
 	ids := append([]uuid.UUID(nil), userIDs...)
-	go s.send(ids, payload)
+	go s.send(ids, category, payload)
 }
 
-func (s *WebPushSender) send(userIDs []uuid.UUID, payload PushPayload) {
+func (s *WebPushSender) send(userIDs []uuid.UUID, category string, payload PushPayload) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	subs, err := store.ListWebPushSubscriptionsForUsers(ctx, s.Pool, userIDs)
+	filtered, err := store.FilterUserIDsForWebPushCategory(ctx, s.Pool, userIDs, category)
+	if err != nil {
+		log.Printf("web push: filter prefs: %v", err)
+		return
+	}
+	if len(filtered) == 0 {
+		return
+	}
+
+	subs, err := store.ListWebPushSubscriptionsForUsers(ctx, s.Pool, filtered)
 	if err != nil {
 		log.Printf("web push: list subscriptions: %v", err)
 		return
@@ -200,6 +209,43 @@ func (h *WebPushHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
 		"ok":    true,
 		"apple": strings.Contains(endpoint, "web.push.apple.com"),
 	})
+}
+
+func (h *WebPushHandler) Preferences(w http.ResponseWriter, r *http.Request) {
+	if h == nil || h.Pool == nil {
+		writeJSONError(w, "web push disabled", http.StatusServiceUnavailable)
+		return
+	}
+	userID, ok := currentUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		prefs, err := store.GetWebPushPreferences(r.Context(), h.Pool, userID)
+		if err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(prefs)
+	case http.MethodPut:
+		var body store.WebPushPreferences
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			return
+		}
+		if err := store.UpsertWebPushPreferences(r.Context(), h.Pool, userID, body); err != nil {
+			log.Printf("web push prefs: %v", err)
+			http.Error(w, "failed to save preferences", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(body)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {

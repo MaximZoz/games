@@ -137,6 +137,7 @@ type RealtimeWSHandler struct {
 	JWTSecret     []byte
 	LogWriter     *applog.FileWriter // файл (для импорта)
 	AppLogEnabled bool               // если true — presence пишем ещё и напрямую в БД
+	Push          *WebPushSender
 }
 
 var wsUpgrader = websocket.Upgrader{
@@ -213,6 +214,16 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"type":      "daily_reward_available",
 				"available": available,
 			})
+			if available && h.Push != nil {
+				if ok, markErr := store.TryMarkDailyRewardPush(ctx, h.Pool, userID); markErr == nil && ok {
+					h.Push.NotifyUsers([]uuid.UUID{userID}, store.WebPushCategoryRewards, PushPayload{
+						Title: "Награда за вход",
+						Body:  "Монеты за вход доступны — заберите на главной",
+						URL:   "/coins/login",
+						Tag:   "daily_reward",
+					})
+				}
+			}
 		}
 		if h.LogWriter != nil {
 			meta := map[string]interface{}{

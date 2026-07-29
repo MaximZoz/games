@@ -39,6 +39,9 @@ function pathFromTag(tag) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
   }
+  if (t.startsWith('achievement_')) return '/achievements';
+  if (t.startsWith('reward_gift_')) return '/inventory';
+  if (t === 'daily_reward') return '/coins/login';
   return null;
 }
 

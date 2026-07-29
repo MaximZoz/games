@@ -25,6 +25,7 @@ const (
 type AuthHandler struct {
 	Pool      *pgxpool.Pool
 	JWTSecret []byte
+	Push      *WebPushSender
 }
 
 type RegisterRequest struct {

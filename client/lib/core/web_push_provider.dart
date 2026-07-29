@@ -11,10 +11,60 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyWebPushEnabled = 'web_push_enabled';
 
+class WebPushCategoryPrefs {
+  const WebPushCategoryPrefs({
+    this.chat = true,
+    this.friends = true,
+    this.games = true,
+    this.rewards = true,
+  });
+
+  final bool chat;
+  final bool friends;
+  final bool games;
+  final bool rewards;
+
+  WebPushCategoryPrefs copyWith({
+    bool? chat,
+    bool? friends,
+    bool? games,
+    bool? rewards,
+  }) {
+    return WebPushCategoryPrefs(
+      chat: chat ?? this.chat,
+      friends: friends ?? this.friends,
+      games: games ?? this.games,
+      rewards: rewards ?? this.rewards,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'chat': chat,
+        'friends': friends,
+        'games': games,
+        'rewards': rewards,
+      };
+
+  factory WebPushCategoryPrefs.fromJson(Map<String, dynamic> json) {
+    return WebPushCategoryPrefs(
+      chat: json['chat'] as bool? ?? true,
+      friends: json['friends'] as bool? ?? true,
+      games: json['games'] as bool? ?? true,
+      rewards: json['rewards'] as bool? ?? true,
+    );
+  }
+}
+
 /// Пользовательский флаг «уведомления в браузере» (local prefs).
 final webPushEnabledProvider =
     StateNotifierProvider<WebPushEnabledNotifier, bool>((ref) {
   return WebPushEnabledNotifier(ref);
+});
+
+/// Категории Web Push (серверные prefs).
+final webPushCategoriesProvider = StateNotifierProvider<
+    WebPushCategoriesNotifier, WebPushCategoryPrefs>((ref) {
+  return WebPushCategoriesNotifier(ref);
 });
 
 class WebPushEnabledNotifier extends StateNotifier<bool> {
@@ -84,13 +134,11 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     if (_ref.read(authStateProvider).valueOrNull == null) return;
 
     _ensuring = true;
-    // Один attempt за сессию, даже при ошибке — иначе AppShell spam'ит на каждый rebuild.
     _boundThisSession = true;
     try {
-      // Не forceRefresh: на iOS лишний unsubscribe/subscribe даёт InvalidStateError.
       await _subscribeAndSave(forceRefresh: false);
+      await _ref.read(webPushCategoriesProvider.notifier).refresh();
     } catch (_) {
-      // Тихий rebind — пользователь уже видел ошибку при ручном включении.
     } finally {
       _ensuring = false;
     }
@@ -118,6 +166,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
         return e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '');
       }
       _boundThisSession = true;
+      await _ref.read(webPushCategoriesProvider.notifier).refresh();
     } else {
       _boundThisSession = false;
       try {
@@ -144,6 +193,75 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     await prefs.setBool(_keyWebPushEnabled, value);
     state = value;
     return null;
+  }
+}
+
+class WebPushCategoriesNotifier extends StateNotifier<WebPushCategoryPrefs> {
+  WebPushCategoriesNotifier(this._ref) : super(const WebPushCategoryPrefs()) {
+    refresh();
+  }
+
+  final Ref _ref;
+  bool _saving = false;
+
+  Future<void> refresh() async {
+    if (_ref.read(authStateProvider).valueOrNull == null) return;
+    try {
+      final auth = _ref.read(authRepositoryProvider);
+      final resp = await auth.sendAuthorized((token) {
+        return ApiClient.get(
+          Uri.parse('$apiBaseUrl/api/push/preferences'),
+          headers: {'Authorization': 'Bearer $token'},
+          operation: 'push_preferences_get',
+        );
+      });
+      if (resp.statusCode == 200) {
+        final map = jsonDecode(resp.body) as Map<String, dynamic>;
+        state = WebPushCategoryPrefs.fromJson(map);
+      }
+    } catch (_) {}
+  }
+
+  Future<String?> setCategory({
+    bool? chat,
+    bool? friends,
+    bool? games,
+    bool? rewards,
+  }) async {
+    if (_saving) return null;
+    final next = state.copyWith(
+      chat: chat,
+      friends: friends,
+      games: games,
+      rewards: rewards,
+    );
+    final prev = state;
+    state = next;
+    _saving = true;
+    try {
+      final auth = _ref.read(authRepositoryProvider);
+      final resp = await auth.sendAuthorized((token) {
+        return ApiClient.put(
+          Uri.parse('$apiBaseUrl/api/push/preferences'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(next.toJson()),
+          operation: 'push_preferences_put',
+        );
+      });
+      if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        state = prev;
+        return 'Не удалось сохранить настройки уведомлений';
+      }
+      return null;
+    } catch (e) {
+      state = prev;
+      return e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '');
+    } finally {
+      _saving = false;
+    }
   }
 }
 

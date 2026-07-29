@@ -14,6 +14,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final addBotsAfter30s = ref.watch(addBotsAfter30sProvider);
     final webPushEnabled = ref.watch(webPushEnabledProvider);
+    final pushCategories = ref.watch(webPushCategoriesProvider);
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
@@ -25,6 +26,16 @@ class SettingsScreen extends ConsumerWidget {
         return 'Откройте приложение с экрана «Домой». В обычной вкладке Safari пуши недоступны.';
       }
       return null;
+    }
+
+    Future<void> setCategory(Future<String?> Function() save) async {
+      final err = await save();
+      if (!context.mounted || err == null) return;
+      showAppSnackBar(
+        context,
+        message: err,
+        kind: AppSnackKind.error,
+      );
     }
 
     return Scaffold(
@@ -76,6 +87,48 @@ class SettingsScreen extends ConsumerWidget {
                             }
                           : null,
                     ),
+                    if (webPushEnabled && isWebPushSupported) ...[
+                      const SizedBox(height: 12),
+                      _SettingsTile(
+                        title: 'Чат',
+                        value: pushCategories.chat,
+                        onChanged: (v) => setCategory(
+                          () => ref
+                              .read(webPushCategoriesProvider.notifier)
+                              .setCategory(chat: v),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _SettingsTile(
+                        title: 'Друзья',
+                        value: pushCategories.friends,
+                        onChanged: (v) => setCategory(
+                          () => ref
+                              .read(webPushCategoriesProvider.notifier)
+                              .setCategory(friends: v),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _SettingsTile(
+                        title: 'Игры',
+                        value: pushCategories.games,
+                        onChanged: (v) => setCategory(
+                          () => ref
+                              .read(webPushCategoriesProvider.notifier)
+                              .setCategory(games: v),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _SettingsTile(
+                        title: 'Награды',
+                        value: pushCategories.rewards,
+                        onChanged: (v) => setCategory(
+                          () => ref
+                              .read(webPushCategoriesProvider.notifier)
+                              .setCategory(rewards: v),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
