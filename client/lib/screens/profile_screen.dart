@@ -16,9 +16,13 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -348,18 +352,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
     }
 
-    Widget centeredBody(Widget child) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: child,
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       // iOS Safari/Flutter Web: resize от клавиатуры сбрасывает фокус TextField.
@@ -441,7 +433,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: content,
                     );
                   }
-                  return centeredBody(content);
+                  // Важно: при полном заполнении (о себе + коллекции + чипы)
+                  // карточка выше экрана — нужен скролл, а не Center.
+                  return scrollableBody(content);
                 }
 
                 return extraAsync.when(
@@ -632,7 +626,10 @@ class _ProfileContent extends StatelessWidget {
       children: [
         AnimatedBorderBox(
           key: cardKey,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          padding: EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
+          ),
           child: AnimatedSwitcher(
             duration: AppDurations.medium,
             switchInCurve: Curves.easeOutCubic,
@@ -676,7 +673,7 @@ class _ProfileContent extends StatelessWidget {
   }
 }
 
-class _ProfileView extends StatelessWidget {
+class _ProfileView extends ConsumerWidget {
   const _ProfileView({
     super.key,
     required this.user,
@@ -710,32 +707,53 @@ class _ProfileView extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
+    final shortScreen = MediaQuery.sizeOf(context).height < 700;
+    final gapAfterAvatar = shortScreen ? 12.0 : 16.0;
+    final gapSection = shortScreen ? 12.0 : 14.0;
+    final hasFrame = AvatarFrameStyle.resolve(
+          code: caps?.frameCode,
+          colorHex: caps?.frameColor,
+        ) !=
+        null;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [AppColors.accentStart, AppColors.accentEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceCard,
-              shape: BoxShape.circle,
-            ),
+        if (hasFrame)
+          FramedAvatar(
+            size: 80,
+            borderWidth: 4.5,
+            frameCode: caps?.frameCode,
+            frameColor: caps?.frameColor,
             child: _buildAvatar(),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppColors.accentStart, AppColors.accentEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceCard,
+                shape: BoxShape.circle,
+              ),
+              child: _buildAvatar(),
+            ),
           ),
-        ),
-        const SizedBox(height: 18),
+        SizedBox(height: gapAfterAvatar),
         Text(
           _displayTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w800,
@@ -743,19 +761,22 @@ class _ProfileView extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         if (user.displayName?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             user.email,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 14,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
         if (profileExtra.age != null ||
             (profileExtra.gender != null &&
                 profileExtra.gender!.isNotEmpty)) ...[
-          const SizedBox(height: 14),
+          SizedBox(height: gapSection),
           Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
@@ -780,26 +801,56 @@ class _ProfileView extends StatelessWidget {
         ],
         if (profileExtra.about != null &&
             profileExtra.about!.trim().isNotEmpty) ...[
-          const SizedBox(height: 16),
+          SizedBox(height: gapSection),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            constraints: const BoxConstraints(maxHeight: 96),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.accentSoft.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(
-              profileExtra.about!.trim(),
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                height: 1.35,
+            child: SingleChildScrollView(
+              child: Text(
+                profileExtra.about!.trim(),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  height: 1.35,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
         ],
-        const SizedBox(height: 22),
+        Builder(
+          builder: (context) {
+            final inv = ref.watch(inventoryListProvider).valueOrNull ??
+                const <InventoryItem>[];
+            final collections =
+                inv.where((e) => e.kind == 'collection').toList();
+            if (collections.isEmpty) return const SizedBox.shrink();
+            return Column(
+              children: [
+                SizedBox(height: gapSection + 2),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Коллекции',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                CollectionShowcaseGrid(items: collections),
+              ],
+            );
+          },
+        ),
+        SizedBox(height: shortScreen ? 16 : 20),
         OutlinedButton.icon(
           onPressed: onEdit,
           icon: const Icon(Icons.edit_outlined, size: 18),
@@ -811,7 +862,10 @@ class _ProfileView extends StatelessWidget {
           ),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.accentStart,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+            padding: EdgeInsets.symmetric(
+              horizontal: 22,
+              vertical: shortScreen ? 11 : 13,
+            ),
             side: BorderSide(
               color: AppColors.accentStart.withValues(alpha: 0.6),
             ),

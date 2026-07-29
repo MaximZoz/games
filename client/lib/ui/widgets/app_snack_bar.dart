@@ -6,7 +6,9 @@ enum AppSnackKind { info, success, error }
 /// Фирменный нижний тост через [ScaffoldMessenger].
 ///
 /// В AppShell нижнее меню — в [Scaffold.bottomNavigationBar], поэтому
-/// SnackBar сам встаёт над ним (как задумано в Material), без ручных отступов.
+/// SnackBar сам встаёт над ним (как задумано в Material).
+/// Не используйте «голый» [SnackBar]: при `ColorScheme.surface: transparent`
+/// стандартный тост почти невидим.
 void showAppSnackBar(
   BuildContext context, {
   required String message,
@@ -20,24 +22,31 @@ void showAppSnackBar(
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
 
-  messenger
-    ..clearSnackBars()
-    ..showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        padding: EdgeInsets.zero,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        duration: duration,
-        dismissDirection: DismissDirection.horizontal,
-        content: _AppSnackCard(
-          message: text,
-          kind: kind,
-          icon: icon,
+  void present() {
+    if (!context.mounted) return;
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          padding: EdgeInsets.zero,
+          // Над bottomNavigationBar AppShell; 16 — зазор от меню.
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          duration: duration,
+          dismissDirection: DismissDirection.horizontal,
+          content: _AppSnackCard(
+            message: text,
+            kind: kind,
+            icon: icon,
+          ),
         ),
-      ),
-    );
+      );
+  }
+
+  // После закрытия диалога покупки — на следующий кадр, иначе тост схлопывается.
+  WidgetsBinding.instance.addPostFrameCallback((_) => present());
 }
 
 class _AppSnackCard extends StatefulWidget {

@@ -13,6 +13,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -709,6 +710,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
+                      PeerCollectionsSection(userId: user.id),
                     ],
                   ),
                 );

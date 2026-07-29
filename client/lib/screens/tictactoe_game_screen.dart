@@ -15,10 +15,12 @@ import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
@@ -362,6 +364,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final opponentAvatarValue = game.xUserId == currentUser?.id
               ? game.oAvatarValue
               : game.xAvatarValue;
+          final opponentFrameCode = game.xUserId == currentUser?.id
+              ? game.oFrameCode
+              : game.xFrameCode;
+          final opponentFrameColor = game.xUserId == currentUser?.id
+              ? game.oFrameColor
+              : game.xFrameColor;
 
           String statusText = '';
           if (isOver) {
@@ -422,6 +430,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               displayName: opponentName,
                               avatarKind: opponentAvatarKind,
                               avatarValue: opponentAvatarValue,
+                              frameCode: opponentFrameCode,
+                              frameColor: opponentFrameColor,
                               isBot: opponentId.startsWith('bot:'),
                               friendsSnapshot: ref
                                   .watch(friendsSnapshotProvider)
@@ -529,6 +539,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                       displayName: opponentName,
                                       avatarKind: opponentAvatarKind,
                                       avatarValue: opponentAvatarValue,
+                                      frameCode: opponentFrameCode,
+                                      frameColor: opponentFrameColor,
                                       isBot: opponentId.startsWith('bot:'),
                                       friendsSnapshot: ref
                                           .watch(friendsSnapshotProvider)
@@ -1001,6 +1013,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                    PeerCollectionsSection(userId: opponentId),
                   ],
                 );
               },
@@ -1593,6 +1606,8 @@ class _OpponentCard extends StatelessWidget {
     required this.displayName,
     required this.avatarKind,
     required this.avatarValue,
+    this.frameCode,
+    this.frameColor,
     this.isBot = false,
     required this.friendsSnapshot,
     required this.chatsList,
@@ -1605,6 +1620,8 @@ class _OpponentCard extends StatelessWidget {
   final String displayName;
   final String avatarKind;
   final String? avatarValue;
+  final String? frameCode;
+  final String? frameColor;
   final bool isBot;
   final FriendsSnapshot? friendsSnapshot;
   final List<ChatPreviewItem> chatsList;
@@ -1656,6 +1673,8 @@ class _OpponentCard extends StatelessWidget {
                   displayName: displayName,
                   avatarKind: avatarKind,
                   avatarValue: avatarValue,
+                  frameCode: frameCode,
+                  frameColor: frameColor,
                   compact: narrow,
                 ),
               ),
@@ -1715,38 +1734,58 @@ class _OpponentAvatar extends StatelessWidget {
     required this.displayName,
     required this.avatarKind,
     required this.avatarValue,
+    this.frameCode,
+    this.frameColor,
     this.compact = false,
   });
 
   final String displayName;
   final String avatarKind;
   final String? avatarValue;
+  final String? frameCode;
+  final String? frameColor;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final r = compact ? 18.0 : 22.0;
+    Widget avatar;
     if (avatarKind == 'file' &&
         avatarValue != null &&
         avatarValue!.trim().isNotEmpty) {
       final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
       if (img != null) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: r,
           backgroundImage: img,
         );
+      } else {
+        avatar = _letter(r);
       }
-    }
-    if (avatarKind == 'preset' && avatarValue != null) {
+    } else if (avatarKind == 'preset' && avatarValue != null) {
       final idx = int.tryParse(avatarValue!);
       if (idx != null && idx >= 0 && idx < _presetAvatarIcons.length) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: r,
           backgroundColor: AppColors.accentSoft,
           child: Icon(_presetAvatarIcons[idx], color: AppColors.accentStart),
         );
+      } else {
+        avatar = _letter(r);
       }
+    } else {
+      avatar = _letter(r);
     }
+    return FramedAvatar(
+      size: r * 2,
+      borderWidth: compact ? 2.4 : 3.0,
+      frameCode: frameCode,
+      frameColor: frameColor,
+      child: avatar,
+    );
+  }
+
+  Widget _letter(double r) {
     final letter =
         displayName.trim().isEmpty ? '?' : displayName[0].toUpperCase();
     return CircleAvatar(
@@ -1808,20 +1847,6 @@ class _GameBoard extends StatelessWidget {
             height: boardSize,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentStart.withValues(alpha: 0.12),
-                  blurRadius: 20,
-                  offset: Offset.zero,
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: Offset.zero,
-                  spreadRadius: 0,
-                ),
-              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),

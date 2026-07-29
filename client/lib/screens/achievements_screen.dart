@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/achievements/achievements_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
@@ -64,6 +66,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
               title: a.title,
               description: a.description,
               rewardBronze: a.rewardBronze,
+              rewardItemCode: a.rewardItemCode,
               progress: a.target,
               target: a.target,
               status: 'claimed',
@@ -80,6 +83,8 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
           .read(authStateProvider.notifier)
           .applyBalance(result.balanceBronze);
       ref.invalidate(achievementsUnclaimedCountProvider);
+      ref.invalidate(inventoryCapabilitiesProvider);
+      ref.invalidate(inventoryListProvider);
       // Тихо подтянуть актуальный список в кэш (без спиннера на UI).
       unawaited(() async {
         try {
@@ -140,22 +145,19 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
               constraints: const BoxConstraints(maxWidth: 520),
               child: items.isEmpty
                   ? const SizedBox.shrink()
-                  : Padding(
+                  : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (var i = 0; i < items.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 10),
-                            _AchievementCard(
-                              item: items[i],
-                              onClaim: items[i].isUnlocked
-                                  ? () => unawaited(_claim(items[i]))
-                                  : null,
-                            ),
-                          ],
-                        ],
-                      ),
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) {
+                        final item = items[i];
+                        return _AchievementCard(
+                          item: item,
+                          onClaim: item.isUnlocked
+                              ? () => unawaited(_claim(item))
+                              : null,
+                        );
+                      },
                     ),
             ),
           ),
@@ -182,6 +184,10 @@ class _AchievementCard extends StatelessWidget {
         return Icons.sports_esports_outlined;
       case 'friends_5':
         return Icons.group_outlined;
+      case 'wins_bronze_10':
+      case 'wins_silver_10':
+      case 'wins_gold_10':
+        return Icons.workspace_premium_outlined;
       default:
         return Icons.emoji_events_outlined;
     }
@@ -190,6 +196,7 @@ class _AchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progressText = '${item.progress}/${item.target}';
+    final frameCode = item.rewardItemCode;
     return GradientCard(
       margin: EdgeInsets.zero,
       animate: false,
@@ -200,15 +207,18 @@ class _AchievementCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
-                  borderRadius: BorderRadius.circular(14),
+              if (frameCode != null && frameCode.isNotEmpty)
+                FramePreviewBadge(frameCode: frameCode, size: 48)
+              else
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(_icon, color: AppColors.accentStart),
                 ),
-                child: Icon(_icon, color: AppColors.accentStart),
-              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -234,21 +244,23 @@ class _AchievementCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${item.rewardBronze}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+              if (item.rewardBronze > 0) ...[
+                const SizedBox(width: 8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${item.rewardBronze}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  const CoinIcon(coinType: CoinType.bronze, size: 18),
-                ],
-              ),
+                    const SizedBox(width: 4),
+                    const CoinIcon(coinType: CoinType.bronze, size: 18),
+                  ],
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -274,7 +286,7 @@ class _AchievementCard extends StatelessWidget {
             ),
           ] else if (item.isClaimed)
             Text(
-              'Получено',
+              item.hasFrameReward ? 'Рамка получена' : 'Получено',
               style: TextStyle(
                 color: Colors.green.shade700,
                 fontWeight: FontWeight.w700,
@@ -298,7 +310,9 @@ class _AchievementCard extends StatelessWidget {
                   decoration: TextDecoration.none,
                 ),
               ),
-              child: const Text('Забрать'),
+              child: Text(
+                item.hasFrameReward ? 'Открыть рамку' : 'Забрать',
+              ),
             ),
         ],
       ),

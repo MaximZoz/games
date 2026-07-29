@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
+import 'package:multigames_client/auth/session_cache.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
@@ -11,7 +12,8 @@ final authUserProvider = FutureProvider<AuthUser?>((ref) async {
   return repo.getStoredUser();
 });
 
-final authStateProvider = StateNotifierProvider<AuthStateNotifier, AsyncValue<AuthUser?>>((ref) {
+final authStateProvider =
+    StateNotifierProvider<AuthStateNotifier, AsyncValue<AuthUser?>>((ref) {
   return AuthStateNotifier(ref);
 });
 
@@ -19,7 +21,12 @@ final authStateProvider = StateNotifierProvider<AuthStateNotifier, AsyncValue<Au
 final dailyRewardFromRealtimeProvider = StateProvider<bool?>((ref) => null);
 
 /// Полный статус ежедневной награды (серия, сумма).
-final dailyRewardStatusProvider = FutureProvider<DailyRewardStatus>((ref) async {
+final dailyRewardStatusProvider =
+    FutureProvider<DailyRewardStatus>((ref) async {
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user == null) {
+    return DailyRewardStatus.empty;
+  }
   final repo = ref.watch(authRepositoryProvider);
   final status = await repo.getDailyRewardStatus();
   final fromWs = ref.watch(dailyRewardFromRealtimeProvider);
@@ -83,6 +90,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     String displayName = '',
     String? ref,
   }) async {
+    clearUserScopedCaches(_ref);
     final repo = _ref.read(authRepositoryProvider);
     final result = await repo.register(
       email: email,
@@ -94,6 +102,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   }
 
   Future<void> login({required String email, required String password}) async {
+    clearUserScopedCaches(_ref);
     final repo = _ref.read(authRepositoryProvider);
     final result = await repo.login(email: email, password: password);
     state = AsyncValue.data(result.user);
@@ -103,6 +112,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     final repo = _ref.read(authRepositoryProvider);
     await repo.logout();
     state = const AsyncValue.data(null);
+    clearUserScopedCaches(_ref);
   }
 
   Future<void> refresh() async {
@@ -188,6 +198,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     } on AuthException catch (e) {
       if (e.statusCode == 401) {
         state = const AsyncValue.data(null);
+        clearUserScopedCaches(_ref);
       }
       rethrow;
     }

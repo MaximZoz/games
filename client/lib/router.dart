@@ -23,6 +23,10 @@ import 'package:multigames_client/screens/login_screen.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
+import 'package:multigames_client/screens/shop_collections_screen.dart';
+import 'package:multigames_client/screens/shop_emojis_screen.dart';
+import 'package:multigames_client/screens/shop_screen.dart';
+import 'package:multigames_client/screens/shop_section_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
@@ -35,6 +39,7 @@ const _authRequiredPaths = <String>{
   '/games',
   '/inventory',
   '/achievements',
+  '/shop',
   '/settings',
   '/coins',
   '/admin',
@@ -80,6 +85,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final needsAuth = _authRequiredPaths.contains(path) ||
           path.startsWith('/chats/') ||
           path.startsWith('/coins/') ||
+          path.startsWith('/shop/') ||
           path.startsWith('/games');
       final isAdminRoute = path == '/admin';
 
@@ -127,6 +133,66 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     path: 'achievements',
                     pageBuilder: (_, state) =>
                         _noTransitionPage(state, const AchievementsScreen()),
+                  ),
+                  GoRoute(
+                    path: 'shop',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const ShopScreen()),
+                    routes: [
+                      GoRoute(
+                        path: 'emojis',
+                        pageBuilder: (_, state) =>
+                            _noTransitionPage(state, const ShopEmojisScreen()),
+                        routes: [
+                          GoRoute(
+                            path: ':group',
+                            pageBuilder: (_, state) {
+                              final group =
+                                  state.pathParameters['group'] ?? 'emotions';
+                              return _noTransitionPage(
+                                state,
+                                ShopEmojiGroupScreen(group: group),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'collections',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const ShopCollectionsScreen(),
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: ':set',
+                            pageBuilder: (_, state) {
+                              final set =
+                                  state.pathParameters['set'] ?? 'legends';
+                              return _noTransitionPage(
+                                state,
+                                ShopCollectionGroupScreen(set: set),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'stakes',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const ShopSectionScreen(
+                            title: 'Ставки',
+                            kind: 'stake_unlock',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'inventory',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const InventoryScreen()),
                   ),
                   GoRoute(
                     path: 'coins',
@@ -231,11 +297,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/tournaments',
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const TournamentsScreen()),
-              ),
-              GoRoute(
-                path: '/inventory',
-                pageBuilder: (_, state) =>
-                    _noTransitionPage(state, const InventoryScreen()),
               ),
             ],
           ),

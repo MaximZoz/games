@@ -28,6 +28,8 @@ type ChatUserItem struct {
 	Age         *int    `json:"age,omitempty"`
 	Gender      *string `json:"gender,omitempty"`
 	About       *string `json:"about,omitempty"`
+	FrameColor  string  `json:"frame_color,omitempty"`
+	FrameCode   string  `json:"frame_code,omitempty"`
 }
 
 type ChatPreviewItem struct {
@@ -118,6 +120,15 @@ func chatUserToItem(u store.ChatUser) ChatUserItem {
 	}
 }
 
+func chatUserToItemWithFrame(u store.ChatUser, frames map[uuid.UUID]store.EquippedFrame) ChatUserItem {
+	item := chatUserToItem(u)
+	if f, ok := frames[u.ID]; ok {
+		item.FrameColor = f.Color
+		item.FrameCode = f.Code
+	}
+	return item
+}
+
 func writeChatError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, store.ErrCannotChatWithYourself):
@@ -186,6 +197,11 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 	syncIncomingDelivered(r.Context(), h.Pool, h.Hub, userID)
 
 	items := make([]ChatPreviewItem, 0, len(chats))
+	peerIDs := make([]uuid.UUID, 0, len(chats))
+	for _, c := range chats {
+		peerIDs = append(peerIDs, c.Peer.ID)
+	}
+	frames, _ := store.EquippedFramesMap(r.Context(), h.Pool, peerIDs)
 	for _, c := range chats {
 		var lastMessage *ChatMessageItem
 		if c.LastMessage != nil {
@@ -194,7 +210,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 		}
 		items = append(items, ChatPreviewItem{
 			ChatID:      c.ChatID.String(),
-			User:        chatUserToItem(c.Peer),
+			User:        chatUserToItemWithFrame(c.Peer, frames),
 			LastMessage: lastMessage,
 			UnreadCount: c.UnreadCount,
 			CreatedAt:   c.CreatedAt.UTC().Format(time.RFC3339Nano),

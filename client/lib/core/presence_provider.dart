@@ -127,3 +127,8 @@ final presenceMapProvider = StreamProvider.autoDispose<Map<String, PresenceEntry
 void refreshPresence(WidgetRef ref) {
   ref.invalidate(presenceMapProvider);
 }
+
+/// Сброс локальных overrides при смене аккаунта.
+void clearPresenceOverrides(Ref ref) {
+  ref.read(_presenceOverridesProvider.notifier).state = const {};
+}

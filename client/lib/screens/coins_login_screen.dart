@@ -239,15 +239,9 @@ class _CompactMilestoneCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CoinIcon(
-                coinType: rewardCoinType(rewardBronze),
-                size: 22,
-                animate: isTodaysTarget || pendingToday,
-              ),
-              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '$title · ${formatRewardBronze(rewardBronze)}',
+                  title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -256,6 +250,14 @@ class _CompactMilestoneCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              BalanceDisplay(
+                bronze: rewardBronze,
+                coinSize: 18,
+                fontSize: 13,
+                spacing: 4,
+                animate: isTodaysTarget || pendingToday,
               ),
             ],
           ),

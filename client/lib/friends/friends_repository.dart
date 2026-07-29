@@ -14,6 +14,8 @@ class FriendUserItem {
   final int? age;
   final String? gender;
   final String? about;
+  final String? frameColor;
+  final String? frameCode;
   final bool? isOnline;
   final String? lastSeenAt;
 
@@ -26,6 +28,8 @@ class FriendUserItem {
     this.age,
     this.gender,
     this.about,
+    this.frameColor,
+    this.frameCode,
     this.isOnline,
     this.lastSeenAt,
   });
@@ -39,6 +43,8 @@ class FriendUserItem {
     int? age,
     String? gender,
     String? about,
+    String? frameColor,
+    String? frameCode,
     bool? isOnline,
     String? lastSeenAt,
   }) {
@@ -51,6 +57,8 @@ class FriendUserItem {
       age: age ?? this.age,
       gender: gender ?? this.gender,
       about: about ?? this.about,
+      frameColor: frameColor ?? this.frameColor,
+      frameCode: frameCode ?? this.frameCode,
       isOnline: isOnline ?? this.isOnline,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
     );
@@ -66,6 +74,8 @@ class FriendUserItem {
       age: json['age'] as int?,
       gender: json['gender'] as String?,
       about: json['about'] as String?,
+      frameColor: json['frame_color'] as String?,
+      frameCode: json['frame_code'] as String?,
     );
   }
 }

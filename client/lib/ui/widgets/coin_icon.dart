@@ -7,30 +7,34 @@ import 'package:multigames_client/ui/app_theme.dart';
 class CoinColors {
   CoinColors._();
 
-  // Монеты — контрастные оттенки
-  static const Color bronze = Color(0xFFB87333);
-  static const Color bronzeLight = Color(0xFFE8A84A);
-  static const Color bronzeHighlight = Color(0xFFFFE4A3);
-  static const Color bronzeDark = Color(0xFF6B4423);
-  static const Color silver = Color(0xFFA0A0A0);
-  static const Color silverLight = Color(0xFFE8E8E8);
+  static const Color bronze = Color(0xFFC47A2C);
+  static const Color bronzeLight = Color(0xFFF0B45A);
+  static const Color bronzeHighlight = Color(0xFFFFE7B0);
+  static const Color bronzeDark = Color(0xFF6E3D14);
+  static const Color bronzeRim = Color(0xFF8A4E1A);
+
+  static const Color silver = Color(0xFFB8BEC8);
+  static const Color silverLight = Color(0xFFECEFF3);
   static const Color silverHighlight = Color(0xFFFFFFFF);
-  static const Color silverDark = Color(0xFF505050);
-  static const Color gold = Color(0xFFD4A600);
-  static const Color goldLight = Color(0xFFFFE55C);
-  static const Color goldHighlight = Color(0xFFFFFACD);
-  static const Color goldDark = Color(0xFF8B6914);
-  // Бриллиант — яркий голубой (топаз/аквамарин)
-  static const Color diamondWhite = Color(0xFFE8F7FF);
-  static const Color diamondLight = Color(0xFF4DD0E1);
-  static const Color diamondMid = Color(0xFF29B6F6);
-  static const Color diamondBlue = Color(0xFF0288D1);
-  static const Color diamondDark = Color(0xFF01579B);
+  static const Color silverDark = Color(0xFF5A6472);
+  static const Color silverRim = Color(0xFF7A8494);
+
+  static const Color gold = Color(0xFFE1B12C);
+  static const Color goldLight = Color(0xFFFFE066);
+  static const Color goldHighlight = Color(0xFFFFF6C2);
+  static const Color goldDark = Color(0xFF8A6410);
+  static const Color goldRim = Color(0xFFB8860B);
+
+  static const Color diamondWhite = Color(0xFFF2FBFF);
+  static const Color diamondLight = Color(0xFF7DE7F5);
+  static const Color diamondMid = Color(0xFF35C4F0);
+  static const Color diamondBlue = Color(0xFF1E90E0);
+  static const Color diamondDark = Color(0xFF0B4F9C);
   static const Color diamondSparkle = Color(0xFFFFFFFF);
-  static const Color diamondOutline = Color(0xFF1A237E);
+  static const Color diamondOutline = Color(0xFF163A7A);
 }
 
-/// Иконка монеты в своём цвете — с рельефом и бликом. [animate] включает периодический блеск.
+/// Иконка монеты / бриллианта. [animate] — периодический блик.
 class CoinIcon extends StatelessWidget {
   const CoinIcon({
     super.key,
@@ -47,12 +51,19 @@ class CoinIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget icon;
-    if (coinType == CoinType.diamond) {
-      icon = _DiamondIcon(size: size);
-    } else {
-      icon = _MetalCoinIcon(coinType: coinType, size: size, showBorder: showBorder);
-    }
+    final icon = SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: coinType == CoinType.diamond
+            ? _DiamondPainter(iconSize: size)
+            : _MetalCoinPainter(
+                coinType: coinType,
+                showBorder: showBorder,
+              ),
+        size: Size.square(size),
+      ),
+    );
     if (animate) {
       return _ShimmerIcon(size: size, child: icon);
     }
@@ -60,7 +71,6 @@ class CoinIcon extends StatelessWidget {
   }
 }
 
-/// Оборачивает иконку периодической анимацией блеска.
 class _ShimmerIcon extends StatefulWidget {
   const _ShimmerIcon({required this.size, required this.child});
 
@@ -71,7 +81,8 @@ class _ShimmerIcon extends StatefulWidget {
   State<_ShimmerIcon> createState() => _ShimmerIconState();
 }
 
-class _ShimmerIconState extends State<_ShimmerIcon> with SingleTickerProviderStateMixin {
+class _ShimmerIconState extends State<_ShimmerIcon>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _shimmerOpacity;
 
@@ -84,8 +95,8 @@ class _ShimmerIconState extends State<_ShimmerIcon> with SingleTickerProviderSta
     )..repeat();
 
     _shimmerOpacity = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.7), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 0.7, end: 0.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.75), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.75, end: 0.0), weight: 1),
       TweenSequenceItem(tween: ConstantTween<double>(0.0), weight: 8),
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
@@ -113,14 +124,15 @@ class _ShimmerIconState extends State<_ShimmerIcon> with SingleTickerProviderSta
                     height: widget.size,
                     decoration: BoxDecoration(
                       gradient: RadialGradient(
-                        center: const Alignment(-0.4, -0.5),
-                        radius: 1.5,
+                        center: const Alignment(-0.35, -0.45),
+                        radius: 1.4,
                         colors: [
                           Colors.white.withValues(alpha: _shimmerOpacity.value),
-                          Colors.white.withValues(alpha: _shimmerOpacity.value * 0.3),
+                          Colors.white
+                              .withValues(alpha: _shimmerOpacity.value * 0.25),
                           Colors.white.withValues(alpha: 0.0),
                         ],
-                        stops: const [0.0, 0.4, 1.0],
+                        stops: const [0.0, 0.45, 1.0],
                       ),
                     ),
                   ),
@@ -134,102 +146,179 @@ class _ShimmerIconState extends State<_ShimmerIcon> with SingleTickerProviderSta
   }
 }
 
-/// Металлическая монета с объёмом: рельефная середина, кант, блик.
-class _MetalCoinIcon extends StatelessWidget {
-  const _MetalCoinIcon({
+class _MetalCoinPainter extends CustomPainter {
+  _MetalCoinPainter({
     required this.coinType,
-    required this.size,
     required this.showBorder,
   });
 
   final CoinType coinType;
-  final double size;
   final bool showBorder;
 
-  static const Map<CoinType, List<Color>> _gradients = {
-    CoinType.bronze: [
-      CoinColors.bronzeHighlight,
-      CoinColors.bronzeLight,
-      CoinColors.bronze,
-      CoinColors.bronzeDark,
-    ],
-    CoinType.silver: [
-      CoinColors.silverHighlight,
-      CoinColors.silverLight,
-      CoinColors.silver,
-      CoinColors.silverDark,
-    ],
-    CoinType.gold: [
-      CoinColors.goldHighlight,
-      CoinColors.goldLight,
-      CoinColors.gold,
-      CoinColors.goldDark,
-    ],
-  };
-
   @override
-  Widget build(BuildContext context) {
-    final colors = _gradients[coinType] ?? _gradients[CoinType.bronze]!;
-    return ClipOval(
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: colors[3].withValues(alpha: 0.6),
-                blurRadius: size * 0.12,
-                offset: Offset(0, size * 0.05),
-              ),
-              BoxShadow(
-                color: colors[0].withValues(alpha: 0.7),
-                blurRadius: size * 0.08,
-                offset: Offset(-size * 0.06, -size * 0.06),
-              ),
-            ],
-            gradient: RadialGradient(
-              center: const Alignment(-0.3, -0.4),
-              radius: 1.2,
-              colors: [
-                colors[0],
-                colors[1],
-                colors[2],
-                colors[3],
-              ],
-              stops: const [0.0, 0.3, 0.7, 1.0],
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final c = Offset(s / 2, s / 2);
+    final r = s / 2;
+
+    final palette = switch (coinType) {
+      CoinType.bronze => (
+          highlight: CoinColors.bronzeHighlight,
+          light: CoinColors.bronzeLight,
+          mid: CoinColors.bronze,
+          dark: CoinColors.bronzeDark,
+          rim: CoinColors.bronzeRim,
+          glyph: 'Б',
+        ),
+      CoinType.silver => (
+          highlight: CoinColors.silverHighlight,
+          light: CoinColors.silverLight,
+          mid: CoinColors.silver,
+          dark: CoinColors.silverDark,
+          rim: CoinColors.silverRim,
+          glyph: 'С',
+        ),
+      CoinType.gold => (
+          highlight: CoinColors.goldHighlight,
+          light: CoinColors.goldLight,
+          mid: CoinColors.gold,
+          dark: CoinColors.goldDark,
+          rim: CoinColors.goldRim,
+          glyph: 'З',
+        ),
+      CoinType.diamond => (
+          highlight: CoinColors.diamondWhite,
+          light: CoinColors.diamondLight,
+          mid: CoinColors.diamondMid,
+          dark: CoinColors.diamondDark,
+          rim: CoinColors.diamondOutline,
+          glyph: '◆',
+        ),
+    };
+
+    // Мягкая тень под монетой.
+    canvas.drawCircle(
+      c.translate(0, s * 0.06),
+      r * 0.92,
+      Paint()
+        ..color = palette.dark.withValues(alpha: 0.28)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.08),
+    );
+
+    // Внешний обод.
+    canvas.drawCircle(
+      c,
+      r * 0.98,
+      Paint()
+        ..shader = SweepGradient(
+          startAngle: -math.pi / 2,
+          colors: [
+            palette.highlight,
+            palette.light,
+            palette.mid,
+            palette.dark,
+            palette.rim,
+            palette.light,
+            palette.highlight,
+          ],
+          stops: const [0.0, 0.18, 0.38, 0.58, 0.78, 0.9, 1.0],
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+
+    // Внутренний диск.
+    final innerR = r * 0.78;
+    canvas.drawCircle(
+      c,
+      innerR,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.35, -0.42),
+          radius: 1.05,
+          colors: [
+            palette.highlight,
+            palette.light,
+            palette.mid,
+            palette.dark,
+          ],
+          stops: const [0.0, 0.28, 0.7, 1.0],
+        ).createShader(Rect.fromCircle(center: c, radius: innerR)),
+    );
+
+    // Внутренний кант (гравировка).
+    canvas.drawCircle(
+      c,
+      innerR * 0.86,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (s * 0.045).clamp(1.0, 2.4)
+        ..color = palette.dark.withValues(alpha: 0.35),
+    );
+    canvas.drawCircle(
+      c,
+      innerR * 0.86,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (s * 0.02).clamp(0.6, 1.2)
+        ..color = palette.highlight.withValues(alpha: 0.55),
+    );
+
+    // Блик-дуга сверху слева.
+    final highlightPath = Path()
+      ..addArc(
+        Rect.fromCircle(center: c, radius: innerR * 0.72),
+        -math.pi * 0.95,
+        math.pi * 0.55,
+      );
+    canvas.drawPath(
+      highlightPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = (s * 0.07).clamp(1.2, 3.5)
+        ..color = Colors.white.withValues(alpha: 0.55),
+    );
+
+    // Центральный символ.
+    final fontSize = s * 0.42;
+    final tp = TextPainter(
+      text: TextSpan(
+        text: palette.glyph,
+        style: TextStyle(
+          color: palette.dark.withValues(alpha: 0.82),
+          fontSize: fontSize,
+          fontWeight: FontWeight.w800,
+          height: 1,
+          shadows: [
+            Shadow(
+              color: palette.highlight.withValues(alpha: 0.7),
+              offset: Offset(-s * 0.02, -s * 0.02),
+              blurRadius: s * 0.04,
             ),
-            border: showBorder
-                ? Border.all(
-                    color: colors[1].withValues(alpha: 0.95),
-                    width: size * 0.03,
-                  )
-                : null,
-          ),
+          ],
         ),
       ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(
+      canvas,
+      Offset(c.dx - tp.width / 2, c.dy - tp.height / 2 - s * 0.02),
     );
+
+    if (showBorder) {
+      canvas.drawCircle(
+        c,
+        r * 0.985,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = (s * 0.035).clamp(0.8, 1.8)
+          ..color = palette.rim.withValues(alpha: 0.85),
+      );
+    }
   }
-}
-
-/// Фасетный бриллиант — огранка «круглый бриллиант».
-class _DiamondIcon extends StatelessWidget {
-  const _DiamondIcon({required this.size});
-
-  final double size;
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _DiamondPainter(iconSize: size),
-        size: Size(size, size),
-      ),
-    );
-  }
+  bool shouldRepaint(covariant _MetalCoinPainter oldDelegate) =>
+      oldDelegate.coinType != coinType || oldDelegate.showBorder != showBorder;
 }
 
 class _DiamondPainter extends CustomPainter {
@@ -242,158 +331,163 @@ class _DiamondPainter extends CustomPainter {
     final s = size.width;
     final cx = s / 2;
     final cy = s / 2;
-    final r = s * 0.48;
-    final strokeW = (s * 0.02).clamp(0.8, 1.5);
-    final rect = Rect.fromCenter(center: Offset(cx, cy), width: s * 2, height: s * 2);
+    // Чуть крупнее, чтобы визуально совпадать с круглыми монетами в одном слоте.
+    final r = s * 0.50;
 
-    // Широкий сверху, плоский стол, остриё внизу (wider than tall)
-    final tl = Offset(cx - r * 0.55, cy - r * 0.38);
-    final tr = Offset(cx + r * 0.55, cy - r * 0.38);
-    final gl = Offset(cx - r * 0.48, cy + r * 0.12);
-    final gr = Offset(cx + r * 0.48, cy + r * 0.12);
-    final bottom = Offset(cx, cy + r);
-
-    // === ПАВИЛЬОН (низ) — тёмные градиенты ===
+    // Тень.
+    final shadow = Path()
+      ..moveTo(cx, cy - r * 0.55)
+      ..lineTo(cx + r * 0.72, cy - r * 0.08)
+      ..lineTo(cx, cy + r * 0.95)
+      ..lineTo(cx - r * 0.72, cy - r * 0.08)
+      ..close();
     canvas.drawPath(
-      Path()
-        ..moveTo(cx - r * 0.2, cy + r * 0.08)
-        ..lineTo(cx + r * 0.2, cy + r * 0.08)
-        ..lineTo(bottom.dx, bottom.dy)
-        ..close(),
+      shadow.shift(Offset(0, s * 0.05)),
       Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [CoinColors.diamondBlue, CoinColors.diamondDark],
-        ).createShader(rect),
+        ..color = CoinColors.diamondDark.withValues(alpha: 0.28)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.08),
     );
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(gl.dx, gl.dy)
-        ..lineTo(cx - r * 0.2, cy + r * 0.08)
-        ..lineTo(bottom.dx, bottom.dy)
-        ..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: const [CoinColors.diamondDark, CoinColors.diamondBlue],
-        ).createShader(rect),
+    final top = Offset(cx, cy - r * 0.58);
+    final left = Offset(cx - r * 0.78, cy - r * 0.05);
+    final right = Offset(cx + r * 0.78, cy - r * 0.05);
+    final midL = Offset(cx - r * 0.42, cy + r * 0.18);
+    final midR = Offset(cx + r * 0.42, cy + r * 0.18);
+    final bottom = Offset(cx, cy + r * 0.92);
+    final tableL = Offset(cx - r * 0.28, cy - r * 0.22);
+    final tableR = Offset(cx + r * 0.28, cy - r * 0.22);
+    final tableB = Offset(cx, cy - r * 0.02);
+
+    Path tri(Offset a, Offset b, Offset c) => Path()
+      ..moveTo(a.dx, a.dy)
+      ..lineTo(b.dx, b.dy)
+      ..lineTo(c.dx, c.dy)
+      ..close();
+
+    void fill(Path path, List<Color> colors, Alignment begin, Alignment end) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader = LinearGradient(
+            begin: begin,
+            end: end,
+            colors: colors,
+          ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r)),
+      );
+    }
+
+    // Корона.
+    fill(
+      tri(top, tableL, left),
+      const [CoinColors.diamondWhite, CoinColors.diamondLight],
+      Alignment.topLeft,
+      Alignment.bottomRight,
+    );
+    fill(
+      tri(top, right, tableR),
+      const [CoinColors.diamondLight, CoinColors.diamondMid],
+      Alignment.topRight,
+      Alignment.bottomLeft,
+    );
+    fill(
+      tri(top, tableR, tableL),
+      const [CoinColors.diamondSparkle, CoinColors.diamondWhite],
+      Alignment.topCenter,
+      Alignment.bottomCenter,
+    );
+    fill(
+      tri(tableL, tableB, left),
+      const [CoinColors.diamondWhite, CoinColors.diamondMid],
+      Alignment.centerLeft,
+      Alignment.centerRight,
+    );
+    fill(
+      tri(tableR, right, tableB),
+      const [CoinColors.diamondMid, CoinColors.diamondBlue],
+      Alignment.centerRight,
+      Alignment.centerLeft,
+    );
+    fill(
+      tri(tableL, tableR, tableB),
+      const [CoinColors.diamondSparkle, CoinColors.diamondLight],
+      Alignment.topLeft,
+      Alignment.bottomRight,
     );
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(gr.dx, gr.dy)
-        ..lineTo(bottom.dx, bottom.dy)
-        ..lineTo(cx + r * 0.2, cy + r * 0.08)
-        ..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-          colors: const [CoinColors.diamondDark, CoinColors.diamondBlue],
-        ).createShader(rect),
+    // Павильон.
+    fill(
+      tri(left, midL, bottom),
+      const [CoinColors.diamondBlue, CoinColors.diamondDark],
+      Alignment.topLeft,
+      Alignment.bottomCenter,
+    );
+    fill(
+      tri(right, bottom, midR),
+      const [CoinColors.diamondMid, CoinColors.diamondDark],
+      Alignment.topRight,
+      Alignment.bottomCenter,
+    );
+    fill(
+      tri(midL, tableB, bottom),
+      const [CoinColors.diamondLight, CoinColors.diamondBlue],
+      Alignment.topCenter,
+      Alignment.bottomCenter,
+    );
+    fill(
+      tri(tableB, midR, bottom),
+      const [CoinColors.diamondBlue, CoinColors.diamondDark],
+      Alignment.topCenter,
+      Alignment.bottomCenter,
+    );
+    fill(
+      tri(left, tableB, midL),
+      const [CoinColors.diamondLight, CoinColors.diamondBlue],
+      Alignment.topLeft,
+      Alignment.bottomRight,
+    );
+    fill(
+      tri(right, midR, tableB),
+      const [CoinColors.diamondMid, CoinColors.diamondBlue],
+      Alignment.topRight,
+      Alignment.bottomLeft,
     );
 
-    // === КОРОНА — левая светлая (почти белая), правая средне-синяя ===
-    final kiteT = Offset(cx, cy - r * 0.3);
-    final kiteR = Offset(cx + r * 0.18, cy - r * 0.12);
-    final kiteB = Offset(cx, cy + r * 0.02);
-    final kiteL = Offset(cx - r * 0.18, cy - r * 0.12);
-
-    canvas.drawPath(
-      Path()..moveTo(tl.dx, tl.dy)..lineTo(kiteT.dx, kiteT.dy)..lineTo(kiteL.dx, kiteL.dy)..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: const [CoinColors.diamondWhite, CoinColors.diamondLight],
-        ).createShader(rect),
-    );
-    canvas.drawPath(
-      Path()..moveTo(tr.dx, tr.dy)..lineTo(kiteR.dx, kiteR.dy)..lineTo(kiteT.dx, kiteT.dy)..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: const [CoinColors.diamondLight, CoinColors.diamondMid],
-        ).createShader(rect),
-    );
-    canvas.drawPath(
-      Path()..moveTo(kiteL.dx, kiteL.dy)..lineTo(kiteB.dx, kiteB.dy)..lineTo(gl.dx, gl.dy)..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: const [CoinColors.diamondWhite, CoinColors.diamondLight],
-        ).createShader(rect),
-    );
-    canvas.drawPath(
-      Path()..moveTo(kiteR.dx, kiteR.dy)..lineTo(gr.dx, gr.dy)..lineTo(kiteB.dx, kiteB.dy)..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-          colors: const [CoinColors.diamondLight, CoinColors.diamondMid],
-        ).createShader(rect),
-    );
-
-    // === Центральный ромб (стол) — яркий светлый ===
-    canvas.drawPath(
-      Path()
-        ..moveTo(kiteT.dx, kiteT.dy)
-        ..lineTo(kiteR.dx, kiteR.dy)
-        ..lineTo(kiteB.dx, kiteB.dy)
-        ..lineTo(kiteL.dx, kiteL.dy)
-        ..close(),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: const [CoinColors.diamondSparkle, CoinColors.diamondWhite],
-        ).createShader(rect),
-    );
-
-    // === Starburst (8 лучей) — верхний правый угол ===
-    _drawStarburst(canvas, cx + r * 0.2, cy - r * 0.28, r * 0.2);
-
-    // === Контур ===
+    // Контур.
     final outline = Path()
-      ..moveTo(tl.dx, tl.dy)
-      ..lineTo(tr.dx, tr.dy)
-      ..lineTo(gr.dx, gr.dy)
+      ..moveTo(top.dx, top.dy)
+      ..lineTo(right.dx, right.dy)
+      ..lineTo(midR.dx, midR.dy)
       ..lineTo(bottom.dx, bottom.dy)
-      ..lineTo(gl.dx, gl.dy)
+      ..lineTo(midL.dx, midL.dy)
+      ..lineTo(left.dx, left.dy)
       ..close();
     canvas.drawPath(
       outline,
       Paint()
-        ..color = CoinColors.diamondOutline
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeJoin = StrokeJoin.miter,
+        ..strokeWidth = (s * 0.035).clamp(0.8, 1.6)
+        ..strokeJoin = StrokeJoin.round
+        ..color = CoinColors.diamondOutline.withValues(alpha: 0.9),
     );
-  }
 
-  void _drawStarburst(Canvas canvas, double cx, double cy, double r) {
-    final path = Path();
-    const points = 8;
-    final outerR = r;
-    final innerR = r * 0.35;
-    for (var i = 0; i < points; i++) {
-      final angle = (i * 2 * math.pi / points) - math.pi / 2;
-      final rad = i.isEven ? outerR : innerR;
-      final x = cx + rad * math.cos(angle);
-      final y = cy + rad * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, Paint()..color = CoinColors.diamondSparkle);
+    // Внутренние фасеты.
+    final facetPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (s * 0.018).clamp(0.5, 1.0)
+      ..color = Colors.white.withValues(alpha: 0.35);
+    canvas.drawLine(tableL, tableR, facetPaint);
+    canvas.drawLine(tableL, tableB, facetPaint);
+    canvas.drawLine(tableR, tableB, facetPaint);
+    canvas.drawLine(tableB, bottom, facetPaint);
+    canvas.drawLine(left, tableB, facetPaint);
+    canvas.drawLine(right, tableB, facetPaint);
+
+    // Блик.
+    canvas.drawCircle(
+      Offset(cx - r * 0.12, cy - r * 0.28),
+      r * 0.1,
+      Paint()..color = Colors.white.withValues(alpha: 0.85),
+    );
   }
 
   @override
@@ -402,19 +496,33 @@ class _DiamondPainter extends CustomPainter {
 
 enum CoinType { bronze, silver, gold, diamond }
 
-/// Тип монеты для суммы награды в бронзовых единицах.
+/// Тип монеты для суммы: старший номинал после округления вверх.
 CoinType rewardCoinType(int bronze) {
-  if (bronze >= 10000) return CoinType.gold;
-  if (bronze >= 100) return CoinType.silver;
+  if (bronze <= 0) return CoinType.bronze;
+  if (bronze >= 100) {
+    final silver = (bronze + 99) ~/ 100;
+    if (silver >= 100) {
+      final gold = (silver + 99) ~/ 100;
+      if (gold >= 100) return CoinType.diamond;
+      return CoinType.gold;
+    }
+    return CoinType.silver;
+  }
   return CoinType.bronze;
 }
 
-/// Человекочитаемая сумма награды: «10 бронзовых», «10 серебряных».
+/// Человекочитаемая сумма: округление вверх до большей монеты.
+/// 150 бр → «2 серебряных», 10001 бр → «2 золотых».
 String formatRewardBronze(int bronze) {
-  if (bronze >= 100 && bronze % 100 == 0) {
-    final silver = bronze ~/ 100;
-    if (silver >= 100 && silver % 100 == 0) {
-      final gold = silver ~/ 100;
+  if (bronze <= 0) return '0 бронзовых';
+  if (bronze >= 100) {
+    final silver = (bronze + 99) ~/ 100;
+    if (silver >= 100) {
+      final gold = (silver + 99) ~/ 100;
+      if (gold >= 100) {
+        final diamond = (gold + 99) ~/ 100;
+        return '$diamond бриллиантов';
+      }
       return '$gold золотых';
     }
     return '$silver серебряных';
@@ -422,9 +530,28 @@ String formatRewardBronze(int bronze) {
   return '$bronze бронзовых';
 }
 
+/// Сумма дохода с явным «в день».
+String formatRewardBronzePerDay(int bronze) =>
+    '${formatRewardBronze(bronze)} в день';
+
+/// Число монет после округления вверх (для иконки + цифры).
+int rewardCoinAmount(int bronze) {
+  if (bronze <= 0) return 0;
+  if (bronze >= 100) {
+    final silver = (bronze + 99) ~/ 100;
+    if (silver >= 100) {
+      final gold = (silver + 99) ~/ 100;
+      if (gold >= 100) return (gold + 99) ~/ 100;
+      return gold;
+    }
+    return silver;
+  }
+  return bronze;
+}
+
 /// Разбивка баланса: 100 бр=1 с, 100 с=1 з, 100 з=1 ◆.
 (BigInt, BigInt, BigInt, BigInt) parseBalance(int bronze) {
-  final b = BigInt.from(bronze);
+  final b = BigInt.from(bronze < 0 ? 0 : bronze);
   final diamond = b ~/ BigInt.from(1000000);
   final gold = (b ~/ BigInt.from(10000)) % BigInt.from(100);
   final silver = (b ~/ BigInt.from(100)) % BigInt.from(100);
@@ -458,6 +585,13 @@ class ToolbarBalanceChip extends StatelessWidget {
       _BalancePopupItem(CoinType.silver, silver),
       _BalancePopupItem(CoinType.bronze, bronzeRest),
     ];
+    // Фиксированная ширина колонки чисел — иначе «0» сдвигает иконку/подпись.
+    final amountWidth = items
+        .map((e) => e.value.toString().length)
+        .fold<int>(1, math.max)
+        .clamp(2, 8)
+        .toDouble() *
+        11;
 
     showDialog<void>(
       context: context,
@@ -465,28 +599,47 @@ class ToolbarBalanceChip extends StatelessWidget {
         title: const Text('Баланс'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: items.map((e) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CoinIcon(coinType: e.type, size: 28, showBorder: true, animate: true),
-                  const SizedBox(width: 12),
-                  Text(
-                    _coinLabels[e.type] ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
+                  SizedBox(
+                    width: amountWidth,
+                    child: Text(
+                      e.value.toString(),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    e.value.toString(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Center(
+                      child: CoinIcon(
+                        coinType: e.type,
+                        size: 28,
+                        showBorder: true,
+                        animate: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _coinLabels[e.type] ?? '',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -500,40 +653,13 @@ class ToolbarBalanceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
-    final parts = <Widget>[];
-    void add(CoinType type, BigInt value) {
-      if (value > BigInt.zero) {
-        if (parts.isNotEmpty) parts.add(const SizedBox(width: 8));
-        parts.add(CoinIcon(coinType: type, size: coinSize, showBorder: true, animate: true));
-        parts.add(const SizedBox(width: 4));
-        parts.add(Text(
-          value.toString(),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-        ));
-      }
-    }
-    add(CoinType.diamond, diamond);
-    add(CoinType.gold, gold);
-    add(CoinType.silver, silver);
-    add(CoinType.bronze, bronzeRest);
-    if (parts.isEmpty) {
-      parts.add(CoinIcon(coinType: CoinType.bronze, size: coinSize, showBorder: true, animate: true));
-      parts.add(const SizedBox(width: 4));
-      parts.add(const Text('0', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)));
-    }
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showBalancePopup(context, bronze),
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(999),
@@ -542,9 +668,13 @@ class ToolbarBalanceChip extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: parts,
+          child: BalanceDisplay(
+            bronze: bronze,
+            coinSize: coinSize,
+            fontSize: 12,
+            spacing: 4,
+            fontWeight: FontWeight.w600,
+            animate: true,
           ),
         ),
       ),
@@ -558,7 +688,7 @@ class _BalancePopupItem {
   final BigInt value;
 }
 
-/// Виджет баланса: число + монета для каждого номинала (только ненулевые).
+/// Сумма монет: `5` + серебро + `4` + бронза (только ненулевые номиналы).
 class BalanceDisplay extends StatelessWidget {
   const BalanceDisplay({
     super.key,
@@ -566,34 +696,56 @@ class BalanceDisplay extends StatelessWidget {
     this.coinSize = 18,
     this.fontSize = 14,
     this.spacing = 6,
+    this.fontWeight = FontWeight.w600,
+    this.prefix,
+    this.animate = false,
+    this.color = AppColors.textPrimary,
   });
 
   final int bronze;
   final double coinSize;
   final double fontSize;
   final double spacing;
+  final FontWeight fontWeight;
+  final String? prefix;
+  final bool animate;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
 
     final parts = <Widget>[];
+    if (prefix != null && prefix!.isNotEmpty) {
+      parts.add(Text(
+        prefix!,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+      ));
+    }
 
     void add(CoinType type, BigInt value) {
-      if (value > BigInt.zero) {
-        if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
-        parts.add(CoinIcon(coinType: type, size: coinSize, showBorder: true));
-        parts.add(SizedBox(width: 4));
-        parts.add(Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w400,
-            color: AppColors.textPrimary,
-          ),
-          overflow: TextOverflow.clip,
-        ));
-      }
+      if (value <= BigInt.zero) return;
+      if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
+      parts.add(Text(
+        value.toString(),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+        overflow: TextOverflow.clip,
+      ));
+      parts.add(const SizedBox(width: 3));
+      parts.add(CoinIcon(
+        coinType: type,
+        size: coinSize,
+        showBorder: true,
+        animate: animate,
+      ));
     }
 
     add(CoinType.diamond, diamond);
@@ -601,13 +753,25 @@ class BalanceDisplay extends StatelessWidget {
     add(CoinType.silver, silver);
     add(CoinType.bronze, bronzeRest);
 
-    if (parts.isEmpty) {
-      parts.add(CoinIcon(coinType: CoinType.bronze, size: coinSize, showBorder: true));
-      parts.add(SizedBox(width: 4));
+    if (parts.isEmpty || (prefix != null && parts.length == 1)) {
+      if (prefix == null || prefix!.isEmpty) {
+        parts.clear();
+      }
       parts.add(Text(
         '0',
-        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400, color: AppColors.textPrimary),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
         overflow: TextOverflow.clip,
+      ));
+      parts.add(const SizedBox(width: 3));
+      parts.add(CoinIcon(
+        coinType: CoinType.bronze,
+        size: coinSize,
+        showBorder: true,
+        animate: animate,
       ));
     }
 

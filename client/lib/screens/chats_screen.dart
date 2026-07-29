@@ -15,10 +15,13 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 
@@ -1349,14 +1352,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
+    final preview = formatChatMessagePreview(subtitle);
     if (presence == null) {
-      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+      return preview.isEmpty ? 'Нет сообщений' : preview;
     }
     final statusText = presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt);
     if (statusText.isEmpty) {
-      return subtitle.isEmpty ? 'Нет сообщений' : subtitle;
+      return preview.isEmpty ? 'Нет сообщений' : preview;
     }
-    return subtitle.isEmpty ? statusText : '$statusText · $subtitle';
+    return preview.isEmpty ? statusText : '$statusText · $preview';
   }
 
   IconData? _genderIcon(String? value) {
@@ -1533,6 +1537,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                PeerCollectionsSection(userId: user.id),
               ],
             ),
           ),
@@ -1551,44 +1556,60 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       children: [
         Padding(
           padding: const EdgeInsets.only(right: 4),
-          child: AnimatedBorderBox(
-            animateBorder: true,
-            padding: const EdgeInsets.all(6),
-            borderRadius: 999,
-            margin: EdgeInsets.zero,
-            child: IconButton(
-              onPressed: actionBusy ? null : _openStartChatDialog,
-              tooltip: 'Новый чат',
-              icon: const Icon(Icons.add_comment_rounded),
-              style: IconButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(28, 28),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
+          child: _buildHeaderFrameIconButton(
+            icon: Icons.add_comment_rounded,
+            tooltip: 'Новый чат',
+            onPressed: actionBusy ? null : _openStartChatDialog,
           ),
         ),
         if (hasBlockedUsers)
           Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: AnimatedBorderBox(
-              animateBorder: true,
-              padding: const EdgeInsets.all(6),
-              borderRadius: 999,
-              margin: EdgeInsets.zero,
-              child: IconButton(
-                onPressed: actionBusy ? null : _openBlockedUsersDialog,
-                tooltip: 'Заблокированные пользователи',
-                icon: const Icon(Icons.block_rounded),
-                style: IconButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(28, 28),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
+            child: _buildHeaderFrameIconButton(
+              icon: Icons.block_rounded,
+              tooltip: 'Заблокированные пользователи',
+              onPressed: actionBusy ? null : _openBlockedUsersDialog,
             ),
           ),
       ],
+    );
+  }
+
+  /// Рамка как у лупы поиска друзей: скруглённый квадрат, фиолетовый бордер.
+  Widget _buildHeaderFrameIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    Color? iconColor,
+  }) {
+    final enabled = onPressed != null;
+    return Tooltip(
+      message: tooltip,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.6,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accentStart, width: 2),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: iconColor ?? AppColors.accentStart,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1612,37 +1633,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required VoidCallback? onPressed,
     required String tooltip,
   }) {
-    final enabled = onPressed != null;
-    return Tooltip(
-      message: tooltip,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.6,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            onTap: enabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
-              ),
-              child: Icon(
-                icon,
-                size: 17,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-      ),
+    // Та же форма рамки, что у лупы / кнопок тулбара чатов.
+    return _buildHeaderFrameIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      iconColor: AppColors.textPrimary,
     );
   }
 
@@ -1943,7 +1939,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                       )
                     else
                       SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // Сверху запас под фиолетовую тень GradientCard —
+                        // иначе CustomScrollView обрезает её о хедер (линия среза).
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -1960,7 +1958,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   _chatActionInFlight.contains(blockKey);
                               final itemBusy = clearBusy || blockBusy;
                               return Padding(
-                                padding: const EdgeInsets.only(top: 10),
+                                padding: EdgeInsets.only(
+                                  top: index == 0 ? 0 : 10,
+                                ),
                                 child: Slidable(
                                   key: ValueKey('chat_${item.chatID}'),
                                   enabled: !itemBusy,
@@ -2328,6 +2328,13 @@ class _AvatarDot extends StatelessWidget {
     } else {
       avatar = _buildLetterAvatar();
     }
+    avatar = FramedAvatar(
+      size: radius * 2,
+      borderWidth: radius < 18 ? 2.2 : 2.8,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      child: avatar,
+    );
     if (isOnline == true) {
       return Stack(
         clipBehavior: Clip.none,

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
   GamesException(this.statusCode, this.message);
@@ -20,8 +21,123 @@ const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
 /// Размеры сетки: 3x3, 4x4, 5x5, 6x6, 7x7, 8x8
 const List<int> gridSizeOptions = [3, 4, 5, 6, 7, 8];
 
-/// Ставки в бронзовых: 1, 10, 50, 100
-const List<int> stakeOptions = [1, 10, 50, 100];
+/// Базовые ставки в бронзе (без покупки в магазине).
+const List<int> freeStakeOptions = [1, 10, 50];
+
+/// Fallback, если capabilities ещё не загружены.
+const List<int> stakeOptions = freeStakeOptions;
+
+/// Сохранённая в БД конфигурация создания игры.
+class UserGameSettings {
+  const UserGameSettings({
+    this.gameType = 'tictactoe',
+    this.turnTimeSec = 0,
+    this.gridSize = 3,
+    this.swapRule = false,
+    this.firstMoveRestriction = false,
+    this.stakeBronze = 1,
+  });
+
+  final String gameType;
+  final int turnTimeSec;
+  final int gridSize;
+  final bool swapRule;
+  final bool firstMoveRestriction;
+  final int stakeBronze;
+
+  static const defaults = UserGameSettings();
+
+  UserGameSettings copyWith({
+    String? gameType,
+    int? turnTimeSec,
+    int? gridSize,
+    bool? swapRule,
+    bool? firstMoveRestriction,
+    int? stakeBronze,
+  }) {
+    return UserGameSettings(
+      gameType: gameType ?? this.gameType,
+      turnTimeSec: turnTimeSec ?? this.turnTimeSec,
+      gridSize: gridSize ?? this.gridSize,
+      swapRule: swapRule ?? this.swapRule,
+      firstMoveRestriction:
+          firstMoveRestriction ?? this.firstMoveRestriction,
+      stakeBronze: stakeBronze ?? this.stakeBronze,
+    );
+  }
+
+  factory UserGameSettings.fromJson(Map<String, dynamic> json) {
+    final turn = (json['turn_time_sec'] as num?)?.toInt() ?? 0;
+    final grid = (json['grid_size'] as num?)?.toInt() ?? 3;
+    final stake = (json['stake_bronze'] as num?)?.toInt() ?? 1;
+    return UserGameSettings(
+      gameType: json['game_type'] as String? ?? 'tictactoe',
+      turnTimeSec: turnTimeOptions.contains(turn) ? turn : 0,
+      gridSize: gridSizeOptions.contains(grid) ? grid : 3,
+      swapRule: json['swap_rule'] == true,
+      firstMoveRestriction: json['first_move_restriction'] == true,
+      stakeBronze: stake < 1 ? 1 : stake,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'game_type': gameType,
+        'turn_time_sec': turnTimeSec,
+        'grid_size': gridSize,
+        'swap_rule': swapRule,
+        'first_move_restriction': firstMoveRestriction,
+        'stake_bronze': stakeBronze,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserGameSettings &&
+          gameType == other.gameType &&
+          turnTimeSec == other.turnTimeSec &&
+          gridSize == other.gridSize &&
+          swapRule == other.swapRule &&
+          firstMoveRestriction == other.firstMoveRestriction &&
+          stakeBronze == other.stakeBronze;
+
+  @override
+  int get hashCode => Object.hash(
+        gameType,
+        turnTimeSec,
+        gridSize,
+        swapRule,
+        firstMoveRestriction,
+        stakeBronze,
+      );
+}
+
+/// Подпись ставки в единицах старшего номинала.
+String formatStakeAmount(int stakeBronze) {
+  if (stakeBronze >= 10000 && stakeBronze % 10000 == 0) {
+    return '${stakeBronze ~/ 10000}';
+  }
+  if (stakeBronze >= 100 && stakeBronze % 100 == 0) {
+    return '${stakeBronze ~/ 100}';
+  }
+  return '$stakeBronze';
+}
+
+/// Тип монеты для отображения ставки.
+CoinType stakeCoinType(int stakeBronze) {
+  if (stakeBronze >= 10000 && stakeBronze % 10000 == 0) {
+    return CoinType.gold;
+  }
+  if (stakeBronze >= 100 && stakeBronze % 100 == 0) {
+    return CoinType.silver;
+  }
+  return CoinType.bronze;
+}
+
+bool stakeIsSilver(int stakeBronze) =>
+    stakeCoinType(stakeBronze) == CoinType.silver;
+
+bool stakeIsGold(int stakeBronze) =>
+    stakeCoinType(stakeBronze) == CoinType.gold;
 
 String formatTurnTime(int sec) {
   if (sec == 0) return '∞';
@@ -142,8 +258,12 @@ class GameStateItem {
   final String? oDisplayName;
   final String xAvatarKind;
   final String? xAvatarValue;
+  final String? xFrameColor;
+  final String? xFrameCode;
   final String oAvatarKind;
   final String? oAvatarValue;
+  final String? oFrameColor;
+  final String? oFrameCode;
   final List<int>? winningCells;
 
   GameStateItem({
@@ -167,8 +287,12 @@ class GameStateItem {
     this.oDisplayName,
     this.xAvatarKind = 'letter',
     this.xAvatarValue,
+    this.xFrameColor,
+    this.xFrameCode,
     this.oAvatarKind = 'letter',
     this.oAvatarValue,
+    this.oFrameColor,
+    this.oFrameCode,
     this.winningCells,
   });
 
@@ -221,8 +345,12 @@ class GameStateItem {
       oDisplayName: json['o_display_name'] as String?,
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',
       xAvatarValue: json['x_avatar_value'] as String?,
+      xFrameColor: json['x_frame_color'] as String?,
+      xFrameCode: json['x_frame_code'] as String?,
       oAvatarKind: json['o_avatar_kind'] as String? ?? 'letter',
       oAvatarValue: json['o_avatar_value'] as String?,
+      oFrameColor: json['o_frame_color'] as String?,
+      oFrameCode: json['o_frame_code'] as String?,
       winningCells: _parseWinningCells(json['winning_cells']),
     );
   }
@@ -746,5 +874,44 @@ class GamesRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return GameStateItem.fromJson(body);
+  }
+
+  Future<UserGameSettings> getGameSettings({
+    String gameType = 'tictactoe',
+  }) async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse(
+          '$apiBaseUrl/api/games/settings?game_type=$gameType&_=$cacheBuster',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.getGameSettings',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return UserGameSettings.fromJson(body);
+  }
+
+  Future<UserGameSettings> saveGameSettings(UserGameSettings settings) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.put(
+        Uri.parse('$apiBaseUrl/api/games/settings'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(settings.toJson()),
+        operation: 'GamesRepository.saveGameSettings',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return UserGameSettings.fromJson(body);
   }
 }

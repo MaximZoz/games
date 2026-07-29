@@ -53,14 +53,7 @@ class _AppButtonState extends State<AppButton>
   }
 
   void _syncBorderAnimation() {
-    if (widget.animateBorder) {
-      _controller ??= AnimationController(
-        vsync: this,
-        duration: const Duration(seconds: 5),
-      )..repeat();
-      _animation ??= CurvedAnimation(parent: _controller!, curve: Curves.linear);
-      return;
-    }
+    // Анимация рамки отключена — без «перелива» градиента.
     _controller?.dispose();
     _controller = null;
     _animation = null;
