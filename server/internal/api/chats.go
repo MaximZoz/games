@@ -18,6 +18,7 @@ import (
 type ChatsHandler struct {
 	Pool *pgxpool.Pool
 	Hub  *RealtimeHub
+	Push *WebPushSender
 }
 
 type ChatUserItem struct {
@@ -631,6 +632,37 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 		"type":    "chat_message",
 		"chat_id": item.ChatID,
 		"message": item,
+	})
+	if h.Push == nil {
+		return
+	}
+	senderID, err := uuid.Parse(item.SenderUserID)
+	if err != nil {
+		return
+	}
+	recipients := make([]uuid.UUID, 0, len(userIDs))
+	for _, id := range userIDs {
+		if id != senderID {
+			recipients = append(recipients, id)
+		}
+	}
+	if len(recipients) == 0 {
+		return
+	}
+	from := pushUserLabel(context.Background(), h.Pool, senderID)
+	body := strings.TrimSpace(item.Body)
+	if len([]rune(body)) > 120 {
+		runes := []rune(body)
+		body = string(runes[:117]) + "…"
+	}
+	if body == "" {
+		body = "Новое сообщение"
+	}
+	h.Push.NotifyUsers(recipients, PushPayload{
+		Title: from,
+		Body:  body,
+		URL:   "/chats/" + item.ChatID,
+		Tag:   "chat_" + item.ChatID,
 	})
 }
 

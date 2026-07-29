@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/settings_provider.dart';
+import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -10,6 +13,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final addBotsAfter30s = ref.watch(addBotsAfter30sProvider);
+    final webPushEnabled = ref.watch(webPushEnabledProvider);
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
@@ -34,11 +38,37 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   _SettingsTile(
                     title: 'Добавлять ботов через 30 с',
-                    subtitle: 'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)',
+                    subtitle:
+                        'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)',
                     value: addBotsAfter30s,
                     onChanged: (v) =>
                         ref.read(addBotsAfter30sProvider.notifier).set(v),
                   ),
+                  if (kIsWeb) ...[
+                    const SizedBox(height: 12),
+                    _SettingsTile(
+                      title: 'Уведомления в браузере',
+                      subtitle: isWebPushSupported
+                          ? 'Push на устройство: сообщения, заявки в друзья, приглашения в игру. На iPhone — только в установленной PWA.'
+                          : 'В этом браузере Web Push недоступен (на iPhone установите приложение на экран «Домой»).',
+                      value: webPushEnabled,
+                      onChanged: isWebPushSupported
+                          ? (v) async {
+                              final err = await ref
+                                  .read(webPushEnabledProvider.notifier)
+                                  .setEnabled(v);
+                              if (!context.mounted) return;
+                              if (err != null) {
+                                showAppSnackBar(
+                                  context,
+                                  message: err,
+                                  kind: AppSnackKind.error,
+                                );
+                              }
+                            }
+                          : null,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -60,7 +90,7 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {

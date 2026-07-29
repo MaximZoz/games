@@ -19,6 +19,7 @@ import (
 type FriendsHandler struct {
 	Pool *pgxpool.Pool
 	Hub  *RealtimeHub
+	Push *WebPushSender
 }
 
 type FriendUserItem struct {
@@ -348,6 +349,15 @@ func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.publishFriendsUpdated(userID, targetID)
+	if h.Push != nil {
+		from := pushUserLabel(r.Context(), h.Pool, userID)
+		h.Push.NotifyUsers([]uuid.UUID{targetID}, PushPayload{
+			Title: "Новая заявка в друзья",
+			Body:  from + " хочет добавить вас в друзья",
+			URL:   "/friends",
+			Tag:   "friend_request",
+		})
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

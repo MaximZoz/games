@@ -255,14 +255,27 @@ func main() {
 		LogWriter:     logWriter,
 		AppLogEnabled: appLogEnabled,
 	}
-	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub}
-	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub}
+	pushSender := &api.WebPushSender{
+		Pool:       pool,
+		PublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
+		PrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
+		Subject:    getEnv("VAPID_SUBJECT", "mailto:admin@zozu.games"),
+	}
+	if pushSender.Enabled() {
+		log.Printf("Web Push: enabled")
+	} else {
+		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
+	}
+	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
+	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
+	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
 	gamesHandler := &api.GamesHandler{
 		Pool:        pool,
 		Rdb:         rdb,
 		Hub:         realtimeHub,
 		Broadcaster: gamesBroadcaster,
+		Push:        pushSender,
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
@@ -333,6 +346,10 @@ func main() {
 	mux.Handle("/api/inventory/collections", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionsShowcase)))
 	mux.Handle("/api/inventory/collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionIncome)))
 	mux.Handle("/api/inventory/claim-collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.ClaimCollectionIncome)))
+
+	mux.Handle("/api/push/vapid-key", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.VapidPublicKey)))
+	mux.Handle("/api/push/subscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Subscribe)))
+	mux.Handle("/api/push/unsubscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Unsubscribe)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

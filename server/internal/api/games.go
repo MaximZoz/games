@@ -52,6 +52,7 @@ type GamesHandler struct {
 	Rdb         *redis.Client
 	Hub         *RealtimeHub
 	Broadcaster *GamesBroadcaster
+	Push        *WebPushSender
 }
 
 type CreateLobbyBody struct {
@@ -2076,6 +2077,28 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	} else if h.Hub != nil {
 		h.Hub.PublishToUsers(userIDs, payload)
 	}
+	if h.Push == nil || len(userIDs) == 0 {
+		return
+	}
+	typ, _ := payload["type"].(string)
+	if typ != "game_invite" {
+		return
+	}
+	name, _ := payload["creator_name"].(string)
+	if strings.TrimSpace(name) == "" {
+		name = "Игрок"
+	}
+	lobbyID, _ := payload["lobby_id"].(string)
+	url := "/games"
+	if lobbyID != "" {
+		url = "/games/tictactoe/lobby/" + lobbyID
+	}
+	h.Push.NotifyUsers(userIDs, PushPayload{
+		Title: "Приглашение в игру",
+		Body:  name + " приглашает сыграть",
+		URL:   url,
+		Tag:   "game_invite_" + lobbyID,
+	})
 }
 
 func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
