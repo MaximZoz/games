@@ -68,7 +68,7 @@ final webPushCategoriesProvider = StateNotifierProvider<
 });
 
 class WebPushEnabledNotifier extends StateNotifier<bool> {
-  WebPushEnabledNotifier(this._ref) : super(false) {
+  WebPushEnabledNotifier(this._ref) : super(true) {
     _load();
   }
 
@@ -78,7 +78,15 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_keyWebPushEnabled) ?? false;
+    // По умолчанию включено: новые пользователи / чистый профиль устройства.
+    state = prefs.getBool(_keyWebPushEnabled) ?? true;
+  }
+
+  /// Для нового аккаунта после регистрации: permission + subscribe.
+  /// Ошибки глотаем — регистрация уже успешна.
+  Future<void> enableForNewUser() async {
+    if (state && _boundThisSession) return;
+    await setEnabled(true);
   }
 
   Future<String?> _subscribeAndSave({required bool forceRefresh}) async {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
@@ -100,6 +102,14 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
       ref: ref,
     );
     state = AsyncValue.data(result.user);
+    // Новым аккаунтам по умолчанию включаем Web Push (запрос permission).
+    unawaited(_enablePushForNewUser());
+  }
+
+  Future<void> _enablePushForNewUser() async {
+    try {
+      await _ref.read(webPushEnabledProvider.notifier).enableForNewUser();
+    } catch (_) {}
   }
 
   Future<void> login({required String email, required String password}) async {
