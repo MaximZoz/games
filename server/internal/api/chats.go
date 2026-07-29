@@ -82,6 +82,10 @@ type EditChatMessageBody struct {
 	Body      string `json:"body"`
 }
 
+type DeleteChatMessageBody struct {
+	MessageID string `json:"message_id"`
+}
+
 type MarkChatReadBody struct {
 	ChatID string `json:"chat_id"`
 }
@@ -192,6 +196,8 @@ func writeChatError(w http.ResponseWriter, err error) {
 		http.Error(w, "only friends can send text messages", http.StatusForbidden)
 	case errors.Is(err, store.ErrChatEditForbidden):
 		http.Error(w, "cannot edit this message", http.StatusForbidden)
+	case errors.Is(err, store.ErrChatDeleteForbidden):
+		http.Error(w, "cannot delete this message", http.StatusForbidden)
 	case errors.Is(err, store.ErrChatForbidden):
 		http.Error(w, "forbidden", http.StatusForbidden)
 	case errors.Is(err, store.ErrUserBlocked):
@@ -588,6 +594,38 @@ func (h *ChatsHandler) EditMessage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *ChatsHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var body DeleteChatMessageBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	messageID, err := uuid.Parse(strings.TrimSpace(body.MessageID))
+	if err != nil {
+		http.Error(w, "invalid message_id", http.StatusBadRequest)
+		return
+	}
+	chatID, err := store.DeleteChatMessage(r.Context(), h.Pool, messageID, userID)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		h.publishChatMessageDeleted([]uuid.UUID{lowID, highID}, chatID.String(), messageID.String())
+		h.publishChatListChanged(lowID, highID)
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *ChatsHandler) MessageImage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -891,6 +929,17 @@ func (h *ChatsHandler) publishChatMessageUpdated(userIDs []uuid.UUID, item ChatM
 		"type":    "chat_message_updated",
 		"chat_id": item.ChatID,
 		"message": item,
+	})
+}
+
+func (h *ChatsHandler) publishChatMessageDeleted(userIDs []uuid.UUID, chatID, messageID string) {
+	if h == nil || h.Hub == nil {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type":       "chat_message_deleted",
+		"chat_id":    chatID,
+		"message_id": messageID,
 	})
 }
 

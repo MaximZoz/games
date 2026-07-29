@@ -19,6 +19,7 @@ var (
 	ErrChatImageTooLarge     = errors.New("chat image is too large")
 	ErrChatImageUnsupported  = errors.New("unsupported chat image type")
 	ErrChatEditForbidden     = errors.New("cannot edit this message")
+	ErrChatDeleteForbidden   = errors.New("cannot delete this message")
 	ErrChatReplyInvalid      = errors.New("invalid reply target")
 )
 
@@ -310,6 +311,39 @@ func EditChatMessage(
 		return ChatMessage{}, err
 	}
 	return GetChatMessageByID(ctx, pool, chatID, editorUserID, messageID)
+}
+
+// DeleteChatMessage удаляет своё сообщение (для всех участников).
+func DeleteChatMessage(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	messageID, actorUserID uuid.UUID,
+) (chatID uuid.UUID, err error) {
+	var senderID uuid.UUID
+	err = pool.QueryRow(ctx, `
+		SELECT chat_id, sender_user_id
+		FROM chat_messages WHERE id = $1
+	`, messageID).Scan(&chatID, &senderID)
+	if err == pgx.ErrNoRows {
+		return uuid.Nil, ErrChatMessageNotFound
+	}
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if senderID != actorUserID {
+		return uuid.Nil, ErrChatDeleteForbidden
+	}
+	if err := ensureChatMembership(ctx, pool, chatID, actorUserID); err != nil {
+		return uuid.Nil, err
+	}
+	ct, err := pool.Exec(ctx, `DELETE FROM chat_messages WHERE id = $1`, messageID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if ct.RowsAffected() == 0 {
+		return uuid.Nil, ErrChatMessageNotFound
+	}
+	return chatID, nil
 }
 
 // ListChatMessagesRich — список с reply/edited/has_image (без байтов фото).

@@ -259,6 +259,7 @@ class ChatsRepository {
       'unsupported image type': 'Неподдерживаемый тип изображения',
       'invalid reply target': 'Нельзя ответить на это сообщение',
       'cannot edit this message': 'Нельзя изменить это сообщение',
+      'cannot delete this message': 'Нельзя удалить это сообщение',
       'cannot block yourself': 'Нельзя заблокировать самого себя',
       'forbidden': 'Недостаточно прав',
       'user is blocked': 'Пользователь заблокирован',
@@ -482,6 +483,23 @@ class ChatsRepository {
     return ChatMessageItem.fromJson(
       Map<String, dynamic>.from((body['message'] ?? const {}) as Map),
     );
+  }
+
+  Future<void> deleteMessage(String messageID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/messages/delete'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'message_id': messageID}),
+        operation: 'ChatsRepository.deleteMessage',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
   }
 
   Future<List<int>> fetchMessageImageBytes(String messageID) async {
