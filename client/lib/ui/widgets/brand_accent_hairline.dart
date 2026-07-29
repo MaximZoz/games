@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Прозрачность стрелок в нижнем тулбаре.
+/// Splash гасит их на старте и поднимает при «приземлении» handoff-анимации.
+final bootToolbarHairlinesOpacityProvider = StateProvider<double>((ref) => 1);
 
 /// Градиентная «стрелка»-линия бренда Zozu (splash и подпись в тулбаре).
 ///

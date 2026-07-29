@@ -460,6 +460,9 @@ class AppShell extends ConsumerWidget {
                           gamesMyTurn: gamesMyTurn,
                           gameInvitesCount: gameInvitesCount,
                           homeBadgeCount: homeBadgeCount,
+                          hairlinesOpacity: ref.watch(
+                            bootToolbarHairlinesOpacityProvider,
+                          ),
                         ),
                       ),
                       // Заливка под home indicator — до скруглённых углов.
@@ -507,6 +510,7 @@ class _MobileBottomNav extends StatelessWidget {
     required this.gamesMyTurn,
     required this.gameInvitesCount,
     required this.homeBadgeCount,
+    this.hairlinesOpacity = 1,
   });
 
   final int selectedIndex;
@@ -516,6 +520,7 @@ class _MobileBottomNav extends StatelessWidget {
   final int gamesMyTurn;
   final int gameInvitesCount;
   final int homeBadgeCount;
+  final double hairlinesOpacity;
 
   @override
   Widget build(BuildContext context) {
@@ -565,10 +570,13 @@ class _MobileBottomNav extends StatelessWidget {
                 // Чуть выше центра строки — visually на уровне середины букв.
                 Transform.translate(
                   offset: const Offset(0, -3),
-                  child: const BrandAccentHairline(
-                    width: 33,
-                    height: 2.5,
-                    side: BrandAccentHairlineSide.fadeOutsideLeft,
+                  child: Opacity(
+                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
+                    child: const BrandAccentHairline(
+                      width: 33,
+                      height: 2.5,
+                      side: BrandAccentHairlineSide.fadeOutsideLeft,
+                    ),
                   ),
                 ),
                 Transform.translate(
@@ -589,10 +597,13 @@ class _MobileBottomNav extends StatelessWidget {
                 ),
                 Transform.translate(
                   offset: const Offset(0, -3),
-                  child: const BrandAccentHairline(
-                    width: 33,
-                    height: 2.5,
-                    side: BrandAccentHairlineSide.fadeOutsideRight,
+                  child: Opacity(
+                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
+                    child: const BrandAccentHairline(
+                      width: 33,
+                      height: 2.5,
+                      side: BrandAccentHairlineSide.fadeOutsideRight,
+                    ),
                   ),
                 ),
               ],
