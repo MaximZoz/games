@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/chats/chat_image_pick.dart';
+import 'package:multigames_client/chats/chat_image_widgets.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -95,6 +98,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String? _composerAlert;
   String? _error;
   List<ChatMessageItem> _messages = const [];
+  ChatMessageItem? _replyTo;
+  ChatMessageItem? _editingMessage;
+  final List<PickedChatImage> _pendingImages = [];
+  static const int _maxPendingImages = 3;
+  static const Color _composerIconPurple = Color(0xFF8B5CF6);
+  final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
+  String? _highlightedMessageID;
+  bool _jumpingToMessage = false;
 
   /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
   final Set<String> _pendingDeliveredIDs = <String>{};
@@ -129,6 +140,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _initialScrollDone = false;
       _emojiOnly = false;
       _composerAlert = null;
+      _highlightedMessageID = null;
+      _messageKeys.clear();
       _messageIDs.clear();
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
@@ -467,24 +480,83 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty || _sending) return;
+    if (_sending) return;
+    if (_editingMessage != null) {
+      if (text.isEmpty && !_editingMessage!.hasImage) return;
+      setState(() {
+        _sending = true;
+        _composerAlert = null;
+      });
+      try {
+        final edited = await ref
+            .read(chatsRepositoryProvider)
+            .editMessage(_editingMessage!.id, text);
+        if (!mounted) return;
+        _upsertMessage(edited);
+        _textController.clear();
+        setState(() {
+          _sending = false;
+          _editingMessage = null;
+          _composerAlert = null;
+        });
+      } on ChatException catch (e) {
+        if (e.statusCode == 401) {
+          await ref.read(authStateProvider.notifier).logout();
+          if (mounted) context.go('/login');
+          return;
+        }
+        if (!mounted) return;
+        setState(() {
+          _sending = false;
+          _composerAlert = e.message;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _sending = false;
+          _composerAlert = 'Не удалось изменить сообщение';
+        });
+      }
+      return;
+    }
 
-    // Всегда спрашиваем сервер: собеседник мог снять ограничение,
-    // пока чат оставался открытым (_emojiOnly иначе устаревает).
+    if (text.isEmpty && _pendingImages.isEmpty) return;
+
     setState(() {
       _sending = true;
       _composerAlert = null;
     });
     try {
-      final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
+      final images = List<PickedChatImage>.of(_pendingImages);
+      final replyID = _replyTo?.id;
+      if (images.isEmpty) {
+        final sent = await ref.read(chatsRepositoryProvider).sendMessage(
+              widget.chatID,
+              text,
+              replyToMessageID: replyID,
+            );
+        if (!mounted) return;
+        _upsertMessage(sent);
+      } else {
+        final sent = await ref.read(chatsRepositoryProvider).sendMessage(
+              widget.chatID,
+              text,
+              replyToMessageID: replyID,
+              images: [
+                for (final img in images) (base64: img.base64, mime: img.mime),
+              ],
+            );
+        if (!mounted) return;
+        _upsertMessage(sent);
+      }
       if (!mounted) return;
       _textController.clear();
-      _upsertMessage(sent);
-      // chatsListProvider обновится через realtimeEventsProvider
       setState(() {
         _sending = false;
         _emojiOnly = false;
         _composerAlert = null;
+        _replyTo = null;
+        _pendingImages.clear();
       });
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
@@ -500,7 +572,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _composerAlert = friendsOnly ? _friendsOnlyAlert : e.message;
       });
       if (!friendsOnly) {
-        // На случай смены настроек у собеседника — подтянуть актуальные.
         unawaited(_loadCapabilities());
       }
     } catch (_) {
@@ -511,6 +582,233 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       });
       unawaited(_loadCapabilities());
     }
+  }
+
+  void _startReply(ChatMessageItem message) {
+    setState(() {
+      _replyTo = message;
+      _editingMessage = null;
+      _composerAlert = null;
+    });
+    _composerFocusNode.requestFocus();
+  }
+
+  void _startEdit(ChatMessageItem message) {
+    setState(() {
+      _editingMessage = message;
+      _replyTo = null;
+      _pendingImages.clear();
+      _composerAlert = null;
+      _textController.text = message.body;
+      _textController.selection = TextSelection.collapsed(
+        offset: _textController.text.length,
+      );
+    });
+    _composerFocusNode.requestFocus();
+  }
+
+  void _cancelComposerContext() {
+    final wasEditing = _editingMessage != null;
+    setState(() {
+      _replyTo = null;
+      _editingMessage = null;
+      if (wasEditing) {
+        _textController.clear();
+      }
+    });
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_sending ||
+        _editingMessage != null ||
+        _emojiOnly ||
+        _pendingImages.length >= _maxPendingImages) {
+      return;
+    }
+    // Сразу галерея/фото, без нижней панели и без «файл».
+    final picked = await pickAndCompressChatImage(ImageSource.gallery);
+    if (!mounted) return;
+    if (picked == null) return;
+    setState(() {
+      if (_pendingImages.length < _maxPendingImages) {
+        _pendingImages.add(picked);
+      }
+      _composerAlert = null;
+    });
+  }
+
+  void _removePendingImage(int index) {
+    if (index < 0 || index >= _pendingImages.length) return;
+    setState(() => _pendingImages.removeAt(index));
+  }
+
+  void _previewPendingImage(PickedChatImage image) {
+    ChatImageFullscreenViewer.open(context, image.bytes);
+  }
+
+  Future<void> _showMessageActions(ChatMessageItem message) async {
+    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    final mine = meID != null && message.senderUserID == meID;
+    final canEdit = mine &&
+        (message.body.trim().isNotEmpty || message.hasImage) &&
+        !isAnimatedEmojiMessage(message.body) &&
+        !isGiftCollectionMessage(message.body);
+
+    final action = await showDialog<String>(
+      context: context,
+      barrierColor: Colors.black26,
+      builder: (ctx) => Center(
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          elevation: 8,
+          clipBehavior: Clip.antiAlias,
+          child: IntrinsicWidth(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _messageActionTile(
+                  ctx,
+                  value: 'reply',
+                  label: 'Ответить',
+                ),
+                if (canEdit)
+                  _messageActionTile(
+                    ctx,
+                    value: 'edit',
+                    label: 'Изменить',
+                  ),
+                if (mine)
+                  _messageActionTile(
+                    ctx,
+                    value: 'delete',
+                    label: 'Удалить',
+                    danger: true,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case 'reply':
+        _startReply(message);
+      case 'edit':
+        _startEdit(message);
+      case 'delete':
+        unawaited(_deleteMessage(message));
+    }
+  }
+
+  Widget _messageActionTile(
+    BuildContext ctx, {
+    required String value,
+    required String label,
+    bool danger = false,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.of(ctx).pop(value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: danger ? Colors.red.shade700 : AppColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteMessage(ChatMessageItem message) async {
+    try {
+      await ref.read(chatsRepositoryProvider).deleteMessage(message.id);
+      if (!mounted) return;
+      _removeMessageLocally(message.id);
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _composerAlert = e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _composerAlert = 'Не удалось удалить сообщение');
+    }
+  }
+
+  void _removeMessageLocally(String messageID) {
+    if (!mounted) return;
+    setState(() {
+      _messages = _messages.where((m) => m.id != messageID).toList();
+      _messageIDs.remove(messageID);
+      if (_replyTo?.id == messageID) _replyTo = null;
+      if (_editingMessage?.id == messageID) {
+        _editingMessage = null;
+        _textController.clear();
+      }
+    });
+  }
+
+  Widget _wrapSwipeReply({
+    required ChatMessageItem message,
+    required AlignmentGeometry alignment,
+    required Widget child,
+  }) {
+    final highlighted = _highlightedMessageID == message.id;
+    return KeyedSubtree(
+      key: _keyForMessage(message.id),
+      child: Dismissible(
+        key: ValueKey('swipe_${message.id}'),
+        direction: DismissDirection.endToStart,
+        dismissThresholds: const {
+          DismissDirection.endToStart: 0.15,
+        },
+        movementDuration: const Duration(milliseconds: 180),
+        confirmDismiss: (_) async {
+          _startReply(message);
+          return false;
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 18),
+          child: const Icon(
+            Icons.reply_rounded,
+            color: AppColors.accentStart,
+            size: 26,
+          ),
+        ),
+        child: Align(
+          alignment: alignment,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            decoration: highlighted
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentStart.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  )
+                : null,
+            child: GestureDetector(
+              onLongPress: () => unawaited(_showMessageActions(message)),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _sendAnimatedEmoji(InventoryItem item) async {
@@ -745,6 +1043,21 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }
       return;
     }
+    if (type == 'chat_message_updated') {
+      if (chatID != widget.chatID) return;
+      final messageRaw = payload['message'];
+      if (messageRaw is! Map) return;
+      final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
+      _upsertMessage(item);
+      return;
+    }
+    if (type == 'chat_message_deleted') {
+      if (chatID != widget.chatID) return;
+      final messageID = payload['message_id']?.toString() ?? '';
+      if (messageID.isEmpty) return;
+      _removeMessageLocally(messageID);
+      return;
+    }
     if (type == 'chat_delivered') {
       if (chatID != widget.chatID) return;
       final meID = ref.read(authStateProvider).valueOrNull?.id;
@@ -882,6 +1195,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final existing = _messages[existingIndex];
       // WS-эхо нового сообщения приходит без delivered/read — не затираем статусы.
       final merged = withPending.copyWith(
+        body: withPending.body,
+        editedAt: withPending.editedAt ?? existing.editedAt,
+        hasImage: withPending.hasImage,
+        imageCount: withPending.imageCount > 0
+            ? withPending.imageCount
+            : existing.imageCount,
+        replyToMessageID: withPending.replyToMessageID ?? existing.replyToMessageID,
+        replyToBody: withPending.replyToBody ?? existing.replyToBody,
+        replyToHasImage: withPending.replyToHasImage,
+        replyToSenderID: withPending.replyToSenderID ?? existing.replyToSenderID,
         deliveredAt:
             _preferStatusTs(withPending.deliveredAt, existing.deliveredAt),
         readAt: _preferStatusTs(withPending.readAt, existing.readAt),
@@ -912,7 +1235,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           left.body != right.body ||
           left.createdAt != right.createdAt ||
           left.deliveredAt != right.deliveredAt ||
-          left.readAt != right.readAt) {
+          left.readAt != right.readAt ||
+          left.editedAt != right.editedAt ||
+          left.hasImage != right.hasImage ||
+          left.imageCount != right.imageCount ||
+          left.replyToMessageID != right.replyToMessageID) {
         return false;
       }
     }
@@ -927,6 +1254,93 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOut,
     );
+  }
+
+  GlobalKey _keyForMessage(String messageID) {
+    return _messageKeys.putIfAbsent(messageID, GlobalKey.new);
+  }
+
+  Future<void> _jumpToMessage(String messageID) async {
+    final targetID = messageID.trim();
+    if (targetID.isEmpty || _jumpingToMessage) return;
+    _jumpingToMessage = true;
+    try {
+      var found = _messages.any((m) => m.id == targetID);
+      var guard = 0;
+      while (!found && mounted && guard < 50) {
+        guard++;
+        if (_loadingOlder) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          found = _messages.any((m) => m.id == targetID);
+          continue;
+        }
+        if (!_hasMoreOlder) break;
+        final beforeCount = _messages.length;
+        await _loadOlderMessages();
+        if (!mounted) return;
+        found = _messages.any((m) => m.id == targetID);
+        if (!found && _messages.length == beforeCount) {
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          if (_messages.length == beforeCount && !_loadingOlder) break;
+        }
+      }
+      if (!mounted) return;
+      if (!found) {
+        setState(() => _composerAlert = 'Исходное сообщение не найдено');
+        return;
+      }
+
+      setState(() {
+        _highlightedMessageID = targetID;
+        _composerAlert = null;
+      });
+
+      // С reverse-списком сначала прыгаем ближе по оценке, затем ensureVisible.
+      if (_scrollController.hasClients) {
+        final timeline = _buildTimelineEntries();
+        final ti = timeline.indexWhere((e) => e.message?.id == targetID);
+        if (ti >= 0) {
+          var itemsFromEnd = 0;
+          for (var i = timeline.length - 1; i > ti; i--) {
+            itemsFromEnd++;
+          }
+          final estimated = (itemsFromEnd * 96.0)
+              .clamp(0.0, _scrollController.position.maxScrollExtent);
+          _scrollController.jumpTo(estimated);
+        }
+      }
+
+      for (var attempt = 0; attempt < 12; attempt++) {
+        await Future<void>.delayed(Duration.zero);
+        if (!mounted) return;
+        await WidgetsBinding.instance.endOfFrame;
+        final ctx = _keyForMessage(targetID).currentContext;
+        if (ctx != null && ctx.mounted) {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: attempt == 0
+                ? Duration.zero
+                : const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: 0.28,
+          );
+          break;
+        }
+        if (_scrollController.hasClients) {
+          final next = (_scrollController.offset + 220)
+              .clamp(0.0, _scrollController.position.maxScrollExtent);
+          _scrollController.jumpTo(next);
+        }
+      }
+
+      await Future<void>.delayed(const Duration(milliseconds: 1400));
+      if (!mounted) return;
+      if (_highlightedMessageID == targetID) {
+        setState(() => _highlightedMessageID = null);
+      }
+    } finally {
+      _jumpingToMessage = false;
+    }
   }
 
   void _scheduleScrollToBottom({int retriesLeft = 12}) {
@@ -1582,8 +1996,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   final isEmoji = isAnimatedEmojiMessage(message.body);
                   final isGift = isGiftCollectionMessage(message.body);
                   if (isGift) {
-                    return Align(
-                      key: ValueKey(message.id),
+                    return _wrapSwipeReply(
+                      message: message,
                       alignment: Alignment.center,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 14, top: 6),
@@ -1618,8 +2032,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     );
                   }
                   if (isEmoji) {
-                    return Align(
-                      key: ValueKey(message.id),
+                    return _wrapSwipeReply(
+                      message: message,
                       alignment: Alignment.center,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12, top: 4),
@@ -1656,33 +2070,130 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       ),
                     );
                   }
-                  return Align(
-                    key: ValueKey(message.id),
-                    alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+                  return _wrapSwipeReply(
+                    message: message,
+                    alignment:
+                        mine ? Alignment.centerRight : Alignment.centerLeft,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 320),
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 9),
                         decoration: BoxDecoration(
-                          color: mine ? AppColors.accentSoft : AppColors.surfaceCard,
+                          color: mine
+                              ? AppColors.accentSoft
+                              : AppColors.surfaceCard,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: mine
-                                ? AppColors.accentStart.withValues(alpha: 0.35)
+                                ? AppColors.accentStart
+                                    .withValues(alpha: 0.35)
                                 : Colors.black.withValues(alpha: 0.08),
                           ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _ChatMessageBody(body: message.body),
+                            if (message.replyToMessageID != null) ...[
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => unawaited(
+                                    _jumpToMessage(message.replyToMessageID!),
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.fromLTRB(
+                                        8, 6, 8, 6),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: const Border(
+                                        left: BorderSide(
+                                          color: AppColors.accentStart,
+                                          width: 3,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      message.replyToHasImage
+                                          ? (message.replyToBody
+                                                      ?.trim()
+                                                      .isNotEmpty ==
+                                                  true
+                                              ? 'Фото: ${formatChatMessagePreview(message.replyToBody!)}'
+                                              : 'Фото')
+                                          : (message.replyToBody
+                                                      ?.trim()
+                                                      .isNotEmpty ==
+                                                  true
+                                              ? formatChatMessagePreview(
+                                                  message.replyToBody!)
+                                              : 'Сообщение'),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (message.hasImage) ...[
+                              Builder(
+                                builder: (context) {
+                                  final count = message.imageCount > 0
+                                      ? message.imageCount.clamp(1, 3)
+                                      : 1;
+                                  final side = count == 1
+                                      ? 168.0
+                                      : (count == 2 ? 128.0 : 88.0);
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (var i = 0; i < count; i++) ...[
+                                        if (i > 0) const SizedBox(width: 4),
+                                        ChatMessageImageThumb(
+                                          messageID: message.id,
+                                          imageIndex: i,
+                                          width: side,
+                                          height: side,
+                                          borderRadius: 10,
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                },
+                              ),
+                              if (message.body.trim().isNotEmpty)
+                                const SizedBox(height: 6),
+                            ],
+                            if (message.body.trim().isNotEmpty)
+                              _ChatMessageBody(body: message.body),
                             const SizedBox(height: 4),
                             Align(
                               alignment: Alignment.centerRight,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  if (message.editedAt != null &&
+                                      message.editedAt!.isNotEmpty) ...[
+                                    const Text(
+                                      'изменено',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 10,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
                                   Text(
                                     _formatBubbleDateTime(message.createdAt),
                                     style: const TextStyle(
@@ -1794,56 +2305,233 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
+              if (_pendingImages.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: [
+                        for (var i = 0; i < _pendingImages.length; i++)
+                          SizedBox(
+                            width: 64,
+                            height: 64,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned.fill(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => _previewPendingImage(
+                                        _pendingImages[i],
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.memory(
+                                          _pendingImages[i].bytes,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: Material(
+                                    color: Colors.white,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: () => _removePendingImage(i),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(2),
+                                        child: Icon(
+                                          Icons.close_rounded,
+                                          size: 16,
+                                          color: _composerIconPurple,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     IconButton(
-                      onPressed: _sending ? null : _openEmojiPicker,
-                      tooltip: 'Смайлики',
-                      padding: const EdgeInsets.all(10),
+                      onPressed: (_sending ||
+                              _editingMessage != null ||
+                              _emojiOnly ||
+                              _pendingImages.length >= _maxPendingImages)
+                          ? null
+                          : _pickPhoto,
+                      tooltip: 'Фото',
+                      padding: const EdgeInsets.all(8),
                       constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
+                        minWidth: 40,
+                        minHeight: 40,
                       ),
-                      icon: const Icon(
-                        Icons.emoji_emotions_outlined,
-                        color: AppColors.accentStart,
-                        size: 28,
+                      icon: Icon(
+                        Icons.image_outlined,
+                        color: (_sending ||
+                                _editingMessage != null ||
+                                _emojiOnly ||
+                                _pendingImages.length >= _maxPendingImages)
+                            ? _composerIconPurple.withValues(alpha: 0.35)
+                            : _composerIconPurple,
+                        size: 24,
                       ),
                     ),
                     Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        focusNode: _composerFocusNode,
-                        minLines: 1,
-                        maxLines: 4,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: const InputDecoration(
-                          hintText: 'Введите сообщение...',
-                          border: InputBorder.none,
-                          isDense: true,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
                         ),
-                        textInputAction: TextInputAction.send,
-                        onTap: _scrollToBottom,
-                        onSubmitted: (_) => _sendMessage(),
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_replyTo != null || _editingMessage != null)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    12, 8, 4, 0),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 3,
+                                      height: 34,
+                                      decoration: BoxDecoration(
+                                        color: _composerIconPurple,
+                                        borderRadius:
+                                            BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _editingMessage != null
+                                                ? 'Редактирование'
+                                                : 'В ответ ${_replyAuthorLabel(_replyTo!)}',
+                                            style: const TextStyle(
+                                              color: _composerIconPurple,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          Text(
+                                            (_editingMessage ?? _replyTo)!
+                                                .previewText,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color:
+                                                  AppColors.textSecondary,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: _cancelComposerContext,
+                                      visualDensity: VisualDensity.compact,
+                                      icon: const Icon(
+                                        Icons.close_rounded,
+                                        size: 18,
+                                        color: _composerIconPurple,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            TextField(
+                              controller: _textController,
+                              focusNode: _composerFocusNode,
+                              minLines: 1,
+                              maxLines: 4,
+                              textCapitalization:
+                                  TextCapitalization.sentences,
+                              // Тема приложения рисует OutlineInputBorder —
+                              // явно гасим все границы и заливку.
+                              decoration: InputDecoration(
+                                hintText: 'Сообщение',
+                                filled: false,
+                                isDense: true,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                  14,
+                                  12,
+                                  4,
+                                  12,
+                                ),
+                                suffixIcon: IconButton(
+                                  onPressed:
+                                      _sending ? null : _openEmojiPicker,
+                                  tooltip: 'Смайлики',
+                                  splashRadius: 20,
+                                  icon: const Icon(
+                                    Icons.emoji_emotions_outlined,
+                                    color: _composerIconPurple,
+                                    size: 24,
+                                  ),
+                                ),
+                                suffixIconConstraints:
+                                    const BoxConstraints(
+                                  minWidth: 40,
+                                  minHeight: 40,
+                                ),
+                              ),
+                              textInputAction: TextInputAction.send,
+                              onTap: _scrollToBottom,
+                              onSubmitted: (_) => _sendMessage(),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     IconButton(
                       onPressed: _sending ? null : _sendMessage,
-                      tooltip: 'Отправить',
+                      tooltip: _editingMessage != null
+                          ? 'Сохранить'
+                          : 'Отправить',
                       icon: _sending
                           ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.accentStart,
+                                color: _composerIconPurple,
                               ),
                             )
-                          : const Icon(
-                              Icons.send_rounded,
-                              color: AppColors.accentStart,
+                          : Icon(
+                              _editingMessage != null
+                                  ? Icons.check_rounded
+                                  : Icons.send_rounded,
+                              color: _composerIconPurple,
                             ),
                     ),
                   ],
@@ -1854,6 +2542,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         ),
       ),
     );
+  }
+
+  String _replyAuthorLabel(ChatMessageItem message) {
+    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    if (meID != null && message.senderUserID == meID) {
+      return 'себе';
+    }
+    final name = (widget.peerName ?? '').trim();
+    if (name.isNotEmpty) return name;
+    return 'собеседнику';
   }
 
   Future<void> _openEmojiPicker() async {
@@ -2282,11 +2980,49 @@ class _ChatMessageBody extends StatelessWidget {
         animate: true,
       );
     }
-    return Text(
-      body,
-      style: const TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 14,
+    if (!animatedEmojiTokenAnywhereRe.hasMatch(body)) {
+      return Text(
+        body,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 14,
+        ),
+      );
+    }
+    // В тексте есть `[ae:…]` — рисуем смайлики inline, не сырой код.
+    final spans = <InlineSpan>[];
+    var start = 0;
+    for (final m in animatedEmojiTokenAnywhereRe.allMatches(body)) {
+      if (m.start > start) {
+        spans.add(TextSpan(text: body.substring(start, m.start)));
+      }
+      final tokenName = m.group(1) ?? '';
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1),
+            child: ShopAnimatedEmoji(
+              animatedName: tokenName,
+              size: 22,
+              fallback: unicodeEmojiFromAnimatedName(tokenName) ?? '🙂',
+              animate: true,
+            ),
+          ),
+        ),
+      );
+      start = m.end;
+    }
+    if (start < body.length) {
+      spans.add(TextSpan(text: body.substring(start)));
+    }
+    return Text.rich(
+      TextSpan(
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 14,
+        ),
+        children: spans,
       ),
     );
   }

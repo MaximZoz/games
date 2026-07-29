@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 
 class ChatUserItem {
   final String id;
@@ -83,6 +84,13 @@ class ChatMessageItem {
   final String createdAt;
   final String? deliveredAt;
   final String? readAt;
+  final String? editedAt;
+  final String? replyToMessageID;
+  final bool hasImage;
+  final int imageCount;
+  final String? replyToBody;
+  final bool replyToHasImage;
+  final String? replyToSenderID;
 
   ChatMessageItem({
     required this.id,
@@ -92,9 +100,19 @@ class ChatMessageItem {
     required this.createdAt,
     this.deliveredAt,
     this.readAt,
+    this.editedAt,
+    this.replyToMessageID,
+    this.hasImage = false,
+    this.imageCount = 0,
+    this.replyToBody,
+    this.replyToHasImage = false,
+    this.replyToSenderID,
   });
 
   factory ChatMessageItem.fromJson(Map<String, dynamic> json) {
+    final hasImage = json['has_image'] as bool? ?? false;
+    var imageCount = json['image_count'] as int? ?? 0;
+    if (hasImage && imageCount <= 0) imageCount = 1;
     return ChatMessageItem(
       id: json['id'] as String? ?? '',
       chatID: json['chat_id'] as String? ?? '',
@@ -103,24 +121,56 @@ class ChatMessageItem {
       createdAt: json['created_at'] as String? ?? '',
       deliveredAt: json['delivered_at'] as String?,
       readAt: json['read_at'] as String?,
+      editedAt: json['edited_at'] as String?,
+      replyToMessageID: json['reply_to_message_id'] as String?,
+      hasImage: hasImage,
+      imageCount: imageCount,
+      replyToBody: json['reply_to_body'] as String?,
+      replyToHasImage: json['reply_to_has_image'] as bool? ?? false,
+      replyToSenderID: json['reply_to_sender_id'] as String?,
     );
   }
 
   ChatMessageItem copyWith({
+    String? body,
     String? deliveredAt,
     String? readAt,
+    String? editedAt,
     bool clearDeliveredAt = false,
     bool clearReadAt = false,
+    bool? hasImage,
+    int? imageCount,
+    String? replyToMessageID,
+    String? replyToBody,
+    bool? replyToHasImage,
+    String? replyToSenderID,
   }) {
     return ChatMessageItem(
       id: id,
       chatID: chatID,
       senderUserID: senderUserID,
-      body: body,
+      body: body ?? this.body,
       createdAt: createdAt,
       deliveredAt: clearDeliveredAt ? null : (deliveredAt ?? this.deliveredAt),
       readAt: clearReadAt ? null : (readAt ?? this.readAt),
+      editedAt: editedAt ?? this.editedAt,
+      replyToMessageID: replyToMessageID ?? this.replyToMessageID,
+      hasImage: hasImage ?? this.hasImage,
+      imageCount: imageCount ?? this.imageCount,
+      replyToBody: replyToBody ?? this.replyToBody,
+      replyToHasImage: replyToHasImage ?? this.replyToHasImage,
+      replyToSenderID: replyToSenderID ?? this.replyToSenderID,
     );
+  }
+
+  String get previewText {
+    final t = replaceAnimatedEmojiTokens(body.trim());
+    final n = imageCount > 0 ? imageCount : (hasImage ? 1 : 0);
+    if (n > 1 && t.isEmpty) return 'Фото ($n)';
+    if (n > 1) return 'Фото ($n): $t';
+    if (hasImage && t.isEmpty) return 'Фото';
+    if (hasImage) return 'Фото: $t';
+    return t;
   }
 }
 
@@ -217,10 +267,17 @@ class ChatsRepository {
       'cannot chat with yourself': 'Нельзя написать самому себе',
       'message is empty': 'Сообщение не может быть пустым',
       'message is too long': 'Сообщение слишком длинное',
+      'image is too large': 'Изображение слишком большое',
+      'unsupported image type': 'Неподдерживаемый тип изображения',
+      'invalid reply target': 'Нельзя ответить на это сообщение',
+      'cannot edit this message': 'Нельзя изменить это сообщение',
+      'cannot delete this message': 'Нельзя удалить это сообщение',
       'cannot block yourself': 'Нельзя заблокировать самого себя',
       'forbidden': 'Недостаточно прав',
       'user is blocked': 'Пользователь заблокирован',
       'user not found': 'Пользователь не найден',
+      'message not found': 'Сообщение не найдено',
+      'image not found': 'Изображение не найдено',
       'not found': 'Не найдено',
       'server error': 'Ошибка сервера. Попробуйте позже.',
     };
@@ -382,7 +439,32 @@ class ChatsRepository {
         .toList();
   }
 
-  Future<ChatMessageItem> sendMessage(String chatID, String message) async {
+  Future<ChatMessageItem> sendMessage(
+    String chatID,
+    String message, {
+    String? replyToMessageID,
+    String? imageBase64,
+    String? imageMime,
+    List<({String base64, String mime})>? images,
+  }) async {
+    final payload = <String, dynamic>{
+      'chat_id': chatID,
+      'body': message,
+      if (replyToMessageID != null && replyToMessageID.isNotEmpty)
+        'reply_to_message_id': replyToMessageID,
+    };
+    if (images != null && images.isNotEmpty) {
+      payload['images'] = [
+        for (final img in images.take(3))
+          {
+            'image_base64': img.base64,
+            'image_mime': img.mime,
+          },
+      ];
+    } else if (imageBase64 != null && imageBase64.isNotEmpty) {
+      payload['image_base64'] = imageBase64;
+      payload['image_mime'] = imageMime ?? 'image/jpeg';
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/chats/messages'),
@@ -390,7 +472,7 @@ class ChatsRepository {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({'chat_id': chatID, 'body': message}),
+        body: jsonEncode(payload),
         operation: 'ChatsRepository.sendMessage',
       ),
     );
@@ -401,6 +483,66 @@ class ChatsRepository {
     return ChatMessageItem.fromJson(
       Map<String, dynamic>.from((body['message'] ?? const {}) as Map),
     );
+  }
+
+  Future<ChatMessageItem> editMessage(String messageID, String message) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/messages/edit'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'message_id': messageID, 'body': message}),
+        operation: 'ChatsRepository.editMessage',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return ChatMessageItem.fromJson(
+      Map<String, dynamic>.from((body['message'] ?? const {}) as Map),
+    );
+  }
+
+  Future<void> deleteMessage(String messageID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/messages/delete'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'message_id': messageID}),
+        operation: 'ChatsRepository.deleteMessage',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<List<int>> fetchMessageImageBytes(
+    String messageID, {
+    int index = 0,
+  }) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/chats/messages/image').replace(
+          queryParameters: {
+            'message_id': messageID,
+            'index': '$index',
+          },
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ChatsRepository.fetchMessageImageBytes',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    return response.bodyBytes;
   }
 
   Future<int> markRead(String chatID) async {

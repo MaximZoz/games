@@ -9,6 +9,10 @@ import 'package:multigames_client/ui/app_theme.dart';
 /// Токен сообщения с анимированным смайликом: `[ae:rocket]`.
 final RegExp animatedEmojiTokenRe = RegExp(r'^\[ae:([A-Za-z0-9_]+)\]$');
 
+/// Токен `[ae:…]` внутри произвольного текста.
+final RegExp animatedEmojiTokenAnywhereRe =
+    RegExp(r'\[ae:([A-Za-z0-9_]+)\]');
+
 String encodeAnimatedEmojiMessage(String animatedName) => '[ae:$animatedName]';
 
 String? parseAnimatedEmojiName(String body) {
@@ -18,6 +22,15 @@ String? parseAnimatedEmojiName(String body) {
 
 bool isAnimatedEmojiMessage(String body) =>
     parseAnimatedEmojiName(body) != null;
+
+/// Заменяет все `[ae:name]` в тексте на юникод-смайлик.
+String replaceAnimatedEmojiTokens(String body) {
+  return body.replaceAllMapped(animatedEmojiTokenAnywhereRe, (m) {
+    final name = m.group(1);
+    if (name == null || name.isEmpty) return m.group(0) ?? '';
+    return unicodeEmojiFromAnimatedName(name) ?? '🙂';
+  });
+}
 
 /// Юникод-символ по имени анимации (из `assets/emojis/`, без сети).
 String? unicodeEmojiFromAnimatedName(String name) {
@@ -83,9 +96,7 @@ String formatChatMessagePreview(String body) {
         : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');
     return '🎁 $emoji $title';
   }
-  final name = parseAnimatedEmojiName(body);
-  if (name == null) return body;
-  return unicodeEmojiFromAnimatedName(name) ?? '🙂';
+  return replaceAnimatedEmojiTokens(body);
 }
 
 String resolvedEmojiChar(String animatedName, String? fallback) {
