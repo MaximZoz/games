@@ -217,6 +217,8 @@ class AuthRepository {
     const Map<String, String> map = {
       'invalid email or password': 'Неверный email или пароль',
       'email already registered': 'Такой email уже зарегистрирован',
+      'login already taken': 'Такой логин уже занят',
+      'login or email already registered': 'Такой логин или email уже зарегистрирован',
       'invalid or expired token': 'Сессия истекла. Войдите заново.',
       'invalid token': 'Сессия истекла. Войдите заново.',
       'missing authorization header': 'Требуется авторизация',
