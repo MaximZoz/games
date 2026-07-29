@@ -7,6 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:multigames_client/main.dart';
+import 'package:multigames_client/ui/widgets/zozu_boot_splash.dart';
+
+Widget _testApp() => ProviderScope(
+      overrides: [
+        bootSplashEnabledProvider.overrideWith((ref) => false),
+      ],
+      child: const MultiGamesApp(),
+    );
 
 void main() {
   setUp(() {
@@ -14,11 +22,7 @@ void main() {
   });
   testWidgets('Unauthenticated app opens login instead of home',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -28,11 +32,7 @@ void main() {
   });
 
   testWidgets('App uses MaterialApp.router', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
 
     expect(find.byType(MaterialApp), findsOneWidget);
@@ -40,11 +40,7 @@ void main() {
 
   testWidgets('Login page shows form and toolbar auth button',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 
@@ -58,11 +54,7 @@ void main() {
 
   testWidgets('Navigation shows main sections from profile',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -80,11 +72,7 @@ void main() {
 
   testWidgets('Unauthenticated user tapping Home redirects to login',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -102,11 +90,7 @@ void main() {
 
   testWidgets('Profile for unauthenticated user shows login prompt',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -122,11 +106,7 @@ void main() {
 
   testWidgets('Profile → Login → Register → Login navigation',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -159,11 +139,7 @@ void main() {
 
   testWidgets('Login form shows validation errors on empty submit',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 
@@ -179,11 +155,7 @@ void main() {
 
   testWidgets('Unauthenticated user tapping Friends redirects to login',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -198,11 +170,7 @@ void main() {
 
   testWidgets('Register form has title and link to login',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MultiGamesApp(),
-      ),
-    );
+    await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 

@@ -7,6 +7,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'router.dart';
 import 'ui/app_theme.dart';
+import 'ui/widgets/zozu_boot_splash.dart';
 import 'src/console_log_stub.dart'
     if (dart.library.html) 'src/console_log_web.dart' as console_log;
 
@@ -81,7 +82,7 @@ class MultiGamesApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
     return MaterialApp.router(
-      title: 'MultiGames',
+      title: 'Zozu Games',
       debugShowCheckedModeBanner: false,
       scrollBehavior: const _NoScrollbarBehavior(),
       theme: ThemeData(
@@ -149,6 +150,11 @@ class MultiGamesApp extends ConsumerWidget {
         ),
       ),
       routerConfig: router,
+      builder: (context, child) {
+        return BootSplashHost(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

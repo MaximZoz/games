@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/main.dart';
+import 'package:multigames_client/ui/widgets/zozu_boot_splash.dart';
 
 /// iPhone-подобный viewport (devicePixelRatio=1 → logical == physical).
 void setPhonePortrait(WidgetTester tester) {
@@ -27,8 +28,11 @@ void setTablet(WidgetTester tester) {
 
 Future<void> pumpMultiGamesApp(WidgetTester tester) async {
   await tester.pumpWidget(
-    const ProviderScope(
-      child: MultiGamesApp(),
+    ProviderScope(
+      overrides: [
+        bootSplashEnabledProvider.overrideWith((ref) => false),
+      ],
+      child: const MultiGamesApp(),
     ),
   );
   await tester.pump();
