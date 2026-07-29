@@ -210,6 +210,9 @@ class ChatsRepository {
 
   static String _translateMessage(String msg) {
     final m = msg.toLowerCase().trim();
+    if (m.contains('only friends can send text')) {
+      return 'Текст только для друзей';
+    }
     const Map<String, String> map = {
       'cannot chat with yourself': 'Нельзя написать самому себе',
       'message is empty': 'Сообщение не может быть пустым',
@@ -436,6 +439,43 @@ class ChatsRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return body['updated'] as int? ?? 0;
+  }
+
+  /// Возможности отправки в чат (учитывает «сообщения только от друзей» у собеседника).
+  Future<ChatCapabilities> getCapabilities(String chatID) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/chats/capabilities').replace(
+          queryParameters: {'chat_id': chatID},
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'ChatsRepository.getCapabilities',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return ChatCapabilities.fromJson(body);
+  }
+}
+
+class ChatCapabilities {
+  final bool canSendText;
+  final bool emojiOnly;
+
+  const ChatCapabilities({
+    this.canSendText = true,
+    this.emojiOnly = false,
+  });
+
+  factory ChatCapabilities.fromJson(Map<String, dynamic> json) {
+    final emojiOnly = json['emoji_only'] as bool? ?? false;
+    final canSendText = json['can_send_text'] as bool? ?? !emojiOnly;
+    return ChatCapabilities(
+      canSendText: canSendText,
+      emojiOnly: emojiOnly,
+    );
   }
 }
 

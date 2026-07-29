@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -19,10 +20,25 @@ var (
 	ErrCannotChatWithYourself = errors.New("cannot chat with yourself")
 	ErrChatMessageEmpty       = errors.New("chat message is empty")
 	ErrChatMessageTooLong     = errors.New("chat message is too long")
+	ErrChatFriendsOnlyText    = errors.New("only friends can send text messages")
 	ErrUserBlocked            = errors.New("user is blocked")
 	ErrCannotBlockYourself    = errors.New("cannot block yourself")
 	ErrUserNotFound           = errors.New("user not found")
 )
+
+// Токены, разрешённые не-друзьям при messages_friends_only у получателя.
+var (
+	animatedEmojiTokenRe  = regexp.MustCompile(`^\[ae:[A-Za-z0-9_]+\]$`)
+	giftCollectionTokenRe = regexp.MustCompile(
+		`^\[gift_coll:[^|\]]+\|[^|\]]*\|[^|\]]*\|[^\]]*\]$`,
+	)
+)
+
+// IsRestrictedChatMessageAllowed — смайлик или подарок коллекции (не свободный текст).
+func IsRestrictedChatMessageAllowed(body string) bool {
+	text := strings.TrimSpace(body)
+	return animatedEmojiTokenRe.MatchString(text) || giftCollectionTokenRe.MatchString(text)
+}
 
 type ChatMessage struct {
 	ID           uuid.UUID
@@ -367,6 +383,20 @@ func SendChatMessage(
 	}
 	if blocked {
 		return ChatMessage{}, ErrUserBlocked
+	}
+
+	peerSettings, err := GetUserSettings(ctx, pool, peerID)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+	if peerSettings.MessagesFriendsOnly {
+		friends, err := AreFriends(ctx, pool, senderUserID, peerID)
+		if err != nil {
+			return ChatMessage{}, err
+		}
+		if !friends && !IsRestrictedChatMessageAllowed(text) {
+			return ChatMessage{}, ErrChatFriendsOnlyText
+		}
 	}
 
 	var msg ChatMessage

@@ -3,6 +3,7 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
@@ -25,5 +26,6 @@ void clearUserScopedCaches(Ref ref) {
   ref.invalidate(achievementsListProvider);
   ref.invalidate(achievementsUnclaimedCountProvider);
   ref.invalidate(userGameSettingsProvider);
+  ref.invalidate(messagesFriendsOnlyProvider);
   ref.read(unreadGiftedCollectionsProvider.notifier).clear();
 }

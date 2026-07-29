@@ -1628,20 +1628,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     );
   }
 
-  Widget _buildRoundIconButton({
-    required IconData icon,
-    required VoidCallback? onPressed,
-    required String tooltip,
-  }) {
-    // Та же форма рамки, что у лупы / кнопок тулбара чатов.
-    return _buildHeaderFrameIconButton(
-      icon: icon,
-      tooltip: tooltip,
-      onPressed: onPressed,
-      iconColor: AppColors.textPrimary,
-    );
-  }
-
   Future<void> _sendOrAcceptFriendFromChat(ChatPreviewItem item) async {
     final userId = item.user.id.trim();
     if (userId.isEmpty) return;
@@ -1660,7 +1646,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     }
     final hasOutgoing =
         snapshot?.outgoing.any((r) => r.user.id == userId) == true;
-    if (hasOutgoing && (incomingRequestId == null || incomingRequestId.isEmpty)) {
+    if (hasOutgoing &&
+        (incomingRequestId == null || incomingRequestId.isEmpty)) {
       if (!mounted) return;
       showAppSnackBar(
         context,
@@ -1941,7 +1928,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                       SliverPadding(
                         // Сверху запас под фиолетовую тень GradientCard —
                         // иначе CustomScrollView обрезает её о хедер (линия среза).
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                        padding: const EdgeInsets.fromLTRB(16, 20, 20, 12),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -1957,6 +1944,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               final blockBusy =
                                   _chatActionInFlight.contains(blockKey);
                               final itemBusy = clearBusy || blockBusy;
+                              final peerId = item.user.id.trim();
+                              final isFriend = peerId.isNotEmpty &&
+                                  friendsSnapshot?.friends
+                                          .any((f) => f.user.id == peerId) ==
+                                      true;
+                              final hasOutgoing = peerId.isNotEmpty &&
+                                  friendsSnapshot?.outgoing
+                                          .any((r) => r.user.id == peerId) ==
+                                      true;
+                              final hasIncoming = peerId.isNotEmpty &&
+                                  friendsSnapshot?.incoming
+                                          .any((r) => r.user.id == peerId) ==
+                                      true;
+                              final friendBusy = _chatActionInFlight
+                                  .contains('friend_$peerId');
+                              final showAddFriend =
+                                  peerId.isNotEmpty && !isFriend;
                               return Padding(
                                 padding: EdgeInsets.only(
                                   top: index == 0 ? 0 : 10,
@@ -2018,7 +2022,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       ),
                                     ],
                                   ),
-                                  child: Opacity(
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Opacity(
                                     opacity: itemBusy ? 0.65 : 1,
                                     child: GradientCard(
                                       margin: EdgeInsets.zero,
@@ -2135,108 +2142,108 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                     ],
                                                   ),
                                                 const SizedBox(height: 6),
-                                                Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Builder(
-                                                      builder: (context) {
-                                                        final peerId =
-                                                            item.user.id.trim();
-                                                        final isFriend =
-                                                            peerId.isNotEmpty &&
-                                                                friendsSnapshot
-                                                                        ?.friends
-                                                                        .any((f) =>
-                                                                            f.user.id ==
-                                                                            peerId) ==
-                                                                    true;
-                                                        if (isFriend) {
-                                                          return const SizedBox
-                                                              .shrink();
-                                                        }
-                                                        final hasOutgoing =
-                                                            peerId.isNotEmpty &&
-                                                                friendsSnapshot
-                                                                        ?.outgoing
-                                                                        .any((r) =>
-                                                                            r.user.id ==
-                                                                            peerId) ==
-                                                                    true;
-                                                        final hasIncoming =
-                                                            peerId.isNotEmpty &&
-                                                                friendsSnapshot
-                                                                        ?.incoming
-                                                                        .any((r) =>
-                                                                            r.user.id ==
-                                                                            peerId) ==
-                                                                    true;
-                                                        final friendBusy =
-                                                            _chatActionInFlight
-                                                                .contains(
-                                                                    'friend_$peerId');
-                                                        return Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  right: 6),
-                                                          child:
-                                                              _buildRoundIconButton(
-                                                            icon: Icons
-                                                                .person_add_alt_1_rounded,
-                                                            onPressed: itemBusy ||
-                                                                    friendBusy ||
-                                                                    hasOutgoing
-                                                                ? null
-                                                                : () => unawaited(
-                                                                      _sendOrAcceptFriendFromChat(
-                                                                          item),
-                                                                    ),
-                                                            tooltip: hasIncoming
-                                                                ? 'Принять заявку в друзья'
-                                                                : (hasOutgoing
-                                                                    ? 'Заявка уже отправлена'
-                                                                    : 'Отправить заявку в друзья'),
-                                                          ),
-                                                        );
-                                                      },
+                                                if (unread > 0)
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 7,
+                                                            vertical: 3),
+                                                    decoration:
+                                                        BoxDecoration(
+                                                      color:
+                                                          AppColors.accentStart,
+                                                      borderRadius:
+                                                          BorderRadius
+                                                              .circular(999),
                                                     ),
-                                                    if (unread > 0) ...[
-                                                      const SizedBox(width: 6),
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                horizontal: 7,
-                                                                vertical: 3),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              AppColors.accentStart,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(999),
-                                                        ),
-                                                        child: Text(
-                                                          unread > 99
-                                                              ? '99+'
-                                                              : '$unread',
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 11,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                        ),
+                                                    child: Text(
+                                                      unread > 99
+                                                          ? '99+'
+                                                          : '$unread',
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
-                                                    ],
-                                                  ],
-                                                ),
+                                                    ),
+                                                  ),
                                               ],
                                             ),
                                           ],
                                         ),
                                       ),
                                     ),
+                                  ),
+                                      if (showAddFriend)
+                                        Positioned(
+                                          bottom: -7,
+                                          right: -7,
+                                          child: Tooltip(
+                                            message: hasIncoming
+                                                ? 'Принять заявку в друзья'
+                                                : (hasOutgoing
+                                                    ? 'Заявка уже отправлена'
+                                                    : 'Отправить заявку в друзья'),
+                                            child: Material(
+                                              color: AppColors.surfaceCard,
+                                              elevation: 0,
+                                              shape: const CircleBorder(
+                                                side: BorderSide(
+                                                  color: AppColors.accentSoft,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: InkWell(
+                                                customBorder:
+                                                    const CircleBorder(),
+                                                onTap: itemBusy ||
+                                                        friendBusy ||
+                                                        hasOutgoing
+                                                    ? null
+                                                    : () => unawaited(
+                                                          _sendOrAcceptFriendFromChat(
+                                                            item,
+                                                          ),
+                                                        ),
+                                                child: SizedBox(
+                                                  width: 26,
+                                                  height: 26,
+                                                  child: Center(
+                                                    child: friendBusy
+                                                        ? const SizedBox(
+                                                            width: 12,
+                                                            height: 12,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              strokeWidth: 1.5,
+                                                              color: AppColors
+                                                                  .accentStart,
+                                                            ),
+                                                          )
+                                                        : Icon(
+                                                            Icons
+                                                                .person_add_alt_1_rounded,
+                                                            size: 15,
+                                                            color: hasOutgoing
+                                                                ? AppColors
+                                                                    .accentStart
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.35,
+                                                                    )
+                                                                : AppColors
+                                                                    .accentStart,
+                                                          ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               );

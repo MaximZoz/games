@@ -54,6 +54,7 @@ enum _RoomAction {
   blockUser,
   sendFriendRequest,
   acceptFriendRequest,
+  removeFriend,
 }
 
 const List<IconData> _chatAvatarIcons = [
@@ -90,6 +91,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   bool _leavingToChats = false;
   bool _showScrollToBottomButton = false;
   bool _roomActionInFlight = false;
+  bool _emojiOnly = false;
+  String? _composerAlert;
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
@@ -104,8 +107,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _composerFocusNode.addListener(_onComposerFocusChanged);
+    _textController.addListener(_onComposerTextChanged);
     _scrollController.addListener(_onMessagesScroll);
     _loadMessages(initial: true);
+    unawaited(_loadCapabilities());
     // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -122,8 +127,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _loadingOlder = false;
       _hasMoreOlder = true;
       _initialScrollDone = false;
+      _emojiOnly = false;
+      _composerAlert = null;
       _messageIDs.clear();
       _loadMessages(initial: true);
+      unawaited(_loadCapabilities());
     }
   }
 
@@ -142,11 +150,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     });
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
+    _textController.removeListener(_onComposerTextChanged);
     _scrollController.removeListener(_onMessagesScroll);
     _composerFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onComposerTextChanged() {
+    if (_composerAlert == null) return;
+    setState(() => _composerAlert = null);
   }
 
   /// Диалог видим в shell (не фоновая вкладка и не уходим назад).
@@ -158,7 +172,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   void _onComposerFocusChanged() {
     if (!_composerFocusNode.hasFocus) return;
+    unawaited(_loadCapabilities());
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_loadCapabilities());
+    }
   }
 
   void _goBackToChats() {
@@ -241,12 +264,74 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           await repo.sendRequest(id);
         }
         await refreshFriendsSnapshot(ref);
+        unawaited(_loadCapabilities());
         if (!mounted) return;
         showAppSnackBar(
           context,
           message: action == _RoomAction.acceptFriendRequest
               ? 'Заявка принята'
               : 'Заявка отправлена',
+          kind: AppSnackKind.success,
+        );
+      } on FriendsException catch (e) {
+        if (e.statusCode == 401) {
+          await ref.read(authStateProvider.notifier).logout();
+          if (mounted) context.go('/login');
+          return;
+        }
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: e.message,
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: e.toString(),
+          kind: AppSnackKind.error,
+        );
+      } finally {
+        if (mounted) setState(() => _roomActionInFlight = false);
+      }
+      return;
+    }
+
+    if (action == _RoomAction.removeFriend) {
+      final id = (peerUserID ?? '').trim();
+      if (id.isEmpty) return;
+      final chats =
+          ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+      String peerName = 'этого пользователя';
+      for (final item in chats) {
+        if (item.chatID == widget.chatID) {
+          final n = (item.user.displayName ?? '').trim();
+          if (n.isNotEmpty) peerName = n;
+          break;
+        }
+      }
+      if (peerName == 'этого пользователя') {
+        final routeName = (widget.peerName ?? '').trim();
+        if (routeName.isNotEmpty) peerName = routeName;
+      }
+      final confirmed = await _confirmAction(
+        title: 'Убрать из друзей?',
+        description: 'Вы уверены, что хотите удалить $peerName из друзей?',
+        confirmText: 'Убрать',
+        destructive: true,
+      );
+      if (!confirmed) return;
+
+      setState(() => _roomActionInFlight = true);
+      try {
+        await ref.read(friendsRepositoryProvider).removeFriend(id);
+        await refreshFriendsSnapshot(ref);
+        unawaited(_loadCapabilities());
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: 'Удалено из друзей',
           kind: AppSnackKind.success,
         );
       } on FriendsException catch (e) {
@@ -346,6 +431,135 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       );
     } finally {
       if (mounted) setState(() => _roomActionInFlight = false);
+    }
+  }
+
+  Future<void> _loadCapabilities() async {
+    try {
+      final caps =
+          await ref.read(chatsRepositoryProvider).getCapabilities(widget.chatID);
+      if (!mounted) return;
+      if (_emojiOnly != caps.emojiOnly ||
+          (!caps.emojiOnly && _composerAlert == _friendsOnlyAlert)) {
+        setState(() {
+          _emojiOnly = caps.emojiOnly;
+          if (!caps.emojiOnly && _composerAlert == _friendsOnlyAlert) {
+            _composerAlert = null;
+          }
+        });
+      }
+    } catch (_) {
+      // Не блокируем чат при ошибке capabilities.
+    }
+  }
+
+  static const _friendsOnlyAlert = 'Текст только для друзей';
+
+  bool _isFriendsOnlySendError(ChatException e) {
+    if (e.statusCode != 403) return false;
+    final m = e.message.toLowerCase();
+    return m.contains('only friends') ||
+        m.contains('только друзья') ||
+        m.contains('текст только для друзей') ||
+        m.contains('только смайлик') ||
+        m.contains('friends can send');
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _textController.text.trim();
+    if (text.isEmpty || _sending) return;
+
+    // Всегда спрашиваем сервер: собеседник мог снять ограничение,
+    // пока чат оставался открытым (_emojiOnly иначе устаревает).
+    setState(() {
+      _sending = true;
+      _composerAlert = null;
+    });
+    try {
+      final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
+      if (!mounted) return;
+      _textController.clear();
+      _upsertMessage(sent);
+      // chatsListProvider обновится через realtimeEventsProvider
+      setState(() {
+        _sending = false;
+        _emojiOnly = false;
+        _composerAlert = null;
+      });
+    } on ChatException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      final friendsOnly = _isFriendsOnlySendError(e);
+      setState(() {
+        _sending = false;
+        if (friendsOnly) _emojiOnly = true;
+        _composerAlert = friendsOnly ? _friendsOnlyAlert : e.message;
+      });
+      if (!friendsOnly) {
+        // На случай смены настроек у собеседника — подтянуть актуальные.
+        unawaited(_loadCapabilities());
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _composerAlert = 'Не удалось отправить сообщение';
+      });
+      unawaited(_loadCapabilities());
+    }
+  }
+
+  Future<void> _sendAnimatedEmoji(InventoryItem item) async {
+    final name = item.animatedName;
+    if (name == null || name.isEmpty || _sending) return;
+    if (item.quantity <= 0) return;
+
+    setState(() {
+      _sending = true;
+    });
+    try {
+      await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
+      ref.invalidate(inventoryListProvider);
+      final body = encodeAnimatedEmojiMessage(name);
+      final sent =
+          await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, body);
+      if (!mounted) return;
+      _upsertMessage(sent);
+      setState(() {
+        _sending = false;
+        _composerAlert = null;
+      });
+    } on AuthException catch (e) {
+      if (e.statusCode == 401) {
+        await ref.read(authStateProvider.notifier).logout();
+        if (mounted) context.go('/login');
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _composerAlert = e.message;
+      });
+      ref.invalidate(inventoryListProvider);
+    } on ChatException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _composerAlert =
+            _isFriendsOnlySendError(e) ? _friendsOnlyAlert : e.message;
+      });
+      ref.invalidate(inventoryListProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _composerAlert = 'Не удалось отправить смайлик';
+      });
+      ref.invalidate(inventoryListProvider);
     }
   }
 
@@ -703,90 +917,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }
     }
     return true;
-  }
-
-  Future<void> _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty || _sending) return;
-
-    setState(() => _sending = true);
-    try {
-      final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
-      if (!mounted) return;
-      _textController.clear();
-      _upsertMessage(sent);
-      // chatsListProvider обновится через realtimeEventsProvider
-      setState(() {
-        _sending = false;
-        _error = null;
-      });
-    } on ChatException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _sending = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось отправить сообщение';
-        _sending = false;
-      });
-    }
-  }
-
-  Future<void> _sendAnimatedEmoji(InventoryItem item) async {
-    final name = item.animatedName;
-    if (name == null || name.isEmpty || _sending) return;
-    if (item.quantity <= 0) return;
-
-    setState(() {
-      _sending = true;
-    });
-    try {
-      await ref.read(shopRepositoryProvider).consumeEmoji(item.code);
-      ref.invalidate(inventoryListProvider);
-      final body = encodeAnimatedEmojiMessage(name);
-      final sent =
-          await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, body);
-      if (!mounted) return;
-      _upsertMessage(sent);
-      setState(() {
-        _sending = false;
-        _error = null;
-      });
-    } on AuthException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _sending = false;
-      });
-      ref.invalidate(inventoryListProvider);
-    } on ChatException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _sending = false;
-      });
-      ref.invalidate(inventoryListProvider);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось отправить смайлик';
-        _sending = false;
-      });
-      ref.invalidate(inventoryListProvider);
-    }
   }
 
   void _scrollToBottom() {
@@ -1261,7 +1391,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   snapshot?.incoming.any((r) => r.user.id == peerId) == true;
 
               return <PopupMenuEntry<_RoomAction>>[
-                if (!isFriend && peerId.isNotEmpty)
+                if (isFriend)
+                  const PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.removeFriend,
+                    child: Text('Убрать из друзей'),
+                  )
+                else if (peerId.isNotEmpty && snapshot != null)
                   if (hasIncoming)
                     const PopupMenuItem<_RoomAction>(
                       value: _RoomAction.acceptFriendRequest,
@@ -1319,7 +1454,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }());
     });
 
+    // Дружба изменилась — пересчитать «только смайлики».
+    ref.listen(friendsSnapshotProvider, (prev, next) {
+      if (prev?.valueOrNull == next.valueOrNull) return;
+      unawaited(_loadCapabilities());
+    });
+
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
+    // Нужен watch: пункты меню «заявка» / «убрать из друзей» зависят от снимка.
+    ref.watch(friendsSnapshotProvider);
     final media = MediaQuery.of(context);
     final narrowLandscape =
         isNarrow(context) && media.size.width > media.size.height;
@@ -1638,6 +1781,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ],
                 ),
               ),
+              if (_composerAlert != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Text(
+                    _composerAlert!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
                 child: Row(
