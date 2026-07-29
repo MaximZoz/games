@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "jezelf",
-  "chatReplyPeer": "de gesprekspartner"
+  "chatReplyPeer": "de gesprekspartner",
+  "pickPhotoGallery": "Fotobibliotheek",
+  "pickPhotoCamera": "Foto maken"
 }

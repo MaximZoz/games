@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "өзіңізге",
-  "chatReplyPeer": "әңгімелесушіге"
+  "chatReplyPeer": "әңгімелесушіге",
+  "pickPhotoGallery": "Медиатека",
+  "pickPhotoCamera": "Суретке түсіру"
 }

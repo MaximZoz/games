@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "στον εαυτό σας",
-  "chatReplyPeer": "στον συνομιλητή"
+  "chatReplyPeer": "στον συνομιλητή",
+  "pickPhotoGallery": "Βιβλιοθήκη φωτογραφιών",
+  "pickPhotoCamera": "Λήψη φωτογραφίας"
 }

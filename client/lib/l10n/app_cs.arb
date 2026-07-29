@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "sobě",
-  "chatReplyPeer": "protějšku"
+  "chatReplyPeer": "protějšku",
+  "pickPhotoGallery": "Knihovna fotek",
+  "pickPhotoCamera": "Pořídit fotku"
 }

@@ -1423,4 +1423,10 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'motparten';
+
+  @override
+  String get pickPhotoGallery => 'Fotobibliotek';
+
+  @override
+  String get pickPhotoCamera => 'Ta bilde';
 }

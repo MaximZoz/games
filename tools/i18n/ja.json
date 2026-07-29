@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "{n} シルバーのベットを解除",
   "shopStakeDescGold": "{n} ゴールドのベットを解除",
   "chatReplySelf": "自分",
-  "chatReplyPeer": "相手"
+  "chatReplyPeer": "相手",
+  "pickPhotoGallery": "写真ライブラリ",
+  "pickPhotoCamera": "写真を撮る"
 }

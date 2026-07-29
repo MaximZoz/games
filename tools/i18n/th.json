@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "ปลดล็อกเดิมพัน {n} เงิน",
   "shopStakeDescGold": "ปลดล็อกเดิมพัน {n} ทอง",
   "chatReplySelf": "ตัวคุณ",
-  "chatReplyPeer": "อีกฝ่าย"
+  "chatReplyPeer": "อีกฝ่าย",
+  "pickPhotoGallery": "คลังรูปภาพ",
+  "pickPhotoCamera": "ถ่ายรูป"
 }

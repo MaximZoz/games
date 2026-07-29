@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "{n} 실버 판돈 잠금 해제",
   "shopStakeDescGold": "{n} 골드 판돈 잠금 해제",
   "chatReplySelf": "자신",
-  "chatReplyPeer": "상대방"
+  "chatReplyPeer": "상대방",
+  "pickPhotoGallery": "사진 보관함",
+  "pickPhotoCamera": "사진 찍기"
 }

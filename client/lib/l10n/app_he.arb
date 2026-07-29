@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "לעצמך",
-  "chatReplyPeer": "לבן השיח"
+  "chatReplyPeer": "לבן השיח",
+  "pickPhotoGallery": "ספריית תמונות",
+  "pickPhotoCamera": "צלמו תמונה"
 }

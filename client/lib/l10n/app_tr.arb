@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "kendine",
-  "chatReplyPeer": "karşı tarafa"
+  "chatReplyPeer": "karşı tarafa",
+  "pickPhotoGallery": "Fotoğraf kitaplığı",
+  "pickPhotoCamera": "Fotoğraf çek"
 }

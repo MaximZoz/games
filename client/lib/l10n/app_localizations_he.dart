@@ -1423,4 +1423,10 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'לבן השיח';
+
+  @override
+  String get pickPhotoGallery => 'ספריית תמונות';
+
+  @override
+  String get pickPhotoCamera => 'צלמו תמונה';
 }

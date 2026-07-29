@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "сабе",
-  "chatReplyPeer": "суразмоўцу"
+  "chatReplyPeer": "суразмоўцу",
+  "pickPhotoGallery": "Медыятэка",
+  "pickPhotoCamera": "Зрабіць здымак"
 }

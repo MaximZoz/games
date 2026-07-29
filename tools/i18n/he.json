@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "פותח הימור של {n} כסף",
   "shopStakeDescGold": "פותח הימור של {n} זהב",
   "chatReplySelf": "לעצמך",
-  "chatReplyPeer": "לבן השיח"
+  "chatReplyPeer": "לבן השיח",
+  "pickPhotoGallery": "ספריית תמונות",
+  "pickPhotoCamera": "צלמו תמונה"
 }

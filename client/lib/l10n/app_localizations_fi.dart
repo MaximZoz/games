@@ -1423,4 +1423,10 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'keskustelukumppanille';
+
+  @override
+  String get pickPhotoGallery => 'Valokuvakirjasto';
+
+  @override
+  String get pickPhotoCamera => 'Ota kuva';
 }

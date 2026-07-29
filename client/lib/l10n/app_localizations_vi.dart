@@ -1423,4 +1423,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'đối phương';
+
+  @override
+  String get pickPhotoGallery => 'Thư viện ảnh';
+
+  @override
+  String get pickPhotoCamera => 'Chụp ảnh';
 }

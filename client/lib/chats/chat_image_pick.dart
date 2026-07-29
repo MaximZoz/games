@@ -78,10 +78,15 @@ Uint8List compressChatImageBytes(Uint8List source) {
 }
 
 /// Выбор фото для чата (камера / галерея) с агрессивным JPEG-сжатием.
+///
+/// На web для [ImageSource.camera] используется `capture=environment`,
+/// чтобы сразу открыть камеру и не показывать системный sheet ОС.
 Future<PickedChatImage?> pickAndCompressChatImage(ImageSource source) async {
   Uint8List? raw;
-  if (kIsWeb && source == ImageSource.gallery) {
-    raw = await pickImageBytesWeb();
+  if (kIsWeb) {
+    raw = await pickImageBytesWeb(
+      capture: source == ImageSource.camera ? 'environment' : null,
+    );
   } else {
     final picker = ImagePicker();
     final file = await picker.pickImage(

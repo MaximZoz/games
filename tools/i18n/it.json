@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Sblocca puntate da {n} argento",
   "shopStakeDescGold": "Sblocca puntate da {n} oro",
   "chatReplySelf": "te stesso",
-  "chatReplyPeer": "all'interlocutore"
+  "chatReplyPeer": "all'interlocutore",
+  "pickPhotoGallery": "Fototeca",
+  "pickPhotoCamera": "Scatta foto"
 }

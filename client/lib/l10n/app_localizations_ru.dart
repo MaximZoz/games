@@ -1423,4 +1423,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'собеседнику';
+
+  @override
+  String get pickPhotoGallery => 'Медиатека';
+
+  @override
+  String get pickPhotoCamera => 'Сделать снимок';
 }

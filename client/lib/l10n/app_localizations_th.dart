@@ -1423,4 +1423,10 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'อีกฝ่าย';
+
+  @override
+  String get pickPhotoGallery => 'คลังรูปภาพ';
+
+  @override
+  String get pickPhotoCamera => 'ถ่ายรูป';
 }

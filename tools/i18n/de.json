@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Freischalten: {n} Silber setzen",
   "shopStakeDescGold": "Freischalten: {n} Gold setzen",
   "chatReplySelf": "sich selbst",
-  "chatReplyPeer": "dem Gesprächspartner"
+  "chatReplyPeer": "dem Gesprächspartner",
+  "pickPhotoGallery": "Mediathek",
+  "pickPhotoCamera": "Foto aufnehmen"
 }

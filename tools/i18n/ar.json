@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "يفتح الرهان بـ {n} فضة",
   "shopStakeDescGold": "يفتح الرهان بـ {n} ذهب",
   "chatReplySelf": "لنفسك",
-  "chatReplyPeer": "للمحاور"
+  "chatReplyPeer": "للمحاور",
+  "pickPhotoGallery": "مكتبة الصور",
+  "pickPhotoCamera": "التقاط صورة"
 }

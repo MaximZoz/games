@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Odblokowuje stawkę {n} srebra",
   "shopStakeDescGold": "Odblokowuje stawkę {n} złota",
   "chatReplySelf": "sobie",
-  "chatReplyPeer": "rozmówcy"
+  "chatReplyPeer": "rozmówcy",
+  "pickPhotoGallery": "Biblioteka zdjęć",
+  "pickPhotoCamera": "Zrób zdjęcie"
 }

@@ -1423,4 +1423,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'दूसरे व्यक्ति';
+
+  @override
+  String get pickPhotoGallery => 'फोटो लाइब्रेरी';
+
+  @override
+  String get pickPhotoCamera => 'फोटो लें';
 }

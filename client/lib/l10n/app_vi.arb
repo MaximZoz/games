@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "chính bạn",
-  "chatReplyPeer": "đối phương"
+  "chatReplyPeer": "đối phương",
+  "pickPhotoGallery": "Thư viện ảnh",
+  "pickPhotoCamera": "Chụp ảnh"
 }

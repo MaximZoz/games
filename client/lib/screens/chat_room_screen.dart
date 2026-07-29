@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
+import 'package:multigames_client/chats/chat_image_source_sheet.dart';
 import 'package:multigames_client/chats/chat_image_widgets.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -627,8 +627,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _pendingImages.length >= _maxPendingImages) {
       return;
     }
-    // Сразу галерея/фото, без нижней панели и без «файл».
-    final picked = await pickAndCompressChatImage(ImageSource.gallery);
+    // Своё меню на языке приложения; системный sheet iOS/браузера
+    // («Медиатека / Снимок / Файл») не локализуется через Flutter.
+    final source = await showChatImageSourceSheet(context);
+    if (!mounted || source == null) return;
+    final picked = await pickAndCompressChatImage(source);
     if (!mounted) return;
     if (picked == null) return;
     setState(() {

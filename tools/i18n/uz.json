@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Oʻyinlarda {n} kumush tikish huquqi",
   "shopStakeDescGold": "Oʻyinlarda {n} oltin tikish huquqi",
   "chatReplySelf": "oʻzingizga",
-  "chatReplyPeer": "suhbatdoshga"
+  "chatReplyPeer": "suhbatdoshga",
+  "pickPhotoGallery": "Media kutubxona",
+  "pickPhotoCamera": "Suratga olish"
 }

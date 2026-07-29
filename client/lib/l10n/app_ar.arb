@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "لنفسك",
-  "chatReplyPeer": "للمحاور"
+  "chatReplyPeer": "للمحاور",
+  "pickPhotoGallery": "مكتبة الصور",
+  "pickPhotoCamera": "التقاط صورة"
 }

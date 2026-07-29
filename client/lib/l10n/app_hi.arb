@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "स्वयं",
-  "chatReplyPeer": "दूसरे व्यक्ति"
+  "chatReplyPeer": "दूसरे व्यक्ति",
+  "pickPhotoGallery": "फोटो लाइब्रेरी",
+  "pickPhotoCamera": "फोटो लें"
 }

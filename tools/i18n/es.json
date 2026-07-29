@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Desbloquea apostar {n} de plata",
   "shopStakeDescGold": "Desbloquea apostar {n} de oro",
   "chatReplySelf": "ti mismo",
-  "chatReplyPeer": "al interlocutor"
+  "chatReplyPeer": "al interlocutor",
+  "pickPhotoGallery": "Fototeca",
+  "pickPhotoCamera": "Hacer una foto"
 }

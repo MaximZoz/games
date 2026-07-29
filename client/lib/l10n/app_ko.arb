@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "자신",
-  "chatReplyPeer": "상대방"
+  "chatReplyPeer": "상대방",
+  "pickPhotoGallery": "사진 보관함",
+  "pickPhotoCamera": "사진 찍기"
 }

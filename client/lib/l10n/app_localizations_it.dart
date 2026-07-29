@@ -1423,4 +1423,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'all\'interlocutore';
+
+  @override
+  String get pickPhotoGallery => 'Fototeca';
+
+  @override
+  String get pickPhotoCamera => 'Scatta foto';
 }

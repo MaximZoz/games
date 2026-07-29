@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "dig själv",
-  "chatReplyPeer": "motparten"
+  "chatReplyPeer": "motparten",
+  "pickPhotoGallery": "Fotobibliotek",
+  "pickPhotoCamera": "Ta foto"
 }

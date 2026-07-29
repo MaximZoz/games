@@ -2740,6 +2740,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'собеседнику'**
   String get chatReplyPeer;
+
+  /// No description provided for @pickPhotoGallery.
+  ///
+  /// In ru, this message translates to:
+  /// **'Медиатека'**
+  String get pickPhotoGallery;
+
+  /// No description provided for @pickPhotoCamera.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать снимок'**
+  String get pickPhotoCamera;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

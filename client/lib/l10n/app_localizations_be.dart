@@ -1423,4 +1423,10 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'суразмоўцу';
+
+  @override
+  String get pickPhotoGallery => 'Медыятэка';
+
+  @override
+  String get pickPhotoCamera => 'Зрабіць здымак';
 }

@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Avaa panoksen {n} hopeaa",
   "shopStakeDescGold": "Avaa panoksen {n} kultaa",
   "chatReplySelf": "itsellesi",
-  "chatReplyPeer": "keskustelukumppanille"
+  "chatReplyPeer": "keskustelukumppanille",
+  "pickPhotoGallery": "Valokuvakirjasto",
+  "pickPhotoCamera": "Ota kuva"
 }

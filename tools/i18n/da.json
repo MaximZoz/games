@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Låser op for indsats på {n} sølv",
   "shopStakeDescGold": "Låser op for indsats på {n} guld",
   "chatReplySelf": "dig selv",
-  "chatReplyPeer": "modparten"
+  "chatReplyPeer": "modparten",
+  "pickPhotoGallery": "Fotobibliotek",
+  "pickPhotoCamera": "Tag foto"
 }

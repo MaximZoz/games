@@ -882,5 +882,7 @@
     }
   },
   "chatReplySelf": "diri sendiri",
-  "chatReplyPeer": "lawan bicara"
+  "chatReplyPeer": "lawan bicara",
+  "pickPhotoGallery": "Perpustakaan foto",
+  "pickPhotoCamera": "Ambil foto"
 }

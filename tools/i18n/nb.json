@@ -430,5 +430,7 @@
   "shopStakeDescSilver": "Låser opp innsats på {n} sølv",
   "shopStakeDescGold": "Låser opp innsats på {n} gull",
   "chatReplySelf": "deg selv",
-  "chatReplyPeer": "motparten"
+  "chatReplyPeer": "motparten",
+  "pickPhotoGallery": "Fotobibliotek",
+  "pickPhotoCamera": "Ta bilde"
 }

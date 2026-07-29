@@ -35,3 +35,6 @@ preferred-supported-locales:
   - da
   - fi
 use-deferred-loading: false
+# Нужен для Flutter 3.27 (локально / CI): писать в lib/l10n.
+# На более новом stable предупреждение безопасно игнорируется.
+synthetic-package: false

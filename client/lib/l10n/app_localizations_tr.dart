@@ -1423,4 +1423,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'karşı tarafa';
+
+  @override
+  String get pickPhotoGallery => 'Fotoğraf kitaplığı';
+
+  @override
+  String get pickPhotoCamera => 'Fotoğraf çek';
 }
