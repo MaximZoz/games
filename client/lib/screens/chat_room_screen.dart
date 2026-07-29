@@ -632,8 +632,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     );
     if (source == null || !mounted) return;
     final picked = await pickAndCompressChatImage(source);
-    if (!mounted || picked == null) return;
-    setState(() => _pendingImage = picked);
+    if (!mounted) return;
+    if (picked == null) {
+      // Отмена выбора — тихо; слишком тяжёлое после сжатия — редко.
+      return;
+    }
+    setState(() {
+      _pendingImage = picked;
+      _composerAlert = null;
+    });
   }
 
   Future<void> _showMessageActions(ChatMessageItem message) async {

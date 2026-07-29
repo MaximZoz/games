@@ -22,7 +22,8 @@ var (
 	ErrChatReplyInvalid      = errors.New("invalid reply target")
 )
 
-const MaxChatImageBytes = 3 * 1024 * 1024
+// MaxChatImageBytes — жёсткий лимит после клиентского сжатия (~200 КБ цель).
+const MaxChatImageBytes = 256 * 1024
 
 // SendChatOptions — текст, опционально ответ и/или фото.
 type SendChatOptions struct {
