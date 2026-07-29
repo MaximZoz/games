@@ -631,18 +631,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               );
                             } on ChatException catch (e) {
                               if (!context.mounted) return;
+                              final sheetContext = context;
                               if (e.statusCode == 401) {
                                 await modalRef
                                     .read(authStateProvider.notifier)
                                     .logout();
-                                if (!context.mounted) return;
-                                // ignore: use_build_context_synchronously
-                                context.go('/login');
+                                if (!sheetContext.mounted) return;
+                                sheetContext.go('/login');
                                 return;
                               }
-                              // ignore: use_build_context_synchronously
                               showAppSnackBar(
-                                context,
+                                sheetContext,
                                 message: e.message,
                                 kind: AppSnackKind.error,
                               );
