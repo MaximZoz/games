@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
-
-const collectionSetTitles = <String, String>{
-  'legends': 'Легенды',
-  'cosmic': 'Космос',
-  'jewels': 'Драгоценности',
-  'celebration': 'Праздник',
-  'nature': 'Природа',
-  'adventure': 'Приключения',
-};
 
 const collectionSetOrder = [
   'legends',
@@ -24,10 +17,30 @@ const collectionSetOrder = [
   'adventure',
 ];
 
-String collectionSetTitle(String set) => collectionSetTitles[set] ?? set;
+String collectionSetTitle(String set) {
+  final l10n = LocaleService.l10n;
+  switch (set) {
+    case 'legends':
+      return l10n.collectionSetLegends;
+    case 'cosmic':
+      return l10n.collectionSetSpace;
+    case 'jewels':
+      return l10n.collectionSetGems;
+    case 'celebration':
+      return l10n.collectionSetParty;
+    case 'nature':
+      return l10n.collectionSetNature;
+    case 'adventure':
+      return l10n.collectionSetAdventures;
+    default:
+      return set;
+  }
+}
 
 String collectionItemSubtitle(int dailyBronze) =>
-    'Коллекция · витрина · подарок · продажа · +${formatRewardBronzePerDay(dailyBronze)}';
+    LocaleService.l10n.collectionCardMeta(
+      formatRewardBronzePerDay(dailyBronze),
+    );
 
 /// Полноэкранный просмотр: тап вне «Купить» закрывает; крестика нет.
 Future<void> showCollectionFullscreen(
@@ -119,14 +132,15 @@ class PeerCollectionsSection extends ConsumerWidget {
       builder: (context, snap) {
         final items = snap.data ?? const <InventoryItem>[];
         if (items.isEmpty) return const SizedBox.shrink();
+        final l10n = context.l10n;
         return Padding(
           padding: EdgeInsets.only(top: topPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Коллекции',
-                style: TextStyle(
+              Text(
+                l10n.shopCollections,
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -146,19 +160,19 @@ class CollectionShowcaseGrid extends StatelessWidget {
   const CollectionShowcaseGrid({
     super.key,
     required this.items,
-    this.emptyText = 'Коллекций пока нет',
+    this.emptyText,
     this.titleOnlyOnTap = true,
   });
 
   final List<InventoryItem> items;
-  final String emptyText;
+  final String? emptyText;
   final bool titleOnlyOnTap;
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
       return Text(
-        emptyText,
+        emptyText ?? context.l10n.shopEmpty,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
       );
     }

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 
 class ChatUserItem {
@@ -164,12 +165,13 @@ class ChatMessageItem {
   }
 
   String get previewText {
+    final l10n = LocaleService.l10n;
     final t = replaceAnimatedEmojiTokens(body.trim());
     final n = imageCount > 0 ? imageCount : (hasImage ? 1 : 0);
-    if (n > 1 && t.isEmpty) return 'Фото ($n)';
-    if (n > 1) return 'Фото ($n): $t';
-    if (hasImage && t.isEmpty) return 'Фото';
-    if (hasImage) return 'Фото: $t';
+    if (n > 1 && t.isEmpty) return l10n.photoCount(n);
+    if (n > 1) return l10n.photoCountWithText(n, t);
+    if (hasImage && t.isEmpty) return l10n.photo;
+    if (hasImage) return l10n.photoWithText(t);
     return t;
   }
 }
@@ -253,35 +255,9 @@ class ChatsRepository {
     } on AuthException catch (e) {
       throw ChatException(
         e.statusCode,
-        e.statusCode == 401 ? 'Сессия истекла. Войдите заново.' : e.message,
+        e.statusCode == 401 ? LocaleService.l10n.sessionExpired : e.message,
       );
     }
-  }
-
-  static String _translateMessage(String msg) {
-    final m = msg.toLowerCase().trim();
-    if (m.contains('only friends can send text')) {
-      return 'Текст только для друзей';
-    }
-    const Map<String, String> map = {
-      'cannot chat with yourself': 'Нельзя написать самому себе',
-      'message is empty': 'Сообщение не может быть пустым',
-      'message is too long': 'Сообщение слишком длинное',
-      'image is too large': 'Изображение слишком большое',
-      'unsupported image type': 'Неподдерживаемый тип изображения',
-      'invalid reply target': 'Нельзя ответить на это сообщение',
-      'cannot edit this message': 'Нельзя изменить это сообщение',
-      'cannot delete this message': 'Нельзя удалить это сообщение',
-      'cannot block yourself': 'Нельзя заблокировать самого себя',
-      'forbidden': 'Недостаточно прав',
-      'user is blocked': 'Пользователь заблокирован',
-      'user not found': 'Пользователь не найден',
-      'message not found': 'Сообщение не найдено',
-      'image not found': 'Изображение не найдено',
-      'not found': 'Не найдено',
-      'server error': 'Ошибка сервера. Попробуйте позже.',
-    };
-    return map[m] ?? msg;
   }
 
   Never _throwForErrorResponse(http.Response response) {
@@ -289,15 +265,18 @@ class ChatsRepository {
     try {
       final body = jsonDecode(response.body);
       if (body is Map) {
-        message = (body['message'] ?? body['error'] ?? message).toString();
+        message = (body['message'] ?? body['error'] ?? message).toString().trim();
       }
     } catch (_) {}
 
+    final l10n = LocaleService.l10n;
     if (response.statusCode == 401) {
-      throw ChatException(401, 'Сессия истекла. Войдите заново.');
+      throw ChatException(401, l10n.sessionExpired);
     }
-    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
-    throw ChatException(response.statusCode, translated);
+    throw ChatException(
+      response.statusCode,
+      message.isEmpty ? l10n.commonServerErrorShort : message,
+    );
   }
 
   Future<List<ChatPreviewItem>> listChats({int limit = 100, int offset = 0}) async {

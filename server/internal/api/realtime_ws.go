@@ -12,6 +12,7 @@ import (
 
 	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -161,27 +162,27 @@ func wsAccessTokenFromRequest(r *http.Request) string {
 
 func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	if h.Hub == nil {
-		http.Error(w, "realtime hub is not initialized", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "realtime hub is not initialized")
 		return
 	}
 
 	token := wsAccessTokenFromRequest(r)
 	if token == "" {
-		http.Error(w, "missing access_token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "missing access_token")
 		return
 	}
 	claims, err := auth.ParseJWT(h.JWTSecret, token)
 	if err != nil {
-		http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}
 	userID, err := uuid.Parse(claims.UserID)
 	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid token")
 		return
 	}
 
@@ -216,9 +217,10 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			})
 			if available && h.Push != nil {
 				if ok, markErr := store.TryMarkDailyRewardPush(ctx, h.Pool, userID); markErr == nil && ok {
+					lang := i18n.LangRU
 					h.Push.NotifyUsers([]uuid.UUID{userID}, store.WebPushCategoryRewards, PushPayload{
-						Title: "Награда за вход",
-						Body:  "Монеты за вход доступны — заберите на главной",
+						Title: i18n.Content(lang, "push.daily_reward_title"),
+						Body:  i18n.Content(lang, "push.daily_reward_body"),
 						URL:   "/coins/login",
 						Tag:   "daily_reward",
 					})

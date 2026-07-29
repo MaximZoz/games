@@ -1,0 +1,886 @@
+{
+  "@@locale": "fi",
+  "appTitle": "Zozu Games",
+  "navHome": "Koti",
+  "navProfile": "Profiili",
+  "navFriends": "Kaverit",
+  "navChats": "Keskustelut",
+  "navGames": "Pelit",
+  "navSettings": "Asetukset",
+  "settingsTitle": "Asetukset",
+  "settingsLanguage": "Kieli",
+  "settingsLanguageSystem": "Järjestelmän oletus",
+  "settingsAddBotsTitle": "Lisää botteja 30 s jälkeen",
+  "settingsAddBotsSubtitle": "Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)",
+  "settingsFriendsOnlyTitle": "Viestit vain kavereilta",
+  "settingsFriendsOnlySubtitle": "Muut kuin kaverit voivat lähettää vain emojeja. Jos spam häiritsee, estä käyttäjä tilapäisesti.",
+  "settingsNotifications": "Ilmoitukset",
+  "settingsPushChat": "Keskustelu",
+  "settingsPushFriends": "Kaverit",
+  "settingsPushGames": "Pelit",
+  "settingsPushRewards": "Palkinnot",
+  "loginTitle": "Kirjaudu sisään",
+  "loginSubtitle": "Syötä sähköposti tai käyttäjänimi ja salasana",
+  "loginEmailLabel": "Sähköposti tai käyttäjänimi",
+  "loginPasswordLabel": "Salasana",
+  "loginSubmit": "Kirjaudu sisään",
+  "loginNoAccount": "Ei tiliä? Rekisteröidy",
+  "loginEmailRequired": "Syötä sähköposti tai käyttäjänimi",
+  "loginPasswordRequired": "Syötä salasana",
+  "loginTooltip": "Kirjaudu sisään",
+  "logoutTooltip": "Kirjaudu ulos",
+  "registerTitle": "Rekisteröidy",
+  "registerSubtitle": "Luo tili pelataksesi",
+  "registerNameLabel": "Nimi (käyttäjänimi)",
+  "registerEmailLabel": "Sähköposti",
+  "registerPasswordLabel": "Salasana",
+  "registerSubmit": "Rekisteröidy",
+  "registerHaveAccount": "Onko sinulla jo tili? Kirjaudu sisään",
+  "registerNameRequired": "Syötä nimi",
+  "registerNameNoSpaces": "Nimi ei voi sisältää välilyöntejä",
+  "registerNameMax": "Enintään 20 merkkiä",
+  "registerNameHint": "Enintään 20 merkkiä",
+  "registerEmailRequired": "Syötä sähköposti",
+  "registerEmailInvalid": "Virheellinen sähköposti",
+  "registerPasswordHint": "Vähintään 6 merkkiä",
+  "registerPasswordMin": "Salasanan on oltava vähintään 6 merkkiä",
+  "commonCancel": "Peruuta",
+  "commonSave": "Tallenna",
+  "commonDelete": "Poista",
+  "commonEdit": "Muokkaa",
+  "commonReply": "Vastaa",
+  "commonSend": "Lähetä",
+  "commonClose": "Sulje",
+  "commonRetry": "Yritä uudelleen",
+  "commonLoading": "Ladataan…",
+  "commonError": "Virhe",
+  "commonOnline": "paikalla",
+  "commonOffline": "poissa",
+  "commonOnlineCap": "Paikalla",
+  "commonUser": "Käyttäjä",
+  "commonPlayer": "Pelaaja",
+  "commonAboutMe": "Tietoja minusta",
+  "commonBack": "Takaisin",
+  "commonAccept": "Hyväksy",
+  "commonDecline": "Hylkää",
+  "commonCreating": "Luodaan…",
+  "commonSearching": "Haetaan…",
+  "commonInsufficientCoins": "Ei tarpeeksi kolikoita",
+  "commonNotFound": "Ei löytynyt",
+  "commonServerErrorShort": "Palvelinvirhe",
+  "commonForbidden": "Pääsy kielletty",
+  "commonUserBlocked": "Käyttäjä on estetty",
+  "commonUserNotFound": "Käyttäjää ei löytynyt",
+  "commonGenericError": "Jotain meni pieleen. Yritä uudelleen.",
+  "timeJustNow": "juuri nyt",
+  "timeYesterday": "eilen",
+  "timeMinutesAgo": "{count} min sitten",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} t sitten",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} pv sitten",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "viikko sitten",
+  "timeWeeksAgo": "{count} vk sitten",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "kuukausi sitten",
+  "timeMonthsAgo": "{count} kk sitten",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "vuosi sitten",
+  "timeYearsAgo": "{count} v sitten",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "Su",
+  "weekdayMon": "Ma",
+  "weekdayTue": "Ti",
+  "weekdayWed": "Ke",
+  "weekdayThu": "To",
+  "weekdayFri": "Pe",
+  "weekdaySat": "La",
+  "monthJan": "Tammi",
+  "monthFeb": "Helmi",
+  "monthMar": "Maalis",
+  "monthApr": "Huhti",
+  "monthMay": "Touko",
+  "monthJun": "Kesä",
+  "monthJul": "Heinä",
+  "monthAug": "Elo",
+  "monthSep": "Syys",
+  "monthOct": "Loka",
+  "monthNov": "Marras",
+  "monthDec": "Joulu",
+  "homeAchievements": "Saavutukset",
+  "homeAchievementsSubtitle": "Pelituloksesi",
+  "homeAchievementsRewards": "Noudettavissa olevia palkintoja",
+  "homeCoins": "Kolikot",
+  "homeCoinsSubtitle": "Saldo ja palkinnot",
+  "homeCoinsDailyReward": "Päivittäinen kirjautumispalkinto saatavilla",
+  "homeItems": "Esineet",
+  "homeItemsInventory": "Inventaariosi",
+  "homeItemsGifted": "Joku lahjoitti sinulle kokoelman",
+  "homeItemsIncome": "Kokoelmatulo valmis noudettavaksi",
+  "homeShop": "Kauppa",
+  "homeShopSubtitle": "Emojit, panokset, kokoelmat",
+  "gamesTitle": "Pelit",
+  "gamesFindMatch": "Etsi peli",
+  "gamesMyTurn": "Sinun vuorosi",
+  "gamesWaiting": "Odottaa",
+  "gamesLobbyTab": "Aula",
+  "gamesTicTacToe": "Ristinolla",
+  "gamesRules": "Säännöt",
+  "gamesRulesTitle": "Pelin säännöt",
+  "gamesCreate": "Luo peli",
+  "gamesJoin": "Liity",
+  "gamesOpponentTurn": "Vastustajan vuoro",
+  "gamesCurrentGame": "Nykyinen peli",
+  "gamesInvitedYou": "Sinut kutsuttiin",
+  "gamesTurnTime": "Vuoron aika",
+  "gamesGridSize": "Ruudukon koko",
+  "gamesSwapSides": "Puolen vaihto",
+  "gamesNoCenter": "Ei aloitusta keskeltä",
+  "lobbyMatchmake": "Aula",
+  "lobbyPrivateGame": "Yksityispeli",
+  "lobbySearchingOpponent": "Etsitään vastustajaa…",
+  "lobbyWaitingJoin": "Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”",
+  "lobbyInviteTitle": "Pelikutsu",
+  "lobbyInvitedToPlay": "Sinut kutsuttiin pelaamaan",
+  "lobbyEnterGame": "Siirry peliin",
+  "lobbyInvite": "Kutsu",
+  "lobbyInviteSent": "Kutsu lähetetty",
+  "lobbyCopyLink": "Jaa pelilinkki",
+  "lobbyLinkCopied": "Linkki kopioitu",
+  "lobbyNoFriendsOnline": "Ei kavereita paikalla. Jaa yllä oleva pelilinkki tai odota, että kaverit tulevat paikalle.",
+  "gameBot": "Bot",
+  "gameOpponent": "Vastustaja",
+  "gameYouWon": "Voitit!",
+  "gameYouWonOpponentLeft": "Voitit — vastustaja lähti",
+  "gameYouWonOpponentTimeout": "Voitit — vastustajan aika loppui",
+  "gameDraw": "Tasapeli",
+  "gameExitTitle": "Poistu pelistä",
+  "gameExitConfirm": "Jos poistut, häviät. Poistutaanko silti?",
+  "gameStay": "Jää",
+  "gameLeave": "Poistu",
+  "gameConnecting": "Yhdistetään peliin…",
+  "gameWaitingOpponent": "Odotetaan vastustajaa",
+  "gameRematchOffer": "Vastustaja tarjoaa uusintaottelua",
+  "gameRematchDeclined": "Vastustaja hylkäsi uusintaottelun",
+  "gameRematch": "Uusinta",
+  "gameOtherOpponent": "Toinen vastustaja",
+  "gameSwapSidesAction": "Vaihda puolta",
+  "gameWriteMessage": "Kirjoita viesti",
+  "chatsTitle": "Keskustelut",
+  "chatsEmpty": "Ei vielä keskusteluja.\nNapauta oikean yläkulman kuvaketta valitaksesi kaverin ja aloittaaksesi keskustelun.",
+  "chatsNewChat": "Uusi keskustelu",
+  "chatsNoMessages": "Ei viestejä",
+  "chatsClearTitle": "Tyhjennetäänkö keskustelu?",
+  "chatsClearDesc": "Keskustelu poistetaan pysyvästi.",
+  "chatsClearConfirm": "Tyhjennä",
+  "chatsBlockTitle": "Estetäänkö tämä käyttäjä?",
+  "chatsBlockDesc": "Ette voi enää lähettää viestejä toisillenne. Keskustelu ja kaveruus poistetaan.",
+  "chatsBlockConfirm": "Estä",
+  "chatsBlockedUsers": "Estetyt käyttäjät",
+  "chatsUnblock": "Poista esto",
+  "chatDialog": "Keskustelu",
+  "chatEmpty": "Ei vielä viestejä.\nLähetä ensimmäinen.",
+  "chatMessageHint": "Viesti",
+  "chatEmoji": "Emojit",
+  "chatBuyEmojiHint": "Osta emojeja kaupasta kotinäytöllä",
+  "chatEditing": "Muokataan",
+  "chatToday": "Tänään",
+  "chatYesterday": "Eilen",
+  "chatFriendsOnly": "Teksti vain kavereille",
+  "emojiGroupEmotions": "Tunteet",
+  "emojiGroupGame": "Pelaaminen",
+  "emojiGroupFlags": "Liput",
+  "emojiGroupAnimals": "Eläimet",
+  "emojiGroupFood": "Ruoka",
+  "emojiGroupTravel": "Matkailu",
+  "emojiGroupParty": "Juhla",
+  "emojiGroupObjects": "Esineet",
+  "friendsTitle": "Kaverit",
+  "friendsTabFriends": "Kaverit",
+  "friendsTabIncoming": "Saapuneet",
+  "friendsTabOutgoing": "Lähetetyt",
+  "friendsAdd": "Lisää kaveri",
+  "friendsRequestSent": "Pyyntö lähetetty",
+  "friendsFindTab": "Etsi kaveri",
+  "friendsSearchHint": "Hae käyttäjänimellä",
+  "friendsSearchPrompt": "Käytä hakua löytääksesi uusia kavereita",
+  "friendsNothingFound": "Ei tuloksia",
+  "friendsEmpty": "Sinulla ei ole vielä kavereita",
+  "friendsNoIncoming": "Ei saapuneita pyyntöjä",
+  "friendsNoOutgoing": "Ei lähetettyjä pyyntöjä",
+  "friendsAlreadyFriends": "Jo kavereita",
+  "friendsRemoveTitle": "Poistetaanko kavereista?",
+  "friendsRemoved": "Poistettu kavereista",
+  "friendsRequestAccepted": "Pyyntö hyväksytty",
+  "friendsRequestDeclined": "Pyyntö hylätty",
+  "friendsRequestCancelled": "Pyyntö peruutettu",
+  "profileTitle": "Profiili",
+  "profileSignInPrompt": "Kirjaudu tilillesi",
+  "profileSignInHint": "Henkilökohtaisen profiilin määrittämiseksi",
+  "profileEdit": "Muokkaa",
+  "profileCollections": "Kokoelmat",
+  "profileAge": "Ikä",
+  "profileGender": "Sukupuoli",
+  "profileGenderUnset": "Ei asetettu",
+  "profileGenderMale": "Mies",
+  "profileGenderFemale": "Nainen",
+  "profileAvatar": "Avatar",
+  "profileUploadPhoto": "Lataa kuva",
+  "profileChangePhoto": "Vaihda kuva",
+  "shopTitle": "Kauppa",
+  "shopEmojis": "Emojit",
+  "shopEmojisSubtitle": "Animoidut emojit keskusteluun",
+  "shopCollections": "Kokoelmat",
+  "shopCollectionsSubtitle": "Profiilinäyttö, lahjat ja tulot",
+  "shopStakes": "Panokset",
+  "shopStakesSubtitle": "Avaa hopeapanokset",
+  "inventoryTitle": "Esineet",
+  "inventoryEmpty": "Täällä ei ole vielä mitään — katso kauppaa",
+  "inventoryFrames": "Kehykset",
+  "inventoryClaim": "Nouda",
+  "inventorySell": "Myy",
+  "inventoryGift": "Lahjoita",
+  "messageEdited": "muokattu",
+  "messageDeleted": "Viesti poistettu",
+  "photo": "Kuva",
+  "camera": "Kamera",
+  "gallery": "Galleria",
+  "connectionError": "Yhteyttä palvelimeen ei voitu muodostaa.",
+  "serverError": "Palvelinvirhe. Yritä myöhemmin uudelleen.",
+  "sessionExpired": "Istunto vanhentui. Kirjaudu sisään uudelleen.",
+  "errNoInternet": "Ei internetyhteyttä.",
+  "errTimeout": "Pyyntö aikakatkaistiin. Yritä uudelleen.",
+  "errGamesUnavailable": "Pelit eivät ole tilapäisesti saatavilla",
+  "errSettingsSaveFailed": "Asetusta ei voitu tallentaa",
+  "errPushPermission": "Salli ilmoitukset selaimen tai järjestelmän asetuksissa.",
+  "balanceTitle": "Saldo",
+  "coinBronze": "Pronssi",
+  "coinSilver": "Hopea",
+  "coinGold": "Kulta",
+  "coinDiamond": "Timantti",
+  "balanceZeroBronze": "0 pronssia",
+  "balanceBronzes": "{count} pronssia",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} hopeaa",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} kultaa",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} timanttia",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "{amount} päivässä",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "pr",
+  "balanceAbbrSilver": "h.",
+  "balanceAbbrGold": "k.",
+  "commonBackHome": "Takaisin etusivulle",
+  "commonCopied": "Kopioitu",
+  "commonClear": "Tyhjennä",
+  "commonTryLater": "Yritä myöhemmin uudelleen.",
+  "commonTryRefresh": "Kokeile päivittää sivu.",
+  "coinsTitle": "Kolikot",
+  "coinsLoginReward": "Kirjautumispalkinto",
+  "coinsLoginAvailableToday": "Päivän palkinto saatavilla",
+  "coinsLoginStreak": "Päivittäinen kirjautumisputki",
+  "coinsFriendReward": "Kaveripalkinto",
+  "coinsFriendRewardHint": "+{amount} rekisteröitymisestä linkkisi kautta",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Palkintoja ei voitu ladata",
+  "coinsClaimReward": "Nouda palkinto",
+  "coinsAlreadyClaimed": "Jo noudettu",
+  "coinsStreakToday": "{done}/{target} · tänään",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · 1 päivä jäljellä",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · {remaining} jäljellä",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Kutsu kaveri",
+  "coinsInviteHint": "+{amount} jokaisesta, joka rekisteröityy linkkisi kautta",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Kopioi linkki",
+  "coinsHowItWorks": "Miten se toimii",
+  "coinsHowStep1": "Kopioi linkki ja lähetä se kaverille",
+  "coinsHowStep2": "Kaveri rekisteröityy linkin kautta",
+  "coinsHowStep3": "Saat {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Saavutukset",
+  "achievementsProgress": "Edistyminen: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Kehys noudettu",
+  "achievementsClaimed": "Noudettu",
+  "achievementsOpenFrame": "Avaa kehys",
+  "friendsRemoveConfirm": "Haluatko varmasti poistaa käyttäjän {name} kavereista?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Poista",
+  "friendsRemove": "Poista kavereista",
+  "friendsAcceptRequest": "Hyväksy pyyntö",
+  "friendsDeclineRequest": "Hylkää pyyntö",
+  "friendsCancelRequest": "Peruuta pyyntö",
+  "friendsSendRequest": "Lähetä kaveripyyntö",
+  "friendsRequestAlreadySent": "Pyyntö on jo lähetetty",
+  "friendsIncomingStatus": "Saapuva pyyntö",
+  "friendsOutgoingStatus": "Lähtevä pyyntö",
+  "friendsNotFriends": "Ei kavereita",
+  "friendsCollapseSearch": "Piilota haku",
+  "friendsExpandSearch": "Näytä haku",
+  "friendsLoadFailed": "Kavereita ei voitu ladata",
+  "friendsSince": "Kavereita alkaen: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Saapuva pyyntö: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Lähtevä pyyntö: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Käyttäjätiedot",
+  "profileAgeYears": "{age} vuotta",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Osta",
+  "shopBuyTitle": "Ostetaanko?",
+  "shopBuyStakeTitle": "Ostetaanko panos?",
+  "shopBuyEmojiTitle": "Ostetaanko emoji?",
+  "shopBuyCollectionTitle": "Ostetaanko kokoelma?",
+  "shopPrice": "Hinta: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Ostettu",
+  "shopEmpty": "Vielä tyhjä",
+  "shopPurchased": "{title} ostettu",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Saat: 10 käyttöä",
+  "shopEmojiBought": "{title}: +10 käyttöä",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 käyttöä",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Osta · 10 kpl",
+  "shopDailyIncome": "Tulo: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Kertaluonteinen osto",
+  "shopSellRefund": "Myynti palauttaa osan hinnasta",
+  "shopCollectionAdded": "{title} lisätty profiiliin",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "settibonus +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Valmis",
+  "shopSetProgress": "Kerätty · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Myydäänkö?",
+  "inventorySellDesc": "Saat {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Myyty: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Lisää ensin kavereita",
+  "inventoryGiftTitle": "Lahjoitetaanko kokoelma?",
+  "inventoryGiftDesc": "Lahjoitetaanko «{title}» käyttäjälle {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Lahjoitettu: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Esineitä ei voitu ladata",
+  "inventoryNoCollections": "Ei kokoelmia — osta kaupasta",
+  "inventoryNoEmojis": "Ei emojeja — osta kaupasta",
+  "inventoryNoFrames": "Ei kehyksiä — voita 10 liigaottelua (saavutukset)",
+  "inventoryNoStakes": "Ei ostettuja panoksia",
+  "inventoryEmojiLeft": "{count} jäljellä",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Tulo: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Tulo huomenna: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "Voit panostaa {amount} kultaa",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "Voit panostaa {amount} hopeaa",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "Noudettu +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Chatteja ei voitu ladata",
+  "chatsLoadListFailed": "Listaa ei voitu ladata",
+  "chatsBlockedEmpty": "Lista on tyhjä",
+  "chatsBlockedAt": "Estetty: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Chattia ei voitu luoda",
+  "chatsNeedFriendsFirst": "Lisää ensin kavereita, sitten voit avata chatin.",
+  "chatsFriendsNotFound": "Kavereita ei löytynyt",
+  "chatsFindFriendHint": "Etsi kaveria nimimerkillä",
+  "chatsSelectChat": "Valitse chat",
+  "chatsSelectHint": "Valitse keskustelu vasemmalla olevasta listasta",
+  "chatEditFailed": "Viestiä ei voitu muokata",
+  "chatSendFailed": "Viestiä ei voitu lähettää",
+  "chatDeleteFailed": "Viestiä ei voitu poistaa",
+  "chatEmojiSendFailed": "Emojia ei voitu lähettää",
+  "chatLoadFailed": "Viestejä ei voitu ladata",
+  "chatBackToGame": "Takaisin peliin",
+  "chatBackToChats": "Takaisin chatteihin",
+  "chatActions": "Chatin toiminnot",
+  "chatScrollToEnd": "Keskustelun loppuun",
+  "chatReplyingTo": "Vastaus käyttäjälle {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Lahja",
+  "chatCollection": "Kokoelma",
+  "chatGiftCollection": "Lahja · kokoelma",
+  "chatThisUser": "tätä käyttäjää",
+  "gamesLobbyLoadFailed": "Aulaa ei voitu ladata.",
+  "gamesTapChangeStake": "Napauta vaihtaaksesi panoksen",
+  "gamesTapChangeTurnTime": "Napauta vaihtaaksesi vuoron ajan",
+  "gamesTapChangeGrid": "Napauta vaihtaaksesi ruudukon koon",
+  "gamesSwapSidesHint": "O voi muuttua X:ksi 1. siirron jälkeen",
+  "gamesNoCenterHint": "Ensimmäinen siirto ei voi olla keskelle",
+  "lobbyInviteSentShort": "Lähetetty",
+  "lobbyInvitesSentWaiting": "Kutsut lähetetty. Odotetaan vastausta.",
+  "lobbyLinkCopiedHint": "Liitä se chattiin tai viestiin kaverille",
+  "lobbyCopyLinkHint": "Kopioi linkki leikepöydälle",
+  "lobbyCreatorInvites": "{name} kutsuu sinut pelaamaan",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "{name} voitti",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Aika loppui. {name} voitti",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Hallinta",
+  "tournamentsTitle": "Turnaukset",
+  "profileAgeInvalid": "Anna ikä välillä 1–111",
+  "profileSaveFailed": "Profiilia ei voitu tallentaa",
+  "profileNameHint": "Latinalaiset kirjaimet, numerot, _ enintään 10 merkkiä",
+  "profileAgeHint": "1–111",
+  "profileAboutHint": "Enintään 100 merkkiä (valinnainen)",
+  "profileProcessingPhoto": "Käsitellään kuvaa…",
+  "profileCropTitle": "Valitse avatarin alue",
+  "profileCropHint": "Zoomaa ja siirrä kuvaa",
+  "profileApply": "Käytä",
+  "profilePreparing": "Valmistellaan…",
+  "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 min",
+  "timeTenMin": "10 min",
+  "rulesIntro": "Ristinolla {grid}-laudalla. Vuorotellen; X aloittaa.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "Voitto: saa {n} putkeen vaaka-, pysty- tai vinorivissä.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Ei aikarajaa siirrolle.",
+  "rulesTurnTime": "Aika per siirto: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Panos: {stake}. Peli käydään näillä kolikoilla.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Puolenvaihto: O voi vaihtaa X:n kanssa X:n ensimmäisen siirron jälkeen.",
+  "rulesNoCenter": "Kielto keskelle: X ei saa pelata keskelle ensimmäisellä siirrolla.",
+  "collectionSetLegends": "Legendat",
+  "collectionSetSpace": "Avaruus",
+  "collectionSetGems": "Jalokivet",
+  "collectionSetParty": "Juhla",
+  "collectionSetNature": "Luonto",
+  "collectionSetAdventures": "Seikkailut",
+  "collectionCardMeta": "Kokoelma · näyteikkuna · lahja · myynti · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "päivä",
+  "coinsDayFew": "päivää",
+  "coinsDayMany": "päivää",
+  "giftFriendTitle": "Anna kaverille",
+  "photoCount": "Kuva ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Kuva ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Kuva: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} emojia · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Laajenna paneeli",
+  "chatsCollapsePanel": "Pienennä paneeli",
+  "chatReplySourceMissing": "Alkuperäistä viestiä ei löydy",
+  "shopStakeTitleSilver": "Panos {n} hopeaa",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Panos {n} kultaa",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Avaa panoksen {n} hopeaa",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Avaa panoksen {n} kultaa",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "itsellesi",
+  "chatReplyPeer": "keskustelukumppanille"
+}

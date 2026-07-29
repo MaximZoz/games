@@ -21,19 +21,19 @@ type UpdateProfileRequest struct {
 
 func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var req UpdateProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
@@ -44,11 +44,11 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		if name != "" {
 			existing, err := store.GetUserByDisplayName(r.Context(), h.Pool, name)
 			if err != nil && err != pgx.ErrNoRows {
-				http.Error(w, "server error", http.StatusInternalServerError)
+				WriteErr(w, r, http.StatusInternalServerError, "server error")
 				return
 			}
 			if err == nil && existing.ID != userID {
-				http.Error(w, "Такой логин уже занят", http.StatusConflict)
+				WriteErr(w, r, http.StatusConflict, "login already taken")
 				return
 			}
 		}
@@ -64,7 +64,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		AvatarValue: req.AvatarValue,
 	})
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	unlocked, _ := store.EvaluateAndUnlock(r.Context(), h.Pool, userID)

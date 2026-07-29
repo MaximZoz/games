@@ -11,16 +11,19 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 /// Раздел магазина для рамок или ставок (одноразовая покупка).
 class ShopSectionScreen extends ConsumerStatefulWidget {
   const ShopSectionScreen({
     super.key,
-    required this.title,
+    this.title,
     required this.kind,
   });
 
-  final String title;
+  /// Если null — берётся из l10n по [kind].
+  final String? title;
   final String kind;
 
   @override
@@ -66,20 +69,21 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final l10n = context.l10n;
         return AlertDialog(
-          title: Text(isStake ? 'Купить ставку?' : 'Купить?'),
+          title: Text(isStake ? l10n.shopBuyStakeTitle : l10n.shopBuyTitle),
           content: Text(
-            '${item.title}\n\n'
-            'Цена: ${formatRewardBronze(item.priceBronze)}',
+            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Купить'),
+              child: Text(l10n.shopBuy),
             ),
           ],
         );
@@ -110,7 +114,9 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: '${item.title} куплен',
+        message: context.l10n.shopPurchased(
+          catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+        ),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -144,10 +150,13 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           title: Text(
-            widget.title,
+            widget.title ??
+                (widget.kind == 'stake_unlock'
+                    ? context.l10n.shopStakes
+                    : context.l10n.shopTitle),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -156,10 +165,10 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
         ),
         body: SafeArea(
           child: section.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    context.l10n.shopEmpty,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
               : ListView.separated(
@@ -194,6 +203,7 @@ class _ShopItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -210,22 +220,33 @@ class _ShopItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  catalogTitle(item.code, fallback: item.title, l10n: l10n),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                if (item.description.trim().isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    item.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary.withValues(alpha: 0.95),
-                    ),
-                  ),
-                ],
+                Builder(
+                  builder: (context) {
+                    final desc = catalogDescription(
+                      item.code,
+                      fallback: item.description,
+                      l10n: l10n,
+                    );
+                    if (desc.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        desc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.95),
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 8),
                 BalanceDisplay(
                   bronze: item.priceBronze,
@@ -239,7 +260,7 @@ class _ShopItemCard extends StatelessWidget {
           const SizedBox(width: 8),
           if (item.owned)
             Text(
-              'Куплено',
+              l10n.shopOwned,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF2E7D32),
@@ -258,7 +279,7 @@ class _ShopItemCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
               ),
-              child: Text(busy ? '…' : 'Купить'),
+              child: Text(busy ? '…' : l10n.shopBuy),
             ),
         ],
       ),

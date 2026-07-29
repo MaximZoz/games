@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 
 class AchievementItem {
   const AchievementItem({
@@ -62,6 +64,25 @@ class AchievementsRepository {
 
   final AuthRepository _auth;
 
+  Never _throwError(http.Response response, {String? fallback}) {
+    final l10n = LocaleService.l10n;
+    if (response.statusCode == 401) {
+      throw AuthException(401, l10n.sessionExpired);
+    }
+    var message = response.body.trim();
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        message =
+            (body['message'] ?? body['error'] ?? message).toString().trim();
+      }
+    } catch (_) {}
+    throw AuthException(
+      response.statusCode,
+      message.isEmpty ? (fallback ?? l10n.commonServerErrorShort) : message,
+    );
+  }
+
   Future<List<AchievementItem>> list() async {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     final response = await _auth.sendAuthorized(
@@ -72,12 +93,7 @@ class AchievementsRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : 'Не удалось загрузить достижения',
-      );
+      _throwError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['achievements'];
@@ -119,14 +135,8 @@ class AchievementsRepository {
         operation: 'AchievementsRepository.claim',
       ),
     );
-    if (response.statusCode == 409) {
-      throw AuthException(409, 'Награда уже получена или ещё недоступна');
-    }
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        'Не удалось забрать награду',
-      );
+      _throwError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return AchievementClaimResult(

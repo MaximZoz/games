@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
+import 'test_locale.dart';
+
 void main() {
+  setUp(setUpTestLocaleRu);
+
   test('formatRewardBronze для ступеней входа', () {
     expect(formatRewardBronze(10), '10 бронзовых');
     expect(formatRewardBronze(50), '50 бронзовых');

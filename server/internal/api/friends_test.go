@@ -148,8 +148,9 @@ func TestWriteFriendError_StatusCodes(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
-			writeFriendError(rec, tc.err)
+			writeFriendError(rec, req, tc.err)
 			if rec.Code != tc.want {
 				t.Fatalf("status = %d, want %d", rec.Code, tc.want)
 			}

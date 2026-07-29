@@ -21,9 +21,9 @@ import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
-import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 /// Индексы центральных клеток (запрещены для первого хода при first_move_restriction).
 List<int> _centerCellIndices(int gridSize) {
@@ -313,11 +313,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             onPressed: goBack,
             icon: const Icon(Icons.close_rounded),
           ),
-          title: const Text('Крестики-нолики'),
+          title: Text(context.l10n.gamesTicTacToe),
           actions: [
             IconButton(
               icon: const Icon(Icons.rule_rounded),
-              tooltip: 'Правила игры',
+              tooltip: context.l10n.gamesRulesTitle,
               onPressed: () => _showGameRules(context),
             ),
           ],
@@ -354,10 +354,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           // Полное состояние игры — источник истины для текущего хода.
           final isMyTurn = game.isTurnOf(currentUser?.id);
           final opponentName = opponentId.startsWith('bot:')
-              ? 'Бот'
+              ? context.l10n.gameBot
               : (game.xUserId == currentUser?.id
-                  ? (game.oDisplayName ?? 'Соперник')
-                  : (game.xDisplayName ?? 'Соперник'));
+                  ? (game.oDisplayName ?? context.l10n.gameOpponent)
+                  : (game.xDisplayName ?? context.l10n.gameOpponent));
           final opponentAvatarKind = game.xUserId == currentUser?.id
               ? game.oAvatarKind
               : game.xAvatarKind;
@@ -377,29 +377,29 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               final iWon = game.xUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? 'Вы победили, соперник вышел'
+                      ? context.l10n.gameYouWonOpponentLeft
                       : game.timeout
-                          ? 'Вы победили, время соперника вышло'
-                          : 'Вы победили!')
+                          ? context.l10n.gameYouWonOpponentTimeout
+                          : context.l10n.gameYouWon)
                   : (game.timeout
-                      ? 'Время вышло. Победил $opponentName'
-                      : 'Победил $opponentName');
+                      ? context.l10n.gameOpponentWonTimeout(opponentName)
+                      : context.l10n.gameOpponentWon(opponentName));
             } else if (game.status == 'o_won') {
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? 'Вы победили, соперник вышел'
+                      ? context.l10n.gameYouWonOpponentLeft
                       : game.timeout
-                          ? 'Вы победили, время соперника вышло'
-                          : 'Вы победили!')
+                          ? context.l10n.gameYouWonOpponentTimeout
+                          : context.l10n.gameYouWon)
                   : (game.timeout
-                      ? 'Время вышло. Победил $opponentName'
-                      : 'Победил $opponentName');
+                      ? context.l10n.gameOpponentWonTimeout(opponentName)
+                      : context.l10n.gameOpponentWon(opponentName));
             } else if (game.status == 'draw') {
-              statusText = 'Ничья';
+              statusText = context.l10n.gameDraw;
             }
           } else {
-            statusText = isMyTurn ? 'Ваш ход' : 'Ход соперника';
+            statusText = isMyTurn ? context.l10n.gamesMyTurn : context.l10n.gamesOpponentTurn;
           }
 
           final showSwapButton = !isOver &&
@@ -471,7 +471,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                   onPressed: () => _swapSides(),
                                   icon: const Icon(Icons.swap_horiz_rounded,
                                       size: 18),
-                                  label: const Text('Сменить стороны'),
+                                  label: Text(context.l10n.gameSwapSidesAction),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.accentStart,
                                     side: BorderSide(
@@ -582,7 +582,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                           icon: const Icon(
                                               Icons.swap_horiz_rounded,
                                               size: 18),
-                                          label: const Text('Сменить стороны'),
+                                          label: Text(context.l10n.gameSwapSidesAction),
                                           style: OutlinedButton.styleFrom(
                                             foregroundColor:
                                                 AppColors.accentStart,
@@ -804,21 +804,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Выход из игры'),
-        content: const Text(
-          'Если вы выйдете, то вы проиграете. Выйти?',
+        title: Text(context.l10n.gameExitTitle),
+        content: Text(
+          context.l10n.gameExitConfirm,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Остаться'),
+            child: Text(context.l10n.gameStay),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accentStart,
             ),
-            child: const Text('Выйти'),
+            child: Text(context.l10n.gameLeave),
           ),
         ],
       ),
@@ -908,7 +908,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 final statusText = presenceEntry == null
                     ? null
                     : (presenceEntry.online
-                        ? 'Онлайн'
+                        ? context.l10n.commonOnlineCap
                         : formatLastSeen(presenceEntry.lastSeenAt));
                 final about = friendUser?.about?.trim();
                 final genderIcon = _genderIcon(friendUser?.gender);
@@ -960,7 +960,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Закрыть',
+                          tooltip: context.l10n.commonClose,
                           icon: const Icon(Icons.close_rounded),
                           onPressed: () => Navigator.of(ctx).pop(),
                         ),
@@ -975,7 +975,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         children: [
                           if (friendUser?.age != null && friendUser!.age! > 0)
                             _buildInfoPill(
-                              text: '${friendUser.age} лет',
+                              text: context.l10n
+                                  .profileAgeYears(friendUser.age!),
                               minWidth: 72,
                             ),
                           if (genderIcon != null)
@@ -994,9 +995,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     ],
                     if (about != null && about.isNotEmpty) ...[
                       const SizedBox(height: 10),
-                      const Text(
-                        'О себе',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.commonAboutMe,
+                        style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1040,7 +1041,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (mounted) {
           showAppSnackBar(
             context,
-            message: 'Заявка принята',
+            message: context.l10n.friendsRequestAccepted,
             kind: AppSnackKind.success,
           );
         }
@@ -1052,7 +1053,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (mounted) {
           showAppSnackBar(
             context,
-            message: 'Запрос отправлен',
+            message: context.l10n.friendsRequestSent,
             kind: AppSnackKind.success,
           );
         }
@@ -1097,7 +1098,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        'Правила игры',
+                        context.l10n.gamesRulesTitle,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
@@ -1106,7 +1107,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Закрыть',
+                      tooltip: context.l10n.commonClose,
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => Navigator.of(ctx).pop(),
                     ),
@@ -1425,13 +1426,13 @@ class _RematchSection extends StatelessWidget {
     if (isAcceptingRematch) {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.hourglass_empty_rounded,
+        children: [
+          const Icon(Icons.hourglass_empty_rounded,
               size: 20, color: AppColors.accentStart),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Text(
-            'Подключение к игре...',
-            style: TextStyle(
+            context.l10n.gameConnecting,
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -1446,7 +1447,7 @@ class _RematchSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Соперник предлагает реванш',
+            context.l10n.gameRematchOffer,
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: compact ? 13 : 14,
@@ -1458,7 +1459,7 @@ class _RematchSection extends StatelessWidget {
             children: [
               TextButton(
                 onPressed: () => onDecline(rematchOffer.lobbyId),
-                child: const Text('Отклонить'),
+                child: Text(context.l10n.commonDecline),
               ),
               SizedBox(width: compact ? 8 : 12),
               FilledButton(
@@ -1467,7 +1468,7 @@ class _RematchSection extends StatelessWidget {
                   backgroundColor: AppColors.accentStart,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Принять'),
+                child: Text(context.l10n.commonAccept),
               ),
             ],
           ),
@@ -1476,6 +1477,7 @@ class _RematchSection extends StatelessWidget {
     }
     if (iDeclinedRematch) {
       return _buildRematchButtons(
+        context,
         isRematching: isRematching,
         isFindingGame: isFindingGame,
         onRematch: onRematch,
@@ -1488,7 +1490,7 @@ class _RematchSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Соперник отклонил предложение поиграть',
+            context.l10n.gameRematchDeclined,
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: compact ? 13 : 14,
@@ -1497,6 +1499,7 @@ class _RematchSection extends StatelessWidget {
           ),
           SizedBox(height: compact ? 8 : 12),
           _buildRematchButtons(
+            context,
             isRematching: isRematching,
             isFindingGame: isFindingGame,
             onRematch: onRematch,
@@ -1517,7 +1520,7 @@ class _RematchSection extends StatelessWidget {
                   size: compact ? 18 : 20, color: AppColors.accentStart),
               SizedBox(width: compact ? 6 : 8),
               Text(
-                'Ожидание соперника',
+                context.l10n.gameWaitingOpponent,
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: compact ? 14 : 15,
@@ -1530,13 +1533,14 @@ class _RematchSection extends StatelessWidget {
             SizedBox(height: compact ? 8 : 12),
             TextButton(
               onPressed: onCancelWait,
-              child: const Text('Отмена'),
+              child: Text(context.l10n.commonCancel),
             ),
           ],
         ],
       );
     }
     return _buildRematchButtons(
+      context,
       isRematching: isRematching,
       isFindingGame: isFindingGame,
       onRematch: onRematch,
@@ -1545,7 +1549,8 @@ class _RematchSection extends StatelessWidget {
     );
   }
 
-  Widget _buildRematchButtons({
+  Widget _buildRematchButtons(
+    BuildContext context, {
     required bool isRematching,
     required bool isFindingGame,
     required VoidCallback onRematch,
@@ -1572,7 +1577,7 @@ class _RematchSection extends StatelessWidget {
                   ),
                 )
               : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
-          label: Text(isRematching ? 'Создание...' : 'Повторить'),
+          label: Text(isRematching ? context.l10n.commonCreating : context.l10n.gameRematch),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentStart,
             foregroundColor: Colors.white,
@@ -1588,7 +1593,7 @@ class _RematchSection extends StatelessWidget {
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 )
               : Icon(Icons.search_rounded, size: compact ? 18 : 20),
-          label: Text(isFindingGame ? 'Поиск...' : 'Другой соперник'),
+          label: Text(isFindingGame ? context.l10n.commonSearching : context.l10n.gameOtherOpponent),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.accentStart,
             side: BorderSide(color: AppColors.accentStart),
@@ -1663,7 +1668,7 @@ class _OpponentCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Tooltip(
-            message: 'Информация о пользователе',
+            message: context.l10n.userInfoTitle,
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
@@ -1696,7 +1701,7 @@ class _OpponentCard extends StatelessWidget {
             _IconWithBadge(
               icon: Icons.chat_bubble_outline_rounded,
               badge: messageBadge,
-              tooltip: 'Написать сообщение',
+              tooltip: context.l10n.gameWriteMessage,
               onPressed: onMessageTap,
             ),
             if (!isFriend)
@@ -1704,10 +1709,10 @@ class _OpponentCard extends StatelessWidget {
                 icon: Icons.person_add_alt_1_rounded,
                 badge: hasIncoming ? 1 : 0,
                 tooltip: hasIncoming
-                    ? 'Принять заявку'
+                    ? context.l10n.friendsAcceptRequest
                     : (addFriendEnabled
-                        ? 'Добавить в друзья'
-                        : 'Заявка отправлена'),
+                        ? context.l10n.friendsAdd
+                        : context.l10n.friendsRequestSent),
                 onPressed: addFriendEnabled
                     ? () =>
                         onAddFriendTap(hasIncoming ? incomingRequestId : null)
@@ -2311,7 +2316,7 @@ class _TurnCountdownState extends State<_TurnCountdown> {
         Icon(Icons.timer_outlined, size: 18, color: color),
         const SizedBox(width: 6),
         Text(
-          '$_remaining с',
+          context.l10n.gameSecondsLeft(_remaining),
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: color,
                 fontWeight: FontWeight.w600,

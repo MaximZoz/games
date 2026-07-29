@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,25 +23,34 @@ type claimAchievementBody struct {
 // GET /api/achievements
 func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	items, err := store.ListAchievements(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	lang := i18n.LangFromRequest(r)
 	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
+		title := i18n.AchievementTitle(lang, it.Code)
+		if title == "" {
+			title = it.Title
+		}
+		desc := i18n.AchievementDescription(lang, it.Code)
+		if desc == "" {
+			desc = it.Description
+		}
 		m := map[string]any{
 			"code":          it.Code,
-			"title":         it.Title,
-			"description":   it.Description,
+			"title":         title,
+			"description":   desc,
 			"reward_bronze": it.RewardBronze,
 			"progress":      it.Progress,
 			"target":        it.Target,
@@ -65,17 +75,17 @@ func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
 // GET /api/achievements/unclaimed-count
 func (h *AchievementsHandler) UnclaimedCount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	n, err := store.CountUnclaimedAchievements(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -86,35 +96,35 @@ func (h *AchievementsHandler) UnclaimedCount(w http.ResponseWriter, r *http.Requ
 // POST /api/achievements/claim  {"code":"..."}
 func (h *AchievementsHandler) Claim(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body claimAchievementBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	code := strings.TrimSpace(body.Code)
 	if code == "" {
-		http.Error(w, "code required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "code required")
 		return
 	}
 	result, err := store.ClaimAchievement(r.Context(), h.Pool, userID, code)
 	if err != nil {
 		switch err {
 		case store.ErrAchievementUnknown:
-			http.Error(w, "unknown achievement", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "unknown achievement")
 		case store.ErrAchievementNotUnlocked:
-			http.Error(w, "not unlocked", http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, "not unlocked")
 		case store.ErrAchievementAlreadyClaimed:
-			http.Error(w, "already claimed", http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, "already claimed")
 		default:
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 		}
 		return
 	}

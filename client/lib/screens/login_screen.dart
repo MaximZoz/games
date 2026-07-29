@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -81,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (e is AuthException) {
             _errorMessage = e.message;
           } else if (e is http.ClientException) {
-            _errorMessage = 'Не удалось подключиться к серверу.';
+            _errorMessage = context.l10n.connectionError;
           } else {
             _errorMessage = e.toString();
           }
@@ -94,6 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final media = MediaQuery.of(context);
     final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
     // Как «О себе»: при фокусе (клавиатура) прижимаем форму вверх.
@@ -127,7 +129,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Вход',
+                        l10n.loginTitle,
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -137,9 +139,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Введите email или логин и пароль',
-                        style: TextStyle(
+                      Text(
+                        l10n.loginSubtitle,
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
@@ -150,14 +152,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         focusNode: _emailFocus,
                         textInputAction: TextInputAction.next,
                         scrollPadding: const EdgeInsets.only(bottom: 120),
-                        decoration: const InputDecoration(
-                          labelText: 'Email или логин',
-                          hintText: 'Email или логин',
-                          prefixIcon: Icon(Icons.person_outline_rounded),
+                        decoration: InputDecoration(
+                          labelText: l10n.loginEmailLabel,
+                          hintText: l10n.loginEmailLabel,
+                          prefixIcon: const Icon(Icons.person_outline_rounded),
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'Введите email или логин';
+                            return l10n.loginEmailRequired;
                           }
                           return null;
                         },
@@ -171,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         scrollPadding: const EdgeInsets.only(bottom: 120),
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
-                          labelText: 'Пароль',
+                          labelText: l10n.loginPasswordLabel,
                           prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -186,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Введите пароль';
+                            return l10n.loginPasswordRequired;
                           }
                           return null;
                         },
@@ -201,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 24),
                       AppButton(
                         onPressed: _submit,
-                        label: 'Войти',
+                        label: l10n.loginSubmit,
                         isLoading: _isLoading,
                         expanded: true,
                       ),
@@ -214,7 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ref: _ref,
                           ),
                         ),
-                        child: const Text('Нет аккаунта? Зарегистрироваться'),
+                        child: Text(l10n.loginNoAccount),
                       ),
                     ],
                   ),

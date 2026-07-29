@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/chat_room_screen.dart';
 import 'package:multigames_client/screens/chats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -131,7 +132,7 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
                             borderRadius: BorderRadius.circular(10),
                             onTap: () => ref.read(chatsSidebarCollapsedProvider.notifier).state = !sidebarCollapsed,
                             child: Tooltip(
-                              message: sidebarCollapsed ? 'Развернуть панель' : 'Свернуть панель',
+                              message: sidebarCollapsed ? context.l10n.chatsExpandPanel : context.l10n.chatsCollapsePanel,
                               child: Container(
                                 width: 20,
                                 height: 36,
@@ -198,7 +199,7 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Выберите чат',
+              context.l10n.chatsSelectChat,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
@@ -206,7 +207,7 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Выберите диалог из списка слева или создайте новый',
+              context.l10n.chatsSelectHint,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textSecondary.withValues(alpha: 0.9),

@@ -8,7 +8,11 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
+import 'test_locale.dart';
+
 void main() {
+  setUp(setUpTestLocaleRu);
+
   group('formatUserError', () {
     test('null and fallback', () {
       expect(formatUserError(null), contains('ошибка'));
@@ -37,7 +41,7 @@ void main() {
       );
       expect(
         formatUserError(Exception('failed host lookup')),
-        contains('найти сервер'),
+        contains('подключиться'),
       );
       expect(
         formatUserError(Exception('request timeout')),

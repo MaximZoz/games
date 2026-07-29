@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -159,7 +161,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
     if (name != null && name.isNotEmpty) return name;
-    return 'Пользователь';
+    return LocaleService.l10n.commonUser;
   }
 
   bool _matchesSearch(FriendUserItem user, String query) {
@@ -292,9 +294,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final about = user.about?.trim();
     final genderIcon = _genderIcon(user.gender);
     final female = _isFemaleGender(user.gender);
+    final l10n = context.l10n;
     final statusText = presence == null
         ? null
-        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+        : (presence.online
+            ? l10n.commonOnlineCap
+            : formatLastSeen(presence.lastSeenAt));
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -350,7 +355,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Закрыть',
+                        tooltip: l10n.commonClose,
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.of(dialogContext).pop(),
                       ),
@@ -365,7 +370,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       children: [
                         if (user.age != null && user.age! > 0)
                           _buildInfoPill(
-                            text: '${user.age} лет',
+                            text: l10n.profileAgeYears(user.age!),
                             minWidth: 72,
                           ),
                         if (genderIcon != null)
@@ -384,9 +389,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   ],
                   if (about != null && about.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    const Text(
-                      'О себе',
-                      style: TextStyle(
+                    Text(
+                      l10n.commonAboutMe,
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -475,7 +480,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     if (onTap == null) return avatar;
     return Tooltip(
-      message: 'Информация о пользователе',
+      message: LocaleService.l10n.userInfoTitle,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -507,7 +512,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     if (e.statusCode == 401) {
       await ref.read(authStateProvider.notifier).logout();
       if (!mounted) return;
-      _showMessage('Сессия истекла. Войдите заново.', null);
+      _showMessage(LocaleService.l10n.sessionExpired, null);
       context.go('/login');
       return;
     }
@@ -759,22 +764,23 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Future<bool> _confirmRemoveFriend(FriendUserItem user) async {
     final name = _displayName(user);
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Убрать из друзей?'),
+        title: Text(l10n.friendsRemoveTitle),
         content: Text(
-          'Вы уверены, что хотите удалить $name из друзей?',
+          l10n.friendsRemoveConfirm(name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Убрать'),
+            child: Text(l10n.friendsRemoveConfirmAction),
           ),
         ],
       ),
@@ -855,9 +861,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     PresenceEntry? presence,
   }) {
     final compactDesktopCard = isWide(context);
+    final l10n = context.l10n;
     final statusText = presence == null
         ? null
-        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+        : (presence.online
+            ? l10n.commonOnlineCap
+            : formatLastSeen(presence.lastSeenAt));
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: EdgeInsets.all(compactDesktopCard ? 10 : 14),
@@ -1087,12 +1096,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildFriendsTab(
       FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
+    final l10n = context.l10n;
     final searchQuery = _searchController.text.trim();
     final items =
         _sortedAndFilteredFriends(snapshot.friends, presence, searchQuery);
     return _buildAdaptiveList<FriendItem>(
       items: items,
-      emptyText: 'У вас пока нет друзей',
+      emptyText: l10n.friendsEmpty,
       tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
         final key = 'remove_${item.user.id}';
@@ -1101,13 +1111,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           context: context,
           user: item.user,
           presence: presence[item.user.id],
-          subtitle: 'Дружите с: ${_formatDateTime(item.createdAt)}',
+          subtitle: l10n.friendsSince(_formatDateTime(item.createdAt)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
-                tooltip: 'Написать сообщение',
+                tooltip: l10n.gameWriteMessage,
                 loading: _busy(chatKey),
                 onPressed: _busy(chatKey)
                     ? null
@@ -1116,7 +1126,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               const SizedBox(width: 14),
               _buildCompactIconButton(
                 icon: Icons.person_remove_alt_1_rounded,
-                tooltip: 'Удалить из друзей',
+                tooltip: l10n.friendsRemove,
                 danger: true,
                 loading: _busy(key),
                 onPressed: _busy(key)
@@ -1127,7 +1137,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                         await _runAction(
                           key: key,
                           call: (repo) => repo.removeFriend(item.user.id),
-                          success: 'Пользователь удалён из друзей',
+                          success: l10n.friendsRemoved,
                         );
                       },
               ),
@@ -1141,11 +1151,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildIncomingTab(
       FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
+    final l10n = context.l10n;
     final searchQuery = _searchController.text.trim();
     final items = _filteredRequests(snapshot.incoming, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: 'Нет входящих заявок',
+      emptyText: l10n.friendsNoIncoming,
       tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
@@ -1155,13 +1166,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           context: context,
           user: item.user,
           presence: presence[item.user.id],
-          subtitle: 'Входящая заявка: ${_formatDateTime(item.createdAt)}',
+          subtitle: l10n.friendsIncomingAt(_formatDateTime(item.createdAt)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
-                tooltip: 'Написать сообщение',
+                tooltip: l10n.gameWriteMessage,
                 loading: _busy(chatKey),
                 onPressed: _busy(chatKey)
                     ? null
@@ -1171,17 +1182,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               _buildActionIcon(
                 key: acceptKey,
                 icon: Icons.check_rounded,
-                tooltip: 'Принять заявку',
+                tooltip: l10n.friendsAcceptRequest,
                 call: (repo) => repo.acceptRequest(item.requestId),
-                success: 'Заявка принята',
+                success: l10n.friendsRequestAccepted,
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
                 key: rejectKey,
                 icon: Icons.close_rounded,
-                tooltip: 'Отклонить заявку',
+                tooltip: l10n.friendsDeclineRequest,
                 call: (repo) => repo.rejectRequest(item.requestId),
-                success: 'Заявка отклонена',
+                success: l10n.friendsRequestDeclined,
                 danger: true,
               ),
             ],
@@ -1194,11 +1205,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildOutgoingTab(
       FriendsSnapshot snapshot, Map<String, PresenceEntry> presence) {
+    final l10n = context.l10n;
     final searchQuery = _searchController.text.trim();
     final items = _filteredRequests(snapshot.outgoing, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: 'Нет исходящих заявок',
+      emptyText: l10n.friendsNoOutgoing,
       tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
@@ -1207,13 +1219,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           context: context,
           user: item.user,
           presence: presence[item.user.id],
-          subtitle: 'Исходящая заявка: ${_formatDateTime(item.createdAt)}',
+          subtitle: l10n.friendsOutgoingAt(_formatDateTime(item.createdAt)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildCompactIconButton(
                 icon: Icons.chat_bubble_outline_rounded,
-                tooltip: 'Написать сообщение',
+                tooltip: l10n.gameWriteMessage,
                 loading: _busy(chatKey),
                 onPressed: _busy(chatKey)
                     ? null
@@ -1223,9 +1235,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               _buildActionIcon(
                 key: cancelKey,
                 icon: Icons.close_rounded,
-                tooltip: 'Отменить заявку',
+                tooltip: l10n.friendsCancelRequest,
                 call: (repo) => repo.cancelRequest(item.requestId),
-                success: 'Заявка отменена',
+                success: l10n.friendsRequestCancelled,
                 danger: true,
               ),
             ],
@@ -1343,6 +1355,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildSearchResultCard(BuildContext context, FriendSearchItem item,
       Map<String, PresenceEntry> presence) {
+    final l10n = context.l10n;
     final relation = item.relationStatus;
     final sendKey = 'send_${item.user.id}';
     final cancelKey = 'cancel_search_${item.requestId ?? item.user.id}';
@@ -1357,14 +1370,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       controls.add(
         _buildCompactIconButton(
           icon: Icons.person_add_alt_1_rounded,
-          tooltip: 'Добавить в друзья',
+          tooltip: l10n.friendsAdd,
           loading: busy,
           onPressed: busy
               ? null
               : () => _runSearchAction(
                     key: sendKey,
                     call: (repo) => repo.sendRequest(item.user.id),
-                    success: 'Заявка отправлена',
+                    success: l10n.friendsRequestSent,
                     userID: item.user.id,
                     nextRelationStatus: 'outgoing',
                     nextRequestID: item.requestId,
@@ -1376,7 +1389,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       controls.add(
         _buildCompactIconButton(
           icon: Icons.close_rounded,
-          tooltip: 'Отменить заявку',
+          tooltip: l10n.friendsCancelRequest,
           danger: true,
           loading: busy,
           onPressed: busy
@@ -1384,7 +1397,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               : () => _runSearchAction(
                     key: cancelKey,
                     call: (repo) => repo.cancelRequest(item.requestId!),
-                    success: 'Заявка отменена',
+                    success: l10n.friendsRequestCancelled,
                     userID: item.user.id,
                     nextRelationStatus: 'none',
                   ),
@@ -1396,21 +1409,21 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       controls.addAll([
         _buildCompactIconButton(
           icon: Icons.check_rounded,
-          tooltip: 'Принять заявку',
+          tooltip: l10n.friendsAcceptRequest,
           loading: acceptBusy,
           onPressed: acceptBusy
               ? null
               : () => _runSearchAction(
                     key: acceptKey,
                     call: (repo) => repo.acceptRequest(item.requestId!),
-                    success: 'Заявка принята',
+                    success: l10n.friendsRequestAccepted,
                     userID: item.user.id,
                     nextRelationStatus: 'friend',
                   ),
         ),
         _buildCompactIconButton(
           icon: Icons.close_rounded,
-          tooltip: 'Отклонить заявку',
+          tooltip: l10n.friendsDeclineRequest,
           danger: true,
           loading: rejectBusy,
           onPressed: rejectBusy
@@ -1418,7 +1431,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               : () => _runSearchAction(
                     key: rejectKey,
                     call: (repo) => repo.rejectRequest(item.requestId!),
-                    success: 'Заявка отклонена',
+                    success: l10n.friendsRequestDeclined,
                     userID: item.user.id,
                     nextRelationStatus: 'none',
                   ),
@@ -1429,7 +1442,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       controls.addAll([
         _buildCompactIconButton(
           icon: Icons.chat_bubble_outline_rounded,
-          tooltip: 'Написать сообщение',
+          tooltip: l10n.gameWriteMessage,
           loading: _busy(chatKey),
           onPressed: _busy(chatKey)
               ? null
@@ -1437,7 +1450,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ),
         _buildCompactIconButton(
           icon: Icons.person_remove_alt_1_rounded,
-          tooltip: 'Удалить из друзей',
+          tooltip: l10n.friendsRemove,
           danger: true,
           loading: removeBusy,
           onPressed: removeBusy
@@ -1448,7 +1461,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   await _runSearchAction(
                     key: removeKey,
                     call: (repo) => repo.removeFriend(item.user.id),
-                    success: 'Пользователь удалён из друзей',
+                    success: l10n.friendsRemoved,
                     userID: item.user.id,
                     nextRelationStatus: 'none',
                   );
@@ -1458,10 +1471,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
 
     final relationLabel = switch (relation) {
-      'friend' => 'Уже в друзьях',
-      'incoming' => 'Входящая заявка',
-      'outgoing' => 'Исходящая заявка',
-      _ => 'Не в друзьях',
+      'friend' => l10n.friendsAlreadyFriends,
+      'incoming' => l10n.friendsIncomingStatus,
+      'outgoing' => l10n.friendsOutgoingStatus,
+      _ => l10n.friendsNotFriends,
     };
 
     final controlRow = <Widget>[];
@@ -1509,7 +1522,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 if (presence[item.user.id] != null) ...[
                   Text(
                     presence[item.user.id]!.online
-                        ? 'Онлайн'
+                        ? l10n.commonOnlineCap
                         : formatLastSeen(presence[item.user.id]!.lastSeenAt),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1570,13 +1583,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Поиск по нику',
+            hintText: context.l10n.friendsSearchHint,
             prefixIcon: const Icon(Icons.search_rounded),
             // Красный крестик без собственной рамки.
             suffixIcon: _searchController.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: 'Очистить поиск',
+                    tooltip: context.l10n.commonClear,
                     onPressed: () {
                       _searchDebounce?.cancel();
                       _searchRevision++;
@@ -1606,17 +1619,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   Widget _buildSearchResults(Map<String, PresenceEntry> presence) {
+    final l10n = context.l10n;
     final query = _searchController.text.trim();
     if (query.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(
             parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
-        children: const [
+        children: [
           Center(
             child: Text(
-              'Используйте поиск, чтобы найти новых друзей',
-              style: TextStyle(color: AppColors.textSecondary),
+              l10n.friendsSearchPrompt,
+              style: const TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ),
@@ -1647,11 +1661,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         physics: const AlwaysScrollableScrollPhysics(
             parent: ClampingScrollPhysics()),
         padding: const EdgeInsets.only(top: 80),
-        children: const [
+        children: [
           Center(
             child: Text(
-              'Ничего не найдено',
-              style: TextStyle(color: AppColors.textSecondary),
+              l10n.friendsNothingFound,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
         ],
@@ -1798,12 +1812,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         keyboardType: TextInputType.text,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: 'Поиск по нику',
+          hintText: context.l10n.friendsSearchHint,
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _searchController.text.isEmpty
               ? null
               : IconButton(
-                  tooltip: 'Очистить',
+                  tooltip: context.l10n.commonClose,
                   onPressed: () {
                     _searchDebounce?.cancel();
                     _searchRevision++;
@@ -1850,16 +1864,16 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     ];
   }
 
-  String _tabTitle(_FriendsTabKind tab) {
+  String _tabTitle(AppLocalizations l10n, _FriendsTabKind tab) {
     switch (tab) {
       case _FriendsTabKind.friends:
-        return 'Друзья';
+        return l10n.friendsTabFriends;
       case _FriendsTabKind.incoming:
-        return 'Входящие';
+        return l10n.friendsTabIncoming;
       case _FriendsTabKind.outgoing:
-        return 'Исходящие';
+        return l10n.friendsTabOutgoing;
       case _FriendsTabKind.findFriend:
-        return 'Найти друга';
+        return l10n.friendsFindTab;
     }
   }
 
@@ -1885,7 +1899,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     FriendsSnapshot? snapshot,
     int? totalUsersCount,
   ) {
-    final title = _tabTitle(tab);
+    final title = _tabTitle(context.l10n, tab);
     final count = _tabCount(tab, snapshot, totalUsersCount);
     final isIncoming = tab == _FriendsTabKind.incoming;
     final isFindFriend = tab == _FriendsTabKind.findFriend;
@@ -1993,7 +2007,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             icon: _isSearchExpanded
                 ? Icons.search_off_rounded
                 : Icons.search_rounded,
-            tooltip: _isSearchExpanded ? 'Свернуть поиск' : 'Показать поиск',
+            tooltip: _isSearchExpanded
+                ? context.l10n.friendsCollapseSearch
+                : context.l10n.friendsExpandSearch,
             onPressed: _toggleSearch,
             active: _isSearchExpanded,
           );

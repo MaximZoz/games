@@ -1,0 +1,886 @@
+{
+  "@@locale": "kk",
+  "appTitle": "Zozu Games",
+  "navHome": "Басты бет",
+  "navProfile": "Профиль",
+  "navFriends": "Достар",
+  "navChats": "Чаттар",
+  "navGames": "Ойындар",
+  "navSettings": "Параметрлер",
+  "settingsTitle": "Параметрлер",
+  "settingsLanguage": "Тіл",
+  "settingsLanguageSystem": "Жүйе бойынша",
+  "settingsAddBotsTitle": "30 с кейін бот қосу",
+  "settingsAddBotsSubtitle": "Ойын іздеуде: 30 секунд ішінде қарсылас табылмаса, ойын ботпен басталады (ставка 1 қолаға қайтарылады)",
+  "settingsFriendsOnlyTitle": "Тек достардан хабарлама",
+  "settingsFriendsOnlySubtitle": "Достар емес адамдар тек эмодзи жібере алады. Спам кедергі жасаса, пайдаланушыны уақытша бұғаттаңыз.",
+  "settingsNotifications": "Хабарландырулар",
+  "settingsPushChat": "Чат",
+  "settingsPushFriends": "Достар",
+  "settingsPushGames": "Ойындар",
+  "settingsPushRewards": "Марапаттар",
+  "loginTitle": "Кіру",
+  "loginSubtitle": "Email немесе логин мен құпия сөзді енгізіңіз",
+  "loginEmailLabel": "Email немесе логин",
+  "loginPasswordLabel": "Құпия сөз",
+  "loginSubmit": "Кіру",
+  "loginNoAccount": "Аккаунт жоқ па? Тіркелу",
+  "loginEmailRequired": "Email немесе логин енгізіңіз",
+  "loginPasswordRequired": "Құпия сөзді енгізіңіз",
+  "loginTooltip": "Кіру",
+  "logoutTooltip": "Шығу",
+  "registerTitle": "Тіркелу",
+  "registerSubtitle": "Ойнау үшін аккаунт жасаңыз",
+  "registerNameLabel": "Аты (логин)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Құпия сөз",
+  "registerSubmit": "Тіркелу",
+  "registerHaveAccount": "Аккаунт бар ма? Кіру",
+  "registerNameRequired": "Атын енгізіңіз",
+  "registerNameNoSpaces": "Атта бос орын болмауы керек",
+  "registerNameMax": "Ең көбі 20 таңба",
+  "registerNameHint": "20 таңбаға дейін",
+  "registerEmailRequired": "Email енгізіңіз",
+  "registerEmailInvalid": "Жарамсыз email",
+  "registerPasswordHint": "Кемінде 6 таңба",
+  "registerPasswordMin": "Құпия сөз кемінде 6 таңба болуы керек",
+  "commonCancel": "Бас тарту",
+  "commonSave": "Сақтау",
+  "commonDelete": "Жою",
+  "commonEdit": "Өңдеу",
+  "commonReply": "Жауап беру",
+  "commonSend": "Жіберу",
+  "commonClose": "Жабу",
+  "commonRetry": "Қайталау",
+  "commonLoading": "Жүктелуде…",
+  "commonError": "Қате",
+  "commonOnline": "желіде",
+  "commonOffline": "желіде емес",
+  "commonOnlineCap": "Онлайн",
+  "commonUser": "Пайдаланушы",
+  "commonPlayer": "Ойыншы",
+  "commonAboutMe": "Өзім туралы",
+  "commonBack": "Артқа",
+  "commonAccept": "Қабылдау",
+  "commonDecline": "Қабылдамау",
+  "commonCreating": "Жасалуда…",
+  "commonSearching": "Іздеу…",
+  "commonInsufficientCoins": "Монета жеткіліксіз",
+  "commonNotFound": "Табылмады",
+  "commonServerErrorShort": "Сервер қатесі",
+  "commonForbidden": "Қолжетімділік жоқ",
+  "commonUserBlocked": "Пайдаланушы бұғатталған",
+  "commonUserNotFound": "Пайдаланушы табылмады",
+  "commonGenericError": "Бірдеңе дұрыс болмады. Қайталап көріңіз.",
+  "timeJustNow": "жаңа ғана",
+  "timeYesterday": "кеше",
+  "timeMinutesAgo": "{count} мин бұрын",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} сағ бұрын",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} күн бұрын",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "бір апта бұрын",
+  "timeWeeksAgo": "{count} апт. бұрын",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "бір ай бұрын",
+  "timeMonthsAgo": "{count} ай бұрын",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "бір жыл бұрын",
+  "timeYearsAgo": "{count} ж. бұрын",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "жс",
+  "weekdayMon": "дс",
+  "weekdayTue": "сс",
+  "weekdayWed": "ср",
+  "weekdayThu": "бс",
+  "weekdayFri": "жм",
+  "weekdaySat": "сб",
+  "monthJan": "қаң",
+  "monthFeb": "ақп",
+  "monthMar": "нау",
+  "monthApr": "сәу",
+  "monthMay": "мам",
+  "monthJun": "мау",
+  "monthJul": "шіл",
+  "monthAug": "там",
+  "monthSep": "қыр",
+  "monthOct": "қаз",
+  "monthNov": "қар",
+  "monthDec": "жел",
+  "homeAchievements": "Жетістіктер",
+  "homeAchievementsSubtitle": "Ойын нәтижелеріңіз",
+  "homeAchievementsRewards": "Алынатын марапаттар бар",
+  "homeCoins": "Монеталар",
+  "homeCoinsSubtitle": "Баланс және марапаттар",
+  "homeCoinsDailyReward": "Кіру марапаты қолжетімді",
+  "homeItems": "Заттар",
+  "homeItemsInventory": "Инвентарыңыз",
+  "homeItemsGifted": "Сізге коллекция сыйлады",
+  "homeItemsIncome": "Коллекция кірісін алуға болады",
+  "homeShop": "Дүкен",
+  "homeShopSubtitle": "Эмодзи, ставкалар, коллекциялар",
+  "gamesTitle": "Ойындар",
+  "gamesFindMatch": "Ойын табу",
+  "gamesMyTurn": "Сіздің жүрісіңіз",
+  "gamesWaiting": "Күту",
+  "gamesLobbyTab": "Лобби",
+  "gamesTicTacToe": "Крестики-нолики",
+  "gamesRules": "Ережелер",
+  "gamesRulesTitle": "Ойын ережелері",
+  "gamesCreate": "Ойын жасау",
+  "gamesJoin": "Қосылу",
+  "gamesOpponentTurn": "Қарсыластың жүрісі",
+  "gamesCurrentGame": "Ағымдағы ойын",
+  "gamesInvitedYou": "Сізді шақырды",
+  "gamesTurnTime": "Жүріс уақыты",
+  "gamesGridSize": "Тор өлшемі",
+  "gamesSwapSides": "Жақтарды ауыстыру",
+  "gamesNoCenter": "Ортадан бастау жоқ",
+  "lobbyMatchmake": "Лобби",
+  "lobbyPrivateGame": "Жеке ойын",
+  "lobbySearchingOpponent": "Қарсылас ізделуде…",
+  "lobbyWaitingJoin": "Біреу «Ойын табу» немесе «Қосылу» басқанша күтеміз",
+  "lobbyInviteTitle": "Ойынға шақыру",
+  "lobbyInvitedToPlay": "Сізді ойнауға шақырды",
+  "lobbyEnterGame": "Ойынға кіру",
+  "lobbyInvite": "Шақыру",
+  "lobbyInviteSent": "Шақыру жіберілді",
+  "lobbyCopyLink": "Ойын сілтемесін бөлісу",
+  "lobbyLinkCopied": "Сілтеме көшірілді",
+  "lobbyNoFriendsOnline": "Онлайн достар жоқ. Жоғарыдағы ойын сілтемесін бөлісіңіз немесе достарыңыз желіге шыққанша күтіңіз.",
+  "gameBot": "Бот",
+  "gameOpponent": "Қарсылас",
+  "gameYouWon": "Сіз жеңдіңіз!",
+  "gameYouWonOpponentLeft": "Сіз жеңдіңіз — қарсылас шығып кетті",
+  "gameYouWonOpponentTimeout": "Сіз жеңдіңіз — қарсыластың уақыты бітті",
+  "gameDraw": "Тең ойын",
+  "gameExitTitle": "Ойыннан шығу",
+  "gameExitConfirm": "Шықсаңыз, ұтыласыз. Бәрібір шығасыз ба?",
+  "gameStay": "Қалу",
+  "gameLeave": "Шығу",
+  "gameConnecting": "Ойынға қосылуда…",
+  "gameWaitingOpponent": "Қарсылас күтілуде",
+  "gameRematchOffer": "Қарсылас қайта ойнауды ұсынады",
+  "gameRematchDeclined": "Қарсылас қайта ойнаудан бас тартты",
+  "gameRematch": "Қайта ойнау",
+  "gameOtherOpponent": "Басқа қарсылас",
+  "gameSwapSidesAction": "Жақтарды ауыстыру",
+  "gameWriteMessage": "Хабарлама жазу",
+  "chatsTitle": "Чаттар",
+  "chatsEmpty": "Әзірге чат жоқ.\nЖоғары оң жақтағы белгішені басып, дос таңдап сөйлесуді бастаңыз.",
+  "chatsNewChat": "Жаңа чат",
+  "chatsNoMessages": "Хабарлама жоқ",
+  "chatsClearTitle": "Сөйлесуді тазалау керек пе?",
+  "chatsClearDesc": "Чат біржола жойылады.",
+  "chatsClearConfirm": "Тазалау",
+  "chatsBlockTitle": "Бұл пайдаланушыны бұғаттау керек пе?",
+  "chatsBlockDesc": "Енді бір-біріңізге жаза алмайсыз. Чат пен достық жойылады.",
+  "chatsBlockConfirm": "Бұғаттау",
+  "chatsBlockedUsers": "Бұғатталған пайдаланушылар",
+  "chatsUnblock": "Бұғаттан шығару",
+  "chatDialog": "Чат",
+  "chatEmpty": "Әзірге хабарлама жоқ.\nБіріншісін жіберіңіз.",
+  "chatMessageHint": "Хабарлама",
+  "chatEmoji": "Эмодзи",
+  "chatBuyEmojiHint": "Басты экрандағы дүкеннен эмодзи сатып алыңыз",
+  "chatEditing": "Өңдеу",
+  "chatToday": "Бүгін",
+  "chatYesterday": "Кеше",
+  "chatFriendsOnly": "Мәтін тек достарға",
+  "emojiGroupEmotions": "Эмоциялар",
+  "emojiGroupGame": "Ойындық",
+  "emojiGroupFlags": "Тулар",
+  "emojiGroupAnimals": "Жануарлар",
+  "emojiGroupFood": "Тағам",
+  "emojiGroupTravel": "Саяхат",
+  "emojiGroupParty": "Мереке",
+  "emojiGroupObjects": "Заттар",
+  "friendsTitle": "Достар",
+  "friendsTabFriends": "Достар",
+  "friendsTabIncoming": "Кіріс",
+  "friendsTabOutgoing": "Шығыс",
+  "friendsAdd": "Дос қосу",
+  "friendsRequestSent": "Өтінім жіберілді",
+  "friendsFindTab": "Дос табу",
+  "friendsSearchHint": "Ник бойынша іздеу",
+  "friendsSearchPrompt": "Жаңа достар табу үшін іздеуді пайдаланыңыз",
+  "friendsNothingFound": "Ештеңе табылмады",
+  "friendsEmpty": "Әзірге достарыңыз жоқ",
+  "friendsNoIncoming": "Кіріс өтінім жоқ",
+  "friendsNoOutgoing": "Шығыс өтінім жоқ",
+  "friendsAlreadyFriends": "Қазірдің өзінде доссыз",
+  "friendsRemoveTitle": "Достардан алып тастау керек пе?",
+  "friendsRemoved": "Достардан алынды",
+  "friendsRequestAccepted": "Өтінім қабылданды",
+  "friendsRequestDeclined": "Өтінім қабылданбады",
+  "friendsRequestCancelled": "Өтінімден бас тартылды",
+  "profileTitle": "Профиль",
+  "profileSignInPrompt": "Аккаунтыңызға кіріңіз",
+  "profileSignInHint": "Жеке профиліңізді баптау үшін",
+  "profileEdit": "Өңдеу",
+  "profileCollections": "Коллекциялар",
+  "profileAge": "Жасы",
+  "profileGender": "Жынысы",
+  "profileGenderUnset": "Көрсетілмеген",
+  "profileGenderMale": "Ер",
+  "profileGenderFemale": "Әйел",
+  "profileAvatar": "Аватар",
+  "profileUploadPhoto": "Фото жүктеу",
+  "profileChangePhoto": "Фотоны өзгерту",
+  "shopTitle": "Дүкен",
+  "shopEmojis": "Эмодзи",
+  "shopEmojisSubtitle": "Чатқа арналған анимациялық эмодзи",
+  "shopCollections": "Коллекциялар",
+  "shopCollectionsSubtitle": "Профиль витринасы, сыйлықтар және кіріс",
+  "shopStakes": "Ставкалар",
+  "shopStakesSubtitle": "Күміс ставкаларды ашу",
+  "inventoryTitle": "Заттар",
+  "inventoryEmpty": "Әзірге ештеңе жоқ — дүкенге қараңыз",
+  "inventoryFrames": "Жақтаулар",
+  "inventoryClaim": "Алу",
+  "inventorySell": "Сату",
+  "inventoryGift": "Сыйлау",
+  "messageEdited": "өзгертілді",
+  "messageDeleted": "Хабарлама жойылды",
+  "photo": "Фото",
+  "camera": "Камера",
+  "gallery": "Галерея",
+  "connectionError": "Серверге қосылу мүмкін болмады.",
+  "serverError": "Сервер қатесі. Кейінірек қайталап көріңіз.",
+  "sessionExpired": "Сессия аяқталды. Қайта кіріңіз.",
+  "errNoInternet": "Интернет байланысы жоқ.",
+  "errTimeout": "Күту уақыты аяқталды. Қайталап көріңіз.",
+  "errGamesUnavailable": "Ойындар уақытша қолжетімсіз",
+  "errSettingsSaveFailed": "Параметрді сақтау мүмкін болмады",
+  "errPushPermission": "Браузер немесе жүйе параметрлерінде хабарландыруларға рұқсат беріңіз.",
+  "balanceTitle": "Баланс",
+  "coinBronze": "Қола",
+  "coinSilver": "Күміс",
+  "coinGold": "Алтын",
+  "coinDiamond": "Гауһар",
+  "balanceZeroBronze": "0 қола",
+  "balanceBronzes": "{count} қола",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} күміс",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} алтын",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} гауһар",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "күніне {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "қл",
+  "balanceAbbrSilver": "км.",
+  "balanceAbbrGold": "ал.",
+  "commonBackHome": "Басты бетке оралу",
+  "commonCopied": "Көшірілді",
+  "commonClear": "Тазалау",
+  "commonTryLater": "Кейінірек қайта көріңіз.",
+  "commonTryRefresh": "Бетті жаңартып көріңіз.",
+  "coinsTitle": "Тиындар",
+  "coinsLoginReward": "Кіру сыйлығы",
+  "coinsLoginAvailableToday": "Бүгінгі сыйлық қолжетімді",
+  "coinsLoginStreak": "Күнделікті кіру сериясы",
+  "coinsFriendReward": "Дос сыйлығы",
+  "coinsFriendRewardHint": "Сілтемеңіз арқылы тіркелу үшін +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Сыйлықтарды жүктеу мүмкін болмады",
+  "coinsClaimReward": "Сыйлықты алу",
+  "coinsAlreadyClaimed": "Алынған",
+  "coinsStreakToday": "{done}/{target} · бүгін",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · тағы 1 күн",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · тағы {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Досты шақыру",
+  "coinsInviteHint": "Сілтемеңіз арқылы тіркелген әркім үшін +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Сілтемені көшіру",
+  "coinsHowItWorks": "Қалай жұмыс істейді",
+  "coinsHowStep1": "Сілтемені көшіріп, досыңызға жіберіңіз",
+  "coinsHowStep2": "Дос сол сілтеме арқылы тіркеледі",
+  "coinsHowStep3": "Сізге {amount} есептеледі",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Жетістіктер",
+  "achievementsProgress": "Прогресс: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Жақтау алынды",
+  "achievementsClaimed": "Алынды",
+  "achievementsOpenFrame": "Жақтауды ашу",
+  "friendsRemoveConfirm": "{name} пайдаланушысын достардан шынымен жойғыңыз келе ме?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Алып тастау",
+  "friendsRemove": "Достардан жою",
+  "friendsAcceptRequest": "Өтінімді қабылдау",
+  "friendsDeclineRequest": "Өтінімді қабылдамау",
+  "friendsCancelRequest": "Өтінімді болдырмау",
+  "friendsSendRequest": "Достық өтінімін жіберу",
+  "friendsRequestAlreadySent": "Өтінім жіберілген",
+  "friendsIncomingStatus": "Кіріс өтінім",
+  "friendsOutgoingStatus": "Шығыс өтінім",
+  "friendsNotFriends": "Достар емес",
+  "friendsCollapseSearch": "Іздеуді жию",
+  "friendsExpandSearch": "Іздеуді көрсету",
+  "friendsLoadFailed": "Достарды жүктеу мүмкін болмады",
+  "friendsSince": "Дос болған күні: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Кіріс өтінім: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Шығыс өтінім: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Пайдаланушы туралы",
+  "profileAgeYears": "{age} жас",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Сатып алу",
+  "shopBuyTitle": "Сатып алу?",
+  "shopBuyStakeTitle": "Ставканы сатып алу?",
+  "shopBuyEmojiTitle": "Смайлды сатып алу?",
+  "shopBuyCollectionTitle": "Коллекцияны сатып алу?",
+  "shopPrice": "Бағасы: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Сатып алынған",
+  "shopEmpty": "Әзірге бос",
+  "shopPurchased": "{title} сатып алынды",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Аласыз: 10 қолдану",
+  "shopEmojiBought": "{title}: +10 қолдану",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 қолдану",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Сатып алу · 10 дана",
+  "shopDailyIncome": "Табыс: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Бір рет сатып алу",
+  "shopSellRefund": "Сату құнының бір бөлігін қайтарады",
+  "shopCollectionAdded": "{title} профильге қосылды",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "жинақ бонусы +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Жиналды",
+  "shopSetProgress": "Жиналды · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Сату?",
+  "inventorySellDesc": "Сіз {amount} аласыз",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Сатылды: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Алдымен достар қосыңыз",
+  "inventoryGiftTitle": "Коллекцияны сыйлау?",
+  "inventoryGiftDesc": "«{title}» коллекциясын {name} пайдаланушысына сыйлау?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Сыйланды: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Заттарды жүктеу мүмкін болмады",
+  "inventoryNoCollections": "Коллекция жоқ — дүкеннен сатып алыңыз",
+  "inventoryNoEmojis": "Смайл жоқ — дүкеннен сатып алыңыз",
+  "inventoryNoFrames": "Жақтау жоқ — лигада 10 ойын ұтыңыз (жетістіктер)",
+  "inventoryNoStakes": "Сатып алынған ставкалар жоқ",
+  "inventoryEmojiLeft": "{count} қалды",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Табыс: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Ертеңгі табыс: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "{amount} алтын қоюға болады",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "{amount} күміс қоюға болады",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "+{amount} алынды",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Чаттарды жүктеу мүмкін болмады",
+  "chatsLoadListFailed": "Тізімді жүктеу мүмкін болмады",
+  "chatsBlockedEmpty": "Тізім бос",
+  "chatsBlockedAt": "Бұғатталған: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Чат құру мүмкін болмады",
+  "chatsNeedFriendsFirst": "Алдымен достар қосыңыз, содан кейін чат ашуға болады.",
+  "chatsFriendsNotFound": "Достар табылмады",
+  "chatsFindFriendHint": "Ник бойынша дос іздеу",
+  "chatsSelectChat": "Чатты таңдаңыз",
+  "chatsSelectHint": "Сол жақтағы тізімнен диалогты таңдаңыз",
+  "chatEditFailed": "Хабарламаны өзгерту мүмкін болмады",
+  "chatSendFailed": "Хабарламаны жіберу мүмкін болмады",
+  "chatDeleteFailed": "Хабарламаны жою мүмкін болмады",
+  "chatEmojiSendFailed": "Смайлды жіберу мүмкін болмады",
+  "chatLoadFailed": "Хабарламаларды жүктеу мүмкін болмады",
+  "chatBackToGame": "Ойынға оралу",
+  "chatBackToChats": "Чаттарға оралу",
+  "chatActions": "Чат әрекеттері",
+  "chatScrollToEnd": "Сөйлесу соңына",
+  "chatReplyingTo": "{name} жауабы",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Сыйлық",
+  "chatCollection": "Коллекция",
+  "chatGiftCollection": "Сыйлық · коллекция",
+  "chatThisUser": "осы пайдаланушы",
+  "gamesLobbyLoadFailed": "Лоббиді жүктеу мүмкін болмады.",
+  "gamesTapChangeStake": "Ставканы өзгерту үшін басыңыз",
+  "gamesTapChangeTurnTime": "Жүріс уақытын өзгерту үшін басыңыз",
+  "gamesTapChangeGrid": "Тор өлшемін өзгерту үшін басыңыз",
+  "gamesSwapSidesHint": "O 1-жүрістен кейін X болуы мүмкін",
+  "gamesNoCenterHint": "Бірінші жүріс ортаға болмайды",
+  "lobbyInviteSentShort": "Жіберілді",
+  "lobbyInvitesSentWaiting": "Шақырулар жіберілді. Жауап күтілуде.",
+  "lobbyLinkCopiedHint": "Оны чатқа немесе досқа хабарламаға қойыңыз",
+  "lobbyCopyLinkHint": "Сілтемені алмасу буферіне көшіру",
+  "lobbyCreatorInvites": "{name} сізді ойнауға шақырады",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "{name} жеңді",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Уақыт бітті. {name} жеңді",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} с",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Әкімшілік",
+  "tournamentsTitle": "Турнирлер",
+  "profileAgeInvalid": "1-ден 111-ге дейін жасты енгізіңіз",
+  "profileSaveFailed": "Профильді сақтау мүмкін болмады",
+  "profileNameHint": "Латын әріптері, цифрлар, _ 10 таңбаға дейін",
+  "profileAgeHint": "1-ден 111-ге дейін",
+  "profileAboutHint": "100 таңбаға дейін (қалауы бойынша)",
+  "profileProcessingPhoto": "Фото өңделуде…",
+  "profileCropTitle": "Аватар аймағын таңдаңыз",
+  "profileCropHint": "Фотоны масштабтаңыз және жылжытыңыз",
+  "profileApply": "Қолдану",
+  "profilePreparing": "Дайындалуда…",
+  "timeSecondsShort": "{seconds} с",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 мин",
+  "timeTenMin": "10 мин",
+  "rulesIntro": "X-O ойыны {grid} өрісінде. Кезекпен жүреді, X бастайды.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "Жеңіс: көлденең, тік немесе диагональ бойынша {n} қатарға тізу керек.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Жүріске уақыт шектеуі жоқ.",
+  "rulesTurnTime": "Жүріс уақыты: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Ставка: {stake}. Ойын осы монеталарға жүреді.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Жақтарды ауыстыру: X-тің бірінші жүрісінен кейін O X-пен орын алмасуы мүмкін.",
+  "rulesNoCenter": "Ортаға тыйым: X бірінші жүрісте ортаға жүре алмайды.",
+  "collectionSetLegends": "Аңыздар",
+  "collectionSetSpace": "Ғарыш",
+  "collectionSetGems": "Асыл тастар",
+  "collectionSetParty": "Мейрам",
+  "collectionSetNature": "Табиғат",
+  "collectionSetAdventures": "Шытырман оқиғалар",
+  "collectionCardMeta": "Жинақ · витрина · сыйлық · сату · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "күн",
+  "coinsDayFew": "күн",
+  "coinsDayMany": "күн",
+  "giftFriendTitle": "Досыңа сыйлау",
+  "photoCount": "Фото ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Фото ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Фото: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} эмодзи · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Панельді жазу",
+  "chatsCollapsePanel": "Панельді жию",
+  "chatReplySourceMissing": "Бастапқы хабар табылмады",
+  "shopStakeTitleSilver": "{n} күміс ставкасы",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "{n} алтын ставкасы",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Ойындарда {n} күміс қою құқығы",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Ойындарда {n} алтын қою құқығы",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "өзіңізге",
+  "chatReplyPeer": "әңгімелесушіге"
+}

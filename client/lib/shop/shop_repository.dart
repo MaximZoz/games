@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 
 class ShopItem {
   const ShopItem({
@@ -232,6 +234,31 @@ class ShopRepository {
 
   final AuthRepository _auth;
 
+  Never _throwShopError(http.Response response, {String? fallback}) {
+    final l10n = LocaleService.l10n;
+    if (response.statusCode == 401) {
+      throw AuthException(401, l10n.sessionExpired);
+    }
+    var message = response.body.trim();
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        message =
+            (body['message'] ?? body['error'] ?? message).toString().trim();
+      }
+    } catch (_) {}
+    if (response.statusCode == 402) {
+      throw AuthException(
+        402,
+        message.isEmpty ? l10n.commonInsufficientCoins : message,
+      );
+    }
+    throw AuthException(
+      response.statusCode,
+      message.isEmpty ? (fallback ?? l10n.commonServerErrorShort) : message,
+    );
+  }
+
   Future<List<ShopItem>> listShop() async {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     final response = await _auth.sendAuthorized(
@@ -242,12 +269,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : 'Не удалось загрузить магазин',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['items'];
@@ -270,17 +292,8 @@ class ShopRepository {
         operation: 'ShopRepository.buy',
       ),
     );
-    if (response.statusCode == 402) {
-      throw AuthException(402, 'Недостаточно монет');
-    }
-    if (response.statusCode == 409) {
-      throw AuthException(409, 'Уже куплено или нет в наличии');
-    }
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401 ? 'Сессия истекла' : 'Не удалось купить',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
@@ -302,14 +315,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : response.statusCode == 409
-                ? 'Смайлик недоступен'
-                : 'Не удалось использовать смайлик',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return (body['quantity'] as num?)?.toInt() ?? 0;
@@ -325,11 +331,9 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : 'Не удалось загрузить предметы',
+      _throwShopError(
+        response,
+        fallback: LocaleService.l10n.inventoryLoadFailed,
       );
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -351,12 +355,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : 'Не удалось загрузить возможности',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return InventoryCapabilities.fromJson(body);
@@ -374,12 +373,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : 'Не удалось загрузить коллекции',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['items'];
@@ -403,10 +397,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401 ? 'Сессия истекла' : 'Не удалось продать',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
@@ -428,14 +419,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : response.statusCode == 409
-                ? 'Нельзя подарить (уже есть у друга или предмет недоступен)'
-                : 'Не удалось подарить',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
   }
 
@@ -449,12 +433,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : 'Не удалось загрузить доход',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return CollectionIncomeInfo.fromJson(body);
@@ -473,14 +452,7 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      throw AuthException(
-        response.statusCode,
-        response.statusCode == 401
-            ? 'Сессия истекла'
-            : response.statusCode == 409
-                ? 'Доход пока недоступен'
-                : 'Не удалось забрать доход',
-      );
+      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(

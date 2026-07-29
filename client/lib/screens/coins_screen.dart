@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/referral_link.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
@@ -14,6 +15,7 @@ class CoinsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final rewardAvailable =
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
     void goBack() => context.pop();
@@ -28,10 +30,10 @@ class CoinsScreen extends ConsumerWidget {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад на главную',
+            tooltip: l10n.commonBack,
           ),
           title: Text(
-            'Монеты',
+            l10n.homeCoins,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -49,19 +51,20 @@ class CoinsScreen extends ConsumerWidget {
                   children: [
                     HomeActionCard(
                       icon: Icons.calendar_today_rounded,
-                      title: 'Монеты за вход',
+                      title: l10n.coinsLoginReward,
                       subtitle: rewardAvailable
-                          ? 'Доступна награда за сегодня'
-                          : 'Ежедневная серия входов',
+                          ? l10n.coinsLoginAvailableToday
+                          : l10n.coinsLoginStreak,
                       badgeCount: rewardAvailable ? 1 : 0,
                       onTap: () => context.push('/coins/login'),
                     ),
                     const SizedBox(height: 12),
                     HomeActionCard(
                       icon: Icons.person_add_alt_1_rounded,
-                      title: 'Монеты за друга',
-                      subtitle:
-                          '+${formatRewardBronze(referralBonusBronze)} за регистрацию по ссылке',
+                      title: l10n.coinsFriendReward,
+                      subtitle: l10n.coinsFriendRewardHint(
+                        formatRewardBronze(referralBonusBronze),
+                      ),
                       onTap: () => context.push('/coins/friend'),
                     ),
                   ],

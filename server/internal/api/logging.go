@@ -130,7 +130,7 @@ type frontendLogRequest struct {
 // Ingest принимает frontend-события и пишет их в файл и/или напрямую в БД.
 func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	if h.Writer == nil && !(h.Pool != nil && h.DirectDB) {
@@ -141,7 +141,7 @@ func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 	var req frontendLogRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 
 	if h.Writer != nil {
 		if err := h.Writer.Append(event); err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
 	}

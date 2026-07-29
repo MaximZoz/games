@@ -29,6 +29,9 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
   const ChatRoomScreen({
@@ -239,7 +242,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: Text(context.l10n.commonCancel),
             ),
             FilledButton(
               style: destructive
@@ -282,8 +285,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         showAppSnackBar(
           context,
           message: action == _RoomAction.acceptFriendRequest
-              ? 'Заявка принята'
-              : 'Заявка отправлена',
+              ? context.l10n.friendsRequestAccepted
+              : context.l10n.friendsRequestSent,
           kind: AppSnackKind.success,
         );
       } on FriendsException catch (e) {
@@ -316,7 +319,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (id.isEmpty) return;
       final chats =
           ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
-      String peerName = 'этого пользователя';
+      String peerName = LocaleService.l10n.chatThisUser;
       for (final item in chats) {
         if (item.chatID == widget.chatID) {
           final n = (item.user.displayName ?? '').trim();
@@ -324,14 +327,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           break;
         }
       }
-      if (peerName == 'этого пользователя') {
+      if (peerName == LocaleService.l10n.chatThisUser) {
         final routeName = (widget.peerName ?? '').trim();
         if (routeName.isNotEmpty) peerName = routeName;
       }
       final confirmed = await _confirmAction(
-        title: 'Убрать из друзей?',
-        description: 'Вы уверены, что хотите удалить $peerName из друзей?',
-        confirmText: 'Убрать',
+        title: context.l10n.friendsRemoveTitle,
+        description: LocaleService.l10n.friendsRemoveConfirm(peerName),
+        confirmText: LocaleService.l10n.friendsRemoveConfirmAction,
         destructive: true,
       );
       if (!confirmed) return;
@@ -344,7 +347,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         if (!mounted) return;
         showAppSnackBar(
           context,
-          message: 'Удалено из друзей',
+          message: LocaleService.l10n.friendsRemoved,
           kind: AppSnackKind.success,
         );
       } on FriendsException catch (e) {
@@ -376,10 +379,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final id = (peerUserID ?? '').trim();
       if (id.isEmpty) return;
       final confirmed = await _confirmAction(
-        title: 'Заблокировать пользователя?',
-        description:
-            'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.',
-        confirmText: 'Заблокировать',
+        title: context.l10n.chatsBlockTitle,
+        description: context.l10n.chatsBlockDesc,
+        confirmText: context.l10n.chatsBlockConfirm,
         destructive: true,
       );
       if (!confirmed) return;
@@ -413,9 +415,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
 
     final confirmed = await _confirmAction(
-      title: 'Очистить переписку?',
-      description: 'Диалог будет удалён без возможности восстановления.',
-      confirmText: 'Очистить',
+      title: context.l10n.chatsClearTitle,
+      description: context.l10n.chatsClearDesc,
+      confirmText: context.l10n.chatsClearConfirm,
       destructive: true,
     );
     if (!confirmed) return;
@@ -466,7 +468,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
   }
 
-  static const _friendsOnlyAlert = 'Текст только для друзей';
+  static String get _friendsOnlyAlert => LocaleService.l10n.chatFriendsOnly;
 
   bool _isFriendsOnlySendError(ChatException e) {
     if (e.statusCode != 403) return false;
@@ -514,7 +516,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         if (!mounted) return;
         setState(() {
           _sending = false;
-          _composerAlert = 'Не удалось изменить сообщение';
+          _composerAlert = LocaleService.l10n.chatEditFailed;
         });
       }
       return;
@@ -578,7 +580,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (!mounted) return;
       setState(() {
         _sending = false;
-        _composerAlert = 'Не удалось отправить сообщение';
+        _composerAlert = LocaleService.l10n.chatSendFailed;
       });
       unawaited(_loadCapabilities());
     }
@@ -671,19 +673,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 _messageActionTile(
                   ctx,
                   value: 'reply',
-                  label: 'Ответить',
+                  label: context.l10n.commonReply,
                 ),
                 if (canEdit)
                   _messageActionTile(
                     ctx,
                     value: 'edit',
-                    label: 'Изменить',
+                    label: context.l10n.commonEdit,
                   ),
                 if (mine)
                   _messageActionTile(
                     ctx,
                     value: 'delete',
-                    label: 'Удалить',
+                    label: context.l10n.commonDelete,
                     danger: true,
                   ),
               ],
@@ -740,7 +742,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       setState(() => _composerAlert = e.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _composerAlert = 'Не удалось удалить сообщение');
+      setState(() => _composerAlert = LocaleService.l10n.chatDeleteFailed);
     }
   }
 
@@ -855,7 +857,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (!mounted) return;
       setState(() {
         _sending = false;
-        _composerAlert = 'Не удалось отправить смайлик';
+        _composerAlert = LocaleService.l10n.chatEmojiSendFailed;
       });
       ref.invalidate(inventoryListProvider);
     }
@@ -950,7 +952,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (!surfaceErrors) return;
       if (!mounted) return;
       setState(() {
-        _error = 'Не удалось загрузить сообщения';
+        _error = LocaleService.l10n.chatLoadFailed;
         _loading = false;
       });
     }
@@ -1286,7 +1288,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }
       if (!mounted) return;
       if (!found) {
-        setState(() => _composerAlert = 'Исходное сообщение не найдено');
+        setState(() => _composerAlert = context.l10n.chatReplySourceMissing);
         return;
       }
 
@@ -1384,8 +1386,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final todayKey = DateTime(today.year, today.month, today.day);
     final yesterdayKey = todayKey.subtract(const Duration(days: 1));
     final dateKey = DateTime(localDate.year, localDate.month, localDate.day);
-    if (dateKey == todayKey) return 'Сегодня';
-    if (dateKey == yesterdayKey) return 'Вчера';
+    if (dateKey == todayKey) return context.l10n.chatToday;
+    if (dateKey == yesterdayKey) return context.l10n.chatYesterday;
     final dd = localDate.day.toString().padLeft(2, '0');
     final mo = localDate.month.toString().padLeft(2, '0');
     final yyyy = localDate.year.toString();
@@ -1394,7 +1396,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   String _peerTitle(ChatUserItem user) {
     final value = user.displayName?.trim();
-    if (value == null || value.isEmpty) return 'Пользователь';
+    if (value == null || value.isEmpty) return context.l10n.commonUser;
     return value;
   }
 
@@ -1566,7 +1568,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
         final statusText = presence == null
             ? null
-            : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+            : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
@@ -1623,7 +1625,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Закрыть',
+                      tooltip: context.l10n.commonClose,
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => Navigator.of(dialogContext).pop(),
                     ),
@@ -1637,7 +1639,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     children: [
                       if (user.age != null && user.age! > 0)
                         _buildInfoPill(
-                          text: '${user.age} лет',
+                          text: context.l10n.profileAgeYears(user.age!),
                           minWidth: 72,
                         ),
                       if (genderIcon != null)
@@ -1652,9 +1654,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ],
                 if (about != null && about.isNotEmpty) ...[
                   const SizedBox(height: 10),
-                  const Text(
-                    'О себе',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.commonAboutMe,
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1706,7 +1708,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final infoUser = peerUser;
     final statusText = presence == null
         ? null
-        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+        : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Row(
@@ -1718,10 +1720,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             IconButton(
               onPressed: _leavingToChats ? null : _goBackToChats,
               icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: widget.fromGames ? 'Назад в игру' : 'Назад к чатам',
+              tooltip: widget.fromGames ? context.l10n.chatBackToGame : context.l10n.chatBackToChats,
             ),
           Tooltip(
-            message: 'Информация о пользователе',
+            message: context.l10n.userInfoTitle,
             child: MouseRegion(
               cursor: infoUser == null
                   ? SystemMouseCursors.basic
@@ -1775,7 +1777,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           ),
           PopupMenuButton<_RoomAction>(
             enabled: !_roomActionInFlight,
-            tooltip: 'Действия с чатом',
+            tooltip: context.l10n.chatActions,
             onSelected: (action) {
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final peerId = (peerUser?.id ?? '').trim();
@@ -1806,35 +1808,35 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
               return <PopupMenuEntry<_RoomAction>>[
                 if (isFriend)
-                  const PopupMenuItem<_RoomAction>(
+                  PopupMenuItem<_RoomAction>(
                     value: _RoomAction.removeFriend,
-                    child: Text('Убрать из друзей'),
+                    child: Text(context.l10n.friendsRemove),
                   )
                 else if (peerId.isNotEmpty && snapshot != null)
                   if (hasIncoming)
-                    const PopupMenuItem<_RoomAction>(
+                    PopupMenuItem<_RoomAction>(
                       value: _RoomAction.acceptFriendRequest,
-                      child: Text('Принять заявку в друзья'),
+                      child: Text(context.l10n.friendsAcceptRequest),
                     )
                   else if (hasOutgoing)
-                    const PopupMenuItem<_RoomAction>(
+                    PopupMenuItem<_RoomAction>(
                       enabled: false,
                       value: _RoomAction.sendFriendRequest,
-                      child: Text('Заявка уже отправлена'),
+                      child: Text(context.l10n.friendsRequestAlreadySent),
                     )
                   else
-                    const PopupMenuItem<_RoomAction>(
+                    PopupMenuItem<_RoomAction>(
                       value: _RoomAction.sendFriendRequest,
-                      child: Text('Отправить заявку в друзья'),
+                      child: Text(context.l10n.friendsSendRequest),
                     ),
-                const PopupMenuItem<_RoomAction>(
+                PopupMenuItem<_RoomAction>(
                   value: _RoomAction.clearChat,
-                  child: Text('Очистить переписку'),
+                  child: Text(context.l10n.chatsClearConfirm),
                 ),
                 PopupMenuItem<_RoomAction>(
                   value: _RoomAction.blockUser,
                   enabled: peerId.isNotEmpty,
-                  child: const Text('Заблокировать пользователя'),
+                  child: Text(context.l10n.chatsBlockConfirm),
                 ),
               ];
             },
@@ -1880,7 +1882,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final media = MediaQuery.of(context);
     final narrowLandscape =
         isNarrow(context) && media.size.width > media.size.height;
-    final routeTitle = (widget.peerName ?? '').trim().isEmpty ? 'Диалог' : widget.peerName!.trim();
+    final routeTitle = (widget.peerName ?? '').trim().isEmpty ? context.l10n.chatDialog : widget.peerName!.trim();
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     ChatUserItem? peerUser;
@@ -1922,13 +1924,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics(),
               ),
-              children: const [
-                SizedBox(height: 120),
+              children: [
+                const SizedBox(height: 120),
                 Center(
                   child: Text(
-                    'Сообщений пока нет.\nНапишите первое сообщение.',
+                    context.l10n.chatEmpty,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -2125,15 +2127,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                                       ?.trim()
                                                       .isNotEmpty ==
                                                   true
-                                              ? 'Фото: ${formatChatMessagePreview(message.replyToBody!)}'
-                                              : 'Фото')
+                                              ? context.l10n.photoWithText(
+                                                  formatChatMessagePreview(
+                                                    message.replyToBody!,
+                                                  ),
+                                                )
+                                              : context.l10n.photo)
                                           : (message.replyToBody
                                                       ?.trim()
                                                       .isNotEmpty ==
                                                   true
                                               ? formatChatMessagePreview(
                                                   message.replyToBody!)
-                                              : 'Сообщение'),
+                                              : context.l10n.chatMessageHint),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -2184,9 +2190,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 children: [
                                   if (message.editedAt != null &&
                                       message.editedAt!.isNotEmpty) ...[
-                                    const Text(
-                                      'изменено',
-                                      style: TextStyle(
+                                    Text(
+                                      context.l10n.messageEdited,
+                                      style: const TextStyle(
                                         color: AppColors.textSecondary,
                                         fontSize: 10,
                                         fontStyle: FontStyle.italic,
@@ -2259,7 +2265,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         right: 0,
                         child: Center(
                           child: Tooltip(
-                            message: 'В конец переписки',
+                            message: context.l10n.chatScrollToEnd,
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
@@ -2378,7 +2384,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               _pendingImages.length >= _maxPendingImages)
                           ? null
                           : _pickPhoto,
-                      tooltip: 'Фото',
+                      tooltip: context.l10n.photo,
                       padding: const EdgeInsets.all(8),
                       constraints: const BoxConstraints(
                         minWidth: 40,
@@ -2429,8 +2435,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                         children: [
                                           Text(
                                             _editingMessage != null
-                                                ? 'Редактирование'
-                                                : 'В ответ ${_replyAuthorLabel(_replyTo!)}',
+                                                ? context.l10n.chatEditing
+                                                : context.l10n.chatReplyingTo(_replyAuthorLabel(_replyTo!)),
                                             style: const TextStyle(
                                               color: _composerIconPurple,
                                               fontWeight: FontWeight.w600,
@@ -2473,7 +2479,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               // Тема приложения рисует OutlineInputBorder —
                               // явно гасим все границы и заливку.
                               decoration: InputDecoration(
-                                hintText: 'Сообщение',
+                                hintText: context.l10n.chatMessageHint,
                                 filled: false,
                                 isDense: true,
                                 border: InputBorder.none,
@@ -2491,7 +2497,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 suffixIcon: IconButton(
                                   onPressed:
                                       _sending ? null : _openEmojiPicker,
-                                  tooltip: 'Смайлики',
+                                  tooltip: context.l10n.chatEmoji,
                                   splashRadius: 20,
                                   icon: const Icon(
                                     Icons.emoji_emotions_outlined,
@@ -2516,8 +2522,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     IconButton(
                       onPressed: _sending ? null : _sendMessage,
                       tooltip: _editingMessage != null
-                          ? 'Сохранить'
-                          : 'Отправить',
+                          ? context.l10n.commonSave
+                          : context.l10n.commonSend,
                       icon: _sending
                           ? const SizedBox(
                               width: 18,
@@ -2547,11 +2553,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String _replyAuthorLabel(ChatMessageItem message) {
     final meID = ref.read(authStateProvider).valueOrNull?.id;
     if (meID != null && message.senderUserID == meID) {
-      return 'себе';
+      return context.l10n.chatReplySelf;
     }
     final name = (widget.peerName ?? '').trim();
     if (name.isNotEmpty) return name;
-    return 'собеседнику';
+    return context.l10n.chatReplyPeer;
   }
 
   Future<void> _openEmojiPicker() async {
@@ -2608,16 +2614,19 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
 
   bool _expanded = false;
 
-  static const _groupTitles = {
-    'emotions': 'Эмоции',
-    'game': 'Игровые',
-    'flags': 'Флажки',
-    'animals': 'Животные',
-    'food': 'Еда',
-    'travel': 'Путешествия',
-    'party': 'Праздник',
-    'objects': 'Предметы',
-  };
+  Map<String, String> get _groupTitles {
+    final l10n = LocaleService.l10n;
+    return {
+      'emotions': l10n.emojiGroupEmotions,
+      'game': l10n.emojiGroupGame,
+      'flags': l10n.emojiGroupFlags,
+      'animals': l10n.emojiGroupAnimals,
+      'food': l10n.emojiGroupFood,
+      'travel': l10n.emojiGroupTravel,
+      'party': l10n.emojiGroupParty,
+      'objects': l10n.emojiGroupObjects,
+    };
+  }
 
   Widget _emojiTile(
     InventoryItem it, {
@@ -2717,15 +2726,15 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
                   ),
                 ),
                 if (widget.emojis.isEmpty)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(24),
                         child: Text(
-                          'Купите смайлики в магазине на главной',
+                          context.l10n.chatBuyEmojiHint,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                           ),
@@ -2776,7 +2785,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
                                   child: Text(
-                                    _groupTitles[key] ?? 'Смайлики',
+                                    _groupTitles[key] ?? context.l10n.chatEmoji,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13,
@@ -2839,7 +2848,12 @@ class _ChatGiftCard extends StatelessWidget {
     if (gift == null) {
       return _ChatMessageBody(body: body, largeCentered: true);
     }
-    final title = gift.title.isNotEmpty ? gift.title : 'Коллекция';
+    final title = catalogTitle(
+      gift.code,
+      fallback: gift.title.isNotEmpty
+          ? gift.title
+          : LocaleService.l10n.chatCollection,
+    );
     final name =
         gift.animatedName.isNotEmpty ? gift.animatedName : 'sparkles';
 
@@ -2854,7 +2868,7 @@ class _ChatGiftCard extends StatelessWidget {
             title: title,
             animatedName: name,
             fallback: gift.emoji.isNotEmpty ? gift.emoji : null,
-            subtitle: 'Подарок · коллекция',
+            subtitle: LocaleService.l10n.chatGiftCollection,
           ),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -2883,18 +2897,18 @@ class _ChatGiftCard extends StatelessWidget {
                     color: AppColors.accentSoft,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.card_giftcard_rounded,
                         size: 15,
                         color: AppColors.accentStart,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
-                        'Подарок',
-                        style: TextStyle(
+                        LocaleService.l10n.chatGift,
+                        style: const TextStyle(
                           color: AppColors.accentStart,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -2937,10 +2951,10 @@ class _ChatGiftCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Коллекция в инвентаре',
+                Text(
+                  LocaleService.l10n.inventoryTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -101,6 +102,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final media = MediaQuery.of(context);
     final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
     // Как «О себе»: при фокусе (клавиатура) прижимаем форму вверх.
@@ -130,7 +132,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Регистрация',
+                        l10n.registerTitle,
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -140,9 +142,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Создайте аккаунт для игры',
-                        style: TextStyle(
+                      Text(
+                        l10n.registerSubtitle,
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
@@ -158,20 +160,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           FilteringTextInputFormatter.deny(RegExp(r'\s')),
                           LengthLimitingTextInputFormatter(20),
                         ],
-                        decoration: const InputDecoration(
-                          labelText: 'Имя (логин)',
-                          hintText: 'До 20 символов',
-                          prefixIcon: Icon(Icons.person_outline_rounded),
+                        decoration: InputDecoration(
+                          labelText: l10n.registerNameLabel,
+                          hintText: l10n.registerNameHint,
+                          prefixIcon: const Icon(Icons.person_outline_rounded),
                           counterText: '',
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'Введите имя';
+                            return l10n.registerNameRequired;
                           }
                           if (v.contains(RegExp(r'\s'))) {
-                            return 'Имя без пробелов';
+                            return l10n.registerNameNoSpaces;
                           }
-                          if (v.length > 20) return 'Максимум 20 символов';
+                          if (v.length > 20) return l10n.registerNameMax;
                           return null;
                         },
                       ),
@@ -182,17 +184,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         scrollPadding: const EdgeInsets.only(bottom: 120),
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
+                        decoration: InputDecoration(
+                          labelText: l10n.registerEmailLabel,
                           hintText: 'you@example.com',
-                          prefixIcon: Icon(Icons.email_outlined),
+                          prefixIcon: const Icon(Icons.email_outlined),
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'Введите email';
+                            return l10n.registerEmailRequired;
                           }
                           if (!v.contains('@')) {
-                            return 'Некорректный email';
+                            return l10n.registerEmailInvalid;
                           }
                           return null;
                         },
@@ -206,8 +208,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         scrollPadding: const EdgeInsets.only(bottom: 120),
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
-                          labelText: 'Пароль',
-                          hintText: 'Минимум 6 символов',
+                          labelText: l10n.registerPasswordLabel,
+                          hintText: l10n.registerPasswordHint,
                           prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -222,10 +224,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Введите пароль';
+                            return l10n.loginPasswordRequired;
                           }
                           if (v.length < 6) {
-                            return 'Пароль не менее 6 символов';
+                            return l10n.registerPasswordMin;
                           }
                           return null;
                         },
@@ -240,7 +242,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       const SizedBox(height: 24),
                       AppButton(
                         onPressed: _submit,
-                        label: 'Зарегистрироваться',
+                        label: l10n.registerSubmit,
                         isLoading: _isLoading,
                         expanded: true,
                       ),
@@ -253,7 +255,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ref: _ref,
                           ),
                         ),
-                        child: const Text('Уже есть аккаунт? Войти'),
+                        child: Text(l10n.registerHaveAccount),
                       ),
                     ],
                   ),

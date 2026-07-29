@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyAddBotsAfter30s = 'add_bots_after_30s';
@@ -114,7 +115,7 @@ class MessagesFriendsOnlyNotifier extends StateNotifier<bool> {
       if (response.statusCode != 200) {
         state = previous;
         await _persistLocal(previous);
-        return 'Не удалось сохранить настройку';
+        return LocaleService.l10n.errSettingsSaveFailed;
       }
       final map = jsonDecode(response.body);
       if (map is Map) {
@@ -126,7 +127,7 @@ class MessagesFriendsOnlyNotifier extends StateNotifier<bool> {
     } catch (_) {
       state = previous;
       await _persistLocal(previous);
-      return 'Не удалось сохранить настройку';
+      return LocaleService.l10n.errSettingsSaveFailed;
     }
   }
 }

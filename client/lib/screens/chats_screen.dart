@@ -24,6 +24,8 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 
 class ChatsScreen extends ConsumerStatefulWidget {
   const ChatsScreen({
@@ -287,7 +289,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Не удалось загрузить чаты';
+        _error = LocaleService.l10n.chatsLoadFailed;
         _isLoadingChats = false;
         _isLoadingMoreChats = false;
       });
@@ -497,7 +499,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       );
     } else if (blockedAsync.hasError && blockedRaw.isEmpty) {
       final err = blockedAsync.error;
-      final message = formatUserError(err, fallback: 'Не удалось загрузить список');
+      final message = formatUserError(err, fallback: LocaleService.l10n.chatsLoadListFailed);
       content = ListView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),
@@ -522,7 +524,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                 unawaited(refreshBlockedUsers(modalRef, force: true));
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Повторить'),
+              label: Text(context.l10n.commonRetry),
             ),
           ),
         ],
@@ -532,12 +534,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),
         ),
-        children: const [
-          SizedBox(height: 80),
+        children: [
+          const SizedBox(height: 80),
           Center(
             child: Text(
-              'Список пуст',
-              style: TextStyle(color: AppColors.textSecondary),
+              context.l10n.chatsBlockedEmpty,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
         ],
@@ -607,7 +609,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Заблокирован: ${_formatDateTime(entry.blockedAt)}',
+                          context.l10n.chatsBlockedAt(_formatDateTime(entry.blockedAt)),
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
@@ -631,18 +633,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               );
                             } on ChatException catch (e) {
                               if (!context.mounted) return;
+                              final sheetContext = context;
                               if (e.statusCode == 401) {
                                 await modalRef
                                     .read(authStateProvider.notifier)
                                     .logout();
-                                if (!context.mounted) return;
-                                // ignore: use_build_context_synchronously
-                                context.go('/login');
+                                if (!sheetContext.mounted) return;
+                                sheetContext.go('/login');
                                 return;
                               }
-                              // ignore: use_build_context_synchronously
                               showAppSnackBar(
-                                context,
+                                sheetContext,
                                 message: e.message,
                                 kind: AppSnackKind.error,
                               );
@@ -652,7 +653,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                               }
                             }
                           },
-                    child: const Text('Разблокировать'),
+                    child: Text(context.l10n.chatsUnblock),
                   ),
                 ],
               ),
@@ -676,9 +677,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Заблокированные пользователи',
-                style: TextStyle(
+              Text(
+                context.l10n.chatsBlockedUsers,
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -724,7 +725,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       setState(() => _error = e.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Не удалось создать чат');
+      setState(() => _error = LocaleService.l10n.chatsCreateFailed);
     } finally {
       if (mounted) {
         setState(() => _isStartingChat = false);
@@ -780,7 +781,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
             style: destructive
@@ -797,9 +798,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   Future<void> _clearChatFromList(ChatPreviewItem item) async {
     final confirmed = await _confirmChatAction(
-      title: 'Очистить переписку?',
-      description: 'Диалог будет удалён без возможности восстановления.',
-      confirmText: 'Очистить',
+      title: context.l10n.chatsClearTitle,
+      description: context.l10n.chatsClearDesc,
+      confirmText: context.l10n.chatsClearConfirm,
       destructive: true,
     );
     if (!confirmed) return;
@@ -838,9 +839,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final userID = item.user.id.trim();
     if (userID.isEmpty) return;
     final confirmed = await _confirmChatAction(
-      title: 'Заблокировать пользователя?',
-      description: 'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.',
-      confirmText: 'Заблокировать',
+      title: context.l10n.chatsBlockTitle,
+      description: context.l10n.chatsBlockDesc,
+      confirmText: context.l10n.chatsBlockConfirm,
       destructive: true,
     );
     if (!confirmed) return;
@@ -936,7 +937,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   String _friendLoadErrorText(Object? error) {
     if (error is FriendsException) return error.message;
-    return 'Не удалось загрузить друзей';
+    return LocaleService.l10n.friendsLoadFailed;
   }
 
   Future<FriendUserItem?> _pickFriendDialog() async {
@@ -1162,7 +1163,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             onRefreshFriends();
                                           },
                                           icon: const Icon(Icons.refresh_rounded),
-                                          label: const Text('Повторить'),
+                                          label: Text(context.l10n.commonRetry),
                                         ),
                                       ),
                                     ],
@@ -1175,13 +1176,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                     physics: const AlwaysScrollableScrollPhysics(
                                       parent: ClampingScrollPhysics(),
                                     ),
-                                    children: const [
-                                      SizedBox(height: 80),
+                                    children: [
+                                      const SizedBox(height: 80),
                                       Center(
                                         child: Text(
-                                          'Сначала добавьте друзей, потом можно открыть чат.',
+                                          context.l10n.chatsNeedFriendsFirst,
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(color: AppColors.textSecondary),
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1194,12 +1197,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                     physics: const AlwaysScrollableScrollPhysics(
                                       parent: ClampingScrollPhysics(),
                                     ),
-                                    children: const [
-                                      SizedBox(height: 80),
+                                    children: [
+                                      const SizedBox(height: 80),
                                       Center(
                                         child: Text(
-                                          'Друзья не найдены',
-                                          style: TextStyle(color: AppColors.textSecondary),
+                                          context.l10n.chatsFriendsNotFound,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1294,9 +1299,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       mainAxisSize: maxListHeight != null ? MainAxisSize.min : MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Новый чат',
-          style: TextStyle(
+        Text(
+          context.l10n.chatsNewChat,
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 28,
             fontWeight: FontWeight.w700,
@@ -1310,9 +1315,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
           autocorrect: false,
           enableIMEPersonalizedLearning: false,
           textInputAction: TextInputAction.search,
-          decoration: const InputDecoration(
-            hintText: 'Найти друга по нику',
-            prefixIcon: Icon(Icons.search_rounded),
+          decoration: InputDecoration(
+            hintText: context.l10n.chatsFindFriendHint,
+            prefixIcon: const Icon(Icons.search_rounded),
           ),
           onChanged: (value) {
             setSheetState(() {
@@ -1329,7 +1334,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   String _friendTitle(FriendUserItem user) {
     final value = user.displayName?.trim();
-    if (value == null || value.isEmpty) return 'Пользователь';
+    if (value == null || value.isEmpty) return context.l10n.commonUser;
     return value;
   }
 
@@ -1347,18 +1352,18 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   String _peerTitle(ChatUserItem user) {
     final value = user.displayName?.trim();
-    if (value == null || value.isEmpty) return 'Пользователь';
+    if (value == null || value.isEmpty) return context.l10n.commonUser;
     return value;
   }
 
   String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
     final preview = formatChatMessagePreview(subtitle);
     if (presence == null) {
-      return preview.isEmpty ? 'Нет сообщений' : preview;
+      return preview.isEmpty ? context.l10n.chatsNoMessages : preview;
     }
-    final statusText = presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt);
+    final statusText = presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt);
     if (statusText.isEmpty) {
-      return preview.isEmpty ? 'Нет сообщений' : preview;
+      return preview.isEmpty ? context.l10n.chatsNoMessages : preview;
     }
     return preview.isEmpty ? statusText : '$statusText · $preview';
   }
@@ -1444,7 +1449,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
         final statusText = presence == null
             ? null
-            : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+            : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
           backgroundColor: Colors.transparent,
@@ -1479,7 +1484,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Закрыть',
+                      tooltip: context.l10n.commonClose,
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => Navigator.of(dialogContext).pop(),
                     ),
@@ -1503,7 +1508,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     children: [
                       if (user.age != null && user.age! > 0)
                         _buildInfoPill(
-                          text: '${user.age} лет',
+                          text: context.l10n.profileAgeYears(user.age!),
                           minWidth: 72,
                         ),
                       if (genderIcon != null)
@@ -1518,9 +1523,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                 ],
                 if (about != null && about.isNotEmpty) ...[
                   const SizedBox(height: 10),
-                  const Text(
-                    'О себе',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.commonAboutMe,
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1558,7 +1563,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
           padding: const EdgeInsets.only(right: 4),
           child: _buildHeaderFrameIconButton(
             icon: Icons.add_comment_rounded,
-            tooltip: 'Новый чат',
+            tooltip: context.l10n.chatsNewChat,
             onPressed: actionBusy ? null : _openStartChatDialog,
           ),
         ),
@@ -1567,7 +1572,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             padding: const EdgeInsets.only(right: 4),
             child: _buildHeaderFrameIconButton(
               icon: Icons.block_rounded,
-              tooltip: 'Заблокированные пользователи',
+              tooltip: context.l10n.chatsBlockedUsers,
               onPressed: actionBusy ? null : _openBlockedUsersDialog,
             ),
           ),
@@ -1651,7 +1656,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: 'Заявка уже отправлена',
+        message: context.l10n.friendsRequestAlreadySent,
         kind: AppSnackKind.info,
       );
       return;
@@ -1670,8 +1675,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       showAppSnackBar(
         context,
         message: incomingRequestId != null && incomingRequestId.isNotEmpty
-            ? 'Заявка принята'
-            : 'Заявка отправлена',
+            ? context.l10n.friendsRequestAccepted
+            : context.l10n.friendsRequestSent,
         kind: AppSnackKind.success,
       );
     } on FriendsException catch (e) {
@@ -1770,7 +1775,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                 child: Center(
                   child: IconButton(
                     onPressed: actionBusy ? null : _openStartChatDialog,
-                    tooltip: 'Новый чат',
+                    tooltip: context.l10n.chatsNewChat,
                     icon: const Icon(Icons.add_comment_rounded),
                   ),
                 ),
@@ -1911,13 +1916,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                         ),
                       )
                     else if (chats.isEmpty)
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.only(top: 24),
+                          padding: const EdgeInsets.only(top: 24),
                           child: Text(
-                            'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.',
+                            context.l10n.chatsEmpty,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 14,
                             ),
@@ -2040,7 +2045,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                           children: [
                                             Tooltip(
                                               message:
-                                                  'Информация о пользователе',
+                                                  context.l10n.userInfoTitle,
                                               child: MouseRegion(
                                                 cursor:
                                                     SystemMouseCursors.click,
@@ -2100,10 +2105,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                               ),
                                                               child: Tooltip(
                                                                 message: hasIncoming
-                                                                    ? 'Принять заявку в друзья'
+                                                                    ? context.l10n.friendsAcceptRequest
                                                                     : (hasOutgoing
-                                                                        ? 'Заявка уже отправлена'
-                                                                        : 'Отправить заявку в друзья'),
+                                                                        ? context.l10n.friendsRequestAlreadySent
+                                                                        : context.l10n.friendsSendRequest),
                                                                 child: Material(
                                                                   color: Colors
                                                                       .transparent,

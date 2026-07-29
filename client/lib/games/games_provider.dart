@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 
 final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
   return GamesRepository(authRepository: ref.watch(authRepositoryProvider));
@@ -49,7 +50,9 @@ final gameInvitesProvider =
       if (type == 'game_invite') {
         final lobbyId = data['lobby_id']?.toString();
         final creatorId = data['creator_id']?.toString();
-        final creatorName = data['creator_name']?.toString() ?? 'Игрок';
+        final creatorName = localizeDisplayName(
+          data['creator_name']?.toString(),
+        );
         final gameType = data['game_type']?.toString() ?? 'tictactoe';
         final turnTimeSec = (data['turn_time_sec'] as num?)?.toInt() ?? 0;
         final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;

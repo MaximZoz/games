@@ -2,7 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
+import 'test_locale.dart';
+
 void main() {
+  setUp(setUpTestLocaleRu);
+
   group('formatStakeAmount', () {
     test('bronze amounts stay as-is', () {
       expect(formatStakeAmount(1), '1');
@@ -69,13 +73,13 @@ void main() {
     });
 
     test('silver and mixed', () {
-      expect(formatBalance(100), '1 с');
+      expect(formatBalance(100), '1 с.');
       expect(formatBalance(101), '1 с. 1 бр');
       expect(formatBalance(250), '2 с. 50 бр');
     });
 
     test('gold and diamond', () {
-      expect(formatBalance(10000), '1 з');
+      expect(formatBalance(10000), '1 з.');
       expect(formatBalance(10100), '1 з. 1 с. 0 бр');
       expect(formatBalance(1000000), '1 ◆');
     });

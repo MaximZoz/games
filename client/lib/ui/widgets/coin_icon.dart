@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Цвета монет: бронза, серебро, золото, бриллиант.
@@ -161,6 +163,9 @@ class _MetalCoinPainter extends CustomPainter {
     final c = Offset(s / 2, s / 2);
     final r = s / 2;
 
+    const cyrillic = {'ru', 'uk', 'be', 'kk', 'bg', 'sr', 'mk'};
+    final lang = LocaleService.locale.languageCode.toLowerCase();
+    final useCyr = cyrillic.contains(lang);
     final palette = switch (coinType) {
       CoinType.bronze => (
           highlight: CoinColors.bronzeHighlight,
@@ -168,7 +173,7 @@ class _MetalCoinPainter extends CustomPainter {
           mid: CoinColors.bronze,
           dark: CoinColors.bronzeDark,
           rim: CoinColors.bronzeRim,
-          glyph: 'Б',
+          glyph: useCyr ? 'Б' : 'B',
         ),
       CoinType.silver => (
           highlight: CoinColors.silverHighlight,
@@ -176,7 +181,7 @@ class _MetalCoinPainter extends CustomPainter {
           mid: CoinColors.silver,
           dark: CoinColors.silverDark,
           rim: CoinColors.silverRim,
-          glyph: 'С',
+          glyph: useCyr ? 'С' : 'S',
         ),
       CoinType.gold => (
           highlight: CoinColors.goldHighlight,
@@ -184,7 +189,7 @@ class _MetalCoinPainter extends CustomPainter {
           mid: CoinColors.gold,
           dark: CoinColors.goldDark,
           rim: CoinColors.goldRim,
-          glyph: 'З',
+          glyph: useCyr ? 'З' : 'G',
         ),
       CoinType.diamond => (
           highlight: CoinColors.diamondWhite,
@@ -513,26 +518,29 @@ CoinType rewardCoinType(int bronze) {
 
 /// Человекочитаемая сумма: округление вверх до большей монеты.
 /// 150 бр → «2 серебряных», 10001 бр → «2 золотых».
-String formatRewardBronze(int bronze) {
-  if (bronze <= 0) return '0 бронзовых';
+String formatRewardBronze(int bronze, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  if (bronze <= 0) return t.balanceZeroBronze;
   if (bronze >= 100) {
     final silver = (bronze + 99) ~/ 100;
     if (silver >= 100) {
       final gold = (silver + 99) ~/ 100;
       if (gold >= 100) {
         final diamond = (gold + 99) ~/ 100;
-        return '$diamond бриллиантов';
+        return t.balanceDiamonds(diamond);
       }
-      return '$gold золотых';
+      return t.balanceGolds(gold);
     }
-    return '$silver серебряных';
+    return t.balanceSilvers(silver);
   }
-  return '$bronze бронзовых';
+  return t.balanceBronzes(bronze);
 }
 
 /// Сумма дохода с явным «в день».
-String formatRewardBronzePerDay(int bronze) =>
-    '${formatRewardBronze(bronze)} в день';
+String formatRewardBronzePerDay(int bronze, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  return t.balancePerDay(formatRewardBronze(bronze, t));
+}
 
 /// Число монет после округления вверх (для иконки + цифры).
 int rewardCoinAmount(int bronze) {
@@ -559,12 +567,18 @@ int rewardCoinAmount(int bronze) {
   return (diamond, gold, silver, bronzeRest);
 }
 
-const Map<CoinType, String> _coinLabels = {
-  CoinType.diamond: 'Бриллиант',
-  CoinType.gold: 'Золото',
-  CoinType.silver: 'Серебро',
-  CoinType.bronze: 'Бронза',
-};
+String _coinLabel(CoinType type, AppLocalizations l10n) {
+  switch (type) {
+    case CoinType.diamond:
+      return l10n.coinDiamond;
+    case CoinType.gold:
+      return l10n.coinGold;
+    case CoinType.silver:
+      return l10n.coinSilver;
+    case CoinType.bronze:
+      return l10n.coinBronze;
+  }
+}
 
 /// Компактный блок баланса для тулбара: капсула с монетой и количеством, по клику — popup со всеми валютами.
 class ToolbarBalanceChip extends StatelessWidget {
@@ -595,59 +609,62 @@ class ToolbarBalanceChip extends StatelessWidget {
 
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Баланс'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: items.map((e) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: amountWidth,
-                    child: Text(
-                      e.value.toString(),
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        fontFeatures: [FontFeature.tabularFigures()],
+      builder: (ctx) {
+        final dialogL10n = ctx.l10n;
+        return AlertDialog(
+          title: Text(dialogL10n.balanceTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: items.map((e) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: amountWidth,
+                      child: Text(
+                        e.value.toString(),
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Center(
-                      child: CoinIcon(
-                        coinType: e.type,
-                        size: 28,
-                        showBorder: true,
-                        animate: true,
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Center(
+                        child: CoinIcon(
+                          coinType: e.type,
+                          size: 28,
+                          showBorder: true,
+                          animate: true,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _coinLabels[e.type] ?? '',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _coinLabel(e.type, dialogL10n),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 

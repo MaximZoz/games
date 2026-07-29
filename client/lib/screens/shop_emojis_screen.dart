@@ -14,15 +14,21 @@ import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
-
-const shopEmojiGroupTitles = <String, String>{
-  'emotions': 'Эмоции',
-  'game': 'Игровые',
-  'flags': 'Флажки',
-};
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 
 /// Порядок групп на витрине смайликов.
 const shopEmojiGroupOrder = <String>['emotions', 'game', 'flags'];
+
+Map<String, String> get shopEmojiGroupTitles {
+  final l10n = LocaleService.l10n;
+  return {
+    'emotions': l10n.emojiGroupEmotions,
+    'game': l10n.emojiGroupGame,
+    'flags': l10n.emojiGroupFlags,
+  };
+}
 
 String shopEmojiGroupTitle(String group) =>
     shopEmojiGroupTitles[group] ?? group;
@@ -99,10 +105,10 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           title: Text(
-            'Смайлики',
+            context.l10n.shopEmojis,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -119,10 +125,10 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                   ),
                 )
               : groupKeys.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Пока пусто',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        context.l10n.shopEmpty,
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
                   : ListView.separated(
@@ -170,7 +176,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          '${groupItems.length} смайликов · по ${formatRewardBronze(price)}',
+                                          context.l10n.shopEmojiGroupMeta(groupItems.length, formatRewardBronze(price)),
                                           style: const TextStyle(
                                             fontSize: 12,
                                             color: AppColors.textSecondary,
@@ -245,24 +251,25 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
   }
 
   Future<bool> _confirmBuy(ShopItem item) async {
+    final l10n = context.l10n;
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Купить смайлик?'),
+          title: Text(l10n.shopBuyEmojiTitle),
           content: Text(
-            '${item.title}\n\n'
-            'Цена: ${formatRewardBronze(item.priceBronze)}\n'
-            'Получите: 10 использований',
+            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
+            '${l10n.shopEmojiUses}',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Купить'),
+              child: Text(l10n.shopBuy),
             ),
           ],
         );
@@ -275,7 +282,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     if (!mounted) return;
     showAppSnackBar(
       context,
-      message: '${item.title}: +10 использований',
+      message: context.l10n.shopEmojiBought(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
       kind: AppSnackKind.success,
     );
   }
@@ -312,17 +319,19 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
   Future<void> _openPreview(ShopItem item) async {
     await showCollectionFullscreen(
       context,
-      title: item.title,
+      title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
       animatedName: item.animatedName ?? 'smile',
       fallback: item.emoji,
-      subtitle: '${formatRewardBronze(item.priceBronze)} · 10 использований',
+      subtitle: context.l10n.shopEmojiPriceUses(
+        formatRewardBronze(item.priceBronze),
+      ),
       bottomAction: Builder(
         builder: (dialogContext) => FilledButton(
           onPressed: () {
             Navigator.of(dialogContext).pop();
             unawaited(_buy(item));
           },
-          child: const Text('Купить'),
+          child: Text(context.l10n.shopBuy),
         ),
       ),
     );
@@ -351,7 +360,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           title: Text(
             shopEmojiGroupTitle(widget.group),
@@ -371,10 +380,10 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                   ),
                 )
               : emojis.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Пока пусто',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        context.l10n.shopEmpty,
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
                   : VerticalPagedSlider(
@@ -497,7 +506,7 @@ class _EmojiBuyTile extends StatelessWidget {
               ),
             ),
             Text(
-              item.title,
+              catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -524,7 +533,7 @@ class _EmojiBuyTile extends StatelessWidget {
                       spacing: 4,
                     ),
                     Text(
-                      busy ? '…' : 'Купить · 10 шт.',
+                      busy ? '…' : context.l10n.shopBuyTen,
                       style: TextStyle(
                         fontSize: 9,
                         height: 1.1,

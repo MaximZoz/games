@@ -1,0 +1,886 @@
+{
+  "@@locale": "be",
+  "appTitle": "Zozu Games",
+  "navHome": "Галоўная",
+  "navProfile": "Профіль",
+  "navFriends": "Сябры",
+  "navChats": "Чаты",
+  "navGames": "Гульні",
+  "navSettings": "Налады",
+  "settingsTitle": "Налады",
+  "settingsLanguage": "Мова",
+  "settingsLanguageSystem": "Як у сістэме",
+  "settingsAddBotsTitle": "Дадаваць ботаў праз 30 с",
+  "settingsAddBotsSubtitle": "У рэжыме пошуку гульні: калі супернік не знойдзены за 30 секунд, гульня пачынаецца з ботам (стаўка скідаецца да 1 бронзы)",
+  "settingsFriendsOnlyTitle": "Паведамленні толькі ад сяброў",
+  "settingsFriendsOnlySubtitle": "Хто не ў сябрах, зможа дасылаць толькі эмодзі. Калі перашкаджае спам — часова заблакіруйце карыстальніка.",
+  "settingsNotifications": "Апавяшчэнні",
+  "settingsPushChat": "Чат",
+  "settingsPushFriends": "Сябры",
+  "settingsPushGames": "Гульні",
+  "settingsPushRewards": "Узнагароды",
+  "loginTitle": "Уваход",
+  "loginSubtitle": "Увядзіце email або лагін і пароль",
+  "loginEmailLabel": "Email або лагін",
+  "loginPasswordLabel": "Пароль",
+  "loginSubmit": "Увайсці",
+  "loginNoAccount": "Няма акаўнта? Зарэгістравацца",
+  "loginEmailRequired": "Увядзіце email або лагін",
+  "loginPasswordRequired": "Увядзіце пароль",
+  "loginTooltip": "Увайсці",
+  "logoutTooltip": "Выйсці",
+  "registerTitle": "Рэгістрацыя",
+  "registerSubtitle": "Стварыце акаўнт, каб гуляць",
+  "registerNameLabel": "Імя (лагін)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Пароль",
+  "registerSubmit": "Зарэгістравацца",
+  "registerHaveAccount": "Ужо ёсць акаўнт? Увайсці",
+  "registerNameRequired": "Увядзіце імя",
+  "registerNameNoSpaces": "Імя не можа змяшчаць прабелаў",
+  "registerNameMax": "Максімум 20 сімвалаў",
+  "registerNameHint": "Да 20 сімвалаў",
+  "registerEmailRequired": "Увядзіце email",
+  "registerEmailInvalid": "Няправільны email",
+  "registerPasswordHint": "Мінімум 6 сімвалаў",
+  "registerPasswordMin": "Пароль павінен мець не менш за 6 сімвалаў",
+  "commonCancel": "Скасаваць",
+  "commonSave": "Захаваць",
+  "commonDelete": "Выдаліць",
+  "commonEdit": "Змяніць",
+  "commonReply": "Адказаць",
+  "commonSend": "Даслаць",
+  "commonClose": "Закрыць",
+  "commonRetry": "Паўтарыць",
+  "commonLoading": "Загрузка…",
+  "commonError": "Памылка",
+  "commonOnline": "у сетцы",
+  "commonOffline": "не ў сетцы",
+  "commonOnlineCap": "Онлайн",
+  "commonUser": "Карыстальнік",
+  "commonPlayer": "Гулец",
+  "commonAboutMe": "Пра сябе",
+  "commonBack": "Назад",
+  "commonAccept": "Прыняць",
+  "commonDecline": "Адхіліць",
+  "commonCreating": "Стварэнне…",
+  "commonSearching": "Пошук…",
+  "commonInsufficientCoins": "Недастаткова манет",
+  "commonNotFound": "Не знойдзена",
+  "commonServerErrorShort": "Памылка сервера",
+  "commonForbidden": "Доступ забаронены",
+  "commonUserBlocked": "Карыстальнік заблакіраваны",
+  "commonUserNotFound": "Карыстальнік не знойдзены",
+  "commonGenericError": "Нешта пайшло не так. Паспрабуйце яшчэ раз.",
+  "timeJustNow": "толькі што",
+  "timeYesterday": "учора",
+  "timeMinutesAgo": "{count} хв таму",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} гадз таму",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} дз. таму",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "тыдзень таму",
+  "timeWeeksAgo": "{count} тыд. таму",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "месяц таму",
+  "timeMonthsAgo": "{count} мес. таму",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "год таму",
+  "timeYearsAgo": "{count} г. таму",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "нд",
+  "weekdayMon": "пн",
+  "weekdayTue": "аў",
+  "weekdayWed": "ср",
+  "weekdayThu": "чц",
+  "weekdayFri": "пт",
+  "weekdaySat": "сб",
+  "monthJan": "сту",
+  "monthFeb": "лют",
+  "monthMar": "сак",
+  "monthApr": "кра",
+  "monthMay": "май",
+  "monthJun": "чэр",
+  "monthJul": "ліп",
+  "monthAug": "жні",
+  "monthSep": "вер",
+  "monthOct": "кас",
+  "monthNov": "ліс",
+  "monthDec": "сне",
+  "homeAchievements": "Дасягненні",
+  "homeAchievementsSubtitle": "Вашы гульнявыя вынікі",
+  "homeAchievementsRewards": "Ёсць узнагароды для атрымання",
+  "homeCoins": "Манеты",
+  "homeCoinsSubtitle": "Баланс і ўзнагароды",
+  "homeCoinsDailyReward": "Даступна ўзнагарода за ўваход",
+  "homeItems": "Прадметы",
+  "homeItemsInventory": "Ваш інвентар",
+  "homeItemsGifted": "Вам падарылі калекцыю",
+  "homeItemsIncome": "Можна забраць даход з калекцый",
+  "homeShop": "Крама",
+  "homeShopSubtitle": "Эмодзі, стаўкі, калекцыі",
+  "gamesTitle": "Гульні",
+  "gamesFindMatch": "Знайсці гульню",
+  "gamesMyTurn": "Ваш ход",
+  "gamesWaiting": "Чаканне",
+  "gamesLobbyTab": "Лобі",
+  "gamesTicTacToe": "Крыжыкі-нулікі",
+  "gamesRules": "Правілы",
+  "gamesRulesTitle": "Правілы гульні",
+  "gamesCreate": "Стварыць гульню",
+  "gamesJoin": "Далучыцца",
+  "gamesOpponentTurn": "Ход суперніка",
+  "gamesCurrentGame": "Бягучая гульня",
+  "gamesInvitedYou": "Вас запрасілі",
+  "gamesTurnTime": "Час на ход",
+  "gamesGridSize": "Памер сеткі",
+  "gamesSwapSides": "Змена бакоў",
+  "gamesNoCenter": "Без старту па цэнтры",
+  "lobbyMatchmake": "Лобі",
+  "lobbyPrivateGame": "Прыватная гульня",
+  "lobbySearchingOpponent": "Пошук суперніка…",
+  "lobbyWaitingJoin": "Чакаем, пакуль хтосьці націсне «Знайсці гульню» або «Далучыцца»",
+  "lobbyInviteTitle": "Запрашэнне ў гульню",
+  "lobbyInvitedToPlay": "Вас запрасілі згуляць",
+  "lobbyEnterGame": "Увайсці ў гульню",
+  "lobbyInvite": "Запрасіць",
+  "lobbyInviteSent": "Запрашэнне даслана",
+  "lobbyCopyLink": "Падзяліцца спасылкай на гульню",
+  "lobbyLinkCopied": "Спасылка скапіявана",
+  "lobbyNoFriendsOnline": "Няма сяброў онлайн. Дашліце спасылку на гульню вышэй або пачакайце, пакуль сябры з’явяцца ў сетцы.",
+  "gameBot": "Бот",
+  "gameOpponent": "Супернік",
+  "gameYouWon": "Вы перамаглі!",
+  "gameYouWonOpponentLeft": "Вы перамаглі — супернік выйшаў",
+  "gameYouWonOpponentTimeout": "Вы перамаглі — у суперніка скончыўся час",
+  "gameDraw": "Нічыя",
+  "gameExitTitle": "Выхад з гульні",
+  "gameExitConfirm": "Калі выйдзеце, прайграеце. Усё роўна выйсці?",
+  "gameStay": "Застацца",
+  "gameLeave": "Выйсці",
+  "gameConnecting": "Падключэнне да гульні…",
+  "gameWaitingOpponent": "Чаканне суперніка",
+  "gameRematchOffer": "Супернік прапануе рэванш",
+  "gameRematchDeclined": "Супернік адхіліў рэванш",
+  "gameRematch": "Рэванш",
+  "gameOtherOpponent": "Іншы супернік",
+  "gameSwapSidesAction": "Змяніць бакі",
+  "gameWriteMessage": "Напісаць паведамленне",
+  "chatsTitle": "Чаты",
+  "chatsEmpty": "Пакуль няма чатаў.\nНацісніце значок справа ўверсе, каб абраць сябра і пачаць размову.",
+  "chatsNewChat": "Новы чат",
+  "chatsNoMessages": "Няма паведамленняў",
+  "chatsClearTitle": "Ачысціць перапіску?",
+  "chatsClearDesc": "Чат будзе выдалены назаўсёды.",
+  "chatsClearConfirm": "Ачысціць",
+  "chatsBlockTitle": "Заблакіраваць гэтага карыстальніка?",
+  "chatsBlockDesc": "Вы больш не зможаце пісаць адно аднаму. Чат і сяброўства будуць выдалены.",
+  "chatsBlockConfirm": "Заблакіраваць",
+  "chatsBlockedUsers": "Заблакіраваныя карыстальнікі",
+  "chatsUnblock": "Разблакіраваць",
+  "chatDialog": "Чат",
+  "chatEmpty": "Паведамленняў пакуль няма.\nДашліце першае.",
+  "chatMessageHint": "Паведамленне",
+  "chatEmoji": "Эмодзі",
+  "chatBuyEmojiHint": "Купіце эмодзі ў краме на галоўным экране",
+  "chatEditing": "Рэдагаванне",
+  "chatToday": "Сёння",
+  "chatYesterday": "Учора",
+  "chatFriendsOnly": "Тэкст толькі для сяброў",
+  "emojiGroupEmotions": "Эмоцыі",
+  "emojiGroupGame": "Гульнявыя",
+  "emojiGroupFlags": "Сцягі",
+  "emojiGroupAnimals": "Жывёлы",
+  "emojiGroupFood": "Ежа",
+  "emojiGroupTravel": "Падарожжы",
+  "emojiGroupParty": "Свята",
+  "emojiGroupObjects": "Прадметы",
+  "friendsTitle": "Сябры",
+  "friendsTabFriends": "Сябры",
+  "friendsTabIncoming": "Уваходныя",
+  "friendsTabOutgoing": "Выходныя",
+  "friendsAdd": "Дадаць у сябры",
+  "friendsRequestSent": "Запыт дасланы",
+  "friendsFindTab": "Знайсці сябра",
+  "friendsSearchHint": "Пошук па ніку",
+  "friendsSearchPrompt": "Скарыстайцеся пошукам, каб знайсці новых сяброў",
+  "friendsNothingFound": "Нічога не знойдзена",
+  "friendsEmpty": "У вас пакуль няма сяброў",
+  "friendsNoIncoming": "Няма ўваходных запытаў",
+  "friendsNoOutgoing": "Няма выходных запытаў",
+  "friendsAlreadyFriends": "Ужо ў сябрах",
+  "friendsRemoveTitle": "Выдаліць з сяброў?",
+  "friendsRemoved": "Выдалена з сяброў",
+  "friendsRequestAccepted": "Запыт прыняты",
+  "friendsRequestDeclined": "Запыт адхілены",
+  "friendsRequestCancelled": "Запыт скасаваны",
+  "profileTitle": "Профіль",
+  "profileSignInPrompt": "Увайдзіце ў свой акаўнт",
+  "profileSignInHint": "Каб наладзіць асабісты профіль",
+  "profileEdit": "Рэдагаваць",
+  "profileCollections": "Калекцыі",
+  "profileAge": "Узрост",
+  "profileGender": "Пол",
+  "profileGenderUnset": "Не пазначана",
+  "profileGenderMale": "Мужчынскі",
+  "profileGenderFemale": "Жаночы",
+  "profileAvatar": "Аватар",
+  "profileUploadPhoto": "Загрузіць фота",
+  "profileChangePhoto": "Змяніць фота",
+  "shopTitle": "Крама",
+  "shopEmojis": "Эмодзі",
+  "shopEmojisSubtitle": "Анімаваныя эмодзі для чата",
+  "shopCollections": "Калекцыі",
+  "shopCollectionsSubtitle": "Вітрына профілю, падарункі і даход",
+  "shopStakes": "Стаўкі",
+  "shopStakesSubtitle": "Разблакіруйце срэбныя стаўкі",
+  "inventoryTitle": "Прадметы",
+  "inventoryEmpty": "Пакуль нічога няма — заглядзіце ў краму",
+  "inventoryFrames": "Рамкі",
+  "inventoryClaim": "Забраць",
+  "inventorySell": "Прадаць",
+  "inventoryGift": "Падарыць",
+  "messageEdited": "зменена",
+  "messageDeleted": "Паведамленне выдалена",
+  "photo": "Фота",
+  "camera": "Камера",
+  "gallery": "Галерэя",
+  "connectionError": "Не ўдалося падключыцца да сервера.",
+  "serverError": "Памылка сервера. Паспрабуйце пазней.",
+  "sessionExpired": "Сесія скончылася. Увайдзіце зноў.",
+  "errNoInternet": "Няма падключэння да інтэрнэту.",
+  "errTimeout": "Час чакання выйшаў. Паспрабуйце яшчэ раз.",
+  "errGamesUnavailable": "Гульні часова недаступныя",
+  "errSettingsSaveFailed": "Не ўдалося захаваць наладу",
+  "errPushPermission": "Дазвольце апавяшчэнні ў наладах браўзера або сістэмы.",
+  "balanceTitle": "Баланс",
+  "coinBronze": "Бронза",
+  "coinSilver": "Серабро",
+  "coinGold": "Золата",
+  "coinDiamond": "Брыльянт",
+  "balanceZeroBronze": "0 бронзавых",
+  "balanceBronzes": "{count} бронзавых",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} серабраных",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} залатых",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} брыльянтаў",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "{amount} у дзень",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "бр",
+  "balanceAbbrSilver": "с.",
+  "balanceAbbrGold": "з.",
+  "commonBackHome": "Назад на галоўную",
+  "commonCopied": "Скапіявана",
+  "commonClear": "Ачысціць",
+  "commonTryLater": "Паспрабуйце пазней.",
+  "commonTryRefresh": "Паспрабуйце абнавіць старонку.",
+  "coinsTitle": "Манеты",
+  "coinsLoginReward": "Манеты за ўваход",
+  "coinsLoginAvailableToday": "Даступна ўзнагарода за сёння",
+  "coinsLoginStreak": "Штодзённая серыя ўваходаў",
+  "coinsFriendReward": "Манеты за сябра",
+  "coinsFriendRewardHint": "+{amount} за рэгістрацыю па спасылцы",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Не ўдалося загрузіць узнагароды",
+  "coinsClaimReward": "Забраць узнагароду",
+  "coinsAlreadyClaimed": "Ужо атрымана",
+  "coinsStreakToday": "{done}/{target} · сёння",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · яшчэ 1 дзень",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · яшчэ {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Запрасі сябра",
+  "coinsInviteHint": "+{amount} за кожнага, хто зарэгіструецца па вашай спасылцы",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Скапіяваць спасылку",
+  "coinsHowItWorks": "Як гэта працуе",
+  "coinsHowStep1": "Скапіюйце спасылку і адпраўце сябру",
+  "coinsHowStep2": "Сябар рэгіструецца па гэтай спасылцы",
+  "coinsHowStep3": "Вам нарахоўваецца {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Дасягненні",
+  "achievementsProgress": "Прагрэс: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Рамку атрымана",
+  "achievementsClaimed": "Атрымана",
+  "achievementsOpenFrame": "Адкрыць рамку",
+  "friendsRemoveConfirm": "Вы ўпэўнены, што хочаце выдаліць {name} з сяброў?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Прыбраць",
+  "friendsRemove": "Выдаліць з сяброў",
+  "friendsAcceptRequest": "Прыняць заяўку",
+  "friendsDeclineRequest": "Адхіліць заяўку",
+  "friendsCancelRequest": "Адмяніць заяўку",
+  "friendsSendRequest": "Адправіць заяўку ў сябры",
+  "friendsRequestAlreadySent": "Заяўка ўжо адпраўлена",
+  "friendsIncomingStatus": "Уваходная заяўка",
+  "friendsOutgoingStatus": "Выходная заяўка",
+  "friendsNotFriends": "Не ў сябрах",
+  "friendsCollapseSearch": "Згарнуць пошук",
+  "friendsExpandSearch": "Паказаць пошук",
+  "friendsLoadFailed": "Не ўдалося загрузіць сяброў",
+  "friendsSince": "Сябруеце з: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Уваходная заяўка: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Выходная заяўка: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Інфармацыя пра карыстальніка",
+  "profileAgeYears": "{age} гадоў",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Купіць",
+  "shopBuyTitle": "Купіць?",
+  "shopBuyStakeTitle": "Купіць стаўку?",
+  "shopBuyEmojiTitle": "Купіць смайлік?",
+  "shopBuyCollectionTitle": "Купіць калекцыю?",
+  "shopPrice": "Цана: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Куплена",
+  "shopEmpty": "Пакуль пуста",
+  "shopPurchased": "{title} куплены",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Атрымаеце: 10 выкарыстанняў",
+  "shopEmojiBought": "{title}: +10 выкарыстанняў",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 выкарыстанняў",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Купіць · 10 шт.",
+  "shopDailyIncome": "Даход: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Пакупка адзін раз",
+  "shopSellRefund": "Продаж верне частку кошту",
+  "shopCollectionAdded": "{title} дададзены ў профіль",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "бонус групы +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Сабрана",
+  "shopSetProgress": "Сабрана · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Прадаць?",
+  "inventorySellDesc": "Вы атрымаеце {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Прадана: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Спачатку дадайце сяброў",
+  "inventoryGiftTitle": "Падарыць калекцыю?",
+  "inventoryGiftDesc": "Падарыць «{title}» карыстальніку {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Падарана: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Не ўдалося загрузіць прадметы",
+  "inventoryNoCollections": "Няма калекцый — купіце ў краме",
+  "inventoryNoEmojis": "Няма смайлікаў — купіце ў краме",
+  "inventoryNoFrames": "Няма рамак — выйграйце 10 гульняў у лізе (дасягненні)",
+  "inventoryNoStakes": "Няма купленых ставак",
+  "inventoryEmojiLeft": "Засталося {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Даход: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Даход заўтра: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "Можна ставіць {amount} золата",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "Можна ставіць {amount} серабра",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "Атрымана +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Не ўдалося загрузіць чаты",
+  "chatsLoadListFailed": "Не ўдалося загрузіць спіс",
+  "chatsBlockedEmpty": "Спіс пусты",
+  "chatsBlockedAt": "Заблакаваны: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Не ўдалося стварыць чат",
+  "chatsNeedFriendsFirst": "Спачатку дадайце сяброў, потым можна адкрыць чат.",
+  "chatsFriendsNotFound": "Сябры не знойдзены",
+  "chatsFindFriendHint": "Знайсці сябра па ніку",
+  "chatsSelectChat": "Выберыце чат",
+  "chatsSelectHint": "Выберыце дыялог са спісу злева",
+  "chatEditFailed": "Не ўдалося змяніць паведамленне",
+  "chatSendFailed": "Не ўдалося адправіць паведамленне",
+  "chatDeleteFailed": "Не ўдалося выдаліць паведамленне",
+  "chatEmojiSendFailed": "Не ўдалося адправіць смайлік",
+  "chatLoadFailed": "Не ўдалося загрузіць паведамленні",
+  "chatBackToGame": "Назад у гульню",
+  "chatBackToChats": "Назад да чатаў",
+  "chatActions": "Дзеянні з чатам",
+  "chatScrollToEnd": "У канец перапіскі",
+  "chatReplyingTo": "У адказ {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Падарунак",
+  "chatCollection": "Калекцыя",
+  "chatGiftCollection": "Падарунак · калекцыя",
+  "chatThisUser": "гэтага карыстальніка",
+  "gamesLobbyLoadFailed": "Не ўдалося загрузіць лобі.",
+  "gamesTapChangeStake": "Націсніце, каб змяніць стаўку",
+  "gamesTapChangeTurnTime": "Націсніце, каб змяніць час на ход",
+  "gamesTapChangeGrid": "Націсніце, каб змяніць памер сеткі",
+  "gamesSwapSidesHint": "O можа стаць X пасля 1-га ходу",
+  "gamesNoCenterHint": "Першы ход не ў цэнтр",
+  "lobbyInviteSentShort": "Адпраўлена",
+  "lobbyInvitesSentWaiting": "Запрашэнні адпраўлены. Чакайце адказу.",
+  "lobbyLinkCopiedHint": "Устаўце яе ў чат або паведамленне сябру",
+  "lobbyCopyLinkHint": "Скапіяваць спасылку ў буфер абмену",
+  "lobbyCreatorInvites": "{name} запрашае вас пагуляць",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "Перамог {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Час выйшаў. Перамог {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} с",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Адмінка",
+  "tournamentsTitle": "Турніры",
+  "profileAgeInvalid": "Увядзіце ўзрост ад 1 да 111",
+  "profileSaveFailed": "Не ўдалося захаваць профіль",
+  "profileNameHint": "Лацініца, лічбы, _ да 10 сімвалаў",
+  "profileAgeHint": "Ад 1 да 111",
+  "profileAboutHint": "Да 100 сімвалаў (па жаданні)",
+  "profileProcessingPhoto": "Апрацоўка фота…",
+  "profileCropTitle": "Выберыце вобласць аватара",
+  "profileCropHint": "Маштабуйце і рухайце фота",
+  "profileApply": "Ужыць",
+  "profilePreparing": "Падрыхтоўка…",
+  "timeSecondsShort": "{seconds} с",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 хв",
+  "timeTenMin": "10 хв",
+  "rulesIntro": "Крыжыкі-нулікі на полі {grid}. Ходзяць па чарзе, X пачынае.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "Перамога: трэба выбудаваць {n} у шэраг па гарызанталі, вертыкалі ці дыяганалі.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Без абмежавання часу на ход.",
+  "rulesTurnTime": "Час на ход: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Стаўка: {stake}. На столькі манет ідзе гульня.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Змена бакоў: O можа памяняцца месцамі з X пасля першага ходу X.",
+  "rulesNoCenter": "Забарона цэнтра: X не можа хадзіць у цэнтр першым ходам.",
+  "collectionSetLegends": "Легенды",
+  "collectionSetSpace": "Космас",
+  "collectionSetGems": "Каштоўнасці",
+  "collectionSetParty": "Свята",
+  "collectionSetNature": "Прырода",
+  "collectionSetAdventures": "Прыгоды",
+  "collectionCardMeta": "Калекцыя · вітрына · падарунак · продаж · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "дзень",
+  "coinsDayFew": "дні",
+  "coinsDayMany": "дзён",
+  "giftFriendTitle": "Падарыць сябру",
+  "photoCount": "Фота ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Фота ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Фота: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} смайлікаў · па {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Разгарнуць панэль",
+  "chatsCollapsePanel": "Згарнуць панэль",
+  "chatReplySourceMissing": "Зыходнае паведамленне не знойдзена",
+  "shopStakeTitleSilver": "Стаўка {n} срэбра",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Стаўка {n} золата",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Права ставіць {n} срэбра ў гульнях",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Права ставіць {n} золата ў гульнях",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "сабе",
+  "chatReplyPeer": "суразмоўцу"
+}

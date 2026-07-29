@@ -59,7 +59,7 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 // GameSettings — GET/PUT /api/games/settings (Postgres, без Redis).
 func (h *GamesHandler) GameSettings(w http.ResponseWriter, r *http.Request) {
 	if _, ok := currentUserIDFromGames(r); !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	switch r.Method {
@@ -68,14 +68,14 @@ func (h *GamesHandler) GameSettings(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		h.putGameSettings(w, r)
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
 
 func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 	uid, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	gameType := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("game_type")))
@@ -84,7 +84,7 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	s, err := store.GetUserGameSettings(r.Context(), h.Pool, uid, gameType)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -95,22 +95,22 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 func (h *GamesHandler) putGameSettings(w http.ResponseWriter, r *http.Request) {
 	uid, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body gameSettingsBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	s, errMsg := normalizeGameSettings(body)
 	if errMsg != "" {
-		http.Error(w, errMsg, http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, errMsg)
 		return
 	}
 	mayStake, err := store.UserMayStake(r.Context(), h.Pool, uid, s.StakeBronze)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if !mayStake {
@@ -119,7 +119,7 @@ func (h *GamesHandler) putGameSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	saved, err := store.UpsertUserGameSettings(r.Context(), h.Pool, uid, s)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

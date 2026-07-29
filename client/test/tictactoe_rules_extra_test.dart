@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/games_repository.dart';
 
+import 'test_locale.dart';
+
 void main() {
+  setUp(setUpTestLocaleRu);
+
   group('buildTictactoeRulesText', () {
     test('base text includes grid, win length, stake', () {
       final text = buildTictactoeRulesText(
