@@ -91,6 +91,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   bool _showScrollToBottomButton = false;
   bool _roomActionInFlight = false;
   bool _emojiOnly = false;
+  String? _composerAlert;
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
@@ -105,6 +106,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _composerFocusNode.addListener(_onComposerFocusChanged);
+    _textController.addListener(_onComposerTextChanged);
     _scrollController.addListener(_onMessagesScroll);
     _loadMessages(initial: true);
     unawaited(_loadCapabilities());
@@ -125,6 +127,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _hasMoreOlder = true;
       _initialScrollDone = false;
       _emojiOnly = false;
+      _composerAlert = null;
       _messageIDs.clear();
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
@@ -146,11 +149,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     });
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
+    _textController.removeListener(_onComposerTextChanged);
     _scrollController.removeListener(_onMessagesScroll);
     _composerFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onComposerTextChanged() {
+    if (_composerAlert == null) return;
+    setState(() => _composerAlert = null);
   }
 
   /// Диалог видим в shell (не фоновая вкладка и не уходим назад).
@@ -360,35 +369,41 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           await ref.read(chatsRepositoryProvider).getCapabilities(widget.chatID);
       if (!mounted) return;
       if (_emojiOnly != caps.emojiOnly) {
-        setState(() => _emojiOnly = caps.emojiOnly);
-        if (caps.emojiOnly) {
-          _textController.clear();
-          _composerFocusNode.unfocus();
-        }
+        setState(() {
+          _emojiOnly = caps.emojiOnly;
+          if (!caps.emojiOnly) _composerAlert = null;
+        });
       }
     } catch (_) {
       // Не блокируем чат при ошибке capabilities.
     }
   }
 
+  static const _friendsOnlyAlert = 'Текст только для друзей';
+
   bool _isFriendsOnlySendError(ChatException e) {
     if (e.statusCode != 403) return false;
     final m = e.message.toLowerCase();
     return m.contains('only friends') ||
         m.contains('только друзья') ||
+        m.contains('текст только для друзей') ||
         m.contains('только смайлик') ||
         m.contains('friends can send');
   }
 
   Future<void> _sendMessage() async {
-    if (_emojiOnly) {
-      unawaited(_openEmojiPicker());
-      return;
-    }
     final text = _textController.text.trim();
     if (text.isEmpty || _sending) return;
 
-    setState(() => _sending = true);
+    if (_emojiOnly) {
+      setState(() => _composerAlert = _friendsOnlyAlert);
+      return;
+    }
+
+    setState(() {
+      _sending = true;
+      _composerAlert = null;
+    });
     try {
       final sent = await ref.read(chatsRepositoryProvider).sendMessage(widget.chatID, text);
       if (!mounted) return;
@@ -397,6 +412,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       // chatsListProvider обновится через realtimeEventsProvider
       setState(() {
         _sending = false;
+        _composerAlert = null;
       });
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
@@ -405,24 +421,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
       if (!mounted) return;
-      setState(() => _sending = false);
-      showAppSnackBar(
-        context,
-        message: _isFriendsOnlySendError(e)
-            ? 'Только друзья могут отправлять сообщения'
-            : e.message,
-        kind: _isFriendsOnlySendError(e)
-            ? AppSnackKind.info
-            : AppSnackKind.error,
-      );
+      setState(() {
+        _sending = false;
+        _composerAlert =
+            _isFriendsOnlySendError(e) ? _friendsOnlyAlert : e.message;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _sending = false);
-      showAppSnackBar(
-        context,
-        message: 'Не удалось отправить сообщение',
-        kind: AppSnackKind.error,
-      );
+      setState(() {
+        _sending = false;
+        _composerAlert = 'Не удалось отправить сообщение';
+      });
     }
   }
 
@@ -444,6 +453,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _upsertMessage(sent);
       setState(() {
         _sending = false;
+        _composerAlert = null;
       });
     } on AuthException catch (e) {
       if (e.statusCode == 401) {
@@ -452,30 +462,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         return;
       }
       if (!mounted) return;
-      setState(() => _sending = false);
-      showAppSnackBar(
-        context,
-        message: e.message,
-        kind: AppSnackKind.error,
-      );
+      setState(() {
+        _sending = false;
+        _composerAlert = e.message;
+      });
       ref.invalidate(inventoryListProvider);
     } on ChatException catch (e) {
       if (!mounted) return;
-      setState(() => _sending = false);
-      showAppSnackBar(
-        context,
-        message: e.message,
-        kind: AppSnackKind.error,
-      );
+      setState(() {
+        _sending = false;
+        _composerAlert =
+            _isFriendsOnlySendError(e) ? _friendsOnlyAlert : e.message;
+      });
       ref.invalidate(inventoryListProvider);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _sending = false);
-      showAppSnackBar(
-        context,
-        message: 'Не удалось отправить смайлик',
-        kind: AppSnackKind.error,
-      );
+      setState(() {
+        _sending = false;
+        _composerAlert = 'Не удалось отправить смайлик';
+      });
       ref.invalidate(inventoryListProvider);
     }
   }
@@ -1691,6 +1696,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ],
                 ),
               ),
+              if (_composerAlert != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Text(
+                    _composerAlert!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
                 child: Row(
@@ -1715,32 +1733,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         focusNode: _composerFocusNode,
                         minLines: 1,
                         maxLines: 4,
-                        readOnly: _emojiOnly,
                         textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                          hintText: _emojiOnly
-                              ? 'Можно отправлять только смайлики'
-                              : 'Введите сообщение...',
+                        decoration: const InputDecoration(
+                          hintText: 'Введите сообщение...',
                           border: InputBorder.none,
                           isDense: true,
                         ),
                         textInputAction: TextInputAction.send,
-                        onTap: () {
-                          _scrollToBottom();
-                          if (_emojiOnly) {
-                            unawaited(_openEmojiPicker());
-                          }
-                        },
-                        onSubmitted: (_) {
-                          if (!_emojiOnly) _sendMessage();
-                        },
+                        onTap: _scrollToBottom,
+                        onSubmitted: (_) => _sendMessage(),
                       ),
                     ),
                     IconButton(
-                      onPressed: _sending
-                          ? null
-                          : (_emojiOnly ? _openEmojiPicker : _sendMessage),
-                      tooltip: _emojiOnly ? 'Смайлики' : 'Отправить',
+                      onPressed: _sending ? null : _sendMessage,
+                      tooltip: 'Отправить',
                       icon: _sending
                           ? const SizedBox(
                               width: 18,
@@ -1750,10 +1756,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 color: AppColors.accentStart,
                               ),
                             )
-                          : Icon(
-                              _emojiOnly
-                                  ? Icons.emoji_emotions_outlined
-                                  : Icons.send_rounded,
+                          : const Icon(
+                              Icons.send_rounded,
                               color: AppColors.accentStart,
                             ),
                     ),

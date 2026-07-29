@@ -211,7 +211,7 @@ class ChatsRepository {
   static String _translateMessage(String msg) {
     final m = msg.toLowerCase().trim();
     if (m.contains('only friends can send text')) {
-      return 'Только друзья могут отправлять сообщения';
+      return 'Текст только для друзей';
     }
     const Map<String, String> map = {
       'cannot chat with yourself': 'Нельзя написать самому себе',
