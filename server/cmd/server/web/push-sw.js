@@ -1,4 +1,5 @@
 /* Web Push service worker for Zozu Games PWA.
+ * v6: при клике / открытии из пуша снимаем уведомление из шторки (iOS).
  * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
  * В открытом приложении — без пушей на телефон (бейджи/realtime в UI).
  */
@@ -50,6 +51,24 @@ function pathFromTag(tag) {
   return null;
 }
 
+/** Обратный map path → tag для снятия баннера после открытия. */
+function tagFromPath(path) {
+  const p = String(path || '');
+  const chat = p.match(/^\/chats\/([^/?#]+)/);
+  if (chat && chat[1]) return `chat_${chat[1]}`;
+  if (p === '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
+    return 'friend_request';
+  }
+  const lobby = p.match(/^\/games\/tictactoe\/lobby\/([^/?#]+)/);
+  if (lobby && lobby[1]) return `game_invite_${lobby[1]}`;
+  const game = p.match(/^\/games\/tictactoe\/game\/([^/?#]+)/);
+  if (game && game[1]) return `game_turn_${game[1]}`;
+  if (p === '/coins/login' || p.startsWith('/coins/login?')) {
+    return 'daily_reward';
+  }
+  return null;
+}
+
 async function setPendingPath(path) {
   try {
     const cache = await caches.open(PENDING_CACHE);
@@ -75,6 +94,61 @@ function resolveClickPath(notification) {
   }
   if (fromTag) return fromTag;
   return '/';
+}
+
+/**
+ * На iOS одного event.notification.close() часто недостаточно —
+ * баннер остаётся в Notification Center. Снимаем все с тем же tag
+ * и, при необходимости, по префиксу path.
+ */
+async function closeShownNotifications({ tag, path } = {}) {
+  try {
+    if (tag) {
+      const byTag = await self.registration.getNotifications({ tag: String(tag) });
+      for (const n of byTag) {
+        try {
+          n.close();
+        } catch (_) {}
+      }
+    }
+  } catch (err) {
+    console.warn('[push-sw] getNotifications(tag) failed', err);
+  }
+
+  const p = path != null ? String(path) : '';
+  if (!p || p === '/') return;
+
+  const exactTag = tagFromPath(p);
+  if (exactTag && exactTag !== tag) {
+    try {
+      const byPath = await self.registration.getNotifications({ tag: exactTag });
+      for (const n of byPath) {
+        try {
+          n.close();
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  // achievement_*/reward_gift_* — конкретный tag неизвестен из path.
+  if (p.startsWith('/achievements') || p.startsWith('/inventory')) {
+    try {
+      const all = await self.registration.getNotifications();
+      for (const n of all) {
+        const t = (n.tag && String(n.tag)) || '';
+        if (p.startsWith('/achievements') && t.startsWith('achievement_')) {
+          try {
+            n.close();
+          } catch (_) {}
+        }
+        if (p.startsWith('/inventory') && t.startsWith('reward_gift_')) {
+          try {
+            n.close();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
 }
 
 /**
@@ -166,12 +240,18 @@ self.addEventListener('push', (event) => {
 });
 
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const appPath = resolveClickPath(event.notification);
+  const notification = event.notification;
+  const appPath = resolveClickPath(notification);
+  const tag = notification.tag || '';
   const target = resolveTargetUrl(appPath);
+
+  try {
+    notification.close();
+  } catch (_) {}
 
   event.waitUntil(
     (async () => {
+      await closeShownNotifications({ tag, path: appPath });
       await setPendingPath(appPath);
 
       const all = await self.clients.matchAll({
@@ -191,7 +271,11 @@ self.addEventListener('notificationclick', (event) => {
         }
         // Не navigate() — reload + splash. postMessage + pending cache.
         try {
-          client.postMessage({ type: 'notification_click', url: appPath });
+          client.postMessage({
+            type: 'notification_click',
+            url: appPath,
+            tag: tag || null,
+          });
         } catch (_) {}
         return;
       }
@@ -200,4 +284,14 @@ self.addEventListener('notificationclick', (event) => {
       }
     })(),
   );
+});
+
+// Приложение просит снять баннеры после перехода по deep-link
+// (когда iOS открыл PWA без надёжного notificationclick.close).
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (!data || data.type !== 'clear_notifications') return;
+  const tag = data.tag != null ? String(data.tag) : '';
+  const path = data.path != null ? String(data.path) : '';
+  event.waitUntil(closeShownNotifications({ tag: tag || undefined, path }));
 });

@@ -30,10 +30,52 @@ String _normalizeAppPath(String raw) {
   return trimmed.startsWith('/') ? trimmed : '/$trimmed';
 }
 
-void _go(String raw) {
+/// Соответствует tagFromPath / pathFromTag в push-sw.js.
+String? _tagFromPath(String path) {
+  final p = _normalizeAppPath(path);
+  final chat = RegExp(r'^/chats/([^/?#]+)').firstMatch(p);
+  if (chat != null) return 'chat_${chat.group(1)}';
+  if (p == '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
+    return 'friend_request';
+  }
+  final lobby =
+      RegExp(r'^/games/tictactoe/lobby/([^/?#]+)').firstMatch(p);
+  if (lobby != null) return 'game_invite_${lobby.group(1)}';
+  final game = RegExp(r'^/games/tictactoe/game/([^/?#]+)').firstMatch(p);
+  if (game != null) return 'game_turn_${game.group(1)}';
+  if (p == '/coins/login' || p.startsWith('/coins/login?')) {
+    return 'daily_reward';
+  }
+  return null;
+}
+
+void _askServiceWorkerClearNotifications({
+  String? tag,
+  required String path,
+}) {
+  try {
+    final ready = web.window.navigator.serviceWorker.ready;
+    ready.toDart.then((reg) {
+      final worker = reg.active;
+      if (worker == null) return;
+      final payload = <String, Object?>{
+        'type': 'clear_notifications',
+        'path': path,
+        if (tag != null && tag.isNotEmpty) 'tag': tag,
+      };
+      worker.postMessage(payload.jsify());
+    });
+  } catch (_) {}
+}
+
+void _go(String raw, {String? tag}) {
   final path = _normalizeAppPath(raw);
   if (path.isEmpty || path == '/') return;
   _onNavigate?.call(path);
+  _askServiceWorkerClearNotifications(
+    tag: tag ?? _tagFromPath(path),
+    path: path,
+  );
 }
 
 Future<String?> _takePendingPath() async {
@@ -72,7 +114,9 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
       final url = obj.getProperty('url'.toJS).dartify();
       if (type is! String || url is! String) return;
       if (type != 'notification_click') return;
-      _go(url);
+      final tagRaw = obj.getProperty('tag'.toJS).dartify();
+      final tag = tagRaw is String && tagRaw.isNotEmpty ? tagRaw : null;
+      _go(url, tag: tag);
     } catch (_) {}
   }
 
