@@ -533,28 +533,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         if (!mounted) return;
         _upsertMessage(sent);
       } else {
-        for (var i = 0; i < images.length; i++) {
-          final img = images[i];
-          final body = i == 0 ? text : '';
-          final sent = await ref.read(chatsRepositoryProvider).sendMessage(
-                widget.chatID,
-                body,
-                replyToMessageID: i == 0 ? replyID : null,
-                imageBase64: img.base64,
-                imageMime: img.mime,
-              );
-          if (!mounted) return;
-          _upsertMessage(sent);
-          setState(() {
-            if (_pendingImages.isNotEmpty) {
-              _pendingImages.removeAt(0);
-            }
-            if (i == 0) {
-              _replyTo = null;
-              if (text.isNotEmpty) _textController.clear();
-            }
-          });
-        }
+        final sent = await ref.read(chatsRepositoryProvider).sendMessage(
+              widget.chatID,
+              text,
+              replyToMessageID: replyID,
+              images: [
+                for (final img in images) (base64: img.base64, mime: img.mime),
+              ],
+            );
+        if (!mounted) return;
+        _upsertMessage(sent);
       }
       if (!mounted) return;
       _textController.clear();
@@ -1188,6 +1176,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         body: withPending.body,
         editedAt: withPending.editedAt ?? existing.editedAt,
         hasImage: withPending.hasImage,
+        imageCount: withPending.imageCount > 0
+            ? withPending.imageCount
+            : existing.imageCount,
         replyToMessageID: withPending.replyToMessageID ?? existing.replyToMessageID,
         replyToBody: withPending.replyToBody ?? existing.replyToBody,
         replyToHasImage: withPending.replyToHasImage,
@@ -1225,6 +1216,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           left.readAt != right.readAt ||
           left.editedAt != right.editedAt ||
           left.hasImage != right.hasImage ||
+          left.imageCount != right.imageCount ||
           left.replyToMessageID != right.replyToMessageID) {
         return false;
       }
@@ -2032,7 +2024,31 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               ),
                             ],
                             if (message.hasImage) ...[
-                              ChatMessageImageThumb(messageID: message.id),
+                              Builder(
+                                builder: (context) {
+                                  final count = message.imageCount > 0
+                                      ? message.imageCount.clamp(1, 3)
+                                      : 1;
+                                  final side = count == 1
+                                      ? 168.0
+                                      : (count == 2 ? 128.0 : 88.0);
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (var i = 0; i < count; i++) ...[
+                                        if (i > 0) const SizedBox(width: 4),
+                                        ChatMessageImageThumb(
+                                          messageID: message.id,
+                                          imageIndex: i,
+                                          width: side,
+                                          height: side,
+                                          borderRadius: 10,
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                },
+                              ),
                               if (message.body.trim().isNotEmpty)
                                 const SizedBox(height: 6),
                             ],

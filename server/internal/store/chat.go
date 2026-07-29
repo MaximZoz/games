@@ -50,6 +50,7 @@ type ChatMessage struct {
 	EditedAt     *time.Time
 	ReplyToMessageID *uuid.UUID
 	HasImage     bool
+	ImageCount   int
 	// Превью ответа (из JOIN), без image_data.
 	ReplyToBody     string
 	ReplyToHasImage bool
@@ -175,7 +176,8 @@ func ListChatsForUser(
 				m.created_at,
 				m.delivered_at,
 				m.read_at,
-				m.has_image
+				m.has_image,
+				COALESCE(m.image_count, 0) AS image_count
 			FROM chat_messages m
 			JOIN my_chats mc ON mc.id = m.chat_id
 			ORDER BY m.chat_id, m.created_at DESC
@@ -193,7 +195,7 @@ func ListChatsForUser(
 			mc.id,
 			mc.created_at,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
-			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at, lm.has_image,
+			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at, lm.has_image, lm.image_count,
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
 		FROM my_chats mc
@@ -220,6 +222,7 @@ func ListChatsForUser(
 		var lastDeliveredAt sql.NullTime
 		var lastReadAt sql.NullTime
 		var lastHasImage sql.NullBool
+		var lastImageCount sql.NullInt32
 
 		if err := rows.Scan(
 			&item.ChatID,
@@ -239,6 +242,7 @@ func ListChatsForUser(
 			&lastDeliveredAt,
 			&lastReadAt,
 			&lastHasImage,
+			&lastImageCount,
 			&item.UnreadCount,
 			&item.UpdatedAt,
 		); err != nil {
@@ -258,6 +262,10 @@ func ListChatsForUser(
 					Body:         strings.TrimSpace(lastBody.String),
 					CreatedAt:    lastCreatedAt.Time.UTC(),
 					HasImage:     lastHasImage.Valid && lastHasImage.Bool,
+					ImageCount:   int(lastImageCount.Int32),
+				}
+				if msg.HasImage && msg.ImageCount <= 0 {
+					msg.ImageCount = 1
 				}
 				if lastDeliveredAt.Valid {
 					deliveredAt := lastDeliveredAt.Time.UTC()

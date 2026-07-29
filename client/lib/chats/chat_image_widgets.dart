@@ -12,12 +12,14 @@ class ChatMessageImageThumb extends ConsumerStatefulWidget {
   const ChatMessageImageThumb({
     super.key,
     required this.messageID,
+    this.imageIndex = 0,
     this.width = 220,
     this.height = 220,
     this.borderRadius = 14,
   });
 
   final String messageID;
+  final int imageIndex;
   final double width;
   final double height;
   final double borderRadius;
@@ -32,6 +34,8 @@ class _ChatMessageImageThumbState extends ConsumerState<ChatMessageImageThumb> {
   bool _loading = true;
   bool _failed = false;
 
+  String get _cacheKey => '${widget.messageID}#${widget.imageIndex}';
+
   @override
   void initState() {
     super.initState();
@@ -41,13 +45,14 @@ class _ChatMessageImageThumbState extends ConsumerState<ChatMessageImageThumb> {
   @override
   void didUpdateWidget(covariant ChatMessageImageThumb oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.messageID != widget.messageID) {
+    if (oldWidget.messageID != widget.messageID ||
+        oldWidget.imageIndex != widget.imageIndex) {
       _load();
     }
   }
 
   Future<void> _load() async {
-    final cached = ref.read(chatImageBytesCacheProvider)[widget.messageID];
+    final cached = ref.read(chatImageBytesCacheProvider)[_cacheKey];
     if (cached != null) {
       setState(() {
         _bytes = cached;
@@ -61,13 +66,14 @@ class _ChatMessageImageThumbState extends ConsumerState<ChatMessageImageThumb> {
       _failed = false;
     });
     try {
-      final raw = await ref
-          .read(chatsRepositoryProvider)
-          .fetchMessageImageBytes(widget.messageID);
+      final raw = await ref.read(chatsRepositoryProvider).fetchMessageImageBytes(
+            widget.messageID,
+            index: widget.imageIndex,
+          );
       final bytes = Uint8List.fromList(raw);
       ref.read(chatImageBytesCacheProvider.notifier).update((m) {
         final next = Map<String, Uint8List>.from(m);
-        next[widget.messageID] = bytes;
+        next[_cacheKey] = bytes;
         return next;
       });
       if (!mounted) return;

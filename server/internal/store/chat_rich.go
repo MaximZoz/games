@@ -26,12 +26,54 @@ var (
 // MaxChatImageBytes — жёсткий лимит после клиентского сжатия (~200 КБ цель).
 const MaxChatImageBytes = 256 * 1024
 
+// MaxChatImagesPerMessage — сколько фото в одном сообщении.
+const MaxChatImagesPerMessage = 3
+
+// ChatImageInput — одно сжатое фото для отправки.
+type ChatImageInput struct {
+	Mime string
+	Data []byte
+}
+
 // SendChatOptions — текст, опционально ответ и/или фото.
 type SendChatOptions struct {
 	Body             string
 	ReplyToMessageID *uuid.UUID
-	ImageMime        string
-	ImageData        []byte
+	// Images — 1..3 фото; ImageData/ImageMime — устаревший одиночный вариант.
+	Images    []ChatImageInput
+	ImageMime string
+	ImageData []byte
+}
+
+func collectSendImages(opts SendChatOptions) ([]ChatImageInput, error) {
+	out := make([]ChatImageInput, 0, MaxChatImagesPerMessage)
+	for _, img := range opts.Images {
+		if len(img.Data) == 0 {
+			continue
+		}
+		mime, err := normalizeImageMime(img.Mime)
+		if err != nil {
+			return nil, err
+		}
+		if len(img.Data) > MaxChatImageBytes {
+			return nil, ErrChatImageTooLarge
+		}
+		out = append(out, ChatImageInput{Mime: mime, Data: img.Data})
+		if len(out) >= MaxChatImagesPerMessage {
+			break
+		}
+	}
+	if len(out) == 0 && len(opts.ImageData) > 0 {
+		mime, err := normalizeImageMime(opts.ImageMime)
+		if err != nil {
+			return nil, err
+		}
+		if len(opts.ImageData) > MaxChatImageBytes {
+			return nil, ErrChatImageTooLarge
+		}
+		out = append(out, ChatImageInput{Mime: mime, Data: opts.ImageData})
+	}
+	return out, nil
 }
 
 func normalizeImageMime(mime string) (string, error) {
@@ -72,6 +114,7 @@ func scanChatMessageRow(
 		&editedAt,
 		&replyToID,
 		&msg.HasImage,
+		&msg.ImageCount,
 		&replyBody,
 		&replyHasImage,
 		&replySender,
@@ -79,6 +122,9 @@ func scanChatMessageRow(
 		return ChatMessage{}, err
 	}
 	msg.CreatedAt = msg.CreatedAt.UTC()
+	if msg.HasImage && msg.ImageCount <= 0 {
+		msg.ImageCount = 1
+	}
 	if deliveredAt.Valid {
 		v := deliveredAt.Time.UTC()
 		msg.DeliveredAt = &v
@@ -110,6 +156,7 @@ const chatMessageSelectSQL = `
 	SELECT
 		m.id, m.chat_id, m.sender_user_id, m.body, m.created_at,
 		m.delivered_at, m.read_at, m.edited_at, m.reply_to_message_id, m.has_image,
+		COALESCE(m.image_count, 0),
 		r.body, r.has_image, r.sender_user_id
 	FROM chat_messages m
 	LEFT JOIN chat_messages r ON r.id = m.reply_to_message_id
@@ -123,18 +170,11 @@ func SendChatMessageOpts(
 	opts SendChatOptions,
 ) (ChatMessage, error) {
 	text := strings.TrimSpace(opts.Body)
-	hasImage := len(opts.ImageData) > 0
-	var mime string
-	if hasImage {
-		var err error
-		mime, err = normalizeImageMime(opts.ImageMime)
-		if err != nil {
-			return ChatMessage{}, err
-		}
-		if len(opts.ImageData) > MaxChatImageBytes {
-			return ChatMessage{}, ErrChatImageTooLarge
-		}
+	images, err := collectSendImages(opts)
+	if err != nil {
+		return ChatMessage{}, err
 	}
+	hasImage := len(images) > 0
 	if !hasImage && text == "" {
 		return ChatMessage{}, ErrChatMessageEmpty
 	}
@@ -202,22 +242,43 @@ func SendChatMessageOpts(
 
 	var imageData any
 	var imageMime any
+	imageCount := 0
 	if hasImage {
-		imageData = opts.ImageData
-		imageMime = mime
+		imageCount = len(images)
+		imageData = images[0].Data
+		imageMime = images[0].Mime
 	}
 
-	var newID uuid.UUID
-	err = pool.QueryRow(ctx, `
-		INSERT INTO chat_messages (
-			chat_id, sender_user_id, body,
-			reply_to_message_id, has_image, image_mime, image_data
-		) VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id
-	`, chatID, senderUserID, text, replyArg, hasImage, imageMime, imageData).Scan(&newID)
+	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return ChatMessage{}, err
 	}
+	defer tx.Rollback(ctx)
+
+	var newID uuid.UUID
+	err = tx.QueryRow(ctx, `
+		INSERT INTO chat_messages (
+			chat_id, sender_user_id, body,
+			reply_to_message_id, has_image, image_count, image_mime, image_data
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id
+	`, chatID, senderUserID, text, replyArg, hasImage, imageCount, imageMime, imageData).Scan(&newID)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+	for i, img := range images {
+		_, err = tx.Exec(ctx, `
+			INSERT INTO chat_message_images (message_id, idx, image_mime, image_data)
+			VALUES ($1, $2, $3, $4)
+		`, newID, i, img.Mime, img.Data)
+		if err != nil {
+			return ChatMessage{}, err
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return ChatMessage{}, err
+	}
+
 	return GetChatMessageByID(ctx, pool, chatID, senderUserID, newID)
 }
 
@@ -240,31 +301,62 @@ func GetChatMessageByID(
 	return msg, err
 }
 
-// GetChatMessageImage отдаёт байты картинки участнику чата.
+// GetChatMessageImage отдаёт байты картинки участнику чата (index 0..2).
 func GetChatMessageImage(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	messageID, currentUserID uuid.UUID,
+	index int,
 ) (mime string, data []byte, chatID uuid.UUID, err error) {
+	if index < 0 {
+		index = 0
+	}
 	var hasImage bool
 	err = pool.QueryRow(ctx, `
-		SELECT m.chat_id, m.image_mime, m.image_data, m.has_image
+		SELECT m.chat_id, m.has_image
 		FROM chat_messages m
 		WHERE m.id = $1
-	`, messageID).Scan(&chatID, &mime, &data, &hasImage)
+	`, messageID).Scan(&chatID, &hasImage)
 	if err == pgx.ErrNoRows {
 		return "", nil, uuid.Nil, ErrChatMessageNotFound
 	}
 	if err != nil {
 		return "", nil, uuid.Nil, err
 	}
-	if !hasImage || len(data) == 0 {
+	if !hasImage {
 		return "", nil, uuid.Nil, ErrChatImageMissing
 	}
 	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
 		return "", nil, uuid.Nil, err
 	}
-	return mime, data, chatID, nil
+
+	err = pool.QueryRow(ctx, `
+		SELECT image_mime, image_data
+		FROM chat_message_images
+		WHERE message_id = $1 AND idx = $2
+	`, messageID, index).Scan(&mime, &data)
+	if err == nil && len(data) > 0 {
+		return mime, data, chatID, nil
+	}
+	if err != nil && err != pgx.ErrNoRows {
+		return "", nil, uuid.Nil, err
+	}
+
+	if index == 0 {
+		err = pool.QueryRow(ctx, `
+			SELECT image_mime, image_data
+			FROM chat_messages
+			WHERE id = $1 AND has_image = TRUE
+		`, messageID).Scan(&mime, &data)
+		if err == pgx.ErrNoRows || len(data) == 0 {
+			return "", nil, uuid.Nil, ErrChatImageMissing
+		}
+		if err != nil {
+			return "", nil, uuid.Nil, err
+		}
+		return mime, data, chatID, nil
+	}
+	return "", nil, uuid.Nil, ErrChatImageMissing
 }
 
 // EditChatMessage меняет текст своего сообщения (фото не трогаем).

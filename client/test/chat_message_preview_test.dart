@@ -24,7 +24,10 @@ void main() {
     expect(msg(body: 'привет', hasImage: true).previewText, 'Фото: привет');
   });
 
-  test('previewText для обычного текста', () {
-    expect(msg(body: 'привет').previewText, 'привет');
+  test('previewText для нескольких фото', () {
+    expect(
+      msg(hasImage: true).copyWith(imageCount: 3).previewText,
+      'Фото (3)',
+    );
   });
 }

@@ -86,6 +86,7 @@ class ChatMessageItem {
   final String? editedAt;
   final String? replyToMessageID;
   final bool hasImage;
+  final int imageCount;
   final String? replyToBody;
   final bool replyToHasImage;
   final String? replyToSenderID;
@@ -101,12 +102,16 @@ class ChatMessageItem {
     this.editedAt,
     this.replyToMessageID,
     this.hasImage = false,
+    this.imageCount = 0,
     this.replyToBody,
     this.replyToHasImage = false,
     this.replyToSenderID,
   });
 
   factory ChatMessageItem.fromJson(Map<String, dynamic> json) {
+    final hasImage = json['has_image'] as bool? ?? false;
+    var imageCount = json['image_count'] as int? ?? 0;
+    if (hasImage && imageCount <= 0) imageCount = 1;
     return ChatMessageItem(
       id: json['id'] as String? ?? '',
       chatID: json['chat_id'] as String? ?? '',
@@ -117,7 +122,8 @@ class ChatMessageItem {
       readAt: json['read_at'] as String?,
       editedAt: json['edited_at'] as String?,
       replyToMessageID: json['reply_to_message_id'] as String?,
-      hasImage: json['has_image'] as bool? ?? false,
+      hasImage: hasImage,
+      imageCount: imageCount,
       replyToBody: json['reply_to_body'] as String?,
       replyToHasImage: json['reply_to_has_image'] as bool? ?? false,
       replyToSenderID: json['reply_to_sender_id'] as String?,
@@ -132,6 +138,7 @@ class ChatMessageItem {
     bool clearDeliveredAt = false,
     bool clearReadAt = false,
     bool? hasImage,
+    int? imageCount,
     String? replyToMessageID,
     String? replyToBody,
     bool? replyToHasImage,
@@ -148,6 +155,7 @@ class ChatMessageItem {
       editedAt: editedAt ?? this.editedAt,
       replyToMessageID: replyToMessageID ?? this.replyToMessageID,
       hasImage: hasImage ?? this.hasImage,
+      imageCount: imageCount ?? this.imageCount,
       replyToBody: replyToBody ?? this.replyToBody,
       replyToHasImage: replyToHasImage ?? this.replyToHasImage,
       replyToSenderID: replyToSenderID ?? this.replyToSenderID,
@@ -156,6 +164,9 @@ class ChatMessageItem {
 
   String get previewText {
     final t = body.trim();
+    final n = imageCount > 0 ? imageCount : (hasImage ? 1 : 0);
+    if (n > 1 && t.isEmpty) return 'Фото ($n)';
+    if (n > 1) return 'Фото ($n): $t';
     if (hasImage && t.isEmpty) return 'Фото';
     if (hasImage) return 'Фото: $t';
     return t;
@@ -433,17 +444,26 @@ class ChatsRepository {
     String? replyToMessageID,
     String? imageBase64,
     String? imageMime,
+    List<({String base64, String mime})>? images,
   }) async {
     final payload = <String, dynamic>{
       'chat_id': chatID,
       'body': message,
       if (replyToMessageID != null && replyToMessageID.isNotEmpty)
         'reply_to_message_id': replyToMessageID,
-      if (imageBase64 != null && imageBase64.isNotEmpty) ...{
-        'image_base64': imageBase64,
-        'image_mime': imageMime ?? 'image/jpeg',
-      },
     };
+    if (images != null && images.isNotEmpty) {
+      payload['images'] = [
+        for (final img in images.take(3))
+          {
+            'image_base64': img.base64,
+            'image_mime': img.mime,
+          },
+      ];
+    } else if (imageBase64 != null && imageBase64.isNotEmpty) {
+      payload['image_base64'] = imageBase64;
+      payload['image_mime'] = imageMime ?? 'image/jpeg';
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/chats/messages'),
@@ -502,11 +522,17 @@ class ChatsRepository {
     }
   }
 
-  Future<List<int>> fetchMessageImageBytes(String messageID) async {
+  Future<List<int>> fetchMessageImageBytes(
+    String messageID, {
+    int index = 0,
+  }) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/chats/messages/image').replace(
-          queryParameters: {'message_id': messageID},
+          queryParameters: {
+            'message_id': messageID,
+            'index': '$index',
+          },
         ),
         headers: {'Authorization': 'Bearer $token'},
         operation: 'ChatsRepository.fetchMessageImageBytes',

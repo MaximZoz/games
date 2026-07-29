@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -59,6 +60,7 @@ type ChatMessageItem struct {
 	EditedAt     *string `json:"edited_at,omitempty"`
 	ReplyToMessageID *string `json:"reply_to_message_id,omitempty"`
 	HasImage     bool    `json:"has_image,omitempty"`
+	ImageCount   int     `json:"image_count,omitempty"`
 	ReplyToBody  *string `json:"reply_to_body,omitempty"`
 	ReplyToHasImage bool `json:"reply_to_has_image,omitempty"`
 	ReplyToSenderID *string `json:"reply_to_sender_id,omitempty"`
@@ -68,13 +70,19 @@ type StartChatBody struct {
 	TargetUserID string `json:"target_user_id"`
 }
 
+type SendChatImageBody struct {
+	ImageBase64 string `json:"image_base64"`
+	ImageMime   string `json:"image_mime,omitempty"`
+}
+
 type SendChatMessageBody struct {
 	ChatID           string `json:"chat_id"`
 	Body             string `json:"body"`
 	ReplyToMessageID string `json:"reply_to_message_id,omitempty"`
-	// image_base64 — data URL или сырой base64; image_mime — image/jpeg и т.п.
-	ImageBase64 string `json:"image_base64,omitempty"`
-	ImageMime   string `json:"image_mime,omitempty"`
+	// image_base64 — устаревший одиночный вариант; images — до 3 фото.
+	ImageBase64 string             `json:"image_base64,omitempty"`
+	ImageMime   string             `json:"image_mime,omitempty"`
+	Images      []SendChatImageBody `json:"images,omitempty"`
 }
 
 type EditChatMessageBody struct {
@@ -149,6 +157,7 @@ func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 		EditedAt:         editedAt,
 		ReplyToMessageID: replyToID,
 		HasImage:         msg.HasImage,
+		ImageCount:       msg.ImageCount,
 		ReplyToBody:      replyToBody,
 		ReplyToHasImage:  msg.ReplyToHasImage,
 		ReplyToSenderID:  replyToSender,
@@ -509,7 +518,28 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 		opts.ReplyToMessageID = &rid
 	}
-	if strings.TrimSpace(body.ImageBase64) != "" {
+	for _, imgBody := range body.Images {
+		if strings.TrimSpace(imgBody.ImageBase64) == "" {
+			continue
+		}
+		img, err := decodeChatImageBase64(imgBody.ImageBase64)
+		if err != nil {
+			http.Error(w, "invalid image_base64", http.StatusBadRequest)
+			return
+		}
+		mime := imgBody.ImageMime
+		if strings.TrimSpace(mime) == "" {
+			mime = "image/jpeg"
+		}
+		opts.Images = append(opts.Images, store.ChatImageInput{
+			Mime: mime,
+			Data: img,
+		})
+		if len(opts.Images) >= store.MaxChatImagesPerMessage {
+			break
+		}
+	}
+	if len(opts.Images) == 0 && strings.TrimSpace(body.ImageBase64) != "" {
 		img, err := decodeChatImageBase64(body.ImageBase64)
 		if err != nil {
 			http.Error(w, "invalid image_base64", http.StatusBadRequest)
@@ -641,7 +671,16 @@ func (h *ChatsHandler) MessageImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid message_id", http.StatusBadRequest)
 		return
 	}
-	mime, data, _, err := store.GetChatMessageImage(r.Context(), h.Pool, messageID, userID)
+	index := 0
+	if raw := strings.TrimSpace(r.URL.Query().Get("index")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 || n >= store.MaxChatImagesPerMessage {
+			http.Error(w, "invalid index", http.StatusBadRequest)
+			return
+		}
+		index = n
+	}
+	mime, data, _, err := store.GetChatMessageImage(r.Context(), h.Pool, messageID, userID, index)
 	if err != nil {
 		writeChatError(w, err)
 		return
@@ -902,9 +941,17 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 	from := pushUserLabel(context.Background(), h.Pool, senderID)
 	body := strings.TrimSpace(item.Body)
 	if item.HasImage && body == "" {
-		body = "Фото"
+		if item.ImageCount > 1 {
+			body = fmt.Sprintf("Фото (%d)", item.ImageCount)
+		} else {
+			body = "Фото"
+		}
 	} else if item.HasImage {
-		body = "Фото: " + body
+		if item.ImageCount > 1 {
+			body = fmt.Sprintf("Фото (%d): %s", item.ImageCount, body)
+		} else {
+			body = "Фото: " + body
+		}
 	}
 	if len([]rune(body)) > 120 {
 		runes := []rune(body)
