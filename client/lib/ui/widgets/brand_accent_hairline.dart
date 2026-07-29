@@ -5,6 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Splash гасит их на старте и поднимает при «приземлении» handoff-анимации.
 final bootToolbarHairlinesOpacityProvider = StateProvider<double>((ref) => 1);
 
+/// Ключ карточки «Вход» — splash рисует рамку по её bounds.
+final bootLoginCardKeyProvider = Provider<GlobalKey>((ref) => GlobalKey());
+
+/// Прозрачность бордера карточки логина во время handoff (рисуют стрелки).
+final bootLoginCardBorderOpacityProvider = StateProvider<double>((ref) => 1);
+
+enum BootHandoffMode {
+  /// Авторизован: стрелки съезжают к подписи тулбара.
+  toolbar,
+
+  /// Гость: стрелки дугами рисуют рамку карточки входа.
+  loginFrame,
+}
+
 /// Градиентная «стрелка»-линия бренда Zozu (splash и подпись в тулбаре).
 ///
 /// Стиль один: indigo → violet с прозрачными краями, скругление 99.
