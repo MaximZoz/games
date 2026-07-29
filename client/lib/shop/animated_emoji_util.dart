@@ -235,21 +235,30 @@ class ShopAnimatedEmoji extends StatefulWidget {
   State<ShopAnimatedEmoji> createState() => _ShopAnimatedEmojiState();
 }
 
-class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
+class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
+    with SingleTickerProviderStateMixin {
   bool _ready = false;
   bool _failed = false;
   bool _revealArmed = false;
+  bool _compositionBound = false;
   Timer? _loadTimeout;
+  late final AnimationController _lottieCtrl;
+
+  /// Доля таймлайна для статичного превью. У части Noto (dragon и др.)
+  /// нулевой кадр пустой — слои ещё за пределами холста.
+  static const double _staticPreviewProgress = 0.42;
 
   @override
   void initState() {
     super.initState();
+    _lottieCtrl = AnimationController(vsync: this);
     _scheduleLoad();
   }
 
   @override
   void dispose() {
     _loadTimeout?.cancel();
+    _lottieCtrl.dispose();
     super.dispose();
   }
 
@@ -263,6 +272,11 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       _ready = false;
       _failed = false;
       _revealArmed = false;
+      _compositionBound = false;
+      _lottieCtrl
+        ..stop()
+        ..reset()
+        ..duration = null;
       _scheduleLoad();
     }
   }
@@ -285,6 +299,29 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
       if (!mounted || _ready) return;
       setState(() => _ready = true);
     });
+  }
+
+  void _applyPlayback() {
+    if (!_compositionBound || _lottieCtrl.duration == null) return;
+    if (widget.animate) {
+      if (!_lottieCtrl.isAnimating) {
+        _lottieCtrl.repeat();
+      }
+    } else {
+      _lottieCtrl
+        ..stop()
+        ..value = _staticPreviewProgress;
+    }
+  }
+
+  void _onLottieLoaded(LottieComposition composition) {
+    if (!mounted) return;
+    _lottieCtrl.duration = composition.duration;
+    _compositionBound = true;
+    _applyPlayback();
+    // Перестроить после seek — иначе останется пустой кадр 0.
+    setState(() {});
+    _armRevealAfterPaint();
   }
 
   /// Composition уже есть: даём кадру отрисоваться, затем снимаем лоадер.
@@ -355,11 +392,8 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
     }
 
     // Lottie из client/assets/emojis/lottie/ — без сети и без package assets.
-    // Лоадер держим, пока composition не готов и кадр не успел отрисоваться.
-    // Opacity(0) пропускает paint — поэтому 0.01, чтобы первый кадр реально
-    // растеризовался под плейсхолдером.
+    // Статичный превью: кадр ~42% таймлайна (нулевой у dragon пустой).
     final lottieSize = widget.size * 0.92;
-    final play = widget.animate;
     return SizedBox(
       width: widget.size,
       height: widget.size,
@@ -367,10 +401,10 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji> {
         bundledEmojiLottieAsset(widget.animatedName),
         width: lottieSize,
         height: lottieSize,
-        repeat: play,
-        animate: play,
+        controller: _lottieCtrl,
+        onLoaded: _onLottieLoaded,
         frameBuilder: (context, child, composition) {
-          if (composition == null) {
+          if (composition == null || !_compositionBound) {
             return EmojiIconPlaceholder(size: widget.size);
           }
           if (!_ready) {
