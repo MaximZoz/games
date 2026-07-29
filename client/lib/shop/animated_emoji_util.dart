@@ -30,15 +30,19 @@ String? unicodeEmojiFromAnimatedName(String name) {
 ///
 /// По умолчанию ~42%: у части Noto (dragon и др.) нулевой кадр пустой.
 /// У baseball к середине анимации мяч сжимается до ~3% — на карточке
-/// кажется, что иконка пропала, поэтому берём стартовый кадр.
+/// кажется, что иконка пропала. К концу таймлайна scale снова 100%.
 double bundledEmojiStaticPreviewProgress(String animatedName) {
   switch (animatedName) {
     case 'baseball':
-      return 0.0;
+      return 0.99;
     default:
       return 0.42;
   }
 }
+
+/// Имена, у которых статичный Lottie-превью ненадёжен — рисуем unicode.
+bool usesUnicodeStaticEmojiPreview(String animatedName) =>
+    animatedName == 'baseball';
 
 /// Токен подарка коллекции: `[gift_coll:code|Title|emoji|animatedName]`.
 final RegExp giftCollectionTokenRe = RegExp(
@@ -296,6 +300,14 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
     if (isCountryFlagAnimatedName(widget.animatedName)) {
       return;
     }
+    // Статичный unicode-превью (baseball и т.п.) — без ожидания Lottie.
+    if (!widget.animate && usesUnicodeStaticEmojiPreview(widget.animatedName)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _ready) return;
+        setState(() => _ready = true);
+      });
+      return;
+    }
     if (hasBundledEmojiLottie(widget.animatedName)) {
       _loadTimeout?.cancel();
       _loadTimeout = Timer(const Duration(milliseconds: 5000), () {
@@ -317,11 +329,15 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
       if (!_lottieCtrl.isAnimating) {
         _lottieCtrl.repeat();
       }
-    } else {
-      _lottieCtrl
-        ..stop()
-        ..value = bundledEmojiStaticPreviewProgress(widget.animatedName);
+      return;
     }
+    final progress = bundledEmojiStaticPreviewProgress(widget.animatedName);
+    _lottieCtrl.stop();
+    // Если value уже равен progress (часто 0), seek может не сработать.
+    if ((_lottieCtrl.value - progress).abs() < 0.0001) {
+      _lottieCtrl.value = progress < 0.5 ? 0.51 : 0.0;
+    }
+    _lottieCtrl.value = progress;
   }
 
   void _onLottieLoaded(LottieComposition composition) {
@@ -388,10 +404,22 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
       ),
     );
 
-    final useLottie =
-        !_failed && hasBundledEmojiLottie(widget.animatedName);
+    // Статичный превью baseball: Lottie на среднем кадре почти невидим
+    // (scale ~3%). В сетке магазина надёжнее unicode; анимация — по tap.
+    final useLottie = !_failed &&
+        hasBundledEmojiLottie(widget.animatedName) &&
+        (widget.animate || !usesUnicodeStaticEmojiPreview(widget.animatedName));
     if (!useLottie) {
       if (!_ready) {
+        // Для unicode-only превью не ждём Lottie — сразу показываем символ.
+        if (!widget.animate &&
+            usesUnicodeStaticEmojiPreview(widget.animatedName)) {
+          return SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Center(child: staticChild),
+          );
+        }
         return EmojiIconPlaceholder(size: widget.size);
       }
       return SizedBox(

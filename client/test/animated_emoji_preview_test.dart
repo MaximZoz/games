@@ -15,8 +15,13 @@ void main() {
   });
 
   test('bundledEmojiStaticPreviewProgress', () {
-    expect(bundledEmojiStaticPreviewProgress('baseball'), 0.0);
+    expect(bundledEmojiStaticPreviewProgress('baseball'), 0.99);
     expect(bundledEmojiStaticPreviewProgress('tennis'), 0.42);
     expect(bundledEmojiStaticPreviewProgress('dragon'), 0.42);
+  });
+
+  test('usesUnicodeStaticEmojiPreview for baseball shop card', () {
+    expect(usesUnicodeStaticEmojiPreview('baseball'), isTrue);
+    expect(usesUnicodeStaticEmojiPreview('tennis'), isFalse);
   });
 }
