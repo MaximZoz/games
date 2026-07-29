@@ -71,9 +71,32 @@ NoTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
 /// Обсервер для уведомления экранов о смене маршрута (например, при возврате назад).
 final chatsRouteObserver = RouteObserver<ModalRoute<void>>();
 
+/// Один раз за жизнь приложения: после обновления/перезагрузки открывать «Игры».
+class _StartupGamesGate {
+  bool done = false;
+}
+
+final _startupGamesGateProvider = Provider<_StartupGamesGate>((ref) {
+  return _StartupGamesGate();
+});
+
+/// Deep-link / auth — не сбрасываем на /games при cold start.
+bool _preserveStartupPath(String path) {
+  if (path == '/login' || path == '/register') return true;
+  if (path.startsWith('/games/tictactoe/')) return true;
+  // Комната чата /invite из пуша или ссылки.
+  if (path.startsWith('/chats/') && path.length > '/chats/'.length) {
+    return true;
+  }
+  if (path.startsWith('/coins/')) return true;
+  if (path.startsWith('/shop/')) return true;
+  return false;
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
+  final startupGate = ref.read(_startupGamesGateProvider);
   ref.onDispose(refreshListenable.dispose);
   return GoRouter(
     initialLocation: '/games',
@@ -100,7 +123,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           if (authState.valueOrNull != null) {
             await ref.read(authStateProvider.notifier).logout();
           }
-          return appendRedirectQuery('/login', locationFromUri(state.uri));
+          final afterLogin = (_preserveStartupPath(path) || path == '/games')
+              ? locationFromUri(state.uri)
+              : '/games';
+          return appendRedirectQuery('/login', afterLogin);
         }
         user ??= await repo.getStoredUser();
       }
@@ -110,9 +136,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             '/games';
       }
       if (needsAuth && user == null) {
-        return appendRedirectQuery('/login', locationFromUri(state.uri));
+        final afterLogin = (_preserveStartupPath(path) || path == '/games')
+            ? locationFromUri(state.uri)
+            : '/games';
+        return appendRedirectQuery('/login', afterLogin);
       }
       if (isAdminRoute && user != null && !user.isAdmin) return '/games';
+
+      // Перезагрузка / обновление PWA: всегда вкладка «Игры» (не чаты/друзья/…).
+      if (user != null && !startupGate.done) {
+        startupGate.done = true;
+        if (!_preserveStartupPath(path) && path != '/games') {
+          return '/games';
+        }
+      }
       return null;
     },
     routes: [
