@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
@@ -94,11 +97,21 @@ class MultiGamesApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
+    final localeChoice = ref.watch(appLocaleProvider);
+    final locale = effectiveAppLocale(localeChoice);
     // Клик по push: navigate внутри SPA, без reload и splash.
     ref.watch(_pushNotificationNavProvider);
     return MaterialApp.router(
       title: 'Zozu Games',
       debugShowCheckedModeBanner: false,
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       scrollBehavior: const _NoScrollbarBehavior(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(

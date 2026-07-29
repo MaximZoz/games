@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'test_locale.dart';
 import 'test_viewport.dart';
 
 Future<void> _openRegisterFromLogin(WidgetTester tester) async {
@@ -16,9 +16,7 @@ Future<void> _openRegisterFromLogin(WidgetTester tester) async {
 Finder _registerFields() => find.byType(TextFormField);
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
+  setUp(setUpTestLocaleRu);
 
   group('Auth UI flows (phone)', () {
     testWidgets('Login ↔ Register round-trip', (tester) async {
@@ -74,7 +72,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Некорректный email'), findsOneWidget);
-      expect(find.text('Пароль не менее 6 символов'), findsOneWidget);
+      expect(find.text('Пароль не короче 6 символов'), findsOneWidget);
     });
 
     testWidgets('Login password visibility toggle', (tester) async {

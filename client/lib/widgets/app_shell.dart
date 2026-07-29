@@ -13,6 +13,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -47,15 +48,25 @@ void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? activ
   }
 }
 
-const List<_NavItem> _navItems = [
-  _NavItem(path: '/', icon: Icons.home, label: 'Главная'),
-  _NavItem(path: '/profile', icon: Icons.person, label: 'Профиль'),
-  _NavItem(path: '/friends', icon: Icons.people, label: 'Друзья'),
-  _NavItem(
-      path: '/chats', icon: Icons.chat_bubble_outline_rounded, label: 'Чаты'),
-  _NavItem(path: '/games', icon: Icons.sports_esports, label: 'Игры'),
-  _NavItem(path: '/settings', icon: Icons.settings, label: 'Настройки'),
-];
+List<_NavItem> _navItems(BuildContext context) {
+  final l10n = context.l10n;
+  return [
+    _NavItem(path: '/', icon: Icons.home, label: l10n.navHome),
+    _NavItem(path: '/profile', icon: Icons.person, label: l10n.navProfile),
+    _NavItem(path: '/friends', icon: Icons.people, label: l10n.navFriends),
+    _NavItem(
+      path: '/chats',
+      icon: Icons.chat_bubble_outline_rounded,
+      label: l10n.navChats,
+    ),
+    _NavItem(path: '/games', icon: Icons.sports_esports, label: l10n.navGames),
+    _NavItem(
+      path: '/settings',
+      icon: Icons.settings,
+      label: l10n.navSettings,
+    ),
+  ];
+}
 
 class _NavItem {
   const _NavItem({required this.path, required this.icon, required this.label});
@@ -182,8 +193,10 @@ class AppShell extends ConsumerWidget {
     final showBottomNav =
         narrow && !narrowLandscape && !inChatRoom && !onAuthScreen;
 
+    final navItems = _navItems(context);
+
     void navigateWithPrefetch(int i) {
-      final target = _navItems[i].path;
+      final target = navItems[i].path;
 
       // «Главная» → карточки «Достижения» и «Монеты» (корень ветки).
       if (target == '/') {
@@ -401,7 +414,7 @@ class AppShell extends ConsumerWidget {
                       labelType: narrowLandscape
                           ? NavigationRailLabelType.none
                           : NavigationRailLabelType.all,
-                      destinations: _navItems.asMap().entries.map((entry) {
+                      destinations: navItems.asMap().entries.map((entry) {
                         final index = entry.key;
                         final item = entry.value;
                         return NavigationRailDestination(
@@ -524,8 +537,9 @@ class _MobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeIndex = selectedIndex.clamp(0, _navItems.length - 1);
-    final label = _navItems[safeIndex].label;
+    final navItems = _navItems(context);
+    final safeIndex = selectedIndex.clamp(0, navItems.length - 1);
+    final label = navItems[safeIndex].label;
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
       child: Column(
@@ -533,7 +547,7 @@ class _MobileBottomNav extends StatelessWidget {
         children: [
           Row(
             children: [
-              for (var i = 0; i < _navItems.length; i++)
+              for (var i = 0; i < navItems.length; i++)
                 Expanded(
                   child: InkWell(
                     onTap: () => onTap(i),
@@ -542,7 +556,7 @@ class _MobileBottomNav extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Center(
                         child: _navIcon(
-                          _navItems[i],
+                          navItems[i],
                           unreadChats,
                           incomingFriends,
                           gamesMyTurn,

@@ -193,9 +193,9 @@ func (h *GamesHandler) addGamePlayerFrames(ctx context.Context, payload map[stri
 	}
 }
 
-func (h *GamesHandler) requireRedis(w http.ResponseWriter) bool {
+func (h *GamesHandler) requireRedis(w http.ResponseWriter, r *http.Request) bool {
 	if h.Rdb == nil {
-		http.Error(w, "games service unavailable (Redis required)", http.StatusServiceUnavailable)
+		WriteErr(w, r, http.StatusServiceUnavailable, "games service unavailable (Redis required)")
 		return false
 	}
 	return true
@@ -207,7 +207,7 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.GameSettings(w, r)
 		return
 	}
-	if !h.requireRedis(w) {
+	if !h.requireRedis(w, r) {
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -229,7 +229,7 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case len(parts) >= 2 && parts[0] == "lobby":
 		lobbyID := parts[1]
 		if lobbyID == "" {
-			http.Error(w, "lobby id required", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "lobby id required")
 			return
 		}
 		switch {
@@ -244,13 +244,13 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
 		default:
-			http.Error(w, "not found", http.StatusNotFound)
+			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
 		return
 	case len(parts) >= 2 && parts[0] == "game":
 		gameID := parts[1]
 		if gameID == "" {
-			http.Error(w, "game id required", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
 		switch {
@@ -263,12 +263,12 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
 			h.ForfeitGame(w, r, gameID)
 		default:
-			http.Error(w, "not found", http.StatusNotFound)
+			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
 		return
 	}
 
-	http.Error(w, "not found", http.StatusNotFound)
+	WriteErr(w, r, http.StatusNotFound, "not found")
 }
 
 func currentUserIDFromGames(r *http.Request) (uuid.UUID, bool) {
@@ -278,18 +278,18 @@ func currentUserIDFromGames(r *http.Request) (uuid.UUID, bool) {
 func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body CreateLobbyBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	mode := strings.TrimSpace(strings.ToLower(body.Mode))
 	if mode != "invite" && mode != "matchmake" {
-		http.Error(w, "mode must be invite or matchmake", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "mode must be invite or matchmake")
 		return
 	}
 	stakeBronze := body.StakeBronze
@@ -299,25 +299,25 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	mayStake, err := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if !mayStake {
-		http.Error(w, "stake not unlocked", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
 		return
 	}
 	balance, err := store.GetBalance(ctx, h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if balance < stakeBronze {
-		http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
 		return
 	}
 	turnTimeSec := body.TurnTimeSec
 	if !validTurnTimeSec[turnTimeSec] {
-		http.Error(w, "turn_time_sec must be 0, 10, 30, 60 or 600", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "turn_time_sec must be 0, 10, 30, 60 or 600")
 		return
 	}
 	gridSize := body.GridSize
@@ -345,10 +345,10 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 				if err != nil {
 					if err == store.ErrStakeNotAllowed {
-						http.Error(w, "stake not unlocked", http.StatusForbidden)
+						WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
 						return
 					}
-					http.Error(w, "server error", http.StatusInternalServerError)
+					WriteErr(w, r, http.StatusInternalServerError, "server error")
 					return
 				}
 				clearUserActiveLobby(ctx, h.Rdb, userID)
@@ -395,7 +395,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		pipe.Expire(ctx, mmKey, 5*time.Minute)
 	}
 	if _, err := pipe.Exec(ctx); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -416,18 +416,18 @@ type RematchBody struct {
 func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body RematchBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	gameID := strings.TrimSpace(body.GameID)
 	if gameID == "" {
-		http.Error(w, "game_id required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "game_id required")
 		return
 	}
 
@@ -435,20 +435,20 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	gameKey := "game:" + gameID
 	m, err := h.Rdb.HGetAll(ctx, gameKey).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "game not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
 
 	xUserID := m["x_user_id"]
 	oUserID := m["o_user_id"]
 	if xUserID != userID.String() && oUserID != userID.String() {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 
 	status := m["status"]
 	if status == gameStatusActive {
-		http.Error(w, "game is not over", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "game is not over")
 		return
 	}
 
@@ -458,7 +458,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	}
 	opponentUUID, err := uuid.Parse(opponentID)
 	if err != nil {
-		http.Error(w, "invalid opponent", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "invalid opponent")
 		return
 	}
 
@@ -505,7 +505,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	pipe.SAdd(ctx, invitedKey, opponentID)
 	pipe.Expire(ctx, invitedKey, lobbyTTL)
 	if _, err := pipe.Exec(ctx); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -1028,14 +1028,14 @@ func (h *GamesHandler) tickBotTimeout(ctx context.Context) {
 func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	ctx := r.Context()
 	keys, err := h.Rdb.Keys(ctx, "lobby:*").Result()
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -1085,7 +1085,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -1093,7 +1093,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "lobby not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
 
@@ -1106,7 +1106,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	// любой авторизованный пользователь может просмотреть waiting-лобби.
 	if creatorID != userID.String() && opponentID != userID.String() {
 		if status != lobbyStatusWaitingMatchmake && status != lobbyStatusWaitingInvite {
-			http.Error(w, "forbidden", http.StatusForbidden)
+			WriteErr(w, r, http.StatusForbidden, "forbidden")
 			return
 		}
 	}
@@ -1152,22 +1152,22 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body InviteBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	friendID, err := uuid.Parse(strings.TrimSpace(body.FriendUserID))
 	if err != nil {
-		http.Error(w, "invalid friend_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid friend_user_id")
 		return
 	}
 	if friendID == userID {
-		http.Error(w, "cannot invite yourself", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cannot invite yourself")
 		return
 	}
 
@@ -1175,21 +1175,21 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "lobby not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
 	if m["creator_id"] != userID.String() {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 	if m["status"] != lobbyStatusWaitingInvite {
-		http.Error(w, "lobby not in invite mode", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "lobby not in invite mode")
 		return
 	}
 
 	friends, err := store.ListFriendships(ctx, h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	var isFriend bool
@@ -1200,7 +1200,7 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		}
 	}
 	if !isFriend {
-		http.Error(w, "user is not your friend", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "user is not your friend")
 		return
 	}
 
@@ -1264,7 +1264,7 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -1272,7 +1272,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "lobby not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
 
@@ -1280,19 +1280,19 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	status := m["status"]
 
 	if status == lobbyStatusInGame {
-		http.Error(w, "игра уже началась с другим соперником", http.StatusConflict)
+		WriteErr(w, r, http.StatusConflict, "game already started with another opponent")
 		return
 	}
 
 	if creatorID == userID.String() {
-		http.Error(w, "cannot join own lobby", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cannot join own lobby")
 		return
 	}
 
 	// waiting_invite: вход по прямой ссылке или по приглашению друга (UUID лобби — секрет).
 	// waiting_matchmake: любой соперник из очереди/списка открытых лобби.
 	if status != lobbyStatusWaitingInvite && status != lobbyStatusWaitingMatchmake {
-		http.Error(w, "lobby not joinable", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "lobby not joinable")
 		return
 	}
 
@@ -1307,12 +1307,12 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			for _, u := range []uuid.UUID{creatorUUID, userID} {
 				if gid, _ := h.Rdb.Get(ctx, userActiveGameKey(u)).Result(); gid != "" {
 					if gm, _ := h.Rdb.HGet(ctx, "game:"+gid, "status").Result(); gm == gameStatusActive {
-						http.Error(w, "у вас или соперника уже есть активная игра", http.StatusConflict)
+						WriteErr(w, r, http.StatusConflict, "you or opponent already has an active game")
 						return
 					}
 				}
 			}
-			http.Error(w, "игра уже создана, обновите страницу", http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, "game already created, refresh the page")
 			return
 		}
 		defer h.Rdb.Del(ctx, lockKey)
@@ -1331,20 +1331,20 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 	bal, err := store.GetBalance(ctx, h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if bal < stakeBronze {
-		http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
 		return
 	}
 	creatorBal, err := store.GetBalance(ctx, h.Pool, creatorUUID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if creatorBal < stakeBronze {
-		http.Error(w, "creator has insufficient balance", http.StatusConflict)
+		WriteErr(w, r, http.StatusConflict, "creator has insufficient balance")
 		return
 	}
 
@@ -1365,7 +1365,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	if err := store.DeductCoinsTwo(ctx, h.Pool, creatorUUID, userID, stakeBronze); err != nil {
-		http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
 		return
 	}
 
@@ -1391,7 +1391,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	pipe.Expire(ctx, gameKey, 24*time.Hour)
 
 	if _, err := pipe.Exec(ctx); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -1450,7 +1450,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -1458,7 +1458,7 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "lobby not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
 
@@ -1467,12 +1467,12 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	status := m["status"]
 
 	if status == lobbyStatusInGame {
-		http.Error(w, "game already started", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "game already started")
 		return
 	}
 
 	if creatorID != userID.String() && opponentID != userID.String() {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 
@@ -1516,7 +1516,7 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -1524,16 +1524,16 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "lobby not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
 
 	if m["status"] != lobbyStatusWaitingInvite {
-		http.Error(w, "lobby invite expired", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "lobby invite expired")
 		return
 	}
 	if m["invite_target_id"] != userID.String() {
-		http.Error(w, "you are not invited", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "you are not invited")
 		return
 	}
 
@@ -1599,7 +1599,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -1607,7 +1607,7 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	key := "game:" + gameID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "game not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
 	if h.applyGameTimeout(ctx, key, m) {
@@ -1617,7 +1617,7 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	xUserID := m["x_user_id"]
 	oUserID := m["o_user_id"]
 	if xUserID != userID.String() && oUserID != userID.String() {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 
@@ -1736,20 +1736,20 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body MoveBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	ctx := r.Context()
 	key := "game:" + gameID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "game not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
 	gridSize := 3
@@ -1760,7 +1760,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 	maxCell := gridSize*gridSize - 1
 	if body.Cell < 0 || body.Cell > maxCell {
-		http.Error(w, "cell must be 0-"+strconv.Itoa(maxCell), http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cell must be 0-"+strconv.Itoa(maxCell))
 		return
 	}
 	if h.applyGameTimeout(ctx, key, m) {
@@ -1785,7 +1785,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 
 	if m["status"] != gameStatusActive {
-		http.Error(w, "game is over", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
 		return
 	}
 
@@ -1793,7 +1793,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	xUserID := m["x_user_id"]
 	oUserID := m["o_user_id"]
 	if (turn == "x" && xUserID != userID.String()) || (turn == "o" && oUserID != userID.String()) {
-		http.Error(w, "not your turn", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "not your turn")
 		return
 	}
 
@@ -1809,7 +1809,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		if moveCount == 0 {
 			for _, c := range centerCellIndices(gridSize) {
 				if c == body.Cell {
-					http.Error(w, "first move cannot be in center", http.StatusBadRequest)
+					WriteErr(w, r, http.StatusBadRequest, "first move cannot be in center")
 					return
 				}
 			}
@@ -1818,7 +1818,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 
 	board := parseBoard(m["board"], gridSize)
 	if board[body.Cell] != "" {
-		http.Error(w, "cell already taken", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cell already taken")
 		return
 	}
 
@@ -1860,7 +1860,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	pipe.Expire(ctx, key, 24*time.Hour)
 
 	if _, err := pipe.Exec(ctx); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -1936,7 +1936,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -1944,28 +1944,28 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 	key := "game:" + gameID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "game not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
 	if m["status"] != gameStatusActive {
-		http.Error(w, "game is over", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
 		return
 	}
 
 	swapRule := m["swap_rule"] == "true"
 	if !swapRule {
-		http.Error(w, "swap not allowed in this game", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "swap not allowed in this game")
 		return
 	}
 
 	xUserID := m["x_user_id"]
 	oUserID := m["o_user_id"]
 	if oUserID != userID.String() {
-		http.Error(w, "only O can swap", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "only O can swap")
 		return
 	}
 	if m["turn"] != "o" {
-		http.Error(w, "can only swap on your turn after X's first move", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "can only swap on your turn after X's first move")
 		return
 	}
 
@@ -1983,7 +1983,7 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 		}
 	}
 	if moveCount != 1 {
-		http.Error(w, "can only swap after X's first move", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "can only swap after X's first move")
 		return
 	}
 
@@ -1993,7 +1993,7 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 	pipe.HSet(ctx, key, "x_user_id", newXUserID, "o_user_id", newOUserID, "turn", "o", "swapped", "true")
 	pipe.Expire(ctx, key, 24*time.Hour)
 	if _, err := pipe.Exec(ctx); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -2037,24 +2037,24 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	ctx := r.Context()
 	key := "game:" + gameID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		http.Error(w, "game not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
 	xUserID := m["x_user_id"]
 	oUserID := m["o_user_id"]
 	if xUserID != userID.String() && oUserID != userID.String() {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 	if m["status"] != gameStatusActive {
-		http.Error(w, "game is over", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
 		return
 	}
 	// Сдавшийся проигрывает — побеждает соперник.
@@ -2073,7 +2073,7 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 	pipe.HSet(ctx, key, "status", status, "forfeit", "1")
 	pipe.Expire(ctx, key, 24*time.Hour)
 	if _, err := pipe.Exec(ctx); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
@@ -2280,7 +2280,7 @@ func clearUserActiveLobby(ctx context.Context, rdb *redis.Client, userID uuid.UU
 func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	ctx := r.Context()

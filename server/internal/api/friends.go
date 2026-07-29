@@ -102,24 +102,24 @@ func currentUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
 	return userID, ok
 }
 
-func writeFriendError(w http.ResponseWriter, err error) {
+func writeFriendError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, store.ErrCannotFriendYourself):
-		http.Error(w, "cannot friend yourself", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cannot friend yourself")
 	case errors.Is(err, store.ErrAlreadyFriends):
-		http.Error(w, "already friends", http.StatusConflict)
+		WriteErr(w, r, http.StatusConflict, "already friends")
 	case errors.Is(err, store.ErrFriendRequestAlreadySent):
-		http.Error(w, "friend request already sent", http.StatusConflict)
+		WriteErr(w, r, http.StatusConflict, "friend request already sent")
 	case errors.Is(err, store.ErrFriendRequestAlreadyPending):
-		http.Error(w, "incoming friend request is pending", http.StatusConflict)
+		WriteErr(w, r, http.StatusConflict, "incoming friend request is pending")
 	case errors.Is(err, store.ErrUserBlocked):
-		http.Error(w, "user is blocked", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "user is blocked")
 	case errors.Is(err, store.ErrFriendForbidden):
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 	case errors.Is(err, store.ErrFriendNotFound):
-		http.Error(w, "not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "not found")
 	default:
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 	}
 }
 
@@ -154,28 +154,28 @@ func (h *FriendsHandler) requestParticipants(
 
 func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	friends, err := store.ListFriendships(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	incoming, err := store.ListIncomingFriendRequests(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	outgoing, err := store.ListOutgoingFriendRequests(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -227,17 +227,17 @@ func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) UsersCount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	_, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	n, err := store.CountUsers(r.Context(), h.Pool)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -246,12 +246,12 @@ func (h *FriendsHandler) UsersCount(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -260,7 +260,7 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n <= 0 {
-			http.Error(w, "invalid limit", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid limit")
 			return
 		}
 		if n > 50 {
@@ -272,7 +272,7 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("offset")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n < 0 {
-			http.Error(w, "invalid offset", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid offset")
 			return
 		}
 		offset = n
@@ -287,7 +287,7 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 		offset,
 	)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -322,30 +322,30 @@ func (h *FriendsHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body SendFriendRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	targetID, err := uuid.Parse(strings.TrimSpace(body.TargetUserID))
 	if err != nil {
-		http.Error(w, "invalid target_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid target_user_id")
 		return
 	}
 
 	requestID, err := store.CreateFriendRequest(r.Context(), h.Pool, userID, targetID)
 	if err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 	h.publishFriendsUpdated(userID, targetID)
@@ -368,35 +368,35 @@ func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) AcceptRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body FriendRequestActionBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	requestID, err := uuid.Parse(strings.TrimSpace(body.RequestID))
 	if err != nil {
-		http.Error(w, "invalid request_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid request_id")
 		return
 	}
 
 	senderID, receiverID, err := h.requestParticipants(r, requestID)
 	if err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 
 	if err := store.AcceptFriendRequest(r.Context(), h.Pool, requestID, userID); err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 	unlockedSender, _ := store.EvaluateAndUnlock(r.Context(), h.Pool, senderID)
@@ -409,35 +409,35 @@ func (h *FriendsHandler) AcceptRequest(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) RejectRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body FriendRequestActionBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	requestID, err := uuid.Parse(strings.TrimSpace(body.RequestID))
 	if err != nil {
-		http.Error(w, "invalid request_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid request_id")
 		return
 	}
 
 	senderID, receiverID, err := h.requestParticipants(r, requestID)
 	if err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 
 	if err := store.RejectFriendRequest(r.Context(), h.Pool, requestID, userID); err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 	h.publishFriendsUpdated(senderID, receiverID)
@@ -446,35 +446,35 @@ func (h *FriendsHandler) RejectRequest(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) CancelRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body FriendRequestActionBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	requestID, err := uuid.Parse(strings.TrimSpace(body.RequestID))
 	if err != nil {
-		http.Error(w, "invalid request_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid request_id")
 		return
 	}
 
 	senderID, receiverID, err := h.requestParticipants(r, requestID)
 	if err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 
 	if err := store.CancelOutgoingFriendRequest(r.Context(), h.Pool, requestID, userID); err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 	h.publishFriendsUpdated(senderID, receiverID)
@@ -483,29 +483,29 @@ func (h *FriendsHandler) CancelRequest(w http.ResponseWriter, r *http.Request) {
 
 func (h *FriendsHandler) RemoveFriend(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body RemoveFriendBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	friendID, err := uuid.Parse(strings.TrimSpace(body.FriendUserID))
 	if err != nil {
-		http.Error(w, "invalid friend_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid friend_user_id")
 		return
 	}
 
 	if err := store.RemoveFriendship(r.Context(), h.Pool, userID, friendID); err != nil {
-		writeFriendError(w, err)
+		writeFriendError(w, r, err)
 		return
 	}
 	h.publishFriendsUpdated(userID, friendID)

@@ -185,54 +185,54 @@ func chatUserToItemWithFrame(u store.ChatUser, frames map[uuid.UUID]store.Equipp
 	return item
 }
 
-func writeChatError(w http.ResponseWriter, err error) {
+func writeChatError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, store.ErrCannotChatWithYourself):
-		http.Error(w, "cannot chat with yourself", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cannot chat with yourself")
 	case errors.Is(err, store.ErrChatMessageEmpty):
-		http.Error(w, "message is empty", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "message is empty")
 	case errors.Is(err, store.ErrChatMessageTooLong):
-		http.Error(w, "message is too long", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "message is too long")
 	case errors.Is(err, store.ErrChatImageTooLarge):
-		http.Error(w, "image is too large", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "image is too large")
 	case errors.Is(err, store.ErrChatImageUnsupported):
-		http.Error(w, "unsupported image type", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "unsupported image type")
 	case errors.Is(err, store.ErrChatReplyInvalid):
-		http.Error(w, "invalid reply target", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid reply target")
 	case errors.Is(err, store.ErrCannotBlockYourself):
-		http.Error(w, "cannot block yourself", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cannot block yourself")
 	case errors.Is(err, store.ErrChatFriendsOnlyText):
-		http.Error(w, "only friends can send text messages", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "only friends can send text messages")
 	case errors.Is(err, store.ErrChatEditForbidden):
-		http.Error(w, "cannot edit this message", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "cannot edit this message")
 	case errors.Is(err, store.ErrChatDeleteForbidden):
-		http.Error(w, "cannot delete this message", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "cannot delete this message")
 	case errors.Is(err, store.ErrChatForbidden):
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 	case errors.Is(err, store.ErrUserBlocked):
-		http.Error(w, "user is blocked", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "user is blocked")
 	case errors.Is(err, store.ErrUserNotFound):
-		http.Error(w, "user not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "user not found")
 	case errors.Is(err, store.ErrChatNotFound):
-		http.Error(w, "not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "not found")
 	case errors.Is(err, store.ErrChatMessageNotFound):
-		http.Error(w, "message not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "message not found")
 	case errors.Is(err, store.ErrChatImageMissing):
-		http.Error(w, "image not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "image not found")
 	default:
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 	}
 }
 
 func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -240,7 +240,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n <= 0 {
-			http.Error(w, "invalid limit", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid limit")
 			return
 		}
 		if n > 200 {
@@ -253,7 +253,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("offset")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n < 0 {
-			http.Error(w, "invalid offset", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid offset")
 			return
 		}
 		offset = n
@@ -261,7 +261,7 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	chats, err := store.ListChatsForUser(r.Context(), h.Pool, userID, limit, offset)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -300,31 +300,31 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Start(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body StartChatBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	targetID, err := uuid.Parse(strings.TrimSpace(body.TargetUserID))
 	if err != nil {
-		http.Error(w, "invalid target_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid target_user_id")
 		return
 	}
 
 	chatID, err := store.EnsureDirectChat(r.Context(), h.Pool, userID, targetID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 
@@ -340,29 +340,29 @@ func (h *ChatsHandler) Start(w http.ResponseWriter, r *http.Request) {
 // can_send_text / emoji_only с учётом messages_friends_only у собеседника.
 func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	chatID, err := uuid.Parse(strings.TrimSpace(r.URL.Query().Get("chat_id")))
 	if err != nil {
-		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid chat_id")
 		return
 	}
 
 	lowID, highID, err := store.ChatParticipantIDs(r.Context(), h.Pool, chatID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	if userID != lowID && userID != highID {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 	peerID := highID
@@ -373,13 +373,13 @@ func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 	emojiOnly := false
 	peerSettings, err := store.GetUserSettings(r.Context(), h.Pool, peerID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if peerSettings.MessagesFriendsOnly {
 		friends, err := store.AreFriends(r.Context(), h.Pool, userID, peerID)
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
 		emojiOnly = !friends
@@ -400,21 +400,21 @@ func (h *ChatsHandler) Messages(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		h.sendMessage(w, r)
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
 
 func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	chatIDRaw := strings.TrimSpace(r.URL.Query().Get("chat_id"))
 	chatID, err := uuid.Parse(chatIDRaw)
 	if err != nil {
-		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid chat_id")
 		return
 	}
 
@@ -422,7 +422,7 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n <= 0 {
-			http.Error(w, "invalid limit", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid limit")
 			return
 		}
 		if n > 200 {
@@ -435,7 +435,7 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("before")); raw != "" {
 		t, err := time.Parse(time.RFC3339Nano, raw)
 		if err != nil {
-			http.Error(w, "invalid before", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid before")
 			return
 		}
 		value := t.UTC()
@@ -444,7 +444,7 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 
 	messages, err := store.ListChatMessages(r.Context(), h.Pool, chatID, userID, limit, before)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 
@@ -493,19 +493,19 @@ func decodeChatImageBase64(raw string) ([]byte, error) {
 func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body SendChatMessageBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	chatID, err := uuid.Parse(strings.TrimSpace(body.ChatID))
 	if err != nil {
-		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid chat_id")
 		return
 	}
 
@@ -513,7 +513,7 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(body.ReplyToMessageID); raw != "" {
 		rid, err := uuid.Parse(raw)
 		if err != nil {
-			http.Error(w, "invalid reply_to_message_id", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid reply_to_message_id")
 			return
 		}
 		opts.ReplyToMessageID = &rid
@@ -524,7 +524,7 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 		img, err := decodeChatImageBase64(imgBody.ImageBase64)
 		if err != nil {
-			http.Error(w, "invalid image_base64", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid image_base64")
 			return
 		}
 		mime := imgBody.ImageMime
@@ -542,7 +542,7 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	if len(opts.Images) == 0 && strings.TrimSpace(body.ImageBase64) != "" {
 		img, err := decodeChatImageBase64(body.ImageBase64)
 		if err != nil {
-			http.Error(w, "invalid image_base64", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid image_base64")
 			return
 		}
 		opts.ImageData = img
@@ -554,7 +554,7 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 
 	msg, err := store.SendChatMessageOpts(r.Context(), h.Pool, chatID, userID, opts)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 
@@ -590,27 +590,27 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) EditMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body EditChatMessageBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	messageID, err := uuid.Parse(strings.TrimSpace(body.MessageID))
 	if err != nil {
-		http.Error(w, "invalid message_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid message_id")
 		return
 	}
 	msg, err := store.EditChatMessage(r.Context(), h.Pool, messageID, userID, body.Body)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	item := chatMessageToItem(msg)
@@ -626,27 +626,27 @@ func (h *ChatsHandler) EditMessage(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body DeleteChatMessageBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	messageID, err := uuid.Parse(strings.TrimSpace(body.MessageID))
 	if err != nil {
-		http.Error(w, "invalid message_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid message_id")
 		return
 	}
 	chatID, err := store.DeleteChatMessage(r.Context(), h.Pool, messageID, userID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
@@ -658,31 +658,31 @@ func (h *ChatsHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) MessageImage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	messageID, err := uuid.Parse(strings.TrimSpace(r.URL.Query().Get("message_id")))
 	if err != nil {
-		http.Error(w, "invalid message_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid message_id")
 		return
 	}
 	index := 0
 	if raw := strings.TrimSpace(r.URL.Query().Get("index")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n < 0 || n >= store.MaxChatImagesPerMessage {
-			http.Error(w, "invalid index", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid index")
 			return
 		}
 		index = n
 	}
 	mime, data, _, err := store.GetChatMessageImage(r.Context(), h.Pool, messageID, userID, index)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	w.Header().Set("Content-Type", mime)
@@ -692,31 +692,31 @@ func (h *ChatsHandler) MessageImage(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body MarkChatReadBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	chatID, err := uuid.Parse(strings.TrimSpace(body.ChatID))
 	if err != nil {
-		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid chat_id")
 		return
 	}
 
 	updatedIDs, err := store.MarkChatRead(r.Context(), h.Pool, chatID, userID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 
@@ -738,31 +738,31 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Delivered(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body MarkChatDeliveredBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	chatID, err := uuid.Parse(strings.TrimSpace(body.ChatID))
 	if err != nil {
-		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid chat_id")
 		return
 	}
 
 	updatedIDs, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, userID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 
@@ -783,31 +783,31 @@ func (h *ChatsHandler) Delivered(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Clear(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body ClearChatBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	chatID, err := uuid.Parse(strings.TrimSpace(body.ChatID))
 	if err != nil {
-		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid chat_id")
 		return
 	}
 
 	lowID, highID, err := store.ClearChatForUser(r.Context(), h.Pool, chatID, userID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	h.publishChatListChanged(lowID, highID)
@@ -816,31 +816,31 @@ func (h *ChatsHandler) Clear(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Block(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body ChatUserActionBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	targetID, err := uuid.Parse(strings.TrimSpace(body.TargetUserID))
 	if err != nil {
-		http.Error(w, "invalid target_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid target_user_id")
 		return
 	}
 
 	_, err = store.BlockUser(r.Context(), h.Pool, userID, targetID)
 	if err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	h.publishChatListChanged(userID, targetID)
@@ -850,30 +850,30 @@ func (h *ChatsHandler) Block(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Unblock(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var body ChatUserActionBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	targetID, err := uuid.Parse(strings.TrimSpace(body.TargetUserID))
 	if err != nil {
-		http.Error(w, "invalid target_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid target_user_id")
 		return
 	}
 
 	if err := store.UnblockUser(r.Context(), h.Pool, userID, targetID); err != nil {
-		writeChatError(w, err)
+		writeChatError(w, r, err)
 		return
 	}
 	h.publishChatListChanged(userID, targetID)
@@ -883,19 +883,19 @@ func (h *ChatsHandler) Unblock(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatsHandler) Blocked(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	blocked, err := store.ListBlockedUsers(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 

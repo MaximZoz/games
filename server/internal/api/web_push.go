@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	webpush "github.com/SherClockHolmes/webpush-go"
@@ -157,11 +158,11 @@ type webPushSubscribeBody struct {
 
 func (h *WebPushHandler) VapidPublicKey(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	if h == nil || h.Sender == nil || !h.Sender.Enabled() {
-		writeJSONError(w, "web push disabled", http.StatusServiceUnavailable)
+		writeJSONError(w, r, "web push disabled", http.StatusServiceUnavailable)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -172,28 +173,28 @@ func (h *WebPushHandler) VapidPublicKey(w http.ResponseWriter, r *http.Request) 
 
 func (h *WebPushHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	if h == nil || h.Sender == nil || !h.Sender.Enabled() {
-		writeJSONError(w, "web push disabled", http.StatusServiceUnavailable)
+		writeJSONError(w, r, "web push disabled", http.StatusServiceUnavailable)
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body webPushSubscribeBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	endpoint := strings.TrimSpace(body.Endpoint)
 	p256dh := strings.TrimSpace(body.Keys.P256dh)
 	auth := strings.TrimSpace(body.Keys.Auth)
 	if endpoint == "" || p256dh == "" || auth == "" {
-		http.Error(w, "endpoint and keys required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "endpoint and keys required")
 		return
 	}
 	ua := r.Header.Get("User-Agent")
@@ -202,7 +203,7 @@ func (h *WebPushHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := store.UpsertWebPushSubscription(r.Context(), h.Pool, userID, endpoint, p256dh, auth, ua); err != nil {
 		log.Printf("web push subscribe: %v", err)
-		http.Error(w, "failed to save subscription", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "failed to save subscription")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -214,19 +215,19 @@ func (h *WebPushHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebPushHandler) Preferences(w http.ResponseWriter, r *http.Request) {
 	if h == nil || h.Pool == nil {
-		writeJSONError(w, "web push disabled", http.StatusServiceUnavailable)
+		writeJSONError(w, r, "web push disabled", http.StatusServiceUnavailable)
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	switch r.Method {
 	case http.MethodGet:
 		prefs, err := store.GetWebPushPreferences(r.Context(), h.Pool, userID)
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -234,41 +235,41 @@ func (h *WebPushHandler) Preferences(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		var body store.WebPushPreferences
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 			return
 		}
 		if err := store.UpsertWebPushPreferences(r.Context(), h.Pool, userID, body); err != nil {
 			log.Printf("web push prefs: %v", err)
-			http.Error(w, "failed to save preferences", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "failed to save preferences")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
 
 func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentUserIDFromContext(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body struct {
 		Endpoint string `json:"endpoint"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	endpoint := strings.TrimSpace(body.Endpoint)
 	if endpoint == "" {
-		http.Error(w, "endpoint required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "endpoint required")
 		return
 	}
 	if h.Pool != nil {
@@ -278,10 +279,10 @@ func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 }
 
-func writeJSONError(w http.ResponseWriter, msg string, code int) {
+func writeJSONError(w http.ResponseWriter, r *http.Request, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": i18n.T(i18n.LangFromRequest(r), msg)})
 }
 
 func pushUserLabel(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) string {

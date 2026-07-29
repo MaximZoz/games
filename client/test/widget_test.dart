@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multigames_client/main.dart';
 import 'package:multigames_client/ui/widgets/zozu_boot_splash.dart';
 
+import 'test_locale.dart';
+
 Widget _testApp() => ProviderScope(
       overrides: [
         bootSplashEnabledProvider.overrideWith((ref) => false),
@@ -17,9 +19,7 @@ Widget _testApp() => ProviderScope(
     );
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
+  setUp(setUpTestLocaleRu);
   testWidgets('Unauthenticated app opens login instead of home',
       (WidgetTester tester) async {
     await tester.pumpWidget(_testApp());

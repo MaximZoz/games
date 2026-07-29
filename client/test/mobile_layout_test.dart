@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'test_locale.dart';
 import 'test_viewport.dart';
 
 Finder mobileBottomNav() => find.byKey(const ValueKey('mobile-bottom-nav'));
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
+  setUp(setUpTestLocaleRu);
 
   testWidgets('Phone portrait: icon-only bottom nav, no NavigationRail',
       (tester) async {

@@ -75,53 +75,53 @@ type AdminLogItem struct {
 // Init создаёт первого админа. Заголовок X-Admin-Init-Secret должен совпадать с ADMIN_INIT_SECRET.
 func (h *AdminHandler) Init(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	if h.InitSecret == "" {
-		http.Error(w, "admin init disabled", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "admin init disabled")
 		return
 	}
 	secret := r.Header.Get("X-Admin-Init-Secret")
 	if secret != h.InitSecret {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 	var req AdminInitRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	if req.Email == "" || len(req.Password) < 6 {
-		http.Error(w, "email and password (min 6 chars) required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "email and password (min 6 chars) required")
 		return
 	}
 	n, err := store.CountAdmins(r.Context(), h.Pool)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if n > 0 {
-		http.Error(w, "admin already exists", http.StatusConflict)
+		WriteErr(w, r, http.StatusConflict, "admin already exists")
 		return
 	}
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, "", nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique") {
-			http.Error(w, "email already registered", http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, "email already registered")
 			return
 		}
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if err := store.SetUserAdmin(r.Context(), h.Pool, u.ID, true); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -134,12 +134,12 @@ func (h *AdminHandler) Init(w http.ResponseWriter, r *http.Request) {
 // ListUsers возвращает список всех пользователей.
 func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	list, err := store.ListUsers(r.Context(), h.Pool)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	items := make([]AdminUserItem, 0, len(list))
@@ -164,21 +164,21 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // SetAdmin выставляет или снимает флаг админа у пользователя.
 func (h *AdminHandler) SetAdmin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	var req SetAdminRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	id, err := uuid.Parse(req.UserID)
 	if err != nil {
-		http.Error(w, "invalid user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
 		return
 	}
 	if err := store.SetUserAdmin(r.Context(), h.Pool, id, req.IsAdmin); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -187,30 +187,30 @@ func (h *AdminHandler) SetAdmin(w http.ResponseWriter, r *http.Request) {
 // ResetPassword сбрасывает пароль пользователю.
 func (h *AdminHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	var req ResetPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	if len(req.NewPassword) < 6 {
-		http.Error(w, "new_password must be at least 6 characters", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "new_password must be at least 6 characters")
 		return
 	}
 	id, err := uuid.Parse(req.UserID)
 	if err != nil {
-		http.Error(w, "invalid user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
 		return
 	}
 	hash, err := auth.HashPassword(req.NewPassword)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if err := store.SetUserPassword(r.Context(), h.Pool, id, hash); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -219,26 +219,26 @@ func (h *AdminHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 // DeleteUser удаляет пользователя.
 func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	var req DeleteUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	id, err := uuid.Parse(req.UserID)
 	if err != nil {
-		http.Error(w, "invalid user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
 		return
 	}
 	currentID, _ := GetUserID(r.Context())
 	if id == currentID {
-		http.Error(w, "cannot delete yourself", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "cannot delete yourself")
 		return
 	}
 	if err := store.DeleteUser(r.Context(), h.Pool, id); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -247,7 +247,7 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 // ListLogs возвращает логи, загруженные в БД из файла.
 func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -255,7 +255,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n <= 0 {
-			http.Error(w, "invalid limit", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid limit")
 			return
 		}
 		if n > 2000 {
@@ -268,7 +268,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("offset")); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n < 0 {
-			http.Error(w, "invalid offset", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid offset")
 			return
 		}
 		offset = n
@@ -278,7 +278,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("user_id")); raw != "" {
 		id, err := uuid.Parse(raw)
 		if err != nil {
-			http.Error(w, "invalid user_id", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
 			return
 		}
 		userID = &id
@@ -287,7 +287,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	var source *string
 	if raw := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source"))); raw != "" {
 		if raw != "frontend" && raw != "backend" {
-			http.Error(w, "invalid source", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid source")
 			return
 		}
 		source = &raw
@@ -302,7 +302,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("from")); raw != "" {
 		t, err := time.Parse(time.RFC3339, raw)
 		if err != nil {
-			http.Error(w, "invalid from", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid from")
 			return
 		}
 		utc := t.UTC()
@@ -313,7 +313,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(r.URL.Query().Get("to")); raw != "" {
 		t, err := time.Parse(time.RFC3339, raw)
 		if err != nil {
-			http.Error(w, "invalid to", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid to")
 			return
 		}
 		utc := t.UTC()
@@ -334,7 +334,7 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		To:         to,
 	})
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -374,11 +374,11 @@ func (h *AdminHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 // ClearLogs очищает таблицу app_logs. POST /api/admin/logs/clear
 func (h *AdminHandler) ClearLogs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	if err := store.TruncateAppLogs(r.Context(), h.Pool); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

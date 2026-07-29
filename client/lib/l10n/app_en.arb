@@ -1,0 +1,155 @@
+{
+  "@@locale": "en",
+  "appTitle": "Zozu Games",
+  "navHome": "Home",
+  "navProfile": "Profile",
+  "navFriends": "Friends",
+  "navChats": "Chats",
+  "navGames": "Games",
+  "navSettings": "Settings",
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageRu": "Русский",
+  "settingsLanguageEn": "English",
+  "settingsAddBotsTitle": "Add bots after 30s",
+  "settingsAddBotsSubtitle": "In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)",
+  "settingsFriendsOnlyTitle": "Messages from friends only",
+  "settingsFriendsOnlySubtitle": "Non-friends can only send emojis. If spam is a problem, temporarily block the user.",
+  "settingsNotifications": "Notifications",
+  "settingsPushChat": "Chat",
+  "settingsPushFriends": "Friends",
+  "settingsPushGames": "Games",
+  "settingsPushRewards": "Rewards",
+  "loginTitle": "Sign in",
+  "loginSubtitle": "Enter email or username and password",
+  "loginEmailLabel": "Email or username",
+  "loginPasswordLabel": "Password",
+  "loginSubmit": "Sign in",
+  "loginNoAccount": "No account? Sign up",
+  "loginEmailRequired": "Enter email or username",
+  "loginPasswordRequired": "Enter password",
+  "loginTooltip": "Sign in",
+  "logoutTooltip": "Sign out",
+  "registerTitle": "Sign up",
+  "registerSubtitle": "Create an account to play",
+  "registerNameLabel": "Name (username)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Password",
+  "registerSubmit": "Sign up",
+  "registerHaveAccount": "Already have an account? Sign in",
+  "registerNameRequired": "Enter a name",
+  "registerNameNoSpaces": "Name cannot contain spaces",
+  "registerNameMax": "Maximum 20 characters",
+  "registerNameHint": "Up to 20 characters",
+  "registerEmailRequired": "Enter email",
+  "registerEmailInvalid": "Invalid email",
+  "registerPasswordHint": "At least 6 characters",
+  "registerPasswordMin": "Password must be at least 6 characters",
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonDelete": "Delete",
+  "commonEdit": "Edit",
+  "commonReply": "Reply",
+  "commonSend": "Send",
+  "commonClose": "Close",
+  "commonRetry": "Retry",
+  "commonLoading": "Loading…",
+  "commonError": "Error",
+  "commonOnline": "online",
+  "commonOffline": "offline",
+  "timeJustNow": "just now",
+  "timeYesterday": "yesterday",
+  "timeMinutesAgo": "{count} min ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "a week ago",
+  "timeWeeksAgo": "{count} wk ago",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "a month ago",
+  "timeMonthsAgo": "{count} mo ago",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "a year ago",
+  "timeYearsAgo": "{count} yr ago",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "Sun",
+  "weekdayMon": "Mon",
+  "weekdayTue": "Tue",
+  "weekdayWed": "Wed",
+  "weekdayThu": "Thu",
+  "weekdayFri": "Fri",
+  "weekdaySat": "Sat",
+  "monthJan": "Jan",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "May",
+  "monthJun": "Jun",
+  "monthJul": "Jul",
+  "monthAug": "Aug",
+  "monthSep": "Sep",
+  "monthOct": "Oct",
+  "monthNov": "Nov",
+  "monthDec": "Dec",
+  "gamesTitle": "Games",
+  "gamesFindMatch": "Find a game",
+  "gamesMyTurn": "Your turn",
+  "gamesWaiting": "Waiting",
+  "chatsTitle": "Chats",
+  "chatsEmpty": "No chats yet.\nTap the icon at the top right to pick a friend and start a conversation.",
+  "chatsNewChat": "New chat",
+  "friendsTitle": "Friends",
+  "friendsTabFriends": "Friends",
+  "friendsTabIncoming": "Incoming",
+  "friendsTabOutgoing": "Outgoing",
+  "friendsAdd": "Add friend",
+  "friendsRequestSent": "Request sent",
+  "profileTitle": "Profile",
+  "messageEdited": "edited",
+  "messageDeleted": "Message deleted",
+  "photo": "Photo",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "connectionError": "Could not connect to the server.",
+  "serverError": "Server error. Please try again later.",
+  "sessionExpired": "Session expired. Sign in again."
+}

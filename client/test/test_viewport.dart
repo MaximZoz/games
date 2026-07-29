@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/main.dart';
 import 'package:multigames_client/ui/widgets/zozu_boot_splash.dart';
 
+import 'test_locale.dart';
+
 /// iPhone-подобный viewport (devicePixelRatio=1 → logical == physical).
 void setPhonePortrait(WidgetTester tester) {
   tester.view.physicalSize = const Size(390, 844);
@@ -27,6 +29,7 @@ void setTablet(WidgetTester tester) {
 }
 
 Future<void> pumpMultiGamesApp(WidgetTester tester) async {
+  setUpTestLocaleRu();
   await tester.pumpWidget(
     ProviderScope(
       overrides: [

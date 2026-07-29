@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
@@ -12,10 +14,12 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final addBotsAfter30s = ref.watch(addBotsAfter30sProvider);
     final messagesFriendsOnly = ref.watch(messagesFriendsOnlyProvider);
     final webPushEnabled = ref.watch(webPushEnabledProvider);
     final pushCategories = ref.watch(webPushCategoriesProvider);
+    final localeChoice = ref.watch(appLocaleProvider);
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
@@ -29,6 +33,10 @@ class SettingsScreen extends ConsumerWidget {
       );
     }
 
+    final languageValue = localeChoice == null
+        ? 'system'
+        : localeChoice.languageCode;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -41,7 +49,7 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Настройки',
+                    l10n.settingsTitle,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -49,10 +57,62 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   _SettingsCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.settingsLanguage,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: languageValue,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'system',
+                              child: Text(l10n.settingsLanguageSystem),
+                            ),
+                            DropdownMenuItem(
+                              value: 'ru',
+                              child: Text(l10n.settingsLanguageRu),
+                            ),
+                            DropdownMenuItem(
+                              value: 'en',
+                              child: Text(l10n.settingsLanguageEn),
+                            ),
+                          ],
+                          onChanged: (v) async {
+                            if (v == null) return;
+                            if (v == 'system') {
+                              await ref
+                                  .read(appLocaleProvider.notifier)
+                                  .setLocale(null);
+                            } else {
+                              await ref
+                                  .read(appLocaleProvider.notifier)
+                                  .setLocale(Locale(v));
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
                     child: _SwitchRow(
-                      title: 'Добавлять ботов через 30 с',
-                      subtitle:
-                          'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)',
+                      title: l10n.settingsAddBotsTitle,
+                      subtitle: l10n.settingsAddBotsSubtitle,
                       value: addBotsAfter30s,
                       onChanged: (v) =>
                           ref.read(addBotsAfter30sProvider.notifier).set(v),
@@ -61,9 +121,8 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _SettingsCard(
                     child: _SwitchRow(
-                      title: 'Сообщения только от друзей',
-                      subtitle:
-                          'Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.',
+                      title: l10n.settingsFriendsOnlyTitle,
+                      subtitle: l10n.settingsFriendsOnlySubtitle,
                       value: messagesFriendsOnly,
                       onChanged: (v) async {
                         final err = await ref
@@ -85,7 +144,7 @@ class SettingsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _SwitchRow(
-                            title: 'Уведомления',
+                            title: l10n.settingsNotifications,
                             value: webPushEnabled,
                             onChanged: isWebPushSupported
                                 ? (v) async {
@@ -112,7 +171,7 @@ class SettingsScreen extends ConsumerWidget {
                               runSpacing: 4,
                               children: [
                                 _CategoryCheck(
-                                  title: 'Чат',
+                                  title: l10n.settingsPushChat,
                                   value: pushCategories.chat,
                                   onChanged: (v) => setCategory(
                                     () => ref
@@ -121,7 +180,7 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 _CategoryCheck(
-                                  title: 'Друзья',
+                                  title: l10n.settingsPushFriends,
                                   value: pushCategories.friends,
                                   onChanged: (v) => setCategory(
                                     () => ref
@@ -130,7 +189,7 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 _CategoryCheck(
-                                  title: 'Игры',
+                                  title: l10n.settingsPushGames,
                                   value: pushCategories.games,
                                   onChanged: (v) => setCategory(
                                     () => ref
@@ -139,7 +198,7 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 _CategoryCheck(
-                                  title: 'Награды',
+                                  title: l10n.settingsPushRewards,
                                   value: pushCategories.rewards,
                                   onChanged: (v) => setCategory(
                                     () => ref
@@ -248,40 +307,21 @@ class _CategoryCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 22,
-              height: 22,
-              child: Checkbox(
-                value: value,
-                onChanged: (v) => onChanged(v ?? false),
-                activeColor: AppColors.accentStart,
-                side: const BorderSide(color: AppColors.accentSoft, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-          ],
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: value,
+          onChanged: (v) => onChanged(v ?? false),
+          activeColor: AppColors.accentStart,
         ),
-      ),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+              ),
+        ),
+      ],
     );
   }
 }

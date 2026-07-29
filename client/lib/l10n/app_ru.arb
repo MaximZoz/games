@@ -1,0 +1,155 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Zozu Games",
+  "navHome": "Главная",
+  "navProfile": "Профиль",
+  "navFriends": "Друзья",
+  "navChats": "Чаты",
+  "navGames": "Игры",
+  "navSettings": "Настройки",
+  "settingsTitle": "Настройки",
+  "settingsLanguage": "Язык",
+  "settingsLanguageSystem": "Как в системе",
+  "settingsLanguageRu": "Русский",
+  "settingsLanguageEn": "English",
+  "settingsAddBotsTitle": "Добавлять ботов через 30 с",
+  "settingsAddBotsSubtitle": "В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)",
+  "settingsFriendsOnlyTitle": "Сообщения только от друзей",
+  "settingsFriendsOnlySubtitle": "Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.",
+  "settingsNotifications": "Уведомления",
+  "settingsPushChat": "Чат",
+  "settingsPushFriends": "Друзья",
+  "settingsPushGames": "Игры",
+  "settingsPushRewards": "Награды",
+  "loginTitle": "Вход",
+  "loginSubtitle": "Введите email или логин и пароль",
+  "loginEmailLabel": "Email или логин",
+  "loginPasswordLabel": "Пароль",
+  "loginSubmit": "Войти",
+  "loginNoAccount": "Нет аккаунта? Зарегистрироваться",
+  "loginEmailRequired": "Введите email или логин",
+  "loginPasswordRequired": "Введите пароль",
+  "loginTooltip": "Войти",
+  "logoutTooltip": "Выйти",
+  "registerTitle": "Регистрация",
+  "registerSubtitle": "Создайте аккаунт для игры",
+  "registerNameLabel": "Имя (логин)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Пароль",
+  "registerSubmit": "Зарегистрироваться",
+  "registerHaveAccount": "Уже есть аккаунт? Войти",
+  "registerNameRequired": "Введите имя",
+  "registerNameNoSpaces": "Имя без пробелов",
+  "registerNameMax": "Максимум 20 символов",
+  "registerNameHint": "До 20 символов",
+  "registerEmailRequired": "Введите email",
+  "registerEmailInvalid": "Некорректный email",
+  "registerPasswordHint": "Минимум 6 символов",
+  "registerPasswordMin": "Пароль не короче 6 символов",
+  "commonCancel": "Отмена",
+  "commonSave": "Сохранить",
+  "commonDelete": "Удалить",
+  "commonEdit": "Изменить",
+  "commonReply": "Ответить",
+  "commonSend": "Отправить",
+  "commonClose": "Закрыть",
+  "commonRetry": "Повторить",
+  "commonLoading": "Загрузка…",
+  "commonError": "Ошибка",
+  "commonOnline": "в сети",
+  "commonOffline": "не в сети",
+  "timeJustNow": "только что",
+  "timeYesterday": "вчера",
+  "timeMinutesAgo": "{count} мин назад",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} ч назад",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} дн. назад",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "неделю назад",
+  "timeWeeksAgo": "{count} нед. назад",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "месяц назад",
+  "timeMonthsAgo": "{count} мес. назад",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "год назад",
+  "timeYearsAgo": "{count} г. назад",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "вс",
+  "weekdayMon": "пн",
+  "weekdayTue": "вт",
+  "weekdayWed": "ср",
+  "weekdayThu": "чт",
+  "weekdayFri": "пт",
+  "weekdaySat": "сб",
+  "monthJan": "янв",
+  "monthFeb": "фев",
+  "monthMar": "мар",
+  "monthApr": "апр",
+  "monthMay": "май",
+  "monthJun": "июн",
+  "monthJul": "июл",
+  "monthAug": "авг",
+  "monthSep": "сен",
+  "monthOct": "окт",
+  "monthNov": "ноя",
+  "monthDec": "дек",
+  "gamesTitle": "Игры",
+  "gamesFindMatch": "Найти игру",
+  "gamesMyTurn": "Ваш ход",
+  "gamesWaiting": "Ожидание",
+  "chatsTitle": "Чаты",
+  "chatsEmpty": "Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.",
+  "chatsNewChat": "Новый чат",
+  "friendsTitle": "Друзья",
+  "friendsTabFriends": "Друзья",
+  "friendsTabIncoming": "Входящие",
+  "friendsTabOutgoing": "Исходящие",
+  "friendsAdd": "Добавить в друзья",
+  "friendsRequestSent": "Заявка отправлена",
+  "profileTitle": "Профиль",
+  "messageEdited": "изменено",
+  "messageDeleted": "Сообщение удалено",
+  "photo": "Фото",
+  "camera": "Камера",
+  "gallery": "Галерея",
+  "connectionError": "Не удалось подключиться к серверу.",
+  "serverError": "Ошибка сервера. Попробуйте позже.",
+  "sessionExpired": "Сессия истекла. Войдите заново."
+}

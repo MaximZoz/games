@@ -44,17 +44,17 @@ func shopItemJSON(it store.ShopItemView) map[string]any {
 // GET /api/shop
 func (h *ShopHandler) List(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	items, err := store.ListShopItems(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	out := make([]map[string]any, 0, len(items))
@@ -69,35 +69,35 @@ func (h *ShopHandler) List(w http.ResponseWriter, r *http.Request) {
 // POST /api/shop/buy
 func (h *ShopHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body buyBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	code := strings.TrimSpace(body.Code)
 	if code == "" {
-		http.Error(w, "code required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "code required")
 		return
 	}
 	result, err := store.BuyShopItem(r.Context(), h.Pool, userID, code)
 	if err != nil {
 		switch err {
 		case store.ErrShopItemUnknown, store.ErrShopItemInactive:
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, err.Error())
 		case store.ErrShopAlreadyOwned, store.ErrShopOutOfStock:
-			http.Error(w, err.Error(), http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, err.Error())
 		case store.ErrInsufficientFunds:
-			http.Error(w, "insufficient balance", http.StatusPaymentRequired)
+			WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
 		default:
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 		}
 		return
 	}
@@ -112,31 +112,31 @@ func (h *ShopHandler) Buy(w http.ResponseWriter, r *http.Request) {
 // POST /api/inventory/consume  {"code":"emoji_fire"}
 func (h *ShopHandler) Consume(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body buyBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	code := strings.TrimSpace(body.Code)
 	if code == "" {
-		http.Error(w, "code required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "code required")
 		return
 	}
 	remaining, err := store.ConsumeEmoji(r.Context(), h.Pool, userID, code)
 	if err != nil {
 		switch err {
 		case store.ErrEmojiNotOwned, store.ErrEmojiDepleted, store.ErrShopItemUnknown:
-			http.Error(w, err.Error(), http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, err.Error())
 		default:
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 		}
 		return
 	}
@@ -147,17 +147,17 @@ func (h *ShopHandler) Consume(w http.ResponseWriter, r *http.Request) {
 // GET /api/inventory
 func (h *ShopHandler) Inventory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	items, err := store.ListInventory(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	out := make([]map[string]any, 0, len(items))
@@ -186,22 +186,22 @@ func (h *ShopHandler) Inventory(w http.ResponseWriter, r *http.Request) {
 // GET /api/inventory/capabilities
 func (h *ShopHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	stakes, err := store.AllowedStakeBronze(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	frame, err := store.EquippedFrameForUser(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	resp := map[string]any{"allowed_stake_bronze": stakes}
@@ -222,31 +222,31 @@ type giftBody struct {
 // POST /api/inventory/sell  {"code":"coll_unicorn"}
 func (h *ShopHandler) Sell(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body buyBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	code := strings.TrimSpace(body.Code)
 	if code == "" {
-		http.Error(w, "code required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "code required")
 		return
 	}
 	balance, refund, err := store.SellCollection(r.Context(), h.Pool, userID, code)
 	if err != nil {
 		switch err {
 		case store.ErrEmojiNotOwned, store.ErrNotCollection:
-			http.Error(w, err.Error(), http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, err.Error())
 		default:
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 		}
 		return
 	}
@@ -260,40 +260,40 @@ func (h *ShopHandler) Sell(w http.ResponseWriter, r *http.Request) {
 // POST /api/inventory/gift  {"code":"coll_unicorn","to_user_id":"..."}
 func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	var body giftBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	code := strings.TrimSpace(body.Code)
 	toRaw := strings.TrimSpace(body.ToUserID)
 	if code == "" || toRaw == "" {
-		http.Error(w, "code and to_user_id required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "code and to_user_id required")
 		return
 	}
 	toID, err := uuid.Parse(toRaw)
 	if err != nil {
-		http.Error(w, "invalid to_user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid to_user_id")
 		return
 	}
 	if err := store.GiftCollection(r.Context(), h.Pool, userID, toID, code); err != nil {
 		switch err {
 		case store.ErrEmojiNotOwned, store.ErrNotCollection, store.ErrGiftSelf, store.ErrGiftTargetOwned:
-			http.Error(w, err.Error(), http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, err.Error())
 		default:
 			if strings.Contains(err.Error(), "not found") {
-				http.Error(w, err.Error(), http.StatusNotFound)
+				WriteErr(w, r, http.StatusNotFound, err.Error())
 				return
 			}
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 		}
 		return
 	}
@@ -358,27 +358,27 @@ func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 // GET /api/inventory/collections?user_id=
 func (h *ShopHandler) CollectionsShowcase(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	_, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	raw := strings.TrimSpace(r.URL.Query().Get("user_id"))
 	if raw == "" {
-		http.Error(w, "user_id required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "user_id required")
 		return
 	}
 	targetID, err := uuid.Parse(raw)
 	if err != nil {
-		http.Error(w, "invalid user_id", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
 		return
 	}
 	items, err := store.ListCollections(r.Context(), h.Pool, targetID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	out := make([]map[string]any, 0, len(items))
@@ -407,17 +407,17 @@ func (h *ShopHandler) CollectionsShowcase(w http.ResponseWriter, r *http.Request
 // GET /api/inventory/collection-income
 func (h *ShopHandler) CollectionIncome(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	info, err := store.GetCollectionIncomeInfo(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	resp := map[string]any{
@@ -439,21 +439,21 @@ func (h *ShopHandler) CollectionIncome(w http.ResponseWriter, r *http.Request) {
 // POST /api/inventory/claim-collection-income
 func (h *ShopHandler) ClaimCollectionIncome(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	balance, amount, err := store.ClaimCollectionIncome(r.Context(), h.Pool, userID)
 	if err != nil {
 		switch err {
 		case store.ErrIncomeNotReady, store.ErrNoCollections:
-			http.Error(w, err.Error(), http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, err.Error())
 		default:
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 		}
 		return
 	}

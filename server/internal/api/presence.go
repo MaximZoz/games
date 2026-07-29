@@ -26,19 +26,19 @@ type PresenceUserResponse struct {
 
 func (h *PresenceHandler) Get(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	raw := strings.TrimSpace(r.URL.Query().Get("user_ids"))
 	if raw == "" {
-		http.Error(w, "user_ids query parameter required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "user_ids query parameter required")
 		return
 	}
 
 	parts := strings.Split(raw, ",")
 	if len(parts) > maxPresenceUserIDs {
-		http.Error(w, "too many user_ids", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "too many user_ids")
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *PresenceHandler) Get(w http.ResponseWriter, r *http.Request) {
 		}
 		id, err := uuid.Parse(p)
 		if err != nil {
-			http.Error(w, "invalid user_id: "+p, http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid user_id: "+p)
 			return
 		}
 		userIDs = append(userIDs, id)
@@ -64,7 +64,7 @@ func (h *PresenceHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	lastSeen, err := store.GetLastSeenForUsers(r.Context(), h.Pool, userIDs)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
