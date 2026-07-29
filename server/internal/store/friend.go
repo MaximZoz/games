@@ -58,6 +58,26 @@ func orderedUserPair(a, b uuid.UUID) (uuid.UUID, uuid.UUID) {
 	return b, a
 }
 
+// AreFriends возвращает true, если между пользователями есть запись в friendships.
+func AreFriends(ctx context.Context, pool *pgxpool.Pool, a, b uuid.UUID) (bool, error) {
+	if a == b {
+		return false, nil
+	}
+	low, high := orderedUserPair(a, b)
+	var exists int
+	err := pool.QueryRow(ctx,
+		`SELECT 1 FROM friendships WHERE user_low = $1 AND user_high = $2`,
+		low, high,
+	).Scan(&exists)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func ListFriendships(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]Friendship, error) {
 	rows, err := pool.Query(ctx, `
 		SELECT

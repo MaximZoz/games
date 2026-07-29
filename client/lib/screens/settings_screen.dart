@@ -13,6 +13,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final addBotsAfter30s = ref.watch(addBotsAfter30sProvider);
+    final messagesFriendsOnly = ref.watch(messagesFriendsOnlyProvider);
     final webPushEnabled = ref.watch(webPushEnabledProvider);
     final pushCategories = ref.watch(webPushCategoriesProvider);
     final narrow = isNarrow(context);
@@ -55,6 +56,26 @@ class SettingsScreen extends ConsumerWidget {
                       value: addBotsAfter30s,
                       onChanged: (v) =>
                           ref.read(addBotsAfter30sProvider.notifier).set(v),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    child: _SwitchRow(
+                      title: 'Сообщения только от друзей',
+                      subtitle:
+                          'Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.',
+                      value: messagesFriendsOnly,
+                      onChanged: (v) async {
+                        final err = await ref
+                            .read(messagesFriendsOnlyProvider.notifier)
+                            .set(v);
+                        if (!context.mounted || err == null) return;
+                        showAppSnackBar(
+                          context,
+                          message: err,
+                          kind: AppSnackKind.error,
+                        );
+                      },
                     ),
                   ),
                   if (kIsWeb) ...[

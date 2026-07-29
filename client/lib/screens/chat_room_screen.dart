@@ -90,6 +90,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   bool _leavingToChats = false;
   bool _showScrollToBottomButton = false;
   bool _roomActionInFlight = false;
+  bool _emojiOnly = false;
   String? _error;
   List<ChatMessageItem> _messages = const [];
 
@@ -106,6 +107,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _scrollController.addListener(_onMessagesScroll);
     _loadMessages(initial: true);
+    unawaited(_loadCapabilities());
     // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -122,8 +124,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _loadingOlder = false;
       _hasMoreOlder = true;
       _initialScrollDone = false;
+      _emojiOnly = false;
       _messageIDs.clear();
       _loadMessages(initial: true);
+      unawaited(_loadCapabilities());
     }
   }
 
@@ -241,6 +245,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           await repo.sendRequest(id);
         }
         await refreshFriendsSnapshot(ref);
+        unawaited(_loadCapabilities());
         if (!mounted) return;
         showAppSnackBar(
           context,
@@ -346,6 +351,23 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       );
     } finally {
       if (mounted) setState(() => _roomActionInFlight = false);
+    }
+  }
+
+  Future<void> _loadCapabilities() async {
+    try {
+      final caps =
+          await ref.read(chatsRepositoryProvider).getCapabilities(widget.chatID);
+      if (!mounted) return;
+      if (_emojiOnly != caps.emojiOnly) {
+        setState(() => _emojiOnly = caps.emojiOnly);
+        if (caps.emojiOnly) {
+          _textController.clear();
+          _composerFocusNode.unfocus();
+        }
+      }
+    } catch (_) {
+      // Не блокируем чат при ошибке capabilities.
     }
   }
 
@@ -706,6 +728,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _sendMessage() async {
+    if (_emojiOnly) {
+      unawaited(_openEmojiPicker());
+      return;
+    }
     final text = _textController.text.trim();
     if (text.isEmpty || _sending) return;
 
@@ -1319,6 +1345,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       }());
     });
 
+    // Дружба изменилась — пересчитать «только смайлики».
+    ref.listen(friendsSnapshotProvider, (prev, next) {
+      if (prev?.valueOrNull == next.valueOrNull) return;
+      unawaited(_loadCapabilities());
+    });
+
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final media = MediaQuery.of(context);
     final narrowLandscape =
@@ -1662,20 +1694,32 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         focusNode: _composerFocusNode,
                         minLines: 1,
                         maxLines: 4,
+                        readOnly: _emojiOnly,
                         textCapitalization: TextCapitalization.sentences,
-                        decoration: const InputDecoration(
-                          hintText: 'Введите сообщение...',
+                        decoration: InputDecoration(
+                          hintText: _emojiOnly
+                              ? 'Можно отправлять только смайлики'
+                              : 'Введите сообщение...',
                           border: InputBorder.none,
                           isDense: true,
                         ),
                         textInputAction: TextInputAction.send,
-                        onTap: _scrollToBottom,
-                        onSubmitted: (_) => _sendMessage(),
+                        onTap: () {
+                          _scrollToBottom();
+                          if (_emojiOnly) {
+                            unawaited(_openEmojiPicker());
+                          }
+                        },
+                        onSubmitted: (_) {
+                          if (!_emojiOnly) _sendMessage();
+                        },
                       ),
                     ),
                     IconButton(
-                      onPressed: _sending ? null : _sendMessage,
-                      tooltip: 'Отправить',
+                      onPressed: _sending
+                          ? null
+                          : (_emojiOnly ? _openEmojiPicker : _sendMessage),
+                      tooltip: _emojiOnly ? 'Смайлики' : 'Отправить',
                       icon: _sending
                           ? const SizedBox(
                               width: 18,
@@ -1685,8 +1729,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 color: AppColors.accentStart,
                               ),
                             )
-                          : const Icon(
-                              Icons.send_rounded,
+                          : Icon(
+                              _emojiOnly
+                                  ? Icons.emoji_emotions_outlined
+                                  : Icons.send_rounded,
                               color: AppColors.accentStart,
                             ),
                     ),

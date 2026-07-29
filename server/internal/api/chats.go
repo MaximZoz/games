@@ -140,6 +140,8 @@ func writeChatError(w http.ResponseWriter, err error) {
 		http.Error(w, "message is too long", http.StatusBadRequest)
 	case errors.Is(err, store.ErrCannotBlockYourself):
 		http.Error(w, "cannot block yourself", http.StatusBadRequest)
+	case errors.Is(err, store.ErrChatFriendsOnlyText):
+		http.Error(w, "only friends can send text messages", http.StatusForbidden)
 	case errors.Is(err, store.ErrChatForbidden):
 		http.Error(w, "forbidden", http.StatusForbidden)
 	case errors.Is(err, store.ErrUserBlocked):
@@ -262,6 +264,63 @@ func (h *ChatsHandler) Start(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"chat_id": chatID.String(),
+	})
+}
+
+// Capabilities — GET /api/chats/capabilities?chat_id=…
+// can_send_text / emoji_only с учётом messages_friends_only у собеседника.
+func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	chatID, err := uuid.Parse(strings.TrimSpace(r.URL.Query().Get("chat_id")))
+	if err != nil {
+		http.Error(w, "invalid chat_id", http.StatusBadRequest)
+		return
+	}
+
+	lowID, highID, err := store.ChatParticipantIDs(r.Context(), h.Pool, chatID)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+	if userID != lowID && userID != highID {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	peerID := highID
+	if userID == highID {
+		peerID = lowID
+	}
+
+	emojiOnly := false
+	peerSettings, err := store.GetUserSettings(r.Context(), h.Pool, peerID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if peerSettings.MessagesFriendsOnly {
+		friends, err := store.AreFriends(r.Context(), h.Pool, userID, peerID)
+		if err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+		emojiOnly = !friends
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"can_send_text": !emojiOnly,
+		"emoji_only":    emojiOnly,
 	})
 }
 

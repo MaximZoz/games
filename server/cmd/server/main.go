@@ -279,6 +279,7 @@ func main() {
 		Push:          pushSender,
 	}
 	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
+	settingsHandler := &api.SettingsHandler{Pool: pool}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
@@ -334,6 +335,7 @@ func main() {
 	mux.Handle("/api/friends/remove", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.RemoveFriend)))
 	mux.Handle("/api/chats", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.List)))
 	mux.Handle("/api/chats/start", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Start)))
+	mux.Handle("/api/chats/capabilities", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Capabilities)))
 	mux.Handle("/api/chats/messages", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Messages)))
 	mux.Handle("/api/chats/read", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Read)))
 	mux.Handle("/api/chats/delivered", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Delivered)))
@@ -341,6 +343,7 @@ func main() {
 	mux.Handle("/api/chats/block", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Block)))
 	mux.Handle("/api/chats/unblock", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Unblock)))
 	mux.Handle("/api/chats/blocked", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Blocked)))
+	mux.Handle("/api/settings", api.RequireAuth([]byte(jwtSecret), settingsHandler))
 	mux.Handle("/api/games/", api.RequireAuth([]byte(jwtSecret), gamesHandler))
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
 	mux.Handle("/api/coins/daily-available", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.DailyAvailable)))
