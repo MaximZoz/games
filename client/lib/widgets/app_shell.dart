@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -15,6 +16,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -85,6 +87,27 @@ class AppShell extends ConsumerWidget {
       ref.watch(userGameSettingsProvider);
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
+      // iOS PWA: после рестарта/смены SW заново привязываем Web Push.
+      ref.listen(authStateProvider, (prev, next) {
+        if (next.valueOrNull != null && prev?.valueOrNull == null) {
+          unawaited(
+            ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+          );
+        }
+      });
+      ref.listen<bool>(webPushEnabledProvider, (prev, next) {
+        if (next == true && prev != true) {
+          unawaited(
+            ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+          );
+        }
+      });
+      // Уже залогинен при первом кадре shell — тоже rebind.
+      if (authState.valueOrNull != null) {
+        unawaited(
+          ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+        );
+      }
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
@@ -437,6 +460,9 @@ class AppShell extends ConsumerWidget {
                           gamesMyTurn: gamesMyTurn,
                           gameInvitesCount: gameInvitesCount,
                           homeBadgeCount: homeBadgeCount,
+                          hairlinesOpacity: ref.watch(
+                            bootToolbarHairlinesOpacityProvider,
+                          ),
                         ),
                       ),
                       // Заливка под home indicator — до скруглённых углов.
@@ -484,6 +510,7 @@ class _MobileBottomNav extends StatelessWidget {
     required this.gamesMyTurn,
     required this.gameInvitesCount,
     required this.homeBadgeCount,
+    this.hairlinesOpacity = 1,
   });
 
   final int selectedIndex;
@@ -493,6 +520,7 @@ class _MobileBottomNav extends StatelessWidget {
   final int gamesMyTurn;
   final int gameInvitesCount;
   final int homeBadgeCount;
+  final double hairlinesOpacity;
 
   @override
   Widget build(BuildContext context) {
@@ -529,7 +557,7 @@ class _MobileBottomNav extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          // Симметричная подпись: линия — текст — линия (фиолет. как иконка).
+          // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
             switchInCurve: Curves.easeOut,
@@ -542,7 +570,14 @@ class _MobileBottomNav extends StatelessWidget {
                 // Чуть выше центра строки — visually на уровне середины букв.
                 Transform.translate(
                   offset: const Offset(0, -3),
-                  child: _captionHairline(),
+                  child: Opacity(
+                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
+                    child: const BrandAccentHairline(
+                      width: 33,
+                      height: 2.5,
+                      side: BrandAccentHairlineSide.fadeOutsideLeft,
+                    ),
+                  ),
                 ),
                 Transform.translate(
                   offset: const Offset(0, -2),
@@ -562,23 +597,19 @@ class _MobileBottomNav extends StatelessWidget {
                 ),
                 Transform.translate(
                   offset: const Offset(0, -3),
-                  child: _captionHairline(),
+                  child: Opacity(
+                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
+                    child: const BrandAccentHairline(
+                      width: 33,
+                      height: 2.5,
+                      side: BrandAccentHairlineSide.fadeOutsideRight,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _captionHairline() {
-    return Container(
-      width: 33, // ×1.5 от прежних 22
-      height: 1.5,
-      decoration: BoxDecoration(
-        color: AppColors.accentStart.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(999),
       ),
     );
   }
@@ -604,7 +635,9 @@ Widget _navIcon(
   } else if (item.path == '/friends') {
     badgeValue = incomingFriends;
   } else if (item.path == '/games') {
-    badgeValue = gamesMyTurn + gameInvitesCount;
+    // На табе «Игры» бейдж «мой ход» не нужен — ход уже виден в партии.
+    // Приглашения в новую игру оставляем.
+    badgeValue = (selected ? 0 : gamesMyTurn) + gameInvitesCount;
   } else if (item.path == '/') {
     badgeValue = homeBadgeCount;
   }

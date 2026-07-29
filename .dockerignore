@@ -1,33 +1,64 @@
-# Git и IDE
+# =========================
+# Git / IDE / docs
+# =========================
 .git
 .gitignore
 .cursor
 .vscode
+.idea
 *.md
 !README.md
 
-# Локальная среда
+# =========================
+# Local env
+# =========================
 .env
 .env.*
 !.env.example
 
-# Клиент: не копировать лишнее (Dockerfile копирует client/)
+# =========================
+# Flutter client
+# (Dockerfile builds web from sources; native targets not needed)
+# =========================
 client/.dart_tool
 client/build
 client/.packages
+client/.flutter-plugins
+client/.flutter-plugins-dependencies
+client/.metadata
+client/*.iml
 client/test
 client/integration_test
 client/coverage
-client/*.iml
+client/ios
+client/android
+client/macos
+client/linux
+client/windows
+client/tool
 
-# Сервер: тесты и кэш
-server/*.test
+# =========================
+# Go server
+# Local embedded web is replaced by Flutter build stage — skip upload.
+# =========================
+server/cmd/server/web
+server/cmd/server/__debug_bin.exe
+server/cmd/server/__debug_bin.exe*
+server/bin
+server/vendor
 server/.cache
-server/*_test.go
+server/logs
+server/**/*_test.go
+**/*_test.go
+*.test
+*.exe
 
-# Лаунчер и прочее
+# =========================
+# Repo extras
+# =========================
 launcher
 .github
 docs
-*.png
-*.jpg
+*.log
+tmp
+.DS_Store

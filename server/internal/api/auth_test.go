@@ -2,10 +2,12 @@ package api
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -146,5 +148,35 @@ func TestRefresh_EmptyToken(t *testing.T) {
 
 	if rec.Code != http.StatusBadRequest {
 		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestCreateUserConflictMessage_DisplayName(t *testing.T) {
+	err := &pgconn.PgError{
+		Code:           "23505",
+		ConstraintName: "users_display_name_key",
+	}
+	msg, ok := createUserConflictMessage(err)
+	if !ok || msg != "login already taken" {
+		t.Fatalf("got (%q, %v), want (login already taken, true)", msg, ok)
+	}
+}
+
+func TestCreateUserConflictMessage_Email(t *testing.T) {
+	err := &pgconn.PgError{
+		Code:           "23505",
+		ConstraintName: "users_email_key",
+	}
+	msg, ok := createUserConflictMessage(err)
+	if !ok || msg != "email already registered" {
+		t.Fatalf("got (%q, %v), want (email already registered, true)", msg, ok)
+	}
+}
+
+func TestCreateUserConflictMessage_FallbackText(t *testing.T) {
+	err := errors.New(`ERROR: duplicate key value violates unique constraint "users_display_name_key"`)
+	msg, ok := createUserConflictMessage(err)
+	if !ok || msg != "login already taken" {
+		t.Fatalf("got (%q, %v), want (login already taken, true)", msg, ok)
 	}
 }

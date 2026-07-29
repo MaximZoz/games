@@ -701,7 +701,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Future<void> _acceptRematch(String lobbyId) async {
     if (_isAcceptingRematch) return;
     setState(() => _isAcceptingRematch = true);
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
       final result = await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
       if (!context.mounted) return;

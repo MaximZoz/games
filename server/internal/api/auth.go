@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -25,6 +27,7 @@ const (
 type AuthHandler struct {
 	Pool      *pgxpool.Pool
 	JWTSecret []byte
+	Push      *WebPushSender
 }
 
 type RegisterRequest struct {
@@ -78,6 +81,37 @@ func userToResponse(u *store.User) UserResponse {
 	}
 }
 
+// createUserConflictMessage различает unique по email и по логину (display_name).
+// Раньше любой duplicate отдавался как "email already registered" (#145).
+func createUserConflictMessage(err error) (string, bool) {
+	if err == nil {
+		return "", false
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		switch pgErr.ConstraintName {
+		case "users_display_name_key":
+			return "login already taken", true
+		case "users_email_key":
+			return "email already registered", true
+		}
+	}
+
+	msg := err.Error()
+	if strings.Contains(msg, "users_display_name_key") {
+		return "login already taken", true
+	}
+	if strings.Contains(msg, "users_email_key") {
+		return "email already registered", true
+	}
+	if strings.Contains(msg, "duplicate key") || strings.Contains(msg, "unique") {
+		// Неясный unique — безопаснее не врать про email.
+		return "login or email already registered", true
+	}
+	return "", false
+}
+
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -109,8 +143,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName, referredBy)
 	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique") {
-			http.Error(w, "email already registered", http.StatusConflict)
+		if msg, ok := createUserConflictMessage(err); ok {
+			http.Error(w, msg, http.StatusConflict)
 			return
 		}
 		http.Error(w, "server error", http.StatusInternalServerError)

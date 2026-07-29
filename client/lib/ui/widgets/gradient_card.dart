@@ -10,6 +10,7 @@ class GradientCard extends StatefulWidget {
     this.padding,
     this.margin,
     this.borderWidth = 2,
+    this.borderOpacity = 1,
     this.animate = true,
     this.animateBorder = false,
   });
@@ -18,6 +19,8 @@ class GradientCard extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double borderWidth;
+  /// 0 — рамка невидима (splash рисует её стрелками), 1 — обычный вид.
+  final double borderOpacity;
   final bool animate;
   /// Включает циклическую анимацию рамки. По умолчанию отключена для снижения нагрузки.
   final bool animateBorder;
@@ -74,11 +77,26 @@ class _GradientCardState extends State<GradientCard>
   }
 
   Widget _cardWithGradient(Gradient gradient) {
+    final borderOpacity = widget.borderOpacity.clamp(0.0, 1.0);
     final r = AppRadius.card + widget.borderWidth;
+    final fadedGradient = borderOpacity >= 0.999
+        ? gradient
+        : LinearGradient(
+            begin: gradient is LinearGradient
+                ? gradient.begin
+                : Alignment.topLeft,
+            end: gradient is LinearGradient
+                ? gradient.end
+                : Alignment.bottomRight,
+            colors: gradient.colors
+                .map((c) => c.withValues(alpha: c.a * borderOpacity))
+                .toList(),
+            stops: gradient is LinearGradient ? gradient.stops : null,
+          );
     return Container(
       padding: EdgeInsets.all(widget.borderWidth),
       decoration: BoxDecoration(
-        gradient: gradient,
+        gradient: fadedGradient,
         borderRadius: BorderRadius.circular(r),
       ),
       child: ClipRRect(

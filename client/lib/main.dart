@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
+import 'core/push_notification_nav_stub.dart'
+    if (dart.library.html) 'core/push_notification_nav_web.dart'
+    as push_nav;
 import 'router.dart';
 import 'ui/app_theme.dart';
 import 'ui/widgets/zozu_boot_splash.dart';
@@ -61,6 +64,16 @@ TextTheme _textThemeNoUnderline(TextTheme base) {
   );
 }
 
+/// Установка слушателя клика по Web Push → go_router без перезагрузки.
+final _pushNotificationNavProvider = Provider<void>((ref) {
+  if (!kIsWeb) return;
+  final router = ref.watch(goRouterProvider);
+  push_nav.installPushNotificationNavigation((path) {
+    router.go(path);
+  });
+  ref.onDispose(push_nav.uninstallPushNotificationNavigation);
+});
+
 /// Без Material-ползунка поверх списков (чат, друзья, поиск и т.д.).
 class _NoScrollbarBehavior extends MaterialScrollBehavior {
   const _NoScrollbarBehavior();
@@ -81,6 +94,8 @@ class MultiGamesApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
+    // Клик по push: navigate внутри SPA, без reload и splash.
+    ref.watch(_pushNotificationNavProvider);
     return MaterialApp.router(
       title: 'Zozu Games',
       debugShowCheckedModeBanner: false,

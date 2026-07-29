@@ -13,4 +13,10 @@ void main() {
     expect(parseAnimatedEmojiName('[ae:kissingHeart]'), 'kissingHeart');
     expect(parseAnimatedEmojiName(' text '), isNull);
   });
+
+  test('formatChatMessagePreview заменяет [ae:…] в смешанном тексте', () {
+    final out = formatChatMessagePreview('[ae:smile] привет');
+    expect(out, isNot(contains('[ae:')));
+    expect(out, contains('привет'));
+  });
 }

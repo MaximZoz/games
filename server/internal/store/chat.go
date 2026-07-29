@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"regexp"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -19,10 +19,25 @@ var (
 	ErrCannotChatWithYourself = errors.New("cannot chat with yourself")
 	ErrChatMessageEmpty       = errors.New("chat message is empty")
 	ErrChatMessageTooLong     = errors.New("chat message is too long")
+	ErrChatFriendsOnlyText    = errors.New("only friends can send text messages")
 	ErrUserBlocked            = errors.New("user is blocked")
 	ErrCannotBlockYourself    = errors.New("cannot block yourself")
 	ErrUserNotFound           = errors.New("user not found")
 )
+
+// Токены, разрешённые не-друзьям при messages_friends_only у получателя.
+var (
+	animatedEmojiTokenRe  = regexp.MustCompile(`^\[ae:[A-Za-z0-9_]+\]$`)
+	giftCollectionTokenRe = regexp.MustCompile(
+		`^\[gift_coll:[^|\]]+\|[^|\]]*\|[^|\]]*\|[^\]]*\]$`,
+	)
+)
+
+// IsRestrictedChatMessageAllowed — смайлик или подарок коллекции (не свободный текст).
+func IsRestrictedChatMessageAllowed(body string) bool {
+	text := strings.TrimSpace(body)
+	return animatedEmojiTokenRe.MatchString(text) || giftCollectionTokenRe.MatchString(text)
+}
 
 type ChatMessage struct {
 	ID           uuid.UUID
@@ -32,6 +47,14 @@ type ChatMessage struct {
 	CreatedAt    time.Time
 	DeliveredAt  *time.Time
 	ReadAt       *time.Time
+	EditedAt     *time.Time
+	ReplyToMessageID *uuid.UUID
+	HasImage     bool
+	ImageCount   int
+	// Превью ответа (из JOIN), без image_data.
+	ReplyToBody     string
+	ReplyToHasImage bool
+	ReplyToSenderID *uuid.UUID
 }
 
 type ChatUser struct {
@@ -152,7 +175,9 @@ func ListChatsForUser(
 				m.body,
 				m.created_at,
 				m.delivered_at,
-				m.read_at
+				m.read_at,
+				m.has_image,
+				COALESCE(m.image_count, 0) AS image_count
 			FROM chat_messages m
 			JOIN my_chats mc ON mc.id = m.chat_id
 			ORDER BY m.chat_id, m.created_at DESC
@@ -170,7 +195,7 @@ func ListChatsForUser(
 			mc.id,
 			mc.created_at,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
-			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at,
+			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at, lm.has_image, lm.image_count,
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
 		FROM my_chats mc
@@ -196,6 +221,8 @@ func ListChatsForUser(
 		var lastCreatedAt sql.NullTime
 		var lastDeliveredAt sql.NullTime
 		var lastReadAt sql.NullTime
+		var lastHasImage sql.NullBool
+		var lastImageCount sql.NullInt32
 
 		if err := rows.Scan(
 			&item.ChatID,
@@ -214,6 +241,8 @@ func ListChatsForUser(
 			&lastCreatedAt,
 			&lastDeliveredAt,
 			&lastReadAt,
+			&lastHasImage,
+			&lastImageCount,
 			&item.UnreadCount,
 			&item.UpdatedAt,
 		); err != nil {
@@ -232,6 +261,11 @@ func ListChatsForUser(
 					SenderUserID: senderID,
 					Body:         strings.TrimSpace(lastBody.String),
 					CreatedAt:    lastCreatedAt.Time.UTC(),
+					HasImage:     lastHasImage.Valid && lastHasImage.Bool,
+					ImageCount:   int(lastImageCount.Int32),
+				}
+				if msg.HasImage && msg.ImageCount <= 0 {
+					msg.ImageCount = 1
 				}
 				if lastDeliveredAt.Valid {
 					deliveredAt := lastDeliveredAt.Time.UTC()
@@ -258,81 +292,7 @@ func ListChatMessages(
 	limit int,
 	before *time.Time,
 ) ([]ChatMessage, error) {
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
-
-	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
-		return nil, err
-	}
-
-	var (
-		rows pgx.Rows
-		err  error
-	)
-	if before != nil {
-		rows, err = pool.Query(ctx, `
-			SELECT id, chat_id, sender_user_id, body, created_at, delivered_at, read_at
-			FROM chat_messages
-			WHERE chat_id = $1 AND created_at < $3
-			ORDER BY created_at DESC
-			LIMIT $2
-		`, chatID, limit, before.UTC())
-	} else {
-		rows, err = pool.Query(ctx, `
-			SELECT id, chat_id, sender_user_id, body, created_at, delivered_at, read_at
-			FROM chat_messages
-			WHERE chat_id = $1
-			ORDER BY created_at DESC
-			LIMIT $2
-		`, chatID, limit)
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	messages := make([]ChatMessage, 0, limit)
-	for rows.Next() {
-		var msg ChatMessage
-		var deliveredAt sql.NullTime
-		var readAt sql.NullTime
-		if err := rows.Scan(
-			&msg.ID,
-			&msg.ChatID,
-			&msg.SenderUserID,
-			&msg.Body,
-			&msg.CreatedAt,
-			&deliveredAt,
-			&readAt,
-		); err != nil {
-			return nil, err
-		}
-		msg.CreatedAt = msg.CreatedAt.UTC()
-		if deliveredAt.Valid {
-			value := deliveredAt.Time.UTC()
-			msg.DeliveredAt = &value
-		}
-		if readAt.Valid {
-			value := readAt.Time.UTC()
-			msg.ReadAt = &value
-		}
-		messages = append(messages, msg)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	// Возвращаем в хронологическом порядке (старые -> новые).
-	for left, right := 0, len(messages)-1; left < right; {
-		messages[left], messages[right] = messages[right], messages[left]
-		left++
-		right--
-	}
-	return messages, nil
+	return ListChatMessagesRich(ctx, pool, chatID, currentUserID, limit, before)
 }
 
 func SendChatMessage(
@@ -341,63 +301,7 @@ func SendChatMessage(
 	chatID, senderUserID uuid.UUID,
 	body string,
 ) (ChatMessage, error) {
-	text := strings.TrimSpace(body)
-	if text == "" {
-		return ChatMessage{}, ErrChatMessageEmpty
-	}
-	if utf8.RuneCountInString(text) > 2000 {
-		return ChatMessage{}, ErrChatMessageTooLong
-	}
-
-	if err := ensureChatMembership(ctx, pool, chatID, senderUserID); err != nil {
-		return ChatMessage{}, err
-	}
-
-	lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-	peerID := highID
-	if senderUserID == highID {
-		peerID = lowID
-	}
-	blocked, err := IsUsersBlocked(ctx, pool, senderUserID, peerID)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-	if blocked {
-		return ChatMessage{}, ErrUserBlocked
-	}
-
-	var msg ChatMessage
-	var deliveredAt sql.NullTime
-	var readAt sql.NullTime
-	err = pool.QueryRow(ctx, `
-		INSERT INTO chat_messages (chat_id, sender_user_id, body)
-		VALUES ($1, $2, $3)
-		RETURNING id, chat_id, sender_user_id, body, created_at, delivered_at, read_at
-	`, chatID, senderUserID, text).Scan(
-		&msg.ID,
-		&msg.ChatID,
-		&msg.SenderUserID,
-		&msg.Body,
-		&msg.CreatedAt,
-		&deliveredAt,
-		&readAt,
-	)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-	msg.CreatedAt = msg.CreatedAt.UTC()
-	if deliveredAt.Valid {
-		value := deliveredAt.Time.UTC()
-		msg.DeliveredAt = &value
-	}
-	if readAt.Valid {
-		value := readAt.Time.UTC()
-		msg.ReadAt = &value
-	}
-	return msg, nil
+	return SendChatMessageOpts(ctx, pool, chatID, senderUserID, SendChatOptions{Body: body})
 }
 
 type ChatDeliveryBatch struct {

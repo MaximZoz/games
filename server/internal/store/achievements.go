@@ -293,40 +293,43 @@ func achievementMet(def AchievementDef, profileDone bool, gamesFinished, friends
 }
 
 // EvaluateAndUnlock проверяет условия и разблокирует новые достижения.
-func EvaluateAndUnlock(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) error {
+// Возвращает только что разблокированные (для push / UI).
+func EvaluateAndUnlock(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]AchievementDef, error) {
 	u, err := GetUserByID(ctx, pool, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	gamesFinished, err := GetGamesFinished(ctx, pool, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	friendsCount, err := CountFriends(ctx, pool, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	wins, err := GetWinStats(ctx, pool, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	existing, err := loadAchievementRows(ctx, pool, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	profileDone := isProfileComplete(u)
+	unlocked := make([]AchievementDef, 0)
 	for _, def := range AchievementCatalog() {
 		if _, ok := existing[def.Code]; ok {
 			continue
 		}
 		if achievementMet(def, profileDone, gamesFinished, friendsCount, wins) {
 			if err := unlockAchievement(ctx, pool, userID, def); err != nil {
-				return err
+				return unlocked, err
 			}
+			unlocked = append(unlocked, def)
 		}
 	}
-	return nil
+	return unlocked, nil
 }
 
 func progressFor(def AchievementDef, profileDone bool, gamesFinished, friendsCount int, wins userWinStats) int {
@@ -362,7 +365,7 @@ func progressFor(def AchievementDef, profileDone bool, gamesFinished, friendsCou
 
 // ListAchievements возвращает каталог со статусами; перед этим обновляет unlock.
 func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]AchievementItem, error) {
-	if err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
+	if _, err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
 		return nil, err
 	}
 	u, err := GetUserByID(ctx, pool, userID)
@@ -432,7 +435,7 @@ func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID)
 
 // CountUnclaimedAchievements — для бейджа на главной.
 func CountUnclaimedAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (int, error) {
-	if err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
+	if _, err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
 		return 0, err
 	}
 	var n int
@@ -458,7 +461,7 @@ func ClaimAchievement(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID,
 	}
 
 	// На случай, если условие уже выполнено, но строка ещё не создана.
-	if err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
+	if _, err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
 		return ClaimAchievementResult{}, err
 	}
 

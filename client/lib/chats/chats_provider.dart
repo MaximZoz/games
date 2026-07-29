@@ -64,19 +64,31 @@ Future<void> _emitAfterFrame(void Function() fn) async {
 final chatsListCacheProvider =
     StateProvider<({List<ChatPreviewItem> chats, DateTime at})?>((ref) => null);
 
+/// Чаты, которые пользователь только что прочитал локально
+/// (пока серверный список ещё может отдавать старый unread).
+final locallyReadChatIdsProvider = StateProvider<Set<String>>((ref) => {});
+
 /// Локально сбросить unread в кэше списка (без сетевого reload).
 void markChatReadInChatsCache(WidgetRef ref, String chatId) {
+  final id = chatId.trim();
+  if (id.isEmpty) return;
   final cache = ref.read(chatsListCacheProvider);
-  if (cache == null) return;
-  var changed = false;
-  final chats = cache.chats.map((c) {
-    if (c.chatID != chatId || c.unreadCount == 0) return c;
-    changed = true;
-    return c.copyWith(unreadCount: 0);
-  }).toList(growable: false);
-  if (!changed) return;
-  ref.read(chatsListCacheProvider.notifier).state =
-      (chats: chats, at: cache.at);
+  if (cache != null) {
+    var changed = false;
+    final chats = cache.chats.map((c) {
+      if (c.chatID != id || c.unreadCount == 0) return c;
+      changed = true;
+      return c.copyWith(unreadCount: 0);
+    }).toList(growable: false);
+    if (changed) {
+      ref.read(chatsListCacheProvider.notifier).state =
+          (chats: chats, at: cache.at);
+    }
+  }
+  final prev = ref.read(locallyReadChatIdsProvider);
+  if (!prev.contains(id)) {
+    ref.read(locallyReadChatIdsProvider.notifier).state = {...prev, id};
+  }
 }
 
 /// Убрать чат из локального кэша списка (очистка/блок из комнаты на десктопе).
@@ -114,19 +126,42 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
 
   final controller = StreamController<List<ChatPreviewItem>>();
   var loadInFlight = false;
+  var loadQueued = false;
 
   Future<void> load() async {
-    if (loadInFlight) return;
+    if (loadInFlight) {
+      loadQueued = true;
+      return;
+    }
     loadInFlight = true;
     try {
-      final chats = await ref.read(chatsRepositoryProvider).listChats(limit: 10, offset: 0);
-      await _emitAfterFrame(() {
-        if (!controller.isClosed) controller.add(chats);
-      });
-    } catch (e, st) {
-      await _emitAfterFrame(() {
-        if (!controller.isClosed) controller.addError(e, st);
-      });
+      do {
+        loadQueued = false;
+        try {
+          final chats = await ref
+              .read(chatsRepositoryProvider)
+              .listChats(limit: 10, offset: 0);
+          final localRead = ref.read(locallyReadChatIdsProvider);
+          if (localRead.isNotEmpty) {
+            final next = <String>{...localRead};
+            for (final c in chats) {
+              if (next.contains(c.chatID) && c.unreadCount == 0) {
+                next.remove(c.chatID);
+              }
+            }
+            if (next.length != localRead.length) {
+              ref.read(locallyReadChatIdsProvider.notifier).state = next;
+            }
+          }
+          await _emitAfterFrame(() {
+            if (!controller.isClosed) controller.add(chats);
+          });
+        } catch (e, st) {
+          await _emitAfterFrame(() {
+            if (!controller.isClosed) controller.addError(e, st);
+          });
+        }
+      } while (loadQueued);
     } finally {
       loadInFlight = false;
     }
@@ -135,9 +170,39 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
   ref.listen<AsyncValue<Map<String, dynamic>>>(
     realtimeEventsProvider,
     (_, next) {
-      final type = next.valueOrNull?['type']?.toString() ?? '';
-      if (type == 'chat_message' ||
-          type == 'chat_list_changed' ||
+      final event = next.valueOrNull;
+      if (event == null) return;
+      final type = event['type']?.toString() ?? '';
+      if (type == 'chat_message') {
+        // Новое входящее — снять локальный «прочитано», чтобы бейдж снова вырос.
+        final chatID = event['chat_id']?.toString() ?? '';
+        final messageRaw = event['message'];
+        final senderID = messageRaw is Map
+            ? messageRaw['sender_user_id']?.toString()
+            : null;
+        if (chatID.isNotEmpty &&
+            senderID != null &&
+            senderID.isNotEmpty &&
+            senderID != user.id) {
+          final local = ref.read(locallyReadChatIdsProvider);
+          if (local.contains(chatID)) {
+            final next = <String>{...local}..remove(chatID);
+            ref.read(locallyReadChatIdsProvider.notifier).state = next;
+          }
+        }
+        unawaited(load());
+        return;
+      }
+      if (type == 'chat_message_updated') {
+        // Правка текста — обновить превью в списке чатов.
+        unawaited(load());
+        return;
+      }
+      if (type == 'chat_message_deleted') {
+        unawaited(load());
+        return;
+      }
+      if (type == 'chat_list_changed' ||
           type == 'chat_read' ||
           type == 'chat_delivered' ||
           type == 'realtime_connected') {
@@ -207,8 +272,13 @@ final blockedUsersProvider = StreamProvider.autoDispose<List<BlockedChatUserItem
 });
 
 final chatsUnreadCountProvider = Provider<int>((ref) {
-  final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
-  return chats.fold<int>(0, (sum, item) => sum + item.unreadCount);
+  final chats =
+      ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+  final localRead = ref.watch(locallyReadChatIdsProvider);
+  return chats.fold<int>(0, (sum, item) {
+    if (localRead.contains(item.chatID)) return sum;
+    return sum + item.unreadCount;
+  });
 });
 
 final blockedUsersCountProvider = Provider<int>((ref) {

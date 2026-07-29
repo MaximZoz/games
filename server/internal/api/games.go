@@ -52,6 +52,7 @@ type GamesHandler struct {
 	Rdb         *redis.Client
 	Hub         *RealtimeHub
 	Broadcaster *GamesBroadcaster
+	Push        *WebPushSender
 }
 
 type CreateLobbyBody struct {
@@ -929,6 +930,19 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 			"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
 			"board": board, "turn": nextTurn, "winner": winner, "status": status,
 		})
+	} else {
+		gameID := strings.TrimPrefix(key, "game:")
+		payload := map[string]any{
+			"type": "game_state", "game_id": gameID,
+			"board": board, "turn": nextTurn, "status": status,
+		}
+		if turnTimeSec > 0 {
+			deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
+			payload["turn_deadline"] = deadline
+			payload["turn_time_sec"] = turnTimeSec
+		}
+		h.broadcast(humanUserIDs(xUserID, oUserID), payload)
+		h.notifyYourTurn(gameID, nextTurn, xUserID, oUserID)
 	}
 	return true
 }
@@ -1386,15 +1400,33 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
 	setUserActiveGame(ctx, h.Rdb, userID, gameID)
 
-	// Удалить «обратное» лобби (joiner создал своё, invite_target=creator), чтобы второй запрос получил 404
+	// Удалить связанные waiting_invite лобби между этими двумя игроками:
+	// 1) «обратное» (joiner пригласил creator) — иначе второй Join получит конфликт;
+	// 2) дубликаты приглашений от того же creator к joiner (повторный реванш).
 	if status == lobbyStatusWaitingInvite {
 		keys, _ := h.Rdb.Keys(ctx, "lobby:*").Result()
 		for _, k := range keys {
+			if k == key || strings.HasSuffix(k, ":invited") {
+				continue
+			}
 			lm, _ := h.Rdb.HGetAll(ctx, k).Result()
-			if lm["creator_id"] == userID.String() && lm["invite_target_id"] == creatorID && lm["status"] == lobbyStatusWaitingInvite {
-				h.Rdb.Del(ctx, k)
-				h.Rdb.Del(ctx, k+":invited")
-				break
+			if lm["status"] != lobbyStatusWaitingInvite {
+				continue
+			}
+			isReverse := lm["creator_id"] == userID.String() && lm["invite_target_id"] == creatorID
+			isDupFromCreator := lm["creator_id"] == creatorID && lm["invite_target_id"] == userID.String()
+			if !isReverse && !isDupFromCreator {
+				continue
+			}
+			h.Rdb.Del(ctx, k)
+			h.Rdb.Del(ctx, k+":invited")
+			staleLobbyID := strings.TrimPrefix(k, "lobby:")
+			if isDupFromCreator && staleLobbyID != "" {
+				h.broadcast([]uuid.UUID{userID}, map[string]any{
+					"type":     "lobby_updated",
+					"lobby_id": staleLobbyID,
+					"left":     true,
+				})
 			}
 		}
 		h.Rdb.Del(ctx, key+":invited")
@@ -1875,6 +1907,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		broadcastPayload["turn_time_sec"] = turnTimeSec
 	}
 	h.broadcast(humanUserIDs(xUserID, oUserID), broadcastPayload)
+	if status == gameStatusActive {
+		h.notifyYourTurn(gameID, nextTurn, xUserID, oUserID)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
@@ -1983,6 +2018,7 @@ func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID 
 		broadcastPayload["turn_time_sec"] = turnTimeSec
 	}
 	h.broadcast([]uuid.UUID{xUUID, oUUID}, broadcastPayload)
+	h.notifyYourTurn(gameID, "o", newXUserID, newOUserID)
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
@@ -2070,12 +2106,61 @@ func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID s
 	})
 }
 
+// notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).
+// Показ на клиенте подавляется SW, если пользователь уже смотрит этот матч.
+func (h *GamesHandler) notifyYourTurn(gameID, nextTurn, xUserID, oUserID string) {
+	if h.Push == nil || strings.TrimSpace(gameID) == "" {
+		return
+	}
+	nextID := xUserID
+	if nextTurn == "o" {
+		nextID = oUserID
+	}
+	if nextID == "" || isBot(nextID) {
+		return
+	}
+	uid, err := uuid.Parse(nextID)
+	if err != nil {
+		return
+	}
+	h.Push.NotifyUsers([]uuid.UUID{uid}, store.WebPushCategoryGames, PushPayload{
+		Title: "Ваш ход",
+		Body:  "Соперник сделал ход — ваша очередь",
+		URL:   "/games/tictactoe/game/" + gameID,
+		Tag:   "game_turn_" + gameID,
+		Kind:  "game_turn",
+	})
+}
+
 func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	if h.Broadcaster != nil && h.Broadcaster.Rdb != nil {
 		h.Broadcaster.Publish(userIDs, payload)
 	} else if h.Hub != nil {
 		h.Hub.PublishToUsers(userIDs, payload)
 	}
+	if h.Push == nil || len(userIDs) == 0 {
+		return
+	}
+	typ, _ := payload["type"].(string)
+	if typ != "game_invite" {
+		return
+	}
+	name, _ := payload["creator_name"].(string)
+	if strings.TrimSpace(name) == "" {
+		name = "Игрок"
+	}
+	lobbyID, _ := payload["lobby_id"].(string)
+	url := "/games"
+	if lobbyID != "" {
+		url = "/games/tictactoe/lobby/" + lobbyID
+	}
+	h.Push.NotifyUsers(userIDs, store.WebPushCategoryGames, PushPayload{
+		Title: "Приглашение в игру",
+		Body:  name + " приглашает сыграть",
+		URL:   url,
+		Tag:   "game_invite_" + lobbyID,
+		Kind:  "game_invite",
+	})
 }
 
 func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
@@ -2108,7 +2193,8 @@ func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID strin
 	if err := store.IncrementWinsByStake(ctx, h.Pool, uid, stakeBronze); err != nil {
 		return
 	}
-	_ = store.EvaluateAndUnlock(ctx, h.Pool, uid)
+	unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
+	notifyAchievementUnlocks(h.Push, uid, unlocked)
 }
 
 func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID string) {
@@ -2123,7 +2209,8 @@ func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID 
 		if err := store.IncrementGamesFinished(ctx, h.Pool, uid); err != nil {
 			continue
 		}
-		_ = store.EvaluateAndUnlock(ctx, h.Pool, uid)
+		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
+		notifyAchievementUnlocks(h.Push, uid, unlocked)
 	}
 }
 

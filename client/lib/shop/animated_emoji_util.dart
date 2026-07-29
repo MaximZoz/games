@@ -9,6 +9,10 @@ import 'package:multigames_client/ui/app_theme.dart';
 /// Токен сообщения с анимированным смайликом: `[ae:rocket]`.
 final RegExp animatedEmojiTokenRe = RegExp(r'^\[ae:([A-Za-z0-9_]+)\]$');
 
+/// Токен `[ae:…]` внутри произвольного текста.
+final RegExp animatedEmojiTokenAnywhereRe =
+    RegExp(r'\[ae:([A-Za-z0-9_]+)\]');
+
 String encodeAnimatedEmojiMessage(String animatedName) => '[ae:$animatedName]';
 
 String? parseAnimatedEmojiName(String body) {
@@ -19,11 +23,35 @@ String? parseAnimatedEmojiName(String body) {
 bool isAnimatedEmojiMessage(String body) =>
     parseAnimatedEmojiName(body) != null;
 
+/// Заменяет все `[ae:name]` в тексте на юникод-смайлик.
+String replaceAnimatedEmojiTokens(String body) {
+  return body.replaceAllMapped(animatedEmojiTokenAnywhereRe, (m) {
+    final name = m.group(1);
+    if (name == null || name.isEmpty) return m.group(0) ?? '';
+    return unicodeEmojiFromAnimatedName(name) ?? '🙂';
+  });
+}
+
 /// Юникод-символ по имени анимации (из `assets/emojis/`, без сети).
 String? unicodeEmojiFromAnimatedName(String name) {
   final flag = countryFlagUnicodeFromName(name);
   if (flag != null) return flag;
   return kBundledEmojiUnicode[name];
+}
+
+/// Доля таймлайна Lottie для статичного превью в магазине/инвентаре.
+///
+/// Как у dragon: берём кадр, где эмодзи реально видно.
+/// По умолчанию ~42% (у dragon нулевой кадр пустой).
+/// У baseball как раз середина плохая — мяч сжат до ~3%, поэтому
+/// берём ранний кадр, где scale ещё ~100%.
+double bundledEmojiStaticPreviewProgress(String animatedName) {
+  switch (animatedName) {
+    case 'baseball':
+      return 0.02;
+    default:
+      return 0.42;
+  }
 }
 
 /// Токен подарка коллекции: `[gift_coll:code|Title|emoji|animatedName]`.
@@ -68,9 +96,7 @@ String formatChatMessagePreview(String body) {
         : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');
     return '🎁 $emoji $title';
   }
-  final name = parseAnimatedEmojiName(body);
-  if (name == null) return body;
-  return unicodeEmojiFromAnimatedName(name) ?? '🙂';
+  return replaceAnimatedEmojiTokens(body);
 }
 
 String resolvedEmojiChar(String animatedName, String? fallback) {
@@ -244,10 +270,6 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
   Timer? _loadTimeout;
   late final AnimationController _lottieCtrl;
 
-  /// Доля таймлайна для статичного превью. У части Noto (dragon и др.)
-  /// нулевой кадр пустой — слои ещё за пределами холста.
-  static const double _staticPreviewProgress = 0.42;
-
   @override
   void initState() {
     super.initState();
@@ -310,7 +332,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
     } else {
       _lottieCtrl
         ..stop()
-        ..value = _staticPreviewProgress;
+        ..value = bundledEmojiStaticPreviewProgress(widget.animatedName);
     }
   }
 
@@ -392,7 +414,8 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
     }
 
     // Lottie из client/assets/emojis/lottie/ — без сети и без package assets.
-    // Статичный превью: кадр ~42% таймлайна (нулевой у dragon пустой).
+    // Статичный превью: кадр из [bundledEmojiStaticPreviewProgress]
+    // (как dragon: не нулевой/пустой, а видимый).
     final lottieSize = widget.size * 0.92;
     return SizedBox(
       width: widget.size,
