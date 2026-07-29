@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/l10n/display_names.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -339,11 +341,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
     }
 
     if (u.gender != null && u.gender!.isNotEmpty) {
-      final isMale = u.gender == 'Мужской';
+      final female = isFemaleGender(u.gender);
       chips.add(_InfoChip(
-        icon: isMale ? Icons.male_rounded : Icons.female_rounded,
-        label: u.gender!,
-        color: isMale ? Colors.blue.shade700 : Colors.pink.shade600,
+        icon: female ? Icons.female_rounded : Icons.male_rounded,
+        label: localizeGender(u.gender, context.l10n),
+        color: female ? Colors.pink.shade600 : Colors.blue.shade700,
       ));
     }
 

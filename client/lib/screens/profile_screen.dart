@@ -26,6 +26,7 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -782,10 +783,10 @@ class _ProfileView extends ConsumerWidget {
               if (profileExtra.gender != null &&
                   profileExtra.gender!.isNotEmpty)
                 _ProfileInfoChip(
-                  icon: profileExtra.gender == 'Женский'
+                  icon: isFemaleGender(profileExtra.gender)
                       ? Icons.female_rounded
                       : Icons.male_rounded,
-                  label: profileExtra.gender!,
+                  label: localizeGender(profileExtra.gender, context.l10n),
                 ),
             ],
           ),
@@ -1218,7 +1219,10 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     }
   }
 
-  static const List<String> _genderOptions = ['Мужской', 'Женский'];
+  static const List<String> _genderOptions = [
+    kGenderMaleApi,
+    kGenderFemaleApi,
+  ];
 
   void _openGenderMenu() {
     showDialog<void>(
@@ -1234,9 +1238,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               mainAxisSize: MainAxisSize.min,
               children: _genderOptions.map((value) {
                 final selected = _gender == value;
-                final label = value == 'Женский'
-                    ? context.l10n.profileGenderFemale
-                    : context.l10n.profileGenderMale;
+                final label = localizeGender(value, context.l10n);
                 return InkWell(
                   onTap: () {
                     setState(() => _gender = value);
@@ -1386,7 +1388,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     prefixIcon: const Icon(Icons.wc_rounded),
                   ),
                   child: Text(
-                    _gender ?? context.l10n.profileGenderUnset,
+                    localizeGender(_gender, context.l10n),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1594,7 +1596,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_gender ?? context.l10n.profileGenderUnset),
+                        Text(localizeGender(_gender, context.l10n)),
                         const Icon(Icons.arrow_drop_down),
                       ],
                     ),
