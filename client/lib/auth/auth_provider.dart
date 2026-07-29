@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/auth/session_cache.dart';
+import 'package:multigames_client/core/web_push_provider.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
@@ -109,6 +110,10 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   }
 
   Future<void> logout() async {
+    // Сначала снять Web Push (нужен ещё живой access token).
+    try {
+      await _ref.read(webPushEnabledProvider.notifier).detachOnLogout();
+    } catch (_) {}
     final repo = _ref.read(authRepositoryProvider);
     await repo.logout();
     state = const AsyncValue.data(null);

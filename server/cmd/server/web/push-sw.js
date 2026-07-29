@@ -1,4 +1,5 @@
 /* Web Push service worker for Zozu Games PWA.
+ * v7: clear_all_notifications при logout (снять баннеры + pending).
  * v6: при клике / открытии из пуша снимаем уведомление из шторки (iOS).
  * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
  * В открытом приложении — без пушей на телефон (бейджи/realtime в UI).
@@ -286,11 +287,41 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
+async function clearPendingPath() {
+  try {
+    const cache = await caches.open(PENDING_CACHE);
+    await cache.delete(PENDING_KEY);
+  } catch (_) {}
+}
+
+async function closeAllShownNotifications() {
+  try {
+    const list = await self.registration.getNotifications();
+    for (const n of list) {
+      try {
+        n.close();
+      } catch (_) {}
+    }
+  } catch (err) {
+    console.warn('[push-sw] closeAllShownNotifications failed', err);
+  }
+}
+
 // Приложение просит снять баннеры после перехода по deep-link
 // (когда iOS открыл PWA без надёжного notificationclick.close).
 self.addEventListener('message', (event) => {
   const data = event.data || {};
-  if (!data || data.type !== 'clear_notifications') return;
+  if (!data || !data.type) return;
+  if (data.type === 'clear_all_notifications') {
+    event.waitUntil(
+      (async () => {
+        await closeAllShownNotifications();
+        await clearPendingPath();
+      })(),
+    );
+    return;
+  }
+  if (data.type !== 'clear_notifications') return;
   const tag = data.tag != null ? String(data.tag) : '';
   const path = data.path != null ? String(data.path) : '';
   event.waitUntil(closeShownNotifications({ tag: tag || undefined, path }));

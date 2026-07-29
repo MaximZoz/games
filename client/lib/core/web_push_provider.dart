@@ -168,31 +168,44 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
       _boundThisSession = true;
       await _ref.read(webPushCategoriesProvider.notifier).refresh();
     } else {
+      await _unsubscribeEndpointAndBrowser();
       _boundThisSession = false;
-      try {
-        final endpoint = await browser_push.currentBrowserPushEndpoint();
-        if (endpoint != null) {
-          final auth = _ref.read(authRepositoryProvider);
-          await auth.sendAuthorized((token) {
-            return ApiClient.post(
-              Uri.parse('$apiBaseUrl/api/push/unsubscribe'),
-              headers: {
-                'Authorization': 'Bearer $token',
-                'Content-Type': 'application/json',
-              },
-              body: jsonEncode({'endpoint': endpoint}),
-              operation: 'push_unsubscribe',
-            );
-          });
-        }
-        await browser_push.unsubscribeBrowserPush();
-      } catch (_) {}
     }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyWebPushEnabled, value);
     state = value;
     return null;
+  }
+
+  /// Снять endpoint с сервера и в браузере. Флаг prefs не трогаем —
+  /// после следующего логина [ensureActiveSubscription] подпишет снова.
+  /// Вызывать до очистки JWT.
+  Future<void> detachOnLogout() async {
+    _boundThisSession = false;
+    await _unsubscribeEndpointAndBrowser();
+  }
+
+  Future<void> _unsubscribeEndpointAndBrowser() async {
+    try {
+      final endpoint = await browser_push.currentBrowserPushEndpoint();
+      if (endpoint != null) {
+        final auth = _ref.read(authRepositoryProvider);
+        await auth.sendAuthorized((token) {
+          return ApiClient.post(
+            Uri.parse('$apiBaseUrl/api/push/unsubscribe'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'endpoint': endpoint}),
+            operation: 'push_unsubscribe',
+          );
+        });
+      }
+      await browser_push.unsubscribeBrowserPush();
+      await browser_push.clearPushUiOnLogout();
+    } catch (_) {}
   }
 }
 
