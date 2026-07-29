@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
-import 'dart:js_util' as js_util;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -12,10 +11,10 @@ const _swUrl = '/push-sw.js';
 /// Поддержка Web Push в текущем браузере.
 bool browserPushSupported() {
   if (!kIsWeb) return false;
-  final n = html.window.navigator;
-  return html.Notification.supported &&
-      n.serviceWorker != null &&
-      js_util.hasProperty(n, 'PushManager');
+  if (!html.Notification.supported) return false;
+  if (html.window.navigator.serviceWorker == null) return false;
+  // PushManager есть у ServiceWorkerRegistration; проверяем через register.
+  return true;
 }
 
 String browserNotificationPermission() {
@@ -61,18 +60,14 @@ Future<html.PushSubscription> _subscribeWithKey(
   html.PushManager pushManager,
   Uint8List applicationServerKey,
 ) async {
-  // dart:html типы PushManager неточны — работаем через JS interop.
-  final existing = await js_util.promiseToFuture<html.PushSubscription?>(
-    js_util.callMethod(pushManager, 'getSubscription', const []),
-  );
+  // ignore: unnecessary_null_comparison, dead_null_aware_expression
+  final existing = await pushManager.getSubscription();
+  // ignore: unnecessary_null_comparison
   if (existing != null) return existing;
-  final opts = js_util.jsify({
+  return pushManager.subscribe({
     'userVisibleOnly': true,
     'applicationServerKey': applicationServerKey,
   });
-  return js_util.promiseToFuture<html.PushSubscription>(
-    js_util.callMethod(pushManager, 'subscribe', [opts]),
-  );
 }
 
 /// Подписывается на Web Push с [vapidPublicKey] (URL-safe base64).
@@ -117,10 +112,11 @@ Future<String?> currentBrowserPushEndpoint() async {
   final registration = await container.getRegistration(_swUrl);
   final pushManager = registration.pushManager;
   if (pushManager == null) return null;
-  final sub = await js_util.promiseToFuture<html.PushSubscription?>(
-    js_util.callMethod(pushManager, 'getSubscription', const []),
-  );
-  return sub?.endpoint;
+  // ignore: unnecessary_null_comparison
+  final sub = await pushManager.getSubscription();
+  // ignore: unnecessary_null_comparison
+  if (sub == null) return null;
+  return sub.endpoint;
 }
 
 Future<void> unsubscribeBrowserPush() async {
@@ -129,11 +125,9 @@ Future<void> unsubscribeBrowserPush() async {
   final registration = await container.getRegistration(_swUrl);
   final pushManager = registration.pushManager;
   if (pushManager == null) return;
-  final sub = await js_util.promiseToFuture<html.PushSubscription?>(
-    js_util.callMethod(pushManager, 'getSubscription', const []),
-  );
+  // ignore: unnecessary_null_comparison
+  final sub = await pushManager.getSubscription();
+  // ignore: unnecessary_null_comparison
   if (sub == null) return;
-  await js_util.promiseToFuture(
-    js_util.callMethod(sub, 'unsubscribe', const []),
-  );
+  await sub.unsubscribe();
 }
