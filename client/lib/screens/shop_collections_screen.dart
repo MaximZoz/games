@@ -12,6 +12,8 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 
 /// Хаб коллекций — список групп (как «Эмоции» у смайликов).
 class ShopCollectionsScreen extends ConsumerStatefulWidget {
@@ -106,10 +108,10 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           title: Text(
-            'Коллекции',
+            context.l10n.shopCollections,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -118,10 +120,10 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         ),
         body: SafeArea(
           child: orderedSets.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    context.l10n.shopEmpty,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
               : ListView.separated(
@@ -178,8 +180,8 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '$ownedCount/${groupItems.length} · '
-                                      'бонус группы +${formatRewardBronzePerDay(setDaily)}',
+                                      '${context.l10n.shopSetProgress(ownedCount, groupItems.length)} · '
+                                      '+${formatRewardBronzePerDay(setDaily)}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
@@ -244,25 +246,26 @@ class _ShopCollectionGroupScreenState
 
   Future<void> _buy(ShopItem item) async {
     if (_buyInFlight.contains(item.code) || item.owned) return;
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Купить коллекцию?'),
+        title: Text(l10n.shopBuyCollectionTitle),
         content: Text(
-          '${item.title}\n\n'
-          'Цена: ${formatRewardBronze(item.priceBronze)}\n'
-          'Доход: +${formatRewardBronzePerDay(item.dailyBronze)}\n'
-          'Покупка один раз\n'
-          'Продажа: ${formatRewardBronze(item.sellRefundBronze)} (80%)',
+          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+          '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
+          '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
+          '${l10n.shopBuyOnce}\n'
+          '${l10n.shopSellRefund}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Купить'),
+            child: Text(l10n.shopBuy),
           ),
         ],
       ),
@@ -290,7 +293,7 @@ class _ShopCollectionGroupScreenState
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: '${item.title} добавлен в профиль',
+        message: context.l10n.shopCollectionAdded(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -343,7 +346,7 @@ class _ShopCollectionGroupScreenState
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: context.l10n.commonBack,
           ),
           title: Text(
             collectionSetTitle(widget.set),
@@ -355,10 +358,10 @@ class _ShopCollectionGroupScreenState
         ),
         body: SafeArea(
           child: groupItems.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Пока пусто',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    context.l10n.shopEmpty,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
               : ListView.separated(
@@ -367,11 +370,13 @@ class _ShopCollectionGroupScreenState
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     if (index == 0) {
+                      final l10n = context.l10n;
+                      final bonus =
+                          '+${formatRewardBronzePerDay(setDaily)}';
                       return Text(
                         complete
-                            ? 'Собрано · бонус группы +${formatRewardBronzePerDay(setDaily)}'
-                            : 'Собрано $ownedCount/${groupItems.length} · '
-                                'бонус группы +${formatRewardBronzePerDay(setDaily)} при полном наборе',
+                            ? '${l10n.shopSetComplete} · $bonus'
+                            : '${l10n.shopSetProgress(ownedCount, groupItems.length)} · $bonus',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -385,7 +390,7 @@ class _ShopCollectionGroupScreenState
                       onBuy: () => _buy(item),
                       onPreview: () => showCollectionFullscreen(
                         context,
-                        title: item.title,
+                        title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
                         animatedName: item.animatedName ?? 'sparkles',
                         fallback: item.emoji,
                         subtitle: collectionItemSubtitle(item.dailyBronze),
@@ -397,7 +402,7 @@ class _ShopCollectionGroupScreenState
                                     Navigator.of(dialogContext).pop();
                                     unawaited(_buy(item));
                                   },
-                                  child: const Text('Купить'),
+                                  child: Text(context.l10n.shopBuy),
                                 ),
                               ),
                       ),
@@ -449,7 +454,7 @@ class _CollectionShopCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -474,9 +479,9 @@ class _CollectionShopCard extends StatelessWidget {
             ),
           ),
           if (item.owned)
-            const Text(
-              'Куплено',
-              style: TextStyle(
+            Text(
+              context.l10n.shopOwned,
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF2E7D32),
               ),
@@ -484,7 +489,7 @@ class _CollectionShopCard extends StatelessWidget {
           else
             FilledButton(
               onPressed: busy ? null : onBuy,
-              child: Text(busy ? '…' : 'Купить'),
+              child: Text(busy ? '…' : context.l10n.shopBuy),
             ),
         ],
       ),

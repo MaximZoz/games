@@ -1,0 +1,886 @@
+{
+  "@@locale": "el",
+  "appTitle": "Zozu Games",
+  "navHome": "Αρχική",
+  "navProfile": "Προφίλ",
+  "navFriends": "Φίλοι",
+  "navChats": "Συνομιλίες",
+  "navGames": "Παιχνίδια",
+  "navSettings": "Ρυθμίσεις",
+  "settingsTitle": "Ρυθμίσεις",
+  "settingsLanguage": "Γλώσσα",
+  "settingsLanguageSystem": "Προεπιλογή συστήματος",
+  "settingsAddBotsTitle": "Προσθήκη bot μετά από 30 δευτ.",
+  "settingsAddBotsSubtitle": "Στο matchmaking: αν δεν βρεθεί αντίπαλος σε 30 δευτερόλεπτα, το παιχνίδι ξεκινά με bot (το ποντάρισμα επαναφέρεται σε 1 μπρούντζο)",
+  "settingsFriendsOnlyTitle": "Μηνύματα μόνο από φίλους",
+  "settingsFriendsOnlySubtitle": "Οι μη φίλοι μπορούν να στέλνουν μόνο emoji. Αν υπάρχει spam, αποκλείστε προσωρινά τον χρήστη.",
+  "settingsNotifications": "Ειδοποιήσεις",
+  "settingsPushChat": "Συνομιλία",
+  "settingsPushFriends": "Φίλοι",
+  "settingsPushGames": "Παιχνίδια",
+  "settingsPushRewards": "Ανταμοιβές",
+  "loginTitle": "Σύνδεση",
+  "loginSubtitle": "Εισαγάγετε email ή όνομα χρήστη και κωδικό",
+  "loginEmailLabel": "Email ή όνομα χρήστη",
+  "loginPasswordLabel": "Κωδικός",
+  "loginSubmit": "Σύνδεση",
+  "loginNoAccount": "Δεν έχετε λογαριασμό; Εγγραφή",
+  "loginEmailRequired": "Εισαγάγετε email ή όνομα χρήστη",
+  "loginPasswordRequired": "Εισαγάγετε κωδικό",
+  "loginTooltip": "Σύνδεση",
+  "logoutTooltip": "Αποσύνδεση",
+  "registerTitle": "Εγγραφή",
+  "registerSubtitle": "Δημιουργήστε λογαριασμό για να παίξετε",
+  "registerNameLabel": "Όνομα (όνομα χρήστη)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Κωδικός",
+  "registerSubmit": "Εγγραφή",
+  "registerHaveAccount": "Έχετε ήδη λογαριασμό; Σύνδεση",
+  "registerNameRequired": "Εισαγάγετε όνομα",
+  "registerNameNoSpaces": "Το όνομα δεν μπορεί να περιέχει κενά",
+  "registerNameMax": "Μέγιστο 20 χαρακτήρες",
+  "registerNameHint": "Έως 20 χαρακτήρες",
+  "registerEmailRequired": "Εισαγάγετε email",
+  "registerEmailInvalid": "Μη έγκυρο email",
+  "registerPasswordHint": "Τουλάχιστον 6 χαρακτήρες",
+  "registerPasswordMin": "Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες",
+  "commonCancel": "Ακύρωση",
+  "commonSave": "Αποθήκευση",
+  "commonDelete": "Διαγραφή",
+  "commonEdit": "Επεξεργασία",
+  "commonReply": "Απάντηση",
+  "commonSend": "Αποστολή",
+  "commonClose": "Κλείσιμο",
+  "commonRetry": "Επανάληψη",
+  "commonLoading": "Φόρτωση…",
+  "commonError": "Σφάλμα",
+  "commonOnline": "συνδεδεμένος",
+  "commonOffline": "εκτός σύνδεσης",
+  "commonOnlineCap": "Συνδεδεμένος",
+  "commonUser": "Χρήστης",
+  "commonPlayer": "Παίκτης",
+  "commonAboutMe": "Σχετικά με εμένα",
+  "commonBack": "Πίσω",
+  "commonAccept": "Αποδοχή",
+  "commonDecline": "Απόρριψη",
+  "commonCreating": "Δημιουργία…",
+  "commonSearching": "Αναζήτηση…",
+  "commonInsufficientCoins": "Ανεπαρκή νομίσματα",
+  "commonNotFound": "Δεν βρέθηκε",
+  "commonServerErrorShort": "Σφάλμα διακομιστή",
+  "commonForbidden": "Δεν επιτρέπεται η πρόσβαση",
+  "commonUserBlocked": "Ο χρήστης είναι αποκλεισμένος",
+  "commonUserNotFound": "Ο χρήστης δεν βρέθηκε",
+  "commonGenericError": "Κάτι πήγε στραβά. Δοκιμάστε ξανά.",
+  "timeJustNow": "μόλις τώρα",
+  "timeYesterday": "χθες",
+  "timeMinutesAgo": "πριν {count} λεπ.",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "πριν {count} ώρ.",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "πριν {count} ημ.",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "πριν μία εβδομάδα",
+  "timeWeeksAgo": "πριν {count} εβδ.",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "πριν έναν μήνα",
+  "timeMonthsAgo": "πριν {count} μήν.",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "πριν έναν χρόνο",
+  "timeYearsAgo": "πριν {count} χρ.",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "Κυρ",
+  "weekdayMon": "Δευ",
+  "weekdayTue": "Τρί",
+  "weekdayWed": "Τετ",
+  "weekdayThu": "Πέμ",
+  "weekdayFri": "Παρ",
+  "weekdaySat": "Σάβ",
+  "monthJan": "Ιαν",
+  "monthFeb": "Φεβ",
+  "monthMar": "Μαρ",
+  "monthApr": "Απρ",
+  "monthMay": "Μάι",
+  "monthJun": "Ιούν",
+  "monthJul": "Ιούλ",
+  "monthAug": "Αύγ",
+  "monthSep": "Σεπ",
+  "monthOct": "Οκτ",
+  "monthNov": "Νοέ",
+  "monthDec": "Δεκ",
+  "homeAchievements": "Επιτεύγματα",
+  "homeAchievementsSubtitle": "Τα αποτελέσματα των παιχνιδιών σας",
+  "homeAchievementsRewards": "Διαθέσιμες ανταμοιβές προς διεκδίκηση",
+  "homeCoins": "Νομίσματα",
+  "homeCoinsSubtitle": "Υπόλοιπο και ανταμοιβές",
+  "homeCoinsDailyReward": "Διαθέσιμη ημερήσια ανταμοιβή σύνδεσης",
+  "homeItems": "Αντικείμενα",
+  "homeItemsInventory": "Το απόθεμά σας",
+  "homeItemsGifted": "Κάποιος σας χάρισε μια συλλογή",
+  "homeItemsIncome": "Έσοδα συλλογής έτοιμα προς διεκδίκηση",
+  "homeShop": "Κατάστημα",
+  "homeShopSubtitle": "Emoji, πονταρίσματα, συλλογές",
+  "gamesTitle": "Παιχνίδια",
+  "gamesFindMatch": "Εύρεση παιχνιδιού",
+  "gamesMyTurn": "Η σειρά σας",
+  "gamesWaiting": "Αναμονή",
+  "gamesLobbyTab": "Λόμπι",
+  "gamesTicTacToe": "Τρίλιζα",
+  "gamesRules": "Κανόνες",
+  "gamesRulesTitle": "Κανόνες παιχνιδιού",
+  "gamesCreate": "Δημιουργία παιχνιδιού",
+  "gamesJoin": "Συμμετοχή",
+  "gamesOpponentTurn": "Σειρά αντιπάλου",
+  "gamesCurrentGame": "Τρέχον παιχνίδι",
+  "gamesInvitedYou": "Λάβατε πρόσκληση",
+  "gamesTurnTime": "Χρόνος σειράς",
+  "gamesGridSize": "Μέγεθος πλέγματος",
+  "gamesSwapSides": "Αλλαγή πλευράς",
+  "gamesNoCenter": "Χωρίς εκκίνηση στο κέντρο",
+  "lobbyMatchmake": "Λόμπι",
+  "lobbyPrivateGame": "Ιδιωτικό παιχνίδι",
+  "lobbySearchingOpponent": "Αναζήτηση αντιπάλου…",
+  "lobbyWaitingJoin": "Αναμονή να πατήσει κάποιος «Εύρεση παιχνιδιού» ή «Συμμετοχή»",
+  "lobbyInviteTitle": "Πρόσκληση παιχνιδιού",
+  "lobbyInvitedToPlay": "Σας προσκάλεσαν να παίξετε",
+  "lobbyEnterGame": "Είσοδος στο παιχνίδι",
+  "lobbyInvite": "Πρόσκληση",
+  "lobbyInviteSent": "Η πρόσκληση στάλθηκε",
+  "lobbyCopyLink": "Κοινοποίηση συνδέσμου παιχνιδιού",
+  "lobbyLinkCopied": "Ο σύνδεσμος αντιγράφηκε",
+  "lobbyNoFriendsOnline": "Κανένας φίλος σε σύνδεση. Κοινοποιήστε τον σύνδεσμο παραπάνω ή περιμένετε να συνδεθούν φίλοι.",
+  "gameBot": "Bot",
+  "gameOpponent": "Αντίπαλος",
+  "gameYouWon": "Κερδίσατε!",
+  "gameYouWonOpponentLeft": "Κερδίσατε — ο αντίπαλος αποχώρησε",
+  "gameYouWonOpponentTimeout": "Κερδίσατε — έληξε ο χρόνος του αντιπάλου",
+  "gameDraw": "Ισοπαλία",
+  "gameExitTitle": "Αποχώρηση από το παιχνίδι",
+  "gameExitConfirm": "Αν αποχωρήσετε, θα χάσετε. Αποχώρηση ούτως ή άλλως;",
+  "gameStay": "Παραμονή",
+  "gameLeave": "Αποχώρηση",
+  "gameConnecting": "Σύνδεση στο παιχνίδι…",
+  "gameWaitingOpponent": "Αναμονή αντιπάλου",
+  "gameRematchOffer": "Ο αντίπαλος προτείνει ρεβάνς",
+  "gameRematchDeclined": "Ο αντίπαλος απέρριψε το ρεβάνς",
+  "gameRematch": "Ρεβάνς",
+  "gameOtherOpponent": "Άλλος αντίπαλος",
+  "gameSwapSidesAction": "Αλλαγή πλευράς",
+  "gameWriteMessage": "Γράψτε μήνυμα",
+  "chatsTitle": "Συνομιλίες",
+  "chatsEmpty": "Δεν υπάρχουν ακόμα συνομιλίες.\nΠατήστε το εικονίδιο πάνω δεξιά για να επιλέξετε φίλο και να ξεκινήσετε.",
+  "chatsNewChat": "Νέα συνομιλία",
+  "chatsNoMessages": "Χωρίς μηνύματα",
+  "chatsClearTitle": "Εκκαθάριση συνομιλίας;",
+  "chatsClearDesc": "Η συνομιλία θα διαγραφεί οριστικά.",
+  "chatsClearConfirm": "Εκκαθάριση",
+  "chatsBlockTitle": "Αποκλεισμός αυτού του χρήστη;",
+  "chatsBlockDesc": "Δεν θα μπορείτε πλέον να ανταλλάσσετε μηνύματα. Η συνομιλία και η φιλία θα αφαιρεθούν.",
+  "chatsBlockConfirm": "Αποκλεισμός",
+  "chatsBlockedUsers": "Αποκλεισμένοι χρήστες",
+  "chatsUnblock": "Άρση αποκλεισμού",
+  "chatDialog": "Συνομιλία",
+  "chatEmpty": "Δεν υπάρχουν ακόμα μηνύματα.\nΣτείλτε το πρώτο.",
+  "chatMessageHint": "Μήνυμα",
+  "chatEmoji": "Emoji",
+  "chatBuyEmojiHint": "Αγοράστε emoji στο κατάστημα της αρχικής οθόνης",
+  "chatEditing": "Επεξεργασία",
+  "chatToday": "Σήμερα",
+  "chatYesterday": "Χθες",
+  "chatFriendsOnly": "Κείμενο μόνο για φίλους",
+  "emojiGroupEmotions": "Συναισθήματα",
+  "emojiGroupGame": "Παιχνίδια",
+  "emojiGroupFlags": "Σημαίες",
+  "emojiGroupAnimals": "Ζώα",
+  "emojiGroupFood": "Φαγητό",
+  "emojiGroupTravel": "Ταξίδια",
+  "emojiGroupParty": "Γιορτή",
+  "emojiGroupObjects": "Αντικείμενα",
+  "friendsTitle": "Φίλοι",
+  "friendsTabFriends": "Φίλοι",
+  "friendsTabIncoming": "Εισερχόμενα",
+  "friendsTabOutgoing": "Εξερχόμενα",
+  "friendsAdd": "Προσθήκη φίλου",
+  "friendsRequestSent": "Το αίτημα στάλθηκε",
+  "friendsFindTab": "Εύρεση φίλου",
+  "friendsSearchHint": "Αναζήτηση με όνομα χρήστη",
+  "friendsSearchPrompt": "Χρησιμοποιήστε την αναζήτηση για νέους φίλους",
+  "friendsNothingFound": "Δεν βρέθηκε τίποτα",
+  "friendsEmpty": "Δεν έχετε ακόμα φίλους",
+  "friendsNoIncoming": "Δεν υπάρχουν εισερχόμενα αιτήματα",
+  "friendsNoOutgoing": "Δεν υπάρχουν εξερχόμενα αιτήματα",
+  "friendsAlreadyFriends": "Ήδη φίλοι",
+  "friendsRemoveTitle": "Αφαίρεση από τους φίλους;",
+  "friendsRemoved": "Αφαιρέθηκε από τους φίλους",
+  "friendsRequestAccepted": "Το αίτημα έγινε αποδεκτό",
+  "friendsRequestDeclined": "Το αίτημα απορρίφθηκε",
+  "friendsRequestCancelled": "Το αίτημα ακυρώθηκε",
+  "profileTitle": "Προφίλ",
+  "profileSignInPrompt": "Συνδεθείτε στον λογαριασμό σας",
+  "profileSignInHint": "Για να ρυθμίσετε το προσωπικό σας προφίλ",
+  "profileEdit": "Επεξεργασία",
+  "profileCollections": "Συλλογές",
+  "profileAge": "Ηλικία",
+  "profileGender": "Φύλο",
+  "profileGenderUnset": "Δεν έχει οριστεί",
+  "profileGenderMale": "Άνδρας",
+  "profileGenderFemale": "Γυναίκα",
+  "profileAvatar": "Άβαταρ",
+  "profileUploadPhoto": "Μεταφόρτωση φωτογραφίας",
+  "profileChangePhoto": "Αλλαγή φωτογραφίας",
+  "shopTitle": "Κατάστημα",
+  "shopEmojis": "Emoji",
+  "shopEmojisSubtitle": "Κινούμενα emoji για συνομιλία",
+  "shopCollections": "Συλλογές",
+  "shopCollectionsSubtitle": "Προβολή προφίλ, δώρα και έσοδα",
+  "shopStakes": "Πονταρίσματα",
+  "shopStakesSubtitle": "Ξεκλείδωμα ασημένιων πονταρισμάτων",
+  "inventoryTitle": "Αντικείμενα",
+  "inventoryEmpty": "Δεν υπάρχει τίποτα ακόμα — δείτε το κατάστημα",
+  "inventoryFrames": "Πλαίσια",
+  "inventoryClaim": "Διεκδίκηση",
+  "inventorySell": "Πώληση",
+  "inventoryGift": "Δώρο",
+  "messageEdited": "επεξεργασμένο",
+  "messageDeleted": "Το μήνυμα διαγράφηκε",
+  "photo": "Φωτογραφία",
+  "camera": "Κάμερα",
+  "gallery": "Συλλογή",
+  "connectionError": "Αδυναμία σύνδεσης με τον διακομιστή.",
+  "serverError": "Σφάλμα διακομιστή. Δοκιμάστε ξανά αργότερα.",
+  "sessionExpired": "Η συνεδρία έληξε. Συνδεθείτε ξανά.",
+  "errNoInternet": "Δεν υπάρχει σύνδεση στο διαδίκτυο.",
+  "errTimeout": "Λήξη χρονικού ορίου αιτήματος. Δοκιμάστε ξανά.",
+  "errGamesUnavailable": "Τα παιχνίδια δεν είναι προσωρινά διαθέσιμα",
+  "errSettingsSaveFailed": "Αδυναμία αποθήκευσης ρύθμισης",
+  "errPushPermission": "Επιτρέψτε τις ειδοποιήσεις στο πρόγραμμα περιήγησης ή στις ρυθμίσεις συστήματος.",
+  "balanceTitle": "Υπόλοιπο",
+  "coinBronze": "Χαλκός",
+  "coinSilver": "Ασήμι",
+  "coinGold": "Χρυσός",
+  "coinDiamond": "Διαμάντι",
+  "balanceZeroBronze": "0 χάλκινα",
+  "balanceBronzes": "{count} χάλκινα",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} ασημένια",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} χρυσά",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} διαμάντια",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "{amount} την ημέρα",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "χλ",
+  "balanceAbbrSilver": "ασ.",
+  "balanceAbbrGold": "χρ.",
+  "commonBackHome": "Πίσω στην αρχική",
+  "commonCopied": "Αντιγράφηκε",
+  "commonClear": "Εκκαθάριση",
+  "commonTryLater": "Δοκιμάστε ξανά αργότερα.",
+  "commonTryRefresh": "Δοκιμάστε να ανανεώσετε τη σελίδα.",
+  "coinsTitle": "Νομίσματα",
+  "coinsLoginReward": "Ανταμοιβή σύνδεσης",
+  "coinsLoginAvailableToday": "Η σημερινή ανταμοιβή είναι διαθέσιμη",
+  "coinsLoginStreak": "Καθημερινή σειρά συνδέσεων",
+  "coinsFriendReward": "Ανταμοιβή φίλου",
+  "coinsFriendRewardHint": "+{amount} για εγγραφή μέσω του συνδέσμου σας",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Αποτυχία φόρτωσης ανταμοιβών",
+  "coinsClaimReward": "Λήψη ανταμοιβής",
+  "coinsAlreadyClaimed": "Ήδη λήφθηκε",
+  "coinsStreakToday": "{done}/{target} · σήμερα",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · απομένει 1 ημέρα",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · απομένουν {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Προσκαλέστε φίλο",
+  "coinsInviteHint": "+{amount} για κάθε άτομο που εγγράφεται μέσω του συνδέσμου σας",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Αντιγραφή συνδέσμου",
+  "coinsHowItWorks": "Πώς λειτουργεί",
+  "coinsHowStep1": "Αντιγράψτε τον σύνδεσμο και στείλτε τον σε φίλο",
+  "coinsHowStep2": "Ο φίλος εγγράφεται μέσω αυτού του συνδέσμου",
+  "coinsHowStep3": "Λαμβάνετε {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Επιτεύγματα",
+  "achievementsProgress": "Πρόοδος: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Το πλαίσιο ελήφθη",
+  "achievementsClaimed": "Ελήφθη",
+  "achievementsOpenFrame": "Άνοιγμα πλαισίου",
+  "friendsRemoveConfirm": "Είστε σίγουροι ότι θέλετε να αφαιρέσετε τον/την {name} από τους φίλους;",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Αφαίρεση",
+  "friendsRemove": "Αφαίρεση από φίλους",
+  "friendsAcceptRequest": "Αποδοχή αιτήματος",
+  "friendsDeclineRequest": "Απόρριψη αιτήματος",
+  "friendsCancelRequest": "Ακύρωση αιτήματος",
+  "friendsSendRequest": "Αποστολή αιτήματος φιλίας",
+  "friendsRequestAlreadySent": "Το αίτημα έχει ήδη σταλεί",
+  "friendsIncomingStatus": "Εισερχόμενο αίτημα",
+  "friendsOutgoingStatus": "Εξερχόμενο αίτημα",
+  "friendsNotFriends": "Δεν είστε φίλοι",
+  "friendsCollapseSearch": "Σύμπτυξη αναζήτησης",
+  "friendsExpandSearch": "Εμφάνιση αναζήτησης",
+  "friendsLoadFailed": "Αποτυχία φόρτωσης φίλων",
+  "friendsSince": "Φίλοι από: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Εισερχόμενο αίτημα: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Εξερχόμενο αίτημα: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Πληροφορίες χρήστη",
+  "profileAgeYears": "{age} ετών",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Αγορά",
+  "shopBuyTitle": "Αγορά;",
+  "shopBuyStakeTitle": "Αγορά πονταρίσματος;",
+  "shopBuyEmojiTitle": "Αγορά emoji;",
+  "shopBuyCollectionTitle": "Αγορά συλλογής;",
+  "shopPrice": "Τιμή: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Αγορασμένο",
+  "shopEmpty": "Ακόμα άδειο",
+  "shopPurchased": "Αγοράστηκε το {title}",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Λαμβάνετε: 10 χρήσεις",
+  "shopEmojiBought": "{title}: +10 χρήσεις",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 χρήσεις",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Αγορά · 10 τεμ.",
+  "shopDailyIncome": "Έσοδο: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Εφάπαξ αγορά",
+  "shopSellRefund": "Η πώληση επιστρέφει μέρος του κόστους",
+  "shopCollectionAdded": "Το {title} προστέθηκε στο προφίλ",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "μπόνους σετ +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Ολοκληρώθηκε",
+  "shopSetProgress": "Συλλέχθηκε · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Πώληση;",
+  "inventorySellDesc": "Θα λάβετε {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Πουλήθηκε: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Προσθέστε πρώτα φίλους",
+  "inventoryGiftTitle": "Δώρο συλλογής;",
+  "inventoryGiftDesc": "Να δώσετε το «{title}» στον/στην {name};",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Δωρίστηκε: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Αποτυχία φόρτωσης αντικειμένων",
+  "inventoryNoCollections": "Δεν υπάρχουν συλλογές — αγοράστε στο κατάστημα",
+  "inventoryNoEmojis": "Δεν υπάρχουν emoji — αγοράστε στο κατάστημα",
+  "inventoryNoFrames": "Δεν υπάρχουν πλαίσια — κερδίστε 10 παιχνίδια λίγκας (επιτεύγματα)",
+  "inventoryNoStakes": "Δεν υπάρχουν αγορασμένα πονταρίσματα",
+  "inventoryEmojiLeft": "Απομένουν {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Έσοδο: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Έσοδο αύριο: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "Μπορείτε να ποντάρετε {amount} χρυσό",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "Μπορείτε να ποντάρετε {amount} ασήμι",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "Ελήφθη +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Αποτυχία φόρτωσης συνομιλιών",
+  "chatsLoadListFailed": "Αποτυχία φόρτωσης λίστας",
+  "chatsBlockedEmpty": "Η λίστα είναι άδεια",
+  "chatsBlockedAt": "Αποκλεισμένος: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Αποτυχία δημιουργίας συνομιλίας",
+  "chatsNeedFriendsFirst": "Προσθέστε πρώτα φίλους και μετά μπορείτε να ανοίξετε συνομιλία.",
+  "chatsFriendsNotFound": "Δεν βρέθηκαν φίλοι",
+  "chatsFindFriendHint": "Βρείτε φίλο με ψευδώνυμο",
+  "chatsSelectChat": "Επιλέξτε συνομιλία",
+  "chatsSelectHint": "Επιλέξτε διάλογο από τη λίστα αριστερά",
+  "chatEditFailed": "Αποτυχία επεξεργασίας μηνύματος",
+  "chatSendFailed": "Αποτυχία αποστολής μηνύματος",
+  "chatDeleteFailed": "Αποτυχία διαγραφής μηνύματος",
+  "chatEmojiSendFailed": "Αποτυχία αποστολής emoji",
+  "chatLoadFailed": "Αποτυχία φόρτωσης μηνυμάτων",
+  "chatBackToGame": "Πίσω στο παιχνίδι",
+  "chatBackToChats": "Πίσω στις συνομιλίες",
+  "chatActions": "Ενέργειες συνομιλίας",
+  "chatScrollToEnd": "Στο τέλος της συνομιλίας",
+  "chatReplyingTo": "Απάντηση στον/στην {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Δώρο",
+  "chatCollection": "Συλλογή",
+  "chatGiftCollection": "Δώρο · συλλογή",
+  "chatThisUser": "αυτού του χρήστη",
+  "gamesLobbyLoadFailed": "Αποτυχία φόρτωσης λόμπι.",
+  "gamesTapChangeStake": "Πατήστε για αλλαγή πονταρίσματος",
+  "gamesTapChangeTurnTime": "Πατήστε για αλλαγή χρόνου κινήσεων",
+  "gamesTapChangeGrid": "Πατήστε για αλλαγή μεγέθους πλέγματος",
+  "gamesSwapSidesHint": "Το O μπορεί να γίνει X μετά την 1η κίνηση",
+  "gamesNoCenterHint": "Η πρώτη κίνηση δεν μπορεί να είναι στο κέντρο",
+  "lobbyInviteSentShort": "Εστάλη",
+  "lobbyInvitesSentWaiting": "Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.",
+  "lobbyLinkCopiedHint": "Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο",
+  "lobbyCopyLinkHint": "Αντιγραφή συνδέσμου στο πρόχειρο",
+  "lobbyCreatorInvites": "Ο/Η {name} σας προσκαλεί να παίξετε",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "Νίκησε ο/η {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Ο χρόνος τελείωσε. Νίκησε ο/η {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} δ",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Διαχείριση",
+  "tournamentsTitle": "Τουρνουά",
+  "profileAgeInvalid": "Εισαγάγετε ηλικία από 1 έως 111",
+  "profileSaveFailed": "Αποτυχία αποθήκευσης προφίλ",
+  "profileNameHint": "Λατινικά γράμματα, ψηφία, _ έως 10 χαρακτήρες",
+  "profileAgeHint": "Από 1 έως 111",
+  "profileAboutHint": "Έως 100 χαρακτήρες (προαιρετικά)",
+  "profileProcessingPhoto": "Επεξεργασία φωτογραφίας…",
+  "profileCropTitle": "Επιλέξτε περιοχή avatar",
+  "profileCropHint": "Μεγεθύνετε και μετακινήστε τη φωτογραφία",
+  "profileApply": "Εφαρμογή",
+  "profilePreparing": "Προετοιμασία…",
+  "timeSecondsShort": "{seconds} δ",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 λεπτό",
+  "timeTenMin": "10 λεπτά",
+  "rulesIntro": "Τρίλιζα σε πίνακα {grid}. Εναλλάξ· ξεκινά ο X.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "Νίκη: σχηματίστε {n} στη σειρά οριζόντια, κάθετα ή διαγώνια.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Χωρίς χρονικό όριο ανά κίνηση.",
+  "rulesTurnTime": "Χρόνος ανά κίνηση: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Ποντάρισμα: {stake}. Τόσα νομίσματα παίζονται.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Αλλαγή πλευρών: ο O μπορεί να αλλάξει με τον X μετά την πρώτη κίνηση του X.",
+  "rulesNoCenter": "Απαγόρευση κέντρου: ο X δεν μπορεί να παίξει στο κέντρο στην πρώτη κίνηση.",
+  "collectionSetLegends": "Θρύλοι",
+  "collectionSetSpace": "Διάστημα",
+  "collectionSetGems": "Πετράδια",
+  "collectionSetParty": "Γιορτή",
+  "collectionSetNature": "Φύση",
+  "collectionSetAdventures": "Περιπέτειες",
+  "collectionCardMeta": "Συλλογή · βιτρίνα · δώρο · πώληση · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "ημέρα",
+  "coinsDayFew": "ημέρες",
+  "coinsDayMany": "ημέρες",
+  "giftFriendTitle": "Δώρο σε φίλο",
+  "photoCount": "Φωτο ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Φωτο ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Φωτο: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Ανάπτυξη πίνακα",
+  "chatsCollapsePanel": "Σύμπτυξη πίνακα",
+  "chatReplySourceMissing": "Το αρχικό μήνυμα δεν βρέθηκε",
+  "shopStakeTitleSilver": "Ποντάρισμα {n} ασήμι",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Ποντάρισμα {n} χρυσό",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Ξεκλειδώνει ποντάρισμα {n} ασήμι",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Ξεκλειδώνει ποντάρισμα {n} χρυσό",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "στον εαυτό σας",
+  "chatReplyPeer": "στον συνομιλητή"
+}

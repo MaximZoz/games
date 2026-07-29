@@ -7,6 +7,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/browser_push_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/browser_push_web.dart'
     as browser_push;
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyWebPushEnabled = 'web_push_enabled';
@@ -164,7 +165,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
         permission = await browser_push.requestBrowserNotificationPermission();
       }
       if (permission != 'granted') {
-        return 'Разрешите уведомления в настройках браузера / системы.';
+        return LocaleService.l10n.errPushPermission;
       }
 
       try {
@@ -274,7 +275,7 @@ class WebPushCategoriesNotifier extends StateNotifier<WebPushCategoryPrefs> {
       });
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         state = prev;
-        return 'Не удалось сохранить настройки уведомлений';
+        return LocaleService.l10n.errSettingsSaveFailed;
       }
       return null;
     } catch (e) {

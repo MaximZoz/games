@@ -1,0 +1,886 @@
+{
+  "@@locale": "uz",
+  "appTitle": "Zozu Games",
+  "navHome": "Bosh sahifa",
+  "navProfile": "Profil",
+  "navFriends": "Do‘stlar",
+  "navChats": "Chatlar",
+  "navGames": "O‘yinlar",
+  "navSettings": "Sozlamalar",
+  "settingsTitle": "Sozlamalar",
+  "settingsLanguage": "Til",
+  "settingsLanguageSystem": "Tizim bo‘yicha",
+  "settingsAddBotsTitle": "30 soniyadan keyin bot qo‘shish",
+  "settingsAddBotsSubtitle": "O‘yin qidiruvda: 30 soniya ichida raqib topilmasa, o‘yin bot bilan boshlanadi (stavka 1 bronzaga qaytariladi)",
+  "settingsFriendsOnlyTitle": "Faqat do‘stlardan xabarlar",
+  "settingsFriendsOnlySubtitle": "Do‘st bo‘lmaganlar faqat emoji yubora oladi. Spam xalaqit bersa, foydalanuvchini vaqtincha bloklang.",
+  "settingsNotifications": "Bildirishnomalar",
+  "settingsPushChat": "Chat",
+  "settingsPushFriends": "Do‘stlar",
+  "settingsPushGames": "O‘yinlar",
+  "settingsPushRewards": "Mukofotlar",
+  "loginTitle": "Kirish",
+  "loginSubtitle": "Email yoki login va parolni kiriting",
+  "loginEmailLabel": "Email yoki login",
+  "loginPasswordLabel": "Parol",
+  "loginSubmit": "Kirish",
+  "loginNoAccount": "Hisobingiz yo‘qmi? Ro‘yxatdan o‘ting",
+  "loginEmailRequired": "Email yoki login kiriting",
+  "loginPasswordRequired": "Parolni kiriting",
+  "loginTooltip": "Kirish",
+  "logoutTooltip": "Chiqish",
+  "registerTitle": "Ro‘yxatdan o‘tish",
+  "registerSubtitle": "O‘ynash uchun hisob yarating",
+  "registerNameLabel": "Ism (login)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Parol",
+  "registerSubmit": "Ro‘yxatdan o‘tish",
+  "registerHaveAccount": "Hisobingiz bormi? Kirish",
+  "registerNameRequired": "Ism kiriting",
+  "registerNameNoSpaces": "Ismda bo‘sh joy bo‘lmasligi kerak",
+  "registerNameMax": "Maksimum 20 belgi",
+  "registerNameHint": "20 belgigacha",
+  "registerEmailRequired": "Email kiriting",
+  "registerEmailInvalid": "Noto‘g‘ri email",
+  "registerPasswordHint": "Kamida 6 belgi",
+  "registerPasswordMin": "Parol kamida 6 belgidan iborat bo‘lishi kerak",
+  "commonCancel": "Bekor qilish",
+  "commonSave": "Saqlash",
+  "commonDelete": "O‘chirish",
+  "commonEdit": "Tahrirlash",
+  "commonReply": "Javob berish",
+  "commonSend": "Yuborish",
+  "commonClose": "Yopish",
+  "commonRetry": "Qayta urinish",
+  "commonLoading": "Yuklanmoqda…",
+  "commonError": "Xato",
+  "commonOnline": "onlayn",
+  "commonOffline": "oflayn",
+  "commonOnlineCap": "Onlayn",
+  "commonUser": "Foydalanuvchi",
+  "commonPlayer": "O‘yinchi",
+  "commonAboutMe": "O‘zim haqimda",
+  "commonBack": "Orqaga",
+  "commonAccept": "Qabul qilish",
+  "commonDecline": "Rad etish",
+  "commonCreating": "Yaratilmoqda…",
+  "commonSearching": "Qidirilmoqda…",
+  "commonInsufficientCoins": "Tangalar yetarli emas",
+  "commonNotFound": "Topilmadi",
+  "commonServerErrorShort": "Server xatosi",
+  "commonForbidden": "Ruxsat yo‘q",
+  "commonUserBlocked": "Foydalanuvchi bloklangan",
+  "commonUserNotFound": "Foydalanuvchi topilmadi",
+  "commonGenericError": "Nimadir xato ketdi. Qayta urinib ko‘ring.",
+  "timeJustNow": "hozirgina",
+  "timeYesterday": "kecha",
+  "timeMinutesAgo": "{count} daq oldin",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} soat oldin",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} kun oldin",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "bir hafta oldin",
+  "timeWeeksAgo": "{count} hafta oldin",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "bir oy oldin",
+  "timeMonthsAgo": "{count} oy oldin",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "bir yil oldin",
+  "timeYearsAgo": "{count} yil oldin",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "Yak",
+  "weekdayMon": "Dush",
+  "weekdayTue": "Sesh",
+  "weekdayWed": "Chor",
+  "weekdayThu": "Pay",
+  "weekdayFri": "Jum",
+  "weekdaySat": "Shan",
+  "monthJan": "yan",
+  "monthFeb": "fev",
+  "monthMar": "mar",
+  "monthApr": "apr",
+  "monthMay": "may",
+  "monthJun": "iyn",
+  "monthJul": "iyl",
+  "monthAug": "avg",
+  "monthSep": "sen",
+  "monthOct": "okt",
+  "monthNov": "noy",
+  "monthDec": "dek",
+  "homeAchievements": "Yutuqlar",
+  "homeAchievementsSubtitle": "O‘yin natijalaringiz",
+  "homeAchievementsRewards": "Olish uchun mukofotlar bor",
+  "homeCoins": "Tangalar",
+  "homeCoinsSubtitle": "Balans va mukofotlar",
+  "homeCoinsDailyReward": "Kirish mukofoti mavjud",
+  "homeItems": "Buyumlar",
+  "homeItemsInventory": "Inventaringiz",
+  "homeItemsGifted": "Sizga kolleksiya sovg‘a qilindi",
+  "homeItemsIncome": "Kolleksiya daromadini olish mumkin",
+  "homeShop": "Do‘kon",
+  "homeShopSubtitle": "Emoji, stavkalar, kolleksiyalar",
+  "gamesTitle": "O‘yinlar",
+  "gamesFindMatch": "O‘yin topish",
+  "gamesMyTurn": "Sizning yurishingiz",
+  "gamesWaiting": "Kutilmoqda",
+  "gamesLobbyTab": "Lobi",
+  "gamesTicTacToe": "X-O",
+  "gamesRules": "Qoidalar",
+  "gamesRulesTitle": "O‘yin qoidalari",
+  "gamesCreate": "O‘yin yaratish",
+  "gamesJoin": "Qo‘shilish",
+  "gamesOpponentTurn": "Raqib yurishi",
+  "gamesCurrentGame": "Joriy o‘yin",
+  "gamesInvitedYou": "Sizni taklif qilishdi",
+  "gamesTurnTime": "Yurish vaqti",
+  "gamesGridSize": "To‘r o‘lchami",
+  "gamesSwapSides": "Tomonlarni almashtirish",
+  "gamesNoCenter": "Markazdan boshlash yo‘q",
+  "lobbyMatchmake": "Lobi",
+  "lobbyPrivateGame": "Shaxsiy o‘yin",
+  "lobbySearchingOpponent": "Raqib qidirilmoqda…",
+  "lobbyWaitingJoin": "Kimdir «O‘yin topish» yoki «Qo‘shilish»ni bosishini kutmoqdamiz",
+  "lobbyInviteTitle": "O‘yinga taklif",
+  "lobbyInvitedToPlay": "Sizni o‘ynashga taklif qilishdi",
+  "lobbyEnterGame": "O‘yinga kirish",
+  "lobbyInvite": "Taklif qilish",
+  "lobbyInviteSent": "Taklif yuborildi",
+  "lobbyCopyLink": "O‘yin havolasini ulashish",
+  "lobbyLinkCopied": "Havola nusxalandi",
+  "lobbyNoFriendsOnline": "Onlayn do‘stlar yo‘q. Yuqoridagi o‘yin havolasini ulashing yoki do‘stlaringiz onlayn bo‘lishini kuting.",
+  "gameBot": "Bot",
+  "gameOpponent": "Raqib",
+  "gameYouWon": "Siz yutdingiz!",
+  "gameYouWonOpponentLeft": "Siz yutdingiz — raqib chiqib ketdi",
+  "gameYouWonOpponentTimeout": "Siz yutdingiz — raqib vaqti tugadi",
+  "gameDraw": "Durrang",
+  "gameExitTitle": "O‘yindan chiqish",
+  "gameExitConfirm": "Chiqsangiz, mag‘lub bo‘lasiz. Baribir chiqasizmi?",
+  "gameStay": "Qolish",
+  "gameLeave": "Chiqish",
+  "gameConnecting": "O‘yinga ulanilmoqda…",
+  "gameWaitingOpponent": "Raqib kutilmoqda",
+  "gameRematchOffer": "Raqib qayta o‘ynashni taklif qilmoqda",
+  "gameRematchDeclined": "Raqib qayta o‘ynashni rad etdi",
+  "gameRematch": "Qayta o‘ynash",
+  "gameOtherOpponent": "Boshqa raqib",
+  "gameSwapSidesAction": "Tomonlarni almashtirish",
+  "gameWriteMessage": "Xabar yozish",
+  "chatsTitle": "Chatlar",
+  "chatsEmpty": "Hali chatlar yo‘q.\nYuqori o‘ngdagi belgini bosib, do‘st tanlang va suhbatni boshlang.",
+  "chatsNewChat": "Yangi chat",
+  "chatsNoMessages": "Xabarlar yo‘q",
+  "chatsClearTitle": "Suhbat tozalansinmi?",
+  "chatsClearDesc": "Chat butunlay o‘chiriladi.",
+  "chatsClearConfirm": "Tozalash",
+  "chatsBlockTitle": "Bu foydalanuvchi bloklansinmi?",
+  "chatsBlockDesc": "Endi bir-biringizga yoza olmaysiz. Chat va do‘stlik o‘chiriladi.",
+  "chatsBlockConfirm": "Bloklash",
+  "chatsBlockedUsers": "Bloklangan foydalanuvchilar",
+  "chatsUnblock": "Blokdan chiqarish",
+  "chatDialog": "Chat",
+  "chatEmpty": "Hali xabarlar yo‘q.\nBirinchisini yuboring.",
+  "chatMessageHint": "Xabar",
+  "chatEmoji": "Emoji",
+  "chatBuyEmojiHint": "Bosh ekrandagi do‘kondan emoji sotib oling",
+  "chatEditing": "Tahrirlash",
+  "chatToday": "Bugun",
+  "chatYesterday": "Kecha",
+  "chatFriendsOnly": "Matn faqat do‘stlar uchun",
+  "emojiGroupEmotions": "Hissiyotlar",
+  "emojiGroupGame": "O‘yin",
+  "emojiGroupFlags": "Bayroqlar",
+  "emojiGroupAnimals": "Hayvonlar",
+  "emojiGroupFood": "Ovqat",
+  "emojiGroupTravel": "Sayohat",
+  "emojiGroupParty": "Bayram",
+  "emojiGroupObjects": "Buyumlar",
+  "friendsTitle": "Do‘stlar",
+  "friendsTabFriends": "Do‘stlar",
+  "friendsTabIncoming": "Kiruvchi",
+  "friendsTabOutgoing": "Chiquvchi",
+  "friendsAdd": "Do‘st qo‘shish",
+  "friendsRequestSent": "So‘rov yuborildi",
+  "friendsFindTab": "Do‘st topish",
+  "friendsSearchHint": "Login bo‘yicha qidirish",
+  "friendsSearchPrompt": "Yangi do‘stlar topish uchun qidiruvdan foydalaning",
+  "friendsNothingFound": "Hech narsa topilmadi",
+  "friendsEmpty": "Hali do‘stlaringiz yo‘q",
+  "friendsNoIncoming": "Kiruvchi so‘rovlar yo‘q",
+  "friendsNoOutgoing": "Chiquvchi so‘rovlar yo‘q",
+  "friendsAlreadyFriends": "Allaqachon do‘stsiz",
+  "friendsRemoveTitle": "Do‘stlardan olib tashlansinmi?",
+  "friendsRemoved": "Do‘stlardan olib tashlandi",
+  "friendsRequestAccepted": "So‘rov qabul qilindi",
+  "friendsRequestDeclined": "So‘rov rad etildi",
+  "friendsRequestCancelled": "So‘rov bekor qilindi",
+  "profileTitle": "Profil",
+  "profileSignInPrompt": "Hisobingizga kiring",
+  "profileSignInHint": "Shaxsiy profilingizni sozlash uchun",
+  "profileEdit": "Tahrirlash",
+  "profileCollections": "Kolleksiyalar",
+  "profileAge": "Yosh",
+  "profileGender": "Jins",
+  "profileGenderUnset": "Ko‘rsatilmagan",
+  "profileGenderMale": "Erkak",
+  "profileGenderFemale": "Ayol",
+  "profileAvatar": "Avatar",
+  "profileUploadPhoto": "Foto yuklash",
+  "profileChangePhoto": "Fotoni o‘zgartirish",
+  "shopTitle": "Do‘kon",
+  "shopEmojis": "Emoji",
+  "shopEmojisSubtitle": "Chat uchun animatsiyali emoji",
+  "shopCollections": "Kolleksiyalar",
+  "shopCollectionsSubtitle": "Profil vitrinasi, sovg‘alar va daromad",
+  "shopStakes": "Stavkalar",
+  "shopStakesSubtitle": "Kumush stavkalarni ochish",
+  "inventoryTitle": "Buyumlar",
+  "inventoryEmpty": "Hali hech narsa yo‘q — do‘konga qarang",
+  "inventoryFrames": "Ramkalar",
+  "inventoryClaim": "Olish",
+  "inventorySell": "Sotish",
+  "inventoryGift": "Sovg‘a qilish",
+  "messageEdited": "tahrirlandi",
+  "messageDeleted": "Xabar o‘chirildi",
+  "photo": "Foto",
+  "camera": "Kamera",
+  "gallery": "Galereya",
+  "connectionError": "Serverga ulanib bo‘lmadi.",
+  "serverError": "Server xatosi. Keyinroq qayta urinib ko‘ring.",
+  "sessionExpired": "Sessiya muddati tugadi. Qayta kiring.",
+  "errNoInternet": "Internet aloqasi yo‘q.",
+  "errTimeout": "So‘rov vaqti tugadi. Qayta urinib ko‘ring.",
+  "errGamesUnavailable": "O‘yinlar vaqtincha mavjud emas",
+  "errSettingsSaveFailed": "Sozlamani saqlab bo‘lmadi",
+  "errPushPermission": "Brauzer yoki tizim sozlamalarida bildirishnomalarga ruxsat bering.",
+  "balanceTitle": "Balans",
+  "coinBronze": "Bronza",
+  "coinSilver": "Kumush",
+  "coinGold": "Oltin",
+  "coinDiamond": "Olmos",
+  "balanceZeroBronze": "0 bronza",
+  "balanceBronzes": "{count} bronza",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} kumush",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} oltin",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} olmos",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "kuniga {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "br",
+  "balanceAbbrSilver": "k.",
+  "balanceAbbrGold": "o.",
+  "commonBackHome": "Bosh sahifaga qaytish",
+  "commonCopied": "Nusxalandi",
+  "commonClear": "Tozalash",
+  "commonTryLater": "Keyinroq qayta urinib ko‘ring.",
+  "commonTryRefresh": "Sahifani yangilab ko‘ring.",
+  "coinsTitle": "Tangalar",
+  "coinsLoginReward": "Kirish mukofoti",
+  "coinsLoginAvailableToday": "Bugungi mukofot mavjud",
+  "coinsLoginStreak": "Kundalik kirish seriyasi",
+  "coinsFriendReward": "Do‘st mukofoti",
+  "coinsFriendRewardHint": "Havolangiz orqali ro‘yxatdan o‘tish uchun +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Mukofotlarni yuklab bo‘lmadi",
+  "coinsClaimReward": "Mukofotni olish",
+  "coinsAlreadyClaimed": "Allaqachon olingan",
+  "coinsStreakToday": "{done}/{target} · bugun",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · yana 1 kun",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · yana {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Do‘stni taklif qilish",
+  "coinsInviteHint": "Havolangiz orqali ro‘yxatdan o‘tgan har bir kishi uchun +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Havolani nusxalash",
+  "coinsHowItWorks": "Qanday ishlaydi",
+  "coinsHowStep1": "Havolani nusxalang va do‘stingizga yuboring",
+  "coinsHowStep2": "Do‘st shu havola orqali ro‘yxatdan o‘tadi",
+  "coinsHowStep3": "Sizga {amount} beriladi",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Yutuqlar",
+  "achievementsProgress": "Progress: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Ramka olindi",
+  "achievementsClaimed": "Olindi",
+  "achievementsOpenFrame": "Ramkani ochish",
+  "friendsRemoveConfirm": "{name} ni do‘stlardan olib tashlamoqchimisiz?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Olib tashlash",
+  "friendsRemove": "Do‘stlardan o‘chirish",
+  "friendsAcceptRequest": "So‘rovni qabul qilish",
+  "friendsDeclineRequest": "So‘rovni rad etish",
+  "friendsCancelRequest": "So‘rovni bekor qilish",
+  "friendsSendRequest": "Do‘stlik so‘rovini yuborish",
+  "friendsRequestAlreadySent": "So‘rov allaqachon yuborilgan",
+  "friendsIncomingStatus": "Kiruvchi so‘rov",
+  "friendsOutgoingStatus": "Chiquvchi so‘rov",
+  "friendsNotFriends": "Do‘st emas",
+  "friendsCollapseSearch": "Qidiruvni yig‘ish",
+  "friendsExpandSearch": "Qidiruvni ko‘rsatish",
+  "friendsLoadFailed": "Do‘stlarni yuklab bo‘lmadi",
+  "friendsSince": "Do‘stlik boshlanishi: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Kiruvchi so‘rov: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Chiquvchi so‘rov: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Foydalanuvchi ma’lumoti",
+  "profileAgeYears": "{age} yosh",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Sotib olish",
+  "shopBuyTitle": "Sotib olasizmi?",
+  "shopBuyStakeTitle": "Tikishni sotib olasizmi?",
+  "shopBuyEmojiTitle": "Smayl sotib olasizmi?",
+  "shopBuyCollectionTitle": "Kolleksiyani sotib olasizmi?",
+  "shopPrice": "Narxi: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Sotib olingan",
+  "shopEmpty": "Hali bo‘sh",
+  "shopPurchased": "{title} sotib olindi",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Olasiz: 10 foydalanish",
+  "shopEmojiBought": "{title}: +10 foydalanish",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 foydalanish",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Sotib olish · 10 dona",
+  "shopDailyIncome": "Daromad: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Bir martalik xarid",
+  "shopSellRefund": "Sotish narxning bir qismini qaytaradi",
+  "shopCollectionAdded": "{title} profilga qo‘shildi",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "to‘plam bonusi +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Yig‘ildi",
+  "shopSetProgress": "Yig‘ildi · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Sotasizmi?",
+  "inventorySellDesc": "Siz {amount} olasiz",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Sotildi: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Avval do‘stlar qo‘shing",
+  "inventoryGiftTitle": "Kolleksiyani sovg‘a qilasizmi?",
+  "inventoryGiftDesc": "«{title}» ni {name} ga sovg‘a qilasizmi?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Sovg‘a qilindi: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Buyumlarni yuklab bo‘lmadi",
+  "inventoryNoCollections": "Kolleksiya yo‘q — do‘kondan sotib oling",
+  "inventoryNoEmojis": "Smayl yo‘q — do‘kondan sotib oling",
+  "inventoryNoFrames": "Ramka yo‘q — ligada 10 o‘yin yuting (yutuqlar)",
+  "inventoryNoStakes": "Sotib olingan tikishlar yo‘q",
+  "inventoryEmojiLeft": "{count} qoldi",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Daromad: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Ertangi daromad: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "{amount} oltin tikish mumkin",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "{amount} kumush tikish mumkin",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "+{amount} olindi",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Chatlarni yuklab bo‘lmadi",
+  "chatsLoadListFailed": "Ro‘yxatni yuklab bo‘lmadi",
+  "chatsBlockedEmpty": "Ro‘yxat bo‘sh",
+  "chatsBlockedAt": "Bloklangan: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Chat yaratib bo‘lmadi",
+  "chatsNeedFriendsFirst": "Avval do‘stlar qo‘shing, keyin chat ochishingiz mumkin.",
+  "chatsFriendsNotFound": "Do‘stlar topilmadi",
+  "chatsFindFriendHint": "Nik bo‘yicha do‘st topish",
+  "chatsSelectChat": "Chatni tanlang",
+  "chatsSelectHint": "Chapdagi ro‘yxatdan suhbatni tanlang",
+  "chatEditFailed": "Xabarni o‘zgartirib bo‘lmadi",
+  "chatSendFailed": "Xabarni yuborib bo‘lmadi",
+  "chatDeleteFailed": "Xabarni o‘chirib bo‘lmadi",
+  "chatEmojiSendFailed": "Smaylni yuborib bo‘lmadi",
+  "chatLoadFailed": "Xabarlarni yuklab bo‘lmadi",
+  "chatBackToGame": "O‘yinga qaytish",
+  "chatBackToChats": "Chatlarga qaytish",
+  "chatActions": "Chat amallari",
+  "chatScrollToEnd": "Suhbat oxiriga",
+  "chatReplyingTo": "{name} ga javob",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Sovg‘a",
+  "chatCollection": "Kolleksiya",
+  "chatGiftCollection": "Sovg‘a · kolleksiya",
+  "chatThisUser": "bu foydalanuvchi",
+  "gamesLobbyLoadFailed": "Lobbi yuklab bo‘lmadi.",
+  "gamesTapChangeStake": "Tikishni o‘zgartirish uchun bosing",
+  "gamesTapChangeTurnTime": "Yurish vaqtini o‘zgartirish uchun bosing",
+  "gamesTapChangeGrid": "To‘r o‘lchamini o‘zgartirish uchun bosing",
+  "gamesSwapSidesHint": "O 1-yurishdan keyin X bo‘lishi mumkin",
+  "gamesNoCenterHint": "Birinchi yurish markazda bo‘lmasin",
+  "lobbyInviteSentShort": "Yuborildi",
+  "lobbyInvitesSentWaiting": "Takliflar yuborildi. Javob kutilmoqda.",
+  "lobbyLinkCopiedHint": "Uni chatga yoki do‘stga xabarga joylashtiring",
+  "lobbyCopyLinkHint": "Havolani vaqtinchalik xotiraga nusxalash",
+  "lobbyCreatorInvites": "{name} sizni o‘ynashga taklif qiladi",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "{name} g‘alaba qozondi",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Vaqt tugadi. {name} g‘alaba qozondi",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Admin",
+  "tournamentsTitle": "Turnirlar",
+  "profileAgeInvalid": "1 dan 111 gacha yosh kiriting",
+  "profileSaveFailed": "Profilni saqlab bo‘lmadi",
+  "profileNameHint": "Lotin harflari, raqamlar, _ 10 belgigacha",
+  "profileAgeHint": "1 dan 111 gacha",
+  "profileAboutHint": "100 belgigacha (ixtiyoriy)",
+  "profileProcessingPhoto": "Foto qayta ishlanmoqda…",
+  "profileCropTitle": "Avatar maydonini tanlang",
+  "profileCropHint": "Fotoni kattalashtiring va siljiting",
+  "profileApply": "Qo‘llash",
+  "profilePreparing": "Tayyorlanmoqda…",
+  "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 daq",
+  "timeTenMin": "10 daq",
+  "rulesIntro": "X-O o‘yini {grid} maydonda. Navbat bilan yuriladi, X boshlaydi.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "G‘alaba: gorizontal, vertikal yoki diagonal bo‘ylab {n} qator qilish kerak.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Yurish uchun vaqt cheklovi yo‘q.",
+  "rulesTurnTime": "Yurish vaqti: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Stavka: {stake}. O‘yin shu qancha tangaga.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Tomonlar almashuvi: X ning birinchi yurishidan so‘ng O X bilan joy almashishi mumkin.",
+  "rulesNoCenter": "Markaz taqiqi: X birinchi yurishda markazga yura olmaydi.",
+  "collectionSetLegends": "Afsonalar",
+  "collectionSetSpace": "Kosmos",
+  "collectionSetGems": "Qimmatbaho toshlar",
+  "collectionSetParty": "Bayram",
+  "collectionSetNature": "Tabiat",
+  "collectionSetAdventures": "Sarguzashtlar",
+  "collectionCardMeta": "Kolleksiya · vitrina · sovg‘a · sotish · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "kun",
+  "coinsDayFew": "kun",
+  "coinsDayMany": "kun",
+  "giftFriendTitle": "Do‘stga sovg‘a qilish",
+  "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Panelni yoyish",
+  "chatsCollapsePanel": "Panelni yig‘ish",
+  "chatReplySourceMissing": "Asl xabar topilmadi",
+  "shopStakeTitleSilver": "{n} kumush stavka",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "{n} oltin stavka",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Oʻyinlarda {n} kumush tikish huquqi",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Oʻyinlarda {n} oltin tikish huquqi",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "oʻzingizga",
+  "chatReplyPeer": "suhbatdoshga"
+}

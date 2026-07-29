@@ -1,0 +1,1426 @@
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Finnish (`fi`).
+class AppLocalizationsFi extends AppLocalizations {
+  AppLocalizationsFi([String locale = 'fi']) : super(locale);
+
+  @override
+  String get appTitle => 'Zozu Games';
+
+  @override
+  String get navHome => 'Koti';
+
+  @override
+  String get navProfile => 'Profiili';
+
+  @override
+  String get navFriends => 'Kaverit';
+
+  @override
+  String get navChats => 'Keskustelut';
+
+  @override
+  String get navGames => 'Pelit';
+
+  @override
+  String get navSettings => 'Asetukset';
+
+  @override
+  String get settingsTitle => 'Asetukset';
+
+  @override
+  String get settingsLanguage => 'Kieli';
+
+  @override
+  String get settingsLanguageSystem => 'Järjestelmän oletus';
+
+  @override
+  String get settingsAddBotsTitle => 'Lisää botteja 30 s jälkeen';
+
+  @override
+  String get settingsAddBotsSubtitle => 'Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)';
+
+  @override
+  String get settingsFriendsOnlyTitle => 'Viestit vain kavereilta';
+
+  @override
+  String get settingsFriendsOnlySubtitle => 'Muut kuin kaverit voivat lähettää vain emojeja. Jos spam häiritsee, estä käyttäjä tilapäisesti.';
+
+  @override
+  String get settingsNotifications => 'Ilmoitukset';
+
+  @override
+  String get settingsPushChat => 'Keskustelu';
+
+  @override
+  String get settingsPushFriends => 'Kaverit';
+
+  @override
+  String get settingsPushGames => 'Pelit';
+
+  @override
+  String get settingsPushRewards => 'Palkinnot';
+
+  @override
+  String get loginTitle => 'Kirjaudu sisään';
+
+  @override
+  String get loginSubtitle => 'Syötä sähköposti tai käyttäjänimi ja salasana';
+
+  @override
+  String get loginEmailLabel => 'Sähköposti tai käyttäjänimi';
+
+  @override
+  String get loginPasswordLabel => 'Salasana';
+
+  @override
+  String get loginSubmit => 'Kirjaudu sisään';
+
+  @override
+  String get loginNoAccount => 'Ei tiliä? Rekisteröidy';
+
+  @override
+  String get loginEmailRequired => 'Syötä sähköposti tai käyttäjänimi';
+
+  @override
+  String get loginPasswordRequired => 'Syötä salasana';
+
+  @override
+  String get loginTooltip => 'Kirjaudu sisään';
+
+  @override
+  String get logoutTooltip => 'Kirjaudu ulos';
+
+  @override
+  String get registerTitle => 'Rekisteröidy';
+
+  @override
+  String get registerSubtitle => 'Luo tili pelataksesi';
+
+  @override
+  String get registerNameLabel => 'Nimi (käyttäjänimi)';
+
+  @override
+  String get registerEmailLabel => 'Sähköposti';
+
+  @override
+  String get registerPasswordLabel => 'Salasana';
+
+  @override
+  String get registerSubmit => 'Rekisteröidy';
+
+  @override
+  String get registerHaveAccount => 'Onko sinulla jo tili? Kirjaudu sisään';
+
+  @override
+  String get registerNameRequired => 'Syötä nimi';
+
+  @override
+  String get registerNameNoSpaces => 'Nimi ei voi sisältää välilyöntejä';
+
+  @override
+  String get registerNameMax => 'Enintään 20 merkkiä';
+
+  @override
+  String get registerNameHint => 'Enintään 20 merkkiä';
+
+  @override
+  String get registerEmailRequired => 'Syötä sähköposti';
+
+  @override
+  String get registerEmailInvalid => 'Virheellinen sähköposti';
+
+  @override
+  String get registerPasswordHint => 'Vähintään 6 merkkiä';
+
+  @override
+  String get registerPasswordMin => 'Salasanan on oltava vähintään 6 merkkiä';
+
+  @override
+  String get commonCancel => 'Peruuta';
+
+  @override
+  String get commonSave => 'Tallenna';
+
+  @override
+  String get commonDelete => 'Poista';
+
+  @override
+  String get commonEdit => 'Muokkaa';
+
+  @override
+  String get commonReply => 'Vastaa';
+
+  @override
+  String get commonSend => 'Lähetä';
+
+  @override
+  String get commonClose => 'Sulje';
+
+  @override
+  String get commonRetry => 'Yritä uudelleen';
+
+  @override
+  String get commonLoading => 'Ladataan…';
+
+  @override
+  String get commonError => 'Virhe';
+
+  @override
+  String get commonOnline => 'paikalla';
+
+  @override
+  String get commonOffline => 'poissa';
+
+  @override
+  String get commonOnlineCap => 'Paikalla';
+
+  @override
+  String get commonUser => 'Käyttäjä';
+
+  @override
+  String get commonPlayer => 'Pelaaja';
+
+  @override
+  String get commonAboutMe => 'Tietoja minusta';
+
+  @override
+  String get commonBack => 'Takaisin';
+
+  @override
+  String get commonAccept => 'Hyväksy';
+
+  @override
+  String get commonDecline => 'Hylkää';
+
+  @override
+  String get commonCreating => 'Luodaan…';
+
+  @override
+  String get commonSearching => 'Haetaan…';
+
+  @override
+  String get commonInsufficientCoins => 'Ei tarpeeksi kolikoita';
+
+  @override
+  String get commonNotFound => 'Ei löytynyt';
+
+  @override
+  String get commonServerErrorShort => 'Palvelinvirhe';
+
+  @override
+  String get commonForbidden => 'Pääsy kielletty';
+
+  @override
+  String get commonUserBlocked => 'Käyttäjä on estetty';
+
+  @override
+  String get commonUserNotFound => 'Käyttäjää ei löytynyt';
+
+  @override
+  String get commonGenericError => 'Jotain meni pieleen. Yritä uudelleen.';
+
+  @override
+  String get timeJustNow => 'juuri nyt';
+
+  @override
+  String get timeYesterday => 'eilen';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return '$count min sitten';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return '$count t sitten';
+  }
+
+  @override
+  String timeDaysAgo(int count) {
+    return '$count pv sitten';
+  }
+
+  @override
+  String get timeWeekAgo => 'viikko sitten';
+
+  @override
+  String timeWeeksAgo(int count) {
+    return '$count vk sitten';
+  }
+
+  @override
+  String get timeMonthAgo => 'kuukausi sitten';
+
+  @override
+  String timeMonthsAgo(int count) {
+    return '$count kk sitten';
+  }
+
+  @override
+  String get timeYearAgo => 'vuosi sitten';
+
+  @override
+  String timeYearsAgo(int count) {
+    return '$count v sitten';
+  }
+
+  @override
+  String get weekdaySun => 'Su';
+
+  @override
+  String get weekdayMon => 'Ma';
+
+  @override
+  String get weekdayTue => 'Ti';
+
+  @override
+  String get weekdayWed => 'Ke';
+
+  @override
+  String get weekdayThu => 'To';
+
+  @override
+  String get weekdayFri => 'Pe';
+
+  @override
+  String get weekdaySat => 'La';
+
+  @override
+  String get monthJan => 'Tammi';
+
+  @override
+  String get monthFeb => 'Helmi';
+
+  @override
+  String get monthMar => 'Maalis';
+
+  @override
+  String get monthApr => 'Huhti';
+
+  @override
+  String get monthMay => 'Touko';
+
+  @override
+  String get monthJun => 'Kesä';
+
+  @override
+  String get monthJul => 'Heinä';
+
+  @override
+  String get monthAug => 'Elo';
+
+  @override
+  String get monthSep => 'Syys';
+
+  @override
+  String get monthOct => 'Loka';
+
+  @override
+  String get monthNov => 'Marras';
+
+  @override
+  String get monthDec => 'Joulu';
+
+  @override
+  String get homeAchievements => 'Saavutukset';
+
+  @override
+  String get homeAchievementsSubtitle => 'Pelituloksesi';
+
+  @override
+  String get homeAchievementsRewards => 'Noudettavissa olevia palkintoja';
+
+  @override
+  String get homeCoins => 'Kolikot';
+
+  @override
+  String get homeCoinsSubtitle => 'Saldo ja palkinnot';
+
+  @override
+  String get homeCoinsDailyReward => 'Päivittäinen kirjautumispalkinto saatavilla';
+
+  @override
+  String get homeItems => 'Esineet';
+
+  @override
+  String get homeItemsInventory => 'Inventaariosi';
+
+  @override
+  String get homeItemsGifted => 'Joku lahjoitti sinulle kokoelman';
+
+  @override
+  String get homeItemsIncome => 'Kokoelmatulo valmis noudettavaksi';
+
+  @override
+  String get homeShop => 'Kauppa';
+
+  @override
+  String get homeShopSubtitle => 'Emojit, panokset, kokoelmat';
+
+  @override
+  String get gamesTitle => 'Pelit';
+
+  @override
+  String get gamesFindMatch => 'Etsi peli';
+
+  @override
+  String get gamesMyTurn => 'Sinun vuorosi';
+
+  @override
+  String get gamesWaiting => 'Odottaa';
+
+  @override
+  String get gamesLobbyTab => 'Aula';
+
+  @override
+  String get gamesTicTacToe => 'Ristinolla';
+
+  @override
+  String get gamesRules => 'Säännöt';
+
+  @override
+  String get gamesRulesTitle => 'Pelin säännöt';
+
+  @override
+  String get gamesCreate => 'Luo peli';
+
+  @override
+  String get gamesJoin => 'Liity';
+
+  @override
+  String get gamesOpponentTurn => 'Vastustajan vuoro';
+
+  @override
+  String get gamesCurrentGame => 'Nykyinen peli';
+
+  @override
+  String get gamesInvitedYou => 'Sinut kutsuttiin';
+
+  @override
+  String get gamesTurnTime => 'Vuoron aika';
+
+  @override
+  String get gamesGridSize => 'Ruudukon koko';
+
+  @override
+  String get gamesSwapSides => 'Puolen vaihto';
+
+  @override
+  String get gamesNoCenter => 'Ei aloitusta keskeltä';
+
+  @override
+  String get lobbyMatchmake => 'Aula';
+
+  @override
+  String get lobbyPrivateGame => 'Yksityispeli';
+
+  @override
+  String get lobbySearchingOpponent => 'Etsitään vastustajaa…';
+
+  @override
+  String get lobbyWaitingJoin => 'Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”';
+
+  @override
+  String get lobbyInviteTitle => 'Pelikutsu';
+
+  @override
+  String get lobbyInvitedToPlay => 'Sinut kutsuttiin pelaamaan';
+
+  @override
+  String get lobbyEnterGame => 'Siirry peliin';
+
+  @override
+  String get lobbyInvite => 'Kutsu';
+
+  @override
+  String get lobbyInviteSent => 'Kutsu lähetetty';
+
+  @override
+  String get lobbyCopyLink => 'Jaa pelilinkki';
+
+  @override
+  String get lobbyLinkCopied => 'Linkki kopioitu';
+
+  @override
+  String get lobbyNoFriendsOnline => 'Ei kavereita paikalla. Jaa yllä oleva pelilinkki tai odota, että kaverit tulevat paikalle.';
+
+  @override
+  String get gameBot => 'Bot';
+
+  @override
+  String get gameOpponent => 'Vastustaja';
+
+  @override
+  String get gameYouWon => 'Voitit!';
+
+  @override
+  String get gameYouWonOpponentLeft => 'Voitit — vastustaja lähti';
+
+  @override
+  String get gameYouWonOpponentTimeout => 'Voitit — vastustajan aika loppui';
+
+  @override
+  String get gameDraw => 'Tasapeli';
+
+  @override
+  String get gameExitTitle => 'Poistu pelistä';
+
+  @override
+  String get gameExitConfirm => 'Jos poistut, häviät. Poistutaanko silti?';
+
+  @override
+  String get gameStay => 'Jää';
+
+  @override
+  String get gameLeave => 'Poistu';
+
+  @override
+  String get gameConnecting => 'Yhdistetään peliin…';
+
+  @override
+  String get gameWaitingOpponent => 'Odotetaan vastustajaa';
+
+  @override
+  String get gameRematchOffer => 'Vastustaja tarjoaa uusintaottelua';
+
+  @override
+  String get gameRematchDeclined => 'Vastustaja hylkäsi uusintaottelun';
+
+  @override
+  String get gameRematch => 'Uusinta';
+
+  @override
+  String get gameOtherOpponent => 'Toinen vastustaja';
+
+  @override
+  String get gameSwapSidesAction => 'Vaihda puolta';
+
+  @override
+  String get gameWriteMessage => 'Kirjoita viesti';
+
+  @override
+  String get chatsTitle => 'Keskustelut';
+
+  @override
+  String get chatsEmpty => 'Ei vielä keskusteluja.\nNapauta oikean yläkulman kuvaketta valitaksesi kaverin ja aloittaaksesi keskustelun.';
+
+  @override
+  String get chatsNewChat => 'Uusi keskustelu';
+
+  @override
+  String get chatsNoMessages => 'Ei viestejä';
+
+  @override
+  String get chatsClearTitle => 'Tyhjennetäänkö keskustelu?';
+
+  @override
+  String get chatsClearDesc => 'Keskustelu poistetaan pysyvästi.';
+
+  @override
+  String get chatsClearConfirm => 'Tyhjennä';
+
+  @override
+  String get chatsBlockTitle => 'Estetäänkö tämä käyttäjä?';
+
+  @override
+  String get chatsBlockDesc => 'Ette voi enää lähettää viestejä toisillenne. Keskustelu ja kaveruus poistetaan.';
+
+  @override
+  String get chatsBlockConfirm => 'Estä';
+
+  @override
+  String get chatsBlockedUsers => 'Estetyt käyttäjät';
+
+  @override
+  String get chatsUnblock => 'Poista esto';
+
+  @override
+  String get chatDialog => 'Keskustelu';
+
+  @override
+  String get chatEmpty => 'Ei vielä viestejä.\nLähetä ensimmäinen.';
+
+  @override
+  String get chatMessageHint => 'Viesti';
+
+  @override
+  String get chatEmoji => 'Emojit';
+
+  @override
+  String get chatBuyEmojiHint => 'Osta emojeja kaupasta kotinäytöllä';
+
+  @override
+  String get chatEditing => 'Muokataan';
+
+  @override
+  String get chatToday => 'Tänään';
+
+  @override
+  String get chatYesterday => 'Eilen';
+
+  @override
+  String get chatFriendsOnly => 'Teksti vain kavereille';
+
+  @override
+  String get emojiGroupEmotions => 'Tunteet';
+
+  @override
+  String get emojiGroupGame => 'Pelaaminen';
+
+  @override
+  String get emojiGroupFlags => 'Liput';
+
+  @override
+  String get emojiGroupAnimals => 'Eläimet';
+
+  @override
+  String get emojiGroupFood => 'Ruoka';
+
+  @override
+  String get emojiGroupTravel => 'Matkailu';
+
+  @override
+  String get emojiGroupParty => 'Juhla';
+
+  @override
+  String get emojiGroupObjects => 'Esineet';
+
+  @override
+  String get friendsTitle => 'Kaverit';
+
+  @override
+  String get friendsTabFriends => 'Kaverit';
+
+  @override
+  String get friendsTabIncoming => 'Saapuneet';
+
+  @override
+  String get friendsTabOutgoing => 'Lähetetyt';
+
+  @override
+  String get friendsAdd => 'Lisää kaveri';
+
+  @override
+  String get friendsRequestSent => 'Pyyntö lähetetty';
+
+  @override
+  String get friendsFindTab => 'Etsi kaveri';
+
+  @override
+  String get friendsSearchHint => 'Hae käyttäjänimellä';
+
+  @override
+  String get friendsSearchPrompt => 'Käytä hakua löytääksesi uusia kavereita';
+
+  @override
+  String get friendsNothingFound => 'Ei tuloksia';
+
+  @override
+  String get friendsEmpty => 'Sinulla ei ole vielä kavereita';
+
+  @override
+  String get friendsNoIncoming => 'Ei saapuneita pyyntöjä';
+
+  @override
+  String get friendsNoOutgoing => 'Ei lähetettyjä pyyntöjä';
+
+  @override
+  String get friendsAlreadyFriends => 'Jo kavereita';
+
+  @override
+  String get friendsRemoveTitle => 'Poistetaanko kavereista?';
+
+  @override
+  String get friendsRemoved => 'Poistettu kavereista';
+
+  @override
+  String get friendsRequestAccepted => 'Pyyntö hyväksytty';
+
+  @override
+  String get friendsRequestDeclined => 'Pyyntö hylätty';
+
+  @override
+  String get friendsRequestCancelled => 'Pyyntö peruutettu';
+
+  @override
+  String get profileTitle => 'Profiili';
+
+  @override
+  String get profileSignInPrompt => 'Kirjaudu tilillesi';
+
+  @override
+  String get profileSignInHint => 'Henkilökohtaisen profiilin määrittämiseksi';
+
+  @override
+  String get profileEdit => 'Muokkaa';
+
+  @override
+  String get profileCollections => 'Kokoelmat';
+
+  @override
+  String get profileAge => 'Ikä';
+
+  @override
+  String get profileGender => 'Sukupuoli';
+
+  @override
+  String get profileGenderUnset => 'Ei asetettu';
+
+  @override
+  String get profileGenderMale => 'Mies';
+
+  @override
+  String get profileGenderFemale => 'Nainen';
+
+  @override
+  String get profileAvatar => 'Avatar';
+
+  @override
+  String get profileUploadPhoto => 'Lataa kuva';
+
+  @override
+  String get profileChangePhoto => 'Vaihda kuva';
+
+  @override
+  String get shopTitle => 'Kauppa';
+
+  @override
+  String get shopEmojis => 'Emojit';
+
+  @override
+  String get shopEmojisSubtitle => 'Animoidut emojit keskusteluun';
+
+  @override
+  String get shopCollections => 'Kokoelmat';
+
+  @override
+  String get shopCollectionsSubtitle => 'Profiilinäyttö, lahjat ja tulot';
+
+  @override
+  String get shopStakes => 'Panokset';
+
+  @override
+  String get shopStakesSubtitle => 'Avaa hopeapanokset';
+
+  @override
+  String get inventoryTitle => 'Esineet';
+
+  @override
+  String get inventoryEmpty => 'Täällä ei ole vielä mitään — katso kauppaa';
+
+  @override
+  String get inventoryFrames => 'Kehykset';
+
+  @override
+  String get inventoryClaim => 'Nouda';
+
+  @override
+  String get inventorySell => 'Myy';
+
+  @override
+  String get inventoryGift => 'Lahjoita';
+
+  @override
+  String get messageEdited => 'muokattu';
+
+  @override
+  String get messageDeleted => 'Viesti poistettu';
+
+  @override
+  String get photo => 'Kuva';
+
+  @override
+  String get camera => 'Kamera';
+
+  @override
+  String get gallery => 'Galleria';
+
+  @override
+  String get connectionError => 'Yhteyttä palvelimeen ei voitu muodostaa.';
+
+  @override
+  String get serverError => 'Palvelinvirhe. Yritä myöhemmin uudelleen.';
+
+  @override
+  String get sessionExpired => 'Istunto vanhentui. Kirjaudu sisään uudelleen.';
+
+  @override
+  String get errNoInternet => 'Ei internetyhteyttä.';
+
+  @override
+  String get errTimeout => 'Pyyntö aikakatkaistiin. Yritä uudelleen.';
+
+  @override
+  String get errGamesUnavailable => 'Pelit eivät ole tilapäisesti saatavilla';
+
+  @override
+  String get errSettingsSaveFailed => 'Asetusta ei voitu tallentaa';
+
+  @override
+  String get errPushPermission => 'Salli ilmoitukset selaimen tai järjestelmän asetuksissa.';
+
+  @override
+  String get balanceTitle => 'Saldo';
+
+  @override
+  String get coinBronze => 'Pronssi';
+
+  @override
+  String get coinSilver => 'Hopea';
+
+  @override
+  String get coinGold => 'Kulta';
+
+  @override
+  String get coinDiamond => 'Timantti';
+
+  @override
+  String get balanceZeroBronze => '0 pronssia';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count pronssia';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count hopeaa';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count kultaa';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count timanttia';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount päivässä';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'pr';
+
+  @override
+  String get balanceAbbrSilver => 'h.';
+
+  @override
+  String get balanceAbbrGold => 'k.';
+
+  @override
+  String get commonBackHome => 'Takaisin etusivulle';
+
+  @override
+  String get commonCopied => 'Kopioitu';
+
+  @override
+  String get commonClear => 'Tyhjennä';
+
+  @override
+  String get commonTryLater => 'Yritä myöhemmin uudelleen.';
+
+  @override
+  String get commonTryRefresh => 'Kokeile päivittää sivu.';
+
+  @override
+  String get coinsTitle => 'Kolikot';
+
+  @override
+  String get coinsLoginReward => 'Kirjautumispalkinto';
+
+  @override
+  String get coinsLoginAvailableToday => 'Päivän palkinto saatavilla';
+
+  @override
+  String get coinsLoginStreak => 'Päivittäinen kirjautumisputki';
+
+  @override
+  String get coinsFriendReward => 'Kaveripalkinto';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount rekisteröitymisestä linkkisi kautta';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Palkintoja ei voitu ladata';
+
+  @override
+  String get coinsClaimReward => 'Nouda palkinto';
+
+  @override
+  String get coinsAlreadyClaimed => 'Jo noudettu';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · tänään';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · 1 päivä jäljellä';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · $remaining jäljellä';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Kutsu kaveri';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount jokaisesta, joka rekisteröityy linkkisi kautta';
+  }
+
+  @override
+  String get coinsCopyLink => 'Kopioi linkki';
+
+  @override
+  String get coinsHowItWorks => 'Miten se toimii';
+
+  @override
+  String get coinsHowStep1 => 'Kopioi linkki ja lähetä se kaverille';
+
+  @override
+  String get coinsHowStep2 => 'Kaveri rekisteröityy linkin kautta';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Saat $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Saavutukset';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Edistyminen: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Kehys noudettu';
+
+  @override
+  String get achievementsClaimed => 'Noudettu';
+
+  @override
+  String get achievementsOpenFrame => 'Avaa kehys';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Haluatko varmasti poistaa käyttäjän $name kavereista?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Poista';
+
+  @override
+  String get friendsRemove => 'Poista kavereista';
+
+  @override
+  String get friendsAcceptRequest => 'Hyväksy pyyntö';
+
+  @override
+  String get friendsDeclineRequest => 'Hylkää pyyntö';
+
+  @override
+  String get friendsCancelRequest => 'Peruuta pyyntö';
+
+  @override
+  String get friendsSendRequest => 'Lähetä kaveripyyntö';
+
+  @override
+  String get friendsRequestAlreadySent => 'Pyyntö on jo lähetetty';
+
+  @override
+  String get friendsIncomingStatus => 'Saapuva pyyntö';
+
+  @override
+  String get friendsOutgoingStatus => 'Lähtevä pyyntö';
+
+  @override
+  String get friendsNotFriends => 'Ei kavereita';
+
+  @override
+  String get friendsCollapseSearch => 'Piilota haku';
+
+  @override
+  String get friendsExpandSearch => 'Näytä haku';
+
+  @override
+  String get friendsLoadFailed => 'Kavereita ei voitu ladata';
+
+  @override
+  String friendsSince(String date) {
+    return 'Kavereita alkaen: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Saapuva pyyntö: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Lähtevä pyyntö: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Käyttäjätiedot';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age vuotta';
+  }
+
+  @override
+  String get shopBuy => 'Osta';
+
+  @override
+  String get shopBuyTitle => 'Ostetaanko?';
+
+  @override
+  String get shopBuyStakeTitle => 'Ostetaanko panos?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Ostetaanko emoji?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Ostetaanko kokoelma?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Hinta: $price';
+  }
+
+  @override
+  String get shopOwned => 'Ostettu';
+
+  @override
+  String get shopEmpty => 'Vielä tyhjä';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title ostettu';
+  }
+
+  @override
+  String get shopEmojiUses => 'Saat: 10 käyttöä';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 käyttöä';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 käyttöä';
+  }
+
+  @override
+  String get shopBuyTen => 'Osta · 10 kpl';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Tulo: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Kertaluonteinen osto';
+
+  @override
+  String get shopSellRefund => 'Myynti palauttaa osan hinnasta';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title lisätty profiiliin';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'settibonus +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Valmis';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Kerätty · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Myydäänkö?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Saat $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Myyty: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Lisää ensin kavereita';
+
+  @override
+  String get inventoryGiftTitle => 'Lahjoitetaanko kokoelma?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Lahjoitetaanko «$title» käyttäjälle $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Lahjoitettu: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Esineitä ei voitu ladata';
+
+  @override
+  String get inventoryNoCollections => 'Ei kokoelmia — osta kaupasta';
+
+  @override
+  String get inventoryNoEmojis => 'Ei emojeja — osta kaupasta';
+
+  @override
+  String get inventoryNoFrames => 'Ei kehyksiä — voita 10 liigaottelua (saavutukset)';
+
+  @override
+  String get inventoryNoStakes => 'Ei ostettuja panoksia';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return '$count jäljellä';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Tulo: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Tulo huomenna: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Voit panostaa $amount kultaa';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Voit panostaa $amount hopeaa';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Noudettu +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Chatteja ei voitu ladata';
+
+  @override
+  String get chatsLoadListFailed => 'Listaa ei voitu ladata';
+
+  @override
+  String get chatsBlockedEmpty => 'Lista on tyhjä';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Estetty: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Chattia ei voitu luoda';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Lisää ensin kavereita, sitten voit avata chatin.';
+
+  @override
+  String get chatsFriendsNotFound => 'Kavereita ei löytynyt';
+
+  @override
+  String get chatsFindFriendHint => 'Etsi kaveria nimimerkillä';
+
+  @override
+  String get chatsSelectChat => 'Valitse chat';
+
+  @override
+  String get chatsSelectHint => 'Valitse keskustelu vasemmalla olevasta listasta';
+
+  @override
+  String get chatEditFailed => 'Viestiä ei voitu muokata';
+
+  @override
+  String get chatSendFailed => 'Viestiä ei voitu lähettää';
+
+  @override
+  String get chatDeleteFailed => 'Viestiä ei voitu poistaa';
+
+  @override
+  String get chatEmojiSendFailed => 'Emojia ei voitu lähettää';
+
+  @override
+  String get chatLoadFailed => 'Viestejä ei voitu ladata';
+
+  @override
+  String get chatBackToGame => 'Takaisin peliin';
+
+  @override
+  String get chatBackToChats => 'Takaisin chatteihin';
+
+  @override
+  String get chatActions => 'Chatin toiminnot';
+
+  @override
+  String get chatScrollToEnd => 'Keskustelun loppuun';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Vastaus käyttäjälle $name';
+  }
+
+  @override
+  String get chatGift => 'Lahja';
+
+  @override
+  String get chatCollection => 'Kokoelma';
+
+  @override
+  String get chatGiftCollection => 'Lahja · kokoelma';
+
+  @override
+  String get chatThisUser => 'tätä käyttäjää';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Aulaa ei voitu ladata.';
+
+  @override
+  String get gamesTapChangeStake => 'Napauta vaihtaaksesi panoksen';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Napauta vaihtaaksesi vuoron ajan';
+
+  @override
+  String get gamesTapChangeGrid => 'Napauta vaihtaaksesi ruudukon koon';
+
+  @override
+  String get gamesSwapSidesHint => 'O voi muuttua X:ksi 1. siirron jälkeen';
+
+  @override
+  String get gamesNoCenterHint => 'Ensimmäinen siirto ei voi olla keskelle';
+
+  @override
+  String get lobbyInviteSentShort => 'Lähetetty';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Kutsut lähetetty. Odotetaan vastausta.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Liitä se chattiin tai viestiin kaverille';
+
+  @override
+  String get lobbyCopyLinkHint => 'Kopioi linkki leikepöydälle';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name kutsuu sinut pelaamaan';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name voitti';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Aika loppui. $name voitti';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get adminTitle => 'Hallinta';
+
+  @override
+  String get tournamentsTitle => 'Turnaukset';
+
+  @override
+  String get profileAgeInvalid => 'Anna ikä välillä 1–111';
+
+  @override
+  String get profileSaveFailed => 'Profiilia ei voitu tallentaa';
+
+  @override
+  String get profileNameHint => 'Latinalaiset kirjaimet, numerot, _ enintään 10 merkkiä';
+
+  @override
+  String get profileAgeHint => '1–111';
+
+  @override
+  String get profileAboutHint => 'Enintään 100 merkkiä (valinnainen)';
+
+  @override
+  String get profileProcessingPhoto => 'Käsitellään kuvaa…';
+
+  @override
+  String get profileCropTitle => 'Valitse avatarin alue';
+
+  @override
+  String get profileCropHint => 'Zoomaa ja siirrä kuvaa';
+
+  @override
+  String get profileApply => 'Käytä';
+
+  @override
+  String get profilePreparing => 'Valmistellaan…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get timeOneMin => '1 min';
+
+  @override
+  String get timeTenMin => '10 min';
+
+  @override
+  String rulesIntro(String grid) {
+    return 'Ristinolla $grid-laudalla. Vuorotellen; X aloittaa.';
+  }
+
+  @override
+  String rulesWin(int n) {
+    return 'Voitto: saa $n putkeen vaaka-, pysty- tai vinorivissä.';
+  }
+
+  @override
+  String get rulesNoTimeLimit => 'Ei aikarajaa siirrolle.';
+
+  @override
+  String rulesTurnTime(String time) {
+    return 'Aika per siirto: $time.';
+  }
+
+  @override
+  String rulesStake(String stake) {
+    return 'Panos: $stake. Peli käydään näillä kolikoilla.';
+  }
+
+  @override
+  String get rulesSwap => 'Puolenvaihto: O voi vaihtaa X:n kanssa X:n ensimmäisen siirron jälkeen.';
+
+  @override
+  String get rulesNoCenter => 'Kielto keskelle: X ei saa pelata keskelle ensimmäisellä siirrolla.';
+
+  @override
+  String get collectionSetLegends => 'Legendat';
+
+  @override
+  String get collectionSetSpace => 'Avaruus';
+
+  @override
+  String get collectionSetGems => 'Jalokivet';
+
+  @override
+  String get collectionSetParty => 'Juhla';
+
+  @override
+  String get collectionSetNature => 'Luonto';
+
+  @override
+  String get collectionSetAdventures => 'Seikkailut';
+
+  @override
+  String collectionCardMeta(String amount) {
+    return 'Kokoelma · näyteikkuna · lahja · myynti · +$amount';
+  }
+
+  @override
+  String get coinsDayOne => 'päivä';
+
+  @override
+  String get coinsDayFew => 'päivää';
+
+  @override
+  String get coinsDayMany => 'päivää';
+
+  @override
+  String get giftFriendTitle => 'Anna kaverille';
+
+  @override
+  String photoCount(int count) {
+    return 'Kuva ($count)';
+  }
+
+  @override
+  String photoCountWithText(int count, String text) {
+    return 'Kuva ($count): $text';
+  }
+
+  @override
+  String photoWithText(String text) {
+    return 'Kuva: $text';
+  }
+
+  @override
+  String shopEmojiGroupMeta(int count, String price) {
+    return '$count emojia · $price';
+  }
+
+  @override
+  String get chatsExpandPanel => 'Laajenna paneeli';
+
+  @override
+  String get chatsCollapsePanel => 'Pienennä paneeli';
+
+  @override
+  String get chatReplySourceMissing => 'Alkuperäistä viestiä ei löydy';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Panos $n hopeaa';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Panos $n kultaa';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Avaa panoksen $n hopeaa';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Avaa panoksen $n kultaa';
+  }
+
+  @override
+  String get chatReplySelf => 'itsellesi';
+
+  @override
+  String get chatReplyPeer => 'keskustelukumppanille';
+}

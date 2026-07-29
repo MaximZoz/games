@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 
 class FriendUserItem {
   final String id;
@@ -214,24 +215,9 @@ class FriendsRepository {
     } on AuthException catch (e) {
       throw FriendsException(
         e.statusCode,
-        e.statusCode == 401 ? 'Сессия истекла. Войдите заново.' : e.message,
+        e.statusCode == 401 ? LocaleService.l10n.sessionExpired : e.message,
       );
     }
-  }
-
-  static String _translateMessage(String msg) {
-    final m = msg.toLowerCase().trim();
-    const Map<String, String> map = {
-      'cannot friend yourself': 'Нельзя добавить в друзья самого себя',
-      'already friends': 'Вы уже друзья',
-      'friend request already sent': 'Запрос уже отправлен',
-      'incoming friend request is pending': 'У вас уже есть входящий запрос от этого пользователя',
-      'user is blocked': 'Пользователь заблокирован',
-      'forbidden': 'Недостаточно прав',
-      'not found': 'Не найдено',
-      'server error': 'Ошибка сервера. Попробуйте позже.',
-    };
-    return map[m] ?? msg;
   }
 
   Never _throwForErrorResponse(http.Response response) {
@@ -239,21 +225,24 @@ class FriendsRepository {
     try {
       final body = jsonDecode(response.body);
       if (body is Map) {
-        message = (body['message'] ?? body['error'] ?? message).toString();
+        message = (body['message'] ?? body['error'] ?? message).toString().trim();
       }
     } catch (_) {}
 
+    final l10n = LocaleService.l10n;
     if (response.statusCode == 401) {
-      throw FriendsException(401, 'Сессия истекла. Войдите заново.');
+      throw FriendsException(401, l10n.sessionExpired);
     }
     if (response.statusCode == 403 && message.isEmpty) {
-      throw FriendsException(403, 'Недостаточно прав для этого действия.');
+      throw FriendsException(403, l10n.commonForbidden);
     }
     if (response.statusCode == 404 && message.isEmpty) {
-      throw FriendsException(404, 'Запись не найдена.');
+      throw FriendsException(404, l10n.commonNotFound);
     }
-    final translated = message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
-    throw FriendsException(response.statusCode, translated);
+    throw FriendsException(
+      response.statusCode,
+      message.isEmpty ? l10n.commonServerErrorShort : message,
+    );
   }
 
   Future<int> getUsersCount() async {

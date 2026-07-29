@@ -15,6 +15,7 @@ import (
 
 	"multigames/server/internal/api"
 	"multigames/server/internal/applog"
+	"multigames/server/internal/i18n"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -67,7 +68,7 @@ func handleStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, i18n.T(i18n.LangFromRequest(r), "Method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -80,7 +81,7 @@ func spaHandler(webRoot fs.FS) http.Handler {
 	sub, err := fs.Sub(webRoot, "web")
 	if err != nil {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "web assets not available", http.StatusInternalServerError)
+			http.Error(w, i18n.T(i18n.LangFromRequest(r), "web assets not available"), http.StatusInternalServerError)
 		})
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

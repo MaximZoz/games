@@ -5,6 +5,7 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
@@ -13,6 +14,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final rewardAvailable =
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
     final unclaimedAchievements =
@@ -28,10 +30,10 @@ class HomeScreen extends ConsumerWidget {
 
     final itemsBadge = (collectionIncomeAvailable ? 1 : 0) + unreadGifts;
     final itemsSubtitle = unreadGifts > 0
-        ? 'Вам подарили коллекцию'
+        ? l10n.homeItemsGifted
         : (collectionIncomeAvailable
-            ? 'Можно забрать доход коллекций'
-            : 'Ваш инвентарь');
+            ? l10n.homeItemsIncome
+            : l10n.homeItemsInventory);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -45,27 +47,27 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   HomeActionCard(
                     icon: Icons.emoji_events_rounded,
-                    title: 'Достижения',
+                    title: l10n.homeAchievements,
                     subtitle: unclaimedAchievements > 0
-                        ? 'Есть награды к получению'
-                        : 'Ваши игровые результаты',
+                        ? l10n.homeAchievementsRewards
+                        : l10n.homeAchievementsSubtitle,
                     badgeCount: unclaimedAchievements,
                     onTap: () => context.push('/achievements'),
                   ),
                   const SizedBox(height: 12),
                   HomeActionCard(
                     icon: Icons.monetization_on_rounded,
-                    title: 'Монеты',
+                    title: l10n.homeCoins,
                     subtitle: rewardAvailable
-                        ? 'Доступна награда за вход'
-                        : 'Баланс и награды',
+                        ? l10n.homeCoinsDailyReward
+                        : l10n.homeCoinsSubtitle,
                     badgeCount: rewardAvailable ? 1 : 0,
                     onTap: () => context.push('/coins'),
                   ),
                   const SizedBox(height: 12),
                   HomeActionCard(
                     icon: Icons.inventory_2_rounded,
-                    title: 'Предметы',
+                    title: l10n.homeItems,
                     subtitle: itemsSubtitle,
                     badgeCount: itemsBadge,
                     onTap: () => context.push('/inventory'),
@@ -73,8 +75,8 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   HomeActionCard(
                     icon: Icons.storefront_rounded,
-                    title: 'Магазин',
-                    subtitle: 'Смайлы, ставки, коллекции',
+                    title: l10n.homeShop,
+                    subtitle: l10n.homeShopSubtitle,
                     onTap: () => context.push('/shop'),
                   ),
                 ],

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -62,6 +64,7 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final dailyRewardAsync = ref.watch(dailyRewardStatusProvider);
     void goBack() => context.pop();
 
@@ -79,10 +82,10 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: l10n.commonBack,
           ),
           title: Text(
-            'Монеты за вход',
+            l10n.coinsLoginReward,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -99,11 +102,11 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
                       onClaim: () => unawaited(_claim(status)),
                     )
                   : dailyRewardAsync.hasError
-                      ? const Padding(
-                          padding: EdgeInsets.all(16),
+                      ? Padding(
+                          padding: const EdgeInsets.all(16),
                           child: Text(
-                            'Не удалось загрузить награды',
-                            style: TextStyle(color: AppColors.textSecondary),
+                            l10n.coinsLoadRewardsFailed,
+                            style: const TextStyle(color: AppColors.textSecondary),
                           ),
                         )
                       // Только первая загрузка; после клейма спиннера нет.
@@ -129,6 +132,7 @@ class _LoginRewardsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final canClaim = status.available;
 
     return Padding(
@@ -162,7 +166,9 @@ class _LoginRewardsBody extends StatelessWidget {
               onPressed: canClaim ? onClaim : null,
               icon: const Icon(Icons.card_giftcard, size: 18),
               label: Text(
-                status.available ? 'Забрать награду' : 'Уже получено',
+                status.available
+                    ? l10n.coinsClaimReward
+                    : l10n.coinsAlreadyClaimed,
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentStart,
@@ -198,6 +204,7 @@ class _CompactMilestoneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final doneDays = streak.clamp(0, targetDays);
     final completed = streak >= targetDays;
     final isTodaysTarget = availableToday && nextStreak == targetDays;
@@ -215,10 +222,10 @@ class _CompactMilestoneCard extends StatelessWidget {
     final progressLabel = completed
         ? '$targetDays/$targetDays'
         : pendingToday
-            ? '$doneDays/$targetDays · сегодня'
+            ? l10n.coinsStreakToday(doneDays, targetDays)
             : remaining == 1
-                ? '$doneDays/$targetDays · ещё 1 день'
-                : '$doneDays/$targetDays · ещё $remaining';
+                ? l10n.coinsStreakOneDayLeft(doneDays, targetDays)
+                : l10n.coinsStreakDaysLeft(doneDays, targetDays, remaining);
 
     final borderColor = completed
         ? const Color(0xFF34B7F1).withValues(alpha: 0.5)
@@ -289,12 +296,13 @@ class _CompactMilestoneCard extends StatelessWidget {
 }
 
 String _daysWord(int n) {
+  final l10n = LocaleService.l10n;
   final abs = n.abs();
   final mod10 = abs % 10;
   final mod100 = abs % 100;
-  if (mod10 == 1 && mod100 != 11) return 'день';
+  if (mod10 == 1 && mod100 != 11) return l10n.coinsDayOne;
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-    return 'дня';
+    return l10n.coinsDayFew;
   }
-  return 'дней';
+  return l10n.coinsDayMany;
 }

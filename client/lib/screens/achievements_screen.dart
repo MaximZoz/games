@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/achievements/achievements_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -119,6 +121,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         ? _items
         : (cached != null ? sortAchievements(cached) : const <AchievementItem>[]);
 
+    final l10n = context.l10n;
     return SwipeBackScope(
       onBack: goBack,
       child: Scaffold(
@@ -129,10 +132,10 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад на главную',
+            tooltip: l10n.commonBack,
           ),
           title: Text(
-            'Достижения',
+            l10n.homeAchievements,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -195,6 +198,7 @@ class _AchievementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final progressText = '${item.progress}/${item.target}';
     final frameCode = item.rewardItemCode;
     return GradientCard(
@@ -225,7 +229,7 @@ class _AchievementCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.title,
+                      achievementTitle(item.code, fallback: item.title, l10n: l10n),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
@@ -234,7 +238,11 @@ class _AchievementCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      item.description,
+                      achievementDescription(
+                        item.code,
+                        fallback: item.description,
+                        l10n: l10n,
+                      ),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
@@ -278,7 +286,7 @@ class _AchievementCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Прогресс: $progressText',
+              l10n.achievementsProgress(progressText),
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -286,7 +294,9 @@ class _AchievementCard extends StatelessWidget {
             ),
           ] else if (item.isClaimed)
             Text(
-              item.hasFrameReward ? 'Рамка получена' : 'Получено',
+              item.hasFrameReward
+                  ? l10n.achievementsFrameClaimed
+                  : l10n.achievementsClaimed,
               style: TextStyle(
                 color: Colors.green.shade700,
                 fontWeight: FontWeight.w700,
@@ -311,7 +321,9 @@ class _AchievementCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                item.hasFrameReward ? 'Открыть рамку' : 'Забрать',
+                item.hasFrameReward
+                    ? l10n.achievementsOpenFrame
+                    : l10n.inventoryClaim,
               ),
             ),
         ],

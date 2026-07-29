@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
@@ -140,11 +142,11 @@ bool stakeIsGold(int stakeBronze) =>
     stakeCoinType(stakeBronze) == CoinType.gold;
 
 String formatTurnTime(int sec) {
+  final l10n = LocaleService.l10n;
   if (sec == 0) return '∞';
-  if (sec == 10 || sec == 30) return '$sec с';
-  if (sec == 60) return '1 мин';
-  if (sec == 600) return '10 мин';
-  return '$sec с';
+  if (sec == 60) return l10n.timeOneMin;
+  if (sec == 600) return l10n.timeTenMin;
+  return l10n.timeSecondsShort(sec);
 }
 
 String formatGridSize(int size) => '${size}x$size';
@@ -157,37 +159,46 @@ String buildTictactoeRulesText({
   required bool firstMoveRestriction,
   int stakeBronze = 1,
 }) {
+  final l10n = LocaleService.l10n;
   final stake = stakeBronze < 1 ? 1 : stakeBronze;
+  final winN = gridSize >= 6 ? 5 : gridSize;
   final parts = <String>[
-    'Крестики-нолики на поле ${formatGridSize(gridSize)}. Ходят по очереди, X начинает.',
-    'Победа: нужно выстроить ${gridSize >= 6 ? 5 : gridSize} в ряд по горизонтали, вертикали или диагонали.',
+    l10n.rulesIntro(formatGridSize(gridSize)),
+    l10n.rulesWin(winN),
     turnTimeSec == 0
-        ? 'Без ограничения по времени на ход.'
-        : 'Время на ход: ${formatTurnTime(turnTimeSec)}.',
-    'Ставка: ${formatBalance(stake)}. На столько монет идёт игра.',
+        ? l10n.rulesNoTimeLimit
+        : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
+    l10n.rulesStake(formatBalance(stake)),
   ];
   if (swapRule) {
-    parts.add(
-        'Смена сторон: O может поменяться местами с X после первого хода X.');
+    parts.add(l10n.rulesSwap);
   }
   if (firstMoveRestriction) {
-    parts.add('Запрет центра: X не может ходить в центр первым ходом.');
+    parts.add(l10n.rulesNoCenter);
   }
   return parts.join('\n\n');
 }
 
 /// 100 бронзы=1 серебро, 100 серебра=1 золото, 100 золота=1 бриллиант.
 String formatBalance(int bronze) {
-  if (bronze < 100) return '$bronze бр';
+  final l10n = LocaleService.l10n;
+  final br = l10n.balanceAbbrBronze;
+  final sil = l10n.balanceAbbrSilver;
+  final gld = l10n.balanceAbbrGold;
+  if (bronze < 100) return '$bronze $br';
   final silver = bronze ~/ 100;
   final b = bronze % 100;
-  if (silver < 100) return b > 0 ? '$silver с. $b бр' : '$silver с';
+  if (silver < 100) return b > 0 ? '$silver $sil $b $br' : '$silver $sil';
   final gold = silver ~/ 100;
   final s = silver % 100;
-  if (gold < 100) return s > 0 || b > 0 ? '$gold з. $s с. $b бр' : '$gold з';
+  if (gold < 100) {
+    return s > 0 || b > 0 ? '$gold $gld $s $sil $b $br' : '$gold $gld';
+  }
   final diamond = gold ~/ 100;
   final g = gold % 100;
-  return g > 0 || s > 0 || b > 0 ? '$diamond ◆ $g з. $s с' : '$diamond ◆';
+  return g > 0 || s > 0 || b > 0
+      ? '$diamond ◆ $g $gld $s $sil'
+      : '$diamond ◆';
 }
 
 class LobbyItem {
@@ -207,7 +218,7 @@ class LobbyItem {
   LobbyItem({
     required this.id,
     required this.creatorId,
-    this.creatorName = 'Игрок',
+    String? creatorName,
     this.opponentId,
     required this.status,
     this.gameId,
@@ -217,13 +228,13 @@ class LobbyItem {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 1,
-  });
+  }) : creatorName = localizeDisplayName(creatorName);
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
     return LobbyItem(
       id: json['id'] as String? ?? '',
       creatorId: json['creator_id'] as String? ?? '',
-      creatorName: json['creator_name'] as String? ?? 'Игрок',
+      creatorName: localizeDisplayName(json['creator_name'] as String?),
       opponentId: json['opponent_id'] as String?,
       status: json['status'] as String? ?? '',
       gameId: json['game_id'] as String?,
@@ -341,8 +352,16 @@ class GameStateItem {
       firstMoveRestriction: json['first_move_restriction'] == true,
       canSwap: json['can_swap'] == true,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
-      xDisplayName: json['x_display_name'] as String?,
-      oDisplayName: json['o_display_name'] as String?,
+      xDisplayName: () {
+        final raw = json['x_display_name'] as String?;
+        if (raw == null || raw.trim().isEmpty) return null;
+        return localizeDisplayName(raw);
+      }(),
+      oDisplayName: () {
+        final raw = json['o_display_name'] as String?;
+        if (raw == null || raw.trim().isEmpty) return null;
+        return localizeDisplayName(raw);
+      }(),
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',
       xAvatarValue: json['x_avatar_value'] as String?,
       xFrameColor: json['x_frame_color'] as String?,
@@ -565,44 +584,17 @@ class GamesRepository {
     } on AuthException catch (e) {
       throw GamesException(
         e.statusCode,
-        e.statusCode == 401 ? 'Сессия истекла. Войдите заново.' : e.message,
+        e.statusCode == 401
+            ? LocaleService.l10n.sessionExpired
+            : e.message,
       );
     }
   }
 
-  static String _translateMessage(String msg) {
-    final m = msg.toLowerCase().trim();
-    const Map<String, String> map = {
-      'lobby not found': 'Лобби не найдено',
-      'game not found': 'Игра не найдена',
-      'not found': 'Не найдено',
-      'you are not invited': 'Вас не приглашали в эту игру',
-      'cannot invite yourself': 'Нельзя пригласить самого себя',
-      'user is not your friend': 'Этот пользователь не в списке друзей',
-      'lobby not in invite mode': 'Лобби не в режиме приглашений',
-      'lobby not joinable': 'В это лобби уже нельзя войти',
-      'cannot join own lobby': 'Нельзя присоединиться к своему лобби',
-      'game is not over': 'Игра ещё не закончена',
-      'game already started': 'Игра уже началась',
-      'game is over': 'Игра уже завершена',
-      'not your turn': 'Сейчас не ваш ход',
-      'cell already taken': 'Эта клетка уже занята',
-      'cell must be 0-8': 'Неверный ход',
-      'first move cannot be in center': 'Первый ход нельзя делать в центр',
-      'swap not allowed in this game': 'Смена сторон недоступна в этой игре',
-      'only O can swap': 'Сменить стороны может только игрок O',
-      'can only swap on your turn after X\'s first move':
-          'Сменить стороны можно только после первого хода X',
-      'can only swap after X\'s first move':
-          'Сменить стороны можно только после первого хода X',
-      'lobby invite expired': 'Приглашение в лобби истекло',
-      'insufficient balance': 'Недостаточно монет',
-      'creator has insufficient balance': 'У создателя недостаточно монет',
-      'forbidden': 'Недостаточно прав',
-      'games service unavailable (redis required)': 'Игры временно недоступны',
-      'server error': 'Ошибка сервера. Попробуйте позже.',
-    };
-    return map[m] ?? (map[msg.trim()] ?? msg);
+  static String _messageFromBody(String msg) {
+    final trimmed = msg.trim();
+    if (trimmed.isEmpty) return LocaleService.l10n.commonServerErrorShort;
+    return trimmed;
   }
 
   Never _throwForErrorResponse(http.Response response) {
@@ -614,24 +606,26 @@ class GamesRepository {
       }
     } catch (_) {}
 
+    final l10n = LocaleService.l10n;
     if (response.statusCode == 401) {
-      throw GamesException(401, 'Сессия истекла. Войдите заново.');
+      throw GamesException(401, l10n.sessionExpired);
     }
     if (response.statusCode == 402) {
-      throw GamesException(402, 'Недостаточно монет для этой ставки.');
+      throw GamesException(
+        402,
+        message.trim().isEmpty ? l10n.commonInsufficientCoins : message.trim(),
+      );
     }
-    if (response.statusCode == 403 && message.isEmpty) {
-      throw GamesException(403, 'Недостаточно прав для этого действия.');
+    if (response.statusCode == 403 && message.trim().isEmpty) {
+      throw GamesException(403, l10n.commonForbidden);
     }
-    if (response.statusCode == 404 && message.isEmpty) {
-      throw GamesException(404, 'Лобби или игра не найдена.');
+    if (response.statusCode == 404 && message.trim().isEmpty) {
+      throw GamesException(404, l10n.commonNotFound);
     }
-    if (response.statusCode == 503 && message.isEmpty) {
-      throw GamesException(503, 'Игры временно недоступны.');
+    if (response.statusCode == 503 && message.trim().isEmpty) {
+      throw GamesException(503, l10n.errGamesUnavailable);
     }
-    final translated =
-        message.isEmpty ? 'Ошибка сервера' : _translateMessage(message);
-    throw GamesException(response.statusCode, translated);
+    throw GamesException(response.statusCode, _messageFromBody(message));
   }
 
   Future<RematchResult> rematch(String gameId) async {

@@ -19,17 +19,17 @@ type CoinsHandler struct {
 // GET /api/coins/daily-available → статус серии и следующей награды
 func (h *CoinsHandler) DailyAvailable(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	info, err := store.GetDailyRewardInfo(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -40,21 +40,21 @@ func (h *CoinsHandler) DailyAvailable(w http.ResponseWriter, r *http.Request) {
 // POST /api/coins/claim-daily → баланс, награда и серия
 func (h *CoinsHandler) ClaimDaily(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	result, err := store.ClaimDailyReward(r.Context(), h.Pool, userID)
 	if err != nil {
 		if err == store.ErrAlreadyClaimed {
-			http.Error(w, "already claimed today", http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, "already claimed today")
 			return
 		}
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

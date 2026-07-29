@@ -9,17 +9,17 @@ import (
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	u, err := store.GetUserByID(r.Context(), h.Pool, userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		WriteErr(w, r, http.StatusNotFound, "user not found")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

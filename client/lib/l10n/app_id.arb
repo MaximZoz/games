@@ -1,0 +1,886 @@
+{
+  "@@locale": "id",
+  "appTitle": "Zozu Games",
+  "navHome": "Beranda",
+  "navProfile": "Profil",
+  "navFriends": "Teman",
+  "navChats": "Obrolan",
+  "navGames": "Game",
+  "navSettings": "Pengaturan",
+  "settingsTitle": "Pengaturan",
+  "settingsLanguage": "Bahasa",
+  "settingsLanguageSystem": "Default sistem",
+  "settingsAddBotsTitle": "Tambah bot setelah 30 dtk",
+  "settingsAddBotsSubtitle": "Saat matchmaking: jika lawan tidak ditemukan dalam 30 detik, game dimulai dengan bot (taruhan direset ke 1 perunggu)",
+  "settingsFriendsOnlyTitle": "Pesan hanya dari teman",
+  "settingsFriendsOnlySubtitle": "Non-teman hanya bisa mengirim emoji. Jika spam jadi masalah, blokir pengguna sementara.",
+  "settingsNotifications": "Notifikasi",
+  "settingsPushChat": "Obrolan",
+  "settingsPushFriends": "Teman",
+  "settingsPushGames": "Game",
+  "settingsPushRewards": "Hadiah",
+  "loginTitle": "Masuk",
+  "loginSubtitle": "Masukkan email atau nama pengguna dan kata sandi",
+  "loginEmailLabel": "Email atau nama pengguna",
+  "loginPasswordLabel": "Kata sandi",
+  "loginSubmit": "Masuk",
+  "loginNoAccount": "Belum punya akun? Daftar",
+  "loginEmailRequired": "Masukkan email atau nama pengguna",
+  "loginPasswordRequired": "Masukkan kata sandi",
+  "loginTooltip": "Masuk",
+  "logoutTooltip": "Keluar",
+  "registerTitle": "Daftar",
+  "registerSubtitle": "Buat akun untuk bermain",
+  "registerNameLabel": "Nama (nama pengguna)",
+  "registerEmailLabel": "Email",
+  "registerPasswordLabel": "Kata sandi",
+  "registerSubmit": "Daftar",
+  "registerHaveAccount": "Sudah punya akun? Masuk",
+  "registerNameRequired": "Masukkan nama",
+  "registerNameNoSpaces": "Nama tidak boleh berisi spasi",
+  "registerNameMax": "Maksimal 20 karakter",
+  "registerNameHint": "Hingga 20 karakter",
+  "registerEmailRequired": "Masukkan email",
+  "registerEmailInvalid": "Email tidak valid",
+  "registerPasswordHint": "Minimal 6 karakter",
+  "registerPasswordMin": "Kata sandi minimal 6 karakter",
+  "commonCancel": "Batal",
+  "commonSave": "Simpan",
+  "commonDelete": "Hapus",
+  "commonEdit": "Ubah",
+  "commonReply": "Balas",
+  "commonSend": "Kirim",
+  "commonClose": "Tutup",
+  "commonRetry": "Coba lagi",
+  "commonLoading": "Memuat…",
+  "commonError": "Kesalahan",
+  "commonOnline": "daring",
+  "commonOffline": "luring",
+  "commonOnlineCap": "Daring",
+  "commonUser": "Pengguna",
+  "commonPlayer": "Pemain",
+  "commonAboutMe": "Tentang saya",
+  "commonBack": "Kembali",
+  "commonAccept": "Terima",
+  "commonDecline": "Tolak",
+  "commonCreating": "Membuat…",
+  "commonSearching": "Mencari…",
+  "commonInsufficientCoins": "Koin tidak cukup",
+  "commonNotFound": "Tidak ditemukan",
+  "commonServerErrorShort": "Error server",
+  "commonForbidden": "Akses ditolak",
+  "commonUserBlocked": "Pengguna diblokir",
+  "commonUserNotFound": "Pengguna tidak ditemukan",
+  "commonGenericError": "Terjadi kesalahan. Silakan coba lagi.",
+  "timeJustNow": "baru saja",
+  "timeYesterday": "kemarin",
+  "timeMinutesAgo": "{count} mnt lalu",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} jam lalu",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} hr lalu",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "seminggu lalu",
+  "timeWeeksAgo": "{count} mgg lalu",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "sebulan lalu",
+  "timeMonthsAgo": "{count} bln lalu",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "setahun lalu",
+  "timeYearsAgo": "{count} thn lalu",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "Min",
+  "weekdayMon": "Sen",
+  "weekdayTue": "Sel",
+  "weekdayWed": "Rab",
+  "weekdayThu": "Kam",
+  "weekdayFri": "Jum",
+  "weekdaySat": "Sab",
+  "monthJan": "Jan",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "Mei",
+  "monthJun": "Jun",
+  "monthJul": "Jul",
+  "monthAug": "Agu",
+  "monthSep": "Sep",
+  "monthOct": "Okt",
+  "monthNov": "Nov",
+  "monthDec": "Des",
+  "homeAchievements": "Pencapaian",
+  "homeAchievementsSubtitle": "Hasil game Anda",
+  "homeAchievementsRewards": "Ada hadiah yang bisa diklaim",
+  "homeCoins": "Koin",
+  "homeCoinsSubtitle": "Saldo dan hadiah",
+  "homeCoinsDailyReward": "Hadiah login harian tersedia",
+  "homeItems": "Item",
+  "homeItemsInventory": "Inventaris Anda",
+  "homeItemsGifted": "Seseorang memberi Anda koleksi",
+  "homeItemsIncome": "Pendapatan koleksi siap diklaim",
+  "homeShop": "Toko",
+  "homeShopSubtitle": "Emoji, taruhan, koleksi",
+  "gamesTitle": "Game",
+  "gamesFindMatch": "Cari game",
+  "gamesMyTurn": "Giliran Anda",
+  "gamesWaiting": "Menunggu",
+  "gamesLobbyTab": "Lobi",
+  "gamesTicTacToe": "XOX",
+  "gamesRules": "Aturan",
+  "gamesRulesTitle": "Aturan game",
+  "gamesCreate": "Buat game",
+  "gamesJoin": "Gabung",
+  "gamesOpponentTurn": "Giliran lawan",
+  "gamesCurrentGame": "Game saat ini",
+  "gamesInvitedYou": "Anda diundang",
+  "gamesTurnTime": "Waktu giliran",
+  "gamesGridSize": "Ukuran papan",
+  "gamesSwapSides": "Tukar sisi",
+  "gamesNoCenter": "Tanpa mulai di tengah",
+  "lobbyMatchmake": "Lobi",
+  "lobbyPrivateGame": "Game pribadi",
+  "lobbySearchingOpponent": "Mencari lawan…",
+  "lobbyWaitingJoin": "Menunggu seseorang mengetuk “Cari game” atau “Gabung”",
+  "lobbyInviteTitle": "Undangan game",
+  "lobbyInvitedToPlay": "Anda diundang untuk bermain",
+  "lobbyEnterGame": "Masuk game",
+  "lobbyInvite": "Undang",
+  "lobbyInviteSent": "Undangan terkirim",
+  "lobbyCopyLink": "Bagikan tautan game",
+  "lobbyLinkCopied": "Tautan disalin",
+  "lobbyNoFriendsOnline": "Tidak ada teman online. Bagikan tautan game di atas atau tunggu teman online.",
+  "gameBot": "Bot",
+  "gameOpponent": "Lawan",
+  "gameYouWon": "Anda menang!",
+  "gameYouWonOpponentLeft": "Anda menang — lawan keluar",
+  "gameYouWonOpponentTimeout": "Anda menang — lawan kehabisan waktu",
+  "gameDraw": "Seri",
+  "gameExitTitle": "Keluar dari game",
+  "gameExitConfirm": "Jika keluar, Anda kalah. Tetap keluar?",
+  "gameStay": "Tetap",
+  "gameLeave": "Keluar",
+  "gameConnecting": "Menghubungkan ke game…",
+  "gameWaitingOpponent": "Menunggu lawan",
+  "gameRematchOffer": "Lawan menawarkan main lagi",
+  "gameRematchDeclined": "Lawan menolak main lagi",
+  "gameRematch": "Main lagi",
+  "gameOtherOpponent": "Lawan lain",
+  "gameSwapSidesAction": "Tukar sisi",
+  "gameWriteMessage": "Tulis pesan",
+  "chatsTitle": "Obrolan",
+  "chatsEmpty": "Belum ada obrolan.\nKetuk ikon di kanan atas untuk memilih teman dan mulai percakapan.",
+  "chatsNewChat": "Obrolan baru",
+  "chatsNoMessages": "Tidak ada pesan",
+  "chatsClearTitle": "Hapus percakapan?",
+  "chatsClearDesc": "Obrolan akan dihapus permanen.",
+  "chatsClearConfirm": "Hapus",
+  "chatsBlockTitle": "Blokir pengguna ini?",
+  "chatsBlockDesc": "Anda tidak lagi bisa saling mengirim pesan. Obrolan dan pertemanan akan dihapus.",
+  "chatsBlockConfirm": "Blokir",
+  "chatsBlockedUsers": "Pengguna diblokir",
+  "chatsUnblock": "Buka blokir",
+  "chatDialog": "Obrolan",
+  "chatEmpty": "Belum ada pesan.\nKirim yang pertama.",
+  "chatMessageHint": "Pesan",
+  "chatEmoji": "Emoji",
+  "chatBuyEmojiHint": "Beli emoji di toko di beranda",
+  "chatEditing": "Mengedit",
+  "chatToday": "Hari ini",
+  "chatYesterday": "Kemarin",
+  "chatFriendsOnly": "Teks hanya untuk teman",
+  "emojiGroupEmotions": "Emosi",
+  "emojiGroupGame": "Permainan",
+  "emojiGroupFlags": "Bendera",
+  "emojiGroupAnimals": "Hewan",
+  "emojiGroupFood": "Makanan",
+  "emojiGroupTravel": "Perjalanan",
+  "emojiGroupParty": "Perayaan",
+  "emojiGroupObjects": "Objek",
+  "friendsTitle": "Teman",
+  "friendsTabFriends": "Teman",
+  "friendsTabIncoming": "Masuk",
+  "friendsTabOutgoing": "Keluar",
+  "friendsAdd": "Tambah teman",
+  "friendsRequestSent": "Permintaan terkirim",
+  "friendsFindTab": "Cari teman",
+  "friendsSearchHint": "Cari berdasarkan nama pengguna",
+  "friendsSearchPrompt": "Gunakan pencarian untuk menemukan teman baru",
+  "friendsNothingFound": "Tidak ditemukan",
+  "friendsEmpty": "Anda belum punya teman",
+  "friendsNoIncoming": "Tidak ada permintaan masuk",
+  "friendsNoOutgoing": "Tidak ada permintaan keluar",
+  "friendsAlreadyFriends": "Sudah berteman",
+  "friendsRemoveTitle": "Hapus dari teman?",
+  "friendsRemoved": "Dihapus dari teman",
+  "friendsRequestAccepted": "Permintaan diterima",
+  "friendsRequestDeclined": "Permintaan ditolak",
+  "friendsRequestCancelled": "Permintaan dibatalkan",
+  "profileTitle": "Profil",
+  "profileSignInPrompt": "Masuk ke akun Anda",
+  "profileSignInHint": "Untuk mengatur profil pribadi",
+  "profileEdit": "Ubah",
+  "profileCollections": "Koleksi",
+  "profileAge": "Usia",
+  "profileGender": "Jenis kelamin",
+  "profileGenderUnset": "Belum diatur",
+  "profileGenderMale": "Pria",
+  "profileGenderFemale": "Wanita",
+  "profileAvatar": "Avatar",
+  "profileUploadPhoto": "Unggah foto",
+  "profileChangePhoto": "Ganti foto",
+  "shopTitle": "Toko",
+  "shopEmojis": "Emoji",
+  "shopEmojisSubtitle": "Emoji animasi untuk obrolan",
+  "shopCollections": "Koleksi",
+  "shopCollectionsSubtitle": "Pameran profil, hadiah, dan pendapatan",
+  "shopStakes": "Taruhan",
+  "shopStakesSubtitle": "Buka taruhan perak",
+  "inventoryTitle": "Item",
+  "inventoryEmpty": "Belum ada apa pun — cek toko",
+  "inventoryFrames": "Bingkai",
+  "inventoryClaim": "Klaim",
+  "inventorySell": "Jual",
+  "inventoryGift": "Hadiahkan",
+  "messageEdited": "diedit",
+  "messageDeleted": "Pesan dihapus",
+  "photo": "Foto",
+  "camera": "Kamera",
+  "gallery": "Galeri",
+  "connectionError": "Tidak dapat terhubung ke server.",
+  "serverError": "Error server. Silakan coba lagi nanti.",
+  "sessionExpired": "Sesi berakhir. Silakan masuk lagi.",
+  "errNoInternet": "Tidak ada koneksi internet.",
+  "errTimeout": "Permintaan habis waktu. Silakan coba lagi.",
+  "errGamesUnavailable": "Game sementara tidak tersedia",
+  "errSettingsSaveFailed": "Tidak dapat menyimpan pengaturan",
+  "errPushPermission": "Izinkan notifikasi di browser atau pengaturan sistem.",
+  "balanceTitle": "Saldo",
+  "coinBronze": "Perunggu",
+  "coinSilver": "Perak",
+  "coinGold": "Emas",
+  "coinDiamond": "Berlian",
+  "balanceZeroBronze": "0 perunggu",
+  "balanceBronzes": "{count} perunggu",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} perak",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} emas",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} berlian",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "{amount} per hari",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "pr",
+  "balanceAbbrSilver": "pk.",
+  "balanceAbbrGold": "em.",
+  "commonBackHome": "Kembali ke beranda",
+  "commonCopied": "Disalin",
+  "commonClear": "Hapus",
+  "commonTryLater": "Coba lagi nanti.",
+  "commonTryRefresh": "Coba segarkan halaman.",
+  "coinsTitle": "Koin",
+  "coinsLoginReward": "Hadiah masuk",
+  "coinsLoginAvailableToday": "Hadiah hari ini tersedia",
+  "coinsLoginStreak": "Rentetan masuk harian",
+  "coinsFriendReward": "Hadiah teman",
+  "coinsFriendRewardHint": "+{amount} untuk pendaftaran lewat tautan Anda",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Gagal memuat hadiah",
+  "coinsClaimReward": "Ambil hadiah",
+  "coinsAlreadyClaimed": "Sudah diambil",
+  "coinsStreakToday": "{done}/{target} · hari ini",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · sisa 1 hari",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · sisa {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Undang teman",
+  "coinsInviteHint": "+{amount} untuk setiap orang yang mendaftar lewat tautan Anda",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Salin tautan",
+  "coinsHowItWorks": "Cara kerjanya",
+  "coinsHowStep1": "Salin tautan dan kirim ke teman",
+  "coinsHowStep2": "Teman mendaftar lewat tautan itu",
+  "coinsHowStep3": "Anda menerima {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Pencapaian",
+  "achievementsProgress": "Progres: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Bingkai diperoleh",
+  "achievementsClaimed": "Diperoleh",
+  "achievementsOpenFrame": "Buka bingkai",
+  "friendsRemoveConfirm": "Yakin ingin menghapus {name} dari teman?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Hapus",
+  "friendsRemove": "Hapus dari teman",
+  "friendsAcceptRequest": "Terima permintaan",
+  "friendsDeclineRequest": "Tolak permintaan",
+  "friendsCancelRequest": "Batalkan permintaan",
+  "friendsSendRequest": "Kirim permintaan pertemanan",
+  "friendsRequestAlreadySent": "Permintaan sudah dikirim",
+  "friendsIncomingStatus": "Permintaan masuk",
+  "friendsOutgoingStatus": "Permintaan keluar",
+  "friendsNotFriends": "Bukan teman",
+  "friendsCollapseSearch": "Sembunyikan pencarian",
+  "friendsExpandSearch": "Tampilkan pencarian",
+  "friendsLoadFailed": "Gagal memuat teman",
+  "friendsSince": "Berteman sejak: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Permintaan masuk: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Permintaan keluar: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Info pengguna",
+  "profileAgeYears": "{age} tahun",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Beli",
+  "shopBuyTitle": "Beli?",
+  "shopBuyStakeTitle": "Beli taruhan?",
+  "shopBuyEmojiTitle": "Beli emoji?",
+  "shopBuyCollectionTitle": "Beli koleksi?",
+  "shopPrice": "Harga: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Dibeli",
+  "shopEmpty": "Masih kosong",
+  "shopPurchased": "{title} dibeli",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Anda mendapat: 10 penggunaan",
+  "shopEmojiBought": "{title}: +10 penggunaan",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 penggunaan",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Beli · 10 pcs",
+  "shopDailyIncome": "Pendapatan: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Pembelian sekali",
+  "shopSellRefund": "Menjual mengembalikan sebagian biaya",
+  "shopCollectionAdded": "{title} ditambahkan ke profil",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "bonus set +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Lengkap",
+  "shopSetProgress": "Terkumpul · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Jual?",
+  "inventorySellDesc": "Anda akan menerima {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Terjual: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Tambahkan teman dulu",
+  "inventoryGiftTitle": "Hadiahkan koleksi?",
+  "inventoryGiftDesc": "Hadiahkan «{title}» kepada {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Dihadiahkan: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Gagal memuat item",
+  "inventoryNoCollections": "Tidak ada koleksi — beli di toko",
+  "inventoryNoEmojis": "Tidak ada emoji — beli di toko",
+  "inventoryNoFrames": "Tidak ada bingkai — menangkan 10 pertandingan liga (pencapaian)",
+  "inventoryNoStakes": "Tidak ada taruhan yang dibeli",
+  "inventoryEmojiLeft": "Sisa {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Pendapatan: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Pendapatan besok: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "Bisa bertaruh {amount} emas",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "Bisa bertaruh {amount} perak",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "Diterima +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Gagal memuat obrolan",
+  "chatsLoadListFailed": "Gagal memuat daftar",
+  "chatsBlockedEmpty": "Daftar kosong",
+  "chatsBlockedAt": "Diblokir: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Gagal membuat obrolan",
+  "chatsNeedFriendsFirst": "Tambahkan teman dulu, baru bisa membuka obrolan.",
+  "chatsFriendsNotFound": "Teman tidak ditemukan",
+  "chatsFindFriendHint": "Cari teman berdasarkan nama panggilan",
+  "chatsSelectChat": "Pilih obrolan",
+  "chatsSelectHint": "Pilih percakapan dari daftar di kiri",
+  "chatEditFailed": "Gagal mengubah pesan",
+  "chatSendFailed": "Gagal mengirim pesan",
+  "chatDeleteFailed": "Gagal menghapus pesan",
+  "chatEmojiSendFailed": "Gagal mengirim emoji",
+  "chatLoadFailed": "Gagal memuat pesan",
+  "chatBackToGame": "Kembali ke permainan",
+  "chatBackToChats": "Kembali ke obrolan",
+  "chatActions": "Tindakan obrolan",
+  "chatScrollToEnd": "Ke akhir percakapan",
+  "chatReplyingTo": "Membalas {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Hadiah",
+  "chatCollection": "Koleksi",
+  "chatGiftCollection": "Hadiah · koleksi",
+  "chatThisUser": "pengguna ini",
+  "gamesLobbyLoadFailed": "Gagal memuat lobi.",
+  "gamesTapChangeStake": "Ketuk untuk mengubah taruhan",
+  "gamesTapChangeTurnTime": "Ketuk untuk mengubah waktu giliran",
+  "gamesTapChangeGrid": "Ketuk untuk mengubah ukuran grid",
+  "gamesSwapSidesHint": "O bisa menjadi X setelah langkah pertama",
+  "gamesNoCenterHint": "Langkah pertama tidak boleh di tengah",
+  "lobbyInviteSentShort": "Terkirim",
+  "lobbyInvitesSentWaiting": "Undangan terkirim. Menunggu respons.",
+  "lobbyLinkCopiedHint": "Tempel di obrolan atau pesan ke teman",
+  "lobbyCopyLinkHint": "Salin tautan ke papan klip",
+  "lobbyCreatorInvites": "{name} mengundang Anda bermain",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "{name} menang",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Waktu habis. {name} menang",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} d",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Admin",
+  "tournamentsTitle": "Turnamen",
+  "profileAgeInvalid": "Masukkan usia dari 1 hingga 111",
+  "profileSaveFailed": "Gagal menyimpan profil",
+  "profileNameHint": "Huruf Latin, angka, _ hingga 10 karakter",
+  "profileAgeHint": "Dari 1 hingga 111",
+  "profileAboutHint": "Hingga 100 karakter (opsional)",
+  "profileProcessingPhoto": "Memproses foto…",
+  "profileCropTitle": "Pilih area avatar",
+  "profileCropHint": "Perbesar dan geser foto",
+  "profileApply": "Terapkan",
+  "profilePreparing": "Menyiapkan…",
+  "timeSecondsShort": "{seconds} d",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 mnt",
+  "timeTenMin": "10 mnt",
+  "rulesIntro": "Tic-tac-toe di papan {grid}. Bergiliran; X duluan.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "Menang: susun {n} beruntun horizontal, vertikal, atau diagonal.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Tanpa batas waktu per giliran.",
+  "rulesTurnTime": "Waktu per giliran: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Taruhan: {stake}. Game ini seharga koin sebanyak itu.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Tukar sisi: O boleh bertukar dengan X setelah langkah pertama X.",
+  "rulesNoCenter": "Larangan tengah: X tidak boleh main di tengah pada langkah pertama.",
+  "collectionSetLegends": "Legenda",
+  "collectionSetSpace": "Antariksa",
+  "collectionSetGems": "Permata",
+  "collectionSetParty": "Pesta",
+  "collectionSetNature": "Alam",
+  "collectionSetAdventures": "Petualangan",
+  "collectionCardMeta": "Koleksi · etalase · hadiah · jual · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "hari",
+  "coinsDayFew": "hari",
+  "coinsDayMany": "hari",
+  "giftFriendTitle": "Hadiah ke teman",
+  "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Perluas panel",
+  "chatsCollapsePanel": "Ciutkan panel",
+  "chatReplySourceMissing": "Pesan asli tidak ditemukan",
+  "shopStakeTitleSilver": "Taruhan {n} perak",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Taruhan {n} emas",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Buka taruhan {n} perak",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Buka taruhan {n} emas",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "diri sendiri",
+  "chatReplyPeer": "lawan bicara"
+}

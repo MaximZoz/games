@@ -77,7 +77,7 @@ func TestRequireAuth_ValidToken(t *testing.T) {
 		id, ok := GetUserID(r.Context())
 		if !ok {
 			t.Error("GetUserID: expected user id in context")
-			http.Error(w, "no user", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "no user")
 			return
 		}
 		capturedID = id

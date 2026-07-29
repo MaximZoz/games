@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 
+import 'test_locale.dart';
+
 void main() {
+  setUp(setUpTestLocaleRu);
+
   group('formatLastSeen', () {
     test('empty / invalid', () {
       expect(formatLastSeen(null), '');

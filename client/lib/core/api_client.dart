@@ -3,18 +3,28 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 
 class ApiClient {
+  static Map<String, String> _withLocale(Map<String, String>? headers) {
+    final merged = <String, String>{
+      'Accept-Language': LocaleService.acceptLanguageHeader,
+      ...?headers,
+    };
+    return merged;
+  }
+
   static Future<http.Response> get(
     Uri uri, {
     Map<String, String>? headers,
     String? operation,
   }) {
+    final h = _withLocale(headers);
     return _request(
-      () => http.get(uri, headers: headers),
+      () => http.get(uri, headers: h),
       uri: uri,
       httpMethod: 'GET',
-      headers: headers,
+      headers: h,
       operation: operation,
     );
   }
@@ -25,11 +35,12 @@ class ApiClient {
     Object? body,
     String? operation,
   }) {
+    final h = _withLocale(headers);
     return _request(
-      () => http.post(uri, headers: headers, body: body),
+      () => http.post(uri, headers: h, body: body),
       uri: uri,
       httpMethod: 'POST',
-      headers: headers,
+      headers: h,
       operation: operation,
     );
   }
@@ -40,11 +51,12 @@ class ApiClient {
     Object? body,
     String? operation,
   }) {
+    final h = _withLocale(headers);
     return _request(
-      () => http.put(uri, headers: headers, body: body),
+      () => http.put(uri, headers: h, body: body),
       uri: uri,
       httpMethod: 'PUT',
-      headers: headers,
+      headers: h,
       operation: operation,
     );
   }

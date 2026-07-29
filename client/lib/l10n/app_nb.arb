@@ -1,0 +1,886 @@
+{
+  "@@locale": "nb",
+  "appTitle": "Zozu Games",
+  "navHome": "Hjem",
+  "navProfile": "Profil",
+  "navFriends": "Venner",
+  "navChats": "Chatter",
+  "navGames": "Spill",
+  "navSettings": "Innstillinger",
+  "settingsTitle": "Innstillinger",
+  "settingsLanguage": "Språk",
+  "settingsLanguageSystem": "Systemstandard",
+  "settingsAddBotsTitle": "Legg til boter etter 30 s",
+  "settingsAddBotsSubtitle": "Ved matchmaking: hvis ingen motstander finnes innen 30 sekunder, starter spillet med en bot (innsatsen settes tilbake til 1 bronse)",
+  "settingsFriendsOnlyTitle": "Meldinger kun fra venner",
+  "settingsFriendsOnlySubtitle": "Ikke-venner kan bare sende emojier. Ved spam, blokker brukeren midlertidig.",
+  "settingsNotifications": "Varsler",
+  "settingsPushChat": "Chat",
+  "settingsPushFriends": "Venner",
+  "settingsPushGames": "Spill",
+  "settingsPushRewards": "Belønninger",
+  "loginTitle": "Logg inn",
+  "loginSubtitle": "Skriv inn e-post eller brukernavn og passord",
+  "loginEmailLabel": "E-post eller brukernavn",
+  "loginPasswordLabel": "Passord",
+  "loginSubmit": "Logg inn",
+  "loginNoAccount": "Ingen konto? Registrer deg",
+  "loginEmailRequired": "Skriv inn e-post eller brukernavn",
+  "loginPasswordRequired": "Skriv inn passord",
+  "loginTooltip": "Logg inn",
+  "logoutTooltip": "Logg ut",
+  "registerTitle": "Registrer deg",
+  "registerSubtitle": "Opprett en konto for å spille",
+  "registerNameLabel": "Navn (brukernavn)",
+  "registerEmailLabel": "E-post",
+  "registerPasswordLabel": "Passord",
+  "registerSubmit": "Registrer deg",
+  "registerHaveAccount": "Har du allerede en konto? Logg inn",
+  "registerNameRequired": "Skriv inn et navn",
+  "registerNameNoSpaces": "Navnet kan ikke inneholde mellomrom",
+  "registerNameMax": "Maksimum 20 tegn",
+  "registerNameHint": "Opptil 20 tegn",
+  "registerEmailRequired": "Skriv inn e-post",
+  "registerEmailInvalid": "Ugyldig e-post",
+  "registerPasswordHint": "Minst 6 tegn",
+  "registerPasswordMin": "Passordet må være minst 6 tegn",
+  "commonCancel": "Avbryt",
+  "commonSave": "Lagre",
+  "commonDelete": "Slett",
+  "commonEdit": "Rediger",
+  "commonReply": "Svar",
+  "commonSend": "Send",
+  "commonClose": "Lukk",
+  "commonRetry": "Prøv igjen",
+  "commonLoading": "Laster…",
+  "commonError": "Feil",
+  "commonOnline": "pålogget",
+  "commonOffline": "avlogget",
+  "commonOnlineCap": "Pålogget",
+  "commonUser": "Bruker",
+  "commonPlayer": "Spiller",
+  "commonAboutMe": "Om meg",
+  "commonBack": "Tilbake",
+  "commonAccept": "Godta",
+  "commonDecline": "Avslå",
+  "commonCreating": "Oppretter…",
+  "commonSearching": "Søker…",
+  "commonInsufficientCoins": "Ikke nok mynter",
+  "commonNotFound": "Ikke funnet",
+  "commonServerErrorShort": "Serverfeil",
+  "commonForbidden": "Tilgang nektet",
+  "commonUserBlocked": "Brukeren er blokkert",
+  "commonUserNotFound": "Brukeren ble ikke funnet",
+  "commonGenericError": "Noe gikk galt. Prøv igjen.",
+  "timeJustNow": "akkurat nå",
+  "timeYesterday": "i går",
+  "timeMinutesAgo": "{count} min siden",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} t siden",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} d siden",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeekAgo": "en uke siden",
+  "timeWeeksAgo": "{count} u siden",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthAgo": "en måned siden",
+  "timeMonthsAgo": "{count} md. siden",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearAgo": "et år siden",
+  "timeYearsAgo": "{count} år siden",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaySun": "Søn",
+  "weekdayMon": "Man",
+  "weekdayTue": "Tir",
+  "weekdayWed": "Ons",
+  "weekdayThu": "Tor",
+  "weekdayFri": "Fre",
+  "weekdaySat": "Lør",
+  "monthJan": "Jan",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "Mai",
+  "monthJun": "Jun",
+  "monthJul": "Jul",
+  "monthAug": "Aug",
+  "monthSep": "Sep",
+  "monthOct": "Okt",
+  "monthNov": "Nov",
+  "monthDec": "Des",
+  "homeAchievements": "Prestasjoner",
+  "homeAchievementsSubtitle": "Dine spillresultater",
+  "homeAchievementsRewards": "Belønninger klare til å hentes",
+  "homeCoins": "Mynter",
+  "homeCoinsSubtitle": "Saldo og belønninger",
+  "homeCoinsDailyReward": "Daglig innloggingsbelønning tilgjengelig",
+  "homeItems": "Gjenstander",
+  "homeItemsInventory": "Din inventar",
+  "homeItemsGifted": "Noen ga deg en samling",
+  "homeItemsIncome": "Samlinginntekt klar til å hentes",
+  "homeShop": "Butikk",
+  "homeShopSubtitle": "Emojier, innsatser, samlinger",
+  "gamesTitle": "Spill",
+  "gamesFindMatch": "Finn et spill",
+  "gamesMyTurn": "Din tur",
+  "gamesWaiting": "Venter",
+  "gamesLobbyTab": "Lobby",
+  "gamesTicTacToe": "Tripp-trapp-tresko",
+  "gamesRules": "Regler",
+  "gamesRulesTitle": "Spillregler",
+  "gamesCreate": "Opprett spill",
+  "gamesJoin": "Bli med",
+  "gamesOpponentTurn": "Motstanderens tur",
+  "gamesCurrentGame": "Pågående spill",
+  "gamesInvitedYou": "Du ble invitert",
+  "gamesTurnTime": "Tid per tur",
+  "gamesGridSize": "Rutenettstørrelse",
+  "gamesSwapSides": "Sidebytte",
+  "gamesNoCenter": "Ingen start i midten",
+  "lobbyMatchmake": "Lobby",
+  "lobbyPrivateGame": "Privat spill",
+  "lobbySearchingOpponent": "Ser etter motstander…",
+  "lobbyWaitingJoin": "Venter på at noen trykker «Finn et spill» eller «Bli med»",
+  "lobbyInviteTitle": "Spillinvitasjon",
+  "lobbyInvitedToPlay": "Du ble invitert til å spille",
+  "lobbyEnterGame": "Gå inn i spillet",
+  "lobbyInvite": "Inviter",
+  "lobbyInviteSent": "Invitasjon sendt",
+  "lobbyCopyLink": "Del spilllenke",
+  "lobbyLinkCopied": "Lenke kopiert",
+  "lobbyNoFriendsOnline": "Ingen venner pålogget. Del spilllenken ovenfor eller vent til venner kommer pålogget.",
+  "gameBot": "Bot",
+  "gameOpponent": "Motstander",
+  "gameYouWon": "Du vant!",
+  "gameYouWonOpponentLeft": "Du vant — motstanderen forlot",
+  "gameYouWonOpponentTimeout": "Du vant — motstanderen gikk tom for tid",
+  "gameDraw": "Uavgjort",
+  "gameExitTitle": "Forlat spillet",
+  "gameExitConfirm": "Hvis du går, taper du. Forlate likevel?",
+  "gameStay": "Bli",
+  "gameLeave": "Forlat",
+  "gameConnecting": "Kobler til spillet…",
+  "gameWaitingOpponent": "Venter på motstander",
+  "gameRematchOffer": "Motstanderen tilbyr omkamp",
+  "gameRematchDeclined": "Motstanderen avslo omkampen",
+  "gameRematch": "Omkamp",
+  "gameOtherOpponent": "Annen motstander",
+  "gameSwapSidesAction": "Bytt side",
+  "gameWriteMessage": "Skriv en melding",
+  "chatsTitle": "Chatter",
+  "chatsEmpty": "Ingen chatter ennå.\nTrykk på ikonet øverst til høyre for å velge en venn og starte en samtale.",
+  "chatsNewChat": "Ny chat",
+  "chatsNoMessages": "Ingen meldinger",
+  "chatsClearTitle": "Tøm samtalen?",
+  "chatsClearDesc": "Chatten slettes permanent.",
+  "chatsClearConfirm": "Tøm",
+  "chatsBlockTitle": "Blokkere denne brukeren?",
+  "chatsBlockDesc": "Dere kan ikke lenger sende meldinger til hverandre. Chatten og vennskapet fjernes.",
+  "chatsBlockConfirm": "Blokker",
+  "chatsBlockedUsers": "Blokkerte brukere",
+  "chatsUnblock": "Opphev blokkering",
+  "chatDialog": "Chat",
+  "chatEmpty": "Ingen meldinger ennå.\nSend den første.",
+  "chatMessageHint": "Melding",
+  "chatEmoji": "Emojier",
+  "chatBuyEmojiHint": "Kjøp emojier i butikken på startskjermen",
+  "chatEditing": "Redigerer",
+  "chatToday": "I dag",
+  "chatYesterday": "I går",
+  "chatFriendsOnly": "Tekst kun for venner",
+  "emojiGroupEmotions": "Følelser",
+  "emojiGroupGame": "Spill",
+  "emojiGroupFlags": "Flagg",
+  "emojiGroupAnimals": "Dyr",
+  "emojiGroupFood": "Mat",
+  "emojiGroupTravel": "Reise",
+  "emojiGroupParty": "Feiring",
+  "emojiGroupObjects": "Objekter",
+  "friendsTitle": "Venner",
+  "friendsTabFriends": "Venner",
+  "friendsTabIncoming": "Innkommende",
+  "friendsTabOutgoing": "Utgående",
+  "friendsAdd": "Legg til venn",
+  "friendsRequestSent": "Forespørsel sendt",
+  "friendsFindTab": "Finn venn",
+  "friendsSearchHint": "Søk etter brukernavn",
+  "friendsSearchPrompt": "Bruk søk for å finne nye venner",
+  "friendsNothingFound": "Ingenting funnet",
+  "friendsEmpty": "Du har ingen venner ennå",
+  "friendsNoIncoming": "Ingen innkommende forespørsler",
+  "friendsNoOutgoing": "Ingen utgående forespørsler",
+  "friendsAlreadyFriends": "Allerede venner",
+  "friendsRemoveTitle": "Fjerne fra venner?",
+  "friendsRemoved": "Fjernet fra venner",
+  "friendsRequestAccepted": "Forespørsel godtatt",
+  "friendsRequestDeclined": "Forespørsel avslått",
+  "friendsRequestCancelled": "Forespørsel avbrutt",
+  "profileTitle": "Profil",
+  "profileSignInPrompt": "Logg inn på kontoen din",
+  "profileSignInHint": "For å sette opp din personlige profil",
+  "profileEdit": "Rediger",
+  "profileCollections": "Samlinger",
+  "profileAge": "Alder",
+  "profileGender": "Kjønn",
+  "profileGenderUnset": "Ikke angitt",
+  "profileGenderMale": "Mann",
+  "profileGenderFemale": "Kvinne",
+  "profileAvatar": "Avatar",
+  "profileUploadPhoto": "Last opp bilde",
+  "profileChangePhoto": "Bytt bilde",
+  "shopTitle": "Butikk",
+  "shopEmojis": "Emojier",
+  "shopEmojisSubtitle": "Animerte emojier for chat",
+  "shopCollections": "Samlinger",
+  "shopCollectionsSubtitle": "Profilutstilling, gaver og inntekt",
+  "shopStakes": "Innsatser",
+  "shopStakesSubtitle": "Lås opp sølvinnsatser",
+  "inventoryTitle": "Gjenstander",
+  "inventoryEmpty": "Ingenting her ennå — sjekk butikken",
+  "inventoryFrames": "Rammer",
+  "inventoryClaim": "Hent",
+  "inventorySell": "Selg",
+  "inventoryGift": "Gi bort",
+  "messageEdited": "redigert",
+  "messageDeleted": "Melding slettet",
+  "photo": "Bilde",
+  "camera": "Kamera",
+  "gallery": "Galleri",
+  "connectionError": "Kunne ikke koble til serveren.",
+  "serverError": "Serverfeil. Prøv igjen senere.",
+  "sessionExpired": "Økten er utløpt. Logg inn på nytt.",
+  "errNoInternet": "Ingen internettforbindelse.",
+  "errTimeout": "Forespørselen tok for lang tid. Prøv igjen.",
+  "errGamesUnavailable": "Spill er midlertidig utilgjengelige",
+  "errSettingsSaveFailed": "Kunne ikke lagre innstillingen",
+  "errPushPermission": "Tillat varsler i nettleser- eller systeminnstillingene.",
+  "balanceTitle": "Saldo",
+  "coinBronze": "Bronse",
+  "coinSilver": "Sølv",
+  "coinGold": "Gull",
+  "coinDiamond": "Diamant",
+  "balanceZeroBronze": "0 bronse",
+  "balanceBronzes": "{count} bronse",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} sølv",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} gull",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} diamanter",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "{amount} per dag",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "br",
+  "balanceAbbrSilver": "s.",
+  "balanceAbbrGold": "g.",
+  "commonBackHome": "Tilbake til forsiden",
+  "commonCopied": "Kopiert",
+  "commonClear": "Tøm",
+  "commonTryLater": "Prøv igjen senere.",
+  "commonTryRefresh": "Prøv å oppdatere siden.",
+  "coinsTitle": "Mynter",
+  "coinsLoginReward": "Innloggingsbelønning",
+  "coinsLoginAvailableToday": "Dagens belønning er tilgjengelig",
+  "coinsLoginStreak": "Daglig innloggingsrekke",
+  "coinsFriendReward": "Vennebelønning",
+  "coinsFriendRewardHint": "+{amount} for registrering via lenken din",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Kunne ikke laste belønninger",
+  "coinsClaimReward": "Hent belønning",
+  "coinsAlreadyClaimed": "Allerede hentet",
+  "coinsStreakToday": "{done}/{target} · i dag",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · 1 dag igjen",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · {remaining} igjen",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Inviter en venn",
+  "coinsInviteHint": "+{amount} for hver som registrerer seg via lenken din",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Kopier lenke",
+  "coinsHowItWorks": "Slik fungerer det",
+  "coinsHowStep1": "Kopier lenken og send den til en venn",
+  "coinsHowStep2": "Vennen registrerer seg via den lenken",
+  "coinsHowStep3": "Du mottar {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Prestasjoner",
+  "achievementsProgress": "Fremdrift: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Ramme hentet",
+  "achievementsClaimed": "Hentet",
+  "achievementsOpenFrame": "Åpne ramme",
+  "friendsRemoveConfirm": "Er du sikker på at du vil fjerne {name} fra venner?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Fjern",
+  "friendsRemove": "Fjern fra venner",
+  "friendsAcceptRequest": "Godta forespørsel",
+  "friendsDeclineRequest": "Avslå forespørsel",
+  "friendsCancelRequest": "Avbryt forespørsel",
+  "friendsSendRequest": "Send venneforespørsel",
+  "friendsRequestAlreadySent": "Forespørsel allerede sendt",
+  "friendsIncomingStatus": "Innkommende forespørsel",
+  "friendsOutgoingStatus": "Utgående forespørsel",
+  "friendsNotFriends": "Ikke venner",
+  "friendsCollapseSearch": "Skjul søk",
+  "friendsExpandSearch": "Vis søk",
+  "friendsLoadFailed": "Kunne ikke laste venner",
+  "friendsSince": "Venner siden: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Innkommende forespørsel: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Utgående forespørsel: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Brukerinfo",
+  "profileAgeYears": "{age} år",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Kjøp",
+  "shopBuyTitle": "Kjøpe?",
+  "shopBuyStakeTitle": "Kjøpe innsats?",
+  "shopBuyEmojiTitle": "Kjøpe emoji?",
+  "shopBuyCollectionTitle": "Kjøpe samling?",
+  "shopPrice": "Pris: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Kjøpt",
+  "shopEmpty": "Tomt foreløpig",
+  "shopPurchased": "{title} kjøpt",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Du får: 10 bruk",
+  "shopEmojiBought": "{title}: +10 bruk",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 bruk",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Kjøp · 10 stk",
+  "shopDailyIncome": "Inntekt: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Engangskjøp",
+  "shopSellRefund": "Salg returnerer deler av kostnaden",
+  "shopCollectionAdded": "{title} lagt til i profilen",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "settbonus +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Fullført",
+  "shopSetProgress": "Samlet · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Selge?",
+  "inventorySellDesc": "Du får {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Solgt: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Legg til venner først",
+  "inventoryGiftTitle": "Gi samling i gave?",
+  "inventoryGiftDesc": "Gi «{title}» til {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Gitt: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Kunne ikke laste gjenstander",
+  "inventoryNoCollections": "Ingen samlinger — kjøp i butikken",
+  "inventoryNoEmojis": "Ingen emojier — kjøp i butikken",
+  "inventoryNoFrames": "Ingen rammer — vinn 10 ligakamper (prestasjoner)",
+  "inventoryNoStakes": "Ingen kjøpte innsatser",
+  "inventoryEmojiLeft": "{count} igjen",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Inntekt: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Inntekt i morgen: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "Du kan satse {amount} gull",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "Du kan satse {amount} sølv",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "Hentet +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Kunne ikke laste chatter",
+  "chatsLoadListFailed": "Kunne ikke laste listen",
+  "chatsBlockedEmpty": "Listen er tom",
+  "chatsBlockedAt": "Blokkert: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Kunne ikke opprette chat",
+  "chatsNeedFriendsFirst": "Legg til venner først, deretter kan du åpne en chat.",
+  "chatsFriendsNotFound": "Fant ingen venner",
+  "chatsFindFriendHint": "Finn venn etter kallenavn",
+  "chatsSelectChat": "Velg en chat",
+  "chatsSelectHint": "Velg en samtale fra listen til venstre",
+  "chatEditFailed": "Kunne ikke redigere meldingen",
+  "chatSendFailed": "Kunne ikke sende meldingen",
+  "chatDeleteFailed": "Kunne ikke slette meldingen",
+  "chatEmojiSendFailed": "Kunne ikke sende emoji",
+  "chatLoadFailed": "Kunne ikke laste meldinger",
+  "chatBackToGame": "Tilbake til spillet",
+  "chatBackToChats": "Tilbake til chatter",
+  "chatActions": "Chathandlinger",
+  "chatScrollToEnd": "Til slutten av samtalen",
+  "chatReplyingTo": "Svar til {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Gave",
+  "chatCollection": "Samling",
+  "chatGiftCollection": "Gave · samling",
+  "chatThisUser": "denne brukeren",
+  "gamesLobbyLoadFailed": "Kunne ikke laste lobbyen.",
+  "gamesTapChangeStake": "Trykk for å endre innsats",
+  "gamesTapChangeTurnTime": "Trykk for å endre tid per trekk",
+  "gamesTapChangeGrid": "Trykk for å endre rutenettstørrelse",
+  "gamesSwapSidesHint": "O kan bli X etter 1. trekk",
+  "gamesNoCenterHint": "Første trekk kan ikke være i midten",
+  "lobbyInviteSentShort": "Sendt",
+  "lobbyInvitesSentWaiting": "Invitasjoner sendt. Venter på svar.",
+  "lobbyLinkCopiedHint": "Lim den inn i en chat eller melding til en venn",
+  "lobbyCopyLinkHint": "Kopier lenke til utklippstavlen",
+  "lobbyCreatorInvites": "{name} inviterer deg til å spille",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "{name} vant",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Tiden er ute. {name} vant",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Admin",
+  "tournamentsTitle": "Turneringer",
+  "profileAgeInvalid": "Skriv inn alder fra 1 til 111",
+  "profileSaveFailed": "Kunne ikke lagre profilen",
+  "profileNameHint": "Latinske bokstaver, sifre, _ opptil 10 tegn",
+  "profileAgeHint": "Fra 1 til 111",
+  "profileAboutHint": "Opptil 100 tegn (valgfritt)",
+  "profileProcessingPhoto": "Behandler bilde…",
+  "profileCropTitle": "Velg avatarområde",
+  "profileCropHint": "Zoom og flytt bildet",
+  "profileApply": "Bruk",
+  "profilePreparing": "Forbereder…",
+  "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 min",
+  "timeTenMin": "10 min",
+  "rulesIntro": "Tripp-trapp-tresko på {grid}-brett. På tur; X starter.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWin": "Seier: få {n} på rad horisontalt, vertikalt eller diagonalt.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesNoTimeLimit": "Ingen tidsgrense per trekk.",
+  "rulesTurnTime": "Tid per trekk: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStake": "Innsats: {stake}. Spillet gjelder så mange mynter.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesSwap": "Sidebytte: O kan bytte med X etter X sitt første trekk.",
+  "rulesNoCenter": "Ikke midten: X kan ikke spille i midten på første trekk.",
+  "collectionSetLegends": "Legender",
+  "collectionSetSpace": "Rommet",
+  "collectionSetGems": "Edelstener",
+  "collectionSetParty": "Fest",
+  "collectionSetNature": "Natur",
+  "collectionSetAdventures": "Eventyr",
+  "collectionCardMeta": "Samling · utstilling · gave · salg · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsDayOne": "dag",
+  "coinsDayFew": "dager",
+  "coinsDayMany": "dager",
+  "giftFriendTitle": "Gi til en venn",
+  "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiGroupMeta": "{count} emojier · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsExpandPanel": "Utvid panel",
+  "chatsCollapsePanel": "Skjul panel",
+  "chatReplySourceMissing": "Opprinnelig melding ikke funnet",
+  "shopStakeTitleSilver": "Innsats {n} sølv",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Innsats {n} gull",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Låser opp innsats på {n} sølv",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Låser opp innsats på {n} gull",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "deg selv",
+  "chatReplyPeer": "motparten"
+}

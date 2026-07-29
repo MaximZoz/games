@@ -114,23 +114,23 @@ func createUserConflictMessage(err error) (string, bool) {
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	if req.Email == "" || len(req.Password) < 6 {
-		http.Error(w, "email required, password at least 6 characters", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "email required, password at least 6 characters")
 		return
 	}
 
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -144,16 +144,16 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName, referredBy)
 	if err != nil {
 		if msg, ok := createUserConflictMessage(err); ok {
-			http.Error(w, msg, http.StatusConflict)
+			WriteErr(w, r, http.StatusConflict, msg)
 			return
 		}
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
 	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -162,33 +162,33 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	login := strings.TrimSpace(req.Email)
 	if login == "" || req.Password == "" {
-		http.Error(w, "email or login and password required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "email or login and password required")
 		return
 	}
 
 	u, err := store.GetUserByEmailOrDisplayName(r.Context(), h.Pool, login)
 	if err != nil {
-		http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
 	if !auth.CheckPassword(req.Password, u.PasswordHash) {
-		http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
 
 	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -197,59 +197,59 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req RefreshRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
 	if req.RefreshToken == "" {
-		http.Error(w, "refresh_token required", http.StatusBadRequest)
+		WriteErr(w, r, http.StatusBadRequest, "refresh_token required")
 		return
 	}
 
 	claims, err := auth.ParseJWT(h.JWTSecret, req.RefreshToken)
 	if err != nil {
-		http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}
 
 	userID, err := UserFromClaims(claims)
 	if err != nil {
-		http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}
 
 	tokenHash := refreshTokenHash(req.RefreshToken)
 	session, err := store.GetSessionByRefreshTokenHash(r.Context(), h.Pool, tokenHash)
 	if err != nil {
-		http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}
 	if session.UserID != userID || time.Now().After(session.ExpiresAt) {
-		http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}
 
 	u, err := store.GetUserByID(r.Context(), h.Pool, userID)
 	if err != nil || u == nil {
-		http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}
 
 	accessToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	nextRefreshToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -262,10 +262,10 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 			return
 		}
-		http.Error(w, "server error", http.StatusInternalServerError)
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 

@@ -220,7 +220,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         pageBuilder: (_, state) => _noTransitionPage(
                           state,
                           const ShopSectionScreen(
-                            title: 'Ставки',
                             kind: 'stake_unlock',
                           ),
                         ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/referral_link.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -20,6 +21,7 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final user = ref.watch(authStateProvider).valueOrNull;
     void goBack() => context.pop();
 
@@ -33,10 +35,10 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: goBack,
-            tooltip: 'Назад',
+            tooltip: l10n.commonBack,
           ),
           title: Text(
-            'Монеты за друга',
+            l10n.coinsFriendReward,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -90,9 +92,9 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
-                                            'Пригласи друга',
-                                            style: TextStyle(
+                                          Text(
+                                            l10n.coinsInviteFriend,
+                                            style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w700,
                                               color: AppColors.textPrimary,
@@ -100,7 +102,11 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            '+${formatRewardBronze(referralBonusBronze)} за каждого, кто зарегистрируется по вашей ссылке',
+                                            l10n.coinsInviteHint(
+                                              formatRewardBronze(
+                                                referralBonusBronze,
+                                              ),
+                                            ),
                                             style: const TextStyle(
                                               fontSize: 13,
                                               color: AppColors.textSecondary,
@@ -159,8 +165,8 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                                     ),
                                     label: Text(
                                       _linkCopied
-                                          ? 'Скопировано'
-                                          : 'Скопировать ссылку',
+                                          ? l10n.commonCopied
+                                          : l10n.coinsCopyLink,
                                     ),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.accentStart,
@@ -176,27 +182,28 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          const Text(
-                            'Как это работает',
-                            style: TextStyle(
+                          Text(
+                            l10n.coinsHowItWorks,
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const _FriendStep(
+                          _FriendStep(
                             number: '1',
-                            text: 'Скопируйте ссылку и отправьте другу',
+                            text: l10n.coinsHowStep1,
                           ),
-                          const _FriendStep(
+                          _FriendStep(
                             number: '2',
-                            text: 'Друг регистрируется по этой ссылке',
+                            text: l10n.coinsHowStep2,
                           ),
                           _FriendStep(
                             number: '3',
-                            text:
-                                'Вам начисляется ${formatRewardBronze(referralBonusBronze)}',
+                            text: l10n.coinsHowStep3(
+                              formatRewardBronze(referralBonusBronze),
+                            ),
                           ),
                         ],
                       ),

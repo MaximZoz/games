@@ -28,14 +28,14 @@ func settingsToJSON(s store.UserSettings) map[string]any {
 func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	uid, ok := GetUserID(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	switch r.Method {
 	case http.MethodGet:
 		s, err := store.GetUserSettings(r.Context(), h.Pool, uid)
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -44,19 +44,19 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		var body settingsBody
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 			return
 		}
 		saved, err := store.UpsertUserSettings(r.Context(), h.Pool, uid, store.UserSettings{
 			MessagesFriendsOnly: body.MessagesFriendsOnly,
 		})
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(settingsToJSON(saved))
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }

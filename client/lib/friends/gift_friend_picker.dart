@@ -4,6 +4,8 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -81,7 +83,7 @@ class _GiftFriendPickerDialogState
   String _displayName(FriendUserItem user) {
     final name = user.displayName?.trim();
     if (name != null && name.isNotEmpty) return name;
-    return 'Пользователь';
+    return LocaleService.l10n.commonUser;
   }
 
   bool _matchesSearch(FriendUserItem user, String query) {
@@ -135,7 +137,7 @@ class _GiftFriendPickerDialogState
     final about = user.about?.trim();
     final statusText = presence == null
         ? null
-        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+        : (presence.online ? LocaleService.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -191,7 +193,7 @@ class _GiftFriendPickerDialogState
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Закрыть',
+                        tooltip: dialogContext.l10n.commonClose,
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.of(dialogContext).pop(),
                       ),
@@ -199,9 +201,9 @@ class _GiftFriendPickerDialogState
                   ),
                   if (about != null && about.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    const Text(
-                      'О себе',
-                      style: TextStyle(
+                    Text(
+                      dialogContext.l10n.commonAboutMe,
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -290,7 +292,7 @@ class _GiftFriendPickerDialogState
     }
     if (onTap == null) return avatar;
     return Tooltip(
-      message: 'Информация о пользователе',
+      message: LocaleService.l10n.userInfoTitle,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -321,7 +323,7 @@ class _GiftFriendPickerDialogState
   Widget _friendTile(FriendItem item, PresenceEntry? presence) {
     final statusText = presence == null
         ? null
-        : (presence.online ? 'Онлайн' : formatLastSeen(presence.lastSeenAt));
+        : (presence.online ? LocaleService.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),
@@ -371,7 +373,7 @@ class _GiftFriendPickerDialogState
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Подарить',
+                  tooltip: LocaleService.l10n.inventoryGift,
                   onPressed: () => Navigator.of(context).pop(item.user.id),
                   icon: const Icon(
                     Icons.card_giftcard_rounded,
@@ -382,7 +384,7 @@ class _GiftFriendPickerDialogState
             ),
             const SizedBox(height: 10),
             Text(
-              'Дружите с: ${_formatDateTime(item.createdAt)}',
+              LocaleService.l10n.friendsSince(_formatDateTime(item.createdAt)),
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -424,10 +426,10 @@ class _GiftFriendPickerDialogState
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Подарить другу',
-                      style: TextStyle(
+                      context.l10n.giftFriendTitle,
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -435,7 +437,7 @@ class _GiftFriendPickerDialogState
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Закрыть',
+                    tooltip: context.l10n.commonClose,
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
                   ),
@@ -446,12 +448,12 @@ class _GiftFriendPickerDialogState
                 controller: _searchController,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: 'Поиск друга',
+                  hintText: context.l10n.friendsSearchHint,
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _searchController.text.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: 'Очистить',
+                          tooltip: context.l10n.commonClear,
                           onPressed: () {
                             _searchController.clear();
                           },
@@ -463,10 +465,10 @@ class _GiftFriendPickerDialogState
               const SizedBox(height: 12),
               Expanded(
                 child: visible.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'Друзья не найдены',
-                          style: TextStyle(color: AppColors.textSecondary),
+                          context.l10n.chatsFriendsNotFound,
+                          style: const TextStyle(color: AppColors.textSecondary),
                         ),
                       )
                     : ListView.separated(

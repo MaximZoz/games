@@ -20,7 +20,7 @@ func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept-Language")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -33,22 +33,22 @@ func RequireAuth(secret []byte, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		if header == "" {
-			http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+			WriteErr(w, r, http.StatusUnauthorized, "missing Authorization header")
 			return
 		}
 		parts := strings.SplitN(header, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "invalid Authorization header", http.StatusUnauthorized)
+			WriteErr(w, r, http.StatusUnauthorized, "invalid Authorization header")
 			return
 		}
 		claims, err := auth.ParseJWT(secret, parts[1])
 		if err != nil {
-			http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 			return
 		}
 		userID, err := uuid.Parse(claims.UserID)
 		if err != nil {
-			http.Error(w, "invalid token", http.StatusUnauthorized)
+			WriteErr(w, r, http.StatusUnauthorized, "invalid token")
 			return
 		}
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
@@ -66,16 +66,16 @@ func RequireAdmin(pool *pgxpool.Pool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := GetUserID(r.Context())
 		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 		u, err := store.GetUserByID(r.Context(), pool, userID)
 		if err != nil || u == nil {
-			http.Error(w, "user not found", http.StatusNotFound)
+			WriteErr(w, r, http.StatusNotFound, "user not found")
 			return
 		}
 		if !u.IsAdmin {
-			http.Error(w, "admin only", http.StatusForbidden)
+			WriteErr(w, r, http.StatusForbidden, "admin only")
 			return
 		}
 		next.ServeHTTP(w, r)
