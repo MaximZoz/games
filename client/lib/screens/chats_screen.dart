@@ -2073,87 +2073,98 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: Text(
-                                                          _peerTitle(item.user),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style:
-                                                              const TextStyle(
-                                                            color: AppColors
-                                                                .textPrimary,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            fontSize: 15,
-                                                          ),
-                                                        ),
+                                                  Text.rich(
+                                                    TextSpan(
+                                                      style: const TextStyle(
+                                                        color: AppColors
+                                                            .textPrimary,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 15,
                                                       ),
-                                                      if (showAddFriend) ...[
-                                                        const SizedBox(
-                                                            width: 6),
-                                                        Tooltip(
-                                                          message: hasIncoming
-                                                              ? 'Принять заявку в друзья'
-                                                              : (hasOutgoing
-                                                                  ? 'Заявка уже отправлена'
-                                                                  : 'Отправить заявку в друзья'),
-                                                          child: Material(
-                                                            color: Colors
-                                                                .transparent,
-                                                            child: InkWell(
-                                                              onTap: itemBusy ||
-                                                                      friendBusy ||
-                                                                      hasOutgoing
-                                                                  ? null
-                                                                  : () => unawaited(
-                                                                        _sendOrAcceptFriendFromChat(
-                                                                          item,
-                                                                        ),
-                                                                      ),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                999,
+                                                      children: [
+                                                        TextSpan(
+                                                          text: _peerTitle(
+                                                              item.user),
+                                                        ),
+                                                        if (showAddFriend)
+                                                          WidgetSpan(
+                                                            alignment:
+                                                                PlaceholderAlignment
+                                                                    .middle,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                left: 4,
                                                               ),
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(2),
-                                                                child:
-                                                                    friendBusy
-                                                                        ? const SizedBox(
-                                                                            width:
-                                                                                14,
-                                                                            height:
-                                                                                14,
-                                                                            child:
-                                                                                CircularProgressIndicator(
-                                                                              strokeWidth:
-                                                                                  1.5,
-                                                                              color:
-                                                                                  AppColors.accentStart,
-                                                                            ),
-                                                                          )
-                                                                        : Icon(
-                                                                            Icons
-                                                                                .person_add_alt_1_rounded,
-                                                                            size:
-                                                                                16,
-                                                                            color: hasOutgoing
-                                                                                ? AppColors.accentStart.withValues(
-                                                                                    alpha: 0.4,
-                                                                                  )
-                                                                                : AppColors.accentStart,
+                                                              child: Tooltip(
+                                                                message: hasIncoming
+                                                                    ? 'Принять заявку в друзья'
+                                                                    : (hasOutgoing
+                                                                        ? 'Заявка уже отправлена'
+                                                                        : 'Отправить заявку в друзья'),
+                                                                child: Material(
+                                                                  color: Colors
+                                                                      .transparent,
+                                                                  child:
+                                                                      InkWell(
+                                                                    onTap: itemBusy ||
+                                                                            friendBusy ||
+                                                                            hasOutgoing
+                                                                        ? null
+                                                                        : () =>
+                                                                            unawaited(
+                                                                          _sendOrAcceptFriendFromChat(
+                                                                            item,
                                                                           ),
+                                                                        ),
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .circular(
+                                                                      999,
+                                                                    ),
+                                                                    child:
+                                                                        Padding(
+                                                                      padding:
+                                                                          const EdgeInsets
+                                                                              .all(
+                                                                        2,
+                                                                      ),
+                                                                      child: friendBusy
+                                                                          ? const SizedBox(
+                                                                              width:
+                                                                                  14,
+                                                                              height:
+                                                                                  14,
+                                                                              child:
+                                                                                  CircularProgressIndicator(
+                                                                                strokeWidth:
+                                                                                    1.5,
+                                                                                color:
+                                                                                    AppColors.accentStart,
+                                                                              ),
+                                                                            )
+                                                                          : Icon(
+                                                                              Icons.person_add_alt_1_rounded,
+                                                                              size: 16,
+                                                                              color: hasOutgoing
+                                                                                  ? AppColors.accentStart.withValues(
+                                                                                      alpha: 0.4,
+                                                                                    )
+                                                                                  : AppColors.accentStart,
+                                                                            ),
+                                                                    ),
+                                                                  ),
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
-                                                        ),
                                                       ],
-                                                    ],
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
