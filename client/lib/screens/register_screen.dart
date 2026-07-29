@@ -160,7 +160,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ],
                         decoration: const InputDecoration(
                           labelText: 'Имя (логин)',
-                          hintText: 'Без пробелов, до 20 символов',
+                          hintText: 'До 20 символов',
                           prefixIcon: Icon(Icons.person_outline_rounded),
                           counterText: '',
                         ),

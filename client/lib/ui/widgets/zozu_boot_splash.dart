@@ -146,7 +146,7 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
     final gamesSize = (zozuSize * 0.38).clamp(16.0, 28.0);
 
     return ColoredBox(
-      color: AppColors.surfaceUnified,
+      color: AppColors.surfaceCard,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -374,8 +374,8 @@ class _BootAtmospherePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Сплошная база = цвет чёлки/шапки; без вертикального wash сверху.
-    canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.surfaceUnified);
+    // Белый фон splash — совпадает с карточками входа/регистрации.
+    canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.surfaceCard);
 
     void orb(Offset c, double r, Color color, double a) {
       final paint = Paint()

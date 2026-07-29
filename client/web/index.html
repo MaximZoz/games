@@ -26,7 +26,7 @@
   <!-- black-translucent: контент под status bar; фон body совпадает с панелью -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Zozu Games">
-  <meta name="theme-color" content="#E8ECF4">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -47,19 +47,18 @@
       overflow-x: hidden;
       overscroll-behavior: none;
       overscroll-behavior-x: none;
-      /* surfaceUnified — иначе у скруглённых углов iPhone виден чужой цвет */
-      background-color: #E8ECF4;
+      /* Белый — splash и чёлка iOS до первого кадра Flutter */
+      background-color: #FFFFFF;
     }
     body {
-      background-color: #E8ECF4;
+      background-color: #FFFFFF;
       touch-action: pan-y;
     }
     flt-glass-pane, flutter-view, flt-scene-host {
       display: block;
       width: 100%;
       height: 100%;
-      /* Иначе под canvas / в зоне status bar на iOS виден чужой цвет */
-      background-color: #E8ECF4;
+      background-color: #FFFFFF;
     }
     flt-glass-pane canvas, flutter-view canvas {
       display: block;
@@ -75,12 +74,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* База = surfaceUnified (чёлка iOS), орбы только декорация */
-      background-color: #E8ECF4;
+      background-color: #FFFFFF;
       background-image:
-        radial-gradient(ellipse 55% 45% at 22% 32%, rgba(165, 180, 252, 0.28), transparent 70%),
-        radial-gradient(ellipse 50% 40% at 78% 58%, rgba(196, 181, 253, 0.24), transparent 70%),
-        radial-gradient(ellipse 40% 35% at 50% 78%, rgba(147, 197, 253, 0.16), transparent 70%);
+        radial-gradient(ellipse 55% 45% at 22% 32%, rgba(165, 180, 252, 0.22), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 78% 58%, rgba(196, 181, 253, 0.18), transparent 70%),
+        radial-gradient(ellipse 40% 35% at 50% 78%, rgba(147, 197, 253, 0.12), transparent 70%);
       transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
     }
