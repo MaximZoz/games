@@ -84,12 +84,14 @@
     #zozu-boot.is-leaving {
       opacity: 0;
     }
+    /* До Flutter — собранный бренд с дыханием; полная анимация букв в Flutter. */
     #zozu-boot .brand {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.55rem;
       transform: translateY(-2vh);
+      animation: zozu-breathe 2.8s ease-in-out infinite;
     }
     #zozu-boot .zozu {
       display: flex;
@@ -102,10 +104,6 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-    }
-    /* До Flutter — собранный бренд с дыханием; полная анимация букв в Flutter. */
-    #zozu-boot .brand {
-      animation: zozu-breathe 2.8s ease-in-out infinite;
     }
     #zozu-boot .line {
       width: min(42vw, 180px);
