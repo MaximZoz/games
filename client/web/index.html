@@ -54,10 +54,12 @@
       background-color: #E8ECF4;
       touch-action: pan-y;
     }
-    flt-glass-pane, flutter-view {
+    flt-glass-pane, flutter-view, flt-scene-host {
       display: block;
       width: 100%;
       height: 100%;
+      /* Иначе под canvas / в зоне status bar на iOS виден чужой цвет */
+      background-color: #E8ECF4;
     }
     flt-glass-pane canvas, flutter-view canvas {
       display: block;
@@ -73,11 +75,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background:
-        radial-gradient(ellipse 55% 45% at 22% 32%, rgba(165, 180, 252, 0.38), transparent 70%),
-        radial-gradient(ellipse 50% 40% at 78% 58%, rgba(196, 181, 253, 0.34), transparent 70%),
-        radial-gradient(ellipse 40% 35% at 50% 78%, rgba(147, 197, 253, 0.22), transparent 70%),
-        linear-gradient(180deg, rgba(224, 231, 255, 0.55) 0%, #E8ECF4 48%, rgba(237, 233, 254, 0.4) 100%);
+      /* База = surfaceUnified (чёлка iOS), орбы только декорация */
+      background-color: #E8ECF4;
+      background-image:
+        radial-gradient(ellipse 55% 45% at 22% 32%, rgba(165, 180, 252, 0.28), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 78% 58%, rgba(196, 181, 253, 0.24), transparent 70%),
+        radial-gradient(ellipse 40% 35% at 50% 78%, rgba(147, 197, 253, 0.16), transparent 70%);
       transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
     }

@@ -127,7 +127,9 @@ class AppShell extends ConsumerWidget {
         (collectionIncomeAvailable ? 1 : 0) +
         unreadGiftedCollections;
     final media = MediaQuery.of(context);
-    final padding = media.padding;
+    // Как и для нижней панели: Scaffold может обнулять padding — для
+    // челки/status bar берём viewPadding, чтобы цвет шёл full-bleed.
+    final topInset = media.viewPadding.top;
     final narrow = isNarrow(context);
     final isLandscape = media.size.width > media.size.height;
     final narrowLandscape = narrow && isLandscape;
@@ -231,13 +233,18 @@ class AppShell extends ConsumerWidget {
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: padding.top),
-          child: SizedBox(
-            height: kToolbarHeight,
-            child: ClipRect(
-              child: Row(
-                children: [
+        // Одна заливка: status bar (чёлка) + тулбар — тот же цвет, что низ.
+        ColoredBox(
+          color: AppColors.surfaceUnified,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: topInset),
+              SizedBox(
+                height: kToolbarHeight,
+                child: ClipRect(
+                  child: Row(
+                    children: [
                   if ((narrow && (onFriends || onChatsList) ||
                           (narrowLandscape && inChatRoom)) &&
                       toolbarLeading != null)
@@ -348,9 +355,11 @@ class AppShell extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ),
         Expanded(
@@ -453,7 +462,8 @@ class AppShell extends ConsumerWidget {
         // а не к корневому на весь экран.
         ScaffoldMessenger(
           child: Scaffold(
-            backgroundColor: Colors.transparent,
+            // Тот же цвет, что чёлка и низ — без «шва» после splash.
+            backgroundColor: AppColors.surfaceUnified,
             body: shellBody,
             bottomNavigationBar: bottomNav,
           ),

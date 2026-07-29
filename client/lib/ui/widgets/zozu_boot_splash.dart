@@ -62,11 +62,11 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
     final auth = ref.watch(authStateProvider);
     final authReady = !auth.isLoading;
 
-    if (!enabled) {
+    if (!enabled || _gone) {
       return widget.child;
     }
 
-    if (!_gone && authReady && _introDone && !_dismissing) {
+    if (authReady && _introDone && !_dismissing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _tryDismiss(authReady: true);
       });
@@ -76,21 +76,20 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
       fit: StackFit.expand,
       children: [
         widget.child,
-        if (!_gone)
-          FadeTransition(
-            opacity: Tween<double>(begin: 1, end: 0).animate(
-              CurvedAnimation(parent: _exit, curve: Curves.easeInCubic),
-            ),
-            child: IgnorePointer(
-              child: ZozuBootSplash(
-                onIntroComplete: () {
-                  if (!mounted) return;
-                  setState(() => _introDone = true);
-                  _tryDismiss(authReady: !ref.read(authStateProvider).isLoading);
-                },
-              ),
+        FadeTransition(
+          opacity: Tween<double>(begin: 1, end: 0).animate(
+            CurvedAnimation(parent: _exit, curve: Curves.easeInCubic),
+          ),
+          child: IgnorePointer(
+            child: ZozuBootSplash(
+              onIntroComplete: () {
+                if (!mounted) return;
+                setState(() => _introDone = true);
+                _tryDismiss(authReady: !ref.read(authStateProvider).isLoading);
+              },
             ),
           ),
+        ),
       ],
     );
   }
@@ -375,19 +374,8 @@ class _BootAtmospherePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Лёгкий вертикальный wash.
-    final wash = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          const Color(0xFFE0E7FF).withValues(alpha: 0.55),
-          AppColors.surfaceUnified,
-          const Color(0xFFEDE9FE).withValues(alpha: 0.4),
-        ],
-        stops: const [0.0, 0.48, 1.0],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, wash);
+    // Сплошная база = цвет чёлки/шапки; без вертикального wash сверху.
+    canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.surfaceUnified);
 
     void orb(Offset c, double r, Color color, double a) {
       final paint = Paint()
