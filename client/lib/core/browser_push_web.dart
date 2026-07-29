@@ -1,39 +1,44 @@
-// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
-import 'dart:async';
 import 'dart:convert';
-import 'dart:html' as html;
+import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:web/web.dart' as web;
 
 const _swUrl = '/push-sw.js';
 
 /// Поддержка Web Push в текущем браузере.
 bool browserPushSupported() {
   if (!kIsWeb) return false;
-  if (!html.Notification.supported) return false;
-  if (html.window.navigator.serviceWorker == null) return false;
-  // PushManager есть у ServiceWorkerRegistration; проверяем через register.
-  return true;
+  try {
+    final _ = web.Notification.permission;
+    // Наличие navigator.serviceWorker — базовый критерий.
+    web.window.navigator.serviceWorker;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 String browserNotificationPermission() {
-  if (!html.Notification.supported) return 'denied';
-  return html.Notification.permission ?? 'default';
+  try {
+    return web.Notification.permission;
+  } catch (_) {
+    return 'denied';
+  }
 }
 
 Future<String> requestBrowserNotificationPermission() async {
-  if (!html.Notification.supported) return 'denied';
-  final result = await html.Notification.requestPermission();
-  return result;
+  try {
+    final result = await web.Notification.requestPermission().toDart;
+    return result.toDart;
+  } catch (_) {
+    return 'denied';
+  }
 }
 
-Future<html.ServiceWorkerRegistration> _ensurePushServiceWorker() async {
-  final container = html.window.navigator.serviceWorker;
-  if (container == null) {
-    throw StateError('ServiceWorker недоступен');
-  }
-  return container.register(_swUrl);
+Future<web.ServiceWorkerRegistration> _ensurePushServiceWorker() {
+  return web.window.navigator.serviceWorker.register(_swUrl.toJS).toDart;
 }
 
 Uint8List _urlBase64ToUint8List(String base64String) {
@@ -41,6 +46,11 @@ Uint8List _urlBase64ToUint8List(String base64String) {
   final normalized =
       (base64String + padding).replaceAll('-', '+').replaceAll('_', '/');
   return Uint8List.fromList(base64Decode(normalized));
+}
+
+String _bufferToBase64Url(JSArrayBuffer buffer) {
+  final bytes = buffer.toDart.asUint8List();
+  return base64UrlEncode(bytes).replaceAll('=', '');
 }
 
 /// Результат подписки для отправки на сервер.
@@ -56,18 +66,21 @@ class BrowserPushSubscriptionData {
   final String auth;
 }
 
-Future<html.PushSubscription> _subscribeWithKey(
-  html.PushManager pushManager,
-  Uint8List applicationServerKey,
-) async {
-  // ignore: unnecessary_null_comparison, dead_null_aware_expression
-  final existing = await pushManager.getSubscription();
-  // ignore: unnecessary_null_comparison
+Future<web.PushSubscription> _getOrCreateSubscription({
+  required web.PushManager pushManager,
+  required Uint8List applicationServerKey,
+}) async {
+  final existing = await pushManager.getSubscription().toDart;
   if (existing != null) return existing;
-  return pushManager.subscribe({
-    'userVisibleOnly': true,
-    'applicationServerKey': applicationServerKey,
-  });
+
+  return pushManager
+      .subscribe(
+        web.PushSubscriptionOptionsInit(
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey.toJS,
+        ),
+      )
+      .toDart;
 }
 
 /// Подписывается на Web Push с [vapidPublicKey] (URL-safe base64).
@@ -78,17 +91,15 @@ Future<BrowserPushSubscriptionData> subscribeBrowserPush({
   if (permission != 'granted') {
     throw StateError('Нет разрешения на уведомления');
   }
+
   final registration = await _ensurePushServiceWorker();
-  await html.window.navigator.serviceWorker!.ready;
+  await web.window.navigator.serviceWorker.ready.toDart;
 
   final applicationServerKey = _urlBase64ToUint8List(vapidPublicKey);
-  final pushManager = registration.pushManager;
-  if (pushManager == null) {
-    throw StateError('PushManager недоступен');
-  }
-
-  final subscription =
-      await _subscribeWithKey(pushManager, applicationServerKey);
+  final subscription = await _getOrCreateSubscription(
+    pushManager: registration.pushManager,
+    applicationServerKey: applicationServerKey,
+  );
 
   final keyP256 = subscription.getKey('p256dh');
   final keyAuth = subscription.getKey('auth');
@@ -96,38 +107,31 @@ Future<BrowserPushSubscriptionData> subscribeBrowserPush({
     throw StateError('Неполная push-подписка');
   }
   final endpoint = subscription.endpoint;
-  if (endpoint == null || endpoint.isEmpty) {
+  if (endpoint.isEmpty) {
     throw StateError('Пустой endpoint подписки');
   }
   return BrowserPushSubscriptionData(
     endpoint: endpoint,
-    p256dh: base64UrlEncode(Uint8List.view(keyP256)).replaceAll('=', ''),
-    auth: base64UrlEncode(Uint8List.view(keyAuth)).replaceAll('=', ''),
+    p256dh: _bufferToBase64Url(keyP256),
+    auth: _bufferToBase64Url(keyAuth),
   );
 }
 
 Future<String?> currentBrowserPushEndpoint() async {
-  final container = html.window.navigator.serviceWorker;
-  if (container == null) return null;
-  final registration = await container.getRegistration(_swUrl);
-  final pushManager = registration.pushManager;
-  if (pushManager == null) return null;
-  // ignore: unnecessary_null_comparison
-  final sub = await pushManager.getSubscription();
-  // ignore: unnecessary_null_comparison
-  if (sub == null) return null;
-  return sub.endpoint;
+  try {
+    final registration = await _ensurePushServiceWorker();
+    final sub = await registration.pushManager.getSubscription().toDart;
+    return sub?.endpoint;
+  } catch (_) {
+    return null;
+  }
 }
 
 Future<void> unsubscribeBrowserPush() async {
-  final container = html.window.navigator.serviceWorker;
-  if (container == null) return;
-  final registration = await container.getRegistration(_swUrl);
-  final pushManager = registration.pushManager;
-  if (pushManager == null) return;
-  // ignore: unnecessary_null_comparison
-  final sub = await pushManager.getSubscription();
-  // ignore: unnecessary_null_comparison
-  if (sub == null) return;
-  await sub.unsubscribe();
+  try {
+    final registration = await _ensurePushServiceWorker();
+    final sub = await registration.pushManager.getSubscription().toDart;
+    if (sub == null) return;
+    await sub.unsubscribe().toDart;
+  } catch (_) {}
 }
