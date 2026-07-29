@@ -1928,7 +1928,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                       SliverPadding(
                         // Сверху запас под фиолетовую тень GradientCard —
                         // иначе CustomScrollView обрезает её о хедер (линия среза).
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                        padding: const EdgeInsets.fromLTRB(16, 20, 20, 12),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -2224,11 +2224,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                             ),
                                                           )
                                                         : Icon(
-                                                            hasIncoming
-                                                                ? Icons
-                                                                    .person_add_alt_1_rounded
-                                                                : Icons
-                                                                    .person_add_alt_1_rounded,
+                                                            Icons
+                                                                .person_add_alt_1_rounded,
                                                             size: 15,
                                                             color: hasOutgoing
                                                                 ? AppColors
