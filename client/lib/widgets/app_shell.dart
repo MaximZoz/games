@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -85,6 +86,27 @@ class AppShell extends ConsumerWidget {
       ref.watch(userGameSettingsProvider);
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
+      // iOS PWA: после рестарта/смены SW заново привязываем Web Push.
+      ref.listen(authStateProvider, (prev, next) {
+        if (next.valueOrNull != null && prev?.valueOrNull == null) {
+          unawaited(
+            ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+          );
+        }
+      });
+      ref.listen<bool>(webPushEnabledProvider, (prev, next) {
+        if (next == true && prev != true) {
+          unawaited(
+            ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+          );
+        }
+      });
+      // Уже залогинен при первом кадре shell — тоже rebind.
+      if (authState.valueOrNull != null) {
+        unawaited(
+          ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+        );
+      }
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];

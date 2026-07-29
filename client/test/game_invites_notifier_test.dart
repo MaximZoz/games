@@ -36,4 +36,20 @@ void main() {
     n.clear();
     expect(n.state, isEmpty);
   });
+
+  test('resolveJoined removes lobby and other invites from same creator', () {
+    final n = GameInvitesNotifier();
+    n.add(invite(lobbyId: 'L1', creatorId: 'c1'));
+    n.add(invite(lobbyId: 'L2', creatorId: 'c1'));
+    n.add(invite(lobbyId: 'L3', creatorId: 'c2', name: 'B'));
+    n.resolveJoined('L1');
+    expect(n.state.map((e) => e.lobbyId), ['L3']);
+  });
+
+  test('resolveJoined removes only matching lobby when creator unknown', () {
+    final n = GameInvitesNotifier();
+    n.add(invite(lobbyId: 'L2', creatorId: 'c2'));
+    n.resolveJoined('L1');
+    expect(n.state.map((e) => e.lobbyId), ['L2']);
+  });
 }

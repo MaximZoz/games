@@ -11,6 +11,7 @@ import 'package:multigames_client/shop/unread_gifted_collections.dart';
 void clearUserScopedCaches(Ref ref) {
   ref.read(dailyRewardFromRealtimeProvider.notifier).state = null;
   ref.read(chatsListCacheProvider.notifier).state = null;
+  ref.read(locallyReadChatIdsProvider.notifier).state = {};
   ref.read(chatRemovedIdProvider.notifier).state = null;
   ref.read(gameInvitesProvider.notifier).clear();
   clearPresenceOverrides(ref);

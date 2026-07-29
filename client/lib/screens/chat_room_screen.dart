@@ -106,6 +106,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _scrollController.addListener(_onMessagesScroll);
     _loadMessages(initial: true);
+    // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      markChatReadInChatsCache(ref, widget.chatID);
+    });
   }
 
   @override
@@ -409,7 +414,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         unawaited(() async {
           try {
             await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
-            // Список чатов обновится по realtime (chat_read) — не перезагружаем здесь.
+            if (!mounted) return;
+            // Сразу гасим бейдж таба, не дожидаясь reload списка.
+            markChatReadInChatsCache(ref, widget.chatID);
           } catch (_) {
             // Ошибку чтения не показываем пользователю в фоне.
           }
@@ -514,7 +521,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final meID = ref.read(authStateProvider).valueOrNull?.id;
       if (item.senderUserID != meID && _isChatRoomVisibleInShell()) {
         // Доставку отмечает chatsListProvider глобально; здесь только прочтение.
-        unawaited(ref.read(chatsRepositoryProvider).markRead(widget.chatID));
+        unawaited(() async {
+          try {
+            await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
+            if (!mounted) return;
+            markChatReadInChatsCache(ref, widget.chatID);
+          } catch (_) {}
+        }());
       }
       return;
     }

@@ -73,10 +73,20 @@ final gameInvitesProvider =
             stakeBronze: stakeBronze,
           ));
         }
+        return;
       }
-      if (type == 'lobby_updated' && data['left'] == true) {
+      // Приглашение больше не актуально: лобби закрыто, игра началась, или
+      // создатель/соперник ушёл.
+      if (type == 'lobby_updated' || type == 'game_started') {
         final lobbyId = data['lobby_id']?.toString();
-        if (lobbyId != null) notifier.remove(lobbyId);
+        if (lobbyId == null || lobbyId.isEmpty) return;
+        final left = data['left'] == true;
+        final gameId = data['game_id']?.toString();
+        final gameStarted = type == 'game_started' ||
+            (gameId != null && gameId.isNotEmpty);
+        if (left || gameStarted) {
+          notifier.remove(lobbyId);
+        }
       }
     },
   );
@@ -98,6 +108,20 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
 
   void removeByCreatorId(String creatorId) {
     state = state.where((i) => i.creatorId != creatorId).toList();
+  }
+
+  /// Снять карточку приглашения после входа в лобби/игру.
+  /// Удаляет и дубликаты от того же создателя (повторный реванш и т.п.).
+  void resolveJoined(String lobbyId) {
+    final match = state.where((i) => i.lobbyId == lobbyId).toList();
+    if (match.isEmpty) {
+      remove(lobbyId);
+      return;
+    }
+    final creatorId = match.first.creatorId;
+    state = state
+        .where((i) => i.lobbyId != lobbyId && i.creatorId != creatorId)
+        .toList();
   }
 
   void clear() {

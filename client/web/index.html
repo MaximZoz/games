@@ -21,8 +21,9 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Zozu Games — online mini-games">
 
-  <!-- iOS meta tags & icons -->
+  <!-- iOS meta tags & icons (PWA / Web Push: нужна установка на «Домой») -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <!-- black-translucent: контент под status bar; фон body совпадает с панелью -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Zozu Games">
@@ -152,6 +153,12 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Ранняя регистрация push SW (до Flutter) — критично для iOS PWA.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/push-sw.js?v=2', { scope: '/' }).catch(function () {});
+    }
+  </script>
   <script>
     (function () {
       function hideBoot() {

@@ -130,6 +130,8 @@ func spaHandler(webRoot fs.FS) http.Handler {
 			contentType = "text/css; charset=utf-8"
 		case strings.HasSuffix(fsPath, ".json"):
 			contentType = "application/json"
+		case strings.HasSuffix(fsPath, ".webmanifest"):
+			contentType = "application/manifest+json"
 		case strings.HasSuffix(fsPath, ".png"):
 			contentType = "image/png"
 		case strings.HasSuffix(fsPath, ".ico"):
@@ -138,6 +140,13 @@ func spaHandler(webRoot fs.FS) http.Handler {
 			contentType = "font/woff2"
 		}
 		w.Header().Set("Content-Type", contentType)
+		// Service worker / bootstrap: без долгого кэша, иначе iOS держит мёртвый SW.
+		if fsPath == "push-sw.js" || fsPath == "flutter_bootstrap.js" || fsPath == "manifest.json" {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+		if fsPath == "push-sw.js" {
+			w.Header().Set("Service-Worker-Allowed", "/")
+		}
 		io.Copy(w, f)
 	})
 }
@@ -246,7 +255,20 @@ func main() {
 		log.Printf("App logs: disabled (APP_LOG_ENABLED=false or unset)")
 	}
 
-	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret)}
+	pushSender := &api.WebPushSender{
+		Pool:       pool,
+		PublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
+		PrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
+		Subject:    getEnv("VAPID_SUBJECT", "admin@zozu.games"),
+		TTLSeconds: 86400,
+	}
+	if pushSender.Enabled() {
+		log.Printf("Web Push: enabled")
+	} else {
+		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
+	}
+
+	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret), Push: pushSender}
 	realtimeHub := api.NewRealtimeHub()
 	wsHandler := &api.RealtimeWSHandler{
 		Hub:           realtimeHub,
@@ -254,20 +276,23 @@ func main() {
 		JWTSecret:     []byte(jwtSecret),
 		LogWriter:     logWriter,
 		AppLogEnabled: appLogEnabled,
+		Push:          pushSender,
 	}
-	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub}
-	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub}
+	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
+	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
+	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
 	gamesHandler := &api.GamesHandler{
 		Pool:        pool,
 		Rdb:         rdb,
 		Hub:         realtimeHub,
 		Broadcaster: gamesBroadcaster,
+		Push:        pushSender,
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	achievementsHandler := &api.AchievementsHandler{Pool: pool}
-	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub}
+	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 		go api.StartBotTimeoutTicker(ctx, gamesHandler)
@@ -333,6 +358,11 @@ func main() {
 	mux.Handle("/api/inventory/collections", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionsShowcase)))
 	mux.Handle("/api/inventory/collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.CollectionIncome)))
 	mux.Handle("/api/inventory/claim-collection-income", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(shopHandler.ClaimCollectionIncome)))
+
+	mux.Handle("/api/push/vapid-key", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.VapidPublicKey)))
+	mux.Handle("/api/push/subscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Subscribe)))
+	mux.Handle("/api/push/unsubscribe", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Unsubscribe)))
+	mux.Handle("/api/push/preferences", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(webPushHandler.Preferences)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))
