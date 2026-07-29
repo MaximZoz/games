@@ -33,50 +33,62 @@ class HomeScreen extends ConsumerWidget {
             ? 'Можно забрать доход коллекций'
             : 'Ваш инвентарь');
 
+    // Отступ сверху у «Достижений» = снизу у «Магазина».
+    const edgePad = 24.0;
+    const gap = 12.0;
+
+    final topCards = <Widget>[
+      HomeActionCard(
+        icon: Icons.emoji_events_rounded,
+        title: 'Достижения',
+        subtitle: unclaimedAchievements > 0
+            ? 'Есть награды к получению'
+            : 'Ваши игровые результаты',
+        badgeCount: unclaimedAchievements,
+        onTap: () => context.push('/achievements'),
+      ),
+      const SizedBox(height: gap),
+      HomeActionCard(
+        icon: Icons.monetization_on_rounded,
+        title: 'Монеты',
+        subtitle: rewardAvailable
+            ? 'Доступна награда за вход'
+            : 'Баланс и награды',
+        badgeCount: rewardAvailable ? 1 : 0,
+        onTap: () => context.push('/coins'),
+      ),
+      const SizedBox(height: gap),
+      HomeActionCard(
+        icon: Icons.inventory_2_rounded,
+        title: 'Предметы',
+        subtitle: itemsSubtitle,
+        badgeCount: itemsBadge,
+        onTap: () => context.push('/inventory'),
+      ),
+    ];
+
+    final shopCard = HomeActionCard(
+      icon: Icons.storefront_rounded,
+      title: 'Магазин',
+      subtitle: 'Смайлы, ставки, коллекции',
+      onTap: () => context.push('/shop'),
+    );
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            // Сверху у «Достижений» и снизу у «Магазина» — одинаковый отступ.
+            padding: const EdgeInsets.fromLTRB(20, edgePad, 20, edgePad),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
-              child: ListView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  HomeActionCard(
-                    icon: Icons.emoji_events_rounded,
-                    title: 'Достижения',
-                    subtitle: unclaimedAchievements > 0
-                        ? 'Есть награды к получению'
-                        : 'Ваши игровые результаты',
-                    badgeCount: unclaimedAchievements,
-                    onTap: () => context.push('/achievements'),
-                  ),
-                  const SizedBox(height: 12),
-                  HomeActionCard(
-                    icon: Icons.monetization_on_rounded,
-                    title: 'Монеты',
-                    subtitle: rewardAvailable
-                        ? 'Доступна награда за вход'
-                        : 'Баланс и награды',
-                    badgeCount: rewardAvailable ? 1 : 0,
-                    onTap: () => context.push('/coins'),
-                  ),
-                  const SizedBox(height: 12),
-                  HomeActionCard(
-                    icon: Icons.inventory_2_rounded,
-                    title: 'Предметы',
-                    subtitle: itemsSubtitle,
-                    badgeCount: itemsBadge,
-                    onTap: () => context.push('/inventory'),
-                  ),
-                  const SizedBox(height: 12),
-                  HomeActionCard(
-                    icon: Icons.storefront_rounded,
-                    title: 'Магазин',
-                    subtitle: 'Смайлы, ставки, коллекции',
-                    onTap: () => context.push('/shop'),
-                  ),
+                  ...topCards,
+                  const Spacer(),
+                  shopCard,
                 ],
               ),
             ),
