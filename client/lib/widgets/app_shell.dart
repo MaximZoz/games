@@ -16,6 +16,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -459,6 +460,9 @@ class AppShell extends ConsumerWidget {
                           gamesMyTurn: gamesMyTurn,
                           gameInvitesCount: gameInvitesCount,
                           homeBadgeCount: homeBadgeCount,
+                          hairlinesOpacity: ref.watch(
+                            bootToolbarHairlinesOpacityProvider,
+                          ),
                         ),
                       ),
                       // Заливка под home indicator — до скруглённых углов.
@@ -506,6 +510,7 @@ class _MobileBottomNav extends StatelessWidget {
     required this.gamesMyTurn,
     required this.gameInvitesCount,
     required this.homeBadgeCount,
+    this.hairlinesOpacity = 1,
   });
 
   final int selectedIndex;
@@ -515,6 +520,7 @@ class _MobileBottomNav extends StatelessWidget {
   final int gamesMyTurn;
   final int gameInvitesCount;
   final int homeBadgeCount;
+  final double hairlinesOpacity;
 
   @override
   Widget build(BuildContext context) {
@@ -551,7 +557,7 @@ class _MobileBottomNav extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          // Симметричная подпись: линия — текст — линия (фиолет. как иконка).
+          // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
             switchInCurve: Curves.easeOut,
@@ -564,7 +570,14 @@ class _MobileBottomNav extends StatelessWidget {
                 // Чуть выше центра строки — visually на уровне середины букв.
                 Transform.translate(
                   offset: const Offset(0, -3),
-                  child: _captionHairline(),
+                  child: Opacity(
+                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
+                    child: const BrandAccentHairline(
+                      width: 33,
+                      height: 2.5,
+                      side: BrandAccentHairlineSide.fadeOutsideLeft,
+                    ),
+                  ),
                 ),
                 Transform.translate(
                   offset: const Offset(0, -2),
@@ -584,23 +597,19 @@ class _MobileBottomNav extends StatelessWidget {
                 ),
                 Transform.translate(
                   offset: const Offset(0, -3),
-                  child: _captionHairline(),
+                  child: Opacity(
+                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
+                    child: const BrandAccentHairline(
+                      width: 33,
+                      height: 2.5,
+                      side: BrandAccentHairlineSide.fadeOutsideRight,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _captionHairline() {
-    return Container(
-      width: 33, // ×1.5 от прежних 22
-      height: 1.5,
-      decoration: BoxDecoration(
-        color: AppColors.accentStart.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(999),
       ),
     );
   }
