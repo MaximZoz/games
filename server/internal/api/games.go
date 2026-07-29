@@ -1387,15 +1387,33 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
 	setUserActiveGame(ctx, h.Rdb, userID, gameID)
 
-	// Удалить «обратное» лобби (joiner создал своё, invite_target=creator), чтобы второй запрос получил 404
+	// Удалить связанные waiting_invite лобби между этими двумя игроками:
+	// 1) «обратное» (joiner пригласил creator) — иначе второй Join получит конфликт;
+	// 2) дубликаты приглашений от того же creator к joiner (повторный реванш).
 	if status == lobbyStatusWaitingInvite {
 		keys, _ := h.Rdb.Keys(ctx, "lobby:*").Result()
 		for _, k := range keys {
+			if k == key || strings.HasSuffix(k, ":invited") {
+				continue
+			}
 			lm, _ := h.Rdb.HGetAll(ctx, k).Result()
-			if lm["creator_id"] == userID.String() && lm["invite_target_id"] == creatorID && lm["status"] == lobbyStatusWaitingInvite {
-				h.Rdb.Del(ctx, k)
-				h.Rdb.Del(ctx, k+":invited")
-				break
+			if lm["status"] != lobbyStatusWaitingInvite {
+				continue
+			}
+			isReverse := lm["creator_id"] == userID.String() && lm["invite_target_id"] == creatorID
+			isDupFromCreator := lm["creator_id"] == creatorID && lm["invite_target_id"] == userID.String()
+			if !isReverse && !isDupFromCreator {
+				continue
+			}
+			h.Rdb.Del(ctx, k)
+			h.Rdb.Del(ctx, k+":invited")
+			staleLobbyID := strings.TrimPrefix(k, "lobby:")
+			if isDupFromCreator && staleLobbyID != "" {
+				h.broadcast([]uuid.UUID{userID}, map[string]any{
+					"type":     "lobby_updated",
+					"lobby_id": staleLobbyID,
+					"left":     true,
+				})
 			}
 		}
 		h.Rdb.Del(ctx, key+":invited")

@@ -81,6 +81,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     // Не инвалидируем lobbyDetail здесь: invalidate → loading без данных →
     // мигание всего экрана при каждом remount (таб «Игры», query без mode).
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Deep-link / push: пользователь уже открыл лобби — убрать карточку
+      // «Вас пригласили» и бейдж в табе «Игры».
+      ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
       ref.invalidate(openLobbiesProvider);
       refreshChatsList(ref, force: true).catchError((_) {});
     });
@@ -489,6 +492,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       final result = await repo.joinLobby(widget.lobbyId);
       if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
+        ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
         navigateToGame(
           GoRouter.of(context),
           ref.read(gameNavigationCoordinatorProvider),

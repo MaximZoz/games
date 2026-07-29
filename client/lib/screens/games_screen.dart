@@ -294,7 +294,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -530,8 +530,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     );
   }
 
-  void _declineInvite(String lobbyId) {
+  Future<void> _declineInvite(String lobbyId) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    try {
+      await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
+    } catch (_) {
+      // Карточка уже скрыта локально; сервер мог уже закрыть лобби.
+    }
   }
 
   Future<void> _joinLobby(BuildContext context, String lobbyId) async {
@@ -539,6 +544,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
       if (!context.mounted) return;
+      ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
       ref.invalidate(openLobbiesProvider);
       if (result.joined && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
