@@ -14,7 +14,9 @@ final bootSplashEnabledProvider = Provider<bool>((ref) => true);
 /// Полноэкранный boot-splash «Zozu Games» поверх первого кадра приложения.
 ///
 /// Держится, пока [authStateProvider] в loading **и** пока не отыграла
-/// intro-анимация. Затем стрелки съезжают к тулбару, фон растворяется.
+/// intro-анимация. Затем:
+/// - авторизован → стрелки съезжают к тулбару;
+/// - гость → стрелки дугами рисуют рамку карточки входа.
 class BootSplashHost extends ConsumerStatefulWidget {
   const BootSplashHost({
     super.key,
@@ -32,6 +34,7 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
   bool _introDone = false;
   bool _dismissing = false;
   bool _gone = false;
+  BootHandoffMode _handoffMode = BootHandoffMode.toolbar;
   late final AnimationController _exit;
 
   @override
@@ -39,9 +42,8 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
     super.initState();
     _exit = AnimationController(
       vsync: this,
-      // Дольше обычного fade: успеть «провезти» стрелки вниз к тулбару.
       duration: const Duration(milliseconds: 980),
-    )..addListener(_syncToolbarHairlines);
+    )..addListener(_onExitTick);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -51,22 +53,39 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
     });
   }
 
-  void _syncToolbarHairlines() {
+  void _onExitTick() {
     if (!mounted) return;
     final v = _exit.value;
-    // Стрелки тулбара проявляются в конце handoff (когда splash-линии «садятся»).
-    final opacity = v <= 0
-        ? 0.0
-        : ((v - 0.72) / 0.28).clamp(0.0, 1.0);
-    final notifier = ref.read(bootToolbarHairlinesOpacityProvider.notifier);
-    if ((notifier.state - opacity).abs() > 0.01 || opacity == 0 || opacity == 1) {
-      notifier.state = opacity;
+    if (_handoffMode == BootHandoffMode.toolbar) {
+      final opacity = v <= 0
+          ? 0.0
+          : ((v - 0.72) / 0.28).clamp(0.0, 1.0);
+      final notifier = ref.read(bootToolbarHairlinesOpacityProvider.notifier);
+      if ((notifier.state - opacity).abs() > 0.01 ||
+          opacity == 0 ||
+          opacity == 1) {
+        notifier.state = opacity;
+      }
+    } else {
+      // Рамка карточки проявляется в конце обводки.
+      final borderOpacity = ((v - 0.82) / 0.18).clamp(0.0, 1.0);
+      final borderNotifier =
+          ref.read(bootLoginCardBorderOpacityProvider.notifier);
+      if ((borderNotifier.state - borderOpacity).abs() > 0.01 ||
+          borderOpacity == 0 ||
+          borderOpacity == 1) {
+        borderNotifier.state = borderOpacity;
+      }
+      // Тулбар на /login скрыт — сразу полный opacity на всякий случай.
+      if (v > 0 && ref.read(bootToolbarHairlinesOpacityProvider) < 1) {
+        ref.read(bootToolbarHairlinesOpacityProvider.notifier).state = 1;
+      }
     }
   }
 
   @override
   void dispose() {
-    _exit.removeListener(_syncToolbarHairlines);
+    _exit.removeListener(_onExitTick);
     _exit.dispose();
     super.dispose();
   }
@@ -74,11 +93,33 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
   void _tryDismiss({required bool authReady}) {
     if (_gone || _dismissing || !_introDone || !authReady) return;
     _dismissing = true;
-    _exit.forward().whenComplete(() {
+    final loggedIn = ref.read(authStateProvider).valueOrNull != null;
+    _handoffMode =
+        loggedIn ? BootHandoffMode.toolbar : BootHandoffMode.loginFrame;
+    _exit.duration = loggedIn
+        ? const Duration(milliseconds: 980)
+        : const Duration(milliseconds: 1450);
+    if (!loggedIn) {
+      ref.read(bootLoginCardBorderOpacityProvider.notifier).state = 0;
+      ref.read(bootToolbarHairlinesOpacityProvider.notifier).state = 1;
+    }
+    setState(() {});
+    Future<void> runExit() async {
+      if (!loggedIn) {
+        // Дать router'у открыть /login и измерить карточку.
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+        if (!mounted) return;
+        await WidgetsBinding.instance.endOfFrame;
+      }
+      if (!mounted) return;
+      await _exit.forward();
       if (!mounted) return;
       ref.read(bootToolbarHairlinesOpacityProvider.notifier).state = 1;
+      ref.read(bootLoginCardBorderOpacityProvider.notifier).state = 1;
       setState(() => _gone = true);
-    });
+    }
+
+    runExit();
   }
 
   @override
@@ -104,6 +145,8 @@ class _BootSplashHostState extends ConsumerState<BootSplashHost>
         IgnorePointer(
           child: ZozuBootSplash(
             exitAnimation: _exit,
+            handoffMode: _handoffMode,
+            loginCardKey: ref.read(bootLoginCardKeyProvider),
             onIntroComplete: () {
               if (!mounted) return;
               setState(() => _introDone = true);
@@ -122,10 +165,14 @@ class ZozuBootSplash extends StatefulWidget {
     super.key,
     this.onIntroComplete,
     this.exitAnimation,
+    this.handoffMode = BootHandoffMode.toolbar,
+    this.loginCardKey,
   });
 
   final VoidCallback? onIntroComplete;
   final Animation<double>? exitAnimation;
+  final BootHandoffMode handoffMode;
+  final GlobalKey? loginCardKey;
 
   @override
   State<ZozuBootSplash> createState() => _ZozuBootSplashState();
@@ -137,6 +184,8 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
   static const _sub = 'Games';
 
   late final AnimationController _ambient;
+  final GlobalKey _leftLineKey = GlobalKey();
+  final GlobalKey _rightLineKey = GlobalKey();
   bool _notified = false;
 
   @override
@@ -147,7 +196,6 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
       duration: const Duration(milliseconds: 5200),
     )..repeat(reverse: true);
 
-    // Intro: staggered letters + flanking lines ≈ 1.85s, затем hold.
     Future<void>.delayed(const Duration(milliseconds: 1850), () {
       if (!mounted || _notified) return;
       _notified = true;
@@ -161,41 +209,61 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
     super.dispose();
   }
 
+  Rect? _globalRectOf(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx == null) return null;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    final topLeft = box.localToGlobal(Offset.zero);
+    return topLeft & box.size;
+  }
+
+  Rect _estimateLoginCard(Size screen) {
+    final maxW = math.min(screen.width - 48, 420.0);
+    final h = math.min(screen.height * 0.55, 460.0);
+    final left = (screen.width - maxW) / 2;
+    final top = (screen.height - h) / 2;
+    return Rect.fromLTWH(left, top, maxW, h);
+  }
+
   Widget _flankingLine({
+    required Key key,
     required double width,
     required BrandAccentHairlineSide side,
     required Alignment scaleAlign,
     required Duration delay,
     required bool playIntro,
   }) {
-    final line = BrandAccentHairline(
+    Widget line = BrandAccentHairline(
       width: width,
       height: 2.5,
       side: side,
     );
-    if (!playIntro) return line;
-    return line
-        .animate()
-        .fadeIn(
-          delay: delay,
-          duration: 520.ms,
-          curve: Curves.easeOutCubic,
-        )
-        .scaleX(
-          begin: 0.08,
-          end: 1,
-          delay: delay,
-          duration: 780.ms,
-          curve: Curves.easeOutCubic,
-          alignment: scaleAlign,
-        )
-        .moveX(
-          begin: scaleAlign == Alignment.centerRight ? 10 : -10,
-          end: 0,
-          delay: delay,
-          duration: 780.ms,
-          curve: Curves.easeOutCubic,
-        );
+    if (playIntro) {
+      line = line
+          .animate()
+          .fadeIn(
+            delay: delay,
+            duration: 520.ms,
+            curve: Curves.easeOutCubic,
+          )
+          .scaleX(
+            begin: 0.08,
+            end: 1,
+            delay: delay,
+            duration: 780.ms,
+            curve: Curves.easeOutCubic,
+            alignment: scaleAlign,
+          )
+          .moveX(
+            begin: scaleAlign == Alignment.centerRight ? 10 : -10,
+            end: 0,
+            delay: delay,
+            duration: 780.ms,
+            curve: Curves.easeOutCubic,
+          );
+    }
+    return KeyedSubtree(key: key, child: line);
   }
 
   @override
@@ -207,29 +275,61 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
     final gamesSize = (zozuSize * 0.38).clamp(16.0, 28.0);
     final lineWidth = (gamesSize * 2.15).clamp(28.0, 56.0);
 
-    final exitListenable = widget.exitAnimation ?? const AlwaysStoppedAnimation(0.0);
+    final exitListenable =
+        widget.exitAnimation ?? const AlwaysStoppedAnimation(0.0);
 
     return AnimatedBuilder(
       animation: Listenable.merge([_ambient, exitListenable]),
       builder: (context, _) {
         final exitT = widget.exitAnimation?.value ?? 0.0;
-        // Фон + бренд уходят раньше; стрелки едут вниз.
-        final brandFade =
-            (1.0 - Curves.easeInCubic.transform((exitT / 0.38).clamp(0.0, 1.0)));
+        final toLogin = widget.handoffMode == BootHandoffMode.loginFrame;
+        final brandFade = (1.0 -
+            Curves.easeInCubic.transform((exitT / 0.34).clamp(0.0, 1.0)));
+        final playIntro = exitT == 0;
+
+        // --- Toolbar handoff ---
         final handoffT = ((exitT - 0.18) / 0.62).clamp(0.0, 1.0);
         final handoff = Curves.easeInOutCubic.transform(handoffT);
-        final linesFade = exitT < 0.78
+        final linesFadeToolbar = exitT < 0.78
             ? 1.0
             : (1.0 -
-                Curves.easeIn.transform(((exitT - 0.78) / 0.22).clamp(0.0, 1.0)));
-
-        // От центра экрана к подписи нижнего тулбара.
+                Curves.easeIn
+                    .transform(((exitT - 0.78) / 0.22).clamp(0.0, 1.0)));
         final slideY = handoff * (size.height * 0.5 - bottomInset - 54);
         final gap = lerpDouble(gamesSize * 0.55, 10, handoff)!;
         final w = lerpDouble(lineWidth, 33.0, handoff)!;
-        // Ширина слота подписи: от «GAMES» к короткой подписи таба.
         final centerSlot = lerpDouble(gamesSize * 5.2, 52, handoff)!;
-        final playIntro = exitT == 0;
+
+        // --- Login frame handoff ---
+        final linesFadeLogin = exitT == 0
+            ? 1.0
+            : (1.0 -
+                Curves.easeIn.transform((exitT / 0.18).clamp(0.0, 1.0)));
+        final drawProgress = Curves.easeInOutCubic
+            .transform(((exitT - 0.08) / 0.84).clamp(0.0, 1.0));
+        final paintFade = exitT < 0.88
+            ? 1.0
+            : (1.0 -
+                Curves.easeIn
+                    .transform(((exitT - 0.88) / 0.12).clamp(0.0, 1.0)));
+
+        final leftRect = _globalRectOf(_leftLineKey);
+        final rightRect = _globalRectOf(_rightLineKey);
+        final cardKey = widget.loginCardKey;
+        final cardRect = (cardKey != null ? _globalRectOf(cardKey) : null) ??
+            _estimateLoginCard(size);
+        final leftStart = leftRect?.center ??
+            Offset(size.width * 0.28, size.height * 0.48);
+        final rightStart = rightRect?.center ??
+            Offset(size.width * 0.72, size.height * 0.48);
+
+        final showToolbarLines = !toLogin || exitT == 0;
+        final toolbarLinesOpacity = toLogin ? linesFadeLogin : linesFadeToolbar;
+        final toolbarSlide = toLogin ? 0.0 : slideY;
+        final toolbarHandoff = toLogin ? 0.0 : handoff;
+        final toolbarW = toLogin ? lineWidth : w;
+        final toolbarGap = toLogin ? gamesSize * 0.55 : gap;
+        final toolbarSlot = toLogin ? gamesSize * 5.2 : centerSlot;
 
         return Opacity(
           opacity: exitT >= 0.995 ? 0 : 1,
@@ -245,6 +345,23 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
                     size: Size.infinite,
                   ),
                 ),
+                if (toLogin && exitT > 0.02)
+                  Opacity(
+                    opacity: paintFade,
+                    child: CustomPaint(
+                      painter: _LoginFrameDrawPainter(
+                        progress: drawProgress,
+                        leftStart: leftStart,
+                        rightStart: rightStart,
+                        card: RRect.fromRectAndRadius(
+                          cardRect,
+                          const Radius.circular(AppRadius.card + 2),
+                        ),
+                        strokeWidth: 2.5,
+                      ),
+                      size: Size.infinite,
+                    ),
+                  ),
                 Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -270,7 +387,6 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
                         ),
                       ),
                       SizedBox(height: zozuSize * 0.28),
-                      // GAMES остаётся на месте и гаснет; стрелки съезжают вниз.
                       Stack(
                         alignment: Alignment.center,
                         clipBehavior: Clip.none,
@@ -290,49 +406,56 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
                               animate: playIntro,
                             ),
                           ),
-                          Transform.translate(
-                            offset: Offset(0, slideY),
-                            child: Opacity(
-                              opacity: linesFade,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      -gamesSize * 0.06 * (1 - handoff),
+                          if (showToolbarLines || toolbarLinesOpacity > 0.01)
+                            Transform.translate(
+                              offset: Offset(0, toolbarSlide),
+                              child: Opacity(
+                                opacity: toolbarLinesOpacity,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Transform.translate(
+                                      offset: Offset(
+                                        0,
+                                        -gamesSize *
+                                            0.06 *
+                                            (1 - toolbarHandoff),
+                                      ),
+                                      child: _flankingLine(
+                                        key: _leftLineKey,
+                                        width: toolbarW,
+                                        side: BrandAccentHairlineSide
+                                            .fadeOutsideLeft,
+                                        scaleAlign: Alignment.centerRight,
+                                        delay: 560.ms,
+                                        playIntro: playIntro,
+                                      ),
                                     ),
-                                    child: _flankingLine(
-                                      width: w,
-                                      side: BrandAccentHairlineSide
-                                          .fadeOutsideLeft,
-                                      scaleAlign: Alignment.centerRight,
-                                      delay: 560.ms,
-                                      playIntro: playIntro,
+                                    SizedBox(width: toolbarGap),
+                                    SizedBox(width: toolbarSlot),
+                                    SizedBox(width: toolbarGap),
+                                    Transform.translate(
+                                      offset: Offset(
+                                        0,
+                                        -gamesSize *
+                                            0.06 *
+                                            (1 - toolbarHandoff),
+                                      ),
+                                      child: _flankingLine(
+                                        key: _rightLineKey,
+                                        width: toolbarW,
+                                        side: BrandAccentHairlineSide
+                                            .fadeOutsideRight,
+                                        scaleAlign: Alignment.centerLeft,
+                                        delay: 640.ms,
+                                        playIntro: playIntro,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(width: gap),
-                                  SizedBox(width: centerSlot),
-                                  SizedBox(width: gap),
-                                  Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      -gamesSize * 0.06 * (1 - handoff),
-                                    ),
-                                    child: _flankingLine(
-                                      width: w,
-                                      side: BrandAccentHairlineSide
-                                          .fadeOutsideRight,
-                                      scaleAlign: Alignment.centerLeft,
-                                      delay: 640.ms,
-                                      playIntro: playIntro,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ],
@@ -345,6 +468,154 @@ class _ZozuBootSplashState extends State<ZozuBootSplash>
       },
     );
   }
+}
+
+/// Две стрелки: дуга к верху карточки, затем половина рамки каждая.
+class _LoginFrameDrawPainter extends CustomPainter {
+  _LoginFrameDrawPainter({
+    required this.progress,
+    required this.leftStart,
+    required this.rightStart,
+    required this.card,
+    required this.strokeWidth,
+  });
+
+  final double progress;
+  final Offset leftStart;
+  final Offset rightStart;
+  final RRect card;
+  final double strokeWidth;
+
+  static const _approachEnd = 0.32;
+
+  Path _approachPath(Offset start, Offset end, {required bool left}) {
+    final dx = left ? -math.max(36.0, (start.dx - end.dx).abs() * 0.35) : math.max(36.0, (end.dx - start.dx).abs() * 0.35);
+    final control = Offset(
+      (start.dx + end.dx) / 2 + dx,
+      (start.dy + end.dy) / 2 - 12,
+    );
+    return Path()
+      ..moveTo(start.dx, start.dy)
+      ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
+  }
+
+  Path _leftHalfFrame(RRect r) {
+    final rect = r.outerRect;
+    final rad = r.tlRadiusX;
+    final topCenter = Offset(rect.center.dx, rect.top);
+    final path = Path()..moveTo(topCenter.dx, topCenter.dy);
+    path.lineTo(rect.left + rad, rect.top);
+    path.arcToPoint(
+      Offset(rect.left, rect.top + rad),
+      radius: Radius.circular(rad),
+      clockwise: false,
+    );
+    path.lineTo(rect.left, rect.bottom - rad);
+    path.arcToPoint(
+      Offset(rect.left + rad, rect.bottom),
+      radius: Radius.circular(rad),
+      clockwise: false,
+    );
+    path.lineTo(rect.center.dx, rect.bottom);
+    return path;
+  }
+
+  Path _rightHalfFrame(RRect r) {
+    final rect = r.outerRect;
+    final rad = r.trRadiusX;
+    final topCenter = Offset(rect.center.dx, rect.top);
+    final path = Path()..moveTo(topCenter.dx, topCenter.dy);
+    path.lineTo(rect.right - rad, rect.top);
+    path.arcToPoint(
+      Offset(rect.right, rect.top + rad),
+      radius: Radius.circular(rad),
+      clockwise: true,
+    );
+    path.lineTo(rect.right, rect.bottom - rad);
+    path.arcToPoint(
+      Offset(rect.right - rad, rect.bottom),
+      radius: Radius.circular(rad),
+      clockwise: true,
+    );
+    path.lineTo(rect.center.dx, rect.bottom);
+    return path;
+  }
+
+  Path _trim(Path path, double t) => _trimRange(path, 0, t);
+
+  /// Отрезок пути [startT, endT] по доле длины (для «змеи»: хвост съедается с start).
+  Path _trimRange(Path path, double startT, double endT) {
+    final a = startT.clamp(0.0, 1.0);
+    final b = endT.clamp(0.0, 1.0);
+    if (b <= a) return Path();
+    if (a <= 0 && b >= 1) return path;
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return Path();
+    final total = metrics.fold<double>(0, (s, m) => s + m.length);
+    if (total <= 0) return Path();
+    final startLen = total * a;
+    final endLen = total * b;
+    var cursor = 0.0;
+    final out = Path();
+    for (final m in metrics) {
+      final segStart = cursor;
+      final segEnd = cursor + m.length;
+      cursor = segEnd;
+      final from = math.max(startLen, segStart);
+      final to = math.min(endLen, segEnd);
+      if (to > from) {
+        out.addPath(m.extractPath(from - segStart, to - segStart), Offset.zero);
+      }
+    }
+    return out;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = progress.clamp(0.0, 1.0);
+    if (t <= 0) return;
+
+    final topCenter = Offset(card.outerRect.center.dx, card.outerRect.top);
+    final approachLeft = _approachPath(leftStart, topCenter, left: true);
+    final approachRight = _approachPath(rightStart, topCenter, left: false);
+    final leftFrame = _leftHalfFrame(card);
+    final rightFrame = _rightHalfFrame(card);
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+      ).createShader(card.outerRect);
+
+    if (t <= _approachEnd) {
+      final local = Curves.easeOutCubic.transform(t / _approachEnd);
+      canvas.drawPath(_trim(approachLeft, local), paint);
+      canvas.drawPath(_trim(approachRight, local), paint);
+      return;
+    }
+
+    final framePhase =
+        ((t - _approachEnd) / (1 - _approachEnd)).clamp(0.0, 1.0);
+    final frameT = Curves.easeInOutCubic.transform(framePhase);
+    // Хвост подходной дуги «съедается» с начала до точки касания рамки.
+    final retractT = Curves.easeInOutCubic
+        .transform((framePhase / 0.38).clamp(0.0, 1.0));
+
+    canvas.drawPath(_trimRange(approachLeft, retractT, 1.0), paint);
+    canvas.drawPath(_trimRange(approachRight, retractT, 1.0), paint);
+    canvas.drawPath(_trim(leftFrame, frameT), paint);
+    canvas.drawPath(_trim(rightFrame, frameT), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LoginFrameDrawPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.leftStart != leftStart ||
+      oldDelegate.rightStart != rightStart ||
+      oldDelegate.card != card;
 }
 
 class _StaggeredBrandRow extends StatelessWidget {
@@ -476,7 +747,6 @@ class _LetterGlyph extends StatelessWidget {
   }
 }
 
-/// Мягкие «орбы» на фоне — атмосфера без неонового glow.
 class _BootAtmospherePainter extends CustomPainter {
   _BootAtmospherePainter(this.t);
 

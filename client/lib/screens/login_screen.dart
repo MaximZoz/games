@@ -98,6 +98,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
     // Как «О себе»: при фокусе (клавиатура) прижимаем форму вверх.
     final liftToTop = _inputFocused;
+    final loginCardKey = ref.watch(bootLoginCardKeyProvider);
+    final loginBorderOpacity = ref.watch(bootLoginCardBorderOpacityProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -112,6 +114,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: formMaxWidth),
               child: GradientCard(
+                key: loginCardKey,
+                borderOpacity: loginBorderOpacity,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 28,
                   vertical: 32,
