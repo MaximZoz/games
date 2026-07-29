@@ -26,6 +26,21 @@ String? unicodeEmojiFromAnimatedName(String name) {
   return kBundledEmojiUnicode[name];
 }
 
+/// Доля таймлайна Lottie для статичного превью в магазине/инвентаре.
+///
+/// Как у dragon: берём кадр, где эмодзи реально видно.
+/// По умолчанию ~42% (у dragon нулевой кадр пустой).
+/// У baseball как раз середина плохая — мяч сжат до ~3%, поэтому
+/// берём ранний кадр, где scale ещё ~100%.
+double bundledEmojiStaticPreviewProgress(String animatedName) {
+  switch (animatedName) {
+    case 'baseball':
+      return 0.02;
+    default:
+      return 0.42;
+  }
+}
+
 /// Токен подарка коллекции: `[gift_coll:code|Title|emoji|animatedName]`.
 final RegExp giftCollectionTokenRe = RegExp(
   r'^\[gift_coll:([^|\]]+)\|([^|\]]*)\|([^|\]]*)\|([^\]]*)\]$',
@@ -244,10 +259,6 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
   Timer? _loadTimeout;
   late final AnimationController _lottieCtrl;
 
-  /// Доля таймлайна для статичного превью. У части Noto (dragon и др.)
-  /// нулевой кадр пустой — слои ещё за пределами холста.
-  static const double _staticPreviewProgress = 0.42;
-
   @override
   void initState() {
     super.initState();
@@ -310,7 +321,7 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
     } else {
       _lottieCtrl
         ..stop()
-        ..value = _staticPreviewProgress;
+        ..value = bundledEmojiStaticPreviewProgress(widget.animatedName);
     }
   }
 
@@ -392,7 +403,8 @@ class _ShopAnimatedEmojiState extends State<ShopAnimatedEmoji>
     }
 
     // Lottie из client/assets/emojis/lottie/ — без сети и без package assets.
-    // Статичный превью: кадр ~42% таймлайна (нулевой у dragon пустой).
+    // Статичный превью: кадр из [bundledEmojiStaticPreviewProgress]
+    // (как dragon: не нулевой/пустой, а видимый).
     final lottieSize = widget.size * 0.92;
     return SizedBox(
       width: widget.size,
