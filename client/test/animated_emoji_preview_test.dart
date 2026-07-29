@@ -14,14 +14,11 @@ void main() {
     expect(parseAnimatedEmojiName(' text '), isNull);
   });
 
-  test('bundledEmojiStaticPreviewProgress', () {
-    expect(bundledEmojiStaticPreviewProgress('baseball'), 0.99);
-    expect(bundledEmojiStaticPreviewProgress('tennis'), 0.42);
+  test('bundledEmojiStaticPreviewProgress picks visible Lottie frame', () {
+    // dragon-style default mid-frame
     expect(bundledEmojiStaticPreviewProgress('dragon'), 0.42);
-  });
-
-  test('usesUnicodeStaticEmojiPreview for baseball shop card', () {
-    expect(usesUnicodeStaticEmojiPreview('baseball'), isTrue);
-    expect(usesUnicodeStaticEmojiPreview('tennis'), isFalse);
+    expect(bundledEmojiStaticPreviewProgress('tennis'), 0.42);
+    // baseball mid-frame is shrunk — use early visible frame
+    expect(bundledEmojiStaticPreviewProgress('baseball'), 0.02);
   });
 }
