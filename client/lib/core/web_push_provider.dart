@@ -83,11 +83,10 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     if (_ref.read(authStateProvider).valueOrNull == null) return;
 
     _ensuring = true;
+    // Один attempt за сессию, даже при ошибке — иначе AppShell spam'ит на каждый rebuild.
+    _boundThisSession = true;
     try {
-      final err = await _subscribeAndSave();
-      if (err == null) {
-        _boundThisSession = true;
-      }
+      await _subscribeAndSave();
     } catch (_) {
       // Тихий rebind — пользователь уже видел ошибку при ручном включении.
     } finally {
