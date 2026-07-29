@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} 個の絵文字 · {price}",
   "chatsExpandPanel": "パネルを展開",
   "chatsCollapsePanel": "パネルを折りたたむ",
-  "chatReplySourceMissing": "元のメッセージが見つかりません"
+  "chatReplySourceMissing": "元のメッセージが見つかりません",
+  "shopStakeTitleSilver": "ベット {n} シルバー",
+  "shopStakeTitleGold": "ベット {n} ゴールド",
+  "shopStakeDescSilver": "{n} シルバーのベットを解除",
+  "shopStakeDescGold": "{n} ゴールドのベットを解除",
+  "chatReplySelf": "自分",
+  "chatReplyPeer": "相手"
 }

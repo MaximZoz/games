@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,12 +36,21 @@ func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	lang := i18n.LangFromRequest(r)
 	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
+		title := i18n.AchievementTitle(lang, it.Code)
+		if title == "" {
+			title = it.Title
+		}
+		desc := i18n.AchievementDescription(lang, it.Code)
+		if desc == "" {
+			desc = it.Description
+		}
 		m := map[string]any{
 			"code":          it.Code,
-			"title":         it.Title,
-			"description":   it.Description,
+			"title":         title,
+			"description":   desc,
 			"reward_bronze": it.RewardBronze,
 			"progress":      it.Progress,
 			"target":        it.Target,

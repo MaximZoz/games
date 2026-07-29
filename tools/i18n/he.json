@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} אימוג'ים · {price}",
   "chatsExpandPanel": "הרחב לוח",
   "chatsCollapsePanel": "כווץ לוח",
-  "chatReplySourceMissing": "ההודעה המקורית לא נמצאה"
+  "chatReplySourceMissing": "ההודעה המקורית לא נמצאה",
+  "shopStakeTitleSilver": "הימור {n} כסף",
+  "shopStakeTitleGold": "הימור {n} זהב",
+  "shopStakeDescSilver": "פותח הימור של {n} כסף",
+  "shopStakeDescGold": "פותח הימור של {n} זהב",
+  "chatReplySelf": "לעצמך",
+  "chatReplyPeer": "לבן השיח"
 }

@@ -18,6 +18,7 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 
 Map<String, String> get _groupTitles {
   final l10n = LocaleService.l10n;
@@ -95,7 +96,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(l10n.inventorySellTitle),
         content: Text(
-          '${item.title}\n${l10n.inventorySellDesc(formatRewardBronze(refund))}',
+          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n${l10n.inventorySellDesc(formatRewardBronze(refund))}',
         ),
         actions: [
           TextButton(
@@ -181,7 +182,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         return AlertDialog(
           title: Text(l10n.inventoryGiftTitle),
           content: Text(
-            l10n.inventoryGiftDesc(item.title, friendName),
+            l10n.inventoryGiftDesc(catalogTitle(item.code, fallback: item.title, l10n: l10n), friendName),
           ),
           actions: [
             TextButton(
@@ -207,7 +208,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: context.l10n.inventoryGifted(item.title),
+        message: context.l10n.inventoryGifted(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -414,7 +415,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                             _highlightGifts.contains(it.code),
                                         onOpen: () => showCollectionFullscreen(
                                           context,
-                                          title: it.title,
+                                          title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
                                           animatedName:
                                               it.animatedName ?? 'sparkles',
                                           fallback: it.emoji,
@@ -444,7 +445,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       size: 32,
                                       fallback: it.emoji,
                                     ),
-                                    title: it.title,
+                                    title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
                                     subtitle: context.l10n
                                         .inventoryEmojiLeft(it.quantity),
                                   ),
@@ -469,8 +470,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   frameCode: it.code,
                                   size: 36,
                                 ),
-                                title: it.title,
-                                subtitle: it.description,
+                                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
+                                subtitle: catalogDescription(it.code, fallback: it.description, l10n: context.l10n),
                               ),
                           ],
                         ),
@@ -487,7 +488,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       : CoinType.silver,
                                   size: 26,
                                 ),
-                                title: it.title,
+                                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
                                 subtitle: it.stakeGold != null
                                     ? context.l10n.inventoryStakeGold(
                                         '${it.stakeGold}',
@@ -665,7 +666,7 @@ class _CollectionInvTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          item.title,
+                          catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,

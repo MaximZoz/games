@@ -16,6 +16,7 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 
 /// Порядок групп на витрине смайликов.
 const shopEmojiGroupOrder = <String>['emotions', 'game', 'flags'];
@@ -257,7 +258,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         return AlertDialog(
           title: Text(l10n.shopBuyEmojiTitle),
           content: Text(
-            '${item.title}\n\n'
+            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
             '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
             '${l10n.shopEmojiUses}',
           ),
@@ -281,7 +282,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     if (!mounted) return;
     showAppSnackBar(
       context,
-      message: context.l10n.shopEmojiBought(item.title),
+      message: context.l10n.shopEmojiBought(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
       kind: AppSnackKind.success,
     );
   }
@@ -318,7 +319,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
   Future<void> _openPreview(ShopItem item) async {
     await showCollectionFullscreen(
       context,
-      title: item.title,
+      title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
       animatedName: item.animatedName ?? 'smile',
       fallback: item.emoji,
       subtitle: context.l10n.shopEmojiPriceUses(
@@ -505,7 +506,7 @@ class _EmojiBuyTile extends StatelessWidget {
               ),
             ),
             Text(
-              item.title,
+              catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,

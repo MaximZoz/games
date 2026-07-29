@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} смайлікаў · па {price}",
   "chatsExpandPanel": "Разгарнуць панэль",
   "chatsCollapsePanel": "Згарнуць панэль",
-  "chatReplySourceMissing": "Зыходнае паведамленне не знойдзена"
+  "chatReplySourceMissing": "Зыходнае паведамленне не знойдзена",
+  "shopStakeTitleSilver": "Стаўка {n} срэбра",
+  "shopStakeTitleGold": "Стаўка {n} золата",
+  "shopStakeDescSilver": "Права ставіць {n} срэбра ў гульнях",
+  "shopStakeDescGold": "Права ставіць {n} золата ў гульнях",
+  "chatReplySelf": "сабе",
+  "chatReplyPeer": "суразмоўцу"
 }

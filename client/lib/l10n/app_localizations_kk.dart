@@ -1397,4 +1397,30 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Бастапқы хабар табылмады';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return '$n күміс ставкасы';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return '$n алтын ставкасы';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Ойындарда $n күміс қою құқығы';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Ойындарда $n алтын қою құқығы';
+  }
+
+  @override
+  String get chatReplySelf => 'өзіңізге';
+
+  @override
+  String get chatReplyPeer => 'әңгімелесушіге';
 }

@@ -75,14 +75,56 @@
   "timeJustNow": "just nu",
   "timeYesterday": "igår",
   "timeMinutesAgo": "{count} min sedan",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} h sedan",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} d sedan",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "en vecka sedan",
   "timeWeeksAgo": "{count} v sedan",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "en månad sedan",
   "timeMonthsAgo": "{count} mån sedan",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "ett år sedan",
   "timeYearsAgo": "{count} år sedan",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Sön",
   "weekdayMon": "Mån",
   "weekdayTue": "Tis",
@@ -255,10 +297,45 @@
   "coinDiamond": "Diamant",
   "balanceZeroBronze": "0 brons",
   "balanceBronzes": "{count} brons",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} silver",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} guld",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} diamanter",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} per dag",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "br",
   "balanceAbbrSilver": "s.",
   "balanceAbbrGold": "g.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Daglig inloggningsstreak",
   "coinsFriendReward": "Vänbelöning",
   "coinsFriendRewardHint": "+{amount} för registrering via din länk",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Kunde inte ladda belöningar",
   "coinsClaimReward": "Hämta belöning",
   "coinsAlreadyClaimed": "Redan hämtad",
   "coinsStreakToday": "{done}/{target} · idag",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 1 dag kvar",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · {remaining} kvar",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Bjud in en vän",
   "coinsInviteHint": "+{amount} för varje som registrerar sig via din länk",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Kopiera länk",
   "coinsHowItWorks": "Så fungerar det",
   "coinsHowStep1": "Kopiera länken och skicka till en vän",
   "coinsHowStep2": "Vännen registrerar sig via länken",
   "coinsHowStep3": "Du får {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Prestationer",
   "achievementsProgress": "Framsteg: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Ram hämtad",
   "achievementsClaimed": "Hämtad",
   "achievementsOpenFrame": "Öppna ram",
   "friendsRemoveConfirm": "Är du säker på att du vill ta bort {name} från vänner?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Ta bort",
   "friendsRemove": "Ta bort från vänner",
   "friendsAcceptRequest": "Acceptera förfrågan",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Visa sökning",
   "friendsLoadFailed": "Kunde inte ladda vänner",
   "friendsSince": "Vänner sedan: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Inkommande förfrågan: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Utgående förfrågan: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Användarinfo",
   "profileAgeYears": "{age} år",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Köp",
   "shopBuyTitle": "Köp?",
   "shopBuyStakeTitle": "Köp insat?",
   "shopBuyEmojiTitle": "Köp emoji?",
   "shopBuyCollectionTitle": "Köp samling?",
   "shopPrice": "Pris: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Köpt",
   "shopEmpty": "Tomt än så länge",
   "shopPurchased": "{title} köpt",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Du får: 10 användningar",
   "shopEmojiBought": "{title}: +10 användningar",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 användningar",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Köp · 10 st",
   "shopDailyIncome": "Inkomst: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Engångsköp",
   "shopSellRefund": "Försäljning återbetalar en del av kostnaden",
   "shopCollectionAdded": "{title} tillagd i profilen",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "setbonus +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Komplett",
   "shopSetProgress": "Samlat · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Sälj?",
   "inventorySellDesc": "Du får {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Sålt: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Lägg till vänner först",
   "inventoryGiftTitle": "Ge samling i present?",
   "inventoryGiftDesc": "Ge ”{title}” till {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Givit: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Kunde inte ladda föremål",
   "inventoryNoCollections": "Inga samlingar — köp i butiken",
   "inventoryNoEmojis": "Inga emojis — köp i butiken",
   "inventoryNoFrames": "Inga ramar — vinn 10 ligamatcher (prestationer)",
   "inventoryNoStakes": "Inga köpta insatser",
   "inventoryEmojiLeft": "{count} kvar",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Inkomst: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Inkomst imorgon: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Du kan satsa {amount} guld",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Du kan satsa {amount} silver",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Hämtat +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Kunde inte ladda chattar",
   "chatsLoadListFailed": "Kunde inte ladda listan",
   "chatsBlockedEmpty": "Listan är tom",
   "chatsBlockedAt": "Blockerad: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Kunde inte skapa chatt",
   "chatsNeedFriendsFirst": "Lägg till vänner först, sedan kan du öppna en chatt.",
   "chatsFriendsNotFound": "Inga vänner hittades",
@@ -368,6 +680,13 @@
   "chatActions": "Chattåtgärder",
   "chatScrollToEnd": "Till slutet av konversationen",
   "chatReplyingTo": "Svar till {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Present",
   "chatCollection": "Samling",
   "chatGiftCollection": "Present · samling",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Klistra in den i en chatt eller ett meddelande till en vän",
   "lobbyCopyLinkHint": "Kopiera länk till urklipp",
   "lobbyCreatorInvites": "{name} bjuder in dig att spela",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} vann",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Tiden är ute. {name} vann",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Admin",
   "tournamentsTitle": "Turneringar",
   "profileAgeInvalid": "Ange en ålder mellan 1 och 111",
@@ -399,13 +746,48 @@
   "profileApply": "Använd",
   "profilePreparing": "Förbereder…",
   "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 min",
   "timeTenMin": "10 min",
   "rulesIntro": "Luffarschack på {grid}-bräde. Turvis; X börjar.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Vinst: få {n} i rad horisontellt, vertikalt eller diagonalt.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Ingen tidsgräns per drag.",
   "rulesTurnTime": "Tid per drag: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Insats: {stake}. Spelet gäller så många mynt.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Sidbyte: O kan byta med X efter X:s första drag.",
   "rulesNoCenter": "Inget mittfält: X får inte spela i mitten på första draget.",
   "collectionSetLegends": "Legender",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Natur",
   "collectionSetAdventures": "Äventyr",
   "collectionCardMeta": "Samling · skyltfönster · present · sälj · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "dag",
   "coinsDayFew": "dagar",
   "coinsDayMany": "dagar",
   "giftFriendTitle": "Ge till en vän",
   "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emojis · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Expandera panel",
   "chatsCollapsePanel": "Fäll ihop panel",
-  "chatReplySourceMissing": "Ursprungligt meddelande hittades inte"
+  "chatReplySourceMissing": "Ursprungligt meddelande hittades inte",
+  "shopStakeTitleSilver": "Insats {n} silver",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Insats {n} guld",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Låser upp insats på {n} silver",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Låser upp insats på {n} guld",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "dig själv",
+  "chatReplyPeer": "motparten"
 }

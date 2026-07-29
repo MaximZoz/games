@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} эмодзи · {price}",
   "chatsExpandPanel": "Панельді жазу",
   "chatsCollapsePanel": "Панельді жию",
-  "chatReplySourceMissing": "Бастапқы хабар табылмады"
+  "chatReplySourceMissing": "Бастапқы хабар табылмады",
+  "shopStakeTitleSilver": "{n} күміс ставкасы",
+  "shopStakeTitleGold": "{n} алтын ставкасы",
+  "shopStakeDescSilver": "Ойындарда {n} күміс қою құқығы",
+  "shopStakeDescGold": "Ойындарда {n} алтын қою құқығы",
+  "chatReplySelf": "өзіңізге",
+  "chatReplyPeer": "әңгімелесушіге"
 }

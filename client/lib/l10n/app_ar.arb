@@ -75,14 +75,56 @@
   "timeJustNow": "الآن",
   "timeYesterday": "أمس",
   "timeMinutesAgo": "منذ {count} د",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "منذ {count} س",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "منذ {count} ي",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "منذ أسبوع",
   "timeWeeksAgo": "منذ {count} أسابيع",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "منذ شهر",
   "timeMonthsAgo": "منذ {count} أشهر",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "منذ سنة",
   "timeYearsAgo": "منذ {count} سنوات",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "أحد",
   "weekdayMon": "إثن",
   "weekdayTue": "ثلا",
@@ -255,10 +297,45 @@
   "coinDiamond": "ألماس",
   "balanceZeroBronze": "0 برونز",
   "balanceBronzes": "{count} برونز",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} فضة",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} ذهب",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} ألماس",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} يوميًا",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "بر",
   "balanceAbbrSilver": "ف.",
   "balanceAbbrGold": "ذ.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "سلسلة تسجيل الدخول اليومية",
   "coinsFriendReward": "مكافأة الصديق",
   "coinsFriendRewardHint": "+{amount} للتسجيل عبر رابطك",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "تعذر تحميل المكافآت",
   "coinsClaimReward": "استلام المكافأة",
   "coinsAlreadyClaimed": "تم الاستلام مسبقًا",
   "coinsStreakToday": "{done}/{target} · اليوم",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · يوم واحد متبقٍ",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · متبقٍ {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "ادعُ صديقًا",
   "coinsInviteHint": "+{amount} لكل من يسجّل عبر رابطك",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "نسخ الرابط",
   "coinsHowItWorks": "كيف يعمل",
   "coinsHowStep1": "انسخ الرابط وأرسله إلى صديق",
   "coinsHowStep2": "يسجّل الصديق عبر هذا الرابط",
   "coinsHowStep3": "تحصل على {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "الإنجازات",
   "achievementsProgress": "التقدم: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "تم الحصول على الإطار",
   "achievementsClaimed": "تم الحصول عليه",
   "achievementsOpenFrame": "فتح الإطار",
   "friendsRemoveConfirm": "هل أنت متأكد أنك تريد إزالة {name} من الأصدقاء؟",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "إزالة",
   "friendsRemove": "إزالة من الأصدقاء",
   "friendsAcceptRequest": "قبول الطلب",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "إظهار البحث",
   "friendsLoadFailed": "تعذر تحميل الأصدقاء",
   "friendsSince": "أصدقاء منذ: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "طلب وارد: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "طلب صادر: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "معلومات المستخدم",
   "profileAgeYears": "{age} سنة",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "شراء",
   "shopBuyTitle": "شراء؟",
   "shopBuyStakeTitle": "شراء الرهان؟",
   "shopBuyEmojiTitle": "شراء الرمز التعبيري؟",
   "shopBuyCollectionTitle": "شراء المجموعة؟",
   "shopPrice": "السعر: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "تم الشراء",
   "shopEmpty": "فارغ حتى الآن",
   "shopPurchased": "تم شراء {title}",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "تحصل على: 10 استخدامات",
   "shopEmojiBought": "{title}: +10 استخدامات",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 استخدامات",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "شراء · 10 قطع",
   "shopDailyIncome": "الدخل: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "شراء لمرة واحدة",
   "shopSellRefund": "البيع يعيد جزءًا من التكلفة",
   "shopCollectionAdded": "أُضيف {title} إلى الملف الشخصي",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "مكافأة المجموعة +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "مكتمل",
   "shopSetProgress": "مجموع · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "بيع؟",
   "inventorySellDesc": "ستحصل على {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "تم البيع: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "أضف أصدقاء أولًا",
   "inventoryGiftTitle": "إهداء المجموعة؟",
   "inventoryGiftDesc": "إهداء «{title}» إلى {name}؟",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "تم الإهداء: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "تعذر تحميل العناصر",
   "inventoryNoCollections": "لا توجد مجموعات — اشترِ من المتجر",
   "inventoryNoEmojis": "لا توجد رموز تعبيرية — اشترِ من المتجر",
   "inventoryNoFrames": "لا توجد إطارات — اربح 10 مباريات دوري (إنجازات)",
   "inventoryNoStakes": "لا رهانات مشتراة",
   "inventoryEmojiLeft": "متبقٍ {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "الدخل: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "دخل الغد: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "يمكنك المراهنة بـ {amount} ذهب",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "يمكنك المراهنة بـ {amount} فضة",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "تم الاستلام +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "تعذر تحميل المحادثات",
   "chatsLoadListFailed": "تعذر تحميل القائمة",
   "chatsBlockedEmpty": "القائمة فارغة",
   "chatsBlockedAt": "محظور: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "تعذر إنشاء المحادثة",
   "chatsNeedFriendsFirst": "أضف أصدقاء أولًا، ثم يمكنك فتح محادثة.",
   "chatsFriendsNotFound": "لم يُعثر على أصدقاء",
@@ -368,6 +680,13 @@
   "chatActions": "إجراءات المحادثة",
   "chatScrollToEnd": "إلى نهاية المحادثة",
   "chatReplyingTo": "رد على {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "هدية",
   "chatCollection": "مجموعة",
   "chatGiftCollection": "هدية · مجموعة",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "الصقه في محادثة أو رسالة لصديق",
   "lobbyCopyLinkHint": "نسخ الرابط إلى الحافظة",
   "lobbyCreatorInvites": "{name} يدعوك للعب",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "فاز {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "انتهى الوقت. فاز {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} ث",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "الإدارة",
   "tournamentsTitle": "البطولات",
   "profileAgeInvalid": "أدخل عمرًا من 1 إلى 111",
@@ -399,13 +746,48 @@
   "profileApply": "تطبيق",
   "profilePreparing": "جاري التحضير…",
   "timeSecondsShort": "{seconds} ث",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 د",
   "timeTenMin": "10 د",
   "rulesIntro": "إكس-أو على لوحة {grid}. بالتناوب، ويبدأ X.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "الفوز: صفّ {n} أفقياً أو عمودياً أو قطرياً.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "لا يوجد حد زمني لكل نقلة.",
   "rulesTurnTime": "وقت النقلة: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "الرهان: {stake}. اللعبة بهذا العدد من العملات.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "تبديل الجوانب: يمكن لـ O التبادل مع X بعد أول نقلة لـ X.",
   "rulesNoCenter": "منع الوسط: لا يمكن لـ X اللعب في الوسط في النقلة الأولى.",
   "collectionSetLegends": "أساطير",
@@ -415,15 +797,90 @@
   "collectionSetNature": "الطبيعة",
   "collectionSetAdventures": "مغامرات",
   "collectionCardMeta": "مجموعة · واجهة · هدية · بيع · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "يوم",
   "coinsDayFew": "أيام",
   "coinsDayMany": "أيام",
   "giftFriendTitle": "أهدِ صديقاً",
   "photoCount": "صورة ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "صورة ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "صورة: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} رموز · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "توسيع اللوحة",
   "chatsCollapsePanel": "طي اللوحة",
-  "chatReplySourceMissing": "لم يتم العثور على الرسالة الأصلية"
+  "chatReplySourceMissing": "لم يتم العثور على الرسالة الأصلية",
+  "shopStakeTitleSilver": "رهان {n} فضة",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "رهان {n} ذهب",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "يفتح الرهان بـ {n} فضة",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "يفتح الرهان بـ {n} ذهب",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "لنفسك",
+  "chatReplyPeer": "للمحاور"
 }

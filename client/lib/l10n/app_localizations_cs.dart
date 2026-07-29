@@ -1397,4 +1397,30 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Původní zpráva nenalezena';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Sázka $n stříbra';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Sázka $n zlata';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Odemkne sázku $n stříbra';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Odemkne sázku $n zlata';
+  }
+
+  @override
+  String get chatReplySelf => 'sobě';
+
+  @override
+  String get chatReplyPeer => 'protějšku';
 }

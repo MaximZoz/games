@@ -75,14 +75,56 @@
   "timeJustNow": "právě teď",
   "timeYesterday": "včera",
   "timeMinutesAgo": "před {count} min",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "před {count} h",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "před {count} d",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "před týdnem",
   "timeWeeksAgo": "před {count} týd.",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "před měsícem",
   "timeMonthsAgo": "před {count} měs.",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "před rokem",
   "timeYearsAgo": "před {count} r.",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "ne",
   "weekdayMon": "po",
   "weekdayTue": "út",
@@ -255,10 +297,45 @@
   "coinDiamond": "Diamant",
   "balanceZeroBronze": "0 bronzových",
   "balanceBronzes": "{count} bronzových",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} stříbrných",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} zlatých",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} diamantů",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} denně",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "br",
   "balanceAbbrSilver": "st.",
   "balanceAbbrGold": "zl.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Denní série přihlášení",
   "coinsFriendReward": "Odměna za přítele",
   "coinsFriendRewardHint": "+{amount} za registraci přes váš odkaz",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Nepodařilo se načíst odměny",
   "coinsClaimReward": "Vyzvednout odměnu",
   "coinsAlreadyClaimed": "Již vyzvednuto",
   "coinsStreakToday": "{done}/{target} · dnes",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · zbývá 1 den",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · zbývá {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Pozvěte přítele",
   "coinsInviteHint": "+{amount} za každého, kdo se zaregistruje přes váš odkaz",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Kopírovat odkaz",
   "coinsHowItWorks": "Jak to funguje",
   "coinsHowStep1": "Zkopírujte odkaz a pošlete ho příteli",
   "coinsHowStep2": "Přítel se zaregistruje přes tento odkaz",
   "coinsHowStep3": "Obdržíte {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Úspěchy",
   "achievementsProgress": "Postup: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Rámeček získán",
   "achievementsClaimed": "Získáno",
   "achievementsOpenFrame": "Otevřít rámeček",
   "friendsRemoveConfirm": "Opravdu chcete odstranit {name} z přátel?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Odebrat",
   "friendsRemove": "Odebrat z přátel",
   "friendsAcceptRequest": "Přijmout žádost",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Zobrazit hledání",
   "friendsLoadFailed": "Nepodařilo se načíst přátele",
   "friendsSince": "Přátelé od: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Příchozí žádost: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Odchozí žádost: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Informace o uživateli",
   "profileAgeYears": "{age} let",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Koupit",
   "shopBuyTitle": "Koupit?",
   "shopBuyStakeTitle": "Koupit sázku?",
   "shopBuyEmojiTitle": "Koupit emoji?",
   "shopBuyCollectionTitle": "Koupit kolekci?",
   "shopPrice": "Cena: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Zakoupeno",
   "shopEmpty": "Zatím prázdné",
   "shopPurchased": "{title} zakoupeno",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Získáte: 10 použití",
   "shopEmojiBought": "{title}: +10 použití",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 použití",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Koupit · 10 ks",
   "shopDailyIncome": "Příjem: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Jednorázový nákup",
   "shopSellRefund": "Prodej vrátí část ceny",
   "shopCollectionAdded": "{title} přidáno do profilu",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "bonus sady +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Kompletní",
   "shopSetProgress": "Sebráno · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Prodat?",
   "inventorySellDesc": "Získáte {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Prodáno: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Nejprve přidejte přátele",
   "inventoryGiftTitle": "Darovat kolekci?",
   "inventoryGiftDesc": "Darovat „{title}“ uživateli {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Darováno: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Nepodařilo se načíst předměty",
   "inventoryNoCollections": "Žádné kolekce — kupte je v obchodě",
   "inventoryNoEmojis": "Žádná emoji — kupte je v obchodě",
   "inventoryNoFrames": "Žádné rámečky — vyhrajte 10 ligových her (úspěchy)",
   "inventoryNoStakes": "Žádné zakoupené sázky",
   "inventoryEmojiLeft": "Zbývá {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Příjem: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Příjem zítra: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Můžete vsadit {amount} zlata",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Můžete vsadit {amount} stříbra",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Získáno +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Nepodařilo se načíst chaty",
   "chatsLoadListFailed": "Nepodařilo se načíst seznam",
   "chatsBlockedEmpty": "Seznam je prázdný",
   "chatsBlockedAt": "Zablokováno: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Nepodařilo se vytvořit chat",
   "chatsNeedFriendsFirst": "Nejprve přidejte přátele, pak můžete otevřít chat.",
   "chatsFriendsNotFound": "Přátelé nenalezeni",
@@ -368,6 +680,13 @@
   "chatActions": "Akce chatu",
   "chatScrollToEnd": "Na konec konverzace",
   "chatReplyingTo": "Odpověď pro {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Dárek",
   "chatCollection": "Kolekce",
   "chatGiftCollection": "Dárek · kolekce",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Vložte ji do chatu nebo zprávy příteli",
   "lobbyCopyLinkHint": "Kopírovat odkaz do schránky",
   "lobbyCreatorInvites": "{name} vás zve ke hře",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "Vyhrál {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Čas vypršel. Vyhrál {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Administrace",
   "tournamentsTitle": "Turnaje",
   "profileAgeInvalid": "Zadejte věk od 1 do 111",
@@ -399,13 +746,48 @@
   "profileApply": "Použít",
   "profilePreparing": "Příprava…",
   "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 min",
   "timeTenMin": "10 min",
   "rulesIntro": "Piškvorky na poli {grid}. Střídavě; začíná X.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Výhra: sestavte {n} v řadě vodorovně, svisle nebo úhlopříčně.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Bez časového limitu na tah.",
   "rulesTurnTime": "Čas na tah: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Sázka: {stake}. O tolik mincí se hraje.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Výměna stran: O se může prohodit s X po prvním tahu X.",
   "rulesNoCenter": "Zákaz středu: X nesmí v prvním tahu hrát do středu.",
   "collectionSetLegends": "Legendy",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Příroda",
   "collectionSetAdventures": "Dobrodružství",
   "collectionCardMeta": "Kolekce · výloha · dárek · prodej · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "den",
   "coinsDayFew": "dny",
   "coinsDayMany": "dní",
   "giftFriendTitle": "Darovat příteli",
   "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emoji · po {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Rozbalit panel",
   "chatsCollapsePanel": "Sbalit panel",
-  "chatReplySourceMissing": "Původní zpráva nenalezena"
+  "chatReplySourceMissing": "Původní zpráva nenalezena",
+  "shopStakeTitleSilver": "Sázka {n} stříbra",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Sázka {n} zlata",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Odemkne sázku {n} stříbra",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Odemkne sázku {n} zlata",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "sobě",
+  "chatReplyPeer": "protějšku"
 }

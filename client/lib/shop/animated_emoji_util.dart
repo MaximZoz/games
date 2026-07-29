@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:lottie/lottie.dart';
 import 'package:multigames_client/shop/emoji_asset_catalog.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
@@ -90,7 +92,12 @@ String encodeGiftCollectionMessage({
 String formatChatMessagePreview(String body) {
   final gift = parseGiftCollectionMessage(body);
   if (gift != null) {
-    final title = gift.title.isNotEmpty ? gift.title : 'коллекция';
+    final title = catalogTitle(
+      gift.code,
+      fallback: gift.title.isNotEmpty
+          ? gift.title
+          : LocaleService.l10n.chatCollection,
+    );
     final emoji = gift.emoji.isNotEmpty
         ? gift.emoji
         : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');

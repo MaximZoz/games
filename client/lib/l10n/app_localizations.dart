@@ -2704,6 +2704,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Исходное сообщение не найдено'**
   String get chatReplySourceMissing;
+
+  /// No description provided for @shopStakeTitleSilver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ставка {n} серебра'**
+  String shopStakeTitleSilver(int n);
+
+  /// No description provided for @shopStakeTitleGold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ставка {n} золота'**
+  String shopStakeTitleGold(int n);
+
+  /// No description provided for @shopStakeDescSilver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Право ставить {n} серебра в играх'**
+  String shopStakeDescSilver(int n);
+
+  /// No description provided for @shopStakeDescGold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Право ставить {n} золота в играх'**
+  String shopStakeDescGold(int n);
+
+  /// No description provided for @chatReplySelf.
+  ///
+  /// In ru, this message translates to:
+  /// **'себе'**
+  String get chatReplySelf;
+
+  /// No description provided for @chatReplyPeer.
+  ///
+  /// In ru, this message translates to:
+  /// **'собеседнику'**
+  String get chatReplyPeer;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

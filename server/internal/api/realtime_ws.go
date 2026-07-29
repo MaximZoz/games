@@ -12,6 +12,7 @@ import (
 
 	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -216,9 +217,10 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			})
 			if available && h.Push != nil {
 				if ok, markErr := store.TryMarkDailyRewardPush(ctx, h.Pool, userID); markErr == nil && ok {
+					lang := i18n.LangRU
 					h.Push.NotifyUsers([]uuid.UUID{userID}, store.WebPushCategoryRewards, PushPayload{
-						Title: "Награда за вход",
-						Body:  "Монеты за вход доступны — заберите на главной",
+						Title: i18n.Content(lang, "push.daily_reward_title"),
+						Body:  i18n.Content(lang, "push.daily_reward_body"),
 						URL:   "/coins/login",
 						Tag:   "daily_reward",
 					})

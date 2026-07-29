@@ -49,9 +49,11 @@ def main() -> None:
                         break
                 en_titles[code] = base.replace("_", " ").title()
 
-    # locale -> code -> title
+    # locale -> code -> title (stakes use ARB templates in Dart — skip here)
     by_locale: dict[str, dict[str, str]] = {lang: {} for lang in LANGS}
     for code, meta in catalog.items():
+        if code.startswith("stake_"):
+            continue
         ru = meta["title_ru"]
         en = en_titles[code]
         for lang in LANGS:
@@ -60,9 +62,6 @@ def main() -> None:
             elif code.startswith("emoji_flag_"):
                 iso = code.removeprefix("emoji_flag_")
                 by_locale[lang][code] = flags.get(lang, {}).get(iso) or flags["en"].get(iso, en)
-            elif code.startswith("stake_"):
-                # keep empty — Dart templates
-                continue
             else:
                 by_locale[lang][code] = overlays.get(lang, {}).get(code) or overlays.get(lang, {}).get(en) or en
 

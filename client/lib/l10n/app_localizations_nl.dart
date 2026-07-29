@@ -1397,4 +1397,30 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Oorspronkelijk bericht niet gevonden';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Inzet $n zilver';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Inzet $n goud';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Ontgrendel inzet van $n zilver';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Ontgrendel inzet van $n goud';
+  }
+
+  @override
+  String get chatReplySelf => 'jezelf';
+
+  @override
+  String get chatReplyPeer => 'de gesprekspartner';
 }

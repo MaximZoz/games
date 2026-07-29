@@ -75,14 +75,56 @@
   "timeJustNow": "अभी",
   "timeYesterday": "कल",
   "timeMinutesAgo": "{count} मि पहले",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} घं पहले",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} दि पहले",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "एक सप्ताह पहले",
   "timeWeeksAgo": "{count} सप्ताह पहले",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "एक महीना पहले",
   "timeMonthsAgo": "{count} माह पहले",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "एक वर्ष पहले",
   "timeYearsAgo": "{count} वर्ष पहले",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "रवि",
   "weekdayMon": "सोम",
   "weekdayTue": "मंगल",
@@ -255,10 +297,45 @@
   "coinDiamond": "डायमंड",
   "balanceZeroBronze": "0 ब्रॉन्ज़",
   "balanceBronzes": "{count} ब्रॉन्ज़",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} सिल्वर",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} गोल्ड",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} डायमंड",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "प्रति दिन {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "ब्रॉ",
   "balanceAbbrSilver": "सि.",
   "balanceAbbrGold": "गो.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "दैनिक लॉगिन स्ट्रीक",
   "coinsFriendReward": "मित्र इनाम",
   "coinsFriendRewardHint": "आपके लिंक से रजिस्टर करने पर +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "इनाम लोड नहीं हो सके",
   "coinsClaimReward": "इनाम लें",
   "coinsAlreadyClaimed": "पहले ही ले लिया",
   "coinsStreakToday": "{done}/{target} · आज",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 1 दिन बाकी",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · {remaining} बाकी",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "मित्र को आमंत्रित करें",
   "coinsInviteHint": "आपके लिंक से रजिस्टर करने वाले प्रत्येक के लिए +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "लिंक कॉपी करें",
   "coinsHowItWorks": "यह कैसे काम करता है",
   "coinsHowStep1": "लिंक कॉपी करें और मित्र को भेजें",
   "coinsHowStep2": "मित्र उस लिंक से रजिस्टर करता है",
   "coinsHowStep3": "आपको {amount} मिलता है",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "उपलब्धियाँ",
   "achievementsProgress": "प्रगति: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "फ़्रेम प्राप्त",
   "achievementsClaimed": "प्राप्त",
   "achievementsOpenFrame": "फ़्रेम खोलें",
   "friendsRemoveConfirm": "क्या आप वाकई {name} को मित्रों से हटाना चाहते हैं?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "हटाएँ",
   "friendsRemove": "मित्रों से हटाएँ",
   "friendsAcceptRequest": "अनुरोध स्वीकार करें",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "खोज दिखाएँ",
   "friendsLoadFailed": "मित्र लोड नहीं हो सके",
   "friendsSince": "मित्रता शुरू: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "आने वाला अनुरोध: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "भेजा गया अनुरोध: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "उपयोगकर्ता जानकारी",
   "profileAgeYears": "{age} वर्ष",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "खरीदें",
   "shopBuyTitle": "खरीदें?",
   "shopBuyStakeTitle": "दाँव खरीदें?",
   "shopBuyEmojiTitle": "इमोजी खरीदें?",
   "shopBuyCollectionTitle": "संग्रह खरीदें?",
   "shopPrice": "कीमत: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "खरीदा गया",
   "shopEmpty": "अभी खाली",
   "shopPurchased": "{title} खरीदा गया",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "आपको मिलेंगे: 10 उपयोग",
   "shopEmojiBought": "{title}: +10 उपयोग",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 उपयोग",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "खरीदें · 10 पीस",
   "shopDailyIncome": "आय: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "एक बार की खरीद",
   "shopSellRefund": "बेचने पर लागत का कुछ हिस्सा वापस मिलता है",
   "shopCollectionAdded": "{title} प्रोफ़ाइल में जोड़ा गया",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "सेट बोनस +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "पूरा",
   "shopSetProgress": "एकत्र · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "बेचें?",
   "inventorySellDesc": "आपको {amount} मिलेगा",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "बेचा गया: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "पहले मित्र जोड़ें",
   "inventoryGiftTitle": "संग्रह उपहार दें?",
   "inventoryGiftDesc": "«{title}» को {name} को उपहार दें?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "उपहार दिया: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "वस्तुएँ लोड नहीं हो सकीं",
   "inventoryNoCollections": "कोई संग्रह नहीं — दुकान से खरीदें",
   "inventoryNoEmojis": "कोई इमोजी नहीं — दुकान से खरीदें",
   "inventoryNoFrames": "कोई फ़्रेम नहीं — लीग में 10 खेल जीतें (उपलब्धियाँ)",
   "inventoryNoStakes": "कोई खरीदे गए दाँव नहीं",
   "inventoryEmojiLeft": "{count} बाकी",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "आय: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "कल की आय: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "आप {amount} गोल्ड लगा सकते हैं",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "आप {amount} सिल्वर लगा सकते हैं",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "+{amount} प्राप्त",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "चैट लोड नहीं हो सकीं",
   "chatsLoadListFailed": "सूची लोड नहीं हो सकी",
   "chatsBlockedEmpty": "सूची खाली है",
   "chatsBlockedAt": "ब्लॉक किया: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "चैट नहीं बनाई जा सकी",
   "chatsNeedFriendsFirst": "पहले मित्र जोड़ें, फिर चैट खोल सकते हैं।",
   "chatsFriendsNotFound": "मित्र नहीं मिले",
@@ -368,6 +680,13 @@
   "chatActions": "चैट क्रियाएँ",
   "chatScrollToEnd": "बातचीत के अंत तक",
   "chatReplyingTo": "{name} को उत्तर",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "उपहार",
   "chatCollection": "संग्रह",
   "chatGiftCollection": "उपहार · संग्रह",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "इसे चैट या मित्र के संदेश में चिपकाएँ",
   "lobbyCopyLinkHint": "लिंक क्लिपबोर्ड पर कॉपी करें",
   "lobbyCreatorInvites": "{name} आपको खेलने के लिए आमंत्रित करता है",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} जीत गया",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "समय समाप्त। {name} जीत गया",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} से",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "एडमिन",
   "tournamentsTitle": "टूर्नामेंट",
   "profileAgeInvalid": "1 से 111 तक आयु दर्ज करें",
@@ -399,13 +746,48 @@
   "profileApply": "लागू करें",
   "profilePreparing": "तैयारी…",
   "timeSecondsShort": "{seconds} से",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 मि",
   "timeTenMin": "10 मि",
   "rulesIntro": "{grid} बोर्ड पर टिक-टैक-टो। बारी-बारी से; X पहले।",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "जीत: क्षैतिज, लंबवत या तिरछे {n} एक पंक्ति में लगाएँ।",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "चाल पर समय सीमा नहीं।",
   "rulesTurnTime": "चाल का समय: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "दाँव: {stake}. इतने सिक्कों पर खेल है।",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "पक्ष बदल: X की पहली चाल के बाद O, X से स्थान बदल सकता है।",
   "rulesNoCenter": "केंद्र वर्जित: X पहली चाल में केंद्र में नहीं खेल सकता।",
   "collectionSetLegends": "किंवदंतियाँ",
@@ -415,15 +797,90 @@
   "collectionSetNature": "प्रकृति",
   "collectionSetAdventures": "साहसिक",
   "collectionCardMeta": "संग्रह · प्रदर्शन · उपहार · बिक्री · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "दिन",
   "coinsDayFew": "दिन",
   "coinsDayMany": "दिन",
   "giftFriendTitle": "मित्र को उपहार दें",
   "photoCount": "फ़ोटो ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "फ़ोटो ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "फ़ोटो: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} इमोजी · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "पैनल फैलाएँ",
   "chatsCollapsePanel": "पैनल समेटें",
-  "chatReplySourceMissing": "मूल संदेश नहीं मिला"
+  "chatReplySourceMissing": "मूल संदेश नहीं मिला",
+  "shopStakeTitleSilver": "दांव {n} सिल्वर",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "दांव {n} गोल्ड",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "{n} सिल्वर दांव अनलॉक करें",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "{n} गोल्ड दांव अनलॉक करें",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "स्वयं",
+  "chatReplyPeer": "दूसरे व्यक्ति"
 }

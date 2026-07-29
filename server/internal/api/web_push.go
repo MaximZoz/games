@@ -287,14 +287,14 @@ func writeJSONError(w http.ResponseWriter, r *http.Request, msg string, code int
 
 func pushUserLabel(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) string {
 	if pool == nil {
-		return "Игрок"
+		return i18n.Content(i18n.LangRU, "common.player")
 	}
 	u, err := store.GetUserByID(ctx, pool, userID)
 	if err != nil || u == nil {
-		return "Игрок"
+		return i18n.Content(i18n.LangRU, "common.player")
 	}
 	if u.DisplayName != nil && strings.TrimSpace(*u.DisplayName) != "" {
 		return strings.TrimSpace(*u.DisplayName)
 	}
-	return "Игрок"
+	return i18n.Content(i18n.LangRU, "common.player")
 }

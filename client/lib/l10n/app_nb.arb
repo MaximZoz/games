@@ -75,14 +75,56 @@
   "timeJustNow": "akkurat nå",
   "timeYesterday": "i går",
   "timeMinutesAgo": "{count} min siden",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} t siden",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} d siden",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "en uke siden",
   "timeWeeksAgo": "{count} u siden",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "en måned siden",
   "timeMonthsAgo": "{count} md. siden",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "et år siden",
   "timeYearsAgo": "{count} år siden",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Søn",
   "weekdayMon": "Man",
   "weekdayTue": "Tir",
@@ -255,10 +297,45 @@
   "coinDiamond": "Diamant",
   "balanceZeroBronze": "0 bronse",
   "balanceBronzes": "{count} bronse",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} sølv",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} gull",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} diamanter",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} per dag",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "br",
   "balanceAbbrSilver": "s.",
   "balanceAbbrGold": "g.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Daglig innloggingsrekke",
   "coinsFriendReward": "Vennebelønning",
   "coinsFriendRewardHint": "+{amount} for registrering via lenken din",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Kunne ikke laste belønninger",
   "coinsClaimReward": "Hent belønning",
   "coinsAlreadyClaimed": "Allerede hentet",
   "coinsStreakToday": "{done}/{target} · i dag",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 1 dag igjen",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · {remaining} igjen",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Inviter en venn",
   "coinsInviteHint": "+{amount} for hver som registrerer seg via lenken din",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Kopier lenke",
   "coinsHowItWorks": "Slik fungerer det",
   "coinsHowStep1": "Kopier lenken og send den til en venn",
   "coinsHowStep2": "Vennen registrerer seg via den lenken",
   "coinsHowStep3": "Du mottar {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Prestasjoner",
   "achievementsProgress": "Fremdrift: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Ramme hentet",
   "achievementsClaimed": "Hentet",
   "achievementsOpenFrame": "Åpne ramme",
   "friendsRemoveConfirm": "Er du sikker på at du vil fjerne {name} fra venner?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Fjern",
   "friendsRemove": "Fjern fra venner",
   "friendsAcceptRequest": "Godta forespørsel",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Vis søk",
   "friendsLoadFailed": "Kunne ikke laste venner",
   "friendsSince": "Venner siden: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Innkommende forespørsel: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Utgående forespørsel: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Brukerinfo",
   "profileAgeYears": "{age} år",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Kjøp",
   "shopBuyTitle": "Kjøpe?",
   "shopBuyStakeTitle": "Kjøpe innsats?",
   "shopBuyEmojiTitle": "Kjøpe emoji?",
   "shopBuyCollectionTitle": "Kjøpe samling?",
   "shopPrice": "Pris: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Kjøpt",
   "shopEmpty": "Tomt foreløpig",
   "shopPurchased": "{title} kjøpt",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Du får: 10 bruk",
   "shopEmojiBought": "{title}: +10 bruk",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 bruk",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Kjøp · 10 stk",
   "shopDailyIncome": "Inntekt: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Engangskjøp",
   "shopSellRefund": "Salg returnerer deler av kostnaden",
   "shopCollectionAdded": "{title} lagt til i profilen",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "settbonus +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Fullført",
   "shopSetProgress": "Samlet · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Selge?",
   "inventorySellDesc": "Du får {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Solgt: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Legg til venner først",
   "inventoryGiftTitle": "Gi samling i gave?",
   "inventoryGiftDesc": "Gi «{title}» til {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Gitt: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Kunne ikke laste gjenstander",
   "inventoryNoCollections": "Ingen samlinger — kjøp i butikken",
   "inventoryNoEmojis": "Ingen emojier — kjøp i butikken",
   "inventoryNoFrames": "Ingen rammer — vinn 10 ligakamper (prestasjoner)",
   "inventoryNoStakes": "Ingen kjøpte innsatser",
   "inventoryEmojiLeft": "{count} igjen",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Inntekt: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Inntekt i morgen: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Du kan satse {amount} gull",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Du kan satse {amount} sølv",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Hentet +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Kunne ikke laste chatter",
   "chatsLoadListFailed": "Kunne ikke laste listen",
   "chatsBlockedEmpty": "Listen er tom",
   "chatsBlockedAt": "Blokkert: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Kunne ikke opprette chat",
   "chatsNeedFriendsFirst": "Legg til venner først, deretter kan du åpne en chat.",
   "chatsFriendsNotFound": "Fant ingen venner",
@@ -368,6 +680,13 @@
   "chatActions": "Chathandlinger",
   "chatScrollToEnd": "Til slutten av samtalen",
   "chatReplyingTo": "Svar til {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Gave",
   "chatCollection": "Samling",
   "chatGiftCollection": "Gave · samling",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Lim den inn i en chat eller melding til en venn",
   "lobbyCopyLinkHint": "Kopier lenke til utklippstavlen",
   "lobbyCreatorInvites": "{name} inviterer deg til å spille",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} vant",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Tiden er ute. {name} vant",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Admin",
   "tournamentsTitle": "Turneringer",
   "profileAgeInvalid": "Skriv inn alder fra 1 til 111",
@@ -399,13 +746,48 @@
   "profileApply": "Bruk",
   "profilePreparing": "Forbereder…",
   "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 min",
   "timeTenMin": "10 min",
   "rulesIntro": "Tripp-trapp-tresko på {grid}-brett. På tur; X starter.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Seier: få {n} på rad horisontalt, vertikalt eller diagonalt.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Ingen tidsgrense per trekk.",
   "rulesTurnTime": "Tid per trekk: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Innsats: {stake}. Spillet gjelder så mange mynter.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Sidebytte: O kan bytte med X etter X sitt første trekk.",
   "rulesNoCenter": "Ikke midten: X kan ikke spille i midten på første trekk.",
   "collectionSetLegends": "Legender",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Natur",
   "collectionSetAdventures": "Eventyr",
   "collectionCardMeta": "Samling · utstilling · gave · salg · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "dag",
   "coinsDayFew": "dager",
   "coinsDayMany": "dager",
   "giftFriendTitle": "Gi til en venn",
   "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emojier · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Utvid panel",
   "chatsCollapsePanel": "Skjul panel",
-  "chatReplySourceMissing": "Opprinnelig melding ikke funnet"
+  "chatReplySourceMissing": "Opprinnelig melding ikke funnet",
+  "shopStakeTitleSilver": "Innsats {n} sølv",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Innsats {n} gull",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Låser opp innsats på {n} sølv",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Låser opp innsats på {n} gull",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "deg selv",
+  "chatReplyPeer": "motparten"
 }

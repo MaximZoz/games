@@ -1397,4 +1397,30 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Orijinal mesaj bulunamadı';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return '$n gümüş bahis';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return '$n altın bahis';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return '$n gümüş bahis hakkını açar';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return '$n altın bahis hakkını açar';
+  }
+
+  @override
+  String get chatReplySelf => 'kendine';
+
+  @override
+  String get chatReplyPeer => 'karşı tarafa';
 }

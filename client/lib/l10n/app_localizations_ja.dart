@@ -1397,4 +1397,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => '元のメッセージが見つかりません';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'ベット $n シルバー';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'ベット $n ゴールド';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return '$n シルバーのベットを解除';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return '$n ゴールドのベットを解除';
+  }
+
+  @override
+  String get chatReplySelf => '自分';
+
+  @override
+  String get chatReplyPeer => '相手';
 }

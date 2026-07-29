@@ -1397,4 +1397,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Message d\'origine introuvable';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Mise $n argent';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Mise $n or';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Débloque la mise de $n argent';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Débloque la mise de $n or';
+  }
+
+  @override
+  String get chatReplySelf => 'vous-même';
+
+  @override
+  String get chatReplyPeer => 'l\'interlocuteur';
 }

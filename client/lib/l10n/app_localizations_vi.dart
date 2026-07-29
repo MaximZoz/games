@@ -1397,4 +1397,30 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Không tìm thấy tin nhắn gốc';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Cược $n bạc';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Cược $n vàng';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Mở khóa cược $n bạc';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Mở khóa cược $n vàng';
+  }
+
+  @override
+  String get chatReplySelf => 'chính bạn';
+
+  @override
+  String get chatReplyPeer => 'đối phương';
 }

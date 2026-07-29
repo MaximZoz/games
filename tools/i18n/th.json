@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} อีโมจิ · {price}",
   "chatsExpandPanel": "ขยายแผง",
   "chatsCollapsePanel": "ย่อแผง",
-  "chatReplySourceMissing": "ไม่พบข้อความต้นฉบับ"
+  "chatReplySourceMissing": "ไม่พบข้อความต้นฉบับ",
+  "shopStakeTitleSilver": "เดิมพัน {n} เงิน",
+  "shopStakeTitleGold": "เดิมพัน {n} ทอง",
+  "shopStakeDescSilver": "ปลดล็อกเดิมพัน {n} เงิน",
+  "shopStakeDescGold": "ปลดล็อกเดิมพัน {n} ทอง",
+  "chatReplySelf": "ตัวคุณ",
+  "chatReplyPeer": "อีกฝ่าย"
 }

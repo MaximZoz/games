@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emojia · {price}",
   "chatsExpandPanel": "Laajenna paneeli",
   "chatsCollapsePanel": "Pienennä paneeli",
-  "chatReplySourceMissing": "Alkuperäistä viestiä ei löydy"
+  "chatReplySourceMissing": "Alkuperäistä viestiä ei löydy",
+  "shopStakeTitleSilver": "Panos {n} hopeaa",
+  "shopStakeTitleGold": "Panos {n} kultaa",
+  "shopStakeDescSilver": "Avaa panoksen {n} hopeaa",
+  "shopStakeDescGold": "Avaa panoksen {n} kultaa",
+  "chatReplySelf": "itsellesi",
+  "chatReplyPeer": "keskustelukumppanille"
 }

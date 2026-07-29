@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} इमोजी · {price}",
   "chatsExpandPanel": "पैनल फैलाएँ",
   "chatsCollapsePanel": "पैनल समेटें",
-  "chatReplySourceMissing": "मूल संदेश नहीं मिला"
+  "chatReplySourceMissing": "मूल संदेश नहीं मिला",
+  "shopStakeTitleSilver": "दांव {n} सिल्वर",
+  "shopStakeTitleGold": "दांव {n} गोल्ड",
+  "shopStakeDescSilver": "{n} सिल्वर दांव अनलॉक करें",
+  "shopStakeDescGold": "{n} गोल्ड दांव अनलॉक करें",
+  "chatReplySelf": "स्वयं",
+  "chatReplyPeer": "दूसरे व्यक्ति"
 }

@@ -13,6 +13,7 @@ import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 
 /// Хаб коллекций — список групп (как «Эмоции» у смайликов).
 class ShopCollectionsScreen extends ConsumerStatefulWidget {
@@ -251,7 +252,7 @@ class _ShopCollectionGroupScreenState
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.shopBuyCollectionTitle),
         content: Text(
-          '${item.title}\n\n'
+          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
           '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
           '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
           '${l10n.shopBuyOnce}\n'
@@ -292,7 +293,7 @@ class _ShopCollectionGroupScreenState
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: context.l10n.shopCollectionAdded(item.title),
+        message: context.l10n.shopCollectionAdded(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -389,7 +390,7 @@ class _ShopCollectionGroupScreenState
                       onBuy: () => _buy(item),
                       onPreview: () => showCollectionFullscreen(
                         context,
-                        title: item.title,
+                        title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
                         animatedName: item.animatedName ?? 'sparkles',
                         fallback: item.emoji,
                         subtitle: collectionItemSubtitle(item.dailyBronze),
@@ -453,7 +454,7 @@ class _CollectionShopCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,

@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} رموز · {price}",
   "chatsExpandPanel": "توسيع اللوحة",
   "chatsCollapsePanel": "طي اللوحة",
-  "chatReplySourceMissing": "لم يتم العثور على الرسالة الأصلية"
+  "chatReplySourceMissing": "لم يتم العثور على الرسالة الأصلية",
+  "shopStakeTitleSilver": "رهان {n} فضة",
+  "shopStakeTitleGold": "رهان {n} ذهب",
+  "shopStakeDescSilver": "يفتح الرهان بـ {n} فضة",
+  "shopStakeDescGold": "يفتح الرهان بـ {n} ذهب",
+  "chatReplySelf": "لنفسك",
+  "chatReplyPeer": "للمحاور"
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -2123,9 +2124,10 @@ func (h *GamesHandler) notifyYourTurn(gameID, nextTurn, xUserID, oUserID string)
 	if err != nil {
 		return
 	}
+	lang := i18n.LangRU
 	h.Push.NotifyUsers([]uuid.UUID{uid}, store.WebPushCategoryGames, PushPayload{
-		Title: "Ваш ход",
-		Body:  "Соперник сделал ход — ваша очередь",
+		Title: i18n.Content(lang, "push.your_turn_title"),
+		Body:  i18n.Content(lang, "push.your_turn_body"),
 		URL:   "/games/tictactoe/game/" + gameID,
 		Tag:   "game_turn_" + gameID,
 		Kind:  "game_turn",
@@ -2145,9 +2147,10 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	if typ != "game_invite" {
 		return
 	}
+	lang := i18n.LangRU
 	name, _ := payload["creator_name"].(string)
 	if strings.TrimSpace(name) == "" {
-		name = "Игрок"
+		name = i18n.Content(lang, "common.player")
 	}
 	lobbyID, _ := payload["lobby_id"].(string)
 	url := "/games"
@@ -2155,8 +2158,8 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 		url = "/games/tictactoe/lobby/" + lobbyID
 	}
 	h.Push.NotifyUsers(userIDs, store.WebPushCategoryGames, PushPayload{
-		Title: "Приглашение в игру",
-		Body:  name + " приглашает сыграть",
+		Title: i18n.Content(lang, "push.game_invite_title"),
+		Body:  i18n.Contentf(lang, "push.game_invite_body", map[string]string{"name": name}),
 		URL:   url,
 		Tag:   "game_invite_" + lobbyID,
 		Kind:  "game_invite",

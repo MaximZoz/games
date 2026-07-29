@@ -1397,4 +1397,30 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Originalbesked ikke fundet';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Indsats $n sølv';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Indsats $n guld';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Låser op for indsats på $n sølv';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Låser op for indsats på $n guld';
+  }
+
+  @override
+  String get chatReplySelf => 'dig selv';
+
+  @override
+  String get chatReplyPeer => 'modparten';
 }

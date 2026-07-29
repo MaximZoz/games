@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emojis · {price} pièce",
   "chatsExpandPanel": "Développer le panneau",
   "chatsCollapsePanel": "Réduire le panneau",
-  "chatReplySourceMissing": "Message d'origine introuvable"
+  "chatReplySourceMissing": "Message d'origine introuvable",
+  "shopStakeTitleSilver": "Mise {n} argent",
+  "shopStakeTitleGold": "Mise {n} or",
+  "shopStakeDescSilver": "Débloque la mise de {n} argent",
+  "shopStakeDescGold": "Débloque la mise de {n} or",
+  "chatReplySelf": "vous-même",
+  "chatReplyPeer": "l'interlocuteur"
 }

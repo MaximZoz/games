@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emojis · {price}",
   "chatsExpandPanel": "Expandera panel",
   "chatsCollapsePanel": "Fäll ihop panel",
-  "chatReplySourceMissing": "Ursprungligt meddelande hittades inte"
+  "chatReplySourceMissing": "Ursprungligt meddelande hittades inte",
+  "shopStakeTitleSilver": "Insats {n} silver",
+  "shopStakeTitleGold": "Insats {n} guld",
+  "shopStakeDescSilver": "Låser upp insats på {n} silver",
+  "shopStakeDescGold": "Låser upp insats på {n} guld",
+  "chatReplySelf": "dig själv",
+  "chatReplyPeer": "motparten"
 }

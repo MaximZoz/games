@@ -75,14 +75,56 @@
   "timeJustNow": "vừa xong",
   "timeYesterday": "hôm qua",
   "timeMinutesAgo": "{count} phút trước",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} giờ trước",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} ngày trước",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "một tuần trước",
   "timeWeeksAgo": "{count} tuần trước",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "một tháng trước",
   "timeMonthsAgo": "{count} tháng trước",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "một năm trước",
   "timeYearsAgo": "{count} năm trước",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "CN",
   "weekdayMon": "T2",
   "weekdayTue": "T3",
@@ -255,10 +297,45 @@
   "coinDiamond": "Kim cương",
   "balanceZeroBronze": "0 đồng",
   "balanceBronzes": "{count} đồng",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} bạc",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} vàng",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} kim cương",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} mỗi ngày",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "đ",
   "balanceAbbrSilver": "b.",
   "balanceAbbrGold": "v.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Chuỗi đăng nhập hàng ngày",
   "coinsFriendReward": "Thưởng bạn bè",
   "coinsFriendRewardHint": "+{amount} khi đăng ký qua liên kết của bạn",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Không thể tải phần thưởng",
   "coinsClaimReward": "Nhận thưởng",
   "coinsAlreadyClaimed": "Đã nhận",
   "coinsStreakToday": "{done}/{target} · hôm nay",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · còn 1 ngày",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · còn {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Mời bạn",
   "coinsInviteHint": "+{amount} cho mỗi người đăng ký qua liên kết của bạn",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Sao chép liên kết",
   "coinsHowItWorks": "Cách hoạt động",
   "coinsHowStep1": "Sao chép liên kết và gửi cho bạn",
   "coinsHowStep2": "Bạn đăng ký qua liên kết đó",
   "coinsHowStep3": "Bạn nhận được {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Thành tựu",
   "achievementsProgress": "Tiến độ: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Đã nhận khung",
   "achievementsClaimed": "Đã nhận",
   "achievementsOpenFrame": "Mở khung",
   "friendsRemoveConfirm": "Bạn có chắc muốn xóa {name} khỏi bạn bè?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Xóa",
   "friendsRemove": "Xóa khỏi bạn bè",
   "friendsAcceptRequest": "Chấp nhận lời mời",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Hiện tìm kiếm",
   "friendsLoadFailed": "Không thể tải bạn bè",
   "friendsSince": "Bạn bè từ: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Lời mời đến: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Lời mời đi: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Thông tin người dùng",
   "profileAgeYears": "{age} tuổi",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Mua",
   "shopBuyTitle": "Mua?",
   "shopBuyStakeTitle": "Mua mức cược?",
   "shopBuyEmojiTitle": "Mua emoji?",
   "shopBuyCollectionTitle": "Mua bộ sưu tập?",
   "shopPrice": "Giá: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Đã mua",
   "shopEmpty": "Vẫn trống",
   "shopPurchased": "Đã mua {title}",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Bạn nhận: 10 lượt dùng",
   "shopEmojiBought": "{title}: +10 lượt dùng",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 lượt dùng",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Mua · 10 cái",
   "shopDailyIncome": "Thu nhập: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Mua một lần",
   "shopSellRefund": "Bán sẽ hoàn lại một phần chi phí",
   "shopCollectionAdded": "Đã thêm {title} vào hồ sơ",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "thưởng bộ +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Hoàn thành",
   "shopSetProgress": "Đã thu thập · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Bán?",
   "inventorySellDesc": "Bạn sẽ nhận {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Đã bán: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Hãy thêm bạn trước",
   "inventoryGiftTitle": "Tặng bộ sưu tập?",
   "inventoryGiftDesc": "Tặng «{title}» cho {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Đã tặng: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Không thể tải vật phẩm",
   "inventoryNoCollections": "Không có bộ sưu tập — mua trong cửa hàng",
   "inventoryNoEmojis": "Không có emoji — mua trong cửa hàng",
   "inventoryNoFrames": "Không có khung — thắng 10 trận giải (thành tựu)",
   "inventoryNoStakes": "Không có mức cược đã mua",
   "inventoryEmojiLeft": "Còn {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Thu nhập: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Thu nhập ngày mai: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Có thể cược {amount} vàng",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Có thể cược {amount} bạc",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Đã nhận +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Không thể tải chat",
   "chatsLoadListFailed": "Không thể tải danh sách",
   "chatsBlockedEmpty": "Danh sách trống",
   "chatsBlockedAt": "Đã chặn: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Không thể tạo chat",
   "chatsNeedFriendsFirst": "Hãy thêm bạn trước, rồi mới mở chat.",
   "chatsFriendsNotFound": "Không tìm thấy bạn",
@@ -368,6 +680,13 @@
   "chatActions": "Thao tác chat",
   "chatScrollToEnd": "Đến cuối cuộc trò chuyện",
   "chatReplyingTo": "Trả lời {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Quà",
   "chatCollection": "Bộ sưu tập",
   "chatGiftCollection": "Quà · bộ sưu tập",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Dán vào chat hoặc tin nhắn gửi bạn",
   "lobbyCopyLinkHint": "Sao chép liên kết vào bộ nhớ tạm",
   "lobbyCreatorInvites": "{name} mời bạn chơi",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} thắng",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Hết giờ. {name} thắng",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} giây",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Quản trị",
   "tournamentsTitle": "Giải đấu",
   "profileAgeInvalid": "Nhập tuổi từ 1 đến 111",
@@ -399,13 +746,48 @@
   "profileApply": "Áp dụng",
   "profilePreparing": "Đang chuẩn bị…",
   "timeSecondsShort": "{seconds} giây",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 phút",
   "timeTenMin": "10 phút",
   "rulesIntro": "Cờ caro trên bàn {grid}. Đi lần lượt, X đi trước.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Thắng: xếp {n} ô liên tiếp ngang, dọc hoặc chéo.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Không giới hạn thời gian mỗi lượt.",
   "rulesTurnTime": "Thời gian mỗi lượt: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Cược: {stake}. Ván chơi với số xu này.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Đổi bên: O có thể đổi chỗ với X sau nước đầu của X.",
   "rulesNoCenter": "Cấm giữa: X không được đánh ô giữa ở nước đầu.",
   "collectionSetLegends": "Huyền thoại",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Thiên nhiên",
   "collectionSetAdventures": "Phiêu lưu",
   "collectionCardMeta": "Bộ sưu tập · trưng bày · quà · bán · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "ngày",
   "coinsDayFew": "ngày",
   "coinsDayMany": "ngày",
   "giftFriendTitle": "Tặng bạn bè",
   "photoCount": "Ảnh ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Ảnh ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Ảnh: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Mở rộng bảng",
   "chatsCollapsePanel": "Thu gọn bảng",
-  "chatReplySourceMissing": "Không tìm thấy tin nhắn gốc"
+  "chatReplySourceMissing": "Không tìm thấy tin nhắn gốc",
+  "shopStakeTitleSilver": "Cược {n} bạc",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Cược {n} vàng",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Mở khóa cược {n} bạc",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Mở khóa cược {n} vàng",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "chính bạn",
+  "chatReplyPeer": "đối phương"
 }

@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · po {price}",
   "chatsExpandPanel": "Rozwiń panel",
   "chatsCollapsePanel": "Zwiń panel",
-  "chatReplySourceMissing": "Nie znaleziono oryginalnej wiadomości"
+  "chatReplySourceMissing": "Nie znaleziono oryginalnej wiadomości",
+  "shopStakeTitleSilver": "Stawka {n} srebra",
+  "shopStakeTitleGold": "Stawka {n} złota",
+  "shopStakeDescSilver": "Odblokowuje stawkę {n} srebra",
+  "shopStakeDescGold": "Odblokowuje stawkę {n} złota",
+  "chatReplySelf": "sobie",
+  "chatReplyPeer": "rozmówcy"
 }

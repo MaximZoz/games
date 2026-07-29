@@ -1397,4 +1397,30 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Pesan asli tidak ditemukan';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Taruhan $n perak';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Taruhan $n emas';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Buka taruhan $n perak';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Buka taruhan $n emas';
+  }
+
+  @override
+  String get chatReplySelf => 'diri sendiri';
+
+  @override
+  String get chatReplyPeer => 'lawan bicara';
 }

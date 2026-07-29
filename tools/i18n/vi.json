@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · {price}",
   "chatsExpandPanel": "Mở rộng bảng",
   "chatsCollapsePanel": "Thu gọn bảng",
-  "chatReplySourceMissing": "Không tìm thấy tin nhắn gốc"
+  "chatReplySourceMissing": "Không tìm thấy tin nhắn gốc",
+  "shopStakeTitleSilver": "Cược {n} bạc",
+  "shopStakeTitleGold": "Cược {n} vàng",
+  "shopStakeDescSilver": "Mở khóa cược {n} bạc",
+  "shopStakeDescGold": "Mở khóa cược {n} vàng",
+  "chatReplySelf": "chính bạn",
+  "chatReplyPeer": "đối phương"
 }

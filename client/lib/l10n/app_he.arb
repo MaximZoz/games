@@ -75,14 +75,56 @@
   "timeJustNow": "עכשיו",
   "timeYesterday": "אתמול",
   "timeMinutesAgo": "לפני {count} דק׳",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "לפני {count} שע׳",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "לפני {count} ימ׳",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "לפני שבוע",
   "timeWeeksAgo": "לפני {count} שב׳",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "לפני חודש",
   "timeMonthsAgo": "לפני {count} חוד׳",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "לפני שנה",
   "timeYearsAgo": "לפני {count} שנ׳",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "א׳",
   "weekdayMon": "ב׳",
   "weekdayTue": "ג׳",
@@ -255,10 +297,45 @@
   "coinDiamond": "יהלום",
   "balanceZeroBronze": "0 ברונזה",
   "balanceBronzes": "{count} ברונזה",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} כסף",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} זהב",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} יהלומים",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} ביום",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "בר",
   "balanceAbbrSilver": "כ.",
   "balanceAbbrGold": "ז.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "רצף התחברויות יומי",
   "coinsFriendReward": "פרס חבר",
   "coinsFriendRewardHint": "+{amount} על הרשמה דרך הקישור שלך",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "לא ניתן לטעון פרסים",
   "coinsClaimReward": "קבלת פרס",
   "coinsAlreadyClaimed": "כבר התקבל",
   "coinsStreakToday": "{done}/{target} · היום",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · נותר יום אחד",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · נותרו {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "הזמנת חבר",
   "coinsInviteHint": "+{amount} על כל מי שנרשם דרך הקישור שלך",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "העתקת קישור",
   "coinsHowItWorks": "איך זה עובד",
   "coinsHowStep1": "העתיקו את הקישור ושלחו לחבר",
   "coinsHowStep2": "החבר נרשם דרך הקישור",
   "coinsHowStep3": "תקבלו {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "הישגים",
   "achievementsProgress": "התקדמות: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "המסגרת התקבלה",
   "achievementsClaimed": "התקבל",
   "achievementsOpenFrame": "פתיחת מסגרת",
   "friendsRemoveConfirm": "האם אתם בטוחים שברצונכם להסיר את {name} מהחברים?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "הסרה",
   "friendsRemove": "הסרה מהחברים",
   "friendsAcceptRequest": "אישור בקשה",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "הצגת חיפוש",
   "friendsLoadFailed": "לא ניתן לטעון חברים",
   "friendsSince": "חברים מאז: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "בקשה נכנסת: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "בקשה יוצאת: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "מידע על המשתמש",
   "profileAgeYears": "{age} שנים",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "קנייה",
   "shopBuyTitle": "לקנות?",
   "shopBuyStakeTitle": "לקנות הימור?",
   "shopBuyEmojiTitle": "לקנות אימוג'י?",
   "shopBuyCollectionTitle": "לקנות אוסף?",
   "shopPrice": "מחיר: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "נרכש",
   "shopEmpty": "עדיין ריק",
   "shopPurchased": "{title} נרכש",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "תקבלו: 10 שימושים",
   "shopEmojiBought": "{title}: +10 שימושים",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 שימושים",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "קנייה · 10 יח׳",
   "shopDailyIncome": "הכנסה: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "רכישה חד-פעמית",
   "shopSellRefund": "מכירה מחזירה חלק מהעלות",
   "shopCollectionAdded": "{title} נוסף לפרופיל",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "בונוס סט +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "הושלם",
   "shopSetProgress": "נאסף · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "למכור?",
   "inventorySellDesc": "תקבלו {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "נמכר: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "הוסיפו חברים קודם",
   "inventoryGiftTitle": "לתת אוסף במתנה?",
   "inventoryGiftDesc": "לתת את «{title}» ל־{name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "ניתן במתנה: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "לא ניתן לטעון פריטים",
   "inventoryNoCollections": "אין אוספים — קנו בחנות",
   "inventoryNoEmojis": "אין אימוג'ים — קנו בחנות",
   "inventoryNoFrames": "אין מסגרות — נצחו 10 משחקי ליגה (הישגים)",
   "inventoryNoStakes": "אין הימורים שנרכשו",
   "inventoryEmojiLeft": "נותרו {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "הכנסה: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "הכנסה מחר: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "ניתן להמר {amount} זהב",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "ניתן להמר {amount} כסף",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "התקבל +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "לא ניתן לטעון צ'אטים",
   "chatsLoadListFailed": "לא ניתן לטעון את הרשימה",
   "chatsBlockedEmpty": "הרשימה ריקה",
   "chatsBlockedAt": "נחסם: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "לא ניתן ליצור צ'אט",
   "chatsNeedFriendsFirst": "הוסיפו חברים קודם, ואז תוכלו לפתוח צ'אט.",
   "chatsFriendsNotFound": "לא נמצאו חברים",
@@ -368,6 +680,13 @@
   "chatActions": "פעולות צ'אט",
   "chatScrollToEnd": "לסוף השיחה",
   "chatReplyingTo": "תשובה ל־{name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "מתנה",
   "chatCollection": "אוסף",
   "chatGiftCollection": "מתנה · אוסף",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "הדביקו אותו בצ'אט או בהודעה לחבר",
   "lobbyCopyLinkHint": "העתקת קישור ללוח",
   "lobbyCreatorInvites": "{name} מזמין אתכם לשחק",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} ניצח",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "הזמן נגמר. {name} ניצח",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} שנ׳",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "ניהול",
   "tournamentsTitle": "טורנירים",
   "profileAgeInvalid": "הזינו גיל בין 1 ל־111",
@@ -399,13 +746,48 @@
   "profileApply": "החלה",
   "profilePreparing": "מכין…",
   "timeSecondsShort": "{seconds} שנ׳",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 דק׳",
   "timeTenMin": "10 דק׳",
   "rulesIntro": "איקס-עיגול על לוח {grid}. בתורות; X מתחיל.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "ניצחון: יש לסדר {n} ברצף אופקית, אנכית או באלכסון.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "אין מגבלת זמן לכל מהלך.",
   "rulesTurnTime": "זמן למהלך: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "הימור: {stake}. המשחק על מספר מטבעות זה.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "החלפת צדדים: O יכול להחליף עם X אחרי המהלך הראשון של X.",
   "rulesNoCenter": "איסור מרכז: X לא יכול לשחק במרכז במהלך הראשון.",
   "collectionSetLegends": "אגדות",
@@ -415,15 +797,90 @@
   "collectionSetNature": "טבע",
   "collectionSetAdventures": "הרפתקאות",
   "collectionCardMeta": "אוסף · חלון ראווה · מתנה · מכירה · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "יום",
   "coinsDayFew": "ימים",
   "coinsDayMany": "ימים",
   "giftFriendTitle": "מתנה לחבר",
   "photoCount": "תמונה ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "תמונה ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "תמונה: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} אימוג'ים · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "הרחב לוח",
   "chatsCollapsePanel": "כווץ לוח",
-  "chatReplySourceMissing": "ההודעה המקורית לא נמצאה"
+  "chatReplySourceMissing": "ההודעה המקורית לא נמצאה",
+  "shopStakeTitleSilver": "הימור {n} כסף",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "הימור {n} זהב",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "פותח הימור של {n} כסף",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "פותח הימור של {n} זהב",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "לעצמך",
+  "chatReplyPeer": "לבן השיח"
 }

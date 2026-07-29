@@ -75,14 +75,56 @@
   "timeJustNow": "baru saja",
   "timeYesterday": "kemarin",
   "timeMinutesAgo": "{count} mnt lalu",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} jam lalu",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} hr lalu",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "seminggu lalu",
   "timeWeeksAgo": "{count} mgg lalu",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "sebulan lalu",
   "timeMonthsAgo": "{count} bln lalu",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "setahun lalu",
   "timeYearsAgo": "{count} thn lalu",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Min",
   "weekdayMon": "Sen",
   "weekdayTue": "Sel",
@@ -255,10 +297,45 @@
   "coinDiamond": "Berlian",
   "balanceZeroBronze": "0 perunggu",
   "balanceBronzes": "{count} perunggu",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} perak",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} emas",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} berlian",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} per hari",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "pr",
   "balanceAbbrSilver": "pk.",
   "balanceAbbrGold": "em.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Rentetan masuk harian",
   "coinsFriendReward": "Hadiah teman",
   "coinsFriendRewardHint": "+{amount} untuk pendaftaran lewat tautan Anda",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Gagal memuat hadiah",
   "coinsClaimReward": "Ambil hadiah",
   "coinsAlreadyClaimed": "Sudah diambil",
   "coinsStreakToday": "{done}/{target} · hari ini",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · sisa 1 hari",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · sisa {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Undang teman",
   "coinsInviteHint": "+{amount} untuk setiap orang yang mendaftar lewat tautan Anda",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Salin tautan",
   "coinsHowItWorks": "Cara kerjanya",
   "coinsHowStep1": "Salin tautan dan kirim ke teman",
   "coinsHowStep2": "Teman mendaftar lewat tautan itu",
   "coinsHowStep3": "Anda menerima {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Pencapaian",
   "achievementsProgress": "Progres: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Bingkai diperoleh",
   "achievementsClaimed": "Diperoleh",
   "achievementsOpenFrame": "Buka bingkai",
   "friendsRemoveConfirm": "Yakin ingin menghapus {name} dari teman?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Hapus",
   "friendsRemove": "Hapus dari teman",
   "friendsAcceptRequest": "Terima permintaan",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Tampilkan pencarian",
   "friendsLoadFailed": "Gagal memuat teman",
   "friendsSince": "Berteman sejak: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Permintaan masuk: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Permintaan keluar: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Info pengguna",
   "profileAgeYears": "{age} tahun",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Beli",
   "shopBuyTitle": "Beli?",
   "shopBuyStakeTitle": "Beli taruhan?",
   "shopBuyEmojiTitle": "Beli emoji?",
   "shopBuyCollectionTitle": "Beli koleksi?",
   "shopPrice": "Harga: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Dibeli",
   "shopEmpty": "Masih kosong",
   "shopPurchased": "{title} dibeli",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Anda mendapat: 10 penggunaan",
   "shopEmojiBought": "{title}: +10 penggunaan",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 penggunaan",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Beli · 10 pcs",
   "shopDailyIncome": "Pendapatan: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Pembelian sekali",
   "shopSellRefund": "Menjual mengembalikan sebagian biaya",
   "shopCollectionAdded": "{title} ditambahkan ke profil",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "bonus set +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Lengkap",
   "shopSetProgress": "Terkumpul · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Jual?",
   "inventorySellDesc": "Anda akan menerima {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Terjual: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Tambahkan teman dulu",
   "inventoryGiftTitle": "Hadiahkan koleksi?",
   "inventoryGiftDesc": "Hadiahkan «{title}» kepada {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Dihadiahkan: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Gagal memuat item",
   "inventoryNoCollections": "Tidak ada koleksi — beli di toko",
   "inventoryNoEmojis": "Tidak ada emoji — beli di toko",
   "inventoryNoFrames": "Tidak ada bingkai — menangkan 10 pertandingan liga (pencapaian)",
   "inventoryNoStakes": "Tidak ada taruhan yang dibeli",
   "inventoryEmojiLeft": "Sisa {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Pendapatan: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Pendapatan besok: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Bisa bertaruh {amount} emas",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Bisa bertaruh {amount} perak",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Diterima +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Gagal memuat obrolan",
   "chatsLoadListFailed": "Gagal memuat daftar",
   "chatsBlockedEmpty": "Daftar kosong",
   "chatsBlockedAt": "Diblokir: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Gagal membuat obrolan",
   "chatsNeedFriendsFirst": "Tambahkan teman dulu, baru bisa membuka obrolan.",
   "chatsFriendsNotFound": "Teman tidak ditemukan",
@@ -368,6 +680,13 @@
   "chatActions": "Tindakan obrolan",
   "chatScrollToEnd": "Ke akhir percakapan",
   "chatReplyingTo": "Membalas {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Hadiah",
   "chatCollection": "Koleksi",
   "chatGiftCollection": "Hadiah · koleksi",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Tempel di obrolan atau pesan ke teman",
   "lobbyCopyLinkHint": "Salin tautan ke papan klip",
   "lobbyCreatorInvites": "{name} mengundang Anda bermain",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} menang",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Waktu habis. {name} menang",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} d",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Admin",
   "tournamentsTitle": "Turnamen",
   "profileAgeInvalid": "Masukkan usia dari 1 hingga 111",
@@ -399,13 +746,48 @@
   "profileApply": "Terapkan",
   "profilePreparing": "Menyiapkan…",
   "timeSecondsShort": "{seconds} d",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 mnt",
   "timeTenMin": "10 mnt",
   "rulesIntro": "Tic-tac-toe di papan {grid}. Bergiliran; X duluan.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Menang: susun {n} beruntun horizontal, vertikal, atau diagonal.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Tanpa batas waktu per giliran.",
   "rulesTurnTime": "Waktu per giliran: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Taruhan: {stake}. Game ini seharga koin sebanyak itu.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Tukar sisi: O boleh bertukar dengan X setelah langkah pertama X.",
   "rulesNoCenter": "Larangan tengah: X tidak boleh main di tengah pada langkah pertama.",
   "collectionSetLegends": "Legenda",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Alam",
   "collectionSetAdventures": "Petualangan",
   "collectionCardMeta": "Koleksi · etalase · hadiah · jual · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "hari",
   "coinsDayFew": "hari",
   "coinsDayMany": "hari",
   "giftFriendTitle": "Hadiah ke teman",
   "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Perluas panel",
   "chatsCollapsePanel": "Ciutkan panel",
-  "chatReplySourceMissing": "Pesan asli tidak ditemukan"
+  "chatReplySourceMissing": "Pesan asli tidak ditemukan",
+  "shopStakeTitleSilver": "Taruhan {n} perak",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Taruhan {n} emas",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Buka taruhan {n} perak",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Buka taruhan {n} emas",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "diri sendiri",
+  "chatReplyPeer": "lawan bicara"
 }

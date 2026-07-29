@@ -75,14 +75,56 @@
   "timeJustNow": "たった今",
   "timeYesterday": "昨日",
   "timeMinutesAgo": "{count}分前",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count}時間前",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count}日前",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "1週間前",
   "timeWeeksAgo": "{count}週間前",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "1か月前",
   "timeMonthsAgo": "{count}か月前",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "1年前",
   "timeYearsAgo": "{count}年前",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "日",
   "weekdayMon": "月",
   "weekdayTue": "火",
@@ -255,10 +297,45 @@
   "coinDiamond": "ダイヤモンド",
   "balanceZeroBronze": "ブロンズ 0",
   "balanceBronzes": "ブロンズ {count}",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "シルバー {count}",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "ゴールド {count}",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "ダイヤモンド {count}",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "1日 {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "ブ",
   "balanceAbbrSilver": "シ",
   "balanceAbbrGold": "ゴ",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "毎日ログイン連続記録",
   "coinsFriendReward": "フレンド報酬",
   "coinsFriendRewardHint": "あなたのリンクからの登録で +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "報酬を読み込めませんでした",
   "coinsClaimReward": "報酬を受け取る",
   "coinsAlreadyClaimed": "受け取り済み",
   "coinsStreakToday": "{done}/{target} · 今日",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · あと1日",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · あと {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "フレンドを招待",
   "coinsInviteHint": "あなたのリンクで登録した人ごとに +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "リンクをコピー",
   "coinsHowItWorks": "仕組み",
   "coinsHowStep1": "リンクをコピーしてフレンドに送る",
   "coinsHowStep2": "フレンドがそのリンクから登録する",
   "coinsHowStep3": "{amount} が付与されます",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "実績",
   "achievementsProgress": "進捗: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "フレーム獲得",
   "achievementsClaimed": "獲得済み",
   "achievementsOpenFrame": "フレームを開く",
   "friendsRemoveConfirm": "{name} をフレンドから削除しますか？",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "削除",
   "friendsRemove": "フレンドから削除",
   "friendsAcceptRequest": "リクエストを承認",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "検索を表示",
   "friendsLoadFailed": "フレンドを読み込めませんでした",
   "friendsSince": "フレンド開始: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "受信リクエスト: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "送信リクエスト: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "ユーザー情報",
   "profileAgeYears": "{age} 歳",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "購入",
   "shopBuyTitle": "購入しますか？",
   "shopBuyStakeTitle": "賭け金を購入しますか？",
   "shopBuyEmojiTitle": "絵文字を購入しますか？",
   "shopBuyCollectionTitle": "コレクションを購入しますか？",
   "shopPrice": "価格: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "購入済み",
   "shopEmpty": "まだ何もありません",
   "shopPurchased": "{title} を購入しました",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "取得: 10回分",
   "shopEmojiBought": "{title}: +10回分",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10回分",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "購入 · 10個",
   "shopDailyIncome": "収入: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "一度きりの購入",
   "shopSellRefund": "売却すると費用の一部が戻ります",
   "shopCollectionAdded": "{title} をプロフィールに追加しました",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "セットボーナス +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "完成",
   "shopSetProgress": "収集済み · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "売却しますか？",
   "inventorySellDesc": "{amount} を受け取ります",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "売却済み: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "先にフレンドを追加してください",
   "inventoryGiftTitle": "コレクションを贈りますか？",
   "inventoryGiftDesc": "「{title}」を {name} に贈りますか？",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "贈呈済み: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "アイテムを読み込めませんでした",
   "inventoryNoCollections": "コレクションがありません — ショップで購入",
   "inventoryNoEmojis": "絵文字がありません — ショップで購入",
   "inventoryNoFrames": "フレームがありません — リーグで10勝（実績）",
   "inventoryNoStakes": "購入済みの賭け金がありません",
   "inventoryEmojiLeft": "残り {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "収入: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "明日の収入: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "{amount} ゴールドを賭けられます",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "{amount} シルバーを賭けられます",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "+{amount} を受け取りました",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "チャットを読み込めませんでした",
   "chatsLoadListFailed": "リストを読み込めませんでした",
   "chatsBlockedEmpty": "リストは空です",
   "chatsBlockedAt": "ブロック済み: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "チャットを作成できませんでした",
   "chatsNeedFriendsFirst": "先にフレンドを追加してからチャットを開けます。",
   "chatsFriendsNotFound": "フレンドが見つかりません",
@@ -368,6 +680,13 @@
   "chatActions": "チャット操作",
   "chatScrollToEnd": "会話の末尾へ",
   "chatReplyingTo": "{name} への返信",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "ギフト",
   "chatCollection": "コレクション",
   "chatGiftCollection": "ギフト · コレクション",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "チャットやフレンドへのメッセージに貼り付けてください",
   "lobbyCopyLinkHint": "リンクをクリップボードにコピー",
   "lobbyCreatorInvites": "{name} があなたをゲームに招待しています",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} の勝ち",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "時間切れ。{name} の勝ち",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} 秒",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "管理画面",
   "tournamentsTitle": "トーナメント",
   "profileAgeInvalid": "年齢は1〜111で入力してください",
@@ -399,13 +746,48 @@
   "profileApply": "適用",
   "profilePreparing": "準備中…",
   "timeSecondsShort": "{seconds} 秒",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1分",
   "timeTenMin": "10分",
   "rulesIntro": "{grid} の盤で三目並べ。交互に打ち、X が先手。",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "勝利：縦・横・斜めに {n} 個並べます。",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "一手の制限時間なし。",
   "rulesTurnTime": "一手の時間：{time}。",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "掛け金：{stake}。このコイン数で対戦します。",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "サイド交代：X の初手の後、O は X と交代できます。",
   "rulesNoCenter": "中央禁止：X は初手で中央に打てません。",
   "collectionSetLegends": "伝説",
@@ -415,15 +797,90 @@
   "collectionSetNature": "自然",
   "collectionSetAdventures": "冒険",
   "collectionCardMeta": "コレクション · 展示 · ギフト · 売却 · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "日",
   "coinsDayFew": "日",
   "coinsDayMany": "日",
   "giftFriendTitle": "友達に贈る",
   "photoCount": "写真（{count}）",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "写真（{count}）：{text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "写真：{text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} 個の絵文字 · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "パネルを展開",
   "chatsCollapsePanel": "パネルを折りたたむ",
-  "chatReplySourceMissing": "元のメッセージが見つかりません"
+  "chatReplySourceMissing": "元のメッセージが見つかりません",
+  "shopStakeTitleSilver": "ベット {n} シルバー",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "ベット {n} ゴールド",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "{n} シルバーのベットを解除",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "{n} ゴールドのベットを解除",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "自分",
+  "chatReplyPeer": "相手"
 }

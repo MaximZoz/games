@@ -1397,4 +1397,30 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'मूल संदेश नहीं मिला';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'दांव $n सिल्वर';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'दांव $n गोल्ड';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return '$n सिल्वर दांव अनलॉक करें';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return '$n गोल्ड दांव अनलॉक करें';
+  }
+
+  @override
+  String get chatReplySelf => 'स्वयं';
+
+  @override
+  String get chatReplyPeer => 'दूसरे व्यक्ति';
 }

@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · {price}",
   "chatsExpandPanel": "Perluas panel",
   "chatsCollapsePanel": "Ciutkan panel",
-  "chatReplySourceMissing": "Pesan asli tidak ditemukan"
+  "chatReplySourceMissing": "Pesan asli tidak ditemukan",
+  "shopStakeTitleSilver": "Taruhan {n} perak",
+  "shopStakeTitleGold": "Taruhan {n} emas",
+  "shopStakeDescSilver": "Buka taruhan {n} perak",
+  "shopStakeDescGold": "Buka taruhan {n} emas",
+  "chatReplySelf": "diri sendiri",
+  "chatReplyPeer": "lawan bicara"
 }

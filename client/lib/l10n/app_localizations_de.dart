@@ -1397,4 +1397,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Originalnachricht nicht gefunden';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Einsatz $n Silber';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Einsatz $n Gold';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Freischalten: $n Silber setzen';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Freischalten: $n Gold setzen';
+  }
+
+  @override
+  String get chatReplySelf => 'sich selbst';
+
+  @override
+  String get chatReplyPeer => 'dem Gesprächspartner';
 }

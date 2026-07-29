@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emojier · {price}",
   "chatsExpandPanel": "Utvid panel",
   "chatsCollapsePanel": "Skjul panel",
-  "chatReplySourceMissing": "Opprinnelig melding ikke funnet"
+  "chatReplySourceMissing": "Opprinnelig melding ikke funnet",
+  "shopStakeTitleSilver": "Innsats {n} sølv",
+  "shopStakeTitleGold": "Innsats {n} gull",
+  "shopStakeDescSilver": "Låser opp innsats på {n} sølv",
+  "shopStakeDescGold": "Låser opp innsats på {n} gull",
+  "chatReplySelf": "deg selv",
+  "chatReplyPeer": "motparten"
 }

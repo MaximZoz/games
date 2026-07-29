@@ -75,14 +75,56 @@
   "timeJustNow": "just now",
   "timeYesterday": "yesterday",
   "timeMinutesAgo": "{count} min ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "a week ago",
   "timeWeeksAgo": "{count} wk ago",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "a month ago",
   "timeMonthsAgo": "{count} mo ago",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "a year ago",
   "timeYearsAgo": "{count} yr ago",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Sun",
   "weekdayMon": "Mon",
   "weekdayTue": "Tue",
@@ -255,10 +297,45 @@
   "coinDiamond": "Diamond",
   "balanceZeroBronze": "0 bronze",
   "balanceBronzes": "{count} bronze",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} silver",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} gold",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} diamonds",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} per day",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "br",
   "balanceAbbrSilver": "s.",
   "balanceAbbrGold": "g.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Daily login streak",
   "coinsFriendReward": "Friend reward",
   "coinsFriendRewardHint": "+{amount} for signing up via your link",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Could not load rewards",
   "coinsClaimReward": "Claim reward",
   "coinsAlreadyClaimed": "Already claimed",
   "coinsStreakToday": "{done}/{target} · today",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 1 day left",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · {remaining} left",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Invite a friend",
   "coinsInviteHint": "+{amount} for each person who signs up via your link",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Copy link",
   "coinsHowItWorks": "How it works",
   "coinsHowStep1": "Copy the link and send it to a friend",
   "coinsHowStep2": "Your friend signs up via that link",
   "coinsHowStep3": "You receive {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Achievements",
   "achievementsProgress": "Progress: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Frame claimed",
   "achievementsClaimed": "Claimed",
   "achievementsOpenFrame": "Open frame",
   "friendsRemoveConfirm": "Are you sure you want to remove {name} from friends?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Remove",
   "friendsRemove": "Remove from friends",
   "friendsAcceptRequest": "Accept request",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Show search",
   "friendsLoadFailed": "Could not load friends",
   "friendsSince": "Friends since: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Incoming request: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Outgoing request: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "User info",
   "profileAgeYears": "{age} years",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Buy",
   "shopBuyTitle": "Buy?",
   "shopBuyStakeTitle": "Buy stake?",
   "shopBuyEmojiTitle": "Buy emoji?",
   "shopBuyCollectionTitle": "Buy collection?",
   "shopPrice": "Price: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Owned",
   "shopEmpty": "Nothing here yet",
   "shopPurchased": "{title} purchased",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "You get: 10 uses",
   "shopEmojiBought": "{title}: +10 uses",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 uses",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Buy · 10 pcs",
   "shopDailyIncome": "Income: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "One-time purchase",
   "shopSellRefund": "Selling returns part of the cost",
   "shopCollectionAdded": "{title} added to profile",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "set bonus +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Complete",
   "shopSetProgress": "Collected · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Sell?",
   "inventorySellDesc": "You will receive {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Sold: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Add friends first",
   "inventoryGiftTitle": "Gift collection?",
   "inventoryGiftDesc": "Gift “{title}” to {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Gifted: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Could not load items",
   "inventoryNoCollections": "No collections — buy them in the shop",
   "inventoryNoEmojis": "No emojis — buy them in the shop",
   "inventoryNoFrames": "No frames — win 10 league games (achievements)",
   "inventoryNoStakes": "No purchased stakes",
   "inventoryEmojiLeft": "{count} left",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Income: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Income tomorrow: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "You can bet {amount} gold",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "You can bet {amount} silver",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Claimed +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Could not load chats",
   "chatsLoadListFailed": "Could not load list",
   "chatsBlockedEmpty": "List is empty",
   "chatsBlockedAt": "Blocked: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Could not create chat",
   "chatsNeedFriendsFirst": "Add friends first, then you can open a chat.",
   "chatsFriendsNotFound": "Friends not found",
@@ -368,6 +680,13 @@
   "chatActions": "Chat actions",
   "chatScrollToEnd": "Scroll to end",
   "chatReplyingTo": "Replying to {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Gift",
   "chatCollection": "Collection",
   "chatGiftCollection": "Gift · collection",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Paste it in a chat or message to a friend",
   "lobbyCopyLinkHint": "Copy link to clipboard",
   "lobbyCreatorInvites": "{name} invites you to play",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} won",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Time's up. {name} won",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Admin",
   "tournamentsTitle": "Tournaments",
   "profileAgeInvalid": "Enter an age from 1 to 111",
@@ -399,13 +746,48 @@
   "profileApply": "Apply",
   "profilePreparing": "Preparing…",
   "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 min",
   "timeTenMin": "10 min",
   "rulesIntro": "Tic-tac-toe on a {grid} board. Players take turns; X goes first.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Win: get {n} in a row horizontally, vertically, or diagonally.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "No time limit per turn.",
   "rulesTurnTime": "Time per turn: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Stake: {stake}. That’s how many coins the game is for.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Side swap: O may swap with X after X’s first move.",
   "rulesNoCenter": "No center: X cannot play in the center on the first move.",
   "collectionSetLegends": "Legends",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Nature",
   "collectionSetAdventures": "Adventures",
   "collectionCardMeta": "Collection · showcase · gift · sell · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "day",
   "coinsDayFew": "days",
   "coinsDayMany": "days",
   "giftFriendTitle": "Gift a friend",
   "photoCount": "Photo ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Photo ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Photo: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emojis · {price} each",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Expand panel",
   "chatsCollapsePanel": "Collapse panel",
-  "chatReplySourceMissing": "Original message not found"
+  "chatReplySourceMissing": "Original message not found",
+  "shopStakeTitleSilver": "Stake {n} silver",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Stake {n} gold",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Unlock betting {n} silver in games",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Unlock betting {n} gold in games",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "yourself",
+  "chatReplyPeer": "the other person"
 }

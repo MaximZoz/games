@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -351,9 +352,10 @@ func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 	h.publishFriendsUpdated(userID, targetID)
 	if h.Push != nil {
 		from := pushUserLabel(r.Context(), h.Pool, userID)
+		lang := i18n.LangRU
 		h.Push.NotifyUsers([]uuid.UUID{targetID}, store.WebPushCategoryFriends, PushPayload{
-			Title: "Новая заявка в друзья",
-			Body:  from + " хочет добавить вас в друзья",
+			Title: i18n.Content(lang, "push.friend_request_title"),
+			Body:  i18n.Contentf(lang, "push.friend_request_body", map[string]string{"name": from}),
 			URL:   "/friends",
 			Tag:   "friend_request",
 		})

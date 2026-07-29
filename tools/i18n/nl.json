@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji's · {price}",
   "chatsExpandPanel": "Paneel uitklappen",
   "chatsCollapsePanel": "Paneel inklappen",
-  "chatReplySourceMissing": "Oorspronkelijk bericht niet gevonden"
+  "chatReplySourceMissing": "Oorspronkelijk bericht niet gevonden",
+  "shopStakeTitleSilver": "Inzet {n} zilver",
+  "shopStakeTitleGold": "Inzet {n} goud",
+  "shopStakeDescSilver": "Ontgrendel inzet van {n} zilver",
+  "shopStakeDescGold": "Ontgrendel inzet van {n} goud",
+  "chatReplySelf": "jezelf",
+  "chatReplyPeer": "de gesprekspartner"
 }

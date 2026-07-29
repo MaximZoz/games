@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · po {price}",
   "chatsExpandPanel": "Rozbalit panel",
   "chatsCollapsePanel": "Sbalit panel",
-  "chatReplySourceMissing": "Původní zpráva nenalezena"
+  "chatReplySourceMissing": "Původní zpráva nenalezena",
+  "shopStakeTitleSilver": "Sázka {n} stříbra",
+  "shopStakeTitleGold": "Sázka {n} zlata",
+  "shopStakeDescSilver": "Odemkne sázku {n} stříbra",
+  "shopStakeDescGold": "Odemkne sázku {n} zlata",
+  "chatReplySelf": "sobě",
+  "chatReplyPeer": "protějšku"
 }

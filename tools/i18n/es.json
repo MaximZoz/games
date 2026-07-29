@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emojis · a {price}",
   "chatsExpandPanel": "Expandir panel",
   "chatsCollapsePanel": "Contraer panel",
-  "chatReplySourceMissing": "Mensaje original no encontrado"
+  "chatReplySourceMissing": "Mensaje original no encontrado",
+  "shopStakeTitleSilver": "Apuesta {n} plata",
+  "shopStakeTitleGold": "Apuesta {n} oro",
+  "shopStakeDescSilver": "Desbloquea apostar {n} de plata",
+  "shopStakeDescGold": "Desbloquea apostar {n} de oro",
+  "chatReplySelf": "ti mismo",
+  "chatReplyPeer": "al interlocutor"
 }

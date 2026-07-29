@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emojis · {price} pr.",
   "chatsExpandPanel": "Udvid panel",
   "chatsCollapsePanel": "Skjul panel",
-  "chatReplySourceMissing": "Originalbesked ikke fundet"
+  "chatReplySourceMissing": "Originalbesked ikke fundet",
+  "shopStakeTitleSilver": "Indsats {n} sølv",
+  "shopStakeTitleGold": "Indsats {n} guld",
+  "shopStakeDescSilver": "Låser op for indsats på {n} sølv",
+  "shopStakeDescGold": "Låser op for indsats på {n} guld",
+  "chatReplySelf": "dig selv",
+  "chatReplyPeer": "modparten"
 }

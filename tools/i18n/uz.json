@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · {price}",
   "chatsExpandPanel": "Panelni yoyish",
   "chatsCollapsePanel": "Panelni yig‘ish",
-  "chatReplySourceMissing": "Asl xabar topilmadi"
+  "chatReplySourceMissing": "Asl xabar topilmadi",
+  "shopStakeTitleSilver": "{n} kumush stavka",
+  "shopStakeTitleGold": "{n} oltin stavka",
+  "shopStakeDescSilver": "Oʻyinlarda {n} kumush tikish huquqi",
+  "shopStakeDescGold": "Oʻyinlarda {n} oltin tikish huquqi",
+  "chatReplySelf": "oʻzingizga",
+  "chatReplyPeer": "suhbatdoshga"
 }

@@ -1397,4 +1397,30 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Alkuperäistä viestiä ei löydy';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Panos $n hopeaa';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Panos $n kultaa';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Avaa panoksen $n hopeaa';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Avaa panoksen $n kultaa';
+  }
+
+  @override
+  String get chatReplySelf => 'itsellesi';
+
+  @override
+  String get chatReplyPeer => 'keskustelukumppanille';
 }

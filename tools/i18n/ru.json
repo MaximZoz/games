@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} смайликов · по {price}",
   "chatsExpandPanel": "Развернуть панель",
   "chatsCollapsePanel": "Свернуть панель",
-  "chatReplySourceMissing": "Исходное сообщение не найдено"
+  "chatReplySourceMissing": "Исходное сообщение не найдено",
+  "shopStakeTitleSilver": "Ставка {n} серебра",
+  "shopStakeTitleGold": "Ставка {n} золота",
+  "shopStakeDescSilver": "Право ставить {n} серебра в играх",
+  "shopStakeDescGold": "Право ставить {n} золота в играх",
+  "chatReplySelf": "себе",
+  "chatReplyPeer": "собеседнику"
 }

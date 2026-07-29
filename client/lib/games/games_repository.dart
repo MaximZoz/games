@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
@@ -227,13 +228,13 @@ class LobbyItem {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 1,
-  }) : creatorName = creatorName ?? LocaleService.l10n.commonPlayer;
+  }) : creatorName = localizeDisplayName(creatorName);
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
     return LobbyItem(
       id: json['id'] as String? ?? '',
       creatorId: json['creator_id'] as String? ?? '',
-      creatorName: json['creator_name'] as String? ?? LocaleService.l10n.commonPlayer,
+      creatorName: localizeDisplayName(json['creator_name'] as String?),
       opponentId: json['opponent_id'] as String?,
       status: json['status'] as String? ?? '',
       gameId: json['game_id'] as String?,
@@ -351,8 +352,16 @@ class GameStateItem {
       firstMoveRestriction: json['first_move_restriction'] == true,
       canSwap: json['can_swap'] == true,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
-      xDisplayName: json['x_display_name'] as String?,
-      oDisplayName: json['o_display_name'] as String?,
+      xDisplayName: () {
+        final raw = json['x_display_name'] as String?;
+        if (raw == null || raw.trim().isEmpty) return null;
+        return localizeDisplayName(raw);
+      }(),
+      oDisplayName: () {
+        final raw = json['o_display_name'] as String?;
+        if (raw == null || raw.trim().isEmpty) return null;
+        return localizeDisplayName(raw);
+      }(),
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',
       xAvatarValue: json['x_avatar_value'] as String?,
       xFrameColor: json['x_frame_color'] as String?,

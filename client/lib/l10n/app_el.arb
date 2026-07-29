@@ -75,14 +75,56 @@
   "timeJustNow": "μόλις τώρα",
   "timeYesterday": "χθες",
   "timeMinutesAgo": "πριν {count} λεπ.",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "πριν {count} ώρ.",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "πριν {count} ημ.",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "πριν μία εβδομάδα",
   "timeWeeksAgo": "πριν {count} εβδ.",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "πριν έναν μήνα",
   "timeMonthsAgo": "πριν {count} μήν.",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "πριν έναν χρόνο",
   "timeYearsAgo": "πριν {count} χρ.",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Κυρ",
   "weekdayMon": "Δευ",
   "weekdayTue": "Τρί",
@@ -255,10 +297,45 @@
   "coinDiamond": "Διαμάντι",
   "balanceZeroBronze": "0 χάλκινα",
   "balanceBronzes": "{count} χάλκινα",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} ασημένια",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} χρυσά",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} διαμάντια",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} την ημέρα",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "χλ",
   "balanceAbbrSilver": "ασ.",
   "balanceAbbrGold": "χρ.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Καθημερινή σειρά συνδέσεων",
   "coinsFriendReward": "Ανταμοιβή φίλου",
   "coinsFriendRewardHint": "+{amount} για εγγραφή μέσω του συνδέσμου σας",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Αποτυχία φόρτωσης ανταμοιβών",
   "coinsClaimReward": "Λήψη ανταμοιβής",
   "coinsAlreadyClaimed": "Ήδη λήφθηκε",
   "coinsStreakToday": "{done}/{target} · σήμερα",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · απομένει 1 ημέρα",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · απομένουν {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Προσκαλέστε φίλο",
   "coinsInviteHint": "+{amount} για κάθε άτομο που εγγράφεται μέσω του συνδέσμου σας",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Αντιγραφή συνδέσμου",
   "coinsHowItWorks": "Πώς λειτουργεί",
   "coinsHowStep1": "Αντιγράψτε τον σύνδεσμο και στείλτε τον σε φίλο",
   "coinsHowStep2": "Ο φίλος εγγράφεται μέσω αυτού του συνδέσμου",
   "coinsHowStep3": "Λαμβάνετε {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Επιτεύγματα",
   "achievementsProgress": "Πρόοδος: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Το πλαίσιο ελήφθη",
   "achievementsClaimed": "Ελήφθη",
   "achievementsOpenFrame": "Άνοιγμα πλαισίου",
   "friendsRemoveConfirm": "Είστε σίγουροι ότι θέλετε να αφαιρέσετε τον/την {name} από τους φίλους;",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Αφαίρεση",
   "friendsRemove": "Αφαίρεση από φίλους",
   "friendsAcceptRequest": "Αποδοχή αιτήματος",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Εμφάνιση αναζήτησης",
   "friendsLoadFailed": "Αποτυχία φόρτωσης φίλων",
   "friendsSince": "Φίλοι από: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Εισερχόμενο αίτημα: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Εξερχόμενο αίτημα: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Πληροφορίες χρήστη",
   "profileAgeYears": "{age} ετών",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Αγορά",
   "shopBuyTitle": "Αγορά;",
   "shopBuyStakeTitle": "Αγορά πονταρίσματος;",
   "shopBuyEmojiTitle": "Αγορά emoji;",
   "shopBuyCollectionTitle": "Αγορά συλλογής;",
   "shopPrice": "Τιμή: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Αγορασμένο",
   "shopEmpty": "Ακόμα άδειο",
   "shopPurchased": "Αγοράστηκε το {title}",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Λαμβάνετε: 10 χρήσεις",
   "shopEmojiBought": "{title}: +10 χρήσεις",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 χρήσεις",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Αγορά · 10 τεμ.",
   "shopDailyIncome": "Έσοδο: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Εφάπαξ αγορά",
   "shopSellRefund": "Η πώληση επιστρέφει μέρος του κόστους",
   "shopCollectionAdded": "Το {title} προστέθηκε στο προφίλ",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "μπόνους σετ +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Ολοκληρώθηκε",
   "shopSetProgress": "Συλλέχθηκε · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Πώληση;",
   "inventorySellDesc": "Θα λάβετε {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Πουλήθηκε: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Προσθέστε πρώτα φίλους",
   "inventoryGiftTitle": "Δώρο συλλογής;",
   "inventoryGiftDesc": "Να δώσετε το «{title}» στον/στην {name};",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Δωρίστηκε: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Αποτυχία φόρτωσης αντικειμένων",
   "inventoryNoCollections": "Δεν υπάρχουν συλλογές — αγοράστε στο κατάστημα",
   "inventoryNoEmojis": "Δεν υπάρχουν emoji — αγοράστε στο κατάστημα",
   "inventoryNoFrames": "Δεν υπάρχουν πλαίσια — κερδίστε 10 παιχνίδια λίγκας (επιτεύγματα)",
   "inventoryNoStakes": "Δεν υπάρχουν αγορασμένα πονταρίσματα",
   "inventoryEmojiLeft": "Απομένουν {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Έσοδο: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Έσοδο αύριο: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Μπορείτε να ποντάρετε {amount} χρυσό",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Μπορείτε να ποντάρετε {amount} ασήμι",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Ελήφθη +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Αποτυχία φόρτωσης συνομιλιών",
   "chatsLoadListFailed": "Αποτυχία φόρτωσης λίστας",
   "chatsBlockedEmpty": "Η λίστα είναι άδεια",
   "chatsBlockedAt": "Αποκλεισμένος: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Αποτυχία δημιουργίας συνομιλίας",
   "chatsNeedFriendsFirst": "Προσθέστε πρώτα φίλους και μετά μπορείτε να ανοίξετε συνομιλία.",
   "chatsFriendsNotFound": "Δεν βρέθηκαν φίλοι",
@@ -368,6 +680,13 @@
   "chatActions": "Ενέργειες συνομιλίας",
   "chatScrollToEnd": "Στο τέλος της συνομιλίας",
   "chatReplyingTo": "Απάντηση στον/στην {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Δώρο",
   "chatCollection": "Συλλογή",
   "chatGiftCollection": "Δώρο · συλλογή",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο",
   "lobbyCopyLinkHint": "Αντιγραφή συνδέσμου στο πρόχειρο",
   "lobbyCreatorInvites": "Ο/Η {name} σας προσκαλεί να παίξετε",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "Νίκησε ο/η {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Ο χρόνος τελείωσε. Νίκησε ο/η {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} δ",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Διαχείριση",
   "tournamentsTitle": "Τουρνουά",
   "profileAgeInvalid": "Εισαγάγετε ηλικία από 1 έως 111",
@@ -399,13 +746,48 @@
   "profileApply": "Εφαρμογή",
   "profilePreparing": "Προετοιμασία…",
   "timeSecondsShort": "{seconds} δ",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 λεπτό",
   "timeTenMin": "10 λεπτά",
   "rulesIntro": "Τρίλιζα σε πίνακα {grid}. Εναλλάξ· ξεκινά ο X.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Νίκη: σχηματίστε {n} στη σειρά οριζόντια, κάθετα ή διαγώνια.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Χωρίς χρονικό όριο ανά κίνηση.",
   "rulesTurnTime": "Χρόνος ανά κίνηση: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Ποντάρισμα: {stake}. Τόσα νομίσματα παίζονται.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Αλλαγή πλευρών: ο O μπορεί να αλλάξει με τον X μετά την πρώτη κίνηση του X.",
   "rulesNoCenter": "Απαγόρευση κέντρου: ο X δεν μπορεί να παίξει στο κέντρο στην πρώτη κίνηση.",
   "collectionSetLegends": "Θρύλοι",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Φύση",
   "collectionSetAdventures": "Περιπέτειες",
   "collectionCardMeta": "Συλλογή · βιτρίνα · δώρο · πώληση · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "ημέρα",
   "coinsDayFew": "ημέρες",
   "coinsDayMany": "ημέρες",
   "giftFriendTitle": "Δώρο σε φίλο",
   "photoCount": "Φωτο ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Φωτο ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Φωτο: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Ανάπτυξη πίνακα",
   "chatsCollapsePanel": "Σύμπτυξη πίνακα",
-  "chatReplySourceMissing": "Το αρχικό μήνυμα δεν βρέθηκε"
+  "chatReplySourceMissing": "Το αρχικό μήνυμα δεν βρέθηκε",
+  "shopStakeTitleSilver": "Ποντάρισμα {n} ασήμι",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Ποντάρισμα {n} χρυσό",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Ξεκλειδώνει ποντάρισμα {n} ασήμι",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Ξεκλειδώνει ποντάρισμα {n} χρυσό",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "στον εαυτό σας",
+  "chatReplyPeer": "στον συνομιλητή"
 }

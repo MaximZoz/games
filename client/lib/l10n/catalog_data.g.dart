@@ -7163,39 +7163,6 @@ const Map<String, Map<String, String>> kShopTitles = {
     "vi": "Gói Du lịch",
     "zh": "旅行包",
   },
-  "stake_gold_10": {
-    "ru": "Ставка 10 золота",
-  },
-  "stake_gold_2": {
-    "ru": "Ставка 2 золота",
-  },
-  "stake_gold_25": {
-    "ru": "Ставка 25 золота",
-  },
-  "stake_gold_5": {
-    "ru": "Ставка 5 золота",
-  },
-  "stake_gold_50": {
-    "ru": "Ставка 50 золота",
-  },
-  "stake_silver_10": {
-    "ru": "Ставка 10 серебра",
-  },
-  "stake_silver_100": {
-    "ru": "Ставка 100 серебра",
-  },
-  "stake_silver_2": {
-    "ru": "Ставка 2 серебра",
-  },
-  "stake_silver_25": {
-    "ru": "Ставка 25 серебра",
-  },
-  "stake_silver_5": {
-    "ru": "Ставка 5 серебра",
-  },
-  "stake_silver_50": {
-    "ru": "Ставка 50 серебра",
-  },
 };
 
 const Map<String, Map<String, String>> kAchievementTitles = {

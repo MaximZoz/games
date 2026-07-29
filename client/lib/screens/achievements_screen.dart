@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/achievements/achievements_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -228,7 +229,7 @@ class _AchievementCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.title,
+                      achievementTitle(item.code, fallback: item.title, l10n: l10n),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
@@ -237,7 +238,11 @@ class _AchievementCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      item.description,
+                      achievementDescription(
+                        item.code,
+                        fallback: item.description,
+                        l10n: l10n,
+                      ),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,

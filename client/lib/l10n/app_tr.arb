@@ -75,14 +75,56 @@
   "timeJustNow": "az önce",
   "timeYesterday": "dün",
   "timeMinutesAgo": "{count} dk önce",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} sa önce",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} g önce",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "bir hafta önce",
   "timeWeeksAgo": "{count} hf önce",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "bir ay önce",
   "timeMonthsAgo": "{count} ay önce",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "bir yıl önce",
   "timeYearsAgo": "{count} yıl önce",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Paz",
   "weekdayMon": "Pzt",
   "weekdayTue": "Sal",
@@ -255,10 +297,45 @@
   "coinDiamond": "Elmas",
   "balanceZeroBronze": "0 bronz",
   "balanceBronzes": "{count} bronz",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} gümüş",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} altın",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} elmas",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "günde {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "br",
   "balanceAbbrSilver": "g.",
   "balanceAbbrGold": "a.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Günlük giriş serisi",
   "coinsFriendReward": "Arkadaş ödülü",
   "coinsFriendRewardHint": "Bağlantınızla kayıt için +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Ödüller yüklenemedi",
   "coinsClaimReward": "Ödülü al",
   "coinsAlreadyClaimed": "Zaten alındı",
   "coinsStreakToday": "{done}/{target} · bugün",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 1 gün kaldı",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · {remaining} kaldı",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Arkadaş davet et",
   "coinsInviteHint": "Bağlantınızla kaydolan herkes için +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Bağlantıyı kopyala",
   "coinsHowItWorks": "Nasıl çalışır",
   "coinsHowStep1": "Bağlantıyı kopyalayıp arkadaşına gönder",
   "coinsHowStep2": "Arkadaşın bu bağlantıyla kaydolur",
   "coinsHowStep3": "{amount} kazanırsın",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Başarımlar",
   "achievementsProgress": "İlerleme: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Çerçeve alındı",
   "achievementsClaimed": "Alındı",
   "achievementsOpenFrame": "Çerçeveyi aç",
   "friendsRemoveConfirm": "{name} adlı kişiyi arkadaşlardan kaldırmak istediğine emin misin?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Kaldır",
   "friendsRemove": "Arkadaşlardan kaldır",
   "friendsAcceptRequest": "İsteği kabul et",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Aramayı göster",
   "friendsLoadFailed": "Arkadaşlar yüklenemedi",
   "friendsSince": "Arkadaşlık tarihi: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Gelen istek: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Giden istek: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Kullanıcı bilgisi",
   "profileAgeYears": "{age} yaş",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Satın al",
   "shopBuyTitle": "Satın al?",
   "shopBuyStakeTitle": "Bahis satın al?",
   "shopBuyEmojiTitle": "Emoji satın al?",
   "shopBuyCollectionTitle": "Koleksiyon satın al?",
   "shopPrice": "Fiyat: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Satın alındı",
   "shopEmpty": "Henüz boş",
   "shopPurchased": "{title} satın alındı",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Alırsınız: 10 kullanım",
   "shopEmojiBought": "{title}: +10 kullanım",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 kullanım",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Satın al · 10 adet",
   "shopDailyIncome": "Gelir: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Tek seferlik satın alma",
   "shopSellRefund": "Satış maliyetin bir kısmını iade eder",
   "shopCollectionAdded": "{title} profile eklendi",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "set bonusu +%{percent}",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Tamamlandı",
   "shopSetProgress": "Toplandı · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Sat?",
   "inventorySellDesc": "{amount} alacaksınız",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Satıldı: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Önce arkadaş ekleyin",
   "inventoryGiftTitle": "Koleksiyon hediye et?",
   "inventoryGiftDesc": "«{title}» koleksiyonunu {name} kullanıcısına hediye et?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Hediye edildi: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Öğeler yüklenemedi",
   "inventoryNoCollections": "Koleksiyon yok — mağazadan satın alın",
   "inventoryNoEmojis": "Emoji yok — mağazadan satın alın",
   "inventoryNoFrames": "Çerçeve yok — ligde 10 oyun kazanın (başarımlar)",
   "inventoryNoStakes": "Satın alınmış bahis yok",
   "inventoryEmojiLeft": "{count} kaldı",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Gelir: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Yarınki gelir: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "{amount} altın bahis koyabilirsiniz",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "{amount} gümüş bahis koyabilirsiniz",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "+{amount} alındı",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Sohbetler yüklenemedi",
   "chatsLoadListFailed": "Liste yüklenemedi",
   "chatsBlockedEmpty": "Liste boş",
   "chatsBlockedAt": "Engellendi: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Sohbet oluşturulamadı",
   "chatsNeedFriendsFirst": "Önce arkadaş ekleyin, sonra sohbet açabilirsiniz.",
   "chatsFriendsNotFound": "Arkadaş bulunamadı",
@@ -368,6 +680,13 @@
   "chatActions": "Sohbet işlemleri",
   "chatScrollToEnd": "Konuşmanın sonuna git",
   "chatReplyingTo": "{name} yanıtlanıyor",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Hediye",
   "chatCollection": "Koleksiyon",
   "chatGiftCollection": "Hediye · koleksiyon",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Bir sohbete veya arkadaş mesajına yapıştırın",
   "lobbyCopyLinkHint": "Bağlantıyı panoya kopyala",
   "lobbyCreatorInvites": "{name} sizi oynamaya davet ediyor",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} kazandı",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Süre doldu. {name} kazandı",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} sn",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Yönetim",
   "tournamentsTitle": "Turnuvalar",
   "profileAgeInvalid": "1 ile 111 arasında bir yaş girin",
@@ -399,13 +746,48 @@
   "profileApply": "Uygula",
   "profilePreparing": "Hazırlanıyor…",
   "timeSecondsShort": "{seconds} sn",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 dk",
   "timeTenMin": "10 dk",
   "rulesIntro": "{grid} tahtasında XOX. Sırayla oynanır; X başlar.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Zafer: yatay, dikey veya çapraz {n}’yi sıraya dizin.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Hamle başına süre sınırı yok.",
   "rulesTurnTime": "Hamle süresi: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Bahis: {stake}. Oyun bu kadar jeton içindir.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Taraf değişimi: X’in ilk hamlesinden sonra O, X ile yer değiştirebilir.",
   "rulesNoCenter": "Merkez yasağı: X ilk hamlede merkeze oynayamaz.",
   "collectionSetLegends": "Efsaneler",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Doğa",
   "collectionSetAdventures": "Maceralar",
   "collectionCardMeta": "Koleksiyon · vitrin · hediye · satış · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "gün",
   "coinsDayFew": "gün",
   "coinsDayMany": "gün",
   "giftFriendTitle": "Arkadaşa hediye et",
   "photoCount": "Fotoğraf ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Fotoğraf ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Fotoğraf: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emoji · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Paneli genişlet",
   "chatsCollapsePanel": "Paneli daralt",
-  "chatReplySourceMissing": "Orijinal mesaj bulunamadı"
+  "chatReplySourceMissing": "Orijinal mesaj bulunamadı",
+  "shopStakeTitleSilver": "{n} gümüş bahis",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "{n} altın bahis",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "{n} gümüş bahis hakkını açar",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "{n} altın bahis hakkını açar",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "kendine",
+  "chatReplyPeer": "karşı tarafa"
 }

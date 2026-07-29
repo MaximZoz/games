@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · {price}",
   "chatsExpandPanel": "Ανάπτυξη πίνακα",
   "chatsCollapsePanel": "Σύμπτυξη πίνακα",
-  "chatReplySourceMissing": "Το αρχικό μήνυμα δεν βρέθηκε"
+  "chatReplySourceMissing": "Το αρχικό μήνυμα δεν βρέθηκε",
+  "shopStakeTitleSilver": "Ποντάρισμα {n} ασήμι",
+  "shopStakeTitleGold": "Ποντάρισμα {n} χρυσό",
+  "shopStakeDescSilver": "Ξεκλειδώνει ποντάρισμα {n} ασήμι",
+  "shopStakeDescGold": "Ξεκλειδώνει ποντάρισμα {n} χρυσό",
+  "chatReplySelf": "στον εαυτό σας",
+  "chatReplyPeer": "στον συνομιλητή"
 }

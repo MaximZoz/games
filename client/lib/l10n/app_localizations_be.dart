@@ -1397,4 +1397,30 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Зыходнае паведамленне не знойдзена';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'Стаўка $n срэбра';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'Стаўка $n золата';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Права ставіць $n срэбра ў гульнях';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Права ставіць $n золата ў гульнях';
+  }
+
+  @override
+  String get chatReplySelf => 'сабе';
+
+  @override
+  String get chatReplyPeer => 'суразмоўцу';
 }

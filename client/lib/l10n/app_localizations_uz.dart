@@ -1397,4 +1397,30 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'Asl xabar topilmadi';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return '$n kumush stavka';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return '$n oltin stavka';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'Oʻyinlarda $n kumush tikish huquqi';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'Oʻyinlarda $n oltin tikish huquqi';
+  }
+
+  @override
+  String get chatReplySelf => 'oʻzingizga';
+
+  @override
+  String get chatReplyPeer => 'suhbatdoshga';
 }

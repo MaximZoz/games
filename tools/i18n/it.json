@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} emoji · {price} cad.",
   "chatsExpandPanel": "Espandi pannello",
   "chatsCollapsePanel": "Comprimi pannello",
-  "chatReplySourceMissing": "Messaggio originale non trovato"
+  "chatReplySourceMissing": "Messaggio originale non trovato",
+  "shopStakeTitleSilver": "Puntata {n} argento",
+  "shopStakeTitleGold": "Puntata {n} oro",
+  "shopStakeDescSilver": "Sblocca puntate da {n} argento",
+  "shopStakeDescGold": "Sblocca puntate da {n} oro",
+  "chatReplySelf": "te stesso",
+  "chatReplyPeer": "all'interlocutore"
 }

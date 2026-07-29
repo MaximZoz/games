@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "이모지 {count}개 · {price}",
   "chatsExpandPanel": "패널 펼치기",
   "chatsCollapsePanel": "패널 접기",
-  "chatReplySourceMissing": "원본 메시지를 찾을 수 없습니다"
+  "chatReplySourceMissing": "원본 메시지를 찾을 수 없습니다",
+  "shopStakeTitleSilver": "판돈 {n} 실버",
+  "shopStakeTitleGold": "판돈 {n} 골드",
+  "shopStakeDescSilver": "{n} 실버 판돈 잠금 해제",
+  "shopStakeDescGold": "{n} 골드 판돈 잠금 해제",
+  "chatReplySelf": "자신",
+  "chatReplyPeer": "상대방"
 }

@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} Emojis · je {price}",
   "chatsExpandPanel": "Panel ausklappen",
   "chatsCollapsePanel": "Panel einklappen",
-  "chatReplySourceMissing": "Originalnachricht nicht gefunden"
+  "chatReplySourceMissing": "Originalnachricht nicht gefunden",
+  "shopStakeTitleSilver": "Einsatz {n} Silber",
+  "shopStakeTitleGold": "Einsatz {n} Gold",
+  "shopStakeDescSilver": "Freischalten: {n} Silber setzen",
+  "shopStakeDescGold": "Freischalten: {n} Gold setzen",
+  "chatReplySelf": "sich selbst",
+  "chatReplyPeer": "dem Gesprächspartner"
 }

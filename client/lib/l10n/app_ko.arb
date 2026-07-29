@@ -75,14 +75,56 @@
   "timeJustNow": "방금",
   "timeYesterday": "어제",
   "timeMinutesAgo": "{count}분 전",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count}시간 전",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count}일 전",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "일주일 전",
   "timeWeeksAgo": "{count}주 전",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "한 달 전",
   "timeMonthsAgo": "{count}개월 전",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "1년 전",
   "timeYearsAgo": "{count}년 전",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "일",
   "weekdayMon": "월",
   "weekdayTue": "화",
@@ -255,10 +297,45 @@
   "coinDiamond": "다이아몬드",
   "balanceZeroBronze": "브론즈 0",
   "balanceBronzes": "브론즈 {count}",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "실버 {count}",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "골드 {count}",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "다이아몬드 {count}",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "하루 {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "브",
   "balanceAbbrSilver": "실",
   "balanceAbbrGold": "골",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "일일 로그인 연속",
   "coinsFriendReward": "친구 보상",
   "coinsFriendRewardHint": "내 링크로 가입 시 +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "보상을 불러오지 못했습니다",
   "coinsClaimReward": "보상 받기",
   "coinsAlreadyClaimed": "이미 받음",
   "coinsStreakToday": "{done}/{target} · 오늘",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 1일 남음",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · {remaining} 남음",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "친구 초대",
   "coinsInviteHint": "내 링크로 가입하는 사람마다 +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "링크 복사",
   "coinsHowItWorks": "이용 방법",
   "coinsHowStep1": "링크를 복사해 친구에게 보내세요",
   "coinsHowStep2": "친구가 그 링크로 가입합니다",
   "coinsHowStep3": "{amount}을(를) 받습니다",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "업적",
   "achievementsProgress": "진행도: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "프레임 획득",
   "achievementsClaimed": "획득함",
   "achievementsOpenFrame": "프레임 열기",
   "friendsRemoveConfirm": "{name}님을 친구에서 삭제하시겠습니까?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "삭제",
   "friendsRemove": "친구에서 삭제",
   "friendsAcceptRequest": "요청 수락",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "검색 표시",
   "friendsLoadFailed": "친구를 불러오지 못했습니다",
   "friendsSince": "친구 시작: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "받은 요청: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "보낸 요청: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "사용자 정보",
   "profileAgeYears": "{age}세",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "구매",
   "shopBuyTitle": "구매할까요?",
   "shopBuyStakeTitle": "판돈을 구매할까요?",
   "shopBuyEmojiTitle": "이모지를 구매할까요?",
   "shopBuyCollectionTitle": "컬렉션을 구매할까요?",
   "shopPrice": "가격: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "구매함",
   "shopEmpty": "아직 비어 있음",
   "shopPurchased": "{title} 구매 완료",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "획득: 10회 사용",
   "shopEmojiBought": "{title}: +10회 사용",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10회 사용",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "구매 · 10개",
   "shopDailyIncome": "수익: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "일회성 구매",
   "shopSellRefund": "판매 시 비용의 일부가 반환됩니다",
   "shopCollectionAdded": "{title}이(가) 프로필에 추가됨",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "세트 보너스 +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "완성",
   "shopSetProgress": "수집 · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "판매할까요?",
   "inventorySellDesc": "{amount}을(를) 받습니다",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "판매됨: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "먼저 친구를 추가하세요",
   "inventoryGiftTitle": "컬렉션을 선물할까요?",
   "inventoryGiftDesc": "«{title}»을(를) {name}님에게 선물할까요?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "선물함: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "아이템을 불러오지 못했습니다",
   "inventoryNoCollections": "컬렉션 없음 — 상점에서 구매하세요",
   "inventoryNoEmojis": "이모지 없음 — 상점에서 구매하세요",
   "inventoryNoFrames": "프레임 없음 — 리그에서 10승 (업적)",
   "inventoryNoStakes": "구매한 판돈 없음",
   "inventoryEmojiLeft": "{count}개 남음",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "수익: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "내일 수익: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "{amount} 골드를 걸 수 있습니다",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "{amount} 실버를 걸 수 있습니다",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "+{amount} 수령",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "채팅을 불러오지 못했습니다",
   "chatsLoadListFailed": "목록을 불러오지 못했습니다",
   "chatsBlockedEmpty": "목록이 비어 있습니다",
   "chatsBlockedAt": "차단됨: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "채팅을 만들지 못했습니다",
   "chatsNeedFriendsFirst": "먼저 친구를 추가한 후 채팅을 열 수 있습니다.",
   "chatsFriendsNotFound": "친구를 찾을 수 없습니다",
@@ -368,6 +680,13 @@
   "chatActions": "채팅 작업",
   "chatScrollToEnd": "대화 끝으로",
   "chatReplyingTo": "{name}님에게 답장",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "선물",
   "chatCollection": "컬렉션",
   "chatGiftCollection": "선물 · 컬렉션",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "채팅이나 친구에게 보내는 메시지에 붙여넣으세요",
   "lobbyCopyLinkHint": "링크를 클립보드에 복사",
   "lobbyCreatorInvites": "{name}님이 게임에 초대합니다",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} 승리",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "시간 종료. {name} 승리",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds}초",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "관리자",
   "tournamentsTitle": "토너먼트",
   "profileAgeInvalid": "나이는 1에서 111 사이로 입력하세요",
@@ -399,13 +746,48 @@
   "profileApply": "적용",
   "profilePreparing": "준비 중…",
   "timeSecondsShort": "{seconds}초",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1분",
   "timeTenMin": "10분",
   "rulesIntro": "{grid} 판에서 틱택토. 번갈아 두며 X가 선공.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "승리: 가로, 세로 또는 대각선으로 {n}개를 잇습니다.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "수당 시간 제한 없음.",
   "rulesTurnTime": "수당 시간: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "판돈: {stake}. 이만큼의 코인으로 진행됩니다.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "진영 교체: X의 첫 수 이후 O가 X와 자리를 바꿀 수 있습니다.",
   "rulesNoCenter": "중앙 금지: X는 첫 수에 중앙에 둘 수 없습니다.",
   "collectionSetLegends": "전설",
@@ -415,15 +797,90 @@
   "collectionSetNature": "자연",
   "collectionSetAdventures": "모험",
   "collectionCardMeta": "컬렉션 · 진열 · 선물 · 판매 · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "일",
   "coinsDayFew": "일",
   "coinsDayMany": "일",
   "giftFriendTitle": "친구에게 선물",
   "photoCount": "사진 ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "사진 ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "사진: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "이모지 {count}개 · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "패널 펼치기",
   "chatsCollapsePanel": "패널 접기",
-  "chatReplySourceMissing": "원본 메시지를 찾을 수 없습니다"
+  "chatReplySourceMissing": "원본 메시지를 찾을 수 없습니다",
+  "shopStakeTitleSilver": "판돈 {n} 실버",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "판돈 {n} 골드",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "{n} 실버 판돈 잠금 해제",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "{n} 골드 판돈 잠금 해제",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "자신",
+  "chatReplyPeer": "상대방"
 }

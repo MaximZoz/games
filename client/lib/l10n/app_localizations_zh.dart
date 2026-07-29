@@ -1397,4 +1397,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => '找不到原消息';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return '赌注 $n 银';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return '赌注 $n 金';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return '解锁以 $n 银下注';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return '解锁以 $n 金下注';
+  }
+
+  @override
+  String get chatReplySelf => '自己';
+
+  @override
+  String get chatReplyPeer => '对方';
 }

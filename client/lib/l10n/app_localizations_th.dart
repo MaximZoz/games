@@ -1397,4 +1397,30 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => 'ไม่พบข้อความต้นฉบับ';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return 'เดิมพัน $n เงิน';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return 'เดิมพัน $n ทอง';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return 'ปลดล็อกเดิมพัน $n เงิน';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return 'ปลดล็อกเดิมพัน $n ทอง';
+  }
+
+  @override
+  String get chatReplySelf => 'ตัวคุณ';
+
+  @override
+  String get chatReplyPeer => 'อีกฝ่าย';
 }

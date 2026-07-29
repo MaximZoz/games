@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -938,19 +939,21 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 	if len(recipients) == 0 {
 		return
 	}
+	lang := i18n.LangRU
 	from := pushUserLabel(context.Background(), h.Pool, senderID)
 	body := strings.TrimSpace(item.Body)
+	photo := i18n.Content(lang, "push.photo")
 	if item.HasImage && body == "" {
 		if item.ImageCount > 1 {
-			body = fmt.Sprintf("Фото (%d)", item.ImageCount)
+			body = i18n.Contentf(lang, "push.photo_n", map[string]string{"n": fmt.Sprintf("%d", item.ImageCount)})
 		} else {
-			body = "Фото"
+			body = photo
 		}
 	} else if item.HasImage {
 		if item.ImageCount > 1 {
-			body = fmt.Sprintf("Фото (%d): %s", item.ImageCount, body)
+			body = i18n.Contentf(lang, "push.photo_n", map[string]string{"n": fmt.Sprintf("%d", item.ImageCount)}) + ": " + body
 		} else {
-			body = "Фото: " + body
+			body = photo + ": " + body
 		}
 	}
 	if len([]rune(body)) > 120 {
@@ -958,7 +961,7 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 		body = string(runes[:117]) + "…"
 	}
 	if body == "" {
-		body = "Новое сообщение"
+		body = i18n.Content(lang, "push.new_message")
 	}
 	h.Push.NotifyUsers(recipients, store.WebPushCategoryChat, PushPayload{
 		Title: from,

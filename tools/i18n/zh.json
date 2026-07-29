@@ -424,5 +424,11 @@
   "shopEmojiGroupMeta": "{count} 个表情 · 每个 {price}",
   "chatsExpandPanel": "展开面板",
   "chatsCollapsePanel": "收起面板",
-  "chatReplySourceMissing": "找不到原消息"
+  "chatReplySourceMissing": "找不到原消息",
+  "shopStakeTitleSilver": "赌注 {n} 银",
+  "shopStakeTitleGold": "赌注 {n} 金",
+  "shopStakeDescSilver": "解锁以 {n} 银下注",
+  "shopStakeDescGold": "解锁以 {n} 金下注",
+  "chatReplySelf": "自己",
+  "chatReplyPeer": "对方"
 }

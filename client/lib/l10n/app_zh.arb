@@ -75,14 +75,56 @@
   "timeJustNow": "刚刚",
   "timeYesterday": "昨天",
   "timeMinutesAgo": "{count} 分钟前",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} 小时前",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} 天前",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "一周前",
   "timeWeeksAgo": "{count} 周前",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "一个月前",
   "timeMonthsAgo": "{count} 个月前",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "一年前",
   "timeYearsAgo": "{count} 年前",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "日",
   "weekdayMon": "一",
   "weekdayTue": "二",
@@ -255,10 +297,45 @@
   "coinDiamond": "钻石",
   "balanceZeroBronze": "0 青铜",
   "balanceBronzes": "{count} 青铜",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} 白银",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} 黄金",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} 钻石",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "每天 {amount}",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "铜",
   "balanceAbbrSilver": "银",
   "balanceAbbrGold": "金",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "每日登录连续奖励",
   "coinsFriendReward": "好友奖励",
   "coinsFriendRewardHint": "通过您的链接注册可获得 +{amount}",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "无法加载奖励",
   "coinsClaimReward": "领取奖励",
   "coinsAlreadyClaimed": "已领取",
   "coinsStreakToday": "{done}/{target} · 今天",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · 还剩 1 天",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · 还剩 {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "邀请好友",
   "coinsInviteHint": "每位通过您的链接注册的用户可获得 +{amount}",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "复制链接",
   "coinsHowItWorks": "如何运作",
   "coinsHowStep1": "复制链接并发送给好友",
   "coinsHowStep2": "好友通过该链接注册",
   "coinsHowStep3": "您将获得 {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "成就",
   "achievementsProgress": "进度：{progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "已获得边框",
   "achievementsClaimed": "已获得",
   "achievementsOpenFrame": "打开边框",
   "friendsRemoveConfirm": "确定要将 {name} 移出好友吗？",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "移除",
   "friendsRemove": "移出好友",
   "friendsAcceptRequest": "接受请求",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "显示搜索",
   "friendsLoadFailed": "无法加载好友",
   "friendsSince": "成为好友：{date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "收到的请求：{date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "发出的请求：{date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "用户信息",
   "profileAgeYears": "{age} 岁",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "购买",
   "shopBuyTitle": "购买？",
   "shopBuyStakeTitle": "购买赌注？",
   "shopBuyEmojiTitle": "购买表情？",
   "shopBuyCollectionTitle": "购买收藏？",
   "shopPrice": "价格：{price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "已购买",
   "shopEmpty": "暂无内容",
   "shopPurchased": "已购买 {title}",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "获得：10 次使用",
   "shopEmojiBought": "{title}：+10 次使用",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 次使用",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "购买 · 10 个",
   "shopDailyIncome": "收益：{amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "一次性购买",
   "shopSellRefund": "出售可返还部分费用",
   "shopCollectionAdded": "{title} 已添加到个人资料",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "套装加成 +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "已集齐",
   "shopSetProgress": "已收集 · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "出售？",
   "inventorySellDesc": "您将获得 {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "已出售：+{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "请先添加好友",
   "inventoryGiftTitle": "赠送收藏？",
   "inventoryGiftDesc": "将「{title}」赠送给 {name}？",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "已赠送：{title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "无法加载物品",
   "inventoryNoCollections": "没有收藏 — 请在商店购买",
   "inventoryNoEmojis": "没有表情 — 请在商店购买",
   "inventoryNoFrames": "没有边框 — 在联赛中赢 10 场（成就）",
   "inventoryNoStakes": "没有已购买的赌注",
   "inventoryEmojiLeft": "剩余 {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "收益：+{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "明日收益：{amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "可以下注 {amount} 黄金",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "可以下注 {amount} 白银",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "已领取 +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "无法加载聊天",
   "chatsLoadListFailed": "无法加载列表",
   "chatsBlockedEmpty": "列表为空",
   "chatsBlockedAt": "已屏蔽：{date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "无法创建聊天",
   "chatsNeedFriendsFirst": "请先添加好友，然后才能打开聊天。",
   "chatsFriendsNotFound": "未找到好友",
@@ -368,6 +680,13 @@
   "chatActions": "聊天操作",
   "chatScrollToEnd": "转到对话末尾",
   "chatReplyingTo": "回复 {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "礼物",
   "chatCollection": "收藏",
   "chatGiftCollection": "礼物 · 收藏",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "将其粘贴到聊天或发给好友的消息中",
   "lobbyCopyLinkHint": "复制链接到剪贴板",
   "lobbyCreatorInvites": "{name} 邀请您一起玩",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} 获胜",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "时间到。{name} 获胜",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} 秒",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "管理后台",
   "tournamentsTitle": "锦标赛",
   "profileAgeInvalid": "请输入 1 到 111 之间的年龄",
@@ -399,13 +746,48 @@
   "profileApply": "应用",
   "profilePreparing": "准备中…",
   "timeSecondsShort": "{seconds} 秒",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 分钟",
   "timeTenMin": "10 分钟",
   "rulesIntro": "在 {grid} 棋盘上玩井字棋。轮流落子，X 先行。",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "获胜：在横向、纵向或对角线连成 {n} 个。",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "每步不限时。",
   "rulesTurnTime": "每步时间：{time}。",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "赌注：{stake}。本局押这么多硬币。",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "换边：X 首步之后，O 可与 X 互换。",
   "rulesNoCenter": "禁中：X 首步不能下在中心。",
   "collectionSetLegends": "传奇",
@@ -415,15 +797,90 @@
   "collectionSetNature": "自然",
   "collectionSetAdventures": "冒险",
   "collectionCardMeta": "收藏 · 展示 · 赠送 · 出售 · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "天",
   "coinsDayFew": "天",
   "coinsDayMany": "天",
   "giftFriendTitle": "送给好友",
   "photoCount": "照片（{count}）",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "照片（{count}）：{text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "照片：{text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} 个表情 · 每个 {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "展开面板",
   "chatsCollapsePanel": "收起面板",
-  "chatReplySourceMissing": "找不到原消息"
+  "chatReplySourceMissing": "找不到原消息",
+  "shopStakeTitleSilver": "赌注 {n} 银",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "赌注 {n} 金",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "解锁以 {n} 银下注",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "解锁以 {n} 金下注",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "自己",
+  "chatReplyPeer": "对方"
 }

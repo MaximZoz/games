@@ -75,14 +75,56 @@
   "timeJustNow": "щойно",
   "timeYesterday": "вчора",
   "timeMinutesAgo": "{count} хв тому",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{count} год тому",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{count} дн. тому",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "тиждень тому",
   "timeWeeksAgo": "{count} тиж. тому",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "місяць тому",
   "timeMonthsAgo": "{count} міс. тому",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "рік тому",
   "timeYearsAgo": "{count} р. тому",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "нд",
   "weekdayMon": "пн",
   "weekdayTue": "вт",
@@ -255,10 +297,45 @@
   "coinDiamond": "Діамант",
   "balanceZeroBronze": "0 бронзових",
   "balanceBronzes": "{count} бронзових",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} срібних",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} золотих",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} діамантів",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} на день",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "бр",
   "balanceAbbrSilver": "ср.",
   "balanceAbbrGold": "зл.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Щоденна серія входів",
   "coinsFriendReward": "Монети за друга",
   "coinsFriendRewardHint": "+{amount} за реєстрацію за посиланням",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Не вдалося завантажити нагороди",
   "coinsClaimReward": "Забрати нагороду",
   "coinsAlreadyClaimed": "Уже отримано",
   "coinsStreakToday": "{done}/{target} · сьогодні",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · ще 1 день",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · ще {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Запроси друга",
   "coinsInviteHint": "+{amount} за кожного, хто зареєструється за вашим посиланням",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Скопіювати посилання",
   "coinsHowItWorks": "Як це працює",
   "coinsHowStep1": "Скопіюйте посилання й надішліть другу",
   "coinsHowStep2": "Друг реєструється за цим посиланням",
   "coinsHowStep3": "Вам нараховується {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Досягнення",
   "achievementsProgress": "Прогрес: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Рамку отримано",
   "achievementsClaimed": "Отримано",
   "achievementsOpenFrame": "Відкрити рамку",
   "friendsRemoveConfirm": "Ви впевнені, що хочете видалити {name} з друзів?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Прибрати",
   "friendsRemove": "Видалити з друзів",
   "friendsAcceptRequest": "Прийняти заявку",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Показати пошук",
   "friendsLoadFailed": "Не вдалося завантажити друзів",
   "friendsSince": "Дружите з: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Вхідна заявка: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Вихідна заявка: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Інформація про користувача",
   "profileAgeYears": "{age} років",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Купити",
   "shopBuyTitle": "Купити?",
   "shopBuyStakeTitle": "Купити ставку?",
   "shopBuyEmojiTitle": "Купити смайлик?",
   "shopBuyCollectionTitle": "Купити колекцію?",
   "shopPrice": "Ціна: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Куплено",
   "shopEmpty": "Поки порожньо",
   "shopPurchased": "{title} куплено",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Отримаєте: 10 використань",
   "shopEmojiBought": "{title}: +10 використань",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 використань",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Купити · 10 шт.",
   "shopDailyIncome": "Дохід: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Покупка один раз",
   "shopSellRefund": "Продаж поверне частину вартості",
   "shopCollectionAdded": "{title} додано до профілю",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "бонус групи +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Зібрано",
   "shopSetProgress": "Зібрано · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Продати?",
   "inventorySellDesc": "Ви отримаєте {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Продано: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Спочатку додайте друзів",
   "inventoryGiftTitle": "Подарувати колекцію?",
   "inventoryGiftDesc": "Подарувати «{title}» користувачу {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Подаровано: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Не вдалося завантажити предмети",
   "inventoryNoCollections": "Немає колекцій — купіть у магазині",
   "inventoryNoEmojis": "Немає смайликів — купіть у магазині",
   "inventoryNoFrames": "Немає рамок — виграйте 10 ігор у лізі (досягнення)",
   "inventoryNoStakes": "Немає куплених ставок",
   "inventoryEmojiLeft": "Залишилось {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Дохід: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Дохід завтра: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Можна ставити {amount} золота",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Можна ставити {amount} срібла",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Отримано +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Не вдалося завантажити чати",
   "chatsLoadListFailed": "Не вдалося завантажити список",
   "chatsBlockedEmpty": "Список порожній",
   "chatsBlockedAt": "Заблоковано: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Не вдалося створити чат",
   "chatsNeedFriendsFirst": "Спочатку додайте друзів, потім можна відкрити чат.",
   "chatsFriendsNotFound": "Друзів не знайдено",
@@ -368,6 +680,13 @@
   "chatActions": "Дії з чатом",
   "chatScrollToEnd": "В кінець переписки",
   "chatReplyingTo": "У відповідь {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Подарунок",
   "chatCollection": "Колекція",
   "chatGiftCollection": "Подарунок · колекція",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Вставте її в чат або повідомлення другу",
   "lobbyCopyLinkHint": "Скопіювати посилання в буфер обміну",
   "lobbyCreatorInvites": "{name} запрошує вас зіграти",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "Переміг {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "Час вийшов. Переміг {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} с",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Адмінка",
   "tournamentsTitle": "Турніри",
   "profileAgeInvalid": "Введіть вік від 1 до 111",
@@ -399,13 +746,48 @@
   "profileApply": "Застосувати",
   "profilePreparing": "Підготовка…",
   "timeSecondsShort": "{seconds} с",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 хв",
   "timeTenMin": "10 хв",
   "rulesIntro": "Хрестики-нулики на полі {grid}. Ходять по черзі, X починає.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Перемога: потрібно вибудувати {n} в ряд по горизонталі, вертикалі або діагоналі.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Без обмеження часу на хід.",
   "rulesTurnTime": "Час на хід: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Ставка: {stake}. На стільки монет іде гра.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Зміна сторін: O може помінятися місцями з X після першого ходу X.",
   "rulesNoCenter": "Заборона центру: X не може ходити в центр першим ходом.",
   "collectionSetLegends": "Легенди",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Природа",
   "collectionSetAdventures": "Пригоди",
   "collectionCardMeta": "Колекція · вітрина · подарунок · продаж · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "день",
   "coinsDayFew": "дні",
   "coinsDayMany": "днів",
   "giftFriendTitle": "Подарувати другу",
   "photoCount": "Фото ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Фото ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Фото: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} смайликів · по {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Розгорнути панель",
   "chatsCollapsePanel": "Згорнути панель",
-  "chatReplySourceMissing": "Вихідне повідомлення не знайдено"
+  "chatReplySourceMissing": "Вихідне повідомлення не знайдено",
+  "shopStakeTitleSilver": "Ставка {n} срібла",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Ставка {n} золота",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Право ставити {n} срібла в іграх",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Право ставити {n} золота в іграх",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "собі",
+  "chatReplyPeer": "співрозмовнику"
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -336,9 +337,10 @@ func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 				}
 				if h.Push != nil {
 					from := pushUserLabel(r.Context(), h.Pool, userID)
-					body := "Вам подарили коллекцию"
+					lang := i18n.LangRU
+					body := i18n.Content(lang, "push.gift_collection")
 					if strings.TrimSpace(title) != "" {
-						body = "Вам подарили: " + strings.TrimSpace(title)
+						body = i18n.Contentf(lang, "push.gift_collection_named", map[string]string{"title": strings.TrimSpace(title)})
 					}
 					h.Push.NotifyUsers([]uuid.UUID{toID}, store.WebPushCategoryRewards, PushPayload{
 						Title: from,

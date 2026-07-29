@@ -75,14 +75,56 @@
   "timeJustNow": "agora mesmo",
   "timeYesterday": "ontem",
   "timeMinutesAgo": "há {count} min",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "há {count} h",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "há {count} d",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeWeekAgo": "há uma semana",
   "timeWeeksAgo": "há {count} sem.",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeMonthAgo": "há um mês",
   "timeMonthsAgo": "há {count} mês.",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "timeYearAgo": "há um ano",
   "timeYearsAgo": "há {count} a.",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weekdaySun": "Dom",
   "weekdayMon": "Seg",
   "weekdayTue": "Ter",
@@ -255,10 +297,45 @@
   "coinDiamond": "Diamante",
   "balanceZeroBronze": "0 bronze",
   "balanceBronzes": "{count} bronze",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceSilvers": "{count} prata",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceGolds": "{count} ouro",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balanceDiamonds": "{count} diamantes",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "balancePerDay": "{amount} por dia",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "balanceAbbrBronze": "br",
   "balanceAbbrSilver": "pr.",
   "balanceAbbrGold": "ou.",
@@ -273,25 +350,93 @@
   "coinsLoginStreak": "Sequência diária de logins",
   "coinsFriendReward": "Recompensa por amigo",
   "coinsFriendRewardHint": "+{amount} por registo através do seu link",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsLoadRewardsFailed": "Não foi possível carregar as recompensas",
   "coinsClaimReward": "Receber recompensa",
   "coinsAlreadyClaimed": "Já recebida",
   "coinsStreakToday": "{done}/{target} · hoje",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakOneDayLeft": "{done}/{target} · falta 1 dia",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "coinsStreakDaysLeft": "{done}/{target} · faltam {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "coinsInviteFriend": "Convidar um amigo",
   "coinsInviteHint": "+{amount} por cada pessoa que se registar com o seu link",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsCopyLink": "Copiar link",
   "coinsHowItWorks": "Como funciona",
   "coinsHowStep1": "Copie o link e envie a um amigo",
   "coinsHowStep2": "O amigo regista-se com esse link",
   "coinsHowStep3": "Recebe {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsTitle": "Conquistas",
   "achievementsProgress": "Progresso: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
   "achievementsFrameClaimed": "Moldura obtida",
   "achievementsClaimed": "Obtido",
   "achievementsOpenFrame": "Abrir moldura",
   "friendsRemoveConfirm": "Tem a certeza de que quer remover {name} dos amigos?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "friendsRemoveConfirmAction": "Remover",
   "friendsRemove": "Remover dos amigos",
   "friendsAcceptRequest": "Aceitar pedido",
@@ -306,52 +451,219 @@
   "friendsExpandSearch": "Mostrar pesquisa",
   "friendsLoadFailed": "Não foi possível carregar os amigos",
   "friendsSince": "Amigos desde: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsIncomingAt": "Pedido recebido: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsOutgoingAt": "Pedido enviado: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "userInfoTitle": "Informações do utilizador",
   "profileAgeYears": "{age} anos",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
   "shopBuy": "Comprar",
   "shopBuyTitle": "Comprar?",
   "shopBuyStakeTitle": "Comprar aposta?",
   "shopBuyEmojiTitle": "Comprar emoji?",
   "shopBuyCollectionTitle": "Comprar coleção?",
   "shopPrice": "Preço: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopOwned": "Comprado",
   "shopEmpty": "Ainda vazio",
   "shopPurchased": "{title} comprado",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiUses": "Recebe: 10 utilizações",
   "shopEmojiBought": "{title}: +10 utilizações",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiPriceUses": "{price} · 10 utilizações",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyTen": "Comprar · 10 un.",
   "shopDailyIncome": "Rendimento: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopBuyOnce": "Compra única",
   "shopSellRefund": "Vender devolve parte do custo",
   "shopCollectionAdded": "{title} adicionado ao perfil",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shopSetBonus": "bónus do conjunto +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "shopSetComplete": "Completo",
   "shopSetProgress": "Recolhido · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySellTitle": "Vender?",
   "inventorySellDesc": "Receberá {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventorySold": "Vendido: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNeedFriends": "Adicione amigos primeiro",
   "inventoryGiftTitle": "Oferecer coleção?",
   "inventoryGiftDesc": "Oferecer «{title}» a {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryGifted": "Oferecido: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryLoadFailed": "Não foi possível carregar os itens",
   "inventoryNoCollections": "Sem coleções — compre na loja",
   "inventoryNoEmojis": "Sem emojis — compre na loja",
   "inventoryNoFrames": "Sem molduras — ganhe 10 jogos de liga (conquistas)",
   "inventoryNoStakes": "Sem apostas compradas",
   "inventoryEmojiLeft": "Restam {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryIncomeReady": "Rendimento: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryIncomeTomorrow": "Rendimento amanhã: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeGold": "Pode apostar {amount} de ouro",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryStakeSilver": "Pode apostar {amount} de prata",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryClaimedAmount": "Recebido +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "chatsLoadFailed": "Não foi possível carregar os chats",
   "chatsLoadListFailed": "Não foi possível carregar a lista",
   "chatsBlockedEmpty": "A lista está vazia",
   "chatsBlockedAt": "Bloqueado: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "chatsCreateFailed": "Não foi possível criar o chat",
   "chatsNeedFriendsFirst": "Adicione amigos primeiro; depois pode abrir um chat.",
   "chatsFriendsNotFound": "Amigos não encontrados",
@@ -368,6 +680,13 @@
   "chatActions": "Ações do chat",
   "chatScrollToEnd": "Ir para o fim",
   "chatReplyingTo": "Em resposta a {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatGift": "Presente",
   "chatCollection": "Coleção",
   "chatGiftCollection": "Presente · coleção",
@@ -383,9 +702,37 @@
   "lobbyLinkCopiedHint": "Cole-o num chat ou mensagem a um amigo",
   "lobbyCopyLinkHint": "Copiar link para a área de transferência",
   "lobbyCreatorInvites": "{name} convida-o a jogar",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWon": "{name} venceu",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameOpponentWonTimeout": "O tempo acabou. {name} venceu",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "gameSecondsLeft": "{seconds} s",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "adminTitle": "Admin",
   "tournamentsTitle": "Torneios",
   "profileAgeInvalid": "Introduza uma idade de 1 a 111",
@@ -399,13 +746,48 @@
   "profileApply": "Aplicar",
   "profilePreparing": "A preparar…",
   "timeSecondsShort": "{seconds} s",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "timeOneMin": "1 min",
   "timeTenMin": "10 min",
   "rulesIntro": "Jogo da velha em um tabuleiro {grid}. Em turnos; X começa.",
+  "@rulesIntro": {
+    "placeholders": {
+      "grid": {
+        "type": "String"
+      }
+    }
+  },
   "rulesWin": "Vitória: alinhe {n} em linha na horizontal, vertical ou diagonal.",
+  "@rulesWin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "rulesNoTimeLimit": "Sem limite de tempo por jogada.",
   "rulesTurnTime": "Tempo por jogada: {time}.",
+  "@rulesTurnTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "rulesStake": "Aposta: {stake}. O jogo vale tantas moedas.",
+  "@rulesStake": {
+    "placeholders": {
+      "stake": {
+        "type": "String"
+      }
+    }
+  },
   "rulesSwap": "Troca de lados: O pode trocar com X após o primeiro lance de X.",
   "rulesNoCenter": "Sem centro: X não pode jogar no centro no primeiro lance.",
   "collectionSetLegends": "Lendas",
@@ -415,15 +797,90 @@
   "collectionSetNature": "Natureza",
   "collectionSetAdventures": "Aventuras",
   "collectionCardMeta": "Coleção · vitrine · presente · venda · +{amount}",
+  "@collectionCardMeta": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "coinsDayOne": "dia",
   "coinsDayFew": "dias",
   "coinsDayMany": "dias",
   "giftFriendTitle": "Presentear um amigo",
   "photoCount": "Foto ({count})",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photoCountWithText": "Foto ({count}): {text}",
+  "@photoCountWithText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "photoWithText": "Foto: {text}",
+  "@photoWithText": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "shopEmojiGroupMeta": "{count} emojis · {price}",
+  "@shopEmojiGroupMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "chatsExpandPanel": "Expandir painel",
   "chatsCollapsePanel": "Recolher painel",
-  "chatReplySourceMissing": "Mensagem original não encontrada"
+  "chatReplySourceMissing": "Mensagem original não encontrada",
+  "shopStakeTitleSilver": "Aposta {n} prata",
+  "@shopStakeTitleSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeTitleGold": "Aposta {n} ouro",
+  "@shopStakeTitleGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescSilver": "Desbloqueia apostar {n} de prata",
+  "@shopStakeDescSilver": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopStakeDescGold": "Desbloqueia apostar {n} de ouro",
+  "@shopStakeDescGold": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatReplySelf": "você mesmo",
+  "chatReplyPeer": "ao interlocutor"
 }

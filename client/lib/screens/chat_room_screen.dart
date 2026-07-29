@@ -30,6 +30,7 @@ import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
@@ -2552,11 +2553,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String _replyAuthorLabel(ChatMessageItem message) {
     final meID = ref.read(authStateProvider).valueOrNull?.id;
     if (meID != null && message.senderUserID == meID) {
-      return 'себе';
+      return context.l10n.chatReplySelf;
     }
     final name = (widget.peerName ?? '').trim();
     if (name.isNotEmpty) return name;
-    return 'собеседнику';
+    return context.l10n.chatReplyPeer;
   }
 
   Future<void> _openEmojiPicker() async {
@@ -2847,7 +2848,12 @@ class _ChatGiftCard extends StatelessWidget {
     if (gift == null) {
       return _ChatMessageBody(body: body, largeCentered: true);
     }
-    final title = gift.title.isNotEmpty ? gift.title : LocaleService.l10n.chatCollection;
+    final title = catalogTitle(
+      gift.code,
+      fallback: gift.title.isNotEmpty
+          ? gift.title
+          : LocaleService.l10n.chatCollection,
+    );
     final name =
         gift.animatedName.isNotEmpty ? gift.animatedName : 'sparkles';
 

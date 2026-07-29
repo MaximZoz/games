@@ -1397,4 +1397,30 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chatReplySourceMissing => '원본 메시지를 찾을 수 없습니다';
+
+  @override
+  String shopStakeTitleSilver(int n) {
+    return '판돈 $n 실버';
+  }
+
+  @override
+  String shopStakeTitleGold(int n) {
+    return '판돈 $n 골드';
+  }
+
+  @override
+  String shopStakeDescSilver(int n) {
+    return '$n 실버 판돈 잠금 해제';
+  }
+
+  @override
+  String shopStakeDescGold(int n) {
+    return '$n 골드 판돈 잠금 해제';
+  }
+
+  @override
+  String get chatReplySelf => '자신';
+
+  @override
+  String get chatReplyPeer => '상대방';
 }
