@@ -1317,7 +1317,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         if (!mounted) return;
         await WidgetsBinding.instance.endOfFrame;
         final ctx = _keyForMessage(targetID).currentContext;
-        if (ctx != null) {
+        if (ctx != null && ctx.mounted) {
           await Scrollable.ensureVisible(
             ctx,
             duration: attempt == 0
