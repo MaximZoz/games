@@ -37,12 +37,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLanguageSystem => 'Как в системе';
 
   @override
-  String get settingsLanguageRu => 'Русский';
-
-  @override
-  String get settingsLanguageEn => 'English';
-
-  @override
   String get settingsAddBotsTitle => 'Добавлять ботов через 30 с';
 
   @override
@@ -181,23 +175,71 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonOffline => 'не в сети';
 
   @override
+  String get commonOnlineCap => 'Онлайн';
+
+  @override
+  String get commonUser => 'Пользователь';
+
+  @override
+  String get commonPlayer => 'Игрок';
+
+  @override
+  String get commonAboutMe => 'О себе';
+
+  @override
+  String get commonBack => 'Назад';
+
+  @override
+  String get commonAccept => 'Принять';
+
+  @override
+  String get commonDecline => 'Отклонить';
+
+  @override
+  String get commonCreating => 'Создание…';
+
+  @override
+  String get commonSearching => 'Поиск…';
+
+  @override
+  String get commonInsufficientCoins => 'Недостаточно монет';
+
+  @override
+  String get commonNotFound => 'Не найдено';
+
+  @override
+  String get commonServerErrorShort => 'Ошибка сервера';
+
+  @override
+  String get commonForbidden => 'Недостаточно прав';
+
+  @override
+  String get commonUserBlocked => 'Пользователь заблокирован';
+
+  @override
+  String get commonUserNotFound => 'Пользователь не найден';
+
+  @override
+  String get commonGenericError => 'Произошла ошибка. Попробуйте ещё раз.';
+
+  @override
   String get timeJustNow => 'только что';
 
   @override
   String get timeYesterday => 'вчера';
 
   @override
-  String timeMinutesAgo(int count) {
+  String timeMinutesAgo(Object count) {
     return '$count мин назад';
   }
 
   @override
-  String timeHoursAgo(int count) {
+  String timeHoursAgo(Object count) {
     return '$count ч назад';
   }
 
   @override
-  String timeDaysAgo(int count) {
+  String timeDaysAgo(Object count) {
     return '$count дн. назад';
   }
 
@@ -205,7 +247,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeWeekAgo => 'неделю назад';
 
   @override
-  String timeWeeksAgo(int count) {
+  String timeWeeksAgo(Object count) {
     return '$count нед. назад';
   }
 
@@ -213,7 +255,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeMonthAgo => 'месяц назад';
 
   @override
-  String timeMonthsAgo(int count) {
+  String timeMonthsAgo(Object count) {
     return '$count мес. назад';
   }
 
@@ -221,7 +263,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeYearAgo => 'год назад';
 
   @override
-  String timeYearsAgo(int count) {
+  String timeYearsAgo(Object count) {
     return '$count г. назад';
   }
 
@@ -283,6 +325,42 @@ class AppLocalizationsRu extends AppLocalizations {
   String get monthDec => 'дек';
 
   @override
+  String get homeAchievements => 'Достижения';
+
+  @override
+  String get homeAchievementsSubtitle => 'Ваши игровые результаты';
+
+  @override
+  String get homeAchievementsRewards => 'Есть награды к получению';
+
+  @override
+  String get homeCoins => 'Монеты';
+
+  @override
+  String get homeCoinsSubtitle => 'Баланс и награды';
+
+  @override
+  String get homeCoinsDailyReward => 'Доступна награда за вход';
+
+  @override
+  String get homeItems => 'Предметы';
+
+  @override
+  String get homeItemsInventory => 'Ваш инвентарь';
+
+  @override
+  String get homeItemsGifted => 'Вам подарили коллекцию';
+
+  @override
+  String get homeItemsIncome => 'Можно забрать доход коллекций';
+
+  @override
+  String get homeShop => 'Магазин';
+
+  @override
+  String get homeShopSubtitle => 'Смайлы, ставки, коллекции';
+
+  @override
   String get gamesTitle => 'Игры';
 
   @override
@@ -295,6 +373,135 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesWaiting => 'Ожидание';
 
   @override
+  String get gamesLobbyTab => 'Лобби';
+
+  @override
+  String get gamesTicTacToe => 'Крестики-нолики';
+
+  @override
+  String get gamesRules => 'Правила';
+
+  @override
+  String get gamesRulesTitle => 'Правила игры';
+
+  @override
+  String get gamesCreate => 'Создать игру';
+
+  @override
+  String get gamesJoin => 'Присоединиться';
+
+  @override
+  String get gamesOpponentTurn => 'Ход соперника';
+
+  @override
+  String get gamesCurrentGame => 'Текущая игра';
+
+  @override
+  String get gamesInvitedYou => 'Вас пригласили';
+
+  @override
+  String get gamesTurnTime => 'Время на ход';
+
+  @override
+  String get gamesGridSize => 'Размер сетки';
+
+  @override
+  String get gamesSwapSides => 'Смена сторон';
+
+  @override
+  String get gamesNoCenter => 'Запрет центра';
+
+  @override
+  String get lobbyMatchmake => 'Лобби';
+
+  @override
+  String get lobbyPrivateGame => 'Своя игра';
+
+  @override
+  String get lobbySearchingOpponent => 'Поиск соперника…';
+
+  @override
+  String get lobbyWaitingJoin => 'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»';
+
+  @override
+  String get lobbyInviteTitle => 'Приглашение в игру';
+
+  @override
+  String get lobbyInvitedToPlay => 'Вас пригласили сыграть';
+
+  @override
+  String get lobbyEnterGame => 'Войти в игру';
+
+  @override
+  String get lobbyInvite => 'Пригласить';
+
+  @override
+  String get lobbyInviteSent => 'Приглашение отправлено';
+
+  @override
+  String get lobbyCopyLink => 'Отправить ссылку на игру';
+
+  @override
+  String get lobbyLinkCopied => 'Ссылка скопирована';
+
+  @override
+  String get lobbyNoFriendsOnline => 'Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.';
+
+  @override
+  String get gameBot => 'Бот';
+
+  @override
+  String get gameOpponent => 'Соперник';
+
+  @override
+  String get gameYouWon => 'Вы победили!';
+
+  @override
+  String get gameYouWonOpponentLeft => 'Вы победили, соперник вышел';
+
+  @override
+  String get gameYouWonOpponentTimeout => 'Вы победили, время соперника вышло';
+
+  @override
+  String get gameDraw => 'Ничья';
+
+  @override
+  String get gameExitTitle => 'Выход из игры';
+
+  @override
+  String get gameExitConfirm => 'Если вы выйдете, то вы проиграете. Выйти?';
+
+  @override
+  String get gameStay => 'Остаться';
+
+  @override
+  String get gameLeave => 'Выйти';
+
+  @override
+  String get gameConnecting => 'Подключение к игре…';
+
+  @override
+  String get gameWaitingOpponent => 'Ожидание соперника';
+
+  @override
+  String get gameRematchOffer => 'Соперник предлагает реванш';
+
+  @override
+  String get gameRematchDeclined => 'Соперник отклонил предложение поиграть';
+
+  @override
+  String get gameRematch => 'Повторить';
+
+  @override
+  String get gameOtherOpponent => 'Другой соперник';
+
+  @override
+  String get gameSwapSidesAction => 'Сменить стороны';
+
+  @override
+  String get gameWriteMessage => 'Написать сообщение';
+
+  @override
   String get chatsTitle => 'Чаты';
 
   @override
@@ -302,6 +509,84 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatsNewChat => 'Новый чат';
+
+  @override
+  String get chatsNoMessages => 'Нет сообщений';
+
+  @override
+  String get chatsClearTitle => 'Очистить переписку?';
+
+  @override
+  String get chatsClearDesc => 'Диалог будет удалён без возможности восстановления.';
+
+  @override
+  String get chatsClearConfirm => 'Очистить';
+
+  @override
+  String get chatsBlockTitle => 'Заблокировать пользователя?';
+
+  @override
+  String get chatsBlockDesc => 'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.';
+
+  @override
+  String get chatsBlockConfirm => 'Заблокировать';
+
+  @override
+  String get chatsBlockedUsers => 'Заблокированные пользователи';
+
+  @override
+  String get chatsUnblock => 'Разблокировать';
+
+  @override
+  String get chatDialog => 'Диалог';
+
+  @override
+  String get chatEmpty => 'Сообщений пока нет.\nНапишите первое сообщение.';
+
+  @override
+  String get chatMessageHint => 'Сообщение';
+
+  @override
+  String get chatEmoji => 'Смайлики';
+
+  @override
+  String get chatBuyEmojiHint => 'Купите смайлики в магазине на главной';
+
+  @override
+  String get chatEditing => 'Редактирование';
+
+  @override
+  String get chatToday => 'Сегодня';
+
+  @override
+  String get chatYesterday => 'Вчера';
+
+  @override
+  String get chatFriendsOnly => 'Текст только для друзей';
+
+  @override
+  String get emojiGroupEmotions => 'Эмоции';
+
+  @override
+  String get emojiGroupGame => 'Игровые';
+
+  @override
+  String get emojiGroupFlags => 'Флажки';
+
+  @override
+  String get emojiGroupAnimals => 'Животные';
+
+  @override
+  String get emojiGroupFood => 'Еда';
+
+  @override
+  String get emojiGroupTravel => 'Путешествия';
+
+  @override
+  String get emojiGroupParty => 'Праздник';
+
+  @override
+  String get emojiGroupObjects => 'Предметы';
 
   @override
   String get friendsTitle => 'Друзья';
@@ -322,7 +607,121 @@ class AppLocalizationsRu extends AppLocalizations {
   String get friendsRequestSent => 'Заявка отправлена';
 
   @override
+  String get friendsFindTab => 'Найти друга';
+
+  @override
+  String get friendsSearchHint => 'Поиск по нику';
+
+  @override
+  String get friendsSearchPrompt => 'Используйте поиск, чтобы найти новых друзей';
+
+  @override
+  String get friendsNothingFound => 'Ничего не найдено';
+
+  @override
+  String get friendsEmpty => 'У вас пока нет друзей';
+
+  @override
+  String get friendsNoIncoming => 'Нет входящих заявок';
+
+  @override
+  String get friendsNoOutgoing => 'Нет исходящих заявок';
+
+  @override
+  String get friendsAlreadyFriends => 'Уже в друзьях';
+
+  @override
+  String get friendsRemoveTitle => 'Убрать из друзей?';
+
+  @override
+  String get friendsRemoved => 'Пользователь удалён из друзей';
+
+  @override
+  String get friendsRequestAccepted => 'Заявка принята';
+
+  @override
+  String get friendsRequestDeclined => 'Заявка отклонена';
+
+  @override
+  String get friendsRequestCancelled => 'Заявка отменена';
+
+  @override
   String get profileTitle => 'Профиль';
+
+  @override
+  String get profileSignInPrompt => 'Войдите в аккаунт';
+
+  @override
+  String get profileSignInHint => 'Чтобы настроить личный профиль';
+
+  @override
+  String get profileEdit => 'Редактировать';
+
+  @override
+  String get profileCollections => 'Коллекции';
+
+  @override
+  String get profileAge => 'Возраст';
+
+  @override
+  String get profileGender => 'Пол';
+
+  @override
+  String get profileGenderUnset => 'Не указан';
+
+  @override
+  String get profileGenderMale => 'Мужской';
+
+  @override
+  String get profileGenderFemale => 'Женский';
+
+  @override
+  String get profileAvatar => 'Аватар';
+
+  @override
+  String get profileUploadPhoto => 'Загрузить фото';
+
+  @override
+  String get profileChangePhoto => 'Поменять фото';
+
+  @override
+  String get shopTitle => 'Магазин';
+
+  @override
+  String get shopEmojis => 'Смайлики';
+
+  @override
+  String get shopEmojisSubtitle => 'Анимированные эмодзи для чата';
+
+  @override
+  String get shopCollections => 'Коллекции';
+
+  @override
+  String get shopCollectionsSubtitle => 'Витрина профиля, подарки и доход';
+
+  @override
+  String get shopStakes => 'Ставки';
+
+  @override
+  String get shopStakesSubtitle => 'Разблокировка серебряных ставок';
+
+  @override
+  String get inventoryTitle => 'Предметы';
+
+  @override
+  String get inventoryEmpty => 'Пока ничего нет — загляните в магазин';
+
+  @override
+  String get inventoryFrames => 'Рамки';
+
+  @override
+  String get inventoryClaim => 'Забрать';
+
+  @override
+  String get inventorySell => 'Продать';
+
+  @override
+  String get inventoryGift => 'Подарить';
 
   @override
   String get messageEdited => 'изменено';
@@ -347,4 +746,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionExpired => 'Сессия истекла. Войдите заново.';
+
+  @override
+  String get errNoInternet => 'Нет подключения к интернету.';
+
+  @override
+  String get errTimeout => 'Превышено время ожидания. Попробуйте ещё раз.';
+
+  @override
+  String get errGamesUnavailable => 'Игры временно недоступны';
+
+  @override
+  String get errSettingsSaveFailed => 'Не удалось сохранить настройку';
+
+  @override
+  String get errPushPermission => 'Разрешите уведомления в настройках браузера или системы.';
 }

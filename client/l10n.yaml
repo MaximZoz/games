@@ -7,5 +7,32 @@ nullable-getter: false
 preferred-supported-locales:
   - ru
   - en
+  - uk
+  - be
+  - kk
+  - uz
+  - de
+  - fr
+  - es
+  - it
+  - pt
+  - pl
+  - nl
+  - tr
+  - zh
+  - ja
+  - ko
+  - hi
+  - ar
+  - he
+  - th
+  - vi
+  - id
+  - cs
+  - el
+  - sv
+  - nb
+  - da
+  - fi
 use-deferred-loading: false
 synthetic-package: false

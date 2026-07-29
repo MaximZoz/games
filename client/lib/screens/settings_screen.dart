@@ -33,9 +33,12 @@ class SettingsScreen extends ConsumerWidget {
       );
     }
 
-    final languageValue = localeChoice == null
-        ? 'system'
-        : localeChoice.languageCode;
+    final effective = effectiveAppLocale(localeChoice);
+    final currentLang = appLanguageByCode(effective.languageCode);
+    final languageLabel = localeChoice == null
+        ? '${l10n.settingsLanguageSystem}'
+            '${currentLang != null ? ' · ${currentLang.nativeName}' : ''}'
+        : (currentLang?.nativeName ?? effective.languageCode);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -57,55 +60,55 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   _SettingsCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          l10n.settingsLanguage,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
+                    child: InkWell(
+                      onTap: () => _openLanguagePicker(
+                        context,
+                        ref,
+                        selected: localeChoice,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            if (currentLang != null) ...[
+                              _FlagThumb(iso: currentLang.flagIso),
+                              const SizedBox(width: 12),
+                            ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.settingsLanguage,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: languageValue,
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    languageLabel,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: 'system',
-                              child: Text(l10n.settingsLanguageSystem),
-                            ),
-                            DropdownMenuItem(
-                              value: 'ru',
-                              child: Text(l10n.settingsLanguageRu),
-                            ),
-                            DropdownMenuItem(
-                              value: 'en',
-                              child: Text(l10n.settingsLanguageEn),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.textSecondary,
                             ),
                           ],
-                          onChanged: (v) async {
-                            if (v == null) return;
-                            if (v == 'system') {
-                              await ref
-                                  .read(appLocaleProvider.notifier)
-                                  .setLocale(null);
-                            } else {
-                              await ref
-                                  .read(appLocaleProvider.notifier)
-                                  .setLocale(Locale(v));
-                            }
-                          },
                         ),
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -217,6 +220,119 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openLanguagePicker(
+    BuildContext context,
+    WidgetRef ref, {
+    required Locale? selected,
+  }) async {
+    final l10n = context.l10n;
+    final chosen = await showModalBottomSheet<Object>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final height = MediaQuery.sizeOf(ctx).height * 0.75;
+        return SafeArea(
+          child: SizedBox(
+            height: height,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.settingsLanguage,
+                          style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: AppColors.accentSoft),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.phone_iphone_rounded),
+                        title: Text(l10n.settingsLanguageSystem),
+                        trailing: selected == null
+                            ? const Icon(Icons.check_rounded,
+                                color: AppColors.accentStart)
+                            : null,
+                        onTap: () => Navigator.pop(ctx, 'system'),
+                      ),
+                      const Divider(height: 1, color: AppColors.accentSoft),
+                      for (final lang in appLanguages)
+                        ListTile(
+                          leading: _FlagThumb(iso: lang.flagIso),
+                          title: Text(lang.nativeName),
+                          subtitle: Text(
+                            lang.englishName,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing: selected?.languageCode == lang.code
+                              ? const Icon(Icons.check_rounded,
+                                  color: AppColors.accentStart)
+                              : null,
+                          onTap: () => Navigator.pop(ctx, lang.code),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (chosen == null || !context.mounted) return;
+    if (chosen == 'system') {
+      await ref.read(appLocaleProvider.notifier).setLocale(null);
+    } else if (chosen is String) {
+      await ref.read(appLocaleProvider.notifier).setLocale(Locale(chosen));
+    }
+  }
+}
+
+class _FlagThumb extends StatelessWidget {
+  const _FlagThumb({required this.iso});
+
+  final String iso;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Image.asset(
+        'assets/flags/$iso.png',
+        width: 28,
+        height: 20,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox(
+          width: 28,
+          height: 20,
+          child: Icon(Icons.flag_outlined, size: 18),
         ),
       ),
     );

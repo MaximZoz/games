@@ -1,0 +1,764 @@
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Hebrew (`he`).
+class AppLocalizationsHe extends AppLocalizations {
+  AppLocalizationsHe([String locale = 'he']) : super(locale);
+
+  @override
+  String get appTitle => 'Zozu Games';
+
+  @override
+  String get navHome => 'בית';
+
+  @override
+  String get navProfile => 'פרופיל';
+
+  @override
+  String get navFriends => 'חברים';
+
+  @override
+  String get navChats => 'צ׳אטים';
+
+  @override
+  String get navGames => 'משחקים';
+
+  @override
+  String get navSettings => 'הגדרות';
+
+  @override
+  String get settingsTitle => 'הגדרות';
+
+  @override
+  String get settingsLanguage => 'שפה';
+
+  @override
+  String get settingsLanguageSystem => 'ברירת מחדל של המערכת';
+
+  @override
+  String get settingsAddBotsTitle => 'הוספת בוטים אחרי 30 שנ׳';
+
+  @override
+  String get settingsAddBotsSubtitle => 'בשידוך: אם לא נמצא יריב תוך 30 שניות, המשחק מתחיל עם בוט (ההימור מתאפס ל־1 ברונזה)';
+
+  @override
+  String get settingsFriendsOnlyTitle => 'הודעות מחברים בלבד';
+
+  @override
+  String get settingsFriendsOnlySubtitle => 'מי שאינם חברים יכולים לשלוח רק אימוג׳ים. אם יש ספאם, חסמו את המשתמש זמנית.';
+
+  @override
+  String get settingsNotifications => 'התראות';
+
+  @override
+  String get settingsPushChat => 'צ׳אט';
+
+  @override
+  String get settingsPushFriends => 'חברים';
+
+  @override
+  String get settingsPushGames => 'משחקים';
+
+  @override
+  String get settingsPushRewards => 'פרסים';
+
+  @override
+  String get loginTitle => 'התחברות';
+
+  @override
+  String get loginSubtitle => 'הזינו אימייל או שם משתמש וסיסמה';
+
+  @override
+  String get loginEmailLabel => 'אימייל או שם משתמש';
+
+  @override
+  String get loginPasswordLabel => 'סיסמה';
+
+  @override
+  String get loginSubmit => 'התחברות';
+
+  @override
+  String get loginNoAccount => 'אין חשבון? הרשמה';
+
+  @override
+  String get loginEmailRequired => 'הזינו אימייל או שם משתמש';
+
+  @override
+  String get loginPasswordRequired => 'הזינו סיסמה';
+
+  @override
+  String get loginTooltip => 'התחברות';
+
+  @override
+  String get logoutTooltip => 'התנתקות';
+
+  @override
+  String get registerTitle => 'הרשמה';
+
+  @override
+  String get registerSubtitle => 'צרו חשבון כדי לשחק';
+
+  @override
+  String get registerNameLabel => 'שם (שם משתמש)';
+
+  @override
+  String get registerEmailLabel => 'Email';
+
+  @override
+  String get registerPasswordLabel => 'סיסמה';
+
+  @override
+  String get registerSubmit => 'הרשמה';
+
+  @override
+  String get registerHaveAccount => 'כבר יש חשבון? התחברות';
+
+  @override
+  String get registerNameRequired => 'הזינו שם';
+
+  @override
+  String get registerNameNoSpaces => 'השם לא יכול להכיל רווחים';
+
+  @override
+  String get registerNameMax => 'עד 20 תווים';
+
+  @override
+  String get registerNameHint => 'עד 20 תווים';
+
+  @override
+  String get registerEmailRequired => 'הזינו אימייל';
+
+  @override
+  String get registerEmailInvalid => 'אימייל לא תקין';
+
+  @override
+  String get registerPasswordHint => 'לפחות 6 תווים';
+
+  @override
+  String get registerPasswordMin => 'הסיסמה חייבת להיות לפחות 6 תווים';
+
+  @override
+  String get commonCancel => 'ביטול';
+
+  @override
+  String get commonSave => 'שמירה';
+
+  @override
+  String get commonDelete => 'מחיקה';
+
+  @override
+  String get commonEdit => 'עריכה';
+
+  @override
+  String get commonReply => 'תשובה';
+
+  @override
+  String get commonSend => 'שליחה';
+
+  @override
+  String get commonClose => 'סגירה';
+
+  @override
+  String get commonRetry => 'ניסיון חוזר';
+
+  @override
+  String get commonLoading => 'טוען…';
+
+  @override
+  String get commonError => 'שגיאה';
+
+  @override
+  String get commonOnline => 'מחובר';
+
+  @override
+  String get commonOffline => 'לא מחובר';
+
+  @override
+  String get commonOnlineCap => 'מחובר';
+
+  @override
+  String get commonUser => 'משתמש';
+
+  @override
+  String get commonPlayer => 'שחקן';
+
+  @override
+  String get commonAboutMe => 'עליי';
+
+  @override
+  String get commonBack => 'חזרה';
+
+  @override
+  String get commonAccept => 'אישור';
+
+  @override
+  String get commonDecline => 'דחייה';
+
+  @override
+  String get commonCreating => 'יוצר…';
+
+  @override
+  String get commonSearching => 'מחפש…';
+
+  @override
+  String get commonInsufficientCoins => 'אין מספיק מטבעות';
+
+  @override
+  String get commonNotFound => 'לא נמצא';
+
+  @override
+  String get commonServerErrorShort => 'שגיאת שרת';
+
+  @override
+  String get commonForbidden => 'הגישה נדחתה';
+
+  @override
+  String get commonUserBlocked => 'המשתמש חסום';
+
+  @override
+  String get commonUserNotFound => 'המשתמש לא נמצא';
+
+  @override
+  String get commonGenericError => 'משהו השתבש. נסו שוב.';
+
+  @override
+  String get timeJustNow => 'עכשיו';
+
+  @override
+  String get timeYesterday => 'אתמול';
+
+  @override
+  String timeMinutesAgo(Object count) {
+    return 'לפני $count דק׳';
+  }
+
+  @override
+  String timeHoursAgo(Object count) {
+    return 'לפני $count שע׳';
+  }
+
+  @override
+  String timeDaysAgo(Object count) {
+    return 'לפני $count ימ׳';
+  }
+
+  @override
+  String get timeWeekAgo => 'לפני שבוע';
+
+  @override
+  String timeWeeksAgo(Object count) {
+    return 'לפני $count שב׳';
+  }
+
+  @override
+  String get timeMonthAgo => 'לפני חודש';
+
+  @override
+  String timeMonthsAgo(Object count) {
+    return 'לפני $count חוד׳';
+  }
+
+  @override
+  String get timeYearAgo => 'לפני שנה';
+
+  @override
+  String timeYearsAgo(Object count) {
+    return 'לפני $count שנ׳';
+  }
+
+  @override
+  String get weekdaySun => 'א׳';
+
+  @override
+  String get weekdayMon => 'ב׳';
+
+  @override
+  String get weekdayTue => 'ג׳';
+
+  @override
+  String get weekdayWed => 'ד׳';
+
+  @override
+  String get weekdayThu => 'ה׳';
+
+  @override
+  String get weekdayFri => 'ו׳';
+
+  @override
+  String get weekdaySat => 'ש׳';
+
+  @override
+  String get monthJan => 'ינו׳';
+
+  @override
+  String get monthFeb => 'פבר׳';
+
+  @override
+  String get monthMar => 'מרץ';
+
+  @override
+  String get monthApr => 'אפר׳';
+
+  @override
+  String get monthMay => 'מאי';
+
+  @override
+  String get monthJun => 'יונ׳';
+
+  @override
+  String get monthJul => 'יול׳';
+
+  @override
+  String get monthAug => 'אוג׳';
+
+  @override
+  String get monthSep => 'ספט׳';
+
+  @override
+  String get monthOct => 'אוק׳';
+
+  @override
+  String get monthNov => 'נוב׳';
+
+  @override
+  String get monthDec => 'דצמ׳';
+
+  @override
+  String get homeAchievements => 'הישגים';
+
+  @override
+  String get homeAchievementsSubtitle => 'תוצאות המשחקים שלכם';
+
+  @override
+  String get homeAchievementsRewards => 'יש פרסים לקבל';
+
+  @override
+  String get homeCoins => 'מטבעות';
+
+  @override
+  String get homeCoinsSubtitle => 'יתרה ופרסים';
+
+  @override
+  String get homeCoinsDailyReward => 'פרס התחברות יומי זמין';
+
+  @override
+  String get homeItems => 'פריטים';
+
+  @override
+  String get homeItemsInventory => 'המלאי שלכם';
+
+  @override
+  String get homeItemsGifted => 'מישהו שלח לכם אוסף';
+
+  @override
+  String get homeItemsIncome => 'הכנסת אוסף מוכנה לקבלה';
+
+  @override
+  String get homeShop => 'חנות';
+
+  @override
+  String get homeShopSubtitle => 'אימוג׳ים, הימורים, אוספים';
+
+  @override
+  String get gamesTitle => 'משחקים';
+
+  @override
+  String get gamesFindMatch => 'חיפוש משחק';
+
+  @override
+  String get gamesMyTurn => 'התור שלכם';
+
+  @override
+  String get gamesWaiting => 'ממתין';
+
+  @override
+  String get gamesLobbyTab => 'לובי';
+
+  @override
+  String get gamesTicTacToe => 'איקס־עיגול';
+
+  @override
+  String get gamesRules => 'חוקים';
+
+  @override
+  String get gamesRulesTitle => 'חוקי המשחק';
+
+  @override
+  String get gamesCreate => 'יצירת משחק';
+
+  @override
+  String get gamesJoin => 'הצטרפות';
+
+  @override
+  String get gamesOpponentTurn => 'תור היריב';
+
+  @override
+  String get gamesCurrentGame => 'משחק נוכחי';
+
+  @override
+  String get gamesInvitedYou => 'הוזמנתם';
+
+  @override
+  String get gamesTurnTime => 'זמן לתור';
+
+  @override
+  String get gamesGridSize => 'גודל לוח';
+
+  @override
+  String get gamesSwapSides => 'החלפת צד';
+
+  @override
+  String get gamesNoCenter => 'ללא פתיחה במרכז';
+
+  @override
+  String get lobbyMatchmake => 'לובי';
+
+  @override
+  String get lobbyPrivateGame => 'משחק פרטי';
+
+  @override
+  String get lobbySearchingOpponent => 'מחפש יריב…';
+
+  @override
+  String get lobbyWaitingJoin => 'ממתין שמישהו ילחץ על ״חיפוש משחק״ או ״הצטרפות״';
+
+  @override
+  String get lobbyInviteTitle => 'הזמנה למשחק';
+
+  @override
+  String get lobbyInvitedToPlay => 'הוזמנתם לשחק';
+
+  @override
+  String get lobbyEnterGame => 'כניסה למשחק';
+
+  @override
+  String get lobbyInvite => 'הזמנה';
+
+  @override
+  String get lobbyInviteSent => 'ההזמנה נשלחה';
+
+  @override
+  String get lobbyCopyLink => 'שיתוף קישור למשחק';
+
+  @override
+  String get lobbyLinkCopied => 'הקישור הועתק';
+
+  @override
+  String get lobbyNoFriendsOnline => 'אין חברים מחוברים. שתפו את קישור המשחק למעלה או המתינו עד שחברים יתחברו.';
+
+  @override
+  String get gameBot => 'Bot';
+
+  @override
+  String get gameOpponent => 'יריב';
+
+  @override
+  String get gameYouWon => 'ניצחתם!';
+
+  @override
+  String get gameYouWonOpponentLeft => 'ניצחתם — היריב עזב';
+
+  @override
+  String get gameYouWonOpponentTimeout => 'ניצחתם — ליריב נגמר הזמן';
+
+  @override
+  String get gameDraw => 'תיקו';
+
+  @override
+  String get gameExitTitle => 'יציאה מהמשחק';
+
+  @override
+  String get gameExitConfirm => 'אם תצאו, תפסידו. לצאת בכל זאת?';
+
+  @override
+  String get gameStay => 'להישאר';
+
+  @override
+  String get gameLeave => 'יציאה';
+
+  @override
+  String get gameConnecting => 'מתחבר למשחק…';
+
+  @override
+  String get gameWaitingOpponent => 'ממתין ליריב';
+
+  @override
+  String get gameRematchOffer => 'היריב מציע משחק חוזר';
+
+  @override
+  String get gameRematchDeclined => 'היריב דחה משחק חוזר';
+
+  @override
+  String get gameRematch => 'משחק חוזר';
+
+  @override
+  String get gameOtherOpponent => 'יריב אחר';
+
+  @override
+  String get gameSwapSidesAction => 'החלפת צד';
+
+  @override
+  String get gameWriteMessage => 'כתבו הודעה';
+
+  @override
+  String get chatsTitle => 'צ׳אטים';
+
+  @override
+  String get chatsEmpty => 'עדיין אין צ׳אטים.\nלחצו על הסמל בפינה הימנית העליונה כדי לבחור חבר ולהתחיל שיחה.';
+
+  @override
+  String get chatsNewChat => 'צ׳אט חדש';
+
+  @override
+  String get chatsNoMessages => 'אין הודעות';
+
+  @override
+  String get chatsClearTitle => 'לנקות את השיחה?';
+
+  @override
+  String get chatsClearDesc => 'הצ׳אט יימחק לצמיתות.';
+
+  @override
+  String get chatsClearConfirm => 'ניקוי';
+
+  @override
+  String get chatsBlockTitle => 'לחסום משתמש זה?';
+
+  @override
+  String get chatsBlockDesc => 'לא תוכלו עוד לשלוח הודעות זה לזה. הצ׳אט והחברות יימחקו.';
+
+  @override
+  String get chatsBlockConfirm => 'חסימה';
+
+  @override
+  String get chatsBlockedUsers => 'משתמשים חסומים';
+
+  @override
+  String get chatsUnblock => 'ביטול חסימה';
+
+  @override
+  String get chatDialog => 'צ׳אט';
+
+  @override
+  String get chatEmpty => 'עדיין אין הודעות.\nשלחו את הראשונה.';
+
+  @override
+  String get chatMessageHint => 'הודעה';
+
+  @override
+  String get chatEmoji => 'אימוג׳ים';
+
+  @override
+  String get chatBuyEmojiHint => 'קנו אימוג׳ים בחנות במסך הבית';
+
+  @override
+  String get chatEditing => 'עריכה';
+
+  @override
+  String get chatToday => 'היום';
+
+  @override
+  String get chatYesterday => 'אתמול';
+
+  @override
+  String get chatFriendsOnly => 'טקסט לחברים בלבד';
+
+  @override
+  String get emojiGroupEmotions => 'רגשות';
+
+  @override
+  String get emojiGroupGame => 'משחקים';
+
+  @override
+  String get emojiGroupFlags => 'דגלים';
+
+  @override
+  String get emojiGroupAnimals => 'חיות';
+
+  @override
+  String get emojiGroupFood => 'אוכל';
+
+  @override
+  String get emojiGroupTravel => 'נסיעות';
+
+  @override
+  String get emojiGroupParty => 'חגיגה';
+
+  @override
+  String get emojiGroupObjects => 'חפצים';
+
+  @override
+  String get friendsTitle => 'חברים';
+
+  @override
+  String get friendsTabFriends => 'חברים';
+
+  @override
+  String get friendsTabIncoming => 'נכנסות';
+
+  @override
+  String get friendsTabOutgoing => 'יוצאות';
+
+  @override
+  String get friendsAdd => 'הוספת חבר';
+
+  @override
+  String get friendsRequestSent => 'הבקשה נשלחה';
+
+  @override
+  String get friendsFindTab => 'חיפוש חבר';
+
+  @override
+  String get friendsSearchHint => 'חיפוש לפי שם משתמש';
+
+  @override
+  String get friendsSearchPrompt => 'השתמשו בחיפוש כדי למצוא חברים חדשים';
+
+  @override
+  String get friendsNothingFound => 'לא נמצא דבר';
+
+  @override
+  String get friendsEmpty => 'עדיין אין לכם חברים';
+
+  @override
+  String get friendsNoIncoming => 'אין בקשות נכנסות';
+
+  @override
+  String get friendsNoOutgoing => 'אין בקשות יוצאות';
+
+  @override
+  String get friendsAlreadyFriends => 'כבר חברים';
+
+  @override
+  String get friendsRemoveTitle => 'להסיר מהחברים?';
+
+  @override
+  String get friendsRemoved => 'הוסר מהחברים';
+
+  @override
+  String get friendsRequestAccepted => 'הבקשה אושרה';
+
+  @override
+  String get friendsRequestDeclined => 'הבקשה נדחתה';
+
+  @override
+  String get friendsRequestCancelled => 'הבקשה בוטלה';
+
+  @override
+  String get profileTitle => 'פרופיל';
+
+  @override
+  String get profileSignInPrompt => 'התחברו לחשבון שלכם';
+
+  @override
+  String get profileSignInHint => 'כדי להגדיר את הפרופיל האישי';
+
+  @override
+  String get profileEdit => 'עריכה';
+
+  @override
+  String get profileCollections => 'אוספים';
+
+  @override
+  String get profileAge => 'גיל';
+
+  @override
+  String get profileGender => 'מגדר';
+
+  @override
+  String get profileGenderUnset => 'לא הוגדר';
+
+  @override
+  String get profileGenderMale => 'זכר';
+
+  @override
+  String get profileGenderFemale => 'נקבה';
+
+  @override
+  String get profileAvatar => 'אווטאר';
+
+  @override
+  String get profileUploadPhoto => 'העלאת תמונה';
+
+  @override
+  String get profileChangePhoto => 'החלפת תמונה';
+
+  @override
+  String get shopTitle => 'חנות';
+
+  @override
+  String get shopEmojis => 'אימוג׳ים';
+
+  @override
+  String get shopEmojisSubtitle => 'אימוג׳ים מונפשים לצ׳אט';
+
+  @override
+  String get shopCollections => 'אוספים';
+
+  @override
+  String get shopCollectionsSubtitle => 'תצוגת פרופיל, מתנות והכנסה';
+
+  @override
+  String get shopStakes => 'הימורים';
+
+  @override
+  String get shopStakesSubtitle => 'פתיחת הימורי כסף';
+
+  @override
+  String get inventoryTitle => 'פריטים';
+
+  @override
+  String get inventoryEmpty => 'עדיין אין כאן כלום — בדקו את החנות';
+
+  @override
+  String get inventoryFrames => 'מסגרות';
+
+  @override
+  String get inventoryClaim => 'קבלת';
+
+  @override
+  String get inventorySell => 'מכירה';
+
+  @override
+  String get inventoryGift => 'מתנה';
+
+  @override
+  String get messageEdited => 'נערך';
+
+  @override
+  String get messageDeleted => 'ההודעה נמחקה';
+
+  @override
+  String get photo => 'תמונה';
+
+  @override
+  String get camera => 'מצלמה';
+
+  @override
+  String get gallery => 'גלריה';
+
+  @override
+  String get connectionError => 'לא ניתן להתחבר לשרת.';
+
+  @override
+  String get serverError => 'שגיאת שרת. נסו שוב מאוחר יותר.';
+
+  @override
+  String get sessionExpired => 'פג תוקף ההפעלה. התחברו שוב.';
+
+  @override
+  String get errNoInternet => 'אין חיבור לאינטרנט.';
+
+  @override
+  String get errTimeout => 'הבקשה פגה. נסו שוב.';
+
+  @override
+  String get errGamesUnavailable => 'המשחקים אינם זמינים כרגע';
+
+  @override
+  String get errSettingsSaveFailed => 'לא ניתן לשמור את ההגדרה';
+
+  @override
+  String get errPushPermission => 'אפשרו התראות בדפדפן או בהגדרות המערכת.';
+}

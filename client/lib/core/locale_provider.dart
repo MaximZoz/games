@@ -2,16 +2,19 @@ import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/app_languages.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _keyAppLocale = 'app_locale';
+export 'package:multigames_client/core/app_languages.dart'
+    show
+        AppLanguage,
+        appLanguages,
+        appLanguageByCode,
+        resolveLocale,
+        supportedAppLocales;
 
-/// Поддерживаемые языки приложения.
-const supportedAppLocales = <Locale>[
-  Locale('ru'),
-  Locale('en'),
-];
+const _keyAppLocale = 'app_locale';
 
 /// null = следовать системе (первый запуск / «Как в системе»).
 final appLocaleProvider =
@@ -30,11 +33,11 @@ class AppLocaleNotifier extends StateNotifier<Locale?> {
     if (raw == null || raw.isEmpty || raw == 'system') {
       final detected = detectSystemLocale();
       LocaleService.setLocale(detected);
-      state = null; // UI: «Как в системе», фактически detected
+      state = null;
       return;
     }
-    final locale = Locale(raw);
-    LocaleService.setLocale(resolveLocale(locale));
+    final locale = resolveLocale(Locale(raw));
+    LocaleService.setLocale(locale);
     state = locale;
   }
 
@@ -56,20 +59,23 @@ class AppLocaleNotifier extends StateNotifier<Locale?> {
 }
 
 Locale detectSystemLocale() {
-  final sys = PlatformDispatcher.instance.locale;
-  return resolveLocale(sys);
-}
-
-Locale resolveLocale(Locale locale) {
-  if (locale.languageCode.toLowerCase() == 'ru') {
-    return const Locale('ru');
+  final locales = PlatformDispatcher.instance.locales;
+  for (final loc in locales) {
+    final resolved = resolveLocale(loc);
+    // resolveLocale всегда что-то вернёт; предпочитаем точное совпадение языка.
+    final code = loc.languageCode.toLowerCase();
+    final normalized = code == 'no' || code == 'nn' ? 'nb' : code;
+    if (normalized == resolved.languageCode) {
+      return resolved;
+    }
   }
-  return const Locale('en');
+  if (locales.isNotEmpty) {
+    return resolveLocale(locales.first);
+  }
+  return resolveLocale(PlatformDispatcher.instance.locale);
 }
 
 /// Эффективная локаль для MaterialApp (никогда null).
-/// При «Как в системе» берём [LocaleService] (уже выставлен из PlatformDispatcher /
-/// SharedPreferences / тестов).
 Locale effectiveAppLocale(Locale? userChoice) {
   if (userChoice != null) return resolveLocale(userChoice);
   return LocaleService.locale;
@@ -89,7 +95,8 @@ class LocaleService {
 
   static String get acceptLanguageHeader {
     final code = _locale.languageCode;
-    if (code == 'ru') return 'ru-RU,ru;q=0.9,en;q=0.5';
-    return 'en-US,en;q=0.9';
+    final lang = appLanguageByCode(code);
+    final region = (lang?.flagIso ?? code).toUpperCase();
+    return '$code-$region,$code;q=0.9,en;q=0.5';
   }
 }

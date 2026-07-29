@@ -5,8 +5,35 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_ar.dart';
+import 'app_localizations_be.dart';
+import 'app_localizations_cs.dart';
+import 'app_localizations_da.dart';
+import 'app_localizations_de.dart';
+import 'app_localizations_el.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fi.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_he.dart';
+import 'app_localizations_hi.dart';
+import 'app_localizations_id.dart';
+import 'app_localizations_it.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_kk.dart';
+import 'app_localizations_ko.dart';
+import 'app_localizations_nb.dart';
+import 'app_localizations_nl.dart';
+import 'app_localizations_pl.dart';
+import 'app_localizations_pt.dart';
 import 'app_localizations_ru.dart';
+import 'app_localizations_sv.dart';
+import 'app_localizations_th.dart';
+import 'app_localizations_tr.dart';
+import 'app_localizations_uk.dart';
+import 'app_localizations_uz.dart';
+import 'app_localizations_vi.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +119,34 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ru'),
-    Locale('en')
+    Locale('en'),
+    Locale('uk'),
+    Locale('be'),
+    Locale('kk'),
+    Locale('uz'),
+    Locale('de'),
+    Locale('fr'),
+    Locale('es'),
+    Locale('it'),
+    Locale('pt'),
+    Locale('pl'),
+    Locale('nl'),
+    Locale('tr'),
+    Locale('zh'),
+    Locale('ja'),
+    Locale('ko'),
+    Locale('hi'),
+    Locale('ar'),
+    Locale('he'),
+    Locale('th'),
+    Locale('vi'),
+    Locale('id'),
+    Locale('cs'),
+    Locale('el'),
+    Locale('sv'),
+    Locale('nb'),
+    Locale('da'),
+    Locale('fi')
   ];
 
   /// No description provided for @appTitle.
@@ -154,18 +208,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Как в системе'**
   String get settingsLanguageSystem;
-
-  /// No description provided for @settingsLanguageRu.
-  ///
-  /// In ru, this message translates to:
-  /// **'Русский'**
-  String get settingsLanguageRu;
-
-  /// No description provided for @settingsLanguageEn.
-  ///
-  /// In ru, this message translates to:
-  /// **'English'**
-  String get settingsLanguageEn;
 
   /// No description provided for @settingsAddBotsTitle.
   ///
@@ -443,6 +485,102 @@ abstract class AppLocalizations {
   /// **'не в сети'**
   String get commonOffline;
 
+  /// No description provided for @commonOnlineCap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Онлайн'**
+  String get commonOnlineCap;
+
+  /// No description provided for @commonUser.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователь'**
+  String get commonUser;
+
+  /// No description provided for @commonPlayer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игрок'**
+  String get commonPlayer;
+
+  /// No description provided for @commonAboutMe.
+  ///
+  /// In ru, this message translates to:
+  /// **'О себе'**
+  String get commonAboutMe;
+
+  /// No description provided for @commonBack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get commonBack;
+
+  /// No description provided for @commonAccept.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять'**
+  String get commonAccept;
+
+  /// No description provided for @commonDecline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить'**
+  String get commonDecline;
+
+  /// No description provided for @commonCreating.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создание…'**
+  String get commonCreating;
+
+  /// No description provided for @commonSearching.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск…'**
+  String get commonSearching;
+
+  /// No description provided for @commonInsufficientCoins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Недостаточно монет'**
+  String get commonInsufficientCoins;
+
+  /// No description provided for @commonNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не найдено'**
+  String get commonNotFound;
+
+  /// No description provided for @commonServerErrorShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка сервера'**
+  String get commonServerErrorShort;
+
+  /// No description provided for @commonForbidden.
+  ///
+  /// In ru, this message translates to:
+  /// **'Недостаточно прав'**
+  String get commonForbidden;
+
+  /// No description provided for @commonUserBlocked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователь заблокирован'**
+  String get commonUserBlocked;
+
+  /// No description provided for @commonUserNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователь не найден'**
+  String get commonUserNotFound;
+
+  /// No description provided for @commonGenericError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Произошла ошибка. Попробуйте ещё раз.'**
+  String get commonGenericError;
+
   /// No description provided for @timeJustNow.
   ///
   /// In ru, this message translates to:
@@ -459,19 +597,19 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} мин назад'**
-  String timeMinutesAgo(int count);
+  String timeMinutesAgo(Object count);
 
   /// No description provided for @timeHoursAgo.
   ///
   /// In ru, this message translates to:
   /// **'{count} ч назад'**
-  String timeHoursAgo(int count);
+  String timeHoursAgo(Object count);
 
   /// No description provided for @timeDaysAgo.
   ///
   /// In ru, this message translates to:
   /// **'{count} дн. назад'**
-  String timeDaysAgo(int count);
+  String timeDaysAgo(Object count);
 
   /// No description provided for @timeWeekAgo.
   ///
@@ -483,7 +621,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} нед. назад'**
-  String timeWeeksAgo(int count);
+  String timeWeeksAgo(Object count);
 
   /// No description provided for @timeMonthAgo.
   ///
@@ -495,7 +633,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} мес. назад'**
-  String timeMonthsAgo(int count);
+  String timeMonthsAgo(Object count);
 
   /// No description provided for @timeYearAgo.
   ///
@@ -507,7 +645,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{count} г. назад'**
-  String timeYearsAgo(int count);
+  String timeYearsAgo(Object count);
 
   /// No description provided for @weekdaySun.
   ///
@@ -623,6 +761,78 @@ abstract class AppLocalizations {
   /// **'дек'**
   String get monthDec;
 
+  /// No description provided for @homeAchievements.
+  ///
+  /// In ru, this message translates to:
+  /// **'Достижения'**
+  String get homeAchievements;
+
+  /// No description provided for @homeAchievementsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваши игровые результаты'**
+  String get homeAchievementsSubtitle;
+
+  /// No description provided for @homeAchievementsRewards.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть награды к получению'**
+  String get homeAchievementsRewards;
+
+  /// No description provided for @homeCoins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Монеты'**
+  String get homeCoins;
+
+  /// No description provided for @homeCoinsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Баланс и награды'**
+  String get homeCoinsSubtitle;
+
+  /// No description provided for @homeCoinsDailyReward.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступна награда за вход'**
+  String get homeCoinsDailyReward;
+
+  /// No description provided for @homeItems.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предметы'**
+  String get homeItems;
+
+  /// No description provided for @homeItemsInventory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш инвентарь'**
+  String get homeItemsInventory;
+
+  /// No description provided for @homeItemsGifted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вам подарили коллекцию'**
+  String get homeItemsGifted;
+
+  /// No description provided for @homeItemsIncome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно забрать доход коллекций'**
+  String get homeItemsIncome;
+
+  /// No description provided for @homeShop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Магазин'**
+  String get homeShop;
+
+  /// No description provided for @homeShopSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Смайлы, ставки, коллекции'**
+  String get homeShopSubtitle;
+
   /// No description provided for @gamesTitle.
   ///
   /// In ru, this message translates to:
@@ -647,6 +857,264 @@ abstract class AppLocalizations {
   /// **'Ожидание'**
   String get gamesWaiting;
 
+  /// No description provided for @gamesLobbyTab.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лобби'**
+  String get gamesLobbyTab;
+
+  /// No description provided for @gamesTicTacToe.
+  ///
+  /// In ru, this message translates to:
+  /// **'Крестики-нолики'**
+  String get gamesTicTacToe;
+
+  /// No description provided for @gamesRules.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила'**
+  String get gamesRules;
+
+  /// No description provided for @gamesRulesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила игры'**
+  String get gamesRulesTitle;
+
+  /// No description provided for @gamesCreate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать игру'**
+  String get gamesCreate;
+
+  /// No description provided for @gamesJoin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Присоединиться'**
+  String get gamesJoin;
+
+  /// No description provided for @gamesOpponentTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход соперника'**
+  String get gamesOpponentTurn;
+
+  /// No description provided for @gamesCurrentGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текущая игра'**
+  String get gamesCurrentGame;
+
+  /// No description provided for @gamesInvitedYou.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вас пригласили'**
+  String get gamesInvitedYou;
+
+  /// No description provided for @gamesTurnTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход'**
+  String get gamesTurnTime;
+
+  /// No description provided for @gamesGridSize.
+  ///
+  /// In ru, this message translates to:
+  /// **'Размер сетки'**
+  String get gamesGridSize;
+
+  /// No description provided for @gamesSwapSides.
+  ///
+  /// In ru, this message translates to:
+  /// **'Смена сторон'**
+  String get gamesSwapSides;
+
+  /// No description provided for @gamesNoCenter.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запрет центра'**
+  String get gamesNoCenter;
+
+  /// No description provided for @lobbyMatchmake.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лобби'**
+  String get lobbyMatchmake;
+
+  /// No description provided for @lobbyPrivateGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Своя игра'**
+  String get lobbyPrivateGame;
+
+  /// No description provided for @lobbySearchingOpponent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск соперника…'**
+  String get lobbySearchingOpponent;
+
+  /// No description provided for @lobbyWaitingJoin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»'**
+  String get lobbyWaitingJoin;
+
+  /// No description provided for @lobbyInviteTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приглашение в игру'**
+  String get lobbyInviteTitle;
+
+  /// No description provided for @lobbyInvitedToPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вас пригласили сыграть'**
+  String get lobbyInvitedToPlay;
+
+  /// No description provided for @lobbyEnterGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти в игру'**
+  String get lobbyEnterGame;
+
+  /// No description provided for @lobbyInvite.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пригласить'**
+  String get lobbyInvite;
+
+  /// No description provided for @lobbyInviteSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приглашение отправлено'**
+  String get lobbyInviteSent;
+
+  /// No description provided for @lobbyCopyLink.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить ссылку на игру'**
+  String get lobbyCopyLink;
+
+  /// No description provided for @lobbyLinkCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ссылка скопирована'**
+  String get lobbyLinkCopied;
+
+  /// No description provided for @lobbyNoFriendsOnline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.'**
+  String get lobbyNoFriendsOnline;
+
+  /// No description provided for @gameBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бот'**
+  String get gameBot;
+
+  /// No description provided for @gameOpponent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник'**
+  String get gameOpponent;
+
+  /// No description provided for @gameYouWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы победили!'**
+  String get gameYouWon;
+
+  /// No description provided for @gameYouWonOpponentLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы победили, соперник вышел'**
+  String get gameYouWonOpponentLeft;
+
+  /// No description provided for @gameYouWonOpponentTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы победили, время соперника вышло'**
+  String get gameYouWonOpponentTimeout;
+
+  /// No description provided for @gameDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья'**
+  String get gameDraw;
+
+  /// No description provided for @gameExitTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выход из игры'**
+  String get gameExitTitle;
+
+  /// No description provided for @gameExitConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если вы выйдете, то вы проиграете. Выйти?'**
+  String get gameExitConfirm;
+
+  /// No description provided for @gameStay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Остаться'**
+  String get gameStay;
+
+  /// No description provided for @gameLeave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выйти'**
+  String get gameLeave;
+
+  /// No description provided for @gameConnecting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подключение к игре…'**
+  String get gameConnecting;
+
+  /// No description provided for @gameWaitingOpponent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ожидание соперника'**
+  String get gameWaitingOpponent;
+
+  /// No description provided for @gameRematchOffer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник предлагает реванш'**
+  String get gameRematchOffer;
+
+  /// No description provided for @gameRematchDeclined.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник отклонил предложение поиграть'**
+  String get gameRematchDeclined;
+
+  /// No description provided for @gameRematch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить'**
+  String get gameRematch;
+
+  /// No description provided for @gameOtherOpponent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Другой соперник'**
+  String get gameOtherOpponent;
+
+  /// No description provided for @gameSwapSidesAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сменить стороны'**
+  String get gameSwapSidesAction;
+
+  /// No description provided for @gameWriteMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Написать сообщение'**
+  String get gameWriteMessage;
+
   /// No description provided for @chatsTitle.
   ///
   /// In ru, this message translates to:
@@ -664,6 +1132,162 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Новый чат'**
   String get chatsNewChat;
+
+  /// No description provided for @chatsNoMessages.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет сообщений'**
+  String get chatsNoMessages;
+
+  /// No description provided for @chatsClearTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очистить переписку?'**
+  String get chatsClearTitle;
+
+  /// No description provided for @chatsClearDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог будет удалён без возможности восстановления.'**
+  String get chatsClearDesc;
+
+  /// No description provided for @chatsClearConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очистить'**
+  String get chatsClearConfirm;
+
+  /// No description provided for @chatsBlockTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заблокировать пользователя?'**
+  String get chatsBlockTitle;
+
+  /// No description provided for @chatsBlockDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.'**
+  String get chatsBlockDesc;
+
+  /// No description provided for @chatsBlockConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заблокировать'**
+  String get chatsBlockConfirm;
+
+  /// No description provided for @chatsBlockedUsers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заблокированные пользователи'**
+  String get chatsBlockedUsers;
+
+  /// No description provided for @chatsUnblock.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разблокировать'**
+  String get chatsUnblock;
+
+  /// No description provided for @chatDialog.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог'**
+  String get chatDialog;
+
+  /// No description provided for @chatEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сообщений пока нет.\nНапишите первое сообщение.'**
+  String get chatEmpty;
+
+  /// No description provided for @chatMessageHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сообщение'**
+  String get chatMessageHint;
+
+  /// No description provided for @chatEmoji.
+  ///
+  /// In ru, this message translates to:
+  /// **'Смайлики'**
+  String get chatEmoji;
+
+  /// No description provided for @chatBuyEmojiHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купите смайлики в магазине на главной'**
+  String get chatBuyEmojiHint;
+
+  /// No description provided for @chatEditing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактирование'**
+  String get chatEditing;
+
+  /// No description provided for @chatToday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня'**
+  String get chatToday;
+
+  /// No description provided for @chatYesterday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вчера'**
+  String get chatYesterday;
+
+  /// No description provided for @chatFriendsOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текст только для друзей'**
+  String get chatFriendsOnly;
+
+  /// No description provided for @emojiGroupEmotions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эмоции'**
+  String get emojiGroupEmotions;
+
+  /// No description provided for @emojiGroupGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игровые'**
+  String get emojiGroupGame;
+
+  /// No description provided for @emojiGroupFlags.
+  ///
+  /// In ru, this message translates to:
+  /// **'Флажки'**
+  String get emojiGroupFlags;
+
+  /// No description provided for @emojiGroupAnimals.
+  ///
+  /// In ru, this message translates to:
+  /// **'Животные'**
+  String get emojiGroupAnimals;
+
+  /// No description provided for @emojiGroupFood.
+  ///
+  /// In ru, this message translates to:
+  /// **'Еда'**
+  String get emojiGroupFood;
+
+  /// No description provided for @emojiGroupTravel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Путешествия'**
+  String get emojiGroupTravel;
+
+  /// No description provided for @emojiGroupParty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Праздник'**
+  String get emojiGroupParty;
+
+  /// No description provided for @emojiGroupObjects.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предметы'**
+  String get emojiGroupObjects;
 
   /// No description provided for @friendsTitle.
   ///
@@ -701,11 +1325,239 @@ abstract class AppLocalizations {
   /// **'Заявка отправлена'**
   String get friendsRequestSent;
 
+  /// No description provided for @friendsFindTab.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти друга'**
+  String get friendsFindTab;
+
+  /// No description provided for @friendsSearchHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск по нику'**
+  String get friendsSearchHint;
+
+  /// No description provided for @friendsSearchPrompt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Используйте поиск, чтобы найти новых друзей'**
+  String get friendsSearchPrompt;
+
+  /// No description provided for @friendsNothingFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничего не найдено'**
+  String get friendsNothingFound;
+
+  /// No description provided for @friendsEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас пока нет друзей'**
+  String get friendsEmpty;
+
+  /// No description provided for @friendsNoIncoming.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет входящих заявок'**
+  String get friendsNoIncoming;
+
+  /// No description provided for @friendsNoOutgoing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет исходящих заявок'**
+  String get friendsNoOutgoing;
+
+  /// No description provided for @friendsAlreadyFriends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уже в друзьях'**
+  String get friendsAlreadyFriends;
+
+  /// No description provided for @friendsRemoveTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать из друзей?'**
+  String get friendsRemoveTitle;
+
+  /// No description provided for @friendsRemoved.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователь удалён из друзей'**
+  String get friendsRemoved;
+
+  /// No description provided for @friendsRequestAccepted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка принята'**
+  String get friendsRequestAccepted;
+
+  /// No description provided for @friendsRequestDeclined.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отклонена'**
+  String get friendsRequestDeclined;
+
+  /// No description provided for @friendsRequestCancelled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отменена'**
+  String get friendsRequestCancelled;
+
   /// No description provided for @profileTitle.
   ///
   /// In ru, this message translates to:
   /// **'Профиль'**
   String get profileTitle;
+
+  /// No description provided for @profileSignInPrompt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войдите в аккаунт'**
+  String get profileSignInPrompt;
+
+  /// No description provided for @profileSignInHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чтобы настроить личный профиль'**
+  String get profileSignInHint;
+
+  /// No description provided for @profileEdit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактировать'**
+  String get profileEdit;
+
+  /// No description provided for @profileCollections.
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекции'**
+  String get profileCollections;
+
+  /// No description provided for @profileAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Возраст'**
+  String get profileAge;
+
+  /// No description provided for @profileGender.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пол'**
+  String get profileGender;
+
+  /// No description provided for @profileGenderUnset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не указан'**
+  String get profileGenderUnset;
+
+  /// No description provided for @profileGenderMale.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мужской'**
+  String get profileGenderMale;
+
+  /// No description provided for @profileGenderFemale.
+  ///
+  /// In ru, this message translates to:
+  /// **'Женский'**
+  String get profileGenderFemale;
+
+  /// No description provided for @profileAvatar.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аватар'**
+  String get profileAvatar;
+
+  /// No description provided for @profileUploadPhoto.
+  ///
+  /// In ru, this message translates to:
+  /// **'Загрузить фото'**
+  String get profileUploadPhoto;
+
+  /// No description provided for @profileChangePhoto.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поменять фото'**
+  String get profileChangePhoto;
+
+  /// No description provided for @shopTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Магазин'**
+  String get shopTitle;
+
+  /// No description provided for @shopEmojis.
+  ///
+  /// In ru, this message translates to:
+  /// **'Смайлики'**
+  String get shopEmojis;
+
+  /// No description provided for @shopEmojisSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Анимированные эмодзи для чата'**
+  String get shopEmojisSubtitle;
+
+  /// No description provided for @shopCollections.
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекции'**
+  String get shopCollections;
+
+  /// No description provided for @shopCollectionsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Витрина профиля, подарки и доход'**
+  String get shopCollectionsSubtitle;
+
+  /// No description provided for @shopStakes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ставки'**
+  String get shopStakes;
+
+  /// No description provided for @shopStakesSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разблокировка серебряных ставок'**
+  String get shopStakesSubtitle;
+
+  /// No description provided for @inventoryTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предметы'**
+  String get inventoryTitle;
+
+  /// No description provided for @inventoryEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока ничего нет — загляните в магазин'**
+  String get inventoryEmpty;
+
+  /// No description provided for @inventoryFrames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рамки'**
+  String get inventoryFrames;
+
+  /// No description provided for @inventoryClaim.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забрать'**
+  String get inventoryClaim;
+
+  /// No description provided for @inventorySell.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продать'**
+  String get inventorySell;
+
+  /// No description provided for @inventoryGift.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарить'**
+  String get inventoryGift;
 
   /// No description provided for @messageEdited.
   ///
@@ -754,6 +1606,36 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сессия истекла. Войдите заново.'**
   String get sessionExpired;
+
+  /// No description provided for @errNoInternet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет подключения к интернету.'**
+  String get errNoInternet;
+
+  /// No description provided for @errTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Превышено время ожидания. Попробуйте ещё раз.'**
+  String get errTimeout;
+
+  /// No description provided for @errGamesUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игры временно недоступны'**
+  String get errGamesUnavailable;
+
+  /// No description provided for @errSettingsSaveFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить настройку'**
+  String get errSettingsSaveFailed;
+
+  /// No description provided for @errPushPermission.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разрешите уведомления в настройках браузера или системы.'**
+  String get errPushPermission;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -765,7 +1647,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'ru'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'be', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'he', 'hi', 'id', 'it', 'ja', 'kk', 'ko', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'th', 'tr', 'uk', 'uz', 'vi', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -776,8 +1658,35 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
 
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'ar': return AppLocalizationsAr();
+    case 'be': return AppLocalizationsBe();
+    case 'cs': return AppLocalizationsCs();
+    case 'da': return AppLocalizationsDa();
+    case 'de': return AppLocalizationsDe();
+    case 'el': return AppLocalizationsEl();
     case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
+    case 'fi': return AppLocalizationsFi();
+    case 'fr': return AppLocalizationsFr();
+    case 'he': return AppLocalizationsHe();
+    case 'hi': return AppLocalizationsHi();
+    case 'id': return AppLocalizationsId();
+    case 'it': return AppLocalizationsIt();
+    case 'ja': return AppLocalizationsJa();
+    case 'kk': return AppLocalizationsKk();
+    case 'ko': return AppLocalizationsKo();
+    case 'nb': return AppLocalizationsNb();
+    case 'nl': return AppLocalizationsNl();
+    case 'pl': return AppLocalizationsPl();
+    case 'pt': return AppLocalizationsPt();
     case 'ru': return AppLocalizationsRu();
+    case 'sv': return AppLocalizationsSv();
+    case 'th': return AppLocalizationsTh();
+    case 'tr': return AppLocalizationsTr();
+    case 'uk': return AppLocalizationsUk();
+    case 'uz': return AppLocalizationsUz();
+    case 'vi': return AppLocalizationsVi();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
