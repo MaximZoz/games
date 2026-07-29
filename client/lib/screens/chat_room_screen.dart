@@ -103,6 +103,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final List<PickedChatImage> _pendingImages = [];
   static const int _maxPendingImages = 3;
   static const Color _composerIconPurple = Color(0xFF8B5CF6);
+  final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
+  String? _highlightedMessageID;
+  bool _jumpingToMessage = false;
 
   /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
   final Set<String> _pendingDeliveredIDs = <String>{};
@@ -137,6 +140,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _initialScrollDone = false;
       _emojiOnly = false;
       _composerAlert = null;
+      _highlightedMessageID = null;
+      _messageKeys.clear();
       _messageIDs.clear();
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
@@ -759,31 +764,50 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required AlignmentGeometry alignment,
     required Widget child,
   }) {
-    return Dismissible(
-      key: ValueKey('swipe_${message.id}'),
-      direction: DismissDirection.endToStart,
-      dismissThresholds: const {
-        DismissDirection.endToStart: 0.15,
-      },
-      movementDuration: const Duration(milliseconds: 180),
-      confirmDismiss: (_) async {
-        _startReply(message);
-        return false;
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 18),
-        child: const Icon(
-          Icons.reply_rounded,
-          color: AppColors.accentStart,
-          size: 26,
+    final highlighted = _highlightedMessageID == message.id;
+    return KeyedSubtree(
+      key: _keyForMessage(message.id),
+      child: Dismissible(
+        key: ValueKey('swipe_${message.id}'),
+        direction: DismissDirection.endToStart,
+        dismissThresholds: const {
+          DismissDirection.endToStart: 0.15,
+        },
+        movementDuration: const Duration(milliseconds: 180),
+        confirmDismiss: (_) async {
+          _startReply(message);
+          return false;
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 18),
+          child: const Icon(
+            Icons.reply_rounded,
+            color: AppColors.accentStart,
+            size: 26,
+          ),
         ),
-      ),
-      child: Align(
-        alignment: alignment,
-        child: GestureDetector(
-          onLongPress: () => unawaited(_showMessageActions(message)),
-          child: child,
+        child: Align(
+          alignment: alignment,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            decoration: highlighted
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentStart.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  )
+                : null,
+            child: GestureDetector(
+              onLongPress: () => unawaited(_showMessageActions(message)),
+              child: child,
+            ),
+          ),
         ),
       ),
     );
@@ -1232,6 +1256,93 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOut,
     );
+  }
+
+  GlobalKey _keyForMessage(String messageID) {
+    return _messageKeys.putIfAbsent(messageID, GlobalKey.new);
+  }
+
+  Future<void> _jumpToMessage(String messageID) async {
+    final targetID = messageID.trim();
+    if (targetID.isEmpty || _jumpingToMessage) return;
+    _jumpingToMessage = true;
+    try {
+      var found = _messages.any((m) => m.id == targetID);
+      var guard = 0;
+      while (!found && mounted && guard < 50) {
+        guard++;
+        if (_loadingOlder) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          found = _messages.any((m) => m.id == targetID);
+          continue;
+        }
+        if (!_hasMoreOlder) break;
+        final beforeCount = _messages.length;
+        await _loadOlderMessages();
+        if (!mounted) return;
+        found = _messages.any((m) => m.id == targetID);
+        if (!found && _messages.length == beforeCount) {
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          if (_messages.length == beforeCount && !_loadingOlder) break;
+        }
+      }
+      if (!mounted) return;
+      if (!found) {
+        setState(() => _composerAlert = 'Исходное сообщение не найдено');
+        return;
+      }
+
+      setState(() {
+        _highlightedMessageID = targetID;
+        _composerAlert = null;
+      });
+
+      // С reverse-списком сначала прыгаем ближе по оценке, затем ensureVisible.
+      if (_scrollController.hasClients) {
+        final timeline = _buildTimelineEntries();
+        final ti = timeline.indexWhere((e) => e.message?.id == targetID);
+        if (ti >= 0) {
+          var itemsFromEnd = 0;
+          for (var i = timeline.length - 1; i > ti; i--) {
+            itemsFromEnd++;
+          }
+          final estimated = (itemsFromEnd * 96.0)
+              .clamp(0.0, _scrollController.position.maxScrollExtent);
+          _scrollController.jumpTo(estimated);
+        }
+      }
+
+      for (var attempt = 0; attempt < 12; attempt++) {
+        await Future<void>.delayed(Duration.zero);
+        if (!mounted) return;
+        await WidgetsBinding.instance.endOfFrame;
+        final ctx = _keyForMessage(targetID).currentContext;
+        if (ctx != null) {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: attempt == 0
+                ? Duration.zero
+                : const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: 0.28,
+          );
+          break;
+        }
+        if (_scrollController.hasClients) {
+          final next = (_scrollController.offset + 220)
+              .clamp(0.0, _scrollController.position.maxScrollExtent);
+          _scrollController.jumpTo(next);
+        }
+      }
+
+      await Future<void>.delayed(const Duration(milliseconds: 1400));
+      if (!mounted) return;
+      if (_highlightedMessageID == targetID) {
+        setState(() => _highlightedMessageID = null);
+      }
+    } finally {
+      _jumpingToMessage = false;
+    }
   }
 
   void _scheduleScrollToBottom({int retriesLeft = 12}) {
@@ -1987,39 +2098,51 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (message.replyToMessageID != null) ...[
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(bottom: 6),
-                                padding: const EdgeInsets.fromLTRB(
-                                    8, 6, 8, 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: const Border(
-                                    left: BorderSide(
-                                      color: AppColors.accentStart,
-                                      width: 3,
-                                    ),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => unawaited(
+                                    _jumpToMessage(message.replyToMessageID!),
                                   ),
-                                ),
-                                child: Text(
-                                  message.replyToHasImage
-                                      ? (message.replyToBody
-                                                  ?.trim()
-                                                  .isNotEmpty ==
-                                              true
-                                          ? 'Фото: ${formatChatMessagePreview(message.replyToBody!)}'
-                                          : 'Фото')
-                                      : (message.replyToBody?.trim().isNotEmpty ==
-                                              true
-                                          ? formatChatMessagePreview(
-                                              message.replyToBody!)
-                                          : 'Сообщение'),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.fromLTRB(
+                                        8, 6, 8, 6),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: const Border(
+                                        left: BorderSide(
+                                          color: AppColors.accentStart,
+                                          width: 3,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      message.replyToHasImage
+                                          ? (message.replyToBody
+                                                      ?.trim()
+                                                      .isNotEmpty ==
+                                                  true
+                                              ? 'Фото: ${formatChatMessagePreview(message.replyToBody!)}'
+                                              : 'Фото')
+                                          : (message.replyToBody
+                                                      ?.trim()
+                                                      .isNotEmpty ==
+                                                  true
+                                              ? formatChatMessagePreview(
+                                                  message.replyToBody!)
+                                              : 'Сообщение'),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
