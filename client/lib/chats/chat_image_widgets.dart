@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -88,13 +87,7 @@ class _ChatMessageImageThumbState extends ConsumerState<ChatMessageImageThumb> {
   void _openViewer() {
     final bytes = _bytes;
     if (bytes == null) return;
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierColor: Colors.black.withValues(alpha: 0.92),
-        pageBuilder: (_, __, ___) => ChatImageFullscreenViewer(bytes: bytes),
-      ),
-    );
+    ChatImageFullscreenViewer.open(context, bytes);
   }
 
   @override
@@ -139,6 +132,21 @@ class ChatImageFullscreenViewer extends StatefulWidget {
 
   final Uint8List bytes;
 
+  /// Поверх всего приложения (без тулбара shell), на весь экран.
+  static Future<void> open(BuildContext context, Uint8List bytes) {
+    return Navigator.of(context, rootNavigator: true).push<void>(
+      PageRouteBuilder<void>(
+        opaque: true,
+        fullscreenDialog: true,
+        barrierColor: Colors.black,
+        pageBuilder: (_, __, ___) => ChatImageFullscreenViewer(bytes: bytes),
+        transitionsBuilder: (_, animation, __, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
   @override
   State<ChatImageFullscreenViewer> createState() =>
       _ChatImageFullscreenViewerState();
@@ -148,40 +156,95 @@ class _ChatImageFullscreenViewerState extends State<ChatImageFullscreenViewer> {
   final _controller = TransformationController();
 
   @override
+  void initState() {
+    super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: SystemUiOverlay.values,
+    );
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
     super.dispose();
+  }
+
+  void _close() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: InteractiveViewer(
-                transformationController: _controller,
-                minScale: 1,
-                maxScale: 5,
-                child: Center(
-                  child: Image.memory(widget.bytes, fit: BoxFit.contain),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: _close,
+                  child: InteractiveViewer(
+                    transformationController: _controller,
+                    minScale: 1,
+                    maxScale: 5,
+                    child: Center(
+                      child: Image.memory(
+                        widget.bytes,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close_rounded, color: Colors.white),
+              Positioned(
+                top: MediaQuery.viewPaddingOf(context).top + 4,
+                right: 8,
+                child: IconButton(
+                  onPressed: _close,
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

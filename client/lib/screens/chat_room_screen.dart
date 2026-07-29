@@ -650,14 +650,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _previewPendingImage(PickedChatImage image) {
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierColor: Colors.black.withValues(alpha: 0.92),
-        pageBuilder: (_, __, ___) =>
-            ChatImageFullscreenViewer(bytes: image.bytes),
-      ),
-    );
+    ChatImageFullscreenViewer.open(context, image.bytes);
   }
 
   Future<void> _showMessageActions(ChatMessageItem message) async {
