@@ -2178,7 +2178,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   ),
                                       if (showAddFriend)
                                         Positioned(
-                                          top: -7,
+                                          bottom: -7,
                                           right: -7,
                                           child: Tooltip(
                                             message: hasIncoming
