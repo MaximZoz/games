@@ -260,6 +260,7 @@ func main() {
 		PublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
 		PrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
 		Subject:    getEnv("VAPID_SUBJECT", "mailto:admin@zozu.games"),
+		TTLSeconds: 86400,
 	}
 	if pushSender.Enabled() {
 		log.Printf("Web Push: enabled")

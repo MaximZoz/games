@@ -1,7 +1,8 @@
 {
     "name": "Zozu Games",
     "short_name": "Zozu Games",
-    "start_url": ".",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#E8ECF4",
     "theme_color": "#E8ECF4",

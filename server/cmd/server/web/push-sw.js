@@ -1,5 +1,6 @@
 /* Web Push service worker for Zozu Games PWA.
  * Не зависит от Flutter cache SW — регистрируется из Dart.
+ * iOS (установленная PWA): push обязан всегда показать user-visible notification.
  */
 /* eslint-disable no-undef */
 
@@ -30,14 +31,23 @@ self.addEventListener('push', (event) => {
     } catch (__) {}
   }
 
+  // На iOS push без showNotification дропается / считается silent.
+  const title = (data.title && String(data.title)) || 'Zozu Games';
+  const body = data.body != null ? String(data.body) : '';
+  const options = {
+    body: body,
+    icon: '/icons/Icon-192.png',
+    badge: '/icons/Icon-192.png',
+    data: { url: data.url || '/' },
+    tag: data.tag || 'zozu',
+    renotify: true,
+    silent: false,
+    requireInteraction: false,
+  };
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Zozu Games', {
-      body: data.body || '',
-      icon: '/icons/Icon-192.png',
-      badge: '/icons/Icon-192.png',
-      data: { url: data.url || '/' },
-      tag: data.tag || 'zozu',
-      renotify: true,
+    self.registration.showNotification(title, options).catch((err) => {
+      console.warn('[push-sw] showNotification failed', err);
     }),
   );
 });

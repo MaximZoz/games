@@ -73,7 +73,9 @@ func (s *WebPushSender) send(userIDs []uuid.UUID, payload PushPayload) {
 	}
 	ttl := s.TTLSeconds
 	if ttl <= 0 {
-		ttl = 60
+		// Короткий TTL (секунды) часто роняет доставку на iOS, если устройство
+		// кратко офлайн. Сутки — разумный дефолт для APNs Web Push.
+		ttl = 86400
 	}
 
 	for _, sub := range subs {
@@ -99,9 +101,12 @@ func (s *WebPushSender) send(userIDs []uuid.UUID, payload PushPayload) {
 		_ = resp.Body.Close()
 		// Протухшая подписка — удаляем.
 		if status == http.StatusGone || status == http.StatusNotFound {
+			log.Printf("web push: drop stale subscription %s status=%d apple=%v",
+				sub.ID, status, strings.Contains(sub.Endpoint, "web.push.apple.com"))
 			_ = store.DeleteWebPushSubscriptionByID(ctx, s.Pool, sub.ID)
 		} else if status < 200 || status >= 300 {
-			log.Printf("web push: unexpected status %d for %s", status, sub.ID)
+			log.Printf("web push: unexpected status %d for %s apple=%v",
+				status, sub.ID, strings.Contains(sub.Endpoint, "web.push.apple.com"))
 		}
 	}
 }

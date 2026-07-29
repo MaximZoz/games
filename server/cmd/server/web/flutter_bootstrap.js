@@ -35,8 +35,5 @@ if (!window._flutter) {
 }
 _flutter.buildConfig = {"engineRevision":"3452d735bd38224ef2db85ca763d862d6326b17f","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
-_flutter.loader.load({
-  serviceWorkerSettings: {
-    serviceWorkerVersion: "2898366310" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */
-  }
-});
+// Web Push: do not register flutter_service_worker.js (it unregisters itself and steals push-sw scope).
+_flutter.loader.load();

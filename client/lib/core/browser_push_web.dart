@@ -37,8 +37,35 @@ Future<String> requestBrowserNotificationPermission() async {
   }
 }
 
-Future<web.ServiceWorkerRegistration> _ensurePushServiceWorker() {
-  return web.window.navigator.serviceWorker.register(_swUrl.toJS).toDart;
+String? _workerScriptUrl(web.ServiceWorkerRegistration reg) {
+  final worker = reg.active ?? reg.waiting ?? reg.installing;
+  return worker?.scriptURL;
+}
+
+/// Убирает чужие SW (в т.ч. flutter_service_worker.js), держит только push-sw.
+Future<web.ServiceWorkerRegistration> _ensurePushServiceWorker() async {
+  try {
+    final regs =
+        await web.window.navigator.serviceWorker.getRegistrations().toDart;
+    for (final reg in regs.toDart) {
+      final url = _workerScriptUrl(reg) ?? '';
+      if (url.isNotEmpty && !url.contains('push-sw.js')) {
+        try {
+          await reg.unregister().toDart;
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+
+  await web.window.navigator.serviceWorker
+      .register(
+        _swUrl.toJS,
+        web.RegistrationOptions(scope: '/'),
+      )
+      .toDart;
+
+  // Ждём active worker именно для текущего scope.
+  return web.window.navigator.serviceWorker.ready.toDart;
 }
 
 Uint8List _urlBase64ToUint8List(String base64String) {
@@ -66,12 +93,18 @@ class BrowserPushSubscriptionData {
   final String auth;
 }
 
-Future<web.PushSubscription> _getOrCreateSubscription({
+/// Всегда пересоздаёт подписку на нашем SW + текущем VAPID
+/// (старый endpoint после смены SW на iOS часто «мёртвый»).
+Future<web.PushSubscription> _createFreshSubscription({
   required web.PushManager pushManager,
   required Uint8List applicationServerKey,
 }) async {
   final existing = await pushManager.getSubscription().toDart;
-  if (existing != null) return existing;
+  if (existing != null) {
+    try {
+      await existing.unsubscribe().toDart;
+    } catch (_) {}
+  }
 
   return pushManager
       .subscribe(
@@ -83,24 +116,7 @@ Future<web.PushSubscription> _getOrCreateSubscription({
       .toDart;
 }
 
-/// Подписывается на Web Push с [vapidPublicKey] (URL-safe base64).
-Future<BrowserPushSubscriptionData> subscribeBrowserPush({
-  required String vapidPublicKey,
-}) async {
-  final permission = browserNotificationPermission();
-  if (permission != 'granted') {
-    throw StateError('Нет разрешения на уведомления');
-  }
-
-  final registration = await _ensurePushServiceWorker();
-  await web.window.navigator.serviceWorker.ready.toDart;
-
-  final applicationServerKey = _urlBase64ToUint8List(vapidPublicKey);
-  final subscription = await _getOrCreateSubscription(
-    pushManager: registration.pushManager,
-    applicationServerKey: applicationServerKey,
-  );
-
+BrowserPushSubscriptionData _subscriptionData(web.PushSubscription subscription) {
   final keyP256 = subscription.getKey('p256dh');
   final keyAuth = subscription.getKey('auth');
   if (keyP256 == null || keyAuth == null) {
@@ -115,6 +131,24 @@ Future<BrowserPushSubscriptionData> subscribeBrowserPush({
     p256dh: _bufferToBase64Url(keyP256),
     auth: _bufferToBase64Url(keyAuth),
   );
+}
+
+/// Подписывается на Web Push с [vapidPublicKey] (URL-safe base64).
+Future<BrowserPushSubscriptionData> subscribeBrowserPush({
+  required String vapidPublicKey,
+}) async {
+  final permission = browserNotificationPermission();
+  if (permission != 'granted') {
+    throw StateError('Нет разрешения на уведомления');
+  }
+
+  final registration = await _ensurePushServiceWorker();
+  final applicationServerKey = _urlBase64ToUint8List(vapidPublicKey);
+  final subscription = await _createFreshSubscription(
+    pushManager: registration.pushManager,
+    applicationServerKey: applicationServerKey,
+  );
+  return _subscriptionData(subscription);
 }
 
 Future<String?> currentBrowserPushEndpoint() async {

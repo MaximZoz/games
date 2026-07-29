@@ -23,10 +23,76 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
   }
 
   final Ref _ref;
+  bool _ensuring = false;
+  bool _boundThisSession = false;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     state = prefs.getBool(_keyWebPushEnabled) ?? false;
+  }
+
+  Future<String?> _subscribeAndSave() async {
+    final auth = _ref.read(authRepositoryProvider);
+    final keyResp = await auth.sendAuthorized((token) {
+      return ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/push/vapid-key'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'push_vapid_key',
+      );
+    });
+    if (keyResp.statusCode != 200) {
+      return 'Сервер не настроен для Web Push (нет VAPID-ключей).';
+    }
+    final publicKey =
+        (jsonDecode(keyResp.body) as Map)['public_key'] as String? ?? '';
+    if (publicKey.isEmpty) {
+      return 'Пустой VAPID public key';
+    }
+
+    final sub = await browser_push.subscribeBrowserPush(
+      vapidPublicKey: publicKey,
+    );
+    final saveResp = await auth.sendAuthorized((token) {
+      return ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/push/subscribe'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'endpoint': sub.endpoint,
+          'keys': {
+            'p256dh': sub.p256dh,
+            'auth': sub.auth,
+          },
+        }),
+        operation: 'push_subscribe',
+      );
+    });
+    if (saveResp.statusCode < 200 || saveResp.statusCode >= 300) {
+      return 'Не удалось сохранить подписку на сервере';
+    }
+    return null;
+  }
+
+  /// После логина / рестарта PWA: заново привязать SW и endpoint, если флаг включён.
+  Future<void> ensureActiveSubscription() async {
+    if (_ensuring || !state || _boundThisSession) return;
+    if (!browser_push.browserPushSupported()) return;
+    if (browser_push.browserNotificationPermission() != 'granted') return;
+    if (_ref.read(authStateProvider).valueOrNull == null) return;
+
+    _ensuring = true;
+    try {
+      final err = await _subscribeAndSave();
+      if (err == null) {
+        _boundThisSession = true;
+      }
+    } catch (_) {
+      // Тихий rebind — пользователь уже видел ошибку при ручном включении.
+    } finally {
+      _ensuring = false;
+    }
   }
 
   /// Включить/выключить: permission → subscribe/unsubscribe → API.
@@ -44,51 +110,15 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
         return 'Разрешите уведомления в настройках браузера / системы.';
       }
 
-      final auth = _ref.read(authRepositoryProvider);
       try {
-        final keyResp = await auth.sendAuthorized((token) {
-          return ApiClient.get(
-            Uri.parse('$apiBaseUrl/api/push/vapid-key'),
-            headers: {'Authorization': 'Bearer $token'},
-            operation: 'push_vapid_key',
-          );
-        });
-        if (keyResp.statusCode != 200) {
-          return 'Сервер не настроен для Web Push (нет VAPID-ключей).';
-        }
-        final publicKey =
-            (jsonDecode(keyResp.body) as Map)['public_key'] as String? ?? '';
-        if (publicKey.isEmpty) {
-          return 'Пустой VAPID public key';
-        }
-
-        final sub = await browser_push.subscribeBrowserPush(
-          vapidPublicKey: publicKey,
-        );
-        final saveResp = await auth.sendAuthorized((token) {
-          return ApiClient.post(
-            Uri.parse('$apiBaseUrl/api/push/subscribe'),
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'endpoint': sub.endpoint,
-              'keys': {
-                'p256dh': sub.p256dh,
-                'auth': sub.auth,
-              },
-            }),
-            operation: 'push_subscribe',
-          );
-        });
-        if (saveResp.statusCode < 200 || saveResp.statusCode >= 300) {
-          return 'Не удалось сохранить подписку на сервере';
-        }
+        final err = await _subscribeAndSave();
+        if (err != null) return err;
       } catch (e) {
         return e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), '');
       }
+      _boundThisSession = true;
     } else {
+      _boundThisSession = false;
       try {
         final endpoint = await browser_push.currentBrowserPushEndpoint();
         if (endpoint != null) {

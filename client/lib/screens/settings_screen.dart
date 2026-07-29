@@ -49,7 +49,7 @@ class SettingsScreen extends ConsumerWidget {
                     _SettingsTile(
                       title: 'Уведомления в браузере',
                       subtitle: isWebPushSupported
-                          ? 'Push на устройство: сообщения, заявки в друзья, приглашения в игру. На iPhone — только в установленной PWA.'
+                          ? 'Push: сообщения, заявки в друзья, приглашения. На iPhone — только из PWA с экрана «Домой»; приложение должно быть свёрнуто или закрыто. После обновления приложения выключите и снова включите переключатель.'
                           : 'В этом браузере Web Push недоступен (на iPhone установите приложение на экран «Домой»).',
                       value: webPushEnabled,
                       onChanged: isWebPushSupported
