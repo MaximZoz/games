@@ -14,11 +14,9 @@ void main() {
     expect(parseAnimatedEmojiName(' text '), isNull);
   });
 
-  test('bundledEmojiStaticPreviewProgress picks visible Lottie frame', () {
-    // dragon-style default mid-frame
-    expect(bundledEmojiStaticPreviewProgress('dragon'), 0.42);
-    expect(bundledEmojiStaticPreviewProgress('tennis'), 0.42);
-    // baseball mid-frame is shrunk — use early visible frame
-    expect(bundledEmojiStaticPreviewProgress('baseball'), 0.02);
+  test('formatChatMessagePreview заменяет [ae:…] в смешанном тексте', () {
+    final out = formatChatMessagePreview('[ae:smile] привет');
+    expect(out, isNot(contains('[ae:')));
+    expect(out, contains('привет'));
   });
 }

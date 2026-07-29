@@ -2008,11 +2008,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                                   ?.trim()
                                                   .isNotEmpty ==
                                               true
-                                          ? 'Фото: ${message.replyToBody}'
+                                          ? 'Фото: ${formatChatMessagePreview(message.replyToBody!)}'
                                           : 'Фото')
                                       : (message.replyToBody?.trim().isNotEmpty ==
                                               true
-                                          ? message.replyToBody!
+                                          ? formatChatMessagePreview(
+                                              message.replyToBody!)
                                           : 'Сообщение'),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -2858,11 +2859,49 @@ class _ChatMessageBody extends StatelessWidget {
         animate: true,
       );
     }
-    return Text(
-      body,
-      style: const TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 14,
+    if (!animatedEmojiTokenAnywhereRe.hasMatch(body)) {
+      return Text(
+        body,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 14,
+        ),
+      );
+    }
+    // В тексте есть `[ae:…]` — рисуем смайлики inline, не сырой код.
+    final spans = <InlineSpan>[];
+    var start = 0;
+    for (final m in animatedEmojiTokenAnywhereRe.allMatches(body)) {
+      if (m.start > start) {
+        spans.add(TextSpan(text: body.substring(start, m.start)));
+      }
+      final tokenName = m.group(1) ?? '';
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1),
+            child: ShopAnimatedEmoji(
+              animatedName: tokenName,
+              size: 22,
+              fallback: unicodeEmojiFromAnimatedName(tokenName) ?? '🙂',
+              animate: true,
+            ),
+          ),
+        ),
+      );
+      start = m.end;
+    }
+    if (start < body.length) {
+      spans.add(TextSpan(text: body.substring(start)));
+    }
+    return Text.rich(
+      TextSpan(
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 14,
+        ),
+        children: spans,
       ),
     );
   }

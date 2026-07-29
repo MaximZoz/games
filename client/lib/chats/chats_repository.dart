@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 
 class ChatUserItem {
   final String id;
@@ -163,7 +164,7 @@ class ChatMessageItem {
   }
 
   String get previewText {
-    final t = body.trim();
+    final t = replaceAnimatedEmojiTokens(body.trim());
     final n = imageCount > 0 ? imageCount : (hasImage ? 1 : 0);
     if (n > 1 && t.isEmpty) return 'Фото ($n)';
     if (n > 1) return 'Фото ($n): $t';
