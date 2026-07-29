@@ -1,5 +1,6 @@
 /* Web Push service worker for Zozu Games PWA.
- * v4: game_turn только при свёрнутом PWA; в приложении — бейдж на «Игры».
+ * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
+ * В открытом приложении — без пушей на телефон (бейджи/realtime в UI).
  */
 /* eslint-disable no-undef */
 
@@ -77,18 +78,23 @@ function resolveClickPath(notification) {
 }
 
 /**
- * «Ваш ход» на iPhone только если приложение свёрнуто.
- * Если PWA на переднем плане (любой таб) — системный пуш не показываем:
- * на табе «Игры» ход виден в партии, на другом табе — бейдж на «Игры».
- * Приглашения в новую игру (game_invite) этой проверкой не режутся.
+ * PWA реально на экране и в фокусе.
+ * На iOS при сворачивании visibility часто остаётся visible, а focused=false —
+ * поэтому для подавления пуша требуем focused === true.
  */
-async function shouldSuppressGameTurn(data) {
-  const kind = data && data.kind != null ? String(data.kind) : '';
-  const tag = data && data.tag != null ? String(data.tag) : '';
-  if (kind !== 'game_turn' && !tag.startsWith('game_turn_')) {
+function clientIsFocusedForeground(client) {
+  if (!client) return false;
+  if (client.visibilityState && client.visibilityState !== 'visible') {
     return false;
   }
+  if ('focused' in client) {
+    return client.focused === true;
+  }
+  // Старые движки без focused: ориентируемся только на visibility.
+  return client.visibilityState === 'visible';
+}
 
+async function isPwaFocusedForeground() {
   const clientsList = await self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
@@ -101,12 +107,7 @@ async function shouldSuppressGameTurn(data) {
       continue;
     }
     if (!sameOrigin) continue;
-    // Свёрнуто / в фоне — нужен пуш на устройство.
-    if (client.visibilityState && client.visibilityState !== 'visible') {
-      continue;
-    }
-    // Приложение открыто на экране (любой таб) — без системного пуша.
-    return true;
+    if (clientIsFocusedForeground(client)) return true;
   }
   return false;
 }
@@ -147,7 +148,9 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     (async () => {
-      if (await shouldSuppressGameTurn(data)) {
+      // Любые системные пуши только когда приложение свёрнуто / не в фокусе.
+      // В открытом PWA (чаты, игры, другой таб) — без баннера на iPhone.
+      if (await isPwaFocusedForeground()) {
         return;
       }
       const path = appPathFromUrl(resolveTargetUrl(url));
