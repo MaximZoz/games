@@ -2178,8 +2178,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   ),
                                       if (showAddFriend)
                                         Positioned(
-                                          bottom: -7,
-                                          right: -7,
+                                          bottom: 6,
+                                          right: 6,
                                           child: Tooltip(
                                             message: hasIncoming
                                                 ? 'Принять заявку в друзья'
