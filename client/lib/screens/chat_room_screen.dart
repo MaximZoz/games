@@ -2277,6 +2277,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         clipBehavior: Clip.antiAlias,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             if (_replyTo != null || _editingMessage != null)
                               Padding(
@@ -2335,53 +2336,51 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   ],
                                 ),
                               ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 14, right: 4),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _textController,
-                                      focusNode: _composerFocusNode,
-                                      minLines: 1,
-                                      maxLines: 4,
-                                      textCapitalization:
-                                          TextCapitalization.sentences,
-                                      decoration: const InputDecoration(
-                                        hintText: 'Сообщение',
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding:
-                                            EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                      ),
-                                      textInputAction:
-                                          TextInputAction.send,
-                                      onTap: _scrollToBottom,
-                                      onSubmitted: (_) => _sendMessage(),
-                                    ),
+                            TextField(
+                              controller: _textController,
+                              focusNode: _composerFocusNode,
+                              minLines: 1,
+                              maxLines: 4,
+                              textCapitalization:
+                                  TextCapitalization.sentences,
+                              // Тема приложения рисует OutlineInputBorder —
+                              // явно гасим все границы и заливку.
+                              decoration: InputDecoration(
+                                hintText: 'Сообщение',
+                                filled: false,
+                                isDense: true,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                  14,
+                                  12,
+                                  4,
+                                  12,
+                                ),
+                                suffixIcon: IconButton(
+                                  onPressed:
+                                      _sending ? null : _openEmojiPicker,
+                                  tooltip: 'Смайлики',
+                                  splashRadius: 20,
+                                  icon: const Icon(
+                                    Icons.emoji_emotions_outlined,
+                                    color: _composerIconPurple,
+                                    size: 24,
                                   ),
-                                  IconButton(
-                                    onPressed: _sending
-                                        ? null
-                                        : _openEmojiPicker,
-                                    tooltip: 'Смайлики',
-                                    padding: const EdgeInsets.all(8),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 40,
-                                      minHeight: 40,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.emoji_emotions_outlined,
-                                      color: _composerIconPurple,
-                                      size: 24,
-                                    ),
-                                  ),
-                                ],
+                                ),
+                                suffixIconConstraints:
+                                    const BoxConstraints(
+                                  minWidth: 40,
+                                  minHeight: 40,
+                                ),
                               ),
+                              textInputAction: TextInputAction.send,
+                              onTap: _scrollToBottom,
+                              onSubmitted: (_) => _sendMessage(),
                             ),
                           ],
                         ),
