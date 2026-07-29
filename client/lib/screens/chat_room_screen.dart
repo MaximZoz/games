@@ -2249,41 +2249,30 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: (_sending ||
-                                  _editingMessage != null ||
-                                  _emojiOnly ||
-                                  _pendingImages.length >= _maxPendingImages)
-                              ? null
-                              : _pickPhoto,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Ink(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: (_sending ||
-                                      _editingMessage != null ||
-                                      _emojiOnly ||
-                                      _pendingImages.length >=
-                                          _maxPendingImages)
-                                  ? _composerIconPurple.withValues(alpha: 0.35)
-                                  : _composerIconPurple,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.image_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                        ),
+                    IconButton(
+                      onPressed: (_sending ||
+                              _editingMessage != null ||
+                              _emojiOnly ||
+                              _pendingImages.length >= _maxPendingImages)
+                          ? null
+                          : _pickPhoto,
+                      tooltip: 'Фото',
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
+                      icon: Icon(
+                        Icons.image_outlined,
+                        color: (_sending ||
+                                _editingMessage != null ||
+                                _emojiOnly ||
+                                _pendingImages.length >= _maxPendingImages)
+                            ? _composerIconPurple.withValues(alpha: 0.35)
+                            : _composerIconPurple,
+                        size: 24,
                       ),
                     ),
-                    const SizedBox(width: 6),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
