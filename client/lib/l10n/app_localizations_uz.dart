@@ -761,4 +761,547 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Brauzer yoki tizim sozlamalarida bildirishnomalarga ruxsat bering.';
+
+  @override
+  String get balanceTitle => 'Balans';
+
+  @override
+  String get coinBronze => 'Bronza';
+
+  @override
+  String get coinSilver => 'Kumush';
+
+  @override
+  String get coinGold => 'Oltin';
+
+  @override
+  String get coinDiamond => 'Olmos';
+
+  @override
+  String get balanceZeroBronze => '0 bronza';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count bronza';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count kumush';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count oltin';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count olmos';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return 'kuniga $amount';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'br';
+
+  @override
+  String get balanceAbbrSilver => 'k.';
+
+  @override
+  String get balanceAbbrGold => 'o.';
+
+  @override
+  String get commonBackHome => 'Bosh sahifaga qaytish';
+
+  @override
+  String get commonCopied => 'Nusxalandi';
+
+  @override
+  String get commonClear => 'Tozalash';
+
+  @override
+  String get commonTryLater => 'Keyinroq qayta urinib ko‘ring.';
+
+  @override
+  String get commonTryRefresh => 'Sahifani yangilab ko‘ring.';
+
+  @override
+  String get coinsTitle => 'Tangalar';
+
+  @override
+  String get coinsLoginReward => 'Kirish mukofoti';
+
+  @override
+  String get coinsLoginAvailableToday => 'Bugungi mukofot mavjud';
+
+  @override
+  String get coinsLoginStreak => 'Kundalik kirish seriyasi';
+
+  @override
+  String get coinsFriendReward => 'Do‘st mukofoti';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return 'Havolangiz orqali ro‘yxatdan o‘tish uchun +$amount';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Mukofotlarni yuklab bo‘lmadi';
+
+  @override
+  String get coinsClaimReward => 'Mukofotni olish';
+
+  @override
+  String get coinsAlreadyClaimed => 'Allaqachon olingan';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · bugun';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · yana 1 kun';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · yana $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Do‘stni taklif qilish';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return 'Havolangiz orqali ro‘yxatdan o‘tgan har bir kishi uchun +$amount';
+  }
+
+  @override
+  String get coinsCopyLink => 'Havolani nusxalash';
+
+  @override
+  String get coinsHowItWorks => 'Qanday ishlaydi';
+
+  @override
+  String get coinsHowStep1 => 'Havolani nusxalang va do‘stingizga yuboring';
+
+  @override
+  String get coinsHowStep2 => 'Do‘st shu havola orqali ro‘yxatdan o‘tadi';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Sizga $amount beriladi';
+  }
+
+  @override
+  String get achievementsTitle => 'Yutuqlar';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Progress: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Ramka olindi';
+
+  @override
+  String get achievementsClaimed => 'Olindi';
+
+  @override
+  String get achievementsOpenFrame => 'Ramkani ochish';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return '$name ni do‘stlardan olib tashlamoqchimisiz?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Olib tashlash';
+
+  @override
+  String get friendsRemove => 'Do‘stlardan o‘chirish';
+
+  @override
+  String get friendsAcceptRequest => 'So‘rovni qabul qilish';
+
+  @override
+  String get friendsDeclineRequest => 'So‘rovni rad etish';
+
+  @override
+  String get friendsCancelRequest => 'So‘rovni bekor qilish';
+
+  @override
+  String get friendsSendRequest => 'Do‘stlik so‘rovini yuborish';
+
+  @override
+  String get friendsRequestAlreadySent => 'So‘rov allaqachon yuborilgan';
+
+  @override
+  String get friendsIncomingStatus => 'Kiruvchi so‘rov';
+
+  @override
+  String get friendsOutgoingStatus => 'Chiquvchi so‘rov';
+
+  @override
+  String get friendsNotFriends => 'Do‘st emas';
+
+  @override
+  String get friendsCollapseSearch => 'Qidiruvni yig‘ish';
+
+  @override
+  String get friendsExpandSearch => 'Qidiruvni ko‘rsatish';
+
+  @override
+  String get friendsLoadFailed => 'Do‘stlarni yuklab bo‘lmadi';
+
+  @override
+  String friendsSince(String date) {
+    return 'Do‘stlik boshlanishi: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Kiruvchi so‘rov: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Chiquvchi so‘rov: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Foydalanuvchi ma’lumoti';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age yosh';
+  }
+
+  @override
+  String get shopBuy => 'Sotib olish';
+
+  @override
+  String get shopBuyTitle => 'Sotib olasizmi?';
+
+  @override
+  String get shopBuyStakeTitle => 'Tikishni sotib olasizmi?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Smayl sotib olasizmi?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Kolleksiyani sotib olasizmi?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Narxi: $price';
+  }
+
+  @override
+  String get shopOwned => 'Sotib olingan';
+
+  @override
+  String get shopEmpty => 'Hali bo‘sh';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title sotib olindi';
+  }
+
+  @override
+  String get shopEmojiUses => 'Olasiz: 10 foydalanish';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 foydalanish';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 foydalanish';
+  }
+
+  @override
+  String get shopBuyTen => 'Sotib olish · 10 dona';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Daromad: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Bir martalik xarid';
+
+  @override
+  String get shopSellRefund => 'Sotish narxning bir qismini qaytaradi';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title profilga qo‘shildi';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'to‘plam bonusi +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Yig‘ildi';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Yig‘ildi · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Sotasizmi?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Siz $amount olasiz';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Sotildi: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Avval do‘stlar qo‘shing';
+
+  @override
+  String get inventoryGiftTitle => 'Kolleksiyani sovg‘a qilasizmi?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return '«$title» ni $name ga sovg‘a qilasizmi?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Sovg‘a qilindi: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Buyumlarni yuklab bo‘lmadi';
+
+  @override
+  String get inventoryNoCollections => 'Kolleksiya yo‘q — do‘kondan sotib oling';
+
+  @override
+  String get inventoryNoEmojis => 'Smayl yo‘q — do‘kondan sotib oling';
+
+  @override
+  String get inventoryNoFrames => 'Ramka yo‘q — ligada 10 o‘yin yuting (yutuqlar)';
+
+  @override
+  String get inventoryNoStakes => 'Sotib olingan tikishlar yo‘q';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return '$count qoldi';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Daromad: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Ertangi daromad: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return '$amount oltin tikish mumkin';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return '$amount kumush tikish mumkin';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return '+$amount olindi';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Chatlarni yuklab bo‘lmadi';
+
+  @override
+  String get chatsLoadListFailed => 'Ro‘yxatni yuklab bo‘lmadi';
+
+  @override
+  String get chatsBlockedEmpty => 'Ro‘yxat bo‘sh';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Bloklangan: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Chat yaratib bo‘lmadi';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Avval do‘stlar qo‘shing, keyin chat ochishingiz mumkin.';
+
+  @override
+  String get chatsFriendsNotFound => 'Do‘stlar topilmadi';
+
+  @override
+  String get chatsFindFriendHint => 'Nik bo‘yicha do‘st topish';
+
+  @override
+  String get chatsSelectChat => 'Chatni tanlang';
+
+  @override
+  String get chatsSelectHint => 'Chapdagi ro‘yxatdan suhbatni tanlang';
+
+  @override
+  String get chatEditFailed => 'Xabarni o‘zgartirib bo‘lmadi';
+
+  @override
+  String get chatSendFailed => 'Xabarni yuborib bo‘lmadi';
+
+  @override
+  String get chatDeleteFailed => 'Xabarni o‘chirib bo‘lmadi';
+
+  @override
+  String get chatEmojiSendFailed => 'Smaylni yuborib bo‘lmadi';
+
+  @override
+  String get chatLoadFailed => 'Xabarlarni yuklab bo‘lmadi';
+
+  @override
+  String get chatBackToGame => 'O‘yinga qaytish';
+
+  @override
+  String get chatBackToChats => 'Chatlarga qaytish';
+
+  @override
+  String get chatActions => 'Chat amallari';
+
+  @override
+  String get chatScrollToEnd => 'Suhbat oxiriga';
+
+  @override
+  String chatReplyingTo(String name) {
+    return '$name ga javob';
+  }
+
+  @override
+  String get chatGift => 'Sovg‘a';
+
+  @override
+  String get chatCollection => 'Kolleksiya';
+
+  @override
+  String get chatGiftCollection => 'Sovg‘a · kolleksiya';
+
+  @override
+  String get chatThisUser => 'bu foydalanuvchi';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Lobbi yuklab bo‘lmadi.';
+
+  @override
+  String get gamesTapChangeStake => 'Tikishni o‘zgartirish uchun bosing';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Yurish vaqtini o‘zgartirish uchun bosing';
+
+  @override
+  String get gamesTapChangeGrid => 'To‘r o‘lchamini o‘zgartirish uchun bosing';
+
+  @override
+  String get gamesSwapSidesHint => 'O 1-yurishdan keyin X bo‘lishi mumkin';
+
+  @override
+  String get gamesNoCenterHint => 'Birinchi yurish markazda bo‘lmasin';
+
+  @override
+  String get lobbyInviteSentShort => 'Yuborildi';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Takliflar yuborildi. Javob kutilmoqda.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Uni chatga yoki do‘stga xabarga joylashtiring';
+
+  @override
+  String get lobbyCopyLinkHint => 'Havolani vaqtinchalik xotiraga nusxalash';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name sizni o‘ynashga taklif qiladi';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name g‘alaba qozondi';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Vaqt tugadi. $name g‘alaba qozondi';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get adminTitle => 'Admin';
+
+  @override
+  String get tournamentsTitle => 'Turnirlar';
+
+  @override
+  String get profileAgeInvalid => '1 dan 111 gacha yosh kiriting';
+
+  @override
+  String get profileSaveFailed => 'Profilni saqlab bo‘lmadi';
+
+  @override
+  String get profileNameHint => 'Lotin harflari, raqamlar, _ 10 belgigacha';
+
+  @override
+  String get profileAgeHint => '1 dan 111 gacha';
+
+  @override
+  String get profileAboutHint => '100 belgigacha (ixtiyoriy)';
+
+  @override
+  String get profileProcessingPhoto => 'Foto qayta ishlanmoqda…';
+
+  @override
+  String get profileCropTitle => 'Avatar maydonini tanlang';
+
+  @override
+  String get profileCropHint => 'Fotoni kattalashtiring va siljiting';
+
+  @override
+  String get profileApply => 'Qo‘llash';
+
+  @override
+  String get profilePreparing => 'Tayyorlanmoqda…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get timeOneMin => '1 daq';
+
+  @override
+  String get timeTenMin => '10 daq';
 }

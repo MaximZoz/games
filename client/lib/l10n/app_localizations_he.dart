@@ -761,4 +761,547 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get errPushPermission => 'אפשרו התראות בדפדפן או בהגדרות המערכת.';
+
+  @override
+  String get balanceTitle => 'יתרה';
+
+  @override
+  String get coinBronze => 'ברונזה';
+
+  @override
+  String get coinSilver => 'כסף';
+
+  @override
+  String get coinGold => 'זהב';
+
+  @override
+  String get coinDiamond => 'יהלום';
+
+  @override
+  String get balanceZeroBronze => '0 ברונזה';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count ברונזה';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count כסף';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count זהב';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count יהלומים';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount ביום';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'בר';
+
+  @override
+  String get balanceAbbrSilver => 'כ.';
+
+  @override
+  String get balanceAbbrGold => 'ז.';
+
+  @override
+  String get commonBackHome => 'חזרה לדף הבית';
+
+  @override
+  String get commonCopied => 'הועתק';
+
+  @override
+  String get commonClear => 'נקה';
+
+  @override
+  String get commonTryLater => 'נסו שוב מאוחר יותר.';
+
+  @override
+  String get commonTryRefresh => 'נסו לרענן את הדף.';
+
+  @override
+  String get coinsTitle => 'מטבעות';
+
+  @override
+  String get coinsLoginReward => 'פרס התחברות';
+
+  @override
+  String get coinsLoginAvailableToday => 'פרס היום זמין';
+
+  @override
+  String get coinsLoginStreak => 'רצף התחברויות יומי';
+
+  @override
+  String get coinsFriendReward => 'פרס חבר';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount על הרשמה דרך הקישור שלך';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'לא ניתן לטעון פרסים';
+
+  @override
+  String get coinsClaimReward => 'קבלת פרס';
+
+  @override
+  String get coinsAlreadyClaimed => 'כבר התקבל';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · היום';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · נותר יום אחד';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · נותרו $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'הזמנת חבר';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount על כל מי שנרשם דרך הקישור שלך';
+  }
+
+  @override
+  String get coinsCopyLink => 'העתקת קישור';
+
+  @override
+  String get coinsHowItWorks => 'איך זה עובד';
+
+  @override
+  String get coinsHowStep1 => 'העתיקו את הקישור ושלחו לחבר';
+
+  @override
+  String get coinsHowStep2 => 'החבר נרשם דרך הקישור';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'תקבלו $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'הישגים';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'התקדמות: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'המסגרת התקבלה';
+
+  @override
+  String get achievementsClaimed => 'התקבל';
+
+  @override
+  String get achievementsOpenFrame => 'פתיחת מסגרת';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'האם אתם בטוחים שברצונכם להסיר את $name מהחברים?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'הסרה';
+
+  @override
+  String get friendsRemove => 'הסרה מהחברים';
+
+  @override
+  String get friendsAcceptRequest => 'אישור בקשה';
+
+  @override
+  String get friendsDeclineRequest => 'דחיית בקשה';
+
+  @override
+  String get friendsCancelRequest => 'ביטול בקשה';
+
+  @override
+  String get friendsSendRequest => 'שליחת בקשת חברות';
+
+  @override
+  String get friendsRequestAlreadySent => 'הבקשה כבר נשלחה';
+
+  @override
+  String get friendsIncomingStatus => 'בקשה נכנסת';
+
+  @override
+  String get friendsOutgoingStatus => 'בקשה יוצאת';
+
+  @override
+  String get friendsNotFriends => 'לא חברים';
+
+  @override
+  String get friendsCollapseSearch => 'כיווץ חיפוש';
+
+  @override
+  String get friendsExpandSearch => 'הצגת חיפוש';
+
+  @override
+  String get friendsLoadFailed => 'לא ניתן לטעון חברים';
+
+  @override
+  String friendsSince(String date) {
+    return 'חברים מאז: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'בקשה נכנסת: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'בקשה יוצאת: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'מידע על המשתמש';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age שנים';
+  }
+
+  @override
+  String get shopBuy => 'קנייה';
+
+  @override
+  String get shopBuyTitle => 'לקנות?';
+
+  @override
+  String get shopBuyStakeTitle => 'לקנות הימור?';
+
+  @override
+  String get shopBuyEmojiTitle => 'לקנות אימוג\'י?';
+
+  @override
+  String get shopBuyCollectionTitle => 'לקנות אוסף?';
+
+  @override
+  String shopPrice(String price) {
+    return 'מחיר: $price';
+  }
+
+  @override
+  String get shopOwned => 'נרכש';
+
+  @override
+  String get shopEmpty => 'עדיין ריק';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title נרכש';
+  }
+
+  @override
+  String get shopEmojiUses => 'תקבלו: 10 שימושים';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 שימושים';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 שימושים';
+  }
+
+  @override
+  String get shopBuyTen => 'קנייה · 10 יח׳';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'הכנסה: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'רכישה חד-פעמית';
+
+  @override
+  String get shopSellRefund => 'מכירה מחזירה חלק מהעלות';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title נוסף לפרופיל';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'בונוס סט +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'הושלם';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'נאסף · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'למכור?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'תקבלו $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'נמכר: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'הוסיפו חברים קודם';
+
+  @override
+  String get inventoryGiftTitle => 'לתת אוסף במתנה?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'לתת את «$title» ל־$name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'ניתן במתנה: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'לא ניתן לטעון פריטים';
+
+  @override
+  String get inventoryNoCollections => 'אין אוספים — קנו בחנות';
+
+  @override
+  String get inventoryNoEmojis => 'אין אימוג\'ים — קנו בחנות';
+
+  @override
+  String get inventoryNoFrames => 'אין מסגרות — נצחו 10 משחקי ליגה (הישגים)';
+
+  @override
+  String get inventoryNoStakes => 'אין הימורים שנרכשו';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'נותרו $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'הכנסה: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'הכנסה מחר: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'ניתן להמר $amount זהב';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'ניתן להמר $amount כסף';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'התקבל +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'לא ניתן לטעון צ\'אטים';
+
+  @override
+  String get chatsLoadListFailed => 'לא ניתן לטעון את הרשימה';
+
+  @override
+  String get chatsBlockedEmpty => 'הרשימה ריקה';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'נחסם: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'לא ניתן ליצור צ\'אט';
+
+  @override
+  String get chatsNeedFriendsFirst => 'הוסיפו חברים קודם, ואז תוכלו לפתוח צ\'אט.';
+
+  @override
+  String get chatsFriendsNotFound => 'לא נמצאו חברים';
+
+  @override
+  String get chatsFindFriendHint => 'מצאו חבר לפי כינוי';
+
+  @override
+  String get chatsSelectChat => 'בחרו צ\'אט';
+
+  @override
+  String get chatsSelectHint => 'בחרו שיחה מהרשימה משמאל';
+
+  @override
+  String get chatEditFailed => 'לא ניתן לערוך את ההודעה';
+
+  @override
+  String get chatSendFailed => 'לא ניתן לשלוח את ההודעה';
+
+  @override
+  String get chatDeleteFailed => 'לא ניתן למחוק את ההודעה';
+
+  @override
+  String get chatEmojiSendFailed => 'לא ניתן לשלוח אימוג\'י';
+
+  @override
+  String get chatLoadFailed => 'לא ניתן לטעון הודעות';
+
+  @override
+  String get chatBackToGame => 'חזרה למשחק';
+
+  @override
+  String get chatBackToChats => 'חזרה לצ\'אטים';
+
+  @override
+  String get chatActions => 'פעולות צ\'אט';
+
+  @override
+  String get chatScrollToEnd => 'לסוף השיחה';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'תשובה ל־$name';
+  }
+
+  @override
+  String get chatGift => 'מתנה';
+
+  @override
+  String get chatCollection => 'אוסף';
+
+  @override
+  String get chatGiftCollection => 'מתנה · אוסף';
+
+  @override
+  String get chatThisUser => 'משתמש זה';
+
+  @override
+  String get gamesLobbyLoadFailed => 'לא ניתן לטעון את הלובי.';
+
+  @override
+  String get gamesTapChangeStake => 'הקישו לשינוי ההימור';
+
+  @override
+  String get gamesTapChangeTurnTime => 'הקישו לשינוי זמן מהלך';
+
+  @override
+  String get gamesTapChangeGrid => 'הקישו לשינוי גודל הרשת';
+
+  @override
+  String get gamesSwapSidesHint => 'O יכול להפוך ל־X אחרי המהלך הראשון';
+
+  @override
+  String get gamesNoCenterHint => 'המהלך הראשון לא יכול להיות במרכז';
+
+  @override
+  String get lobbyInviteSentShort => 'נשלח';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'ההזמנות נשלחו. ממתינים לתשובה.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'הדביקו אותו בצ\'אט או בהודעה לחבר';
+
+  @override
+  String get lobbyCopyLinkHint => 'העתקת קישור ללוח';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name מזמין אתכם לשחק';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name ניצח';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'הזמן נגמר. $name ניצח';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds שנ׳';
+  }
+
+  @override
+  String get adminTitle => 'ניהול';
+
+  @override
+  String get tournamentsTitle => 'טורנירים';
+
+  @override
+  String get profileAgeInvalid => 'הזינו גיל בין 1 ל־111';
+
+  @override
+  String get profileSaveFailed => 'לא ניתן לשמור את הפרופיל';
+
+  @override
+  String get profileNameHint => 'אותיות לטיניות, ספרות, _ עד 10 תווים';
+
+  @override
+  String get profileAgeHint => 'מ־1 עד 111';
+
+  @override
+  String get profileAboutHint => 'עד 100 תווים (אופציונלי)';
+
+  @override
+  String get profileProcessingPhoto => 'מעבד תמונה…';
+
+  @override
+  String get profileCropTitle => 'בחרו אזור אווטאר';
+
+  @override
+  String get profileCropHint => 'התקרבו והזיזו את התמונה';
+
+  @override
+  String get profileApply => 'החלה';
+
+  @override
+  String get profilePreparing => 'מכין…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds שנ׳';
+  }
+
+  @override
+  String get timeOneMin => '1 דק׳';
+
+  @override
+  String get timeTenMin => '10 דק׳';
 }

@@ -761,4 +761,547 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Izinkan notifikasi di browser atau pengaturan sistem.';
+
+  @override
+  String get balanceTitle => 'Saldo';
+
+  @override
+  String get coinBronze => 'Perunggu';
+
+  @override
+  String get coinSilver => 'Perak';
+
+  @override
+  String get coinGold => 'Emas';
+
+  @override
+  String get coinDiamond => 'Berlian';
+
+  @override
+  String get balanceZeroBronze => '0 perunggu';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count perunggu';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count perak';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count emas';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count berlian';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount per hari';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'pr';
+
+  @override
+  String get balanceAbbrSilver => 'pk.';
+
+  @override
+  String get balanceAbbrGold => 'em.';
+
+  @override
+  String get commonBackHome => 'Kembali ke beranda';
+
+  @override
+  String get commonCopied => 'Disalin';
+
+  @override
+  String get commonClear => 'Hapus';
+
+  @override
+  String get commonTryLater => 'Coba lagi nanti.';
+
+  @override
+  String get commonTryRefresh => 'Coba segarkan halaman.';
+
+  @override
+  String get coinsTitle => 'Koin';
+
+  @override
+  String get coinsLoginReward => 'Hadiah masuk';
+
+  @override
+  String get coinsLoginAvailableToday => 'Hadiah hari ini tersedia';
+
+  @override
+  String get coinsLoginStreak => 'Rentetan masuk harian';
+
+  @override
+  String get coinsFriendReward => 'Hadiah teman';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount untuk pendaftaran lewat tautan Anda';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Gagal memuat hadiah';
+
+  @override
+  String get coinsClaimReward => 'Ambil hadiah';
+
+  @override
+  String get coinsAlreadyClaimed => 'Sudah diambil';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · hari ini';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · sisa 1 hari';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · sisa $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Undang teman';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount untuk setiap orang yang mendaftar lewat tautan Anda';
+  }
+
+  @override
+  String get coinsCopyLink => 'Salin tautan';
+
+  @override
+  String get coinsHowItWorks => 'Cara kerjanya';
+
+  @override
+  String get coinsHowStep1 => 'Salin tautan dan kirim ke teman';
+
+  @override
+  String get coinsHowStep2 => 'Teman mendaftar lewat tautan itu';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Anda menerima $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Pencapaian';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Progres: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Bingkai diperoleh';
+
+  @override
+  String get achievementsClaimed => 'Diperoleh';
+
+  @override
+  String get achievementsOpenFrame => 'Buka bingkai';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Yakin ingin menghapus $name dari teman?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Hapus';
+
+  @override
+  String get friendsRemove => 'Hapus dari teman';
+
+  @override
+  String get friendsAcceptRequest => 'Terima permintaan';
+
+  @override
+  String get friendsDeclineRequest => 'Tolak permintaan';
+
+  @override
+  String get friendsCancelRequest => 'Batalkan permintaan';
+
+  @override
+  String get friendsSendRequest => 'Kirim permintaan pertemanan';
+
+  @override
+  String get friendsRequestAlreadySent => 'Permintaan sudah dikirim';
+
+  @override
+  String get friendsIncomingStatus => 'Permintaan masuk';
+
+  @override
+  String get friendsOutgoingStatus => 'Permintaan keluar';
+
+  @override
+  String get friendsNotFriends => 'Bukan teman';
+
+  @override
+  String get friendsCollapseSearch => 'Sembunyikan pencarian';
+
+  @override
+  String get friendsExpandSearch => 'Tampilkan pencarian';
+
+  @override
+  String get friendsLoadFailed => 'Gagal memuat teman';
+
+  @override
+  String friendsSince(String date) {
+    return 'Berteman sejak: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Permintaan masuk: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Permintaan keluar: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Info pengguna';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age tahun';
+  }
+
+  @override
+  String get shopBuy => 'Beli';
+
+  @override
+  String get shopBuyTitle => 'Beli?';
+
+  @override
+  String get shopBuyStakeTitle => 'Beli taruhan?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Beli emoji?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Beli koleksi?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Harga: $price';
+  }
+
+  @override
+  String get shopOwned => 'Dibeli';
+
+  @override
+  String get shopEmpty => 'Masih kosong';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title dibeli';
+  }
+
+  @override
+  String get shopEmojiUses => 'Anda mendapat: 10 penggunaan';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 penggunaan';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 penggunaan';
+  }
+
+  @override
+  String get shopBuyTen => 'Beli · 10 pcs';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Pendapatan: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Pembelian sekali';
+
+  @override
+  String get shopSellRefund => 'Menjual mengembalikan sebagian biaya';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title ditambahkan ke profil';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'bonus set +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Lengkap';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Terkumpul · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Jual?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Anda akan menerima $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Terjual: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Tambahkan teman dulu';
+
+  @override
+  String get inventoryGiftTitle => 'Hadiahkan koleksi?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Hadiahkan «$title» kepada $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Dihadiahkan: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Gagal memuat item';
+
+  @override
+  String get inventoryNoCollections => 'Tidak ada koleksi — beli di toko';
+
+  @override
+  String get inventoryNoEmojis => 'Tidak ada emoji — beli di toko';
+
+  @override
+  String get inventoryNoFrames => 'Tidak ada bingkai — menangkan 10 pertandingan liga (pencapaian)';
+
+  @override
+  String get inventoryNoStakes => 'Tidak ada taruhan yang dibeli';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Sisa $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Pendapatan: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Pendapatan besok: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Bisa bertaruh $amount emas';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Bisa bertaruh $amount perak';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Diterima +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Gagal memuat obrolan';
+
+  @override
+  String get chatsLoadListFailed => 'Gagal memuat daftar';
+
+  @override
+  String get chatsBlockedEmpty => 'Daftar kosong';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Diblokir: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Gagal membuat obrolan';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Tambahkan teman dulu, baru bisa membuka obrolan.';
+
+  @override
+  String get chatsFriendsNotFound => 'Teman tidak ditemukan';
+
+  @override
+  String get chatsFindFriendHint => 'Cari teman berdasarkan nama panggilan';
+
+  @override
+  String get chatsSelectChat => 'Pilih obrolan';
+
+  @override
+  String get chatsSelectHint => 'Pilih percakapan dari daftar di kiri';
+
+  @override
+  String get chatEditFailed => 'Gagal mengubah pesan';
+
+  @override
+  String get chatSendFailed => 'Gagal mengirim pesan';
+
+  @override
+  String get chatDeleteFailed => 'Gagal menghapus pesan';
+
+  @override
+  String get chatEmojiSendFailed => 'Gagal mengirim emoji';
+
+  @override
+  String get chatLoadFailed => 'Gagal memuat pesan';
+
+  @override
+  String get chatBackToGame => 'Kembali ke permainan';
+
+  @override
+  String get chatBackToChats => 'Kembali ke obrolan';
+
+  @override
+  String get chatActions => 'Tindakan obrolan';
+
+  @override
+  String get chatScrollToEnd => 'Ke akhir percakapan';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Membalas $name';
+  }
+
+  @override
+  String get chatGift => 'Hadiah';
+
+  @override
+  String get chatCollection => 'Koleksi';
+
+  @override
+  String get chatGiftCollection => 'Hadiah · koleksi';
+
+  @override
+  String get chatThisUser => 'pengguna ini';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Gagal memuat lobi.';
+
+  @override
+  String get gamesTapChangeStake => 'Ketuk untuk mengubah taruhan';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Ketuk untuk mengubah waktu giliran';
+
+  @override
+  String get gamesTapChangeGrid => 'Ketuk untuk mengubah ukuran grid';
+
+  @override
+  String get gamesSwapSidesHint => 'O bisa menjadi X setelah langkah pertama';
+
+  @override
+  String get gamesNoCenterHint => 'Langkah pertama tidak boleh di tengah';
+
+  @override
+  String get lobbyInviteSentShort => 'Terkirim';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Undangan terkirim. Menunggu respons.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Tempel di obrolan atau pesan ke teman';
+
+  @override
+  String get lobbyCopyLinkHint => 'Salin tautan ke papan klip';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name mengundang Anda bermain';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name menang';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Waktu habis. $name menang';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds d';
+  }
+
+  @override
+  String get adminTitle => 'Admin';
+
+  @override
+  String get tournamentsTitle => 'Turnamen';
+
+  @override
+  String get profileAgeInvalid => 'Masukkan usia dari 1 hingga 111';
+
+  @override
+  String get profileSaveFailed => 'Gagal menyimpan profil';
+
+  @override
+  String get profileNameHint => 'Huruf Latin, angka, _ hingga 10 karakter';
+
+  @override
+  String get profileAgeHint => 'Dari 1 hingga 111';
+
+  @override
+  String get profileAboutHint => 'Hingga 100 karakter (opsional)';
+
+  @override
+  String get profileProcessingPhoto => 'Memproses foto…';
+
+  @override
+  String get profileCropTitle => 'Pilih area avatar';
+
+  @override
+  String get profileCropHint => 'Perbesar dan geser foto';
+
+  @override
+  String get profileApply => 'Terapkan';
+
+  @override
+  String get profilePreparing => 'Menyiapkan…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds d';
+  }
+
+  @override
+  String get timeOneMin => '1 mnt';
+
+  @override
+  String get timeTenMin => '10 mnt';
 }

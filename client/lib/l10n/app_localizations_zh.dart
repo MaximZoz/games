@@ -761,4 +761,547 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errPushPermission => '请在浏览器或系统设置中允许通知。';
+
+  @override
+  String get balanceTitle => '余额';
+
+  @override
+  String get coinBronze => '青铜';
+
+  @override
+  String get coinSilver => '白银';
+
+  @override
+  String get coinGold => '黄金';
+
+  @override
+  String get coinDiamond => '钻石';
+
+  @override
+  String get balanceZeroBronze => '0 青铜';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count 青铜';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count 白银';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count 黄金';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count 钻石';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '每天 $amount';
+  }
+
+  @override
+  String get balanceAbbrBronze => '铜';
+
+  @override
+  String get balanceAbbrSilver => '银';
+
+  @override
+  String get balanceAbbrGold => '金';
+
+  @override
+  String get commonBackHome => '返回首页';
+
+  @override
+  String get commonCopied => '已复制';
+
+  @override
+  String get commonClear => '清除';
+
+  @override
+  String get commonTryLater => '请稍后再试。';
+
+  @override
+  String get commonTryRefresh => '请尝试刷新页面。';
+
+  @override
+  String get coinsTitle => '金币';
+
+  @override
+  String get coinsLoginReward => '登录奖励';
+
+  @override
+  String get coinsLoginAvailableToday => '今日奖励可领取';
+
+  @override
+  String get coinsLoginStreak => '每日登录连续奖励';
+
+  @override
+  String get coinsFriendReward => '好友奖励';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '通过您的链接注册可获得 +$amount';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => '无法加载奖励';
+
+  @override
+  String get coinsClaimReward => '领取奖励';
+
+  @override
+  String get coinsAlreadyClaimed => '已领取';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · 今天';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · 还剩 1 天';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · 还剩 $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => '邀请好友';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '每位通过您的链接注册的用户可获得 +$amount';
+  }
+
+  @override
+  String get coinsCopyLink => '复制链接';
+
+  @override
+  String get coinsHowItWorks => '如何运作';
+
+  @override
+  String get coinsHowStep1 => '复制链接并发送给好友';
+
+  @override
+  String get coinsHowStep2 => '好友通过该链接注册';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return '您将获得 $amount';
+  }
+
+  @override
+  String get achievementsTitle => '成就';
+
+  @override
+  String achievementsProgress(String progress) {
+    return '进度：$progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => '已获得边框';
+
+  @override
+  String get achievementsClaimed => '已获得';
+
+  @override
+  String get achievementsOpenFrame => '打开边框';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return '确定要将 $name 移出好友吗？';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => '移除';
+
+  @override
+  String get friendsRemove => '移出好友';
+
+  @override
+  String get friendsAcceptRequest => '接受请求';
+
+  @override
+  String get friendsDeclineRequest => '拒绝请求';
+
+  @override
+  String get friendsCancelRequest => '取消请求';
+
+  @override
+  String get friendsSendRequest => '发送好友请求';
+
+  @override
+  String get friendsRequestAlreadySent => '请求已发送';
+
+  @override
+  String get friendsIncomingStatus => '收到的请求';
+
+  @override
+  String get friendsOutgoingStatus => '发出的请求';
+
+  @override
+  String get friendsNotFriends => '还不是好友';
+
+  @override
+  String get friendsCollapseSearch => '收起搜索';
+
+  @override
+  String get friendsExpandSearch => '显示搜索';
+
+  @override
+  String get friendsLoadFailed => '无法加载好友';
+
+  @override
+  String friendsSince(String date) {
+    return '成为好友：$date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return '收到的请求：$date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return '发出的请求：$date';
+  }
+
+  @override
+  String get userInfoTitle => '用户信息';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age 岁';
+  }
+
+  @override
+  String get shopBuy => '购买';
+
+  @override
+  String get shopBuyTitle => '购买？';
+
+  @override
+  String get shopBuyStakeTitle => '购买赌注？';
+
+  @override
+  String get shopBuyEmojiTitle => '购买表情？';
+
+  @override
+  String get shopBuyCollectionTitle => '购买收藏？';
+
+  @override
+  String shopPrice(String price) {
+    return '价格：$price';
+  }
+
+  @override
+  String get shopOwned => '已购买';
+
+  @override
+  String get shopEmpty => '暂无内容';
+
+  @override
+  String shopPurchased(String title) {
+    return '已购买 $title';
+  }
+
+  @override
+  String get shopEmojiUses => '获得：10 次使用';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title：+10 次使用';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 次使用';
+  }
+
+  @override
+  String get shopBuyTen => '购买 · 10 个';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return '收益：$amount';
+  }
+
+  @override
+  String get shopBuyOnce => '一次性购买';
+
+  @override
+  String get shopSellRefund => '出售可返还部分费用';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title 已添加到个人资料';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return '套装加成 +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => '已集齐';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return '已收集 · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => '出售？';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return '您将获得 $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return '已出售：+$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => '请先添加好友';
+
+  @override
+  String get inventoryGiftTitle => '赠送收藏？';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return '将「$title」赠送给 $name？';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return '已赠送：$title';
+  }
+
+  @override
+  String get inventoryLoadFailed => '无法加载物品';
+
+  @override
+  String get inventoryNoCollections => '没有收藏 — 请在商店购买';
+
+  @override
+  String get inventoryNoEmojis => '没有表情 — 请在商店购买';
+
+  @override
+  String get inventoryNoFrames => '没有边框 — 在联赛中赢 10 场（成就）';
+
+  @override
+  String get inventoryNoStakes => '没有已购买的赌注';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return '剩余 $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return '收益：+$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return '明日收益：$amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return '可以下注 $amount 黄金';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return '可以下注 $amount 白银';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return '已领取 +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => '无法加载聊天';
+
+  @override
+  String get chatsLoadListFailed => '无法加载列表';
+
+  @override
+  String get chatsBlockedEmpty => '列表为空';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return '已屏蔽：$date';
+  }
+
+  @override
+  String get chatsCreateFailed => '无法创建聊天';
+
+  @override
+  String get chatsNeedFriendsFirst => '请先添加好友，然后才能打开聊天。';
+
+  @override
+  String get chatsFriendsNotFound => '未找到好友';
+
+  @override
+  String get chatsFindFriendHint => '按昵称查找好友';
+
+  @override
+  String get chatsSelectChat => '选择聊天';
+
+  @override
+  String get chatsSelectHint => '从左侧列表选择对话';
+
+  @override
+  String get chatEditFailed => '无法编辑消息';
+
+  @override
+  String get chatSendFailed => '无法发送消息';
+
+  @override
+  String get chatDeleteFailed => '无法删除消息';
+
+  @override
+  String get chatEmojiSendFailed => '无法发送表情';
+
+  @override
+  String get chatLoadFailed => '无法加载消息';
+
+  @override
+  String get chatBackToGame => '返回游戏';
+
+  @override
+  String get chatBackToChats => '返回聊天';
+
+  @override
+  String get chatActions => '聊天操作';
+
+  @override
+  String get chatScrollToEnd => '转到对话末尾';
+
+  @override
+  String chatReplyingTo(String name) {
+    return '回复 $name';
+  }
+
+  @override
+  String get chatGift => '礼物';
+
+  @override
+  String get chatCollection => '收藏';
+
+  @override
+  String get chatGiftCollection => '礼物 · 收藏';
+
+  @override
+  String get chatThisUser => '此用户';
+
+  @override
+  String get gamesLobbyLoadFailed => '无法加载大厅。';
+
+  @override
+  String get gamesTapChangeStake => '点击更改赌注';
+
+  @override
+  String get gamesTapChangeTurnTime => '点击更改回合时间';
+
+  @override
+  String get gamesTapChangeGrid => '点击更改网格大小';
+
+  @override
+  String get gamesSwapSidesHint => '第一步后 O 可能变成 X';
+
+  @override
+  String get gamesNoCenterHint => '第一步不能下在中心';
+
+  @override
+  String get lobbyInviteSentShort => '已发送';
+
+  @override
+  String get lobbyInvitesSentWaiting => '邀请已发送。等待回复。';
+
+  @override
+  String get lobbyLinkCopiedHint => '将其粘贴到聊天或发给好友的消息中';
+
+  @override
+  String get lobbyCopyLinkHint => '复制链接到剪贴板';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name 邀请您一起玩';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name 获胜';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return '时间到。$name 获胜';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String get adminTitle => '管理后台';
+
+  @override
+  String get tournamentsTitle => '锦标赛';
+
+  @override
+  String get profileAgeInvalid => '请输入 1 到 111 之间的年龄';
+
+  @override
+  String get profileSaveFailed => '无法保存个人资料';
+
+  @override
+  String get profileNameHint => '拉丁字母、数字、_，最多 10 个字符';
+
+  @override
+  String get profileAgeHint => '1 到 111';
+
+  @override
+  String get profileAboutHint => '最多 100 个字符（可选）';
+
+  @override
+  String get profileProcessingPhoto => '正在处理照片…';
+
+  @override
+  String get profileCropTitle => '选择头像区域';
+
+  @override
+  String get profileCropHint => '缩放并移动照片';
+
+  @override
+  String get profileApply => '应用';
+
+  @override
+  String get profilePreparing => '准备中…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String get timeOneMin => '1 分钟';
+
+  @override
+  String get timeTenMin => '10 分钟';
 }

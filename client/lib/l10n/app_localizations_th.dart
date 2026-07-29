@@ -761,4 +761,547 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get errPushPermission => 'อนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์หรือระบบ';
+
+  @override
+  String get balanceTitle => 'ยอดคงเหลือ';
+
+  @override
+  String get coinBronze => 'บรอนซ์';
+
+  @override
+  String get coinSilver => 'เงิน';
+
+  @override
+  String get coinGold => 'ทอง';
+
+  @override
+  String get coinDiamond => 'เพชร';
+
+  @override
+  String get balanceZeroBronze => '0 บรอนซ์';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count บรอนซ์';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count เงิน';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count ทอง';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count เพชร';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount ต่อวัน';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'บร';
+
+  @override
+  String get balanceAbbrSilver => 'ง.';
+
+  @override
+  String get balanceAbbrGold => 'ท.';
+
+  @override
+  String get commonBackHome => 'กลับหน้าหลัก';
+
+  @override
+  String get commonCopied => 'คัดลอกแล้ว';
+
+  @override
+  String get commonClear => 'ล้าง';
+
+  @override
+  String get commonTryLater => 'โปรดลองอีกครั้งในภายหลัง';
+
+  @override
+  String get commonTryRefresh => 'ลองรีเฟรชหน้า';
+
+  @override
+  String get coinsTitle => 'เหรียญ';
+
+  @override
+  String get coinsLoginReward => 'รางวัลเข้าสู่ระบบ';
+
+  @override
+  String get coinsLoginAvailableToday => 'รางวัลวันนี้พร้อมรับ';
+
+  @override
+  String get coinsLoginStreak => 'เข้าสู่ระบบต่อเนื่องรายวัน';
+
+  @override
+  String get coinsFriendReward => 'รางวัลเพื่อน';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount สำหรับการสมัครผ่านลิงก์ของคุณ';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'โหลดรางวัลไม่สำเร็จ';
+
+  @override
+  String get coinsClaimReward => 'รับรางวัล';
+
+  @override
+  String get coinsAlreadyClaimed => 'รับแล้ว';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · วันนี้';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · เหลืออีก 1 วัน';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · เหลืออีก $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'เชิญเพื่อน';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount สำหรับทุกคนที่สมัครผ่านลิงก์ของคุณ';
+  }
+
+  @override
+  String get coinsCopyLink => 'คัดลอกลิงก์';
+
+  @override
+  String get coinsHowItWorks => 'วิธีใช้งาน';
+
+  @override
+  String get coinsHowStep1 => 'คัดลอกลิงก์แล้วส่งให้เพื่อน';
+
+  @override
+  String get coinsHowStep2 => 'เพื่อนสมัครผ่านลิงก์นั้น';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'คุณได้รับ $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'ความสำเร็จ';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'ความคืบหน้า: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'ได้รับกรอบแล้ว';
+
+  @override
+  String get achievementsClaimed => 'ได้รับแล้ว';
+
+  @override
+  String get achievementsOpenFrame => 'เปิดกรอบ';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'แน่ใจหรือไม่ว่าต้องการลบ $name ออกจากเพื่อน?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'ลบ';
+
+  @override
+  String get friendsRemove => 'ลบออกจากเพื่อน';
+
+  @override
+  String get friendsAcceptRequest => 'ยอมรับคำขอ';
+
+  @override
+  String get friendsDeclineRequest => 'ปฏิเสธคำขอ';
+
+  @override
+  String get friendsCancelRequest => 'ยกเลิกคำขอ';
+
+  @override
+  String get friendsSendRequest => 'ส่งคำขอเป็นเพื่อน';
+
+  @override
+  String get friendsRequestAlreadySent => 'ส่งคำขอแล้ว';
+
+  @override
+  String get friendsIncomingStatus => 'คำขอขาเข้า';
+
+  @override
+  String get friendsOutgoingStatus => 'คำขอขาออก';
+
+  @override
+  String get friendsNotFriends => 'ยังไม่เป็นเพื่อน';
+
+  @override
+  String get friendsCollapseSearch => 'ยุบการค้นหา';
+
+  @override
+  String get friendsExpandSearch => 'แสดงการค้นหา';
+
+  @override
+  String get friendsLoadFailed => 'โหลดเพื่อนไม่สำเร็จ';
+
+  @override
+  String friendsSince(String date) {
+    return 'เป็นเพื่อนตั้งแต่: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'คำขอขาเข้า: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'คำขอขาออก: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'ข้อมูลผู้ใช้';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age ปี';
+  }
+
+  @override
+  String get shopBuy => 'ซื้อ';
+
+  @override
+  String get shopBuyTitle => 'ซื้อ?';
+
+  @override
+  String get shopBuyStakeTitle => 'ซื้อเดิมพัน?';
+
+  @override
+  String get shopBuyEmojiTitle => 'ซื้ออีโมจิ?';
+
+  @override
+  String get shopBuyCollectionTitle => 'ซื้อคอลเลกชัน?';
+
+  @override
+  String shopPrice(String price) {
+    return 'ราคา: $price';
+  }
+
+  @override
+  String get shopOwned => 'ซื้อแล้ว';
+
+  @override
+  String get shopEmpty => 'ยังว่างอยู่';
+
+  @override
+  String shopPurchased(String title) {
+    return 'ซื้อ $title แล้ว';
+  }
+
+  @override
+  String get shopEmojiUses => 'คุณได้รับ: 10 ครั้ง';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 ครั้ง';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 ครั้ง';
+  }
+
+  @override
+  String get shopBuyTen => 'ซื้อ · 10 ชิ้น';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'รายได้: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'ซื้อครั้งเดียว';
+
+  @override
+  String get shopSellRefund => 'การขายคืนส่วนหนึ่งของราคา';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return 'เพิ่ม $title ในโปรไฟล์แล้ว';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'โบนัสชุด +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'ครบแล้ว';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'เก็บแล้ว · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'ขาย?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'คุณจะได้รับ $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'ขายแล้ว: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'เพิ่มเพื่อนก่อน';
+
+  @override
+  String get inventoryGiftTitle => 'มอบคอลเลกชัน?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'มอบ «$title» ให้ $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'มอบแล้ว: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'โหลดไอเท็มไม่สำเร็จ';
+
+  @override
+  String get inventoryNoCollections => 'ไม่มีคอลเลกชัน — ซื้อในร้านค้า';
+
+  @override
+  String get inventoryNoEmojis => 'ไม่มีอีโมจิ — ซื้อในร้านค้า';
+
+  @override
+  String get inventoryNoFrames => 'ไม่มีกรอบ — ชนะ 10 เกมลีก (ความสำเร็จ)';
+
+  @override
+  String get inventoryNoStakes => 'ไม่มีเดิมพันที่ซื้อ';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'เหลือ $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'รายได้: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'รายได้พรุ่งนี้: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'สามารถเดิมพันทอง $amount';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'สามารถเดิมพันเงิน $amount';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'ได้รับ +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'โหลดแชทไม่สำเร็จ';
+
+  @override
+  String get chatsLoadListFailed => 'โหลดรายการไม่สำเร็จ';
+
+  @override
+  String get chatsBlockedEmpty => 'รายการว่างเปล่า';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'บล็อกเมื่อ: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'สร้างแชทไม่สำเร็จ';
+
+  @override
+  String get chatsNeedFriendsFirst => 'เพิ่มเพื่อนก่อน แล้วจึงเปิดแชทได้';
+
+  @override
+  String get chatsFriendsNotFound => 'ไม่พบเพื่อน';
+
+  @override
+  String get chatsFindFriendHint => 'ค้นหาเพื่อนด้วยชื่อเล่น';
+
+  @override
+  String get chatsSelectChat => 'เลือกแชท';
+
+  @override
+  String get chatsSelectHint => 'เลือกบทสนทนาจากรายการด้านซ้าย';
+
+  @override
+  String get chatEditFailed => 'แก้ไขข้อความไม่สำเร็จ';
+
+  @override
+  String get chatSendFailed => 'ส่งข้อความไม่สำเร็จ';
+
+  @override
+  String get chatDeleteFailed => 'ลบข้อความไม่สำเร็จ';
+
+  @override
+  String get chatEmojiSendFailed => 'ส่งอีโมจิไม่สำเร็จ';
+
+  @override
+  String get chatLoadFailed => 'โหลดข้อความไม่สำเร็จ';
+
+  @override
+  String get chatBackToGame => 'กลับไปเกม';
+
+  @override
+  String get chatBackToChats => 'กลับไปแชท';
+
+  @override
+  String get chatActions => 'การดำเนินการแชท';
+
+  @override
+  String get chatScrollToEnd => 'ไปท้ายบทสนทนา';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'ตอบกลับ $name';
+  }
+
+  @override
+  String get chatGift => 'ของขวัญ';
+
+  @override
+  String get chatCollection => 'คอลเลกชัน';
+
+  @override
+  String get chatGiftCollection => 'ของขวัญ · คอลเลกชัน';
+
+  @override
+  String get chatThisUser => 'ผู้ใช้นี้';
+
+  @override
+  String get gamesLobbyLoadFailed => 'โหลดล็อบบี้ไม่สำเร็จ';
+
+  @override
+  String get gamesTapChangeStake => 'แตะเพื่อเปลี่ยนเดิมพัน';
+
+  @override
+  String get gamesTapChangeTurnTime => 'แตะเพื่อเปลี่ยนเวลาก่อนเดิน';
+
+  @override
+  String get gamesTapChangeGrid => 'แตะเพื่อเปลี่ยนขนาดตาราง';
+
+  @override
+  String get gamesSwapSidesHint => 'O อาจกลายเป็น X หลังตาแรก';
+
+  @override
+  String get gamesNoCenterHint => 'ตาแรกห้ามลงกลาง';
+
+  @override
+  String get lobbyInviteSentShort => 'ส่งแล้ว';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'ส่งคำเชิญแล้ว รอการตอบกลับ';
+
+  @override
+  String get lobbyLinkCopiedHint => 'วางในแชทหรือข้อความถึงเพื่อน';
+
+  @override
+  String get lobbyCopyLinkHint => 'คัดลอกลิงก์ไปยังคลิปบอร์ด';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name เชิญคุณมาเล่น';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name ชนะ';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'หมดเวลา $name ชนะ';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds วิ';
+  }
+
+  @override
+  String get adminTitle => 'แอดมิน';
+
+  @override
+  String get tournamentsTitle => 'ทัวร์นาเมนต์';
+
+  @override
+  String get profileAgeInvalid => 'กรอกอายุระหว่าง 1 ถึง 111';
+
+  @override
+  String get profileSaveFailed => 'บันทึกโปรไฟล์ไม่สำเร็จ';
+
+  @override
+  String get profileNameHint => 'ตัวอักษรละติน ตัวเลข _ ไม่เกิน 10 ตัว';
+
+  @override
+  String get profileAgeHint => 'ตั้งแต่ 1 ถึง 111';
+
+  @override
+  String get profileAboutHint => 'ไม่เกิน 100 ตัวอักษร (ไม่บังคับ)';
+
+  @override
+  String get profileProcessingPhoto => 'กำลังประมวลผลรูป…';
+
+  @override
+  String get profileCropTitle => 'เลือกพื้นที่อวาตาร์';
+
+  @override
+  String get profileCropHint => 'ซูมและเลื่อนรูป';
+
+  @override
+  String get profileApply => 'ใช้';
+
+  @override
+  String get profilePreparing => 'กำลังเตรียม…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds วิ';
+  }
+
+  @override
+  String get timeOneMin => '1 นาที';
+
+  @override
+  String get timeTenMin => '10 นาที';
 }

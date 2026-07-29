@@ -247,5 +247,470 @@
   "errTimeout": "Превышено время ожидания. Попробуйте ещё раз.",
   "errGamesUnavailable": "Игры временно недоступны",
   "errSettingsSaveFailed": "Не удалось сохранить настройку",
-  "errPushPermission": "Разрешите уведомления в настройках браузера или системы."
+  "errPushPermission": "Разрешите уведомления в настройках браузера или системы.",
+  "balanceTitle": "Баланс",
+  "coinBronze": "Бронза",
+  "coinSilver": "Серебро",
+  "coinGold": "Золото",
+  "coinDiamond": "Бриллиант",
+  "balanceZeroBronze": "0 бронзовых",
+  "balanceBronzes": "{count} бронзовых",
+  "@balanceBronzes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceSilvers": "{count} серебряных",
+  "@balanceSilvers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceGolds": "{count} золотых",
+  "@balanceGolds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceDiamonds": "{count} бриллиантов",
+  "@balanceDiamonds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balancePerDay": "{amount} в день",
+  "@balancePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceAbbrBronze": "бр",
+  "balanceAbbrSilver": "с.",
+  "balanceAbbrGold": "з.",
+  "commonBackHome": "Назад на главную",
+  "commonCopied": "Скопировано",
+  "commonClear": "Очистить",
+  "commonTryLater": "Попробуйте позже.",
+  "commonTryRefresh": "Попробуйте обновить страницу.",
+  "coinsTitle": "Монеты",
+  "coinsLoginReward": "Монеты за вход",
+  "coinsLoginAvailableToday": "Доступна награда за сегодня",
+  "coinsLoginStreak": "Ежедневная серия входов",
+  "coinsFriendReward": "Монеты за друга",
+  "coinsFriendRewardHint": "+{amount} за регистрацию по ссылке",
+  "@coinsFriendRewardHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsLoadRewardsFailed": "Не удалось загрузить награды",
+  "coinsClaimReward": "Забрать награду",
+  "coinsAlreadyClaimed": "Уже получено",
+  "coinsStreakToday": "{done}/{target} · сегодня",
+  "@coinsStreakToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakOneDayLeft": "{done}/{target} · ещё 1 день",
+  "@coinsStreakOneDayLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsStreakDaysLeft": "{done}/{target} · ещё {remaining}",
+  "@coinsStreakDaysLeft": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsInviteFriend": "Пригласи друга",
+  "coinsInviteHint": "+{amount} за каждого, кто зарегистрируется по вашей ссылке",
+  "@coinsInviteHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coinsCopyLink": "Скопировать ссылку",
+  "coinsHowItWorks": "Как это работает",
+  "coinsHowStep1": "Скопируйте ссылку и отправьте другу",
+  "coinsHowStep2": "Друг регистрируется по этой ссылке",
+  "coinsHowStep3": "Вам начисляется {amount}",
+  "@coinsHowStep3": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsTitle": "Достижения",
+  "achievementsProgress": "Прогресс: {progress}",
+  "@achievementsProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsFrameClaimed": "Рамка получена",
+  "achievementsClaimed": "Получено",
+  "achievementsOpenFrame": "Открыть рамку",
+  "friendsRemoveConfirm": "Вы уверены, что хотите удалить {name} из друзей?",
+  "@friendsRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsRemoveConfirmAction": "Убрать",
+  "friendsRemove": "Удалить из друзей",
+  "friendsAcceptRequest": "Принять заявку",
+  "friendsDeclineRequest": "Отклонить заявку",
+  "friendsCancelRequest": "Отменить заявку",
+  "friendsSendRequest": "Отправить заявку в друзья",
+  "friendsRequestAlreadySent": "Заявка уже отправлена",
+  "friendsIncomingStatus": "Входящая заявка",
+  "friendsOutgoingStatus": "Исходящая заявка",
+  "friendsNotFriends": "Не в друзьях",
+  "friendsCollapseSearch": "Свернуть поиск",
+  "friendsExpandSearch": "Показать поиск",
+  "friendsLoadFailed": "Не удалось загрузить друзей",
+  "friendsSince": "Дружите с: {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsIncomingAt": "Входящая заявка: {date}",
+  "@friendsIncomingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsOutgoingAt": "Исходящая заявка: {date}",
+  "@friendsOutgoingAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "userInfoTitle": "Информация о пользователе",
+  "profileAgeYears": "{age} лет",
+  "@profileAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuy": "Купить",
+  "shopBuyTitle": "Купить?",
+  "shopBuyStakeTitle": "Купить ставку?",
+  "shopBuyEmojiTitle": "Купить смайлик?",
+  "shopBuyCollectionTitle": "Купить коллекцию?",
+  "shopPrice": "Цена: {price}",
+  "@shopPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopOwned": "Куплено",
+  "shopEmpty": "Пока пусто",
+  "shopPurchased": "{title} куплен",
+  "@shopPurchased": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiUses": "Получите: 10 использований",
+  "shopEmojiBought": "{title}: +10 использований",
+  "@shopEmojiBought": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmojiPriceUses": "{price} · 10 использований",
+  "@shopEmojiPriceUses": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyTen": "Купить · 10 шт.",
+  "shopDailyIncome": "Доход: {amount}",
+  "@shopDailyIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBuyOnce": "Покупка один раз",
+  "shopSellRefund": "Продажа вернёт часть стоимости",
+  "shopCollectionAdded": "{title} добавлен в профиль",
+  "@shopCollectionAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopSetBonus": "бонус группы +{percent}%",
+  "@shopSetBonus": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSetComplete": "Собрано",
+  "shopSetProgress": "Собрано · {owned}/{total}",
+  "@shopSetProgress": {
+    "placeholders": {
+      "owned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySellTitle": "Продать?",
+  "inventorySellDesc": "Вы получите {amount}",
+  "@inventorySellDesc": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventorySold": "Продано: +{amount}",
+  "@inventorySold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryNeedFriends": "Сначала добавьте друзей",
+  "inventoryGiftTitle": "Подарить коллекцию?",
+  "inventoryGiftDesc": "Подарить «{title}» пользователю {name}?",
+  "@inventoryGiftDesc": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryGifted": "Подарено: {title}",
+  "@inventoryGifted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryLoadFailed": "Не удалось загрузить предметы",
+  "inventoryNoCollections": "Нет коллекций — купите в магазине",
+  "inventoryNoEmojis": "Нет смайликов — купите в магазине",
+  "inventoryNoFrames": "Нет рамок — выиграйте 10 игр в лиге (достижения)",
+  "inventoryNoStakes": "Нет купленных ставок",
+  "inventoryEmojiLeft": "Осталось {count}",
+  "@inventoryEmojiLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryIncomeReady": "Доход: +{amount}",
+  "@inventoryIncomeReady": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryIncomeTomorrow": "Доход завтра: {amount}",
+  "@inventoryIncomeTomorrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeGold": "Можно ставить {amount} золота",
+  "@inventoryStakeGold": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryStakeSilver": "Можно ставить {amount} серебра",
+  "@inventoryStakeSilver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryClaimedAmount": "Получено +{amount}",
+  "@inventoryClaimedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsLoadFailed": "Не удалось загрузить чаты",
+  "chatsLoadListFailed": "Не удалось загрузить список",
+  "chatsBlockedEmpty": "Список пуст",
+  "chatsBlockedAt": "Заблокирован: {date}",
+  "@chatsBlockedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsCreateFailed": "Не удалось создать чат",
+  "chatsNeedFriendsFirst": "Сначала добавьте друзей, потом можно открыть чат.",
+  "chatsFriendsNotFound": "Друзья не найдены",
+  "chatsFindFriendHint": "Найти друга по нику",
+  "chatsSelectChat": "Выберите чат",
+  "chatsSelectHint": "Выберите диалог из списка слева",
+  "chatEditFailed": "Не удалось изменить сообщение",
+  "chatSendFailed": "Не удалось отправить сообщение",
+  "chatDeleteFailed": "Не удалось удалить сообщение",
+  "chatEmojiSendFailed": "Не удалось отправить смайлик",
+  "chatLoadFailed": "Не удалось загрузить сообщения",
+  "chatBackToGame": "Назад в игру",
+  "chatBackToChats": "Назад к чатам",
+  "chatActions": "Действия с чатом",
+  "chatScrollToEnd": "В конец переписки",
+  "chatReplyingTo": "В ответ {name}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGift": "Подарок",
+  "chatCollection": "Коллекция",
+  "chatGiftCollection": "Подарок · коллекция",
+  "chatThisUser": "этого пользователя",
+  "gamesLobbyLoadFailed": "Не удалось загрузить лобби.",
+  "gamesTapChangeStake": "Нажмите для смены ставки",
+  "gamesTapChangeTurnTime": "Нажмите для смены времени на ход",
+  "gamesTapChangeGrid": "Нажмите для смены размера сетки",
+  "gamesSwapSidesHint": "O может стать X после 1-го хода",
+  "gamesNoCenterHint": "Первый ход не в центр",
+  "lobbyInviteSentShort": "Отправлено",
+  "lobbyInvitesSentWaiting": "Приглашения отправлены. Ожидайте ответа.",
+  "lobbyLinkCopiedHint": "Вставьте её в чат или сообщение другу",
+  "lobbyCopyLinkHint": "Скопировать ссылку в буфер обмена",
+  "lobbyCreatorInvites": "{name} приглашает вас сыграть",
+  "@lobbyCreatorInvites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWon": "Победил {name}",
+  "@gameOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameOpponentWonTimeout": "Время вышло. Победил {name}",
+  "@gameOpponentWonTimeout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSecondsLeft": "{seconds} с",
+  "@gameSecondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTitle": "Админка",
+  "tournamentsTitle": "Турниры",
+  "profileAgeInvalid": "Введите возраст от 1 до 111",
+  "profileSaveFailed": "Не удалось сохранить профиль",
+  "profileNameHint": "Латиница, цифры, _ до 10 символов",
+  "profileAgeHint": "От 1 до 111",
+  "profileAboutHint": "До 100 символов (по желанию)",
+  "profileProcessingPhoto": "Обработка фото…",
+  "profileCropTitle": "Выбери область аватара",
+  "profileCropHint": "Масштабируй и двигай фото",
+  "profileApply": "Применить",
+  "profilePreparing": "Подготовка…",
+  "timeSecondsShort": "{seconds} с",
+  "@timeSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timeOneMin": "1 мин",
+  "timeTenMin": "10 мин"
 }

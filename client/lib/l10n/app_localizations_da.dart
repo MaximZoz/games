@@ -761,4 +761,547 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Tillad notifikationer i browser- eller systemindstillingerne.';
+
+  @override
+  String get balanceTitle => 'Saldo';
+
+  @override
+  String get coinBronze => 'Bronze';
+
+  @override
+  String get coinSilver => 'Sølv';
+
+  @override
+  String get coinGold => 'Guld';
+
+  @override
+  String get coinDiamond => 'Diamant';
+
+  @override
+  String get balanceZeroBronze => '0 bronze';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count bronze';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count sølv';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count guld';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count diamanter';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount pr. dag';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'br';
+
+  @override
+  String get balanceAbbrSilver => 's.';
+
+  @override
+  String get balanceAbbrGold => 'g.';
+
+  @override
+  String get commonBackHome => 'Tilbage til forsiden';
+
+  @override
+  String get commonCopied => 'Kopieret';
+
+  @override
+  String get commonClear => 'Ryd';
+
+  @override
+  String get commonTryLater => 'Prøv igen senere.';
+
+  @override
+  String get commonTryRefresh => 'Prøv at opdatere siden.';
+
+  @override
+  String get coinsTitle => 'Mønter';
+
+  @override
+  String get coinsLoginReward => 'Loginbelønning';
+
+  @override
+  String get coinsLoginAvailableToday => 'Dagens belønning er tilgængelig';
+
+  @override
+  String get coinsLoginStreak => 'Daglig loginstreak';
+
+  @override
+  String get coinsFriendReward => 'Ven-belønning';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount for tilmelding via dit link';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Kunne ikke indlæse belønninger';
+
+  @override
+  String get coinsClaimReward => 'Hent belønning';
+
+  @override
+  String get coinsAlreadyClaimed => 'Allerede hentet';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · i dag';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · 1 dag tilbage';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · $remaining tilbage';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Inviter en ven';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount for hver, der tilmelder sig via dit link';
+  }
+
+  @override
+  String get coinsCopyLink => 'Kopiér link';
+
+  @override
+  String get coinsHowItWorks => 'Sådan virker det';
+
+  @override
+  String get coinsHowStep1 => 'Kopiér linket og send det til en ven';
+
+  @override
+  String get coinsHowStep2 => 'Din ven tilmelder sig via det link';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Du modtager $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Præstationer';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Fremskridt: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Ramme hentet';
+
+  @override
+  String get achievementsClaimed => 'Hentet';
+
+  @override
+  String get achievementsOpenFrame => 'Åbn ramme';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Er du sikker på, at du vil fjerne $name fra venner?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Fjern';
+
+  @override
+  String get friendsRemove => 'Fjern fra venner';
+
+  @override
+  String get friendsAcceptRequest => 'Acceptér anmodning';
+
+  @override
+  String get friendsDeclineRequest => 'Afvis anmodning';
+
+  @override
+  String get friendsCancelRequest => 'Annuller anmodning';
+
+  @override
+  String get friendsSendRequest => 'Send venneanmodning';
+
+  @override
+  String get friendsRequestAlreadySent => 'Anmodning allerede sendt';
+
+  @override
+  String get friendsIncomingStatus => 'Indgående anmodning';
+
+  @override
+  String get friendsOutgoingStatus => 'Udgående anmodning';
+
+  @override
+  String get friendsNotFriends => 'Ikke venner';
+
+  @override
+  String get friendsCollapseSearch => 'Skjul søgning';
+
+  @override
+  String get friendsExpandSearch => 'Vis søgning';
+
+  @override
+  String get friendsLoadFailed => 'Kunne ikke indlæse venner';
+
+  @override
+  String friendsSince(String date) {
+    return 'Venner siden: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Indgående anmodning: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Udgående anmodning: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Brugerinfo';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age år';
+  }
+
+  @override
+  String get shopBuy => 'Køb';
+
+  @override
+  String get shopBuyTitle => 'Køb?';
+
+  @override
+  String get shopBuyStakeTitle => 'Køb indsats?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Køb emoji?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Køb samling?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Pris: $price';
+  }
+
+  @override
+  String get shopOwned => 'Købt';
+
+  @override
+  String get shopEmpty => 'Tomt indtil videre';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title købt';
+  }
+
+  @override
+  String get shopEmojiUses => 'Du får: 10 brug';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 brug';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 brug';
+  }
+
+  @override
+  String get shopBuyTen => 'Køb · 10 stk.';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Indkomst: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Engangskøb';
+
+  @override
+  String get shopSellRefund => 'Salg returnerer en del af prisen';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title tilføjet til profilen';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'sætbonus +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Fuldført';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Samlet · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Sælg?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Du får $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Solgt: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Tilføj venner først';
+
+  @override
+  String get inventoryGiftTitle => 'Giv samling i gave?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Giv «$title» til $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Givet: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Kunne ikke indlæse genstande';
+
+  @override
+  String get inventoryNoCollections => 'Ingen samlinger — køb i butikken';
+
+  @override
+  String get inventoryNoEmojis => 'Ingen emojis — køb i butikken';
+
+  @override
+  String get inventoryNoFrames => 'Ingen rammer — vind 10 ligakampe (præstationer)';
+
+  @override
+  String get inventoryNoStakes => 'Ingen købte indsatser';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return '$count tilbage';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Indkomst: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Indkomst i morgen: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Du kan satse $amount guld';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Du kan satse $amount sølv';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Hentet +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Kunne ikke indlæse chats';
+
+  @override
+  String get chatsLoadListFailed => 'Kunne ikke indlæse listen';
+
+  @override
+  String get chatsBlockedEmpty => 'Listen er tom';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Blokeret: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Kunne ikke oprette chat';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Tilføj venner først, så kan du åbne en chat.';
+
+  @override
+  String get chatsFriendsNotFound => 'Ingen venner fundet';
+
+  @override
+  String get chatsFindFriendHint => 'Find ven efter kaldenavn';
+
+  @override
+  String get chatsSelectChat => 'Vælg en chat';
+
+  @override
+  String get chatsSelectHint => 'Vælg en samtale fra listen til venstre';
+
+  @override
+  String get chatEditFailed => 'Kunne ikke redigere beskeden';
+
+  @override
+  String get chatSendFailed => 'Kunne ikke sende beskeden';
+
+  @override
+  String get chatDeleteFailed => 'Kunne ikke slette beskeden';
+
+  @override
+  String get chatEmojiSendFailed => 'Kunne ikke sende emoji';
+
+  @override
+  String get chatLoadFailed => 'Kunne ikke indlæse beskeder';
+
+  @override
+  String get chatBackToGame => 'Tilbage til spillet';
+
+  @override
+  String get chatBackToChats => 'Tilbage til chats';
+
+  @override
+  String get chatActions => 'Chathandlinger';
+
+  @override
+  String get chatScrollToEnd => 'Til slutningen af samtalen';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Svar til $name';
+  }
+
+  @override
+  String get chatGift => 'Gave';
+
+  @override
+  String get chatCollection => 'Samling';
+
+  @override
+  String get chatGiftCollection => 'Gave · samling';
+
+  @override
+  String get chatThisUser => 'denne bruger';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Kunne ikke indlæse lobbyen.';
+
+  @override
+  String get gamesTapChangeStake => 'Tryk for at ændre indsats';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Tryk for at ændre tid pr. træk';
+
+  @override
+  String get gamesTapChangeGrid => 'Tryk for at ændre gitterstørrelse';
+
+  @override
+  String get gamesSwapSidesHint => 'O kan blive X efter 1. træk';
+
+  @override
+  String get gamesNoCenterHint => 'Første træk må ikke være i midten';
+
+  @override
+  String get lobbyInviteSentShort => 'Sendt';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Invitationer sendt. Venter på svar.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Indsæt den i en chat eller besked til en ven';
+
+  @override
+  String get lobbyCopyLinkHint => 'Kopiér link til udklipsholder';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name inviterer dig til at spille';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name vandt';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Tiden er gået. $name vandt';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get adminTitle => 'Admin';
+
+  @override
+  String get tournamentsTitle => 'Turneringer';
+
+  @override
+  String get profileAgeInvalid => 'Indtast en alder fra 1 til 111';
+
+  @override
+  String get profileSaveFailed => 'Kunne ikke gemme profilen';
+
+  @override
+  String get profileNameHint => 'Latinske bogstaver, cifre, _ op til 10 tegn';
+
+  @override
+  String get profileAgeHint => 'Fra 1 til 111';
+
+  @override
+  String get profileAboutHint => 'Op til 100 tegn (valgfrit)';
+
+  @override
+  String get profileProcessingPhoto => 'Behandler foto…';
+
+  @override
+  String get profileCropTitle => 'Vælg avatarområde';
+
+  @override
+  String get profileCropHint => 'Zoom og flyt fotoet';
+
+  @override
+  String get profileApply => 'Anvend';
+
+  @override
+  String get profilePreparing => 'Forbereder…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get timeOneMin => '1 min';
+
+  @override
+  String get timeTenMin => '10 min';
 }

@@ -761,4 +761,547 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Επιτρέψτε τις ειδοποιήσεις στο πρόγραμμα περιήγησης ή στις ρυθμίσεις συστήματος.';
+
+  @override
+  String get balanceTitle => 'Υπόλοιπο';
+
+  @override
+  String get coinBronze => 'Χαλκός';
+
+  @override
+  String get coinSilver => 'Ασήμι';
+
+  @override
+  String get coinGold => 'Χρυσός';
+
+  @override
+  String get coinDiamond => 'Διαμάντι';
+
+  @override
+  String get balanceZeroBronze => '0 χάλκινα';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count χάλκινα';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count ασημένια';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count χρυσά';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count διαμάντια';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount την ημέρα';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'χλ';
+
+  @override
+  String get balanceAbbrSilver => 'ασ.';
+
+  @override
+  String get balanceAbbrGold => 'χρ.';
+
+  @override
+  String get commonBackHome => 'Πίσω στην αρχική';
+
+  @override
+  String get commonCopied => 'Αντιγράφηκε';
+
+  @override
+  String get commonClear => 'Εκκαθάριση';
+
+  @override
+  String get commonTryLater => 'Δοκιμάστε ξανά αργότερα.';
+
+  @override
+  String get commonTryRefresh => 'Δοκιμάστε να ανανεώσετε τη σελίδα.';
+
+  @override
+  String get coinsTitle => 'Νομίσματα';
+
+  @override
+  String get coinsLoginReward => 'Ανταμοιβή σύνδεσης';
+
+  @override
+  String get coinsLoginAvailableToday => 'Η σημερινή ανταμοιβή είναι διαθέσιμη';
+
+  @override
+  String get coinsLoginStreak => 'Καθημερινή σειρά συνδέσεων';
+
+  @override
+  String get coinsFriendReward => 'Ανταμοιβή φίλου';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount για εγγραφή μέσω του συνδέσμου σας';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Αποτυχία φόρτωσης ανταμοιβών';
+
+  @override
+  String get coinsClaimReward => 'Λήψη ανταμοιβής';
+
+  @override
+  String get coinsAlreadyClaimed => 'Ήδη λήφθηκε';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · σήμερα';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · απομένει 1 ημέρα';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · απομένουν $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Προσκαλέστε φίλο';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount για κάθε άτομο που εγγράφεται μέσω του συνδέσμου σας';
+  }
+
+  @override
+  String get coinsCopyLink => 'Αντιγραφή συνδέσμου';
+
+  @override
+  String get coinsHowItWorks => 'Πώς λειτουργεί';
+
+  @override
+  String get coinsHowStep1 => 'Αντιγράψτε τον σύνδεσμο και στείλτε τον σε φίλο';
+
+  @override
+  String get coinsHowStep2 => 'Ο φίλος εγγράφεται μέσω αυτού του συνδέσμου';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Λαμβάνετε $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Επιτεύγματα';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Πρόοδος: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Το πλαίσιο ελήφθη';
+
+  @override
+  String get achievementsClaimed => 'Ελήφθη';
+
+  @override
+  String get achievementsOpenFrame => 'Άνοιγμα πλαισίου';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Είστε σίγουροι ότι θέλετε να αφαιρέσετε τον/την $name από τους φίλους;';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Αφαίρεση';
+
+  @override
+  String get friendsRemove => 'Αφαίρεση από φίλους';
+
+  @override
+  String get friendsAcceptRequest => 'Αποδοχή αιτήματος';
+
+  @override
+  String get friendsDeclineRequest => 'Απόρριψη αιτήματος';
+
+  @override
+  String get friendsCancelRequest => 'Ακύρωση αιτήματος';
+
+  @override
+  String get friendsSendRequest => 'Αποστολή αιτήματος φιλίας';
+
+  @override
+  String get friendsRequestAlreadySent => 'Το αίτημα έχει ήδη σταλεί';
+
+  @override
+  String get friendsIncomingStatus => 'Εισερχόμενο αίτημα';
+
+  @override
+  String get friendsOutgoingStatus => 'Εξερχόμενο αίτημα';
+
+  @override
+  String get friendsNotFriends => 'Δεν είστε φίλοι';
+
+  @override
+  String get friendsCollapseSearch => 'Σύμπτυξη αναζήτησης';
+
+  @override
+  String get friendsExpandSearch => 'Εμφάνιση αναζήτησης';
+
+  @override
+  String get friendsLoadFailed => 'Αποτυχία φόρτωσης φίλων';
+
+  @override
+  String friendsSince(String date) {
+    return 'Φίλοι από: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Εισερχόμενο αίτημα: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Εξερχόμενο αίτημα: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Πληροφορίες χρήστη';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age ετών';
+  }
+
+  @override
+  String get shopBuy => 'Αγορά';
+
+  @override
+  String get shopBuyTitle => 'Αγορά;';
+
+  @override
+  String get shopBuyStakeTitle => 'Αγορά πονταρίσματος;';
+
+  @override
+  String get shopBuyEmojiTitle => 'Αγορά emoji;';
+
+  @override
+  String get shopBuyCollectionTitle => 'Αγορά συλλογής;';
+
+  @override
+  String shopPrice(String price) {
+    return 'Τιμή: $price';
+  }
+
+  @override
+  String get shopOwned => 'Αγορασμένο';
+
+  @override
+  String get shopEmpty => 'Ακόμα άδειο';
+
+  @override
+  String shopPurchased(String title) {
+    return 'Αγοράστηκε το $title';
+  }
+
+  @override
+  String get shopEmojiUses => 'Λαμβάνετε: 10 χρήσεις';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 χρήσεις';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 χρήσεις';
+  }
+
+  @override
+  String get shopBuyTen => 'Αγορά · 10 τεμ.';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Έσοδο: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Εφάπαξ αγορά';
+
+  @override
+  String get shopSellRefund => 'Η πώληση επιστρέφει μέρος του κόστους';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return 'Το $title προστέθηκε στο προφίλ';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'μπόνους σετ +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Ολοκληρώθηκε';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Συλλέχθηκε · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Πώληση;';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Θα λάβετε $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Πουλήθηκε: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Προσθέστε πρώτα φίλους';
+
+  @override
+  String get inventoryGiftTitle => 'Δώρο συλλογής;';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Να δώσετε το «$title» στον/στην $name;';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Δωρίστηκε: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Αποτυχία φόρτωσης αντικειμένων';
+
+  @override
+  String get inventoryNoCollections => 'Δεν υπάρχουν συλλογές — αγοράστε στο κατάστημα';
+
+  @override
+  String get inventoryNoEmojis => 'Δεν υπάρχουν emoji — αγοράστε στο κατάστημα';
+
+  @override
+  String get inventoryNoFrames => 'Δεν υπάρχουν πλαίσια — κερδίστε 10 παιχνίδια λίγκας (επιτεύγματα)';
+
+  @override
+  String get inventoryNoStakes => 'Δεν υπάρχουν αγορασμένα πονταρίσματα';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Απομένουν $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Έσοδο: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Έσοδο αύριο: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Μπορείτε να ποντάρετε $amount χρυσό';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Μπορείτε να ποντάρετε $amount ασήμι';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Ελήφθη +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Αποτυχία φόρτωσης συνομιλιών';
+
+  @override
+  String get chatsLoadListFailed => 'Αποτυχία φόρτωσης λίστας';
+
+  @override
+  String get chatsBlockedEmpty => 'Η λίστα είναι άδεια';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Αποκλεισμένος: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Αποτυχία δημιουργίας συνομιλίας';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Προσθέστε πρώτα φίλους και μετά μπορείτε να ανοίξετε συνομιλία.';
+
+  @override
+  String get chatsFriendsNotFound => 'Δεν βρέθηκαν φίλοι';
+
+  @override
+  String get chatsFindFriendHint => 'Βρείτε φίλο με ψευδώνυμο';
+
+  @override
+  String get chatsSelectChat => 'Επιλέξτε συνομιλία';
+
+  @override
+  String get chatsSelectHint => 'Επιλέξτε διάλογο από τη λίστα αριστερά';
+
+  @override
+  String get chatEditFailed => 'Αποτυχία επεξεργασίας μηνύματος';
+
+  @override
+  String get chatSendFailed => 'Αποτυχία αποστολής μηνύματος';
+
+  @override
+  String get chatDeleteFailed => 'Αποτυχία διαγραφής μηνύματος';
+
+  @override
+  String get chatEmojiSendFailed => 'Αποτυχία αποστολής emoji';
+
+  @override
+  String get chatLoadFailed => 'Αποτυχία φόρτωσης μηνυμάτων';
+
+  @override
+  String get chatBackToGame => 'Πίσω στο παιχνίδι';
+
+  @override
+  String get chatBackToChats => 'Πίσω στις συνομιλίες';
+
+  @override
+  String get chatActions => 'Ενέργειες συνομιλίας';
+
+  @override
+  String get chatScrollToEnd => 'Στο τέλος της συνομιλίας';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Απάντηση στον/στην $name';
+  }
+
+  @override
+  String get chatGift => 'Δώρο';
+
+  @override
+  String get chatCollection => 'Συλλογή';
+
+  @override
+  String get chatGiftCollection => 'Δώρο · συλλογή';
+
+  @override
+  String get chatThisUser => 'αυτού του χρήστη';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Αποτυχία φόρτωσης λόμπι.';
+
+  @override
+  String get gamesTapChangeStake => 'Πατήστε για αλλαγή πονταρίσματος';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Πατήστε για αλλαγή χρόνου κινήσεων';
+
+  @override
+  String get gamesTapChangeGrid => 'Πατήστε για αλλαγή μεγέθους πλέγματος';
+
+  @override
+  String get gamesSwapSidesHint => 'Το O μπορεί να γίνει X μετά την 1η κίνηση';
+
+  @override
+  String get gamesNoCenterHint => 'Η πρώτη κίνηση δεν μπορεί να είναι στο κέντρο';
+
+  @override
+  String get lobbyInviteSentShort => 'Εστάλη';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο';
+
+  @override
+  String get lobbyCopyLinkHint => 'Αντιγραφή συνδέσμου στο πρόχειρο';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return 'Ο/Η $name σας προσκαλεί να παίξετε';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return 'Νίκησε ο/η $name';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Ο χρόνος τελείωσε. Νίκησε ο/η $name';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds δ';
+  }
+
+  @override
+  String get adminTitle => 'Διαχείριση';
+
+  @override
+  String get tournamentsTitle => 'Τουρνουά';
+
+  @override
+  String get profileAgeInvalid => 'Εισαγάγετε ηλικία από 1 έως 111';
+
+  @override
+  String get profileSaveFailed => 'Αποτυχία αποθήκευσης προφίλ';
+
+  @override
+  String get profileNameHint => 'Λατινικά γράμματα, ψηφία, _ έως 10 χαρακτήρες';
+
+  @override
+  String get profileAgeHint => 'Από 1 έως 111';
+
+  @override
+  String get profileAboutHint => 'Έως 100 χαρακτήρες (προαιρετικά)';
+
+  @override
+  String get profileProcessingPhoto => 'Επεξεργασία φωτογραφίας…';
+
+  @override
+  String get profileCropTitle => 'Επιλέξτε περιοχή avatar';
+
+  @override
+  String get profileCropHint => 'Μεγεθύνετε και μετακινήστε τη φωτογραφία';
+
+  @override
+  String get profileApply => 'Εφαρμογή';
+
+  @override
+  String get profilePreparing => 'Προετοιμασία…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds δ';
+  }
+
+  @override
+  String get timeOneMin => '1 λεπτό';
+
+  @override
+  String get timeTenMin => '10 λεπτά';
 }

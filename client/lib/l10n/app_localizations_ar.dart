@@ -761,4 +761,547 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errPushPermission => 'اسمح بالإشعارات في المتصفح أو إعدادات النظام.';
+
+  @override
+  String get balanceTitle => 'الرصيد';
+
+  @override
+  String get coinBronze => 'برونز';
+
+  @override
+  String get coinSilver => 'فضة';
+
+  @override
+  String get coinGold => 'ذهب';
+
+  @override
+  String get coinDiamond => 'ألماس';
+
+  @override
+  String get balanceZeroBronze => '0 برونز';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count برونز';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count فضة';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count ذهب';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count ألماس';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount يوميًا';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'بر';
+
+  @override
+  String get balanceAbbrSilver => 'ف.';
+
+  @override
+  String get balanceAbbrGold => 'ذ.';
+
+  @override
+  String get commonBackHome => 'العودة إلى الرئيسية';
+
+  @override
+  String get commonCopied => 'تم النسخ';
+
+  @override
+  String get commonClear => 'مسح';
+
+  @override
+  String get commonTryLater => 'حاول مرة أخرى لاحقًا.';
+
+  @override
+  String get commonTryRefresh => 'جرّب تحديث الصفحة.';
+
+  @override
+  String get coinsTitle => 'العملات';
+
+  @override
+  String get coinsLoginReward => 'مكافأة تسجيل الدخول';
+
+  @override
+  String get coinsLoginAvailableToday => 'مكافأة اليوم متاحة';
+
+  @override
+  String get coinsLoginStreak => 'سلسلة تسجيل الدخول اليومية';
+
+  @override
+  String get coinsFriendReward => 'مكافأة الصديق';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount للتسجيل عبر رابطك';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'تعذر تحميل المكافآت';
+
+  @override
+  String get coinsClaimReward => 'استلام المكافأة';
+
+  @override
+  String get coinsAlreadyClaimed => 'تم الاستلام مسبقًا';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · اليوم';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · يوم واحد متبقٍ';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · متبقٍ $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'ادعُ صديقًا';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount لكل من يسجّل عبر رابطك';
+  }
+
+  @override
+  String get coinsCopyLink => 'نسخ الرابط';
+
+  @override
+  String get coinsHowItWorks => 'كيف يعمل';
+
+  @override
+  String get coinsHowStep1 => 'انسخ الرابط وأرسله إلى صديق';
+
+  @override
+  String get coinsHowStep2 => 'يسجّل الصديق عبر هذا الرابط';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'تحصل على $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'الإنجازات';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'التقدم: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'تم الحصول على الإطار';
+
+  @override
+  String get achievementsClaimed => 'تم الحصول عليه';
+
+  @override
+  String get achievementsOpenFrame => 'فتح الإطار';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'هل أنت متأكد أنك تريد إزالة $name من الأصدقاء؟';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'إزالة';
+
+  @override
+  String get friendsRemove => 'إزالة من الأصدقاء';
+
+  @override
+  String get friendsAcceptRequest => 'قبول الطلب';
+
+  @override
+  String get friendsDeclineRequest => 'رفض الطلب';
+
+  @override
+  String get friendsCancelRequest => 'إلغاء الطلب';
+
+  @override
+  String get friendsSendRequest => 'إرسال طلب صداقة';
+
+  @override
+  String get friendsRequestAlreadySent => 'تم إرسال الطلب مسبقًا';
+
+  @override
+  String get friendsIncomingStatus => 'طلب وارد';
+
+  @override
+  String get friendsOutgoingStatus => 'طلب صادر';
+
+  @override
+  String get friendsNotFriends => 'ليسا صديقين';
+
+  @override
+  String get friendsCollapseSearch => 'طي البحث';
+
+  @override
+  String get friendsExpandSearch => 'إظهار البحث';
+
+  @override
+  String get friendsLoadFailed => 'تعذر تحميل الأصدقاء';
+
+  @override
+  String friendsSince(String date) {
+    return 'أصدقاء منذ: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'طلب وارد: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'طلب صادر: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'معلومات المستخدم';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age سنة';
+  }
+
+  @override
+  String get shopBuy => 'شراء';
+
+  @override
+  String get shopBuyTitle => 'شراء؟';
+
+  @override
+  String get shopBuyStakeTitle => 'شراء الرهان؟';
+
+  @override
+  String get shopBuyEmojiTitle => 'شراء الرمز التعبيري؟';
+
+  @override
+  String get shopBuyCollectionTitle => 'شراء المجموعة؟';
+
+  @override
+  String shopPrice(String price) {
+    return 'السعر: $price';
+  }
+
+  @override
+  String get shopOwned => 'تم الشراء';
+
+  @override
+  String get shopEmpty => 'فارغ حتى الآن';
+
+  @override
+  String shopPurchased(String title) {
+    return 'تم شراء $title';
+  }
+
+  @override
+  String get shopEmojiUses => 'تحصل على: 10 استخدامات';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 استخدامات';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 استخدامات';
+  }
+
+  @override
+  String get shopBuyTen => 'شراء · 10 قطع';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'الدخل: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'شراء لمرة واحدة';
+
+  @override
+  String get shopSellRefund => 'البيع يعيد جزءًا من التكلفة';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return 'أُضيف $title إلى الملف الشخصي';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'مكافأة المجموعة +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'مكتمل';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'مجموع · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'بيع؟';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'ستحصل على $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'تم البيع: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'أضف أصدقاء أولًا';
+
+  @override
+  String get inventoryGiftTitle => 'إهداء المجموعة؟';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'إهداء «$title» إلى $name؟';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'تم الإهداء: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'تعذر تحميل العناصر';
+
+  @override
+  String get inventoryNoCollections => 'لا توجد مجموعات — اشترِ من المتجر';
+
+  @override
+  String get inventoryNoEmojis => 'لا توجد رموز تعبيرية — اشترِ من المتجر';
+
+  @override
+  String get inventoryNoFrames => 'لا توجد إطارات — اربح 10 مباريات دوري (إنجازات)';
+
+  @override
+  String get inventoryNoStakes => 'لا رهانات مشتراة';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'متبقٍ $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'الدخل: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'دخل الغد: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'يمكنك المراهنة بـ $amount ذهب';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'يمكنك المراهنة بـ $amount فضة';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'تم الاستلام +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'تعذر تحميل المحادثات';
+
+  @override
+  String get chatsLoadListFailed => 'تعذر تحميل القائمة';
+
+  @override
+  String get chatsBlockedEmpty => 'القائمة فارغة';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'محظور: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'تعذر إنشاء المحادثة';
+
+  @override
+  String get chatsNeedFriendsFirst => 'أضف أصدقاء أولًا، ثم يمكنك فتح محادثة.';
+
+  @override
+  String get chatsFriendsNotFound => 'لم يُعثر على أصدقاء';
+
+  @override
+  String get chatsFindFriendHint => 'ابحث عن صديق بالاسم المستعار';
+
+  @override
+  String get chatsSelectChat => 'اختر محادثة';
+
+  @override
+  String get chatsSelectHint => 'اختر حوارًا من القائمة على اليسار';
+
+  @override
+  String get chatEditFailed => 'تعذر تعديل الرسالة';
+
+  @override
+  String get chatSendFailed => 'تعذر إرسال الرسالة';
+
+  @override
+  String get chatDeleteFailed => 'تعذر حذف الرسالة';
+
+  @override
+  String get chatEmojiSendFailed => 'تعذر إرسال الرمز التعبيري';
+
+  @override
+  String get chatLoadFailed => 'تعذر تحميل الرسائل';
+
+  @override
+  String get chatBackToGame => 'العودة إلى اللعبة';
+
+  @override
+  String get chatBackToChats => 'العودة إلى المحادثات';
+
+  @override
+  String get chatActions => 'إجراءات المحادثة';
+
+  @override
+  String get chatScrollToEnd => 'إلى نهاية المحادثة';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'رد على $name';
+  }
+
+  @override
+  String get chatGift => 'هدية';
+
+  @override
+  String get chatCollection => 'مجموعة';
+
+  @override
+  String get chatGiftCollection => 'هدية · مجموعة';
+
+  @override
+  String get chatThisUser => 'هذا المستخدم';
+
+  @override
+  String get gamesLobbyLoadFailed => 'تعذر تحميل اللوبي.';
+
+  @override
+  String get gamesTapChangeStake => 'اضغط لتغيير الرهان';
+
+  @override
+  String get gamesTapChangeTurnTime => 'اضغط لتغيير وقت الدور';
+
+  @override
+  String get gamesTapChangeGrid => 'اضغط لتغيير حجم الشبكة';
+
+  @override
+  String get gamesSwapSidesHint => 'قد يصبح O حرف X بعد الحركة الأولى';
+
+  @override
+  String get gamesNoCenterHint => 'الحركة الأولى لا يمكن أن تكون في الوسط';
+
+  @override
+  String get lobbyInviteSentShort => 'تم الإرسال';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'تم إرسال الدعوات. بانتظار الرد.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'الصقه في محادثة أو رسالة لصديق';
+
+  @override
+  String get lobbyCopyLinkHint => 'نسخ الرابط إلى الحافظة';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name يدعوك للعب';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return 'فاز $name';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'انتهى الوقت. فاز $name';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds ث';
+  }
+
+  @override
+  String get adminTitle => 'الإدارة';
+
+  @override
+  String get tournamentsTitle => 'البطولات';
+
+  @override
+  String get profileAgeInvalid => 'أدخل عمرًا من 1 إلى 111';
+
+  @override
+  String get profileSaveFailed => 'تعذر حفظ الملف الشخصي';
+
+  @override
+  String get profileNameHint => 'حروف لاتينية وأرقام و_ حتى 10 أحرف';
+
+  @override
+  String get profileAgeHint => 'من 1 إلى 111';
+
+  @override
+  String get profileAboutHint => 'حتى 100 حرف (اختياري)';
+
+  @override
+  String get profileProcessingPhoto => 'جاري معالجة الصورة…';
+
+  @override
+  String get profileCropTitle => 'اختر منطقة الصورة الرمزية';
+
+  @override
+  String get profileCropHint => 'كبّر وحرّك الصورة';
+
+  @override
+  String get profileApply => 'تطبيق';
+
+  @override
+  String get profilePreparing => 'جاري التحضير…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds ث';
+  }
+
+  @override
+  String get timeOneMin => '1 د';
+
+  @override
+  String get timeTenMin => '10 د';
 }

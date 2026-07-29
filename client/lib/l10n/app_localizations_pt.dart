@@ -761,4 +761,547 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Permita notificações nas configurações do navegador ou do sistema.';
+
+  @override
+  String get balanceTitle => 'Saldo';
+
+  @override
+  String get coinBronze => 'Bronze';
+
+  @override
+  String get coinSilver => 'Prata';
+
+  @override
+  String get coinGold => 'Ouro';
+
+  @override
+  String get coinDiamond => 'Diamante';
+
+  @override
+  String get balanceZeroBronze => '0 bronze';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count bronze';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count prata';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count ouro';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count diamantes';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount por dia';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'br';
+
+  @override
+  String get balanceAbbrSilver => 'pr.';
+
+  @override
+  String get balanceAbbrGold => 'ou.';
+
+  @override
+  String get commonBackHome => 'Voltar ao início';
+
+  @override
+  String get commonCopied => 'Copiado';
+
+  @override
+  String get commonClear => 'Limpar';
+
+  @override
+  String get commonTryLater => 'Tente novamente mais tarde.';
+
+  @override
+  String get commonTryRefresh => 'Tente atualizar a página.';
+
+  @override
+  String get coinsTitle => 'Moedas';
+
+  @override
+  String get coinsLoginReward => 'Recompensa de login';
+
+  @override
+  String get coinsLoginAvailableToday => 'Recompensa de hoje disponível';
+
+  @override
+  String get coinsLoginStreak => 'Sequência diária de logins';
+
+  @override
+  String get coinsFriendReward => 'Recompensa por amigo';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount por registo através do seu link';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Não foi possível carregar as recompensas';
+
+  @override
+  String get coinsClaimReward => 'Receber recompensa';
+
+  @override
+  String get coinsAlreadyClaimed => 'Já recebida';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · hoje';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · falta 1 dia';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · faltam $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Convidar um amigo';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount por cada pessoa que se registar com o seu link';
+  }
+
+  @override
+  String get coinsCopyLink => 'Copiar link';
+
+  @override
+  String get coinsHowItWorks => 'Como funciona';
+
+  @override
+  String get coinsHowStep1 => 'Copie o link e envie a um amigo';
+
+  @override
+  String get coinsHowStep2 => 'O amigo regista-se com esse link';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Recebe $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Conquistas';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Progresso: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Moldura obtida';
+
+  @override
+  String get achievementsClaimed => 'Obtido';
+
+  @override
+  String get achievementsOpenFrame => 'Abrir moldura';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Tem a certeza de que quer remover $name dos amigos?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Remover';
+
+  @override
+  String get friendsRemove => 'Remover dos amigos';
+
+  @override
+  String get friendsAcceptRequest => 'Aceitar pedido';
+
+  @override
+  String get friendsDeclineRequest => 'Recusar pedido';
+
+  @override
+  String get friendsCancelRequest => 'Cancelar pedido';
+
+  @override
+  String get friendsSendRequest => 'Enviar pedido de amizade';
+
+  @override
+  String get friendsRequestAlreadySent => 'Pedido já enviado';
+
+  @override
+  String get friendsIncomingStatus => 'Pedido recebido';
+
+  @override
+  String get friendsOutgoingStatus => 'Pedido enviado';
+
+  @override
+  String get friendsNotFriends => 'Não são amigos';
+
+  @override
+  String get friendsCollapseSearch => 'Recolher pesquisa';
+
+  @override
+  String get friendsExpandSearch => 'Mostrar pesquisa';
+
+  @override
+  String get friendsLoadFailed => 'Não foi possível carregar os amigos';
+
+  @override
+  String friendsSince(String date) {
+    return 'Amigos desde: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Pedido recebido: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Pedido enviado: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Informações do utilizador';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age anos';
+  }
+
+  @override
+  String get shopBuy => 'Comprar';
+
+  @override
+  String get shopBuyTitle => 'Comprar?';
+
+  @override
+  String get shopBuyStakeTitle => 'Comprar aposta?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Comprar emoji?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Comprar coleção?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Preço: $price';
+  }
+
+  @override
+  String get shopOwned => 'Comprado';
+
+  @override
+  String get shopEmpty => 'Ainda vazio';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title comprado';
+  }
+
+  @override
+  String get shopEmojiUses => 'Recebe: 10 utilizações';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 utilizações';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 utilizações';
+  }
+
+  @override
+  String get shopBuyTen => 'Comprar · 10 un.';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Rendimento: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Compra única';
+
+  @override
+  String get shopSellRefund => 'Vender devolve parte do custo';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title adicionado ao perfil';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'bónus do conjunto +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Completo';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Recolhido · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Vender?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Receberá $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Vendido: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Adicione amigos primeiro';
+
+  @override
+  String get inventoryGiftTitle => 'Oferecer coleção?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Oferecer «$title» a $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Oferecido: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Não foi possível carregar os itens';
+
+  @override
+  String get inventoryNoCollections => 'Sem coleções — compre na loja';
+
+  @override
+  String get inventoryNoEmojis => 'Sem emojis — compre na loja';
+
+  @override
+  String get inventoryNoFrames => 'Sem molduras — ganhe 10 jogos de liga (conquistas)';
+
+  @override
+  String get inventoryNoStakes => 'Sem apostas compradas';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Restam $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Rendimento: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Rendimento amanhã: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Pode apostar $amount de ouro';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Pode apostar $amount de prata';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Recebido +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Não foi possível carregar os chats';
+
+  @override
+  String get chatsLoadListFailed => 'Não foi possível carregar a lista';
+
+  @override
+  String get chatsBlockedEmpty => 'A lista está vazia';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Bloqueado: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Não foi possível criar o chat';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Adicione amigos primeiro; depois pode abrir um chat.';
+
+  @override
+  String get chatsFriendsNotFound => 'Amigos não encontrados';
+
+  @override
+  String get chatsFindFriendHint => 'Encontrar amigo pelo nick';
+
+  @override
+  String get chatsSelectChat => 'Selecione um chat';
+
+  @override
+  String get chatsSelectHint => 'Escolha uma conversa na lista à esquerda';
+
+  @override
+  String get chatEditFailed => 'Não foi possível editar a mensagem';
+
+  @override
+  String get chatSendFailed => 'Não foi possível enviar a mensagem';
+
+  @override
+  String get chatDeleteFailed => 'Não foi possível eliminar a mensagem';
+
+  @override
+  String get chatEmojiSendFailed => 'Não foi possível enviar o emoji';
+
+  @override
+  String get chatLoadFailed => 'Não foi possível carregar as mensagens';
+
+  @override
+  String get chatBackToGame => 'Voltar ao jogo';
+
+  @override
+  String get chatBackToChats => 'Voltar aos chats';
+
+  @override
+  String get chatActions => 'Ações do chat';
+
+  @override
+  String get chatScrollToEnd => 'Ir para o fim';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Em resposta a $name';
+  }
+
+  @override
+  String get chatGift => 'Presente';
+
+  @override
+  String get chatCollection => 'Coleção';
+
+  @override
+  String get chatGiftCollection => 'Presente · coleção';
+
+  @override
+  String get chatThisUser => 'este utilizador';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Não foi possível carregar o lobby.';
+
+  @override
+  String get gamesTapChangeStake => 'Toque para alterar a aposta';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Toque para alterar o tempo por jogada';
+
+  @override
+  String get gamesTapChangeGrid => 'Toque para alterar o tamanho da grelha';
+
+  @override
+  String get gamesSwapSidesHint => 'O pode tornar-se X após a 1.ª jogada';
+
+  @override
+  String get gamesNoCenterHint => 'A primeira jogada não pode ser no centro';
+
+  @override
+  String get lobbyInviteSentShort => 'Enviado';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Convites enviados. A aguardar resposta.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Cole-o num chat ou mensagem a um amigo';
+
+  @override
+  String get lobbyCopyLinkHint => 'Copiar link para a área de transferência';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name convida-o a jogar';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name venceu';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'O tempo acabou. $name venceu';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get adminTitle => 'Admin';
+
+  @override
+  String get tournamentsTitle => 'Torneios';
+
+  @override
+  String get profileAgeInvalid => 'Introduza uma idade de 1 a 111';
+
+  @override
+  String get profileSaveFailed => 'Não foi possível guardar o perfil';
+
+  @override
+  String get profileNameHint => 'Letras latinas, dígitos, _ até 10 caracteres';
+
+  @override
+  String get profileAgeHint => 'De 1 a 111';
+
+  @override
+  String get profileAboutHint => 'Até 100 caracteres (opcional)';
+
+  @override
+  String get profileProcessingPhoto => 'A processar foto…';
+
+  @override
+  String get profileCropTitle => 'Escolha a área do avatar';
+
+  @override
+  String get profileCropHint => 'Amplie e mova a foto';
+
+  @override
+  String get profileApply => 'Aplicar';
+
+  @override
+  String get profilePreparing => 'A preparar…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get timeOneMin => '1 min';
+
+  @override
+  String get timeTenMin => '10 min';
 }

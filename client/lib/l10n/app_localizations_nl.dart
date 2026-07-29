@@ -761,4 +761,547 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Sta meldingen toe in je browser- of systeeminstellingen.';
+
+  @override
+  String get balanceTitle => 'Saldo';
+
+  @override
+  String get coinBronze => 'Brons';
+
+  @override
+  String get coinSilver => 'Zilver';
+
+  @override
+  String get coinGold => 'Goud';
+
+  @override
+  String get coinDiamond => 'Diamant';
+
+  @override
+  String get balanceZeroBronze => '0 brons';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count brons';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count zilver';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count goud';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count diamanten';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount per dag';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'br';
+
+  @override
+  String get balanceAbbrSilver => 'z.';
+
+  @override
+  String get balanceAbbrGold => 'g.';
+
+  @override
+  String get commonBackHome => 'Terug naar home';
+
+  @override
+  String get commonCopied => 'Gekopieerd';
+
+  @override
+  String get commonClear => 'Wissen';
+
+  @override
+  String get commonTryLater => 'Probeer het later opnieuw.';
+
+  @override
+  String get commonTryRefresh => 'Probeer de pagina te vernieuwen.';
+
+  @override
+  String get coinsTitle => 'Munten';
+
+  @override
+  String get coinsLoginReward => 'Inlogbeloning';
+
+  @override
+  String get coinsLoginAvailableToday => 'Beloning van vandaag beschikbaar';
+
+  @override
+  String get coinsLoginStreak => 'Dagelijkse inlogreeks';
+
+  @override
+  String get coinsFriendReward => 'Vriendenbeloning';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount voor registratie via jouw link';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Beloningen konden niet worden geladen';
+
+  @override
+  String get coinsClaimReward => 'Beloning ophalen';
+
+  @override
+  String get coinsAlreadyClaimed => 'Al opgehaald';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · vandaag';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · nog 1 dag';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · nog $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Nodig een vriend uit';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount voor iedereen die zich via jouw link registreert';
+  }
+
+  @override
+  String get coinsCopyLink => 'Link kopiëren';
+
+  @override
+  String get coinsHowItWorks => 'Hoe het werkt';
+
+  @override
+  String get coinsHowStep1 => 'Kopieer de link en stuur die naar een vriend';
+
+  @override
+  String get coinsHowStep2 => 'Je vriend registreert zich via die link';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Je ontvangt $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Prestaties';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Voortgang: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Kader ontvangen';
+
+  @override
+  String get achievementsClaimed => 'Ontvangen';
+
+  @override
+  String get achievementsOpenFrame => 'Kader openen';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Weet je zeker dat je $name uit vrienden wilt verwijderen?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Verwijderen';
+
+  @override
+  String get friendsRemove => 'Uit vrienden verwijderen';
+
+  @override
+  String get friendsAcceptRequest => 'Verzoek accepteren';
+
+  @override
+  String get friendsDeclineRequest => 'Verzoek weigeren';
+
+  @override
+  String get friendsCancelRequest => 'Verzoek annuleren';
+
+  @override
+  String get friendsSendRequest => 'Vriendschapsverzoek sturen';
+
+  @override
+  String get friendsRequestAlreadySent => 'Verzoek al verzonden';
+
+  @override
+  String get friendsIncomingStatus => 'Inkomend verzoek';
+
+  @override
+  String get friendsOutgoingStatus => 'Uitgaand verzoek';
+
+  @override
+  String get friendsNotFriends => 'Geen vrienden';
+
+  @override
+  String get friendsCollapseSearch => 'Zoeken inklappen';
+
+  @override
+  String get friendsExpandSearch => 'Zoeken tonen';
+
+  @override
+  String get friendsLoadFailed => 'Vrienden konden niet worden geladen';
+
+  @override
+  String friendsSince(String date) {
+    return 'Vrienden sinds: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Inkomend verzoek: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Uitgaand verzoek: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Gebruikersinfo';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age jaar';
+  }
+
+  @override
+  String get shopBuy => 'Kopen';
+
+  @override
+  String get shopBuyTitle => 'Kopen?';
+
+  @override
+  String get shopBuyStakeTitle => 'Inzet kopen?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Emoji kopen?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Collectie kopen?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Prijs: $price';
+  }
+
+  @override
+  String get shopOwned => 'Gekocht';
+
+  @override
+  String get shopEmpty => 'Nog leeg';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title gekocht';
+  }
+
+  @override
+  String get shopEmojiUses => 'Je krijgt: 10 gebruiken';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 gebruiken';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 gebruiken';
+  }
+
+  @override
+  String get shopBuyTen => 'Kopen · 10 st.';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Inkomen: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Eenmalige aankoop';
+
+  @override
+  String get shopSellRefund => 'Verkopen geeft een deel van de prijs terug';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title toegevoegd aan profiel';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'setbonus +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Compleet';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Verzameld · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Verkopen?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Je ontvangt $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Verkocht: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Voeg eerst vrienden toe';
+
+  @override
+  String get inventoryGiftTitle => 'Collectie cadeau doen?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return '“$title” cadeau doen aan $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Cadeau gegeven: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Items konden niet worden geladen';
+
+  @override
+  String get inventoryNoCollections => 'Geen collecties — koop ze in de winkel';
+
+  @override
+  String get inventoryNoEmojis => 'Geen emoji’s — koop ze in de winkel';
+
+  @override
+  String get inventoryNoFrames => 'Geen kaders — win 10 competitiewedstrijden (prestaties)';
+
+  @override
+  String get inventoryNoStakes => 'Geen gekochte inzetten';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Nog $count over';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Inkomen: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Inkomen morgen: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Je kunt $amount goud inzetten';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Je kunt $amount zilver inzetten';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Ontvangen +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Chats konden niet worden geladen';
+
+  @override
+  String get chatsLoadListFailed => 'Lijst kon niet worden geladen';
+
+  @override
+  String get chatsBlockedEmpty => 'Lijst is leeg';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Geblokkeerd: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Chat kon niet worden gemaakt';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Voeg eerst vrienden toe, dan kun je een chat openen.';
+
+  @override
+  String get chatsFriendsNotFound => 'Geen vrienden gevonden';
+
+  @override
+  String get chatsFindFriendHint => 'Zoek een vriend op bijnaam';
+
+  @override
+  String get chatsSelectChat => 'Selecteer een chat';
+
+  @override
+  String get chatsSelectHint => 'Kies een gesprek uit de lijst links';
+
+  @override
+  String get chatEditFailed => 'Bericht kon niet worden bewerkt';
+
+  @override
+  String get chatSendFailed => 'Bericht kon niet worden verzonden';
+
+  @override
+  String get chatDeleteFailed => 'Bericht kon niet worden verwijderd';
+
+  @override
+  String get chatEmojiSendFailed => 'Emoji kon niet worden verzonden';
+
+  @override
+  String get chatLoadFailed => 'Berichten konden niet worden geladen';
+
+  @override
+  String get chatBackToGame => 'Terug naar het spel';
+
+  @override
+  String get chatBackToChats => 'Terug naar chats';
+
+  @override
+  String get chatActions => 'Chatacties';
+
+  @override
+  String get chatScrollToEnd => 'Naar het einde';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Antwoord aan $name';
+  }
+
+  @override
+  String get chatGift => 'Cadeau';
+
+  @override
+  String get chatCollection => 'Collectie';
+
+  @override
+  String get chatGiftCollection => 'Cadeau · collectie';
+
+  @override
+  String get chatThisUser => 'deze gebruiker';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Lobby kon niet worden geladen.';
+
+  @override
+  String get gamesTapChangeStake => 'Tik om de inzet te wijzigen';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Tik om de bedenktijd te wijzigen';
+
+  @override
+  String get gamesTapChangeGrid => 'Tik om de rastergrootte te wijzigen';
+
+  @override
+  String get gamesSwapSidesHint => 'O kan na de 1e zet X worden';
+
+  @override
+  String get gamesNoCenterHint => 'Eerste zet mag niet in het midden';
+
+  @override
+  String get lobbyInviteSentShort => 'Verzonden';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Uitnodigingen verzonden. Wachten op antwoord.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Plak hem in een chat of bericht naar een vriend';
+
+  @override
+  String get lobbyCopyLinkHint => 'Link naar klembord kopiëren';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name nodigt je uit om te spelen';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name heeft gewonnen';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Tijd is om. $name heeft gewonnen';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get adminTitle => 'Beheer';
+
+  @override
+  String get tournamentsTitle => 'Toernooien';
+
+  @override
+  String get profileAgeInvalid => 'Voer een leeftijd van 1 tot 111 in';
+
+  @override
+  String get profileSaveFailed => 'Profiel kon niet worden opgeslagen';
+
+  @override
+  String get profileNameHint => 'Latijnse letters, cijfers, _ tot 10 tekens';
+
+  @override
+  String get profileAgeHint => 'Van 1 tot 111';
+
+  @override
+  String get profileAboutHint => 'Tot 100 tekens (optioneel)';
+
+  @override
+  String get profileProcessingPhoto => 'Foto verwerken…';
+
+  @override
+  String get profileCropTitle => 'Kies avatargebied';
+
+  @override
+  String get profileCropHint => 'Zoom en verplaats de foto';
+
+  @override
+  String get profileApply => 'Toepassen';
+
+  @override
+  String get profilePreparing => 'Voorbereiden…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get timeOneMin => '1 min';
+
+  @override
+  String get timeTenMin => '10 min';
 }

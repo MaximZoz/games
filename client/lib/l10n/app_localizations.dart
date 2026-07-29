@@ -1636,6 +1636,924 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Разрешите уведомления в настройках браузера или системы.'**
   String get errPushPermission;
+
+  /// No description provided for @balanceTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Баланс'**
+  String get balanceTitle;
+
+  /// No description provided for @coinBronze.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронза'**
+  String get coinBronze;
+
+  /// No description provided for @coinSilver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Серебро'**
+  String get coinSilver;
+
+  /// No description provided for @coinGold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Золото'**
+  String get coinGold;
+
+  /// No description provided for @coinDiamond.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бриллиант'**
+  String get coinDiamond;
+
+  /// No description provided for @balanceZeroBronze.
+  ///
+  /// In ru, this message translates to:
+  /// **'0 бронзовых'**
+  String get balanceZeroBronze;
+
+  /// No description provided for @balanceBronzes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} бронзовых'**
+  String balanceBronzes(int count);
+
+  /// No description provided for @balanceSilvers.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} серебряных'**
+  String balanceSilvers(int count);
+
+  /// No description provided for @balanceGolds.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} золотых'**
+  String balanceGolds(int count);
+
+  /// No description provided for @balanceDiamonds.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} бриллиантов'**
+  String balanceDiamonds(int count);
+
+  /// No description provided for @balancePerDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'{amount} в день'**
+  String balancePerDay(String amount);
+
+  /// No description provided for @balanceAbbrBronze.
+  ///
+  /// In ru, this message translates to:
+  /// **'бр'**
+  String get balanceAbbrBronze;
+
+  /// No description provided for @balanceAbbrSilver.
+  ///
+  /// In ru, this message translates to:
+  /// **'с.'**
+  String get balanceAbbrSilver;
+
+  /// No description provided for @balanceAbbrGold.
+  ///
+  /// In ru, this message translates to:
+  /// **'з.'**
+  String get balanceAbbrGold;
+
+  /// No description provided for @commonBackHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад на главную'**
+  String get commonBackHome;
+
+  /// No description provided for @commonCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировано'**
+  String get commonCopied;
+
+  /// No description provided for @commonClear.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очистить'**
+  String get commonClear;
+
+  /// No description provided for @commonTryLater.
+  ///
+  /// In ru, this message translates to:
+  /// **'Попробуйте позже.'**
+  String get commonTryLater;
+
+  /// No description provided for @commonTryRefresh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Попробуйте обновить страницу.'**
+  String get commonTryRefresh;
+
+  /// No description provided for @coinsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Монеты'**
+  String get coinsTitle;
+
+  /// No description provided for @coinsLoginReward.
+  ///
+  /// In ru, this message translates to:
+  /// **'Монеты за вход'**
+  String get coinsLoginReward;
+
+  /// No description provided for @coinsLoginAvailableToday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступна награда за сегодня'**
+  String get coinsLoginAvailableToday;
+
+  /// No description provided for @coinsLoginStreak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ежедневная серия входов'**
+  String get coinsLoginStreak;
+
+  /// No description provided for @coinsFriendReward.
+  ///
+  /// In ru, this message translates to:
+  /// **'Монеты за друга'**
+  String get coinsFriendReward;
+
+  /// No description provided for @coinsFriendRewardHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'+{amount} за регистрацию по ссылке'**
+  String coinsFriendRewardHint(String amount);
+
+  /// No description provided for @coinsLoadRewardsFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить награды'**
+  String get coinsLoadRewardsFailed;
+
+  /// No description provided for @coinsClaimReward.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забрать награду'**
+  String get coinsClaimReward;
+
+  /// No description provided for @coinsAlreadyClaimed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уже получено'**
+  String get coinsAlreadyClaimed;
+
+  /// No description provided for @coinsStreakToday.
+  ///
+  /// In ru, this message translates to:
+  /// **'{done}/{target} · сегодня'**
+  String coinsStreakToday(int done, int target);
+
+  /// No description provided for @coinsStreakOneDayLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'{done}/{target} · ещё 1 день'**
+  String coinsStreakOneDayLeft(int done, int target);
+
+  /// No description provided for @coinsStreakDaysLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'{done}/{target} · ещё {remaining}'**
+  String coinsStreakDaysLeft(int done, int target, int remaining);
+
+  /// No description provided for @coinsInviteFriend.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пригласи друга'**
+  String get coinsInviteFriend;
+
+  /// No description provided for @coinsInviteHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'+{amount} за каждого, кто зарегистрируется по вашей ссылке'**
+  String coinsInviteHint(String amount);
+
+  /// No description provided for @coinsCopyLink.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать ссылку'**
+  String get coinsCopyLink;
+
+  /// No description provided for @coinsHowItWorks.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как это работает'**
+  String get coinsHowItWorks;
+
+  /// No description provided for @coinsHowStep1.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопируйте ссылку и отправьте другу'**
+  String get coinsHowStep1;
+
+  /// No description provided for @coinsHowStep2.
+  ///
+  /// In ru, this message translates to:
+  /// **'Друг регистрируется по этой ссылке'**
+  String get coinsHowStep2;
+
+  /// No description provided for @coinsHowStep3.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вам начисляется {amount}'**
+  String coinsHowStep3(String amount);
+
+  /// No description provided for @achievementsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Достижения'**
+  String get achievementsTitle;
+
+  /// No description provided for @achievementsProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прогресс: {progress}'**
+  String achievementsProgress(String progress);
+
+  /// No description provided for @achievementsFrameClaimed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рамка получена'**
+  String get achievementsFrameClaimed;
+
+  /// No description provided for @achievementsClaimed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получено'**
+  String get achievementsClaimed;
+
+  /// No description provided for @achievementsOpenFrame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть рамку'**
+  String get achievementsOpenFrame;
+
+  /// No description provided for @friendsRemoveConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уверены, что хотите удалить {name} из друзей?'**
+  String friendsRemoveConfirm(String name);
+
+  /// No description provided for @friendsRemoveConfirmAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать'**
+  String get friendsRemoveConfirmAction;
+
+  /// No description provided for @friendsRemove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить из друзей'**
+  String get friendsRemove;
+
+  /// No description provided for @friendsAcceptRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять заявку'**
+  String get friendsAcceptRequest;
+
+  /// No description provided for @friendsDeclineRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить заявку'**
+  String get friendsDeclineRequest;
+
+  /// No description provided for @friendsCancelRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отменить заявку'**
+  String get friendsCancelRequest;
+
+  /// No description provided for @friendsSendRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить заявку в друзья'**
+  String get friendsSendRequest;
+
+  /// No description provided for @friendsRequestAlreadySent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка уже отправлена'**
+  String get friendsRequestAlreadySent;
+
+  /// No description provided for @friendsIncomingStatus.
+  ///
+  /// In ru, this message translates to:
+  /// **'Входящая заявка'**
+  String get friendsIncomingStatus;
+
+  /// No description provided for @friendsOutgoingStatus.
+  ///
+  /// In ru, this message translates to:
+  /// **'Исходящая заявка'**
+  String get friendsOutgoingStatus;
+
+  /// No description provided for @friendsNotFriends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не в друзьях'**
+  String get friendsNotFriends;
+
+  /// No description provided for @friendsCollapseSearch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свернуть поиск'**
+  String get friendsCollapseSearch;
+
+  /// No description provided for @friendsExpandSearch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать поиск'**
+  String get friendsExpandSearch;
+
+  /// No description provided for @friendsLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить друзей'**
+  String get friendsLoadFailed;
+
+  /// No description provided for @friendsSince.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дружите с: {date}'**
+  String friendsSince(String date);
+
+  /// No description provided for @friendsIncomingAt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Входящая заявка: {date}'**
+  String friendsIncomingAt(String date);
+
+  /// No description provided for @friendsOutgoingAt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Исходящая заявка: {date}'**
+  String friendsOutgoingAt(String date);
+
+  /// No description provided for @userInfoTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Информация о пользователе'**
+  String get userInfoTitle;
+
+  /// No description provided for @profileAgeYears.
+  ///
+  /// In ru, this message translates to:
+  /// **'{age} лет'**
+  String profileAgeYears(int age);
+
+  /// No description provided for @shopBuy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить'**
+  String get shopBuy;
+
+  /// No description provided for @shopBuyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить?'**
+  String get shopBuyTitle;
+
+  /// No description provided for @shopBuyStakeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить ставку?'**
+  String get shopBuyStakeTitle;
+
+  /// No description provided for @shopBuyEmojiTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить смайлик?'**
+  String get shopBuyEmojiTitle;
+
+  /// No description provided for @shopBuyCollectionTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить коллекцию?'**
+  String get shopBuyCollectionTitle;
+
+  /// No description provided for @shopPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цена: {price}'**
+  String shopPrice(String price);
+
+  /// No description provided for @shopOwned.
+  ///
+  /// In ru, this message translates to:
+  /// **'Куплено'**
+  String get shopOwned;
+
+  /// No description provided for @shopEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока пусто'**
+  String get shopEmpty;
+
+  /// No description provided for @shopPurchased.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} куплен'**
+  String shopPurchased(String title);
+
+  /// No description provided for @shopEmojiUses.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получите: 10 использований'**
+  String get shopEmojiUses;
+
+  /// No description provided for @shopEmojiBought.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title}: +10 использований'**
+  String shopEmojiBought(String title);
+
+  /// No description provided for @shopEmojiPriceUses.
+  ///
+  /// In ru, this message translates to:
+  /// **'{price} · 10 использований'**
+  String shopEmojiPriceUses(String price);
+
+  /// No description provided for @shopBuyTen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить · 10 шт.'**
+  String get shopBuyTen;
+
+  /// No description provided for @shopDailyIncome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход: {amount}'**
+  String shopDailyIncome(String amount);
+
+  /// No description provided for @shopBuyOnce.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покупка один раз'**
+  String get shopBuyOnce;
+
+  /// No description provided for @shopSellRefund.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продажа вернёт часть стоимости'**
+  String get shopSellRefund;
+
+  /// No description provided for @shopCollectionAdded.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} добавлен в профиль'**
+  String shopCollectionAdded(String title);
+
+  /// No description provided for @shopSetBonus.
+  ///
+  /// In ru, this message translates to:
+  /// **'бонус группы +{percent}%'**
+  String shopSetBonus(int percent);
+
+  /// No description provided for @shopSetComplete.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрано'**
+  String get shopSetComplete;
+
+  /// No description provided for @shopSetProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрано · {owned}/{total}'**
+  String shopSetProgress(int owned, int total);
+
+  /// No description provided for @inventorySellTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продать?'**
+  String get inventorySellTitle;
+
+  /// No description provided for @inventorySellDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы получите {amount}'**
+  String inventorySellDesc(String amount);
+
+  /// No description provided for @inventorySold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продано: +{amount}'**
+  String inventorySold(String amount);
+
+  /// No description provided for @inventoryNeedFriends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сначала добавьте друзей'**
+  String get inventoryNeedFriends;
+
+  /// No description provided for @inventoryGiftTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарить коллекцию?'**
+  String get inventoryGiftTitle;
+
+  /// No description provided for @inventoryGiftDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарить «{title}» пользователю {name}?'**
+  String inventoryGiftDesc(String title, String name);
+
+  /// No description provided for @inventoryGifted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарено: {title}'**
+  String inventoryGifted(String title);
+
+  /// No description provided for @inventoryLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить предметы'**
+  String get inventoryLoadFailed;
+
+  /// No description provided for @inventoryNoCollections.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет коллекций — купите в магазине'**
+  String get inventoryNoCollections;
+
+  /// No description provided for @inventoryNoEmojis.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет смайликов — купите в магазине'**
+  String get inventoryNoEmojis;
+
+  /// No description provided for @inventoryNoFrames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет рамок — выиграйте 10 игр в лиге (достижения)'**
+  String get inventoryNoFrames;
+
+  /// No description provided for @inventoryNoStakes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет купленных ставок'**
+  String get inventoryNoStakes;
+
+  /// No description provided for @inventoryEmojiLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'Осталось {count}'**
+  String inventoryEmojiLeft(int count);
+
+  /// No description provided for @inventoryIncomeReady.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход: +{amount}'**
+  String inventoryIncomeReady(String amount);
+
+  /// No description provided for @inventoryIncomeTomorrow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход завтра: {amount}'**
+  String inventoryIncomeTomorrow(String amount);
+
+  /// No description provided for @inventoryStakeGold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно ставить {amount} золота'**
+  String inventoryStakeGold(String amount);
+
+  /// No description provided for @inventoryStakeSilver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно ставить {amount} серебра'**
+  String inventoryStakeSilver(String amount);
+
+  /// No description provided for @inventoryClaimedAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получено +{amount}'**
+  String inventoryClaimedAmount(String amount);
+
+  /// No description provided for @chatsLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить чаты'**
+  String get chatsLoadFailed;
+
+  /// No description provided for @chatsLoadListFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить список'**
+  String get chatsLoadListFailed;
+
+  /// No description provided for @chatsBlockedEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Список пуст'**
+  String get chatsBlockedEmpty;
+
+  /// No description provided for @chatsBlockedAt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заблокирован: {date}'**
+  String chatsBlockedAt(String date);
+
+  /// No description provided for @chatsCreateFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось создать чат'**
+  String get chatsCreateFailed;
+
+  /// No description provided for @chatsNeedFriendsFirst.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сначала добавьте друзей, потом можно открыть чат.'**
+  String get chatsNeedFriendsFirst;
+
+  /// No description provided for @chatsFriendsNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Друзья не найдены'**
+  String get chatsFriendsNotFound;
+
+  /// No description provided for @chatsFindFriendHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти друга по нику'**
+  String get chatsFindFriendHint;
+
+  /// No description provided for @chatsSelectChat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите чат'**
+  String get chatsSelectChat;
+
+  /// No description provided for @chatsSelectHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите диалог из списка слева'**
+  String get chatsSelectHint;
+
+  /// No description provided for @chatEditFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось изменить сообщение'**
+  String get chatEditFailed;
+
+  /// No description provided for @chatSendFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось отправить сообщение'**
+  String get chatSendFailed;
+
+  /// No description provided for @chatDeleteFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось удалить сообщение'**
+  String get chatDeleteFailed;
+
+  /// No description provided for @chatEmojiSendFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось отправить смайлик'**
+  String get chatEmojiSendFailed;
+
+  /// No description provided for @chatLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить сообщения'**
+  String get chatLoadFailed;
+
+  /// No description provided for @chatBackToGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад в игру'**
+  String get chatBackToGame;
+
+  /// No description provided for @chatBackToChats.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад к чатам'**
+  String get chatBackToChats;
+
+  /// No description provided for @chatActions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Действия с чатом'**
+  String get chatActions;
+
+  /// No description provided for @chatScrollToEnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'В конец переписки'**
+  String get chatScrollToEnd;
+
+  /// No description provided for @chatReplyingTo.
+  ///
+  /// In ru, this message translates to:
+  /// **'В ответ {name}'**
+  String chatReplyingTo(String name);
+
+  /// No description provided for @chatGift.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарок'**
+  String get chatGift;
+
+  /// No description provided for @chatCollection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекция'**
+  String get chatCollection;
+
+  /// No description provided for @chatGiftCollection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подарок · коллекция'**
+  String get chatGiftCollection;
+
+  /// No description provided for @chatThisUser.
+  ///
+  /// In ru, this message translates to:
+  /// **'этого пользователя'**
+  String get chatThisUser;
+
+  /// No description provided for @gamesLobbyLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить лобби.'**
+  String get gamesLobbyLoadFailed;
+
+  /// No description provided for @gamesTapChangeStake.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нажмите для смены ставки'**
+  String get gamesTapChangeStake;
+
+  /// No description provided for @gamesTapChangeTurnTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нажмите для смены времени на ход'**
+  String get gamesTapChangeTurnTime;
+
+  /// No description provided for @gamesTapChangeGrid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нажмите для смены размера сетки'**
+  String get gamesTapChangeGrid;
+
+  /// No description provided for @gamesSwapSidesHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'O может стать X после 1-го хода'**
+  String get gamesSwapSidesHint;
+
+  /// No description provided for @gamesNoCenterHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Первый ход не в центр'**
+  String get gamesNoCenterHint;
+
+  /// No description provided for @lobbyInviteSentShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлено'**
+  String get lobbyInviteSentShort;
+
+  /// No description provided for @lobbyInvitesSentWaiting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приглашения отправлены. Ожидайте ответа.'**
+  String get lobbyInvitesSentWaiting;
+
+  /// No description provided for @lobbyLinkCopiedHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставьте её в чат или сообщение другу'**
+  String get lobbyLinkCopiedHint;
+
+  /// No description provided for @lobbyCopyLinkHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать ссылку в буфер обмена'**
+  String get lobbyCopyLinkHint;
+
+  /// No description provided for @lobbyCreatorInvites.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name} приглашает вас сыграть'**
+  String lobbyCreatorInvites(String name);
+
+  /// No description provided for @gameOpponentWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победил {name}'**
+  String gameOpponentWon(String name);
+
+  /// No description provided for @gameOpponentWonTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время вышло. Победил {name}'**
+  String gameOpponentWonTimeout(String name);
+
+  /// No description provided for @gameSecondsLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'{seconds} с'**
+  String gameSecondsLeft(int seconds);
+
+  /// No description provided for @adminTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Админка'**
+  String get adminTitle;
+
+  /// No description provided for @tournamentsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Турниры'**
+  String get tournamentsTitle;
+
+  /// No description provided for @profileAgeInvalid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите возраст от 1 до 111'**
+  String get profileAgeInvalid;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить профиль'**
+  String get profileSaveFailed;
+
+  /// No description provided for @profileNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Латиница, цифры, _ до 10 символов'**
+  String get profileNameHint;
+
+  /// No description provided for @profileAgeHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'От 1 до 111'**
+  String get profileAgeHint;
+
+  /// No description provided for @profileAboutHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'До 100 символов (по желанию)'**
+  String get profileAboutHint;
+
+  /// No description provided for @profileProcessingPhoto.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обработка фото…'**
+  String get profileProcessingPhoto;
+
+  /// No description provided for @profileCropTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбери область аватара'**
+  String get profileCropTitle;
+
+  /// No description provided for @profileCropHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Масштабируй и двигай фото'**
+  String get profileCropHint;
+
+  /// No description provided for @profileApply.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применить'**
+  String get profileApply;
+
+  /// No description provided for @profilePreparing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подготовка…'**
+  String get profilePreparing;
+
+  /// No description provided for @timeSecondsShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'{seconds} с'**
+  String timeSecondsShort(int seconds);
+
+  /// No description provided for @timeOneMin.
+  ///
+  /// In ru, this message translates to:
+  /// **'1 мин'**
+  String get timeOneMin;
+
+  /// No description provided for @timeTenMin.
+  ///
+  /// In ru, this message translates to:
+  /// **'10 мин'**
+  String get timeTenMin;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

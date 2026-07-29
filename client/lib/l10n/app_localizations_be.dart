@@ -761,4 +761,547 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Дазвольце апавяшчэнні ў наладах браўзера або сістэмы.';
+
+  @override
+  String get balanceTitle => 'Баланс';
+
+  @override
+  String get coinBronze => 'Бронза';
+
+  @override
+  String get coinSilver => 'Серабро';
+
+  @override
+  String get coinGold => 'Золата';
+
+  @override
+  String get coinDiamond => 'Брыльянт';
+
+  @override
+  String get balanceZeroBronze => '0 бронзавых';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count бронзавых';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count серабраных';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count залатых';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count брыльянтаў';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount у дзень';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'бр';
+
+  @override
+  String get balanceAbbrSilver => 'с.';
+
+  @override
+  String get balanceAbbrGold => 'з.';
+
+  @override
+  String get commonBackHome => 'Назад на галоўную';
+
+  @override
+  String get commonCopied => 'Скапіявана';
+
+  @override
+  String get commonClear => 'Ачысціць';
+
+  @override
+  String get commonTryLater => 'Паспрабуйце пазней.';
+
+  @override
+  String get commonTryRefresh => 'Паспрабуйце абнавіць старонку.';
+
+  @override
+  String get coinsTitle => 'Манеты';
+
+  @override
+  String get coinsLoginReward => 'Манеты за ўваход';
+
+  @override
+  String get coinsLoginAvailableToday => 'Даступна ўзнагарода за сёння';
+
+  @override
+  String get coinsLoginStreak => 'Штодзённая серыя ўваходаў';
+
+  @override
+  String get coinsFriendReward => 'Манеты за сябра';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount за рэгістрацыю па спасылцы';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Не ўдалося загрузіць узнагароды';
+
+  @override
+  String get coinsClaimReward => 'Забраць узнагароду';
+
+  @override
+  String get coinsAlreadyClaimed => 'Ужо атрымана';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · сёння';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · яшчэ 1 дзень';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · яшчэ $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Запрасі сябра';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount за кожнага, хто зарэгіструецца па вашай спасылцы';
+  }
+
+  @override
+  String get coinsCopyLink => 'Скапіяваць спасылку';
+
+  @override
+  String get coinsHowItWorks => 'Як гэта працуе';
+
+  @override
+  String get coinsHowStep1 => 'Скапіюйце спасылку і адпраўце сябру';
+
+  @override
+  String get coinsHowStep2 => 'Сябар рэгіструецца па гэтай спасылцы';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Вам нарахоўваецца $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Дасягненні';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Прагрэс: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Рамку атрымана';
+
+  @override
+  String get achievementsClaimed => 'Атрымана';
+
+  @override
+  String get achievementsOpenFrame => 'Адкрыць рамку';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Вы ўпэўнены, што хочаце выдаліць $name з сяброў?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Прыбраць';
+
+  @override
+  String get friendsRemove => 'Выдаліць з сяброў';
+
+  @override
+  String get friendsAcceptRequest => 'Прыняць заяўку';
+
+  @override
+  String get friendsDeclineRequest => 'Адхіліць заяўку';
+
+  @override
+  String get friendsCancelRequest => 'Адмяніць заяўку';
+
+  @override
+  String get friendsSendRequest => 'Адправіць заяўку ў сябры';
+
+  @override
+  String get friendsRequestAlreadySent => 'Заяўка ўжо адпраўлена';
+
+  @override
+  String get friendsIncomingStatus => 'Уваходная заяўка';
+
+  @override
+  String get friendsOutgoingStatus => 'Выходная заяўка';
+
+  @override
+  String get friendsNotFriends => 'Не ў сябрах';
+
+  @override
+  String get friendsCollapseSearch => 'Згарнуць пошук';
+
+  @override
+  String get friendsExpandSearch => 'Паказаць пошук';
+
+  @override
+  String get friendsLoadFailed => 'Не ўдалося загрузіць сяброў';
+
+  @override
+  String friendsSince(String date) {
+    return 'Сябруеце з: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Уваходная заяўка: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Выходная заяўка: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Інфармацыя пра карыстальніка';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age гадоў';
+  }
+
+  @override
+  String get shopBuy => 'Купіць';
+
+  @override
+  String get shopBuyTitle => 'Купіць?';
+
+  @override
+  String get shopBuyStakeTitle => 'Купіць стаўку?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Купіць смайлік?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Купіць калекцыю?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Цана: $price';
+  }
+
+  @override
+  String get shopOwned => 'Куплена';
+
+  @override
+  String get shopEmpty => 'Пакуль пуста';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title куплены';
+  }
+
+  @override
+  String get shopEmojiUses => 'Атрымаеце: 10 выкарыстанняў';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 выкарыстанняў';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 выкарыстанняў';
+  }
+
+  @override
+  String get shopBuyTen => 'Купіць · 10 шт.';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Даход: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Пакупка адзін раз';
+
+  @override
+  String get shopSellRefund => 'Продаж верне частку кошту';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title дададзены ў профіль';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'бонус групы +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Сабрана';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Сабрана · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Прадаць?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Вы атрымаеце $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Прадана: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Спачатку дадайце сяброў';
+
+  @override
+  String get inventoryGiftTitle => 'Падарыць калекцыю?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Падарыць «$title» карыстальніку $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Падарана: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Не ўдалося загрузіць прадметы';
+
+  @override
+  String get inventoryNoCollections => 'Няма калекцый — купіце ў краме';
+
+  @override
+  String get inventoryNoEmojis => 'Няма смайлікаў — купіце ў краме';
+
+  @override
+  String get inventoryNoFrames => 'Няма рамак — выйграйце 10 гульняў у лізе (дасягненні)';
+
+  @override
+  String get inventoryNoStakes => 'Няма купленых ставак';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Засталося $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Даход: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Даход заўтра: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Можна ставіць $amount золата';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Можна ставіць $amount серабра';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Атрымана +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Не ўдалося загрузіць чаты';
+
+  @override
+  String get chatsLoadListFailed => 'Не ўдалося загрузіць спіс';
+
+  @override
+  String get chatsBlockedEmpty => 'Спіс пусты';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Заблакаваны: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Не ўдалося стварыць чат';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Спачатку дадайце сяброў, потым можна адкрыць чат.';
+
+  @override
+  String get chatsFriendsNotFound => 'Сябры не знойдзены';
+
+  @override
+  String get chatsFindFriendHint => 'Знайсці сябра па ніку';
+
+  @override
+  String get chatsSelectChat => 'Выберыце чат';
+
+  @override
+  String get chatsSelectHint => 'Выберыце дыялог са спісу злева';
+
+  @override
+  String get chatEditFailed => 'Не ўдалося змяніць паведамленне';
+
+  @override
+  String get chatSendFailed => 'Не ўдалося адправіць паведамленне';
+
+  @override
+  String get chatDeleteFailed => 'Не ўдалося выдаліць паведамленне';
+
+  @override
+  String get chatEmojiSendFailed => 'Не ўдалося адправіць смайлік';
+
+  @override
+  String get chatLoadFailed => 'Не ўдалося загрузіць паведамленні';
+
+  @override
+  String get chatBackToGame => 'Назад у гульню';
+
+  @override
+  String get chatBackToChats => 'Назад да чатаў';
+
+  @override
+  String get chatActions => 'Дзеянні з чатам';
+
+  @override
+  String get chatScrollToEnd => 'У канец перапіскі';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'У адказ $name';
+  }
+
+  @override
+  String get chatGift => 'Падарунак';
+
+  @override
+  String get chatCollection => 'Калекцыя';
+
+  @override
+  String get chatGiftCollection => 'Падарунак · калекцыя';
+
+  @override
+  String get chatThisUser => 'гэтага карыстальніка';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Не ўдалося загрузіць лобі.';
+
+  @override
+  String get gamesTapChangeStake => 'Націсніце, каб змяніць стаўку';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Націсніце, каб змяніць час на ход';
+
+  @override
+  String get gamesTapChangeGrid => 'Націсніце, каб змяніць памер сеткі';
+
+  @override
+  String get gamesSwapSidesHint => 'O можа стаць X пасля 1-га ходу';
+
+  @override
+  String get gamesNoCenterHint => 'Першы ход не ў цэнтр';
+
+  @override
+  String get lobbyInviteSentShort => 'Адпраўлена';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Запрашэнні адпраўлены. Чакайце адказу.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Устаўце яе ў чат або паведамленне сябру';
+
+  @override
+  String get lobbyCopyLinkHint => 'Скапіяваць спасылку ў буфер абмену';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name запрашае вас пагуляць';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return 'Перамог $name';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Час выйшаў. Перамог $name';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String get adminTitle => 'Адмінка';
+
+  @override
+  String get tournamentsTitle => 'Турніры';
+
+  @override
+  String get profileAgeInvalid => 'Увядзіце ўзрост ад 1 да 111';
+
+  @override
+  String get profileSaveFailed => 'Не ўдалося захаваць профіль';
+
+  @override
+  String get profileNameHint => 'Лацініца, лічбы, _ да 10 сімвалаў';
+
+  @override
+  String get profileAgeHint => 'Ад 1 да 111';
+
+  @override
+  String get profileAboutHint => 'Да 100 сімвалаў (па жаданні)';
+
+  @override
+  String get profileProcessingPhoto => 'Апрацоўка фота…';
+
+  @override
+  String get profileCropTitle => 'Выберыце вобласць аватара';
+
+  @override
+  String get profileCropHint => 'Маштабуйце і рухайце фота';
+
+  @override
+  String get profileApply => 'Ужыць';
+
+  @override
+  String get profilePreparing => 'Падрыхтоўка…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String get timeOneMin => '1 хв';
+
+  @override
+  String get timeTenMin => '10 хв';
 }

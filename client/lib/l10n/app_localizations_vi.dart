@@ -761,4 +761,547 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Cho phép thông báo trong trình duyệt hoặc cài đặt hệ thống.';
+
+  @override
+  String get balanceTitle => 'Số dư';
+
+  @override
+  String get coinBronze => 'Đồng';
+
+  @override
+  String get coinSilver => 'Bạc';
+
+  @override
+  String get coinGold => 'Vàng';
+
+  @override
+  String get coinDiamond => 'Kim cương';
+
+  @override
+  String get balanceZeroBronze => '0 đồng';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count đồng';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count bạc';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count vàng';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count kim cương';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount mỗi ngày';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'đ';
+
+  @override
+  String get balanceAbbrSilver => 'b.';
+
+  @override
+  String get balanceAbbrGold => 'v.';
+
+  @override
+  String get commonBackHome => 'Về trang chủ';
+
+  @override
+  String get commonCopied => 'Đã sao chép';
+
+  @override
+  String get commonClear => 'Xóa';
+
+  @override
+  String get commonTryLater => 'Vui lòng thử lại sau.';
+
+  @override
+  String get commonTryRefresh => 'Hãy thử làm mới trang.';
+
+  @override
+  String get coinsTitle => 'Xu';
+
+  @override
+  String get coinsLoginReward => 'Thưởng đăng nhập';
+
+  @override
+  String get coinsLoginAvailableToday => 'Thưởng hôm nay đã sẵn sàng';
+
+  @override
+  String get coinsLoginStreak => 'Chuỗi đăng nhập hàng ngày';
+
+  @override
+  String get coinsFriendReward => 'Thưởng bạn bè';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount khi đăng ký qua liên kết của bạn';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Không thể tải phần thưởng';
+
+  @override
+  String get coinsClaimReward => 'Nhận thưởng';
+
+  @override
+  String get coinsAlreadyClaimed => 'Đã nhận';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · hôm nay';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · còn 1 ngày';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · còn $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Mời bạn';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount cho mỗi người đăng ký qua liên kết của bạn';
+  }
+
+  @override
+  String get coinsCopyLink => 'Sao chép liên kết';
+
+  @override
+  String get coinsHowItWorks => 'Cách hoạt động';
+
+  @override
+  String get coinsHowStep1 => 'Sao chép liên kết và gửi cho bạn';
+
+  @override
+  String get coinsHowStep2 => 'Bạn đăng ký qua liên kết đó';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Bạn nhận được $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Thành tựu';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Tiến độ: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Đã nhận khung';
+
+  @override
+  String get achievementsClaimed => 'Đã nhận';
+
+  @override
+  String get achievementsOpenFrame => 'Mở khung';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Bạn có chắc muốn xóa $name khỏi bạn bè?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Xóa';
+
+  @override
+  String get friendsRemove => 'Xóa khỏi bạn bè';
+
+  @override
+  String get friendsAcceptRequest => 'Chấp nhận lời mời';
+
+  @override
+  String get friendsDeclineRequest => 'Từ chối lời mời';
+
+  @override
+  String get friendsCancelRequest => 'Hủy lời mời';
+
+  @override
+  String get friendsSendRequest => 'Gửi lời mời kết bạn';
+
+  @override
+  String get friendsRequestAlreadySent => 'Đã gửi lời mời';
+
+  @override
+  String get friendsIncomingStatus => 'Lời mời đến';
+
+  @override
+  String get friendsOutgoingStatus => 'Lời mời đi';
+
+  @override
+  String get friendsNotFriends => 'Chưa phải bạn bè';
+
+  @override
+  String get friendsCollapseSearch => 'Thu gọn tìm kiếm';
+
+  @override
+  String get friendsExpandSearch => 'Hiện tìm kiếm';
+
+  @override
+  String get friendsLoadFailed => 'Không thể tải bạn bè';
+
+  @override
+  String friendsSince(String date) {
+    return 'Bạn bè từ: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Lời mời đến: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Lời mời đi: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Thông tin người dùng';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age tuổi';
+  }
+
+  @override
+  String get shopBuy => 'Mua';
+
+  @override
+  String get shopBuyTitle => 'Mua?';
+
+  @override
+  String get shopBuyStakeTitle => 'Mua mức cược?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Mua emoji?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Mua bộ sưu tập?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Giá: $price';
+  }
+
+  @override
+  String get shopOwned => 'Đã mua';
+
+  @override
+  String get shopEmpty => 'Vẫn trống';
+
+  @override
+  String shopPurchased(String title) {
+    return 'Đã mua $title';
+  }
+
+  @override
+  String get shopEmojiUses => 'Bạn nhận: 10 lượt dùng';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 lượt dùng';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 lượt dùng';
+  }
+
+  @override
+  String get shopBuyTen => 'Mua · 10 cái';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Thu nhập: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Mua một lần';
+
+  @override
+  String get shopSellRefund => 'Bán sẽ hoàn lại một phần chi phí';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return 'Đã thêm $title vào hồ sơ';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'thưởng bộ +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Hoàn thành';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Đã thu thập · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Bán?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Bạn sẽ nhận $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Đã bán: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Hãy thêm bạn trước';
+
+  @override
+  String get inventoryGiftTitle => 'Tặng bộ sưu tập?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Tặng «$title» cho $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Đã tặng: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Không thể tải vật phẩm';
+
+  @override
+  String get inventoryNoCollections => 'Không có bộ sưu tập — mua trong cửa hàng';
+
+  @override
+  String get inventoryNoEmojis => 'Không có emoji — mua trong cửa hàng';
+
+  @override
+  String get inventoryNoFrames => 'Không có khung — thắng 10 trận giải (thành tựu)';
+
+  @override
+  String get inventoryNoStakes => 'Không có mức cược đã mua';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Còn $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Thu nhập: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Thu nhập ngày mai: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Có thể cược $amount vàng';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Có thể cược $amount bạc';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Đã nhận +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Không thể tải chat';
+
+  @override
+  String get chatsLoadListFailed => 'Không thể tải danh sách';
+
+  @override
+  String get chatsBlockedEmpty => 'Danh sách trống';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Đã chặn: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Không thể tạo chat';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Hãy thêm bạn trước, rồi mới mở chat.';
+
+  @override
+  String get chatsFriendsNotFound => 'Không tìm thấy bạn';
+
+  @override
+  String get chatsFindFriendHint => 'Tìm bạn theo biệt danh';
+
+  @override
+  String get chatsSelectChat => 'Chọn chat';
+
+  @override
+  String get chatsSelectHint => 'Chọn cuộc trò chuyện từ danh sách bên trái';
+
+  @override
+  String get chatEditFailed => 'Không thể sửa tin nhắn';
+
+  @override
+  String get chatSendFailed => 'Không thể gửi tin nhắn';
+
+  @override
+  String get chatDeleteFailed => 'Không thể xóa tin nhắn';
+
+  @override
+  String get chatEmojiSendFailed => 'Không thể gửi emoji';
+
+  @override
+  String get chatLoadFailed => 'Không thể tải tin nhắn';
+
+  @override
+  String get chatBackToGame => 'Quay lại trò chơi';
+
+  @override
+  String get chatBackToChats => 'Quay lại chat';
+
+  @override
+  String get chatActions => 'Thao tác chat';
+
+  @override
+  String get chatScrollToEnd => 'Đến cuối cuộc trò chuyện';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Trả lời $name';
+  }
+
+  @override
+  String get chatGift => 'Quà';
+
+  @override
+  String get chatCollection => 'Bộ sưu tập';
+
+  @override
+  String get chatGiftCollection => 'Quà · bộ sưu tập';
+
+  @override
+  String get chatThisUser => 'người dùng này';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Không thể tải sảnh.';
+
+  @override
+  String get gamesTapChangeStake => 'Chạm để đổi mức cược';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Chạm để đổi thời gian lượt';
+
+  @override
+  String get gamesTapChangeGrid => 'Chạm để đổi kích thước lưới';
+
+  @override
+  String get gamesSwapSidesHint => 'O có thể thành X sau nước đầu';
+
+  @override
+  String get gamesNoCenterHint => 'Nước đầu không được ở giữa';
+
+  @override
+  String get lobbyInviteSentShort => 'Đã gửi';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Đã gửi lời mời. Đang chờ phản hồi.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Dán vào chat hoặc tin nhắn gửi bạn';
+
+  @override
+  String get lobbyCopyLinkHint => 'Sao chép liên kết vào bộ nhớ tạm';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name mời bạn chơi';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name thắng';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Hết giờ. $name thắng';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds giây';
+  }
+
+  @override
+  String get adminTitle => 'Quản trị';
+
+  @override
+  String get tournamentsTitle => 'Giải đấu';
+
+  @override
+  String get profileAgeInvalid => 'Nhập tuổi từ 1 đến 111';
+
+  @override
+  String get profileSaveFailed => 'Không thể lưu hồ sơ';
+
+  @override
+  String get profileNameHint => 'Chữ Latinh, số, _ tối đa 10 ký tự';
+
+  @override
+  String get profileAgeHint => 'Từ 1 đến 111';
+
+  @override
+  String get profileAboutHint => 'Tối đa 100 ký tự (tùy chọn)';
+
+  @override
+  String get profileProcessingPhoto => 'Đang xử lý ảnh…';
+
+  @override
+  String get profileCropTitle => 'Chọn vùng ảnh đại diện';
+
+  @override
+  String get profileCropHint => 'Phóng to và di chuyển ảnh';
+
+  @override
+  String get profileApply => 'Áp dụng';
+
+  @override
+  String get profilePreparing => 'Đang chuẩn bị…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds giây';
+  }
+
+  @override
+  String get timeOneMin => '1 phút';
+
+  @override
+  String get timeTenMin => '10 phút';
 }

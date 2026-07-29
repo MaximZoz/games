@@ -761,4 +761,547 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get errPushPermission => 'ブラウザまたはシステム設定で通知を許可してください。';
+
+  @override
+  String get balanceTitle => '残高';
+
+  @override
+  String get coinBronze => 'ブロンズ';
+
+  @override
+  String get coinSilver => 'シルバー';
+
+  @override
+  String get coinGold => 'ゴールド';
+
+  @override
+  String get coinDiamond => 'ダイヤモンド';
+
+  @override
+  String get balanceZeroBronze => 'ブロンズ 0';
+
+  @override
+  String balanceBronzes(int count) {
+    return 'ブロンズ $count';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return 'シルバー $count';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return 'ゴールド $count';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return 'ダイヤモンド $count';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '1日 $amount';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'ブ';
+
+  @override
+  String get balanceAbbrSilver => 'シ';
+
+  @override
+  String get balanceAbbrGold => 'ゴ';
+
+  @override
+  String get commonBackHome => 'ホームに戻る';
+
+  @override
+  String get commonCopied => 'コピーしました';
+
+  @override
+  String get commonClear => 'クリア';
+
+  @override
+  String get commonTryLater => '後でもう一度お試しください。';
+
+  @override
+  String get commonTryRefresh => 'ページを更新してみてください。';
+
+  @override
+  String get coinsTitle => 'コイン';
+
+  @override
+  String get coinsLoginReward => 'ログイン報酬';
+
+  @override
+  String get coinsLoginAvailableToday => '今日の報酬を受け取れます';
+
+  @override
+  String get coinsLoginStreak => '毎日ログイン連続記録';
+
+  @override
+  String get coinsFriendReward => 'フレンド報酬';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return 'あなたのリンクからの登録で +$amount';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => '報酬を読み込めませんでした';
+
+  @override
+  String get coinsClaimReward => '報酬を受け取る';
+
+  @override
+  String get coinsAlreadyClaimed => '受け取り済み';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · 今日';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · あと1日';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · あと $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'フレンドを招待';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return 'あなたのリンクで登録した人ごとに +$amount';
+  }
+
+  @override
+  String get coinsCopyLink => 'リンクをコピー';
+
+  @override
+  String get coinsHowItWorks => '仕組み';
+
+  @override
+  String get coinsHowStep1 => 'リンクをコピーしてフレンドに送る';
+
+  @override
+  String get coinsHowStep2 => 'フレンドがそのリンクから登録する';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return '$amount が付与されます';
+  }
+
+  @override
+  String get achievementsTitle => '実績';
+
+  @override
+  String achievementsProgress(String progress) {
+    return '進捗: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'フレーム獲得';
+
+  @override
+  String get achievementsClaimed => '獲得済み';
+
+  @override
+  String get achievementsOpenFrame => 'フレームを開く';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return '$name をフレンドから削除しますか？';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => '削除';
+
+  @override
+  String get friendsRemove => 'フレンドから削除';
+
+  @override
+  String get friendsAcceptRequest => 'リクエストを承認';
+
+  @override
+  String get friendsDeclineRequest => 'リクエストを拒否';
+
+  @override
+  String get friendsCancelRequest => 'リクエストをキャンセル';
+
+  @override
+  String get friendsSendRequest => 'フレンドリクエストを送信';
+
+  @override
+  String get friendsRequestAlreadySent => 'リクエストは送信済みです';
+
+  @override
+  String get friendsIncomingStatus => '受信リクエスト';
+
+  @override
+  String get friendsOutgoingStatus => '送信リクエスト';
+
+  @override
+  String get friendsNotFriends => 'フレンドではありません';
+
+  @override
+  String get friendsCollapseSearch => '検索を閉じる';
+
+  @override
+  String get friendsExpandSearch => '検索を表示';
+
+  @override
+  String get friendsLoadFailed => 'フレンドを読み込めませんでした';
+
+  @override
+  String friendsSince(String date) {
+    return 'フレンド開始: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return '受信リクエスト: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return '送信リクエスト: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'ユーザー情報';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age 歳';
+  }
+
+  @override
+  String get shopBuy => '購入';
+
+  @override
+  String get shopBuyTitle => '購入しますか？';
+
+  @override
+  String get shopBuyStakeTitle => '賭け金を購入しますか？';
+
+  @override
+  String get shopBuyEmojiTitle => '絵文字を購入しますか？';
+
+  @override
+  String get shopBuyCollectionTitle => 'コレクションを購入しますか？';
+
+  @override
+  String shopPrice(String price) {
+    return '価格: $price';
+  }
+
+  @override
+  String get shopOwned => '購入済み';
+
+  @override
+  String get shopEmpty => 'まだ何もありません';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title を購入しました';
+  }
+
+  @override
+  String get shopEmojiUses => '取得: 10回分';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10回分';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10回分';
+  }
+
+  @override
+  String get shopBuyTen => '購入 · 10個';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return '収入: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => '一度きりの購入';
+
+  @override
+  String get shopSellRefund => '売却すると費用の一部が戻ります';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title をプロフィールに追加しました';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'セットボーナス +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => '完成';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return '収集済み · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => '売却しますか？';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return '$amount を受け取ります';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return '売却済み: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => '先にフレンドを追加してください';
+
+  @override
+  String get inventoryGiftTitle => 'コレクションを贈りますか？';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return '「$title」を $name に贈りますか？';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return '贈呈済み: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'アイテムを読み込めませんでした';
+
+  @override
+  String get inventoryNoCollections => 'コレクションがありません — ショップで購入';
+
+  @override
+  String get inventoryNoEmojis => '絵文字がありません — ショップで購入';
+
+  @override
+  String get inventoryNoFrames => 'フレームがありません — リーグで10勝（実績）';
+
+  @override
+  String get inventoryNoStakes => '購入済みの賭け金がありません';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return '残り $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return '収入: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return '明日の収入: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return '$amount ゴールドを賭けられます';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return '$amount シルバーを賭けられます';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return '+$amount を受け取りました';
+  }
+
+  @override
+  String get chatsLoadFailed => 'チャットを読み込めませんでした';
+
+  @override
+  String get chatsLoadListFailed => 'リストを読み込めませんでした';
+
+  @override
+  String get chatsBlockedEmpty => 'リストは空です';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'ブロック済み: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'チャットを作成できませんでした';
+
+  @override
+  String get chatsNeedFriendsFirst => '先にフレンドを追加してからチャットを開けます。';
+
+  @override
+  String get chatsFriendsNotFound => 'フレンドが見つかりません';
+
+  @override
+  String get chatsFindFriendHint => 'ニックネームでフレンドを探す';
+
+  @override
+  String get chatsSelectChat => 'チャットを選択';
+
+  @override
+  String get chatsSelectHint => '左のリストから会話を選んでください';
+
+  @override
+  String get chatEditFailed => 'メッセージを編集できませんでした';
+
+  @override
+  String get chatSendFailed => 'メッセージを送信できませんでした';
+
+  @override
+  String get chatDeleteFailed => 'メッセージを削除できませんでした';
+
+  @override
+  String get chatEmojiSendFailed => '絵文字を送信できませんでした';
+
+  @override
+  String get chatLoadFailed => 'メッセージを読み込めませんでした';
+
+  @override
+  String get chatBackToGame => 'ゲームに戻る';
+
+  @override
+  String get chatBackToChats => 'チャットに戻る';
+
+  @override
+  String get chatActions => 'チャット操作';
+
+  @override
+  String get chatScrollToEnd => '会話の末尾へ';
+
+  @override
+  String chatReplyingTo(String name) {
+    return '$name への返信';
+  }
+
+  @override
+  String get chatGift => 'ギフト';
+
+  @override
+  String get chatCollection => 'コレクション';
+
+  @override
+  String get chatGiftCollection => 'ギフト · コレクション';
+
+  @override
+  String get chatThisUser => 'このユーザー';
+
+  @override
+  String get gamesLobbyLoadFailed => 'ロビーを読み込めませんでした。';
+
+  @override
+  String get gamesTapChangeStake => 'タップして賭け金を変更';
+
+  @override
+  String get gamesTapChangeTurnTime => 'タップして持ち時間を変更';
+
+  @override
+  String get gamesTapChangeGrid => 'タップしてグリッドサイズを変更';
+
+  @override
+  String get gamesSwapSidesHint => '1手目の後、OがXになることがあります';
+
+  @override
+  String get gamesNoCenterHint => '初手は中央に置けません';
+
+  @override
+  String get lobbyInviteSentShort => '送信済み';
+
+  @override
+  String get lobbyInvitesSentWaiting => '招待を送信しました。返信を待っています。';
+
+  @override
+  String get lobbyLinkCopiedHint => 'チャットやフレンドへのメッセージに貼り付けてください';
+
+  @override
+  String get lobbyCopyLinkHint => 'リンクをクリップボードにコピー';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name があなたをゲームに招待しています';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name の勝ち';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return '時間切れ。$name の勝ち';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String get adminTitle => '管理画面';
+
+  @override
+  String get tournamentsTitle => 'トーナメント';
+
+  @override
+  String get profileAgeInvalid => '年齢は1〜111で入力してください';
+
+  @override
+  String get profileSaveFailed => 'プロフィールを保存できませんでした';
+
+  @override
+  String get profileNameHint => 'ラテン文字、数字、_、最大10文字';
+
+  @override
+  String get profileAgeHint => '1〜111';
+
+  @override
+  String get profileAboutHint => '最大100文字（任意）';
+
+  @override
+  String get profileProcessingPhoto => '写真を処理中…';
+
+  @override
+  String get profileCropTitle => 'アバター範囲を選択';
+
+  @override
+  String get profileCropHint => '写真を拡大・移動';
+
+  @override
+  String get profileApply => '適用';
+
+  @override
+  String get profilePreparing => '準備中…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String get timeOneMin => '1分';
+
+  @override
+  String get timeTenMin => '10分';
 }

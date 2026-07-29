@@ -761,4 +761,547 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get errPushPermission => '브라우저 또는 시스템 설정에서 알림을 허용해 주세요.';
+
+  @override
+  String get balanceTitle => '잔액';
+
+  @override
+  String get coinBronze => '브론즈';
+
+  @override
+  String get coinSilver => '실버';
+
+  @override
+  String get coinGold => '골드';
+
+  @override
+  String get coinDiamond => '다이아몬드';
+
+  @override
+  String get balanceZeroBronze => '브론즈 0';
+
+  @override
+  String balanceBronzes(int count) {
+    return '브론즈 $count';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '실버 $count';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '골드 $count';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '다이아몬드 $count';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '하루 $amount';
+  }
+
+  @override
+  String get balanceAbbrBronze => '브';
+
+  @override
+  String get balanceAbbrSilver => '실';
+
+  @override
+  String get balanceAbbrGold => '골';
+
+  @override
+  String get commonBackHome => '홈으로 돌아가기';
+
+  @override
+  String get commonCopied => '복사됨';
+
+  @override
+  String get commonClear => '지우기';
+
+  @override
+  String get commonTryLater => '나중에 다시 시도하세요.';
+
+  @override
+  String get commonTryRefresh => '페이지를 새로고침해 보세요.';
+
+  @override
+  String get coinsTitle => '코인';
+
+  @override
+  String get coinsLoginReward => '로그인 보상';
+
+  @override
+  String get coinsLoginAvailableToday => '오늘의 보상 수령 가능';
+
+  @override
+  String get coinsLoginStreak => '일일 로그인 연속';
+
+  @override
+  String get coinsFriendReward => '친구 보상';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '내 링크로 가입 시 +$amount';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => '보상을 불러오지 못했습니다';
+
+  @override
+  String get coinsClaimReward => '보상 받기';
+
+  @override
+  String get coinsAlreadyClaimed => '이미 받음';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · 오늘';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · 1일 남음';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · $remaining 남음';
+  }
+
+  @override
+  String get coinsInviteFriend => '친구 초대';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '내 링크로 가입하는 사람마다 +$amount';
+  }
+
+  @override
+  String get coinsCopyLink => '링크 복사';
+
+  @override
+  String get coinsHowItWorks => '이용 방법';
+
+  @override
+  String get coinsHowStep1 => '링크를 복사해 친구에게 보내세요';
+
+  @override
+  String get coinsHowStep2 => '친구가 그 링크로 가입합니다';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return '$amount을(를) 받습니다';
+  }
+
+  @override
+  String get achievementsTitle => '업적';
+
+  @override
+  String achievementsProgress(String progress) {
+    return '진행도: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => '프레임 획득';
+
+  @override
+  String get achievementsClaimed => '획득함';
+
+  @override
+  String get achievementsOpenFrame => '프레임 열기';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return '$name님을 친구에서 삭제하시겠습니까?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => '삭제';
+
+  @override
+  String get friendsRemove => '친구에서 삭제';
+
+  @override
+  String get friendsAcceptRequest => '요청 수락';
+
+  @override
+  String get friendsDeclineRequest => '요청 거절';
+
+  @override
+  String get friendsCancelRequest => '요청 취소';
+
+  @override
+  String get friendsSendRequest => '친구 요청 보내기';
+
+  @override
+  String get friendsRequestAlreadySent => '요청이 이미 전송됨';
+
+  @override
+  String get friendsIncomingStatus => '받은 요청';
+
+  @override
+  String get friendsOutgoingStatus => '보낸 요청';
+
+  @override
+  String get friendsNotFriends => '친구가 아님';
+
+  @override
+  String get friendsCollapseSearch => '검색 접기';
+
+  @override
+  String get friendsExpandSearch => '검색 표시';
+
+  @override
+  String get friendsLoadFailed => '친구를 불러오지 못했습니다';
+
+  @override
+  String friendsSince(String date) {
+    return '친구 시작: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return '받은 요청: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return '보낸 요청: $date';
+  }
+
+  @override
+  String get userInfoTitle => '사용자 정보';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age세';
+  }
+
+  @override
+  String get shopBuy => '구매';
+
+  @override
+  String get shopBuyTitle => '구매할까요?';
+
+  @override
+  String get shopBuyStakeTitle => '판돈을 구매할까요?';
+
+  @override
+  String get shopBuyEmojiTitle => '이모지를 구매할까요?';
+
+  @override
+  String get shopBuyCollectionTitle => '컬렉션을 구매할까요?';
+
+  @override
+  String shopPrice(String price) {
+    return '가격: $price';
+  }
+
+  @override
+  String get shopOwned => '구매함';
+
+  @override
+  String get shopEmpty => '아직 비어 있음';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title 구매 완료';
+  }
+
+  @override
+  String get shopEmojiUses => '획득: 10회 사용';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10회 사용';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10회 사용';
+  }
+
+  @override
+  String get shopBuyTen => '구매 · 10개';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return '수익: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => '일회성 구매';
+
+  @override
+  String get shopSellRefund => '판매 시 비용의 일부가 반환됩니다';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title이(가) 프로필에 추가됨';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return '세트 보너스 +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => '완성';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return '수집 · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => '판매할까요?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return '$amount을(를) 받습니다';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return '판매됨: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => '먼저 친구를 추가하세요';
+
+  @override
+  String get inventoryGiftTitle => '컬렉션을 선물할까요?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return '«$title»을(를) $name님에게 선물할까요?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return '선물함: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => '아이템을 불러오지 못했습니다';
+
+  @override
+  String get inventoryNoCollections => '컬렉션 없음 — 상점에서 구매하세요';
+
+  @override
+  String get inventoryNoEmojis => '이모지 없음 — 상점에서 구매하세요';
+
+  @override
+  String get inventoryNoFrames => '프레임 없음 — 리그에서 10승 (업적)';
+
+  @override
+  String get inventoryNoStakes => '구매한 판돈 없음';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return '$count개 남음';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return '수익: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return '내일 수익: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return '$amount 골드를 걸 수 있습니다';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return '$amount 실버를 걸 수 있습니다';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return '+$amount 수령';
+  }
+
+  @override
+  String get chatsLoadFailed => '채팅을 불러오지 못했습니다';
+
+  @override
+  String get chatsLoadListFailed => '목록을 불러오지 못했습니다';
+
+  @override
+  String get chatsBlockedEmpty => '목록이 비어 있습니다';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return '차단됨: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => '채팅을 만들지 못했습니다';
+
+  @override
+  String get chatsNeedFriendsFirst => '먼저 친구를 추가한 후 채팅을 열 수 있습니다.';
+
+  @override
+  String get chatsFriendsNotFound => '친구를 찾을 수 없습니다';
+
+  @override
+  String get chatsFindFriendHint => '닉네임으로 친구 찾기';
+
+  @override
+  String get chatsSelectChat => '채팅 선택';
+
+  @override
+  String get chatsSelectHint => '왼쪽 목록에서 대화를 선택하세요';
+
+  @override
+  String get chatEditFailed => '메시지를 수정하지 못했습니다';
+
+  @override
+  String get chatSendFailed => '메시지를 보내지 못했습니다';
+
+  @override
+  String get chatDeleteFailed => '메시지를 삭제하지 못했습니다';
+
+  @override
+  String get chatEmojiSendFailed => '이모지를 보내지 못했습니다';
+
+  @override
+  String get chatLoadFailed => '메시지를 불러오지 못했습니다';
+
+  @override
+  String get chatBackToGame => '게임으로 돌아가기';
+
+  @override
+  String get chatBackToChats => '채팅으로 돌아가기';
+
+  @override
+  String get chatActions => '채팅 작업';
+
+  @override
+  String get chatScrollToEnd => '대화 끝으로';
+
+  @override
+  String chatReplyingTo(String name) {
+    return '$name님에게 답장';
+  }
+
+  @override
+  String get chatGift => '선물';
+
+  @override
+  String get chatCollection => '컬렉션';
+
+  @override
+  String get chatGiftCollection => '선물 · 컬렉션';
+
+  @override
+  String get chatThisUser => '이 사용자';
+
+  @override
+  String get gamesLobbyLoadFailed => '로비를 불러오지 못했습니다.';
+
+  @override
+  String get gamesTapChangeStake => '탭하여 판돈 변경';
+
+  @override
+  String get gamesTapChangeTurnTime => '탭하여 턴 시간 변경';
+
+  @override
+  String get gamesTapChangeGrid => '탭하여 격자 크기 변경';
+
+  @override
+  String get gamesSwapSidesHint => '첫 수 후 O가 X가 될 수 있음';
+
+  @override
+  String get gamesNoCenterHint => '첫 수는 중앙에 둘 수 없음';
+
+  @override
+  String get lobbyInviteSentShort => '보냄';
+
+  @override
+  String get lobbyInvitesSentWaiting => '초대가 전송되었습니다. 응답을 기다리는 중.';
+
+  @override
+  String get lobbyLinkCopiedHint => '채팅이나 친구에게 보내는 메시지에 붙여넣으세요';
+
+  @override
+  String get lobbyCopyLinkHint => '링크를 클립보드에 복사';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name님이 게임에 초대합니다';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return '$name 승리';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return '시간 종료. $name 승리';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds초';
+  }
+
+  @override
+  String get adminTitle => '관리자';
+
+  @override
+  String get tournamentsTitle => '토너먼트';
+
+  @override
+  String get profileAgeInvalid => '나이는 1에서 111 사이로 입력하세요';
+
+  @override
+  String get profileSaveFailed => '프로필을 저장하지 못했습니다';
+
+  @override
+  String get profileNameHint => '라틴 문자, 숫자, _ 최대 10자';
+
+  @override
+  String get profileAgeHint => '1에서 111';
+
+  @override
+  String get profileAboutHint => '최대 100자 (선택)';
+
+  @override
+  String get profileProcessingPhoto => '사진 처리 중…';
+
+  @override
+  String get profileCropTitle => '아바타 영역 선택';
+
+  @override
+  String get profileCropHint => '사진을 확대하고 이동하세요';
+
+  @override
+  String get profileApply => '적용';
+
+  @override
+  String get profilePreparing => '준비 중…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds초';
+  }
+
+  @override
+  String get timeOneMin => '1분';
+
+  @override
+  String get timeTenMin => '10분';
 }

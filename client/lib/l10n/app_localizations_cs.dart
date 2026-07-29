@@ -761,4 +761,547 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get errPushPermission => 'Povolte oznámení v nastavení prohlížeče nebo systému.';
+
+  @override
+  String get balanceTitle => 'Zůstatek';
+
+  @override
+  String get coinBronze => 'Bronz';
+
+  @override
+  String get coinSilver => 'Stříbro';
+
+  @override
+  String get coinGold => 'Zlato';
+
+  @override
+  String get coinDiamond => 'Diamant';
+
+  @override
+  String get balanceZeroBronze => '0 bronzových';
+
+  @override
+  String balanceBronzes(int count) {
+    return '$count bronzových';
+  }
+
+  @override
+  String balanceSilvers(int count) {
+    return '$count stříbrných';
+  }
+
+  @override
+  String balanceGolds(int count) {
+    return '$count zlatých';
+  }
+
+  @override
+  String balanceDiamonds(int count) {
+    return '$count diamantů';
+  }
+
+  @override
+  String balancePerDay(String amount) {
+    return '$amount denně';
+  }
+
+  @override
+  String get balanceAbbrBronze => 'br';
+
+  @override
+  String get balanceAbbrSilver => 'st.';
+
+  @override
+  String get balanceAbbrGold => 'zl.';
+
+  @override
+  String get commonBackHome => 'Zpět na hlavní';
+
+  @override
+  String get commonCopied => 'Zkopírováno';
+
+  @override
+  String get commonClear => 'Vymazat';
+
+  @override
+  String get commonTryLater => 'Zkuste to později.';
+
+  @override
+  String get commonTryRefresh => 'Zkuste obnovit stránku.';
+
+  @override
+  String get coinsTitle => 'Mince';
+
+  @override
+  String get coinsLoginReward => 'Odměna za přihlášení';
+
+  @override
+  String get coinsLoginAvailableToday => 'Dnešní odměna je k dispozici';
+
+  @override
+  String get coinsLoginStreak => 'Denní série přihlášení';
+
+  @override
+  String get coinsFriendReward => 'Odměna za přítele';
+
+  @override
+  String coinsFriendRewardHint(String amount) {
+    return '+$amount za registraci přes váš odkaz';
+  }
+
+  @override
+  String get coinsLoadRewardsFailed => 'Nepodařilo se načíst odměny';
+
+  @override
+  String get coinsClaimReward => 'Vyzvednout odměnu';
+
+  @override
+  String get coinsAlreadyClaimed => 'Již vyzvednuto';
+
+  @override
+  String coinsStreakToday(int done, int target) {
+    return '$done/$target · dnes';
+  }
+
+  @override
+  String coinsStreakOneDayLeft(int done, int target) {
+    return '$done/$target · zbývá 1 den';
+  }
+
+  @override
+  String coinsStreakDaysLeft(int done, int target, int remaining) {
+    return '$done/$target · zbývá $remaining';
+  }
+
+  @override
+  String get coinsInviteFriend => 'Pozvěte přítele';
+
+  @override
+  String coinsInviteHint(String amount) {
+    return '+$amount za každého, kdo se zaregistruje přes váš odkaz';
+  }
+
+  @override
+  String get coinsCopyLink => 'Kopírovat odkaz';
+
+  @override
+  String get coinsHowItWorks => 'Jak to funguje';
+
+  @override
+  String get coinsHowStep1 => 'Zkopírujte odkaz a pošlete ho příteli';
+
+  @override
+  String get coinsHowStep2 => 'Přítel se zaregistruje přes tento odkaz';
+
+  @override
+  String coinsHowStep3(String amount) {
+    return 'Obdržíte $amount';
+  }
+
+  @override
+  String get achievementsTitle => 'Úspěchy';
+
+  @override
+  String achievementsProgress(String progress) {
+    return 'Postup: $progress';
+  }
+
+  @override
+  String get achievementsFrameClaimed => 'Rámeček získán';
+
+  @override
+  String get achievementsClaimed => 'Získáno';
+
+  @override
+  String get achievementsOpenFrame => 'Otevřít rámeček';
+
+  @override
+  String friendsRemoveConfirm(String name) {
+    return 'Opravdu chcete odstranit $name z přátel?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAction => 'Odebrat';
+
+  @override
+  String get friendsRemove => 'Odebrat z přátel';
+
+  @override
+  String get friendsAcceptRequest => 'Přijmout žádost';
+
+  @override
+  String get friendsDeclineRequest => 'Odmítnout žádost';
+
+  @override
+  String get friendsCancelRequest => 'Zrušit žádost';
+
+  @override
+  String get friendsSendRequest => 'Poslat žádost o přátelství';
+
+  @override
+  String get friendsRequestAlreadySent => 'Žádost už byla odeslána';
+
+  @override
+  String get friendsIncomingStatus => 'Příchozí žádost';
+
+  @override
+  String get friendsOutgoingStatus => 'Odchozí žádost';
+
+  @override
+  String get friendsNotFriends => 'Nejsou přátelé';
+
+  @override
+  String get friendsCollapseSearch => 'Sbalit hledání';
+
+  @override
+  String get friendsExpandSearch => 'Zobrazit hledání';
+
+  @override
+  String get friendsLoadFailed => 'Nepodařilo se načíst přátele';
+
+  @override
+  String friendsSince(String date) {
+    return 'Přátelé od: $date';
+  }
+
+  @override
+  String friendsIncomingAt(String date) {
+    return 'Příchozí žádost: $date';
+  }
+
+  @override
+  String friendsOutgoingAt(String date) {
+    return 'Odchozí žádost: $date';
+  }
+
+  @override
+  String get userInfoTitle => 'Informace o uživateli';
+
+  @override
+  String profileAgeYears(int age) {
+    return '$age let';
+  }
+
+  @override
+  String get shopBuy => 'Koupit';
+
+  @override
+  String get shopBuyTitle => 'Koupit?';
+
+  @override
+  String get shopBuyStakeTitle => 'Koupit sázku?';
+
+  @override
+  String get shopBuyEmojiTitle => 'Koupit emoji?';
+
+  @override
+  String get shopBuyCollectionTitle => 'Koupit kolekci?';
+
+  @override
+  String shopPrice(String price) {
+    return 'Cena: $price';
+  }
+
+  @override
+  String get shopOwned => 'Zakoupeno';
+
+  @override
+  String get shopEmpty => 'Zatím prázdné';
+
+  @override
+  String shopPurchased(String title) {
+    return '$title zakoupeno';
+  }
+
+  @override
+  String get shopEmojiUses => 'Získáte: 10 použití';
+
+  @override
+  String shopEmojiBought(String title) {
+    return '$title: +10 použití';
+  }
+
+  @override
+  String shopEmojiPriceUses(String price) {
+    return '$price · 10 použití';
+  }
+
+  @override
+  String get shopBuyTen => 'Koupit · 10 ks';
+
+  @override
+  String shopDailyIncome(String amount) {
+    return 'Příjem: $amount';
+  }
+
+  @override
+  String get shopBuyOnce => 'Jednorázový nákup';
+
+  @override
+  String get shopSellRefund => 'Prodej vrátí část ceny';
+
+  @override
+  String shopCollectionAdded(String title) {
+    return '$title přidáno do profilu';
+  }
+
+  @override
+  String shopSetBonus(int percent) {
+    return 'bonus sady +$percent%';
+  }
+
+  @override
+  String get shopSetComplete => 'Kompletní';
+
+  @override
+  String shopSetProgress(int owned, int total) {
+    return 'Sebráno · $owned/$total';
+  }
+
+  @override
+  String get inventorySellTitle => 'Prodat?';
+
+  @override
+  String inventorySellDesc(String amount) {
+    return 'Získáte $amount';
+  }
+
+  @override
+  String inventorySold(String amount) {
+    return 'Prodáno: +$amount';
+  }
+
+  @override
+  String get inventoryNeedFriends => 'Nejprve přidejte přátele';
+
+  @override
+  String get inventoryGiftTitle => 'Darovat kolekci?';
+
+  @override
+  String inventoryGiftDesc(String title, String name) {
+    return 'Darovat „$title“ uživateli $name?';
+  }
+
+  @override
+  String inventoryGifted(String title) {
+    return 'Darováno: $title';
+  }
+
+  @override
+  String get inventoryLoadFailed => 'Nepodařilo se načíst předměty';
+
+  @override
+  String get inventoryNoCollections => 'Žádné kolekce — kupte je v obchodě';
+
+  @override
+  String get inventoryNoEmojis => 'Žádná emoji — kupte je v obchodě';
+
+  @override
+  String get inventoryNoFrames => 'Žádné rámečky — vyhrajte 10 ligových her (úspěchy)';
+
+  @override
+  String get inventoryNoStakes => 'Žádné zakoupené sázky';
+
+  @override
+  String inventoryEmojiLeft(int count) {
+    return 'Zbývá $count';
+  }
+
+  @override
+  String inventoryIncomeReady(String amount) {
+    return 'Příjem: +$amount';
+  }
+
+  @override
+  String inventoryIncomeTomorrow(String amount) {
+    return 'Příjem zítra: $amount';
+  }
+
+  @override
+  String inventoryStakeGold(String amount) {
+    return 'Můžete vsadit $amount zlata';
+  }
+
+  @override
+  String inventoryStakeSilver(String amount) {
+    return 'Můžete vsadit $amount stříbra';
+  }
+
+  @override
+  String inventoryClaimedAmount(String amount) {
+    return 'Získáno +$amount';
+  }
+
+  @override
+  String get chatsLoadFailed => 'Nepodařilo se načíst chaty';
+
+  @override
+  String get chatsLoadListFailed => 'Nepodařilo se načíst seznam';
+
+  @override
+  String get chatsBlockedEmpty => 'Seznam je prázdný';
+
+  @override
+  String chatsBlockedAt(String date) {
+    return 'Zablokováno: $date';
+  }
+
+  @override
+  String get chatsCreateFailed => 'Nepodařilo se vytvořit chat';
+
+  @override
+  String get chatsNeedFriendsFirst => 'Nejprve přidejte přátele, pak můžete otevřít chat.';
+
+  @override
+  String get chatsFriendsNotFound => 'Přátelé nenalezeni';
+
+  @override
+  String get chatsFindFriendHint => 'Najít přítele podle přezdívky';
+
+  @override
+  String get chatsSelectChat => 'Vyberte chat';
+
+  @override
+  String get chatsSelectHint => 'Vyberte konverzaci ze seznamu vlevo';
+
+  @override
+  String get chatEditFailed => 'Nepodařilo se upravit zprávu';
+
+  @override
+  String get chatSendFailed => 'Nepodařilo se odeslat zprávu';
+
+  @override
+  String get chatDeleteFailed => 'Nepodařilo se smazat zprávu';
+
+  @override
+  String get chatEmojiSendFailed => 'Nepodařilo se odeslat emoji';
+
+  @override
+  String get chatLoadFailed => 'Nepodařilo se načíst zprávy';
+
+  @override
+  String get chatBackToGame => 'Zpět do hry';
+
+  @override
+  String get chatBackToChats => 'Zpět k chatům';
+
+  @override
+  String get chatActions => 'Akce chatu';
+
+  @override
+  String get chatScrollToEnd => 'Na konec konverzace';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Odpověď pro $name';
+  }
+
+  @override
+  String get chatGift => 'Dárek';
+
+  @override
+  String get chatCollection => 'Kolekce';
+
+  @override
+  String get chatGiftCollection => 'Dárek · kolekce';
+
+  @override
+  String get chatThisUser => 'tohoto uživatele';
+
+  @override
+  String get gamesLobbyLoadFailed => 'Nepodařilo se načíst lobby.';
+
+  @override
+  String get gamesTapChangeStake => 'Klepněte pro změnu sázky';
+
+  @override
+  String get gamesTapChangeTurnTime => 'Klepněte pro změnu času na tah';
+
+  @override
+  String get gamesTapChangeGrid => 'Klepněte pro změnu velikosti mřížky';
+
+  @override
+  String get gamesSwapSidesHint => 'O se může stát X po 1. tahu';
+
+  @override
+  String get gamesNoCenterHint => 'První tah nesmí být na střed';
+
+  @override
+  String get lobbyInviteSentShort => 'Odesláno';
+
+  @override
+  String get lobbyInvitesSentWaiting => 'Pozvánky odeslány. Čekejte na odpověď.';
+
+  @override
+  String get lobbyLinkCopiedHint => 'Vložte ji do chatu nebo zprávy příteli';
+
+  @override
+  String get lobbyCopyLinkHint => 'Kopírovat odkaz do schránky';
+
+  @override
+  String lobbyCreatorInvites(String name) {
+    return '$name vás zve ke hře';
+  }
+
+  @override
+  String gameOpponentWon(String name) {
+    return 'Vyhrál $name';
+  }
+
+  @override
+  String gameOpponentWonTimeout(String name) {
+    return 'Čas vypršel. Vyhrál $name';
+  }
+
+  @override
+  String gameSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get adminTitle => 'Administrace';
+
+  @override
+  String get tournamentsTitle => 'Turnaje';
+
+  @override
+  String get profileAgeInvalid => 'Zadejte věk od 1 do 111';
+
+  @override
+  String get profileSaveFailed => 'Nepodařilo se uložit profil';
+
+  @override
+  String get profileNameHint => 'Latinka, číslice, _ do 10 znaků';
+
+  @override
+  String get profileAgeHint => 'Od 1 do 111';
+
+  @override
+  String get profileAboutHint => 'Až 100 znaků (volitelné)';
+
+  @override
+  String get profileProcessingPhoto => 'Zpracování fotky…';
+
+  @override
+  String get profileCropTitle => 'Vyberte oblast avataru';
+
+  @override
+  String get profileCropHint => 'Přibližte a posuňte fotku';
+
+  @override
+  String get profileApply => 'Použít';
+
+  @override
+  String get profilePreparing => 'Příprava…';
+
+  @override
+  String timeSecondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get timeOneMin => '1 min';
+
+  @override
+  String get timeTenMin => '10 min';
 }
