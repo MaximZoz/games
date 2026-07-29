@@ -12,6 +12,14 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+function resolveTargetUrl(raw) {
+  try {
+    return new URL(raw || '/', self.location.origin);
+  } catch (_) {
+    return new URL('/', self.location.origin);
+  }
+}
+
 self.addEventListener('push', (event) => {
   let data = {
     title: 'Zozu Games',
@@ -54,7 +62,12 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+  const target = resolveTargetUrl(
+    (event.notification.data && event.notification.data.url) || '/',
+  );
+  // Path для go_router (без полной перезагрузки SPA).
+  const appPath = `${target.pathname}${target.search}${target.hash}` || '/';
+
   event.waitUntil(
     (async () => {
       const all = await self.clients.matchAll({
@@ -62,20 +75,20 @@ self.addEventListener('notificationclick', (event) => {
         includeUncontrolled: true,
       });
       for (const client of all) {
+        let sameOrigin = false;
+        try {
+          sameOrigin = new URL(client.url).origin === self.location.origin;
+        } catch (_) {}
+        if (!sameOrigin) continue;
         if ('focus' in client) {
           await client.focus();
-          if ('navigate' in client) {
-            try {
-              await client.navigate(targetUrl);
-            } catch (_) {}
-          } else {
-            client.postMessage({ type: 'notification_click', url: targetUrl });
-          }
-          return;
         }
+        // Не вызывать client.navigate() — на iOS это reload + splash «Zozu Games».
+        client.postMessage({ type: 'notification_click', url: appPath });
+        return;
       }
       if (self.clients.openWindow) {
-        await self.clients.openWindow(targetUrl);
+        await self.clients.openWindow(target.href);
       }
     })(),
   );
