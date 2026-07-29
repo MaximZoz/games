@@ -1628,89 +1628,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     );
   }
 
-  Widget _buildRoundIconButton({
-    required IconData icon,
-    required VoidCallback? onPressed,
-    required String tooltip,
-  }) {
-    // Та же форма рамки, что у лупы / кнопок тулбара чатов.
-    return _buildHeaderFrameIconButton(
-      icon: icon,
-      tooltip: tooltip,
-      onPressed: onPressed,
-      iconColor: AppColors.textPrimary,
-    );
-  }
-
-  Future<void> _sendOrAcceptFriendFromChat(ChatPreviewItem item) async {
-    final userId = item.user.id.trim();
-    if (userId.isEmpty) return;
-    final actionKey = 'friend_$userId';
-    if (_chatActionInFlight.contains(actionKey)) return;
-
-    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
-    if (snapshot?.friends.any((f) => f.user.id == userId) == true) return;
-
-    String? incomingRequestId;
-    for (final r in snapshot?.incoming ?? const []) {
-      if (r.user.id == userId) {
-        incomingRequestId = r.requestId;
-        break;
-      }
-    }
-    final hasOutgoing =
-        snapshot?.outgoing.any((r) => r.user.id == userId) == true;
-    if (hasOutgoing && (incomingRequestId == null || incomingRequestId.isEmpty)) {
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: 'Заявка уже отправлена',
-        kind: AppSnackKind.info,
-      );
-      return;
-    }
-
-    setState(() => _chatActionInFlight.add(actionKey));
-    try {
-      final repo = ref.read(friendsRepositoryProvider);
-      if (incomingRequestId != null && incomingRequestId.isNotEmpty) {
-        await repo.acceptRequest(incomingRequestId);
-      } else {
-        await repo.sendRequest(userId);
-      }
-      await refreshFriendsSnapshot(ref);
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: incomingRequestId != null && incomingRequestId.isNotEmpty
-            ? 'Заявка принята'
-            : 'Заявка отправлена',
-        kind: AppSnackKind.success,
-      );
-    } on FriendsException catch (e) {
-      if (e.statusCode == 401) {
-        await ref.read(authStateProvider.notifier).logout();
-        if (mounted) context.go('/login');
-        return;
-      }
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: e.message,
-        kind: AppSnackKind.error,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: formatUserError(e),
-        kind: AppSnackKind.error,
-      );
-    } finally {
-      if (mounted) setState(() => _chatActionInFlight.remove(actionKey));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Очистка/блок из комнаты (десктоп split-view): комната не владеет _chats.
@@ -1739,7 +1656,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final blockedUsers = ref.watch(blockedUsersProvider).valueOrNull ?? const <BlockedChatUserItem>[];
-    final friendsSnapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     final chats = _chats;
     final hasBlockedUsers = blockedUsers.isNotEmpty;
@@ -2135,102 +2051,33 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                     ],
                                                   ),
                                                 const SizedBox(height: 6),
-                                                Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Builder(
-                                                      builder: (context) {
-                                                        final peerId =
-                                                            item.user.id.trim();
-                                                        final isFriend =
-                                                            peerId.isNotEmpty &&
-                                                                friendsSnapshot
-                                                                        ?.friends
-                                                                        .any((f) =>
-                                                                            f.user.id ==
-                                                                            peerId) ==
-                                                                    true;
-                                                        if (isFriend) {
-                                                          return const SizedBox
-                                                              .shrink();
-                                                        }
-                                                        final hasOutgoing =
-                                                            peerId.isNotEmpty &&
-                                                                friendsSnapshot
-                                                                        ?.outgoing
-                                                                        .any((r) =>
-                                                                            r.user.id ==
-                                                                            peerId) ==
-                                                                    true;
-                                                        final hasIncoming =
-                                                            peerId.isNotEmpty &&
-                                                                friendsSnapshot
-                                                                        ?.incoming
-                                                                        .any((r) =>
-                                                                            r.user.id ==
-                                                                            peerId) ==
-                                                                    true;
-                                                        final friendBusy =
-                                                            _chatActionInFlight
-                                                                .contains(
-                                                                    'friend_$peerId');
-                                                        return Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  right: 6),
-                                                          child:
-                                                              _buildRoundIconButton(
-                                                            icon: Icons
-                                                                .person_add_alt_1_rounded,
-                                                            onPressed: itemBusy ||
-                                                                    friendBusy ||
-                                                                    hasOutgoing
-                                                                ? null
-                                                                : () => unawaited(
-                                                                      _sendOrAcceptFriendFromChat(
-                                                                          item),
-                                                                    ),
-                                                            tooltip: hasIncoming
-                                                                ? 'Принять заявку в друзья'
-                                                                : (hasOutgoing
-                                                                    ? 'Заявка уже отправлена'
-                                                                    : 'Отправить заявку в друзья'),
-                                                          ),
-                                                        );
-                                                      },
+                                                if (unread > 0)
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 7,
+                                                            vertical: 3),
+                                                    decoration:
+                                                        BoxDecoration(
+                                                      color:
+                                                          AppColors.accentStart,
+                                                      borderRadius:
+                                                          BorderRadius
+                                                              .circular(999),
                                                     ),
-                                                    if (unread > 0) ...[
-                                                      const SizedBox(width: 6),
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                horizontal: 7,
-                                                                vertical: 3),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              AppColors.accentStart,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(999),
-                                                        ),
-                                                        child: Text(
-                                                          unread > 99
-                                                              ? '99+'
-                                                              : '$unread',
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 11,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                        ),
+                                                    child: Text(
+                                                      unread > 99
+                                                          ? '99+'
+                                                          : '$unread',
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
-                                                    ],
-                                                  ],
-                                                ),
+                                                    ),
+                                                  ),
                                               ],
                                             ),
                                           ],
