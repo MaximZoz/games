@@ -626,7 +626,9 @@ Widget _navIcon(
   } else if (item.path == '/friends') {
     badgeValue = incomingFriends;
   } else if (item.path == '/games') {
-    badgeValue = gamesMyTurn + gameInvitesCount;
+    // На табе «Игры» бейдж «мой ход» не нужен — ход уже виден в партии.
+    // Приглашения в новую игру оставляем.
+    badgeValue = (selected ? 0 : gamesMyTurn) + gameInvitesCount;
   } else if (item.path == '/') {
     badgeValue = homeBadgeCount;
   }
