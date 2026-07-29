@@ -54,6 +54,7 @@ enum _RoomAction {
   blockUser,
   sendFriendRequest,
   acceptFriendRequest,
+  removeFriend,
 }
 
 const List<IconData> _chatAvatarIcons = [
@@ -261,6 +262,67 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           message: action == _RoomAction.acceptFriendRequest
               ? 'Заявка принята'
               : 'Заявка отправлена',
+          kind: AppSnackKind.success,
+        );
+      } on FriendsException catch (e) {
+        if (e.statusCode == 401) {
+          await ref.read(authStateProvider.notifier).logout();
+          if (mounted) context.go('/login');
+          return;
+        }
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: e.message,
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: e.toString(),
+          kind: AppSnackKind.error,
+        );
+      } finally {
+        if (mounted) setState(() => _roomActionInFlight = false);
+      }
+      return;
+    }
+
+    if (action == _RoomAction.removeFriend) {
+      final id = (peerUserID ?? '').trim();
+      if (id.isEmpty) return;
+      final chats =
+          ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+      String peerName = 'этого пользователя';
+      for (final item in chats) {
+        if (item.chatID == widget.chatID) {
+          final n = (item.user.displayName ?? '').trim();
+          if (n.isNotEmpty) peerName = n;
+          break;
+        }
+      }
+      if (peerName == 'этого пользователя') {
+        final routeName = (widget.peerName ?? '').trim();
+        if (routeName.isNotEmpty) peerName = routeName;
+      }
+      final confirmed = await _confirmAction(
+        title: 'Убрать из друзей?',
+        description: 'Вы уверены, что хотите удалить $peerName из друзей?',
+        confirmText: 'Убрать',
+        destructive: true,
+      );
+      if (!confirmed) return;
+
+      setState(() => _roomActionInFlight = true);
+      try {
+        await ref.read(friendsRepositoryProvider).removeFriend(id);
+        await refreshFriendsSnapshot(ref);
+        unawaited(_loadCapabilities());
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: 'Удалено из друзей',
           kind: AppSnackKind.success,
         );
       } on FriendsException catch (e) {
@@ -1313,7 +1375,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   snapshot?.incoming.any((r) => r.user.id == peerId) == true;
 
               return <PopupMenuEntry<_RoomAction>>[
-                if (!isFriend && peerId.isNotEmpty)
+                if (isFriend)
+                  const PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.removeFriend,
+                    child: Text('Убрать из друзей'),
+                  )
+                else if (peerId.isNotEmpty && snapshot != null)
                   if (hasIncoming)
                     const PopupMenuItem<_RoomAction>(
                       value: _RoomAction.acceptFriendRequest,
@@ -1378,6 +1445,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     });
 
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
+    // Нужен watch: пункты меню «заявка» / «убрать из друзей» зависят от снимка.
+    ref.watch(friendsSnapshotProvider);
     final media = MediaQuery.of(context);
     final narrowLandscape =
         isNarrow(context) && media.size.width > media.size.height;
