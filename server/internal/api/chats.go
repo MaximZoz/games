@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -55,6 +56,12 @@ type ChatMessageItem struct {
 	CreatedAt    string  `json:"created_at"`
 	DeliveredAt  *string `json:"delivered_at,omitempty"`
 	ReadAt       *string `json:"read_at,omitempty"`
+	EditedAt     *string `json:"edited_at,omitempty"`
+	ReplyToMessageID *string `json:"reply_to_message_id,omitempty"`
+	HasImage     bool    `json:"has_image,omitempty"`
+	ReplyToBody  *string `json:"reply_to_body,omitempty"`
+	ReplyToHasImage bool `json:"reply_to_has_image,omitempty"`
+	ReplyToSenderID *string `json:"reply_to_sender_id,omitempty"`
 }
 
 type StartChatBody struct {
@@ -62,8 +69,17 @@ type StartChatBody struct {
 }
 
 type SendChatMessageBody struct {
-	ChatID string `json:"chat_id"`
-	Body   string `json:"body"`
+	ChatID           string `json:"chat_id"`
+	Body             string `json:"body"`
+	ReplyToMessageID string `json:"reply_to_message_id,omitempty"`
+	// image_base64 — data URL или сырой base64; image_mime — image/jpeg и т.п.
+	ImageBase64 string `json:"image_base64,omitempty"`
+	ImageMime   string `json:"image_mime,omitempty"`
+}
+
+type EditChatMessageBody struct {
+	MessageID string `json:"message_id"`
+	Body      string `json:"body"`
 }
 
 type MarkChatReadBody struct {
@@ -98,14 +114,40 @@ func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 		value := msg.ReadAt.UTC().Format(time.RFC3339Nano)
 		readAt = &value
 	}
+	var editedAt *string
+	if msg.EditedAt != nil {
+		value := msg.EditedAt.UTC().Format(time.RFC3339Nano)
+		editedAt = &value
+	}
+	var replyToID *string
+	if msg.ReplyToMessageID != nil {
+		s := msg.ReplyToMessageID.String()
+		replyToID = &s
+	}
+	var replyToBody *string
+	if msg.ReplyToMessageID != nil {
+		b := msg.ReplyToBody
+		replyToBody = &b
+	}
+	var replyToSender *string
+	if msg.ReplyToSenderID != nil {
+		s := msg.ReplyToSenderID.String()
+		replyToSender = &s
+	}
 	return ChatMessageItem{
-		ID:           msg.ID.String(),
-		ChatID:       msg.ChatID.String(),
-		SenderUserID: msg.SenderUserID.String(),
-		Body:         msg.Body,
-		CreatedAt:    msg.CreatedAt.UTC().Format(time.RFC3339Nano),
-		DeliveredAt:  deliveredAt,
-		ReadAt:       readAt,
+		ID:               msg.ID.String(),
+		ChatID:           msg.ChatID.String(),
+		SenderUserID:     msg.SenderUserID.String(),
+		Body:             msg.Body,
+		CreatedAt:        msg.CreatedAt.UTC().Format(time.RFC3339Nano),
+		DeliveredAt:      deliveredAt,
+		ReadAt:           readAt,
+		EditedAt:         editedAt,
+		ReplyToMessageID: replyToID,
+		HasImage:         msg.HasImage,
+		ReplyToBody:      replyToBody,
+		ReplyToHasImage:  msg.ReplyToHasImage,
+		ReplyToSenderID:  replyToSender,
 	}
 }
 
@@ -138,10 +180,18 @@ func writeChatError(w http.ResponseWriter, err error) {
 		http.Error(w, "message is empty", http.StatusBadRequest)
 	case errors.Is(err, store.ErrChatMessageTooLong):
 		http.Error(w, "message is too long", http.StatusBadRequest)
+	case errors.Is(err, store.ErrChatImageTooLarge):
+		http.Error(w, "image is too large", http.StatusBadRequest)
+	case errors.Is(err, store.ErrChatImageUnsupported):
+		http.Error(w, "unsupported image type", http.StatusBadRequest)
+	case errors.Is(err, store.ErrChatReplyInvalid):
+		http.Error(w, "invalid reply target", http.StatusBadRequest)
 	case errors.Is(err, store.ErrCannotBlockYourself):
 		http.Error(w, "cannot block yourself", http.StatusBadRequest)
 	case errors.Is(err, store.ErrChatFriendsOnlyText):
 		http.Error(w, "only friends can send text messages", http.StatusForbidden)
+	case errors.Is(err, store.ErrChatEditForbidden):
+		http.Error(w, "cannot edit this message", http.StatusForbidden)
 	case errors.Is(err, store.ErrChatForbidden):
 		http.Error(w, "forbidden", http.StatusForbidden)
 	case errors.Is(err, store.ErrUserBlocked):
@@ -150,6 +200,10 @@ func writeChatError(w http.ResponseWriter, err error) {
 		http.Error(w, "user not found", http.StatusNotFound)
 	case errors.Is(err, store.ErrChatNotFound):
 		http.Error(w, "not found", http.StatusNotFound)
+	case errors.Is(err, store.ErrChatMessageNotFound):
+		http.Error(w, "message not found", http.StatusNotFound)
+	case errors.Is(err, store.ErrChatImageMissing):
+		http.Error(w, "image not found", http.StatusNotFound)
 	default:
 		http.Error(w, "server error", http.StatusInternalServerError)
 	}
@@ -403,6 +457,24 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func decodeChatImageBase64(raw string) ([]byte, error) {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return nil, nil
+	}
+	if i := strings.Index(s, ","); i >= 0 && strings.Contains(strings.ToLower(s[:i]), "base64") {
+		s = s[i+1:]
+	}
+	data, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		data, err = base64.RawStdEncoding.DecodeString(s)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return data, nil
+}
+
 func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentChatUserIDFromContext(r)
 	if !ok {
@@ -422,7 +494,29 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, err := store.SendChatMessage(r.Context(), h.Pool, chatID, userID, body.Body)
+	opts := store.SendChatOptions{Body: body.Body}
+	if raw := strings.TrimSpace(body.ReplyToMessageID); raw != "" {
+		rid, err := uuid.Parse(raw)
+		if err != nil {
+			http.Error(w, "invalid reply_to_message_id", http.StatusBadRequest)
+			return
+		}
+		opts.ReplyToMessageID = &rid
+	}
+	if strings.TrimSpace(body.ImageBase64) != "" {
+		img, err := decodeChatImageBase64(body.ImageBase64)
+		if err != nil {
+			http.Error(w, "invalid image_base64", http.StatusBadRequest)
+			return
+		}
+		opts.ImageData = img
+		opts.ImageMime = body.ImageMime
+		if strings.TrimSpace(opts.ImageMime) == "" {
+			opts.ImageMime = "image/jpeg"
+		}
+	}
+
+	msg, err := store.SendChatMessageOpts(r.Context(), h.Pool, chatID, userID, opts)
 	if err != nil {
 		writeChatError(w, err)
 		return
@@ -433,8 +527,6 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		h.publishChatMessage([]uuid.UUID{lowID, highID}, item)
 		h.publishChatListChanged(lowID, highID)
 
-		// Собеседник онлайн по WS — считаем сообщение доставленным сразу
-		// (не ждём, пока его клиент вызовет /delivered).
 		peerID := highID
 		if userID == highID {
 			peerID = lowID
@@ -458,6 +550,67 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": item,
 	})
+}
+
+func (h *ChatsHandler) EditMessage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var body EditChatMessageBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	messageID, err := uuid.Parse(strings.TrimSpace(body.MessageID))
+	if err != nil {
+		http.Error(w, "invalid message_id", http.StatusBadRequest)
+		return
+	}
+	msg, err := store.EditChatMessage(r.Context(), h.Pool, messageID, userID, body.Body)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+	item := chatMessageToItem(msg)
+	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, msg.ChatID); pairErr == nil {
+		h.publishChatMessageUpdated([]uuid.UUID{lowID, highID}, item)
+		h.publishChatListChanged(lowID, highID)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": item,
+	})
+}
+
+func (h *ChatsHandler) MessageImage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := currentChatUserIDFromContext(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	messageID, err := uuid.Parse(strings.TrimSpace(r.URL.Query().Get("message_id")))
+	if err != nil {
+		http.Error(w, "invalid message_id", http.StatusBadRequest)
+		return
+	}
+	mime, data, _, err := store.GetChatMessageImage(r.Context(), h.Pool, messageID, userID)
+	if err != nil {
+		writeChatError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", mime)
+	w.Header().Set("Cache-Control", "private, max-age=3600")
+	_, _ = w.Write(data)
 }
 
 func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
@@ -710,6 +863,11 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 	}
 	from := pushUserLabel(context.Background(), h.Pool, senderID)
 	body := strings.TrimSpace(item.Body)
+	if item.HasImage && body == "" {
+		body = "Фото"
+	} else if item.HasImage {
+		body = "Фото: " + body
+	}
 	if len([]rune(body)) > 120 {
 		runes := []rune(body)
 		body = string(runes[:117]) + "…"
@@ -722,6 +880,17 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 		Body:  body,
 		URL:   "/chats/" + item.ChatID,
 		Tag:   "chat_" + item.ChatID,
+	})
+}
+
+func (h *ChatsHandler) publishChatMessageUpdated(userIDs []uuid.UUID, item ChatMessageItem) {
+	if h == nil || h.Hub == nil {
+		return
+	}
+	h.Hub.PublishToUsers(userIDs, map[string]any{
+		"type":    "chat_message_updated",
+		"chat_id": item.ChatID,
+		"message": item,
 	})
 }
 

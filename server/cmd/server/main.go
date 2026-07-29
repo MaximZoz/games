@@ -337,6 +337,8 @@ func main() {
 	mux.Handle("/api/chats/start", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Start)))
 	mux.Handle("/api/chats/capabilities", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Capabilities)))
 	mux.Handle("/api/chats/messages", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Messages)))
+	mux.Handle("/api/chats/messages/edit", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.EditMessage)))
+	mux.Handle("/api/chats/messages/image", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.MessageImage)))
 	mux.Handle("/api/chats/read", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Read)))
 	mux.Handle("/api/chats/delivered", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Delivered)))
 	mux.Handle("/api/chats/clear", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Clear)))
