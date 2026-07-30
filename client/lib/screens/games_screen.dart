@@ -43,12 +43,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
   bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
-  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(mobileToolbarLeadingProvider.notifier).state = null;
@@ -86,7 +84,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   @override
   void dispose() {
-    _pageController.dispose();
     _stopLobbyPoll();
     super.dispose();
   }
@@ -105,17 +102,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _onTabChanged(_GamesTab tab) {
+    if (_selectedTab == tab) return;
     setState(() => _selectedTab = tab);
-    _pageController.animateToPage(
-      tab == _GamesTab.games ? 0 : 1,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeInOut,
-    );
     if (tab == _GamesTab.lobbies) {
       ref.invalidate(openLobbiesProvider);
       _startLobbyPoll();
     } else {
       _stopLobbyPoll();
+      ref.read(authStateProvider.notifier).refresh();
     }
   }
 
@@ -175,21 +169,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             ),
             SizedBox(height: isDesktop ? 8 : 20),
             Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  final tab = index == 0 ? _GamesTab.games : _GamesTab.lobbies;
-                  if (tab != _selectedTab) {
-                    setState(() => _selectedTab = tab);
-                    if (tab == _GamesTab.lobbies) {
-                      ref.invalidate(openLobbiesProvider);
-                      _startLobbyPoll();
-                    } else {
-                      _stopLobbyPoll();
-                      ref.read(authStateProvider.notifier).refresh();
-                    }
-                  }
-                },
+              // IndexedStack вместо PageView: ветка /games в StatefulShell
+              // indexedStack остаётся живой при /login|/register (PWA),
+              // а PageController с viewport=0 после возврата ломает смену табов.
+              child: IndexedStack(
+                index: _selectedTab == _GamesTab.games ? 0 : 1,
+                sizing: StackFit.expand,
                 children: [
                   _GamesPageContent(
                     isDesktop: isDesktop,
@@ -236,6 +221,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     isDesktop: isDesktop,
                     onJoinLobby: _joinLobby,
                     onShowLobbyRules: _showLobbyRulesInfo,
+                    onRefresh: () => ref.invalidate(openLobbiesProvider),
                     contentPadding: contentPadding,
                   ),
                 ],
@@ -871,6 +857,7 @@ class _LobbiesPageContent extends StatelessWidget {
     required this.isDesktop,
     required this.onJoinLobby,
     required this.onShowLobbyRules,
+    required this.onRefresh,
     required this.contentPadding,
   });
 
@@ -878,6 +865,7 @@ class _LobbiesPageContent extends StatelessWidget {
   final bool isDesktop;
   final void Function(BuildContext, String) onJoinLobby;
   final void Function(BuildContext, LobbyItem) onShowLobbyRules;
+  final VoidCallback onRefresh;
   final double contentPadding;
 
   @override
@@ -900,7 +888,39 @@ class _LobbiesPageContent extends StatelessWidget {
                   lobbiesAsync.when(
                     data: (lobbies) {
                       if (lobbies.isEmpty) {
-                        return const SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: isDesktop ? 48 : 36,
+                            horizontal: 12,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.group_off_rounded,
+                                size: isDesktop ? 48 : 40,
+                                color: AppColors.textSecondary
+                                    .withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                context.l10n.gamesLobbyTab,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: isDesktop ? 16 : 15,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton.icon(
+                                onPressed: onRefresh,
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: Text(context.l10n.commonTryRefresh),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                       final lobbyCards = lobbies
                           .map(
@@ -1670,33 +1690,45 @@ class _TabSegment extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.button),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 24 : 16,
-              vertical: isDesktop ? 14 : 12,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: isDesktop ? 22 : 20,
-                  color: isSelected
-                      ? AppColors.accentStart
-                      : AppColors.textSecondary,
+          child: Semantics(
+            button: true,
+            selected: isSelected,
+            label: label,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 44),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 24 : 16,
+                  vertical: isDesktop ? 14 : 12,
                 ),
-                SizedBox(width: isDesktop ? 10 : 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: isDesktop ? 15 : 14,
-                    color: isSelected
-                        ? AppColors.accentStart
-                        : AppColors.textSecondary,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      icon,
+                      size: isDesktop ? 22 : 20,
+                      color: isSelected
+                          ? AppColors.accentStart
+                          : AppColors.textSecondary,
+                    ),
+                    SizedBox(width: isDesktop ? 10 : 8),
+                    Flexible(
+                      child: Text(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: isDesktop ? 15 : 14,
+                          color: isSelected
+                              ? AppColors.accentStart
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
