@@ -1,71 +1,75 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zozu Games">
   <title>Zozu Games</title>
-  <desc>Shirt and tie that doubles as a night sky with a UFO between snowy peaks</desc>
+  <desc>Shirt silhouette from two hills; UFO with curved brand arrows suggesting a tie</desc>
   <defs>
-    <linearGradient id="jacket" x1="256" y1="40" x2="256" y2="460" gradientUnits="userSpaceOnUse">
+    <linearGradient id="jacket" x1="256" y1="48" x2="256" y2="420" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#6366F1"/>
       <stop offset="1" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="arrowL" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#6366F1" stop-opacity="0"/>
-      <stop offset="0.42" stop-color="#6366F1"/>
-      <stop offset="1" stop-color="#8B5CF6"/>
+    <linearGradient id="arrowL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A5B4FC" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#6366F1"/>
+      <stop offset="0.75" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#E0E7FF"/>
     </linearGradient>
-    <linearGradient id="arrowR" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8B5CF6"/>
-      <stop offset="0.58" stop-color="#6366F1"/>
-      <stop offset="1" stop-color="#6366F1" stop-opacity="0"/>
+    <linearGradient id="arrowR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C4B5FD" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#8B5CF6"/>
+      <stop offset="0.75" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#E0E7FF"/>
     </linearGradient>
+    <clipPath id="squircle">
+      <rect x="40" y="40" width="432" height="432" rx="88"/>
+    </clipPath>
   </defs>
 
-  <rect width="512" height="512" fill="#FFFFFF"/>
+  <!-- App surface background -->
+  <rect width="512" height="512" fill="#E8ECF4"/>
 
-  <!-- Jacket with shirt V-notch (white = collar; secondarily snow peaks) -->
+  <!-- Purple jacket with two hills cut out (shirt silhouette in surface color) -->
+  <path fill="url(#jacket)" clip-path="url(#squircle)" d="
+    M 40 40
+    H 472
+    V 472
+    H 40
+    Z
+    M 40 472
+    C 80 400, 120 330, 170 310
+    C 210 295, 235 320, 256 360
+    C 277 320, 302 295, 342 310
+    C 392 330, 432 400, 472 472
+    L 40 472
+    Z
+  " fill-rule="evenodd"/>
+
+  <!-- Simpler jacket path: rounded rect minus hills via evenodd -->
   <path fill="url(#jacket)" d="
-    M 88 112
-    C 88 64 124 40 168 40
-    H 344
-    C 388 40 424 64 424 112
+    M 128 40
+    H 384
+    C 428 40 472 84 472 128
     V 300
-    L 280 472
-    L 256 430
-    L 232 472
-    L 88 300
+    C 430 250 380 220 340 235
+    C 300 250 275 300 256 355
+    C 237 300 212 250 172 235
+    C 132 220 82 250 40 300
+    V 128
+    C 40 84 84 40 128 40
     Z
   "/>
 
-  <!-- Brand accent hairlines (toolbar arrows) -->
-  <rect x="108" y="268" width="72" height="7" rx="3.5" fill="url(#arrowL)"/>
-  <rect x="332" y="268" width="72" height="7" rx="3.5" fill="url(#arrowR)"/>
-
-  <!-- Tie / night sky -->
-  <path fill="#1E1B4B" d="
-    M 226 64
-    C 234 52 246 48 256 48
-    C 266 48 278 52 286 64
-    L 304 118
-    L 278 148
-    L 310 250
-    L 286 290
-    L 318 350
-    L 256 455
-    L 194 350
-    L 226 290
-    L 202 250
-    L 234 148
-    L 208 118
-    Z
-  "/>
-
-  <!-- Knot -->
-  <path fill="#24205A" d="M 238 118 L 256 106 L 274 118 L 256 134 Z"/>
-
-  <!-- UFO easter egg (low contrast) -->
-  <g opacity="0.55">
-    <ellipse cx="256" cy="200" rx="28" ry="9" fill="#3A3672"/>
-    <ellipse cx="256" cy="192" rx="11" ry="9" fill="#322E66"/>
-    <circle cx="240" cy="202" r="2.2" fill="#2C285C"/>
-    <circle cx="256" cy="203" r="2.2" fill="#2C285C"/>
-    <circle cx="272" cy="202" r="2.2" fill="#2C285C"/>
+  <!-- UFO -->
+  <g transform="translate(256 175)">
+    <ellipse cx="0" cy="8" rx="58" ry="20" fill="#1E1B4B"/>
+    <ellipse cx="0" cy="-12" rx="26" ry="22" fill="#322E6A"/>
+    <ellipse cx="-8" cy="-18" rx="12" ry="8" fill="#5B5699" opacity="0.45"/>
+    <circle cx="-28" cy="12" r="6" fill="#C7D2FE"/>
+    <circle cx="0" cy="14" r="6" fill="#C7D2FE"/>
+    <circle cx="28" cy="12" r="6" fill="#C7D2FE"/>
   </g>
+
+  <!-- Two curved brand arrows (tie suggestion) -->
+  <path d="M 232 220 C 190 280, 210 330, 255 370" fill="none"
+        stroke="url(#arrowL)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 280 220 C 322 280, 302 330, 257 370" fill="none"
+        stroke="url(#arrowR)" stroke-width="12" stroke-linecap="round"/>
 </svg>
