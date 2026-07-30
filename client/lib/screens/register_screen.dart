@@ -101,6 +101,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             redirect: _redirect,
             ref: _ref,
             email: email,
+            devCode: e.devCode,
           ),
         );
       }

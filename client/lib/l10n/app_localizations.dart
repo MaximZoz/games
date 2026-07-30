@@ -2830,6 +2830,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Отправить код ещё раз через {time}'**
   String verifyEmailResendIn(String time);
+
+  /// No description provided for @verifyEmailDevCodeHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Почта ещё не настроена на сервере. Код для входа: {code}'**
+  String verifyEmailDevCodeHint(String code);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

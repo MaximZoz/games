@@ -207,7 +207,8 @@ cp .env.example .env
 - `JWT_SECRET`
 - `ADMIN_INIT_SECRET`
 - `PUBLIC_BASE_URL`, `FRONTEND_URL` — для OAuth redirect_uri
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` — письмо с кодом (без SMTP код в лог)
+- `RESEND_API_KEY`, `MAIL_FROM` — письма с кодом через [Resend](https://resend.com) (предпочтительно)
+- `SMTP_*` — альтернатива Resend; без почты код в логе и в `dev_code` ответа API
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `APPLE_*`, `YANDEX_*`, `VK_*` — OAuth (пусто = кнопки скрыты)
 - `APP_LOG_FILE`, `APP_LOG_STATE_FILE`
 - `APP_LOG_SYNC_INTERVAL_SECONDS`

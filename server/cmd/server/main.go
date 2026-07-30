@@ -270,17 +270,25 @@ func main() {
 		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
 	}
 
+	mailFrom := getEnv("MAIL_FROM", "")
+	if mailFrom == "" {
+		mailFrom = getEnv("SMTP_FROM", "")
+	}
 	mail := mailer.New(mailer.Config{
-		Host:     getEnv("SMTP_HOST", ""),
-		Port:     getEnv("SMTP_PORT", "587"),
-		Username: getEnv("SMTP_USER", ""),
-		Password: getEnv("SMTP_PASSWORD", ""),
-		From:     getEnv("SMTP_FROM", "noreply@zozu.games"),
+		ResendAPIKey: getEnv("RESEND_API_KEY", ""),
+		From:         mailFrom,
+		Host:         getEnv("SMTP_HOST", ""),
+		Port:         getEnv("SMTP_PORT", "587"),
+		Username:     getEnv("SMTP_USER", ""),
+		Password:     getEnv("SMTP_PASSWORD", ""),
 	})
-	if mail.Enabled() {
+	switch mail.Provider() {
+	case "resend":
+		log.Printf("Mailer: Resend enabled (from=%s)", mailFrom)
+	case "smtp":
 		log.Printf("Mailer: SMTP enabled (%s)", getEnv("SMTP_HOST", ""))
-	} else {
-		log.Printf("Mailer: SMTP not configured — verification codes will be logged")
+	default:
+		log.Printf("Mailer: not configured — set RESEND_API_KEY (or SMTP_*); codes logged + returned as dev_code")
 	}
 
 	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")

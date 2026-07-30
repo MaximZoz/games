@@ -911,5 +911,13 @@
         "type": "String"
       }
     }
+  },
+  "verifyEmailDevCodeHint": "Email is not configured on the server yet. Use this code: {code}",
+  "@verifyEmailDevCodeHint": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   }
 }

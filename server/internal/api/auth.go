@@ -156,12 +156,19 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.sendCodeForUser(r, u); err != nil {
+	code, mailSent, err := h.sendCodeForUser(r, u)
+	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "failed to send verification email")
 		return
 	}
 
-	writeVerificationRequired(w, http.StatusOK, u.Email, "verification code sent")
+	msg := "verification code sent"
+	devCode := ""
+	if !mailSent {
+		msg = "mail provider not configured — use dev_code"
+		devCode = code
+	}
+	writeVerificationRequired(w, http.StatusOK, u.Email, msg, mailSent, devCode)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +197,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !u.EmailVerified() {
-		writeVerificationRequired(w, http.StatusForbidden, u.Email, "email not verified")
+		writeVerificationRequired(w, http.StatusForbidden, u.Email, "email not verified", false, "")
 		return
 	}
 

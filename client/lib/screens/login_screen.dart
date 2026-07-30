@@ -88,6 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             redirect: _redirect,
             ref: _ref,
             email: email,
+            devCode: e.devCode,
           ),
         );
       }

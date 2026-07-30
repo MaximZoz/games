@@ -1472,4 +1472,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String verifyEmailResendIn(String time) {
     return 'Resend code in $time';
   }
+
+  @override
+  String verifyEmailDevCodeHint(String code) {
+    return 'Email is not configured on the server yet. Use this code: $code';
+  }
 }

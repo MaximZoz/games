@@ -911,5 +911,13 @@
         "type": "String"
       }
     }
+  },
+  "verifyEmailDevCodeHint": "Почта ещё не настроена на сервере. Код для входа: {code}",
+  "@verifyEmailDevCodeHint": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   }
 }

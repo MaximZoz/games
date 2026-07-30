@@ -1472,4 +1472,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String verifyEmailResendIn(String time) {
     return 'Отправить код ещё раз через $time';
   }
+
+  @override
+  String verifyEmailDevCodeHint(String code) {
+    return 'Почта ещё не настроена на сервере. Код для входа: $code';
+  }
 }

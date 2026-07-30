@@ -236,7 +236,8 @@ class AuthRepository {
     return _handleAuthResponse(response);
   }
 
-  Future<void> resendVerification({required String email}) async {
+  /// Возвращает dev_code, если почта не настроена на сервере.
+  Future<String?> resendVerification({required String email}) async {
     await init();
     final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/auth/resend-verification'),
@@ -247,6 +248,14 @@ class AuthRepository {
     if (response.statusCode != 200) {
       throw AuthException(response.statusCode, _messageFromResponse(response));
     }
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        final code = (body['dev_code'] ?? '').toString().trim();
+        if (code.isNotEmpty) return code;
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<AuthResult> applySessionTokens({
@@ -313,9 +322,13 @@ class AuthRepository {
       if (body is Map && body['requires_verification'] == true) {
         final email = (body['email'] ?? '').toString();
         final message = (body['message'] ?? body['error'] ?? '').toString();
+        final devCode = (body['dev_code'] ?? '').toString().trim();
+        final mailSent = body['mail_sent'] == true;
         throw EmailVerificationRequiredException(
           email: email,
           message: message.isEmpty ? 'email not verified' : message,
+          mailSent: mailSent,
+          devCode: devCode,
         );
       }
     } catch (e) {
@@ -730,9 +743,13 @@ class AuthException implements Exception {
 class EmailVerificationRequiredException implements Exception {
   final String email;
   final String message;
+  final bool mailSent;
+  final String devCode;
   EmailVerificationRequiredException({
     required this.email,
     this.message = '',
+    this.mailSent = true,
+    this.devCode = '',
   });
   @override
   String toString() => message.isEmpty ? 'email not verified' : message;

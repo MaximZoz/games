@@ -26,15 +26,20 @@ type VerificationRequiredResponse struct {
 	RequiresVerification bool   `json:"requires_verification"`
 	Email                string `json:"email"`
 	Message              string `json:"message,omitempty"`
+	MailSent             bool   `json:"mail_sent"`
+	// DevCode возвращается только если почтовый провайдер не настроен (log mode).
+	DevCode string `json:"dev_code,omitempty"`
 }
 
-func writeVerificationRequired(w http.ResponseWriter, status int, email, message string) {
+func writeVerificationRequired(w http.ResponseWriter, status int, email, message string, mailSent bool, devCode string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(VerificationRequiredResponse{
 		RequiresVerification: true,
 		Email:                email,
 		Message:              message,
+		MailSent:             mailSent,
+		DevCode:              devCode,
 	})
 }
 
@@ -46,26 +51,24 @@ func generateEmailCode() (string, error) {
 	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
-func (h *AuthHandler) sendCodeForUser(r *http.Request, u *store.User) error {
-	code, err := generateEmailCode()
+// sendCodeForUser возвращает код и флаг реальной отправки письма.
+func (h *AuthHandler) sendCodeForUser(r *http.Request, u *store.User) (code string, mailSent bool, err error) {
+	code, err = generateEmailCode()
 	if err != nil {
-		return err
+		return "", false, err
 	}
 	if err := store.CreateEmailVerificationCode(r.Context(), h.Pool, u.ID, code); err != nil {
-		return err
+		return "", false, err
 	}
-	if h.Mailer == nil {
-		log.Printf("[auth] verification code for %s: %s (mailer nil)", u.Email, code)
-		return nil
+	if h.Mailer == nil || !h.Mailer.Enabled() {
+		log.Printf("[auth] verification code for %s: %s (mail provider not configured)", u.Email, code)
+		return code, false, nil
 	}
 	if err := h.Mailer.SendVerificationCode(u.Email, code); err != nil {
-		log.Printf("[auth] send verification email to %s failed: %v", u.Email, err)
-		if h.Mailer.Enabled() {
-			return err
-		}
-		log.Printf("[auth] verification code for %s: %s", u.Email, code)
+		log.Printf("[auth] send verification email to %s via %s failed: %v", u.Email, h.Mailer.Provider(), err)
+		return "", false, err
 	}
-	return nil
+	return code, true, nil
 }
 
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
@@ -185,15 +188,22 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.sendCodeForUser(r, u); err != nil {
+	code, mailSent, err := h.sendCodeForUser(r, u)
+	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "failed to send verification email")
 		return
 	}
 
+	resp := map[string]any{
+		"ok":        true,
+		"message":   "verification code sent",
+		"mail_sent": mailSent,
+	}
+	if !mailSent {
+		resp["dev_code"] = code
+		resp["message"] = "mail provider not configured — use dev_code"
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"ok":      true,
-		"message": "verification code sent",
-	})
+	_ = json.NewEncoder(w).Encode(resp)
 }
