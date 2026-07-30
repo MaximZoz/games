@@ -13,13 +13,13 @@
   <rect width="512" height="512" fill="#E8ECF4"/>
   <!-- Jacket and the V-shaped shirt collar/hills. -->
   <path fill="url(#jacket)" d="M128 36H384C432 36 476 80 476 128V382C456 430 430 457 404 468C370 422 330 430 256 368C182 430 142 422 108 468C82 457 56 430 36 382V128C36 80 80 36 128 36Z"/>
-  <!-- Tie that doubles as a dark mountain silhouette. -->
-  <path fill="#1E1B4B" d="M241 147H271L279 177L268 196L291 278L276 307L287 364L256 368L225 364L236 307L221 278L244 196L233 177Z"/>
-  <!-- Mountain ridge hidden inside the tie. -->
-  <path d="M231 290L240 268L247 277L256 238L268 275L275 260L282 290" fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Two connected accent-arrow lines: UFO → tie → collar/hills. -->
-  <path d="M238 139C217 190 220 267 256 368C204 410 159 428 108 468" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round"/>
-  <path d="M274 139C295 190 292 267 256 368C308 410 353 428 404 468" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Two uninterrupted lines: UFO → outlined tie → mountains → shirt. -->
+  <path d="M244 139L218 188L230 226L208 356L174 320L136 356L110 332L62 388Q50 414 58 440L98 480"
+        fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M268 139L294 188L282 226L304 356L338 320L376 356L402 332L450 388Q462 414 454 440L414 480"
+        fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Central V joins both ridges and completes the tie point. -->
+  <path d="M208 356L256 404L304 356" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Minimal UFO. -->
   <ellipse cx="256" cy="116" rx="43" ry="10" fill="#1E1B4B"/>
   <ellipse cx="256" cy="101" rx="17" ry="15" fill="#1E1B4B"/>
