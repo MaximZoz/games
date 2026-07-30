@@ -29,40 +29,49 @@ class OAuthButtons extends ConsumerWidget {
       data: (providers) {
         if (providers.isEmpty) return const SizedBox.shrink();
         final l10n = context.l10n;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Expanded(child: Divider()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    l10n.oauthOrContinue,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
+        // Полная ширина + явный Material: на PWA мелкие кнопки в Wrap
+        // перекрывались TextButton «Войти / Зарегистрироваться» ниже.
+        return Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      l10n.oauthOrContinue,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                ),
-                const Expanded(child: Divider()),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                for (final p in providers)
-                  OutlinedButton(
-                    onPressed: () => _start(context, ref, p),
-                    child: Text(_label(l10n, p)),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              for (var i = 0; i < providers.length; i++) ...[
+                if (i > 0) const SizedBox(height: 8),
+                SizedBox(
+                  height: 48,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      tapTargetSize: MaterialTapTargetSize.padded,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () => _start(context, ref, providers[i]),
+                    child: Text(_label(l10n, providers[i])),
                   ),
+                ),
               ],
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

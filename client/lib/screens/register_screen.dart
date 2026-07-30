@@ -262,8 +262,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         expanded: true,
                       ),
                       OAuthButtons(redirect: _redirect, refCode: _ref),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       TextButton(
+                        style: TextButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
                         onPressed: () => context.go(
                           appendAuthQuery(
                             '/login',
