@@ -1,31 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zozu Games">
   <title>Zozu Games</title>
   <defs>
-    <linearGradient id="bg" x1="256" y1="0" x2="256" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E0E7FF"/>
-      <stop offset="1" stop-color="#E8ECF4"/>
+    <linearGradient id="jacket" x1="256" y1="36" x2="256" y2="462" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
     </linearGradient>
     <linearGradient id="line" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#6366F1"/>
       <stop offset="1" stop-color="#8B5CF6"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" fill="url(#bg)"/>
-  <!-- Tie fill -->
-  <path fill="#1E1B4B" d="M230 140 H282 L292 170 L274 188 L318 250 L286 290 L310 330 L256 360 L202 330 L226 290 L194 250 L238 188 L220 170 Z"/>
-  <!-- Shirt + mountains + tie outline (schematic) -->
-  <path fill="none" stroke="url(#line)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"
-        d="M70 450 H442 M70 450 V220 L100 165 L180 180 L200 250 L230 200 L256 360"/>
-  <path fill="none" stroke="url(#line)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"
-        d="M442 450 V220 L412 165 L332 180 L312 250 L282 200 L256 360"/>
-  <path fill="none" stroke="url(#line)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"
-        d="M230 140 L220 170 L238 188 L194 250 L226 290 L202 330 L256 360"/>
-  <path fill="none" stroke="url(#line)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"
-        d="M282 140 L292 170 L274 188 L318 250 L286 290 L310 330 L256 360"/>
-  <!-- UFO -->
-  <ellipse cx="256" cy="95" rx="48" ry="16" fill="#1E1B4B"/>
-  <ellipse cx="256" cy="78" rx="20" ry="16" fill="#1E1B4B"/>
-  <circle cx="232" cy="98" r="5" fill="#C7D2FE"/>
-  <circle cx="256" cy="100" r="5" fill="#C7D2FE"/>
-  <circle cx="280" cy="98" r="5" fill="#C7D2FE"/>
+  <rect width="512" height="512" fill="#E8ECF4"/>
+  <!-- Jacket and the V-shaped shirt collar/hills. -->
+  <path fill="url(#jacket)" d="M128 36H384C432 36 476 80 476 128V382C456 430 430 457 404 468C370 422 330 430 256 368C182 430 142 422 108 468C82 457 56 430 36 382V128C36 80 80 36 128 36Z"/>
+  <!-- Tie that doubles as a dark mountain silhouette. -->
+  <path fill="#1E1B4B" d="M241 147H271L279 177L268 196L291 278L276 307L287 364L256 368L225 364L236 307L221 278L244 196L233 177Z"/>
+  <!-- Mountain ridge hidden inside the tie. -->
+  <path d="M231 290L240 268L247 277L256 238L268 275L275 260L282 290" fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Two connected accent-arrow lines: UFO → tie → collar/hills. -->
+  <path d="M238 139C217 190 220 267 256 368C204 410 159 428 108 468" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M274 139C295 190 292 267 256 368C308 410 353 428 404 468" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Minimal UFO. -->
+  <ellipse cx="256" cy="116" rx="43" ry="10" fill="#1E1B4B"/>
+  <ellipse cx="256" cy="101" rx="17" ry="15" fill="#1E1B4B"/>
+  <path d="M213 116C234 126 278 126 299 116" fill="none" stroke="#6366F1" stroke-width="2"/>
+  <circle cx="231" cy="119" r="4" fill="#C7D2FE"/>
+  <circle cx="256" cy="120" r="4" fill="#C7D2FE"/>
+  <circle cx="281" cy="119" r="4" fill="#C7D2FE"/>
 </svg>
