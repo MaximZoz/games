@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zozu Games">
+  <title>Zozu Games</title>
+  <desc>Shirt and tie that doubles as a hot-air balloon over mountains</desc>
+  <defs>
+    <linearGradient id="jacket" x1="256" y1="40" x2="256" y2="460" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Canvas / shirt -->
+  <rect width="512" height="512" rx="96" fill="#FFFFFF"/>
+
+  <!-- Jacket with collar V-notch (negative space = shirt) -->
+  <path fill="url(#jacket)" d="
+    M 96 120
+    C 96 72 132 48 176 48
+    H 336
+    C 380 48 416 72 416 120
+    V 318
+    L 292 468
+    L 256 422
+    L 220 468
+    L 96 318
+    Z
+  "/>
+
+  <!-- Tie body -->
+  <path fill="#1E1B4B" d="
+    M 228 64
+    C 236 52 248 48 256 48
+    C 264 48 276 52 284 64
+    L 308 198
+    L 286 236
+    L 312 292
+    L 256 448
+    L 200 292
+    L 226 236
+    L 204 198
+    Z
+  "/>
+
+  <!-- Balloon envelope -->
+  <ellipse cx="256" cy="132" rx="38" ry="50" fill="#C7D2FE"/>
+  <path fill="#1E1B4B" d="
+    M 232 96
+    C 236 84 244 78 256 78
+    C 268 78 276 84 280 96
+    L 274 176
+    C 270 184 264 188 256 188
+    C 248 188 242 184 238 176
+    Z
+  "/>
+  <g stroke="#C7D2FE" stroke-width="4.5" stroke-linecap="round" fill="none">
+    <path d="M244 92 V176"/>
+    <path d="M256 86 V182"/>
+    <path d="M268 92 V176"/>
+  </g>
+  <!-- Basket -->
+  <circle cx="256" cy="204" r="6.5" fill="#C7D2FE"/>
+
+  <!-- Mountains -->
+  <path fill="#C7D2FE" d="
+    M 214 318
+    L 234 278
+    L 246 298
+    L 256 258
+    L 270 298
+    L 282 278
+    L 302 318
+    L 302 348
+    L 214 348
+    Z
+  "/>
+  <path fill="#A5B4FC" d="
+    M 222 348
+    L 238 312
+    L 248 330
+    L 256 294
+    L 268 330
+    L 278 312
+    L 294 348
+    Z
+  "/>
+</svg>
