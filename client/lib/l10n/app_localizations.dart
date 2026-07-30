@@ -2740,6 +2740,90 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'собеседнику'**
   String get chatReplyPeer;
+
+  /// No description provided for @verifyEmailTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтверждение email'**
+  String get verifyEmailTitle;
+
+  /// No description provided for @verifyEmailSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мы отправили код на {email}'**
+  String verifyEmailSubtitle(String email);
+
+  /// No description provided for @verifyEmailCodeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код из письма'**
+  String get verifyEmailCodeLabel;
+
+  /// No description provided for @verifyEmailCodeRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите код'**
+  String get verifyEmailCodeRequired;
+
+  /// No description provided for @verifyEmailSubmit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердить'**
+  String get verifyEmailSubmit;
+
+  /// No description provided for @verifyEmailResend.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить код ещё раз'**
+  String get verifyEmailResend;
+
+  /// No description provided for @verifyEmailResent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый код отправлен'**
+  String get verifyEmailResent;
+
+  /// No description provided for @oauthOrContinue.
+  ///
+  /// In ru, this message translates to:
+  /// **'или войти через'**
+  String get oauthOrContinue;
+
+  /// No description provided for @oauthGoogle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Google'**
+  String get oauthGoogle;
+
+  /// No description provided for @oauthApple.
+  ///
+  /// In ru, this message translates to:
+  /// **'Apple'**
+  String get oauthApple;
+
+  /// No description provided for @oauthYandex.
+  ///
+  /// In ru, this message translates to:
+  /// **'Яндекс'**
+  String get oauthYandex;
+
+  /// No description provided for @oauthVK.
+  ///
+  /// In ru, this message translates to:
+  /// **'VK'**
+  String get oauthVK;
+
+  /// No description provided for @oauthError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось войти через сервис'**
+  String get oauthError;
+
+  /// No description provided for @oauthCallbackTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход…'**
+  String get oauthCallbackTitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

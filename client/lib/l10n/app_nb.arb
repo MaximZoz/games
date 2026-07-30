@@ -882,5 +882,26 @@
     }
   },
   "chatReplySelf": "deg selv",
-  "chatReplyPeer": "motparten"
+  "chatReplyPeer": "motparten",
+  "verifyEmailTitle": "Verify email",
+  "verifyEmailSubtitle": "We sent a code to {email}",
+  "@verifyEmailSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailCodeLabel": "Code from email",
+  "verifyEmailCodeRequired": "Enter the code",
+  "verifyEmailSubmit": "Verify",
+  "verifyEmailResend": "Resend code",
+  "verifyEmailResent": "A new code was sent",
+  "oauthOrContinue": "or continue with",
+  "oauthGoogle": "Google",
+  "oauthApple": "Apple",
+  "oauthYandex": "Yandex",
+  "oauthVK": "VK",
+  "oauthError": "Could not sign in with this service",
+  "oauthCallbackTitle": "Signing in…"
 }

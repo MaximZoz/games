@@ -21,6 +21,7 @@ class AuthUser {
   final String avatarKind;
   final String? avatarValue;
   final int balanceBronze;
+  final bool emailVerified;
 
   AuthUser({
     required this.id,
@@ -33,6 +34,7 @@ class AuthUser {
     this.avatarKind = 'letter',
     this.avatarValue,
     this.balanceBronze = 0,
+    this.emailVerified = true,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,7 @@ class AuthUser {
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
       balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
+      emailVerified: json['email_verified'] as bool? ?? true,
     );
   }
 
@@ -61,6 +64,7 @@ class AuthUser {
         'avatar_kind': avatarKind,
         'avatar_value': avatarValue,
         'balance_bronze': balanceBronze,
+        'email_verified': emailVerified,
       };
 }
 
@@ -192,6 +196,7 @@ class AuthRepository {
       }),
       operation: 'AuthRepository.register',
     );
+    _throwIfVerificationRequired(response);
     return _handleAuthResponse(response);
   }
 
@@ -210,7 +215,112 @@ class AuthRepository {
       }),
       operation: 'AuthRepository.login',
     );
+    _throwIfVerificationRequired(response);
     return _handleAuthResponse(response);
+  }
+
+  Future<AuthResult> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/verify-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim().toLowerCase(),
+        'code': code.trim(),
+      }),
+      operation: 'AuthRepository.verifyEmail',
+    );
+    return _handleAuthResponse(response);
+  }
+
+  Future<void> resendVerification({required String email}) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/resend-verification'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email.trim().toLowerCase()}),
+      operation: 'AuthRepository.resendVerification',
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(response.statusCode, _messageFromResponse(response));
+    }
+  }
+
+  Future<AuthResult> applySessionTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await init();
+    _memoryAccessToken = accessToken;
+    _memoryRefreshToken = refreshToken;
+    final user = await fetchCurrentUser();
+    if (user == null) {
+      await logout();
+      throw AuthException(401, LocaleService.l10n.sessionExpired);
+    }
+    await _safePersistSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: user,
+    );
+    return AuthResult(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      expiresIn: 900,
+      user: user,
+    );
+  }
+
+  Future<List<String>> fetchOAuthProviders() async {
+    try {
+      final response = await ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/auth/oauth/providers'),
+        operation: 'AuthRepository.fetchOAuthProviders',
+      );
+      if (response.statusCode != 200) return const [];
+      final body = jsonDecode(response.body);
+      if (body is! Map) return const [];
+      final raw = body['providers'];
+      if (raw is! List) return const [];
+      return raw.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  String oauthStartUrl({
+    required String provider,
+    String? redirect,
+    String? ref,
+  }) {
+    final params = <String, String>{};
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) params['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) params['ref'] = referral;
+    return Uri.parse('$apiBaseUrl/api/auth/oauth/$provider/start')
+        .replace(queryParameters: params.isEmpty ? null : params)
+        .toString();
+  }
+
+  void _throwIfVerificationRequired(http.Response response) {
+    if (response.statusCode != 200 && response.statusCode != 403) return;
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map && body['requires_verification'] == true) {
+        final email = (body['email'] ?? '').toString();
+        final message = (body['message'] ?? body['error'] ?? '').toString();
+        throw EmailVerificationRequiredException(
+          email: email,
+          message: message.isEmpty ? 'email not verified' : message,
+        );
+      }
+    } catch (e) {
+      if (e is EmailVerificationRequiredException) rethrow;
+    }
   }
 
   static String _messageFromResponse(http.Response response) {
@@ -496,6 +606,7 @@ class AuthRepository {
             about: about,
             avatarKind: avatarKind ?? 'letter',
             avatarValue: avatarValue,
+            emailVerified: current.emailVerified,
           );
     await _saveUser(user);
     return user;
@@ -614,4 +725,15 @@ class AuthException implements Exception {
   AuthException(this.statusCode, this.message);
   @override
   String toString() => message;
+}
+
+class EmailVerificationRequiredException implements Exception {
+  final String email;
+  final String message;
+  EmailVerificationRequiredException({
+    required this.email,
+    this.message = '',
+  });
+  @override
+  String toString() => message.isEmpty ? 'email not verified' : message;
 }

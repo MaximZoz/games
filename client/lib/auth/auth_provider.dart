@@ -106,6 +106,30 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     unawaited(_enablePushForNewUser());
   }
 
+  Future<void> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.verifyEmail(email: email, code: code);
+    state = AsyncValue.data(result.user);
+    unawaited(_enablePushForNewUser());
+  }
+
+  Future<void> loginWithTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.applySessionTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+    state = AsyncValue.data(result.user);
+  }
+
   Future<void> _enablePushForNewUser() async {
     try {
       await _ref.read(webPushEnabledProvider.notifier).enableForNewUser();
@@ -159,6 +183,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
       avatarKind: user.avatarKind,
       avatarValue: user.avatarValue,
       balanceBronze: balanceBronze,
+      emailVerified: user.emailVerified,
     );
     state = AsyncValue.data(updated);
     await _ref.read(authRepositoryProvider).updateStoredUser(updated);
@@ -185,6 +210,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         avatarKind: user.avatarKind,
         avatarValue: user.avatarValue,
         balanceBronze: result.balanceBronze,
+        emailVerified: user.emailVerified,
       );
       state = AsyncValue.data(updated);
       await repo.updateStoredUser(updated);

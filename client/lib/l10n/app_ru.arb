@@ -882,5 +882,26 @@
     }
   },
   "chatReplySelf": "себе",
-  "chatReplyPeer": "собеседнику"
+  "chatReplyPeer": "собеседнику",
+  "verifyEmailTitle": "Подтверждение email",
+  "verifyEmailSubtitle": "Мы отправили код на {email}",
+  "@verifyEmailSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailCodeLabel": "Код из письма",
+  "verifyEmailCodeRequired": "Введите код",
+  "verifyEmailSubmit": "Подтвердить",
+  "verifyEmailResend": "Отправить код ещё раз",
+  "verifyEmailResent": "Новый код отправлен",
+  "oauthOrContinue": "или войти через",
+  "oauthGoogle": "Google",
+  "oauthApple": "Apple",
+  "oauthYandex": "Яндекс",
+  "oauthVK": "VK",
+  "oauthError": "Не удалось войти через сервис",
+  "oauthCallbackTitle": "Вход…"
 }

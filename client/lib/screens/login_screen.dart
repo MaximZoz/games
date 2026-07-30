@@ -9,6 +9,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/widgets/oauth_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -76,6 +77,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
       if (mounted) context.go(_redirect ?? '/games');
+    } on EmailVerificationRequiredException catch (e) {
+      if (mounted) {
+        final email = e.email.isNotEmpty
+            ? e.email
+            : _emailController.text.trim().toLowerCase();
+        context.go(
+          appendAuthQuery(
+            '/verify-email',
+            redirect: _redirect,
+            ref: _ref,
+            email: email,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -207,6 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         isLoading: _isLoading,
                         expanded: true,
                       ),
+                      OAuthButtons(redirect: _redirect, refCode: _ref),
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => context.push(

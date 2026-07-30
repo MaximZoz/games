@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"multigames/server/internal/auth"
+	"multigames/server/internal/mailer"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -28,6 +29,8 @@ type AuthHandler struct {
 	Pool      *pgxpool.Pool
 	JWTSecret []byte
 	Push      *WebPushSender
+	Mailer    *mailer.Mailer
+	OAuth     *OAuthConfig
 }
 
 type RegisterRequest struct {
@@ -64,6 +67,7 @@ type UserResponse struct {
 	AvatarKind    string  `json:"avatar_kind,omitempty"`
 	AvatarValue   *string `json:"avatar_value,omitempty"`
 	BalanceBronze int     `json:"balance_bronze"`
+	EmailVerified bool    `json:"email_verified"`
 }
 
 func userToResponse(u *store.User) UserResponse {
@@ -78,6 +82,7 @@ func userToResponse(u *store.User) UserResponse {
 		AvatarKind:    u.AvatarKind,
 		AvatarValue:   u.AvatarValue,
 		BalanceBronze: u.BalanceBronze,
+		EmailVerified: u.EmailVerified(),
 	}
 }
 
@@ -151,13 +156,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
-	if err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
+	if err := h.sendCodeForUser(r, u); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "failed to send verification email")
 		return
 	}
 
-	writeTokenResponse(w, accessToken, refreshToken, expiresIn, u)
+	writeVerificationRequired(w, http.StatusOK, u.Email, "verification code sent")
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -181,8 +185,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
-	if !auth.CheckPassword(req.Password, u.PasswordHash) {
+	if u.PasswordHash == "" || !auth.CheckPassword(req.Password, u.PasswordHash) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
+		return
+	}
+	if !u.EmailVerified() {
+		writeVerificationRequired(w, http.StatusForbidden, u.Email, "email not verified")
 		return
 	}
 

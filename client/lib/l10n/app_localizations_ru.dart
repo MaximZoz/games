@@ -1423,4 +1423,48 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'собеседнику';
+
+  @override
+  String get verifyEmailTitle => 'Подтверждение email';
+
+  @override
+  String verifyEmailSubtitle(String email) {
+    return 'Мы отправили код на $email';
+  }
+
+  @override
+  String get verifyEmailCodeLabel => 'Код из письма';
+
+  @override
+  String get verifyEmailCodeRequired => 'Введите код';
+
+  @override
+  String get verifyEmailSubmit => 'Подтвердить';
+
+  @override
+  String get verifyEmailResend => 'Отправить код ещё раз';
+
+  @override
+  String get verifyEmailResent => 'Новый код отправлен';
+
+  @override
+  String get oauthOrContinue => 'или войти через';
+
+  @override
+  String get oauthGoogle => 'Google';
+
+  @override
+  String get oauthApple => 'Apple';
+
+  @override
+  String get oauthYandex => 'Яндекс';
+
+  @override
+  String get oauthVK => 'VK';
+
+  @override
+  String get oauthError => 'Не удалось войти через сервис';
+
+  @override
+  String get oauthCallbackTitle => 'Вход…';
 }
