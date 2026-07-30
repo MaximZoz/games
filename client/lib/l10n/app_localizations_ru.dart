@@ -1467,4 +1467,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get oauthCallbackTitle => 'Вход…';
+
+  @override
+  String verifyEmailResendIn(String time) {
+    return 'Отправить код ещё раз через $time';
+  }
 }

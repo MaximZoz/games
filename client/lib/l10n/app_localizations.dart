@@ -2824,6 +2824,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вход…'**
   String get oauthCallbackTitle;
+
+  /// No description provided for @verifyEmailResendIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить код ещё раз через {time}'**
+  String verifyEmailResendIn(String time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

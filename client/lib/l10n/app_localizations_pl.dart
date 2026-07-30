@@ -1467,4 +1467,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get oauthCallbackTitle => 'Signing in…';
+
+  @override
+  String verifyEmailResendIn(String time) {
+    return 'Resend code in $time';
+  }
 }

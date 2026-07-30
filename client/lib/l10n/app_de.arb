@@ -903,5 +903,13 @@
   "oauthYandex": "Yandex",
   "oauthVK": "VK",
   "oauthError": "Could not sign in with this service",
-  "oauthCallbackTitle": "Signing in…"
+  "oauthCallbackTitle": "Signing in…",
+  "verifyEmailResendIn": "Resend code in {time}",
+  "@verifyEmailResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

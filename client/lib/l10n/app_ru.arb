@@ -903,5 +903,13 @@
   "oauthYandex": "Яндекс",
   "oauthVK": "VK",
   "oauthError": "Не удалось войти через сервис",
-  "oauthCallbackTitle": "Вход…"
+  "oauthCallbackTitle": "Вход…",
+  "verifyEmailResendIn": "Отправить код ещё раз через {time}",
+  "@verifyEmailResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,9 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+
+/// Совпадает с server EmailResendCooldown (60 с).
+const _resendCooldown = Duration(seconds: 60);
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key, required this.email});
@@ -27,14 +32,49 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   bool _resending = false;
   String? _errorMessage;
   String? _infoMessage;
+  int _resendSecondsLeft = 0;
+  Timer? _resendTimer;
 
   String? get _redirect =>
       safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
 
+  bool get _canResend => !_resending && _resendSecondsLeft <= 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Код уже отправлен при регистрации / редиректе с логина.
+    _startResendCooldown();
+  }
+
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _codeController.dispose();
     super.dispose();
+  }
+
+  void _startResendCooldown([Duration duration = _resendCooldown]) {
+    _resendTimer?.cancel();
+    setState(() => _resendSecondsLeft = duration.inSeconds);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_resendSecondsLeft <= 1) {
+        timer.cancel();
+        setState(() => _resendSecondsLeft = 0);
+        return;
+      }
+      setState(() => _resendSecondsLeft -= 1);
+    });
+  }
+
+  String _formatCountdown(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   Future<void> _submit() async {
@@ -65,6 +105,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   }
 
   Future<void> _resend() async {
+    if (!_canResend) return;
     setState(() {
       _errorMessage = null;
       _infoMessage = null;
@@ -74,12 +115,19 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       await ref.read(authRepositoryProvider).resendVerification(email: widget.email);
       if (mounted) {
         setState(() => _infoMessage = context.l10n.verifyEmailResent);
+        _startResendCooldown();
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = e is AuthException ? e.message : formatUserError(e);
-        });
+        // 429 — серверный кулдаун: вместо баннера просто блокируем кнопку.
+        if (e is AuthException && e.statusCode == 429) {
+          setState(() => _errorMessage = null);
+          _startResendCooldown();
+        } else {
+          setState(() {
+            _errorMessage = e is AuthException ? e.message : formatUserError(e);
+          });
+        }
       }
     }
     if (mounted) setState(() => _resending = false);
@@ -90,6 +138,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final l10n = context.l10n;
     final media = MediaQuery.of(context);
     final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
+    final resendLabel = _resendSecondsLeft > 0
+        ? l10n.verifyEmailResendIn(_formatCountdown(_resendSecondsLeft))
+        : l10n.verifyEmailResend;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -162,9 +213,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: _resending ? null : _resend,
+                        onPressed: _canResend ? _resend : null,
                         child: Text(
-                          _resending ? '…' : l10n.verifyEmailResend,
+                          _resending ? '…' : resendLabel,
+                          style: TextStyle(
+                            color: _canResend
+                                ? null
+                                : AppColors.textSecondary.withValues(alpha: 0.7),
+                          ),
                         ),
                       ),
                       TextButton(
