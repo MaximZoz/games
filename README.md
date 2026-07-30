@@ -109,7 +109,7 @@ Go (net/http, middleware, auth, friends, chats, games, admin, logging)
   - `app_logs`;
   - `friendships`, `friend_requests`.
 - Auth API:
-  - `POST /api/auth/register` — создаёт аккаунт и отправляет код на email (токены после verify)
+  - `POST /api/auth/register` — заявка + код на email; пользователь в БД создаётся только после verify
   - `POST /api/auth/verify-email` — подтверждение кода, выдача JWT
   - `POST /api/auth/resend-verification` — повторная отправка кода
   - `POST /api/auth/login`
