@@ -13,13 +13,28 @@
   <rect width="512" height="512" fill="#E8ECF4"/>
   <!-- Jacket and the V-shaped shirt collar/hills. -->
   <path fill="url(#jacket)" d="M128 36H384C432 36 476 80 476 128V382C456 430 430 457 404 468C370 422 330 430 256 368C182 430 142 422 108 468C82 457 56 430 36 382V128C36 80 80 36 128 36Z"/>
-  <!-- Two uninterrupted lines: UFO → outlined tie → mountains → shirt. -->
-  <path d="M244 139L218 188L230 226L208 356L174 320L136 356L110 332L62 388Q50 414 58 440L98 480"
-        fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M268 139L294 188L282 226L304 356L338 320L376 356L402 332L450 388Q462 414 454 440L414 480"
-        fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Central V joins both ridges and completes the tie point. -->
-  <path d="M208 356L256 404L304 356" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- UFO → outlined tie; each line ends on its own mountain peak. -->
+  <path d="M238 139L220 184L228 218L207 354" fill="none"
+        stroke="#C7D2FE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M274 139L292 184L284 218L305 354" fill="none"
+        stroke="#C7D2FE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Shirt silhouette and collar. -->
+  <path d="M207 354L256 398L305 354L340 393L377 412L410 396L452 426" fill="#E8ECF4"
+        stroke="url(#line)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M207 354L172 393L135 412L102 396L60 426" fill="none"
+        stroke="url(#line)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M207 354L256 398L231 420M305 354L256 398L281 420M256 398V475"
+        fill="none" stroke="#B9C2D6" stroke-width="2"/>
+  <!-- Three UFO-light buttons. -->
+  <g fill="#1E1B4B">
+    <circle cx="256" cy="420" r="6"/><circle cx="256" cy="446" r="6"/><circle cx="256" cy="472" r="6"/>
+  </g>
+  <g fill="#C7D2FE">
+    <circle cx="256" cy="420" r="2.5"/><circle cx="256" cy="446" r="2.5"/><circle cx="256" cy="472" r="2.5"/>
+  </g>
+  <!-- Mountain pattern on the shirt. -->
+  <path d="M148 474L169 450L183 464L201 432L217 462L234 444L244 474M268 474L278 444L295 462L311 432L329 464L343 450L364 474"
+        fill="none" stroke="#1E1B4B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Minimal UFO. -->
   <ellipse cx="256" cy="116" rx="43" ry="10" fill="#1E1B4B"/>
   <ellipse cx="256" cy="101" rx="17" ry="15" fill="#1E1B4B"/>
