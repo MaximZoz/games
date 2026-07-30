@@ -32,10 +32,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   bool _resending = false;
   String? _errorMessage;
   String? _infoMessage;
-  String? _devCode;
   int _resendSecondsLeft = 0;
   Timer? _resendTimer;
-  bool _appliedQueryCode = false;
 
   String? get _redirect =>
       safeAuthRedirect(GoRouterState.of(context).uri.queryParameters['redirect']);
@@ -46,19 +44,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   void initState() {
     super.initState();
     _startResendCooldown();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_appliedQueryCode) return;
-    _appliedQueryCode = true;
-    final code =
-        GoRouterState.of(context).uri.queryParameters['dev_code']?.trim() ?? '';
-    if (code.isNotEmpty) {
-      _codeController.text = code;
-      _devCode = code;
-    }
   }
 
   @override
@@ -89,16 +74,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return '$m:${s.toString().padLeft(2, '0')}';
-  }
-
-  void _applyDevCode(String code) {
-    final trimmed = code.trim();
-    if (trimmed.isEmpty) return;
-    _codeController.text = trimmed;
-    setState(() {
-      _devCode = trimmed;
-      _infoMessage = context.l10n.verifyEmailDevCodeHint(trimmed);
-    });
   }
 
   Future<void> _submit() async {
@@ -136,15 +111,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       _resending = true;
     });
     try {
-      final devCode = await ref
-          .read(authRepositoryProvider)
-          .resendVerification(email: widget.email);
+      await ref.read(authRepositoryProvider).resendVerification(email: widget.email);
       if (mounted) {
-        if (devCode != null && devCode.isNotEmpty) {
-          _applyDevCode(devCode);
-        } else {
-          setState(() => _infoMessage = context.l10n.verifyEmailResent);
-        }
+        setState(() => _infoMessage = context.l10n.verifyEmailResent);
         _startResendCooldown();
       }
     } catch (e) {
@@ -170,8 +139,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final resendLabel = _resendSecondsLeft > 0
         ? l10n.verifyEmailResendIn(_formatCountdown(_resendSecondsLeft))
         : l10n.verifyEmailResend;
-    final info = _infoMessage ??
-        (_devCode != null ? l10n.verifyEmailDevCodeHint(_devCode!) : null);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -231,9 +198,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                         const SizedBox(height: 16),
                         MessageBanner(message: _errorMessage!, type: BannerType.error),
                       ],
-                      if (info != null) ...[
+                      if (_infoMessage != null) ...[
                         const SizedBox(height: 16),
-                        MessageBanner(message: info, type: BannerType.success),
+                        MessageBanner(message: _infoMessage!, type: BannerType.success),
                       ],
                       const SizedBox(height: 24),
                       AppButton(

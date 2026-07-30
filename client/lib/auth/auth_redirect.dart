@@ -31,7 +31,6 @@ String appendAuthQuery(
   String? redirect,
   String? ref,
   String? email,
-  String? devCode,
 }) {
   final params = <String, String>{};
   final safe = safeAuthRedirect(redirect);
@@ -40,8 +39,6 @@ String appendAuthQuery(
   if (referral.isNotEmpty) params['ref'] = referral;
   final mail = (email ?? '').trim();
   if (mail.isNotEmpty) params['email'] = mail;
-  final code = (devCode ?? '').trim();
-  if (code.isNotEmpty) params['dev_code'] = code;
   if (params.isEmpty) return path;
   return Uri(path: path, queryParameters: params).toString();
 }

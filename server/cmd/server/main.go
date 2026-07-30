@@ -288,7 +288,7 @@ func main() {
 	case "smtp":
 		log.Printf("Mailer: SMTP enabled (%s)", getEnv("SMTP_HOST", ""))
 	default:
-		log.Printf("Mailer: not configured — set RESEND_API_KEY (or SMTP_*); codes logged + returned as dev_code")
+		log.Printf("Mailer: not configured — set RESEND_API_KEY (or SMTP_*); codes logged only")
 	}
 
 	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")

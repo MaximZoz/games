@@ -29,11 +29,9 @@ type VerificationRequiredResponse struct {
 	Email                string `json:"email"`
 	Message              string `json:"message,omitempty"`
 	MailSent             bool   `json:"mail_sent"`
-	// DevCode возвращается только если почтовый провайдер не настроен (log mode).
-	DevCode string `json:"dev_code,omitempty"`
 }
 
-func writeVerificationRequired(w http.ResponseWriter, status int, email, message string, mailSent bool, devCode string) {
+func writeVerificationRequired(w http.ResponseWriter, status int, email, message string, mailSent bool) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(VerificationRequiredResponse{
@@ -41,7 +39,6 @@ func writeVerificationRequired(w http.ResponseWriter, status int, email, message
 		Email:                email,
 		Message:              message,
 		MailSent:             mailSent,
-		DevCode:              devCode,
 	})
 }
 
@@ -218,16 +215,12 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp := map[string]any{
+	_ = code
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"ok":        true,
 		"message":   "verification code sent",
 		"mail_sent": mailSent,
-	}
-	if !mailSent {
-		resp["dev_code"] = code
-		resp["message"] = "mail provider not configured — use dev_code"
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(resp)
+	})
 }

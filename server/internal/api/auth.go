@@ -190,13 +190,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := "verification code sent"
-	devCode := ""
-	if !mailSent {
-		msg = "mail provider not configured — use dev_code"
-		devCode = code
-	}
-	writeVerificationRequired(w, http.StatusOK, req.Email, msg, mailSent, devCode)
+	_ = code // код только в письме / логе сервера, не отдаём клиенту
+	writeVerificationRequired(w, http.StatusOK, req.Email, "verification code sent", mailSent)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
