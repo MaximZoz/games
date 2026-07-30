@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
@@ -9,7 +11,7 @@ final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
   return ref.watch(authRepositoryProvider).fetchOAuthProviders();
 });
 
-class OAuthButtons extends ConsumerWidget {
+class OAuthButtons extends ConsumerStatefulWidget {
   const OAuthButtons({
     super.key,
     this.redirect,
@@ -20,7 +22,14 @@ class OAuthButtons extends ConsumerWidget {
   final String? refCode;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OAuthButtons> createState() => _OAuthButtonsState();
+}
+
+class _OAuthButtonsState extends ConsumerState<OAuthButtons> {
+  String? _busyProvider;
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(oauthProvidersProvider);
     return async.when(
       loading: () => const SizedBox.shrink(),
@@ -28,8 +37,6 @@ class OAuthButtons extends ConsumerWidget {
       data: (providers) {
         if (providers.isEmpty) return const SizedBox.shrink();
         final l10n = context.l10n;
-        // Полная ширина + явный Material: на PWA мелкие кнопки в Wrap
-        // перекрывались TextButton «Войти / Зарегистрироваться» ниже.
         return Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 4),
           child: Column(
@@ -64,8 +71,16 @@ class OAuthButtons extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    onPressed: () => _start(context, ref, providers[i]),
-                    child: Text(_label(l10n, providers[i])),
+                    onPressed: _busyProvider != null
+                        ? null
+                        : () => _start(context, providers[i]),
+                    child: _busyProvider == providers[i]
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_label(l10n, providers[i])),
                   ),
                 ),
               ],
@@ -91,12 +106,49 @@ class OAuthButtons extends ConsumerWidget {
     }
   }
 
-  void _start(BuildContext context, WidgetRef ref, String provider) {
-    final url = ref.read(authRepositoryProvider).oauthStartUrl(
-          provider: provider,
-          redirect: redirect,
-          ref: refCode,
+  Future<void> _start(BuildContext context, String provider) async {
+    final l10n = context.l10n;
+    setState(() => _busyProvider = provider);
+    try {
+      final url = ref.read(authRepositoryProvider).oauthStartUrl(
+            provider: provider,
+            redirect: widget.redirect,
+            ref: widget.refCode,
+          );
+      final result = await openOAuthUrl(url);
+      if (!mounted) return;
+      // null = полный редирект (ушли со страницы) или пользователь закрыл popup.
+      if (result == null) return;
+
+      final err = (result['error'] ?? '').trim();
+      if (err.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        return;
+      }
+      final access = (result['access_token'] ?? '').trim();
+      final refresh = (result['refresh_token'] ?? '').trim();
+      if (access.isEmpty || refresh.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.oauthError)),
         );
-    openOAuthUrl(url);
+        return;
+      }
+      await ref.read(authStateProvider.notifier).loginWithTokens(
+            accessToken: access,
+            refreshToken: refresh,
+          );
+      if (!mounted) return;
+      final dest = safeAuthRedirect(result['redirect']) ??
+          safeAuthRedirect(widget.redirect) ??
+          '/games';
+      context.go(dest);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oauthError)),
+      );
+    } finally {
+      if (mounted) setState(() => _busyProvider = null);
+    }
   }
 }

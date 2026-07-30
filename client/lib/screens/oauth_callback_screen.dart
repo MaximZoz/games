@@ -6,6 +6,7 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/widgets/oauth_redirect.dart';
 
 class OAuthCallbackScreen extends ConsumerStatefulWidget {
   const OAuthCallbackScreen({super.key});
@@ -25,6 +26,13 @@ class _OAuthCallbackScreenState extends ConsumerState<OAuthCallbackScreen> {
 
   Future<void> _finish() async {
     final q = GoRouterState.of(context).uri.queryParameters;
+    final params = <String, String>{
+      for (final e in q.entries) e.key: e.value,
+    };
+    // Popup PWA: отдать токены opener и закрыться (без навигации в Safari-оболочке).
+    if (completeOAuthPopup(params)) {
+      return;
+    }
     final err = q['error'];
     if (err != null && err.isNotEmpty) {
       setState(() => _error = err);

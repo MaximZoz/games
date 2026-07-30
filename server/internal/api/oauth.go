@@ -253,7 +253,8 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	q.Set("access_token", accessToken)
 	q.Set("refresh_token", refreshToken)
 	q.Set("redirect", st.Redirect)
-	http.Redirect(w, r, front+"/oauth/callback?"+q.Encode(), http.StatusFound)
+	// Статический bridge: в PWA-popup закрывается мгновенно, без загрузки Flutter.
+	http.Redirect(w, r, front+"/oauth_bridge.html?"+q.Encode(), http.StatusFound)
 }
 
 func (h *AuthHandler) oauthRedirectError(w http.ResponseWriter, r *http.Request, msg string) {
@@ -270,7 +271,7 @@ func (h *AuthHandler) oauthRedirectError(w http.ResponseWriter, r *http.Request,
 	}
 	q := url.Values{}
 	q.Set("error", msg)
-	http.Redirect(w, r, front+"/oauth/callback?"+q.Encode(), http.StatusFound)
+	http.Redirect(w, r, front+"/oauth_bridge.html?"+q.Encode(), http.StatusFound)
 }
 
 type oauthIdentity struct {
