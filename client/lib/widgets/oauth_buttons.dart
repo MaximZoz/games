@@ -1,10 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:web/web.dart' as web;
+import 'package:multigames_client/widgets/oauth_redirect.dart';
 
 final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
   return ref.watch(authRepositoryProvider).fetchOAuthProviders();
@@ -98,11 +97,6 @@ class OAuthButtons extends ConsumerWidget {
           redirect: redirect,
           ref: refCode,
         );
-    if (kIsWeb) {
-      web.window.location.assign(url);
-    } else {
-      // Нативный клиент пока ведёт тем же redirect flow через внешний браузер.
-      web.window.location.assign(url);
-    }
+    openOAuthUrl(url);
   }
 }
