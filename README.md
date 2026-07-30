@@ -109,9 +109,13 @@ Go (net/http, middleware, auth, friends, chats, games, admin, logging)
   - `app_logs`;
   - `friendships`, `friend_requests`.
 - Auth API:
-  - `POST /api/auth/register`
+  - `POST /api/auth/register` — создаёт аккаунт и отправляет код на email (токены после verify)
+  - `POST /api/auth/verify-email` — подтверждение кода, выдача JWT
+  - `POST /api/auth/resend-verification` — повторная отправка кода
   - `POST /api/auth/login`
   - `POST /api/auth/refresh`
+  - `GET /api/auth/oauth/providers` — включённые OAuth (google/apple/yandex/vk)
+  - `GET /api/auth/oauth/{provider}/start` → callback → `/oauth/callback`
   - `GET /api/me`
   - `PUT /api/profile`
 - Friends API:
@@ -202,6 +206,9 @@ cp .env.example .env
 - `REDIS_URL`
 - `JWT_SECRET`
 - `ADMIN_INIT_SECRET`
+- `PUBLIC_BASE_URL`, `FRONTEND_URL` — для OAuth redirect_uri
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` — письмо с кодом (без SMTP код в лог)
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `APPLE_*`, `YANDEX_*`, `VK_*` — OAuth (пусто = кнопки скрыты)
 - `APP_LOG_FILE`, `APP_LOG_STATE_FILE`
 - `APP_LOG_SYNC_INTERVAL_SECONDS`
 - `APP_LOG_RETENTION_DAYS`
