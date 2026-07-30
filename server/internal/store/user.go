@@ -79,9 +79,11 @@ func CreateUser(
 		// Невалидный ref игнорируем — регистрация всё равно проходит.
 	}
 
+	// CreateUser вызывается только после подтверждения email (или admin init) —
+	// сразу помечаем email_verified_at.
 	row := tx.QueryRow(ctx,
-		`INSERT INTO users (email, password_hash, display_name, balance_bronze, referred_by)
-		 VALUES ($1, $2, $3, $4, $5)
+		`INSERT INTO users (email, password_hash, display_name, balance_bronze, referred_by, email_verified_at)
+		 VALUES ($1, $2, $3, $4, $5, now())
 		 RETURNING `+selectUserCols,
 		email, passwordHash, displayNamePtr, RegistrationBonusBronze, referrerID,
 	)

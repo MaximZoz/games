@@ -133,6 +133,29 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	displayName := strings.TrimSpace(req.DisplayName)
+
+	taken, err := store.EmailTakenByUser(r.Context(), h.Pool, req.Email)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	if taken {
+		WriteErr(w, r, http.StatusConflict, "email already registered")
+		return
+	}
+	if displayName != "" {
+		nameTaken, err := store.DisplayNameTakenByUser(r.Context(), h.Pool, displayName)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if nameTaken {
+			WriteErr(w, r, http.StatusConflict, "login already taken")
+			return
+		}
+	}
+
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -146,18 +169,23 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName, referredBy)
+	code, err := generateEmailCode()
 	if err != nil {
-		if msg, ok := createUserConflictMessage(err); ok {
-			WriteErr(w, r, http.StatusConflict, msg)
-			return
-		}
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
-	code, mailSent, err := h.sendCodeForUser(r, u)
+	// Пользователь в users НЕ создаётся — только заявка до подтверждения кода.
+	if _, err := store.UpsertPendingRegistration(
+		r.Context(), h.Pool, req.Email, hash, displayName, code, referredBy,
+	); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+
+	mailSent, err := h.sendVerificationMail(req.Email, code)
 	if err != nil {
+		_ = store.DeletePendingRegistration(r.Context(), h.Pool, req.Email)
 		WriteErr(w, r, http.StatusInternalServerError, "failed to send verification email")
 		return
 	}
@@ -168,7 +196,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		msg = "mail provider not configured — use dev_code"
 		devCode = code
 	}
-	writeVerificationRequired(w, http.StatusOK, u.Email, msg, mailSent, devCode)
+	writeVerificationRequired(w, http.StatusOK, req.Email, msg, mailSent, devCode)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -194,10 +222,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if u.PasswordHash == "" || !auth.CheckPassword(req.Password, u.PasswordHash) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
-		return
-	}
-	if !u.EmailVerified() {
-		writeVerificationRequired(w, http.StatusForbidden, u.Email, "email not verified", false, "")
 		return
 	}
 
