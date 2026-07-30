@@ -60,13 +60,24 @@ fly secrets set REDIS_URL="rediss://default:PASSWORD@HOST:6379" --app multigames
 
 ```bash
 # Обязательно: длинная случайная строка для JWT
-fly secrets set JWT_SECRET="$(openssl rand -base64 32)" --app multigames
+fly secrets set JWT_SECRET="$(openssl rand -base64 32)" --app multigameszozu
 
 # Опционально: секрет для создания первого админа (POST /api/admin/init)
-fly secrets set ADMIN_INIT_SECRET="твой-секретный-пароль" --app multigames
+fly secrets set ADMIN_INIT_SECRET="твой-секретный-пароль" --app multigameszozu
+
+# Почта (Resend) — без этих секретов код подтверждения НЕ уходит на email
+# (в ответе register будет "mail_sent": false, код только в fly logs)
+fly secrets set \
+  RESEND_API_KEY="re_xxxxxxxx" \
+  MAIL_FROM="MultiGames <noreply@zozugames.com>" \
+  PUBLIC_BASE_URL="https://zozugames.com" \
+  FRONTEND_URL="https://zozugames.com" \
+  --app multigameszozu
 ```
 
-Имя приложения замени на своё, если использовал другое при `fly launch`.
+Имя приложения замени на своё, если использовал другое при `fly launch`. Проверка:  
+`curl -s -X POST https://multigameszozu.fly.dev/api/auth/register -H 'Content-Type: application/json' -d '{"email":"you@example.com","password":"secret12"}'`  
+должно вернуть `"mail_sent":true`.
 
 ## 5. Деплой
 
