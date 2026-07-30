@@ -2836,6 +2836,120 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Почта ещё не настроена на сервере. Код для входа: {code}'**
   String verifyEmailDevCodeHint(String code);
+
+  /// No description provided for @loginForgotPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забыли пароль?'**
+  String get loginForgotPassword;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сброс пароля'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите email — пришлём код для нового пароля'**
+  String get forgotPasswordSubtitle;
+
+  /// No description provided for @forgotPasswordSubmit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить код'**
+  String get forgotPasswordSubmit;
+
+  /// No description provided for @forgotPasswordSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если аккаунт существует, код отправлен на почту'**
+  String get forgotPasswordSent;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый пароль'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код отправлен на {email}'**
+  String resetPasswordSubtitle(String email);
+
+  /// No description provided for @resetPasswordCodeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код из письма'**
+  String get resetPasswordCodeLabel;
+
+  /// No description provided for @resetPasswordCodeRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите код'**
+  String get resetPasswordCodeRequired;
+
+  /// No description provided for @resetPasswordNewLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый пароль'**
+  String get resetPasswordNewLabel;
+
+  /// No description provided for @resetPasswordNewRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите новый пароль'**
+  String get resetPasswordNewRequired;
+
+  /// No description provided for @resetPasswordNewShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Минимум 6 символов'**
+  String get resetPasswordNewShort;
+
+  /// No description provided for @resetPasswordConfirmLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторите пароль'**
+  String get resetPasswordConfirmLabel;
+
+  /// No description provided for @resetPasswordConfirmMismatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароли не совпадают'**
+  String get resetPasswordConfirmMismatch;
+
+  /// No description provided for @resetPasswordSubmit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить пароль'**
+  String get resetPasswordSubmit;
+
+  /// No description provided for @resetPasswordResend.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить код ещё раз'**
+  String get resetPasswordResend;
+
+  /// No description provided for @resetPasswordResent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый код отправлен'**
+  String get resetPasswordResent;
+
+  /// No description provided for @resetPasswordResendIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить код ещё раз через {time}'**
+  String resetPasswordResendIn(String time);
+
+  /// No description provided for @resetPasswordBackToLogin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуться ко входу'**
+  String get resetPasswordBackToLogin;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

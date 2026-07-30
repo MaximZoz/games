@@ -208,14 +208,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           return null;
                         },
                       ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => context.push(
+                            appendAuthQuery(
+                              '/forgot-password',
+                              redirect: _redirect,
+                              email: _emailController.text.trim(),
+                            ),
+                          ),
+                          child: Text(l10n.loginForgotPassword),
+                        ),
+                      ),
                       if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         MessageBanner(
                           message: _errorMessage!,
                           type: BannerType.error,
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       AppButton(
                         onPressed: _submit,
                         label: l10n.loginSubmit,

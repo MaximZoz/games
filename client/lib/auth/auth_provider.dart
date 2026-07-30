@@ -117,6 +117,21 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     unawaited(_enablePushForNewUser());
   }
 
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.resetPassword(
+      email: email,
+      code: code,
+      newPassword: newPassword,
+    );
+    state = AsyncValue.data(result.user);
+  }
+
   Future<void> loginWithTokens({
     required String accessToken,
     required String refreshToken,

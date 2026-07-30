@@ -249,6 +249,38 @@ class AuthRepository {
     }
   }
 
+  Future<void> forgotPassword({required String email}) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email.trim().toLowerCase()}),
+      operation: 'AuthRepository.forgotPassword',
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(response.statusCode, _messageFromResponse(response));
+    }
+  }
+
+  Future<AuthResult> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim().toLowerCase(),
+        'code': code.trim(),
+        'new_password': newPassword,
+      }),
+      operation: 'AuthRepository.resetPassword',
+    );
+    return _handleAuthResponse(response);
+  }
+
   Future<AuthResult> applySessionTokens({
     required String accessToken,
     required String refreshToken,

@@ -19,6 +19,8 @@ void main() {
       expect(safeAuthRedirect('/login'), isNull);
       expect(safeAuthRedirect('/login?redirect=/games'), isNull);
       expect(safeAuthRedirect('/register'), isNull);
+      expect(safeAuthRedirect('/forgot-password'), isNull);
+      expect(safeAuthRedirect('/reset-password?email=a@b.c'), isNull);
     });
   });
 

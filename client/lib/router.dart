@@ -29,10 +29,19 @@ import 'package:multigames_client/screens/shop_emojis_screen.dart';
 import 'package:multigames_client/screens/shop_screen.dart';
 import 'package:multigames_client/screens/shop_section_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
+import 'package:multigames_client/screens/forgot_password_screen.dart';
+import 'package:multigames_client/screens/reset_password_screen.dart';
 import 'package:multigames_client/screens/verify_email_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
-const _publicPaths = <String>{'/login', '/register', '/verify-email', '/oauth/callback'};
+const _publicPaths = <String>{
+  '/login',
+  '/register',
+  '/verify-email',
+  '/forgot-password',
+  '/reset-password',
+  '/oauth/callback',
+};
 const _authRequiredPaths = <String>{
   '/',
   '/friends',
@@ -84,7 +93,11 @@ final _startupGamesGateProvider = Provider<_StartupGamesGate>((ref) {
 
 /// Deep-link / auth — не сбрасываем на /games при cold start.
 bool _preserveStartupPath(String path) {
-  if (path == '/login' || path == '/register' || path == '/verify-email') {
+  if (path == '/login' ||
+      path == '/register' ||
+      path == '/verify-email' ||
+      path == '/forgot-password' ||
+      path == '/reset-password') {
     return true;
   }
   if (path == '/oauth/callback') return true;
@@ -282,6 +295,28 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   return _noTransitionPage(
                     state,
                     VerifyEmailScreen(email: email),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/forgot-password',
+                pageBuilder: (_, state) {
+                  final email =
+                      state.uri.queryParameters['email']?.trim() ?? '';
+                  return _noTransitionPage(
+                    state,
+                    ForgotPasswordScreen(initialEmail: email),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/reset-password',
+                pageBuilder: (_, state) {
+                  final email =
+                      state.uri.queryParameters['email']?.trim() ?? '';
+                  return _noTransitionPage(
+                    state,
+                    ResetPasswordScreen(email: email),
                   );
                 },
               ),

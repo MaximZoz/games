@@ -252,13 +252,18 @@ func encodeSubject(s string) string {
 }
 
 func extractVerificationCode(body string) string {
-	const prefix = "Ваш код подтверждения: "
-	i := strings.Index(body, prefix)
-	if i < 0 {
-		return ""
+	for _, prefix := range []string{
+		"Ваш код подтверждения: ",
+		"Ваш код для сброса пароля: ",
+	} {
+		i := strings.Index(body, prefix)
+		if i < 0 {
+			continue
+		}
+		rest := body[i+len(prefix):]
+		return strings.TrimSpace(strings.Split(rest, "\n")[0])
 	}
-	rest := body[i+len(prefix):]
-	return strings.TrimSpace(strings.Split(rest, "\n")[0])
+	return ""
 }
 
 func (m *Mailer) otpDomain() string {
@@ -283,6 +288,17 @@ func (m *Mailer) SendVerificationCode(to, code string) error {
 	domain := m.otpDomain()
 	body := fmt.Sprintf(
 		"Ваш код подтверждения: %s\n\nКод действует 15 минут.\nЕсли вы не регистрировались — просто проигнорируйте письмо.\n\n@%s #%s\n",
+		code, domain, code,
+	)
+	return m.SendPlain(to, subject, body)
+}
+
+// SendPasswordResetCode отправляет код для сброса пароля.
+func (m *Mailer) SendPasswordResetCode(to, code string) error {
+	subject := "Сброс пароля MultiGames"
+	domain := m.otpDomain()
+	body := fmt.Sprintf(
+		"Ваш код для сброса пароля: %s\n\nКод действует 15 минут.\nЕсли вы не запрашивали сброс — просто проигнорируйте письмо.\n\n@%s #%s\n",
 		code, domain, code,
 	)
 	return m.SendPlain(to, subject, body)

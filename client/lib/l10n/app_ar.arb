@@ -919,5 +919,38 @@
         "type": "String"
       }
     }
-  }
+  },
+  "loginForgotPassword": "Forgot password?",
+  "forgotPasswordTitle": "Reset password",
+  "forgotPasswordSubtitle": "Enter your email — we’ll send a code for a new password",
+  "forgotPasswordSubmit": "Send code",
+  "forgotPasswordSent": "If the account exists, a code was sent to your email",
+  "resetPasswordTitle": "New password",
+  "resetPasswordSubtitle": "We sent a code to {email}",
+  "@resetPasswordSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordCodeLabel": "Code from email",
+  "resetPasswordCodeRequired": "Enter the code",
+  "resetPasswordNewLabel": "New password",
+  "resetPasswordNewRequired": "Enter a new password",
+  "resetPasswordNewShort": "At least 6 characters",
+  "resetPasswordConfirmLabel": "Confirm password",
+  "resetPasswordConfirmMismatch": "Passwords do not match",
+  "resetPasswordSubmit": "Save password",
+  "resetPasswordResend": "Resend code",
+  "resetPasswordResent": "A new code was sent",
+  "resetPasswordResendIn": "Resend code in {time}",
+  "@resetPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordBackToLogin": "Back to sign in"
 }

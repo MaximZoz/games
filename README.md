@@ -112,6 +112,8 @@ Go (net/http, middleware, auth, friends, chats, games, admin, logging)
   - `POST /api/auth/register` — заявка + код на email; пользователь в БД создаётся только после verify
   - `POST /api/auth/verify-email` — подтверждение кода, выдача JWT
   - `POST /api/auth/resend-verification` — повторная отправка кода
+  - `POST /api/auth/forgot-password` — код сброса пароля на email
+  - `POST /api/auth/reset-password` — новый пароль по коду, выдача JWT
   - `POST /api/auth/login`
   - `POST /api/auth/refresh`
   - `GET /api/auth/oauth/providers` — включённые OAuth (google/apple/yandex/vk)

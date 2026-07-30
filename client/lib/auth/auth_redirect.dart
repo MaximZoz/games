@@ -13,6 +13,10 @@ String? safeAuthRedirect(String? raw) {
       value.startsWith('/register?') ||
       value == '/verify-email' ||
       value.startsWith('/verify-email?') ||
+      value == '/forgot-password' ||
+      value.startsWith('/forgot-password?') ||
+      value == '/reset-password' ||
+      value.startsWith('/reset-password?') ||
       value == '/oauth/callback' ||
       value.startsWith('/oauth/callback?')) {
     return null;

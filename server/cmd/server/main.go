@@ -378,6 +378,8 @@ func main() {
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/api/auth/verify-email", authHandler.VerifyEmail)
 	mux.HandleFunc("/api/auth/resend-verification", authHandler.ResendVerification)
+	mux.HandleFunc("/api/auth/forgot-password", authHandler.ForgotPassword)
+	mux.HandleFunc("/api/auth/reset-password", authHandler.ResetPassword)
 	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
 	mux.HandleFunc("/api/auth/oauth/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -468,7 +470,7 @@ func main() {
 	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
-	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/verify-email, POST /api/auth/resend-verification, GET /api/me (Bearer)")
+	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/verify-email, POST /api/auth/resend-verification, POST /api/auth/forgot-password, POST /api/auth/reset-password, GET /api/me (Bearer)")
 	log.Printf("OAuth: GET /api/auth/oauth/providers, GET /api/auth/oauth/{google|apple|yandex|vk}/start, /callback")
 	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
