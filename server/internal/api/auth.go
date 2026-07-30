@@ -186,7 +186,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	mailSent, err := h.sendVerificationMail(req.Email, code)
 	if err != nil {
 		_ = store.DeletePendingRegistration(r.Context(), h.Pool, req.Email)
-		WriteErr(w, r, http.StatusInternalServerError, "failed to send verification email")
+		WriteErr(w, r, http.StatusBadGateway, mailSendUserMessage(err))
 		return
 	}
 

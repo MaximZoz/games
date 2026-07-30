@@ -60,7 +60,21 @@ func (h *AuthHandler) sendVerificationMail(email, code string) (mailSent bool, e
 		log.Printf("[auth] send verification email to %s via %s failed: %v", email, h.Mailer.Provider(), err)
 		return false, err
 	}
+	log.Printf("[auth] verification email queued to %s via %s", email, h.Mailer.Provider())
 	return true, nil
+}
+
+func mailSendUserMessage(err error) string {
+	if err == nil {
+		return "failed to send verification email"
+	}
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "testing mode") ||
+		strings.Contains(msg, "testing emails") ||
+		strings.Contains(msg, "verify a domain") {
+		return "cannot deliver to this email yet: verify your domain in Resend (MAIL_FROM must use that domain)"
+	}
+	return "failed to send verification email"
 }
 
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +225,7 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 
 	mailSent, err := h.sendVerificationMail(email, code)
 	if err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "failed to send verification email")
+		WriteErr(w, r, http.StatusBadGateway, mailSendUserMessage(err))
 		return
 	}
 

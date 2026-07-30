@@ -152,82 +152,94 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               constraints: BoxConstraints(maxWidth: formMaxWidth),
               child: GradientCard(
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.verifyEmailTitle,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.verifyEmailSubtitle(widget.email),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
+                child: AutofillGroup(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.verifyEmailTitle,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
-                      ),
-                      const SizedBox(height: 28),
-                      TextFormField(
-                        controller: _codeController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.done,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: l10n.verifyEmailCodeLabel,
-                          prefixIcon: const Icon(Icons.mark_email_read_outlined),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return l10n.verifyEmailCodeRequired;
-                          }
-                          return null;
-                        },
-                        onFieldSubmitted: (_) => _submit(),
-                      ),
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
-                        MessageBanner(message: _errorMessage!, type: BannerType.error),
-                      ],
-                      if (_infoMessage != null) ...[
-                        const SizedBox(height: 16),
-                        MessageBanner(message: _infoMessage!, type: BannerType.success),
-                      ],
-                      const SizedBox(height: 24),
-                      AppButton(
-                        onPressed: _submit,
-                        label: l10n.verifyEmailSubmit,
-                        isLoading: _isLoading,
-                        expanded: true,
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: _canResend ? _resend : null,
-                        child: Text(
-                          _resending ? '…' : resendLabel,
-                          style: TextStyle(
-                            color: _canResend
-                                ? null
-                                : AppColors.textSecondary.withValues(alpha: 0.7),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.verifyEmailSubtitle(widget.email),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
                           ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => context.go(
-                          appendAuthQuery('/login', redirect: _redirect),
+                        const SizedBox(height: 28),
+                        TextFormField(
+                          controller: _codeController,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.oneTimeCode],
+                          enableSuggestions: false,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          decoration: InputDecoration(
+                            labelText: l10n.verifyEmailCodeLabel,
+                            prefixIcon: const Icon(Icons.mark_email_read_outlined),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return l10n.verifyEmailCodeRequired;
+                            }
+                            if (v.trim().length != 6) {
+                              return l10n.verifyEmailCodeRequired;
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            if (value.trim().length == 6 && !_isLoading) {
+                              _submit();
+                            }
+                          },
+                          onFieldSubmitted: (_) => _submit(),
                         ),
-                        child: Text(l10n.registerHaveAccount),
-                      ),
-                    ],
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          MessageBanner(message: _errorMessage!, type: BannerType.error),
+                        ],
+                        if (_infoMessage != null) ...[
+                          const SizedBox(height: 16),
+                          MessageBanner(message: _infoMessage!, type: BannerType.success),
+                        ],
+                        const SizedBox(height: 24),
+                        AppButton(
+                          onPressed: _submit,
+                          label: l10n.verifyEmailSubmit,
+                          isLoading: _isLoading,
+                          expanded: true,
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _canResend ? _resend : null,
+                          child: Text(
+                            _resending ? '…' : resendLabel,
+                            style: TextStyle(
+                              color: _canResend
+                                  ? null
+                                  : AppColors.textSecondary.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.go(
+                            appendAuthQuery('/login', redirect: _redirect),
+                          ),
+                          child: Text(l10n.registerHaveAccount),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

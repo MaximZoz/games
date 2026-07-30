@@ -207,8 +207,8 @@ cp .env.example .env
 - `JWT_SECRET`
 - `ADMIN_INIT_SECRET`
 - `PUBLIC_BASE_URL`, `FRONTEND_URL` — для OAuth redirect_uri
-- `RESEND_API_KEY`, `MAIL_FROM` — письма с кодом через [Resend](https://resend.com) (предпочтительно)
-- `SMTP_*` — альтернатива Resend; без почты код в логе и в `dev_code` ответа API
+- `RESEND_API_KEY`, `MAIL_FROM` — письма с кодом через [Resend](https://resend.com) (предпочтительно). Код всегда адресуется на email из регистрации; с `onboarding@resend.dev` Resend доставляет только на email аккаунта Resend — после верификации домена поставьте `MAIL_FROM=MultiGames <noreply@ваш-домен>`
+- `SMTP_*` — альтернатива Resend; без почты код только в логе сервера
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `APPLE_*`, `YANDEX_*`, `VK_*` — OAuth (пусто = кнопки скрыты)
 - `APP_LOG_FILE`, `APP_LOG_STATE_FILE`
 - `APP_LOG_SYNC_INTERVAL_SECONDS`

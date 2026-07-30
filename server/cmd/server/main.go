@@ -270,6 +270,9 @@ func main() {
 		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
 	}
 
+	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")
+	frontendURL := getEnv("FRONTEND_URL", publicBase)
+
 	mailFrom := getEnv("MAIL_FROM", "")
 	if mailFrom == "" {
 		mailFrom = getEnv("SMTP_FROM", "")
@@ -277,6 +280,7 @@ func main() {
 	mail := mailer.New(mailer.Config{
 		ResendAPIKey: getEnv("RESEND_API_KEY", ""),
 		From:         mailFrom,
+		AppOrigin:    frontendURL,
 		Host:         getEnv("SMTP_HOST", ""),
 		Port:         getEnv("SMTP_PORT", "587"),
 		Username:     getEnv("SMTP_USER", ""),
@@ -285,14 +289,14 @@ func main() {
 	switch mail.Provider() {
 	case "resend":
 		log.Printf("Mailer: Resend enabled (from=%s)", mailFrom)
+		if strings.Contains(strings.ToLower(mailFrom), "onboarding@resend.dev") {
+			log.Printf("Mailer: Resend sandbox From — delivery only to your Resend account email until domain is verified")
+		}
 	case "smtp":
 		log.Printf("Mailer: SMTP enabled (%s)", getEnv("SMTP_HOST", ""))
 	default:
 		log.Printf("Mailer: not configured — set RESEND_API_KEY (or SMTP_*); codes logged only")
 	}
-
-	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")
-	frontendURL := getEnv("FRONTEND_URL", publicBase)
 	oauthCfg := &api.OAuthConfig{
 		PublicBaseURL:      publicBase,
 		FrontendURL:        frontendURL,

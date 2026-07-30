@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/smtp"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -18,6 +19,9 @@ import (
 type Config struct {
 	ResendAPIKey string
 	From         string // "MultiGames <noreply@zozu.games>" или onboarding@resend.dev
+	// AppOrigin — URL фронта (FRONTEND_URL). Хост используется в строке
+	// "@host #CODE" для автоподстановки OTP из письма (iOS/Safari и др.).
+	AppOrigin string
 
 	Host     string
 	Port     string
@@ -120,10 +124,24 @@ func (m *Mailer) sendResend(to, subject, body string) error {
 	defer resp.Body.Close()
 	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("status %d: %s", resp.StatusCode, strings.TrimSpace(string(respBody)))
+		msg := strings.TrimSpace(string(respBody))
+		if isResendTestingRestriction(msg) {
+			return fmt.Errorf(
+				"resend testing mode: can only deliver to the Resend account email until a domain is verified (status %d: %s)",
+				resp.StatusCode, msg,
+			)
+		}
+		return fmt.Errorf("status %d: %s", resp.StatusCode, msg)
 	}
 	log.Printf("[mailer] resend ok to=%s", to)
 	return nil
+}
+
+func isResendTestingRestriction(msg string) bool {
+	lower := strings.ToLower(msg)
+	return strings.Contains(lower, "testing emails") ||
+		strings.Contains(lower, "verify a domain") ||
+		strings.Contains(lower, "only send testing")
 }
 
 func (m *Mailer) sendSMTP(to, subject, body string) error {
@@ -243,12 +261,29 @@ func extractVerificationCode(body string) string {
 	return strings.TrimSpace(strings.Split(rest, "\n")[0])
 }
 
-// SendVerificationCode отправляет 6-значный код подтверждения.
+func (m *Mailer) otpDomain() string {
+	raw := strings.TrimSpace(m.cfg.AppOrigin)
+	if raw == "" {
+		return "localhost"
+	}
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Hostname() == "" {
+		return "localhost"
+	}
+	return u.Hostname()
+}
+
+// SendVerificationCode отправляет 6-значный код на указанный адрес (to = email регистрации).
+// В конце тела — строка "@host #CODE" для автозаполнения OTP из почты.
 func (m *Mailer) SendVerificationCode(to, code string) error {
 	subject := "Код подтверждения MultiGames"
+	domain := m.otpDomain()
 	body := fmt.Sprintf(
-		"Ваш код подтверждения: %s\n\nКод действует 15 минут.\nЕсли вы не регистрировались — просто проигнорируйте письмо.\n",
-		code,
+		"Ваш код подтверждения: %s\n\nКод действует 15 минут.\nЕсли вы не регистрировались — просто проигнорируйте письмо.\n\n@%s #%s\n",
+		code, domain, code,
 	)
 	return m.SendPlain(to, subject, body)
 }
