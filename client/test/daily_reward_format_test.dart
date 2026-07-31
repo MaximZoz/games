@@ -13,23 +13,29 @@ void main() {
     expect(formatRewardBronze(3000), '30 серебряных');
   });
 
-  test('formatRewardBronze округляет вверх до большей монеты', () {
+  test('formatRewardBronze без округления вверх', () {
     expect(formatRewardBronze(1), '1 бронзовых');
     expect(formatRewardBronze(99), '99 бронзовых');
     expect(formatRewardBronze(100), '1 серебряных');
-    expect(formatRewardBronze(101), '2 серебряных');
-    expect(formatRewardBronze(150), '2 серебряных');
-    expect(formatRewardBronze(9999), '1 золотых'); // 100 серебра → 1 золото
+    expect(formatRewardBronze(101), '1 серебряных 1 бронзовых');
+    expect(formatRewardBronze(133), '1 серебряных 33 бронзовых');
+    expect(formatRewardBronze(150), '1 серебряных 50 бронзовых');
+    expect(formatRewardBronze(63), '63 бронзовых');
+    expect(formatRewardBronze(9999), '99 серебряных 99 бронзовых');
     expect(formatRewardBronze(10000), '1 золотых');
-    expect(formatRewardBronze(10001), '2 золотых');
+    expect(formatRewardBronze(10001), '1 золотых 1 бронзовых');
   });
 
   test('formatRewardBronzePerDay', () {
     expect(formatRewardBronzePerDay(10), '10 бронзовых в день');
     expect(formatRewardBronzePerDay(100), '1 серебряных в день');
+    expect(
+      formatRewardBronzePerDay(133),
+      '1 серебряных 33 бронзовых в день',
+    );
   });
 
-  test('rewardCoinType', () {
+  test('rewardCoinType — старший ненулевой номинал', () {
     expect(rewardCoinType(10), CoinType.bronze);
     expect(rewardCoinType(50), CoinType.bronze);
     expect(rewardCoinType(100), CoinType.silver);
@@ -37,13 +43,16 @@ void main() {
     expect(rewardCoinType(1000), CoinType.silver);
     expect(rewardCoinType(3000), CoinType.silver);
     expect(rewardCoinType(10000), CoinType.gold);
-    expect(rewardCoinType(9999), CoinType.gold);
+    expect(rewardCoinType(9999), CoinType.silver);
+    expect(rewardCoinType(10001), CoinType.gold);
   });
 
-  test('rewardCoinAmount', () {
+  test('rewardCoinAmount — количество старшего номинала', () {
     expect(rewardCoinAmount(10), 10);
-    expect(rewardCoinAmount(101), 2);
+    expect(rewardCoinAmount(101), 1);
+    expect(rewardCoinAmount(133), 1);
     expect(rewardCoinAmount(10000), 1);
-    expect(rewardCoinAmount(10001), 2);
+    expect(rewardCoinAmount(10001), 1);
+    expect(rewardCoinAmount(250), 2);
   });
 }
