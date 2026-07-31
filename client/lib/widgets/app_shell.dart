@@ -7,6 +7,8 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/push_notification_nav_stub.dart'
+    if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -176,6 +178,8 @@ class AppShell extends ConsumerWidget {
       if (!context.mounted) return;
       try {
         ref.read(currentRoutePathProvider.notifier).state = path;
+        // SW глушит пуш про уже открытый чат/матч (особенно iOS PWA).
+        reportPushSwActiveRoute(path);
         final shouldClearToolbar =
             !onFriends && !onChatsList && !(inChatRoom && narrowLandscape);
         if (shouldClearToolbar) {
