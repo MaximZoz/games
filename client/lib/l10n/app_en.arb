@@ -600,6 +600,9 @@
       }
     }
   },
+  "inventoryGiftAlreadyOwns": "This user already has this collection",
+  "inventoryGiftSelf": "You can't gift a collection to yourself",
+  "inventoryGiftNotOwned": "You don't own this item",
   "inventoryLoadFailed": "Could not load items",
   "inventoryNoCollections": "No collections — buy them in the shop",
   "inventoryNoEmojis": "No emojis — buy them in the shop",

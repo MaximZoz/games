@@ -2171,6 +2171,24 @@ abstract class AppLocalizations {
   /// **'Подарено: {title}'**
   String inventoryGifted(String title);
 
+  /// No description provided for @inventoryGiftAlreadyOwns.
+  ///
+  /// In ru, this message translates to:
+  /// **'У этого пользователя уже есть эта коллекция'**
+  String get inventoryGiftAlreadyOwns;
+
+  /// No description provided for @inventoryGiftSelf.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя подарить коллекцию самому себе'**
+  String get inventoryGiftSelf;
+
+  /// No description provided for @inventoryGiftNotOwned.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас нет этого предмета'**
+  String get inventoryGiftNotOwned;
+
   /// No description provided for @inventoryLoadFailed.
   ///
   /// In ru, this message translates to:

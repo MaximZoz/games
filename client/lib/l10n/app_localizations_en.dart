@@ -1088,6 +1088,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'This user already has this collection';
+
+  @override
+  String get inventoryGiftSelf => 'You can\'t gift a collection to yourself';
+
+  @override
+  String get inventoryGiftNotOwned => 'You don\'t own this item';
+
+  @override
   String get inventoryLoadFailed => 'Could not load items';
 
   @override

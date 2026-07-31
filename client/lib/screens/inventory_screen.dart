@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/utils/user_error.dart';
 
 Map<String, String> get _groupTitles {
   final l10n = LocaleService.l10n;
@@ -215,7 +216,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        message: formatUserError(
+          e,
+          fallback: context.l10n.commonGenericError,
+        ),
         kind: AppSnackKind.error,
       );
     }
