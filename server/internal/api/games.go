@@ -340,10 +340,18 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 			}
 			otherUUID, err := uuid.Parse(otherUserID)
 			if err == nil && otherUUID != userID {
+				// Переиспользуем лобби ожидающего: он сидит на /lobby/{id},
+				// и клиент принимает game_started только с тем же lobby_id.
+				reuseLobbyID := ""
 				if otherLobbyID != "" {
-					h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+					lm, lerr := h.Rdb.HGetAll(ctx, "lobby:"+otherLobbyID).Result()
+					if lerr == nil && len(lm) > 0 && lm["status"] == lobbyStatusWaitingMatchmake {
+						reuseLobbyID = otherLobbyID
+					} else {
+						h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+					}
 				}
-				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
+				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, reuseLobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 				if err != nil {
 					if err == store.ErrStakeNotAllowed {
 						WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
@@ -572,7 +580,10 @@ func emptyBoardJSON(gridSize int) string {
 	return string(raw)
 }
 
-func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
+// createGameFromMatch создаёт игру после матчмейкинга.
+// Если existingLobbyID не пуст — обновляет лобби ожидающего (чтобы WS
+// game_started совпал с URL /lobby/{id} и сразу увёл его в игру).
+func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
 	for _, uid := range []uuid.UUID{user1, user2} {
 		ok, e := store.UserMayStake(ctx, h.Pool, uid, stakeBronze)
 		if e != nil {
@@ -586,7 +597,11 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 		return "", "", err
 	}
 	gameID = uuid.New().String()
-	lobbyID = uuid.New().String()
+	reuseLobby := strings.TrimSpace(existingLobbyID)
+	lobbyID = reuseLobby
+	if lobbyID == "" {
+		lobbyID = uuid.New().String()
+	}
 
 	xUserID := user1.String()
 	oUserID := user2.String()
@@ -620,19 +635,30 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 	pipe.HSet(ctx, key, gameFields...)
 	pipe.Expire(ctx, key, 24*time.Hour)
 
-	pipe.HSet(ctx, lobbyKey,
-		"game_type", "tictactoe",
-		"creator_id", user1.String(),
-		"opponent_id", user2.String(),
-		"status", lobbyStatusInGame,
-		"game_id", gameID,
-		"created_at", time.Now().UTC().Format(time.RFC3339Nano),
-		"mode", "matchmake",
-		"turn_time_sec", strconv.Itoa(turnTimeSec),
-		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
-	)
+	if reuseLobby != "" {
+		// Лобби ожидающего уже содержит настройки — только статус/соперник/игра.
+		// creator_id остаётся за ожидающим; opponent — тот, кто только что нашёл пару.
+		pipe.HSet(ctx, lobbyKey,
+			"opponent_id", user1.String(),
+			"status", lobbyStatusInGame,
+			"game_id", gameID,
+		)
+	} else {
+		pipe.HSet(ctx, lobbyKey,
+			"game_type", "tictactoe",
+			"creator_id", user1.String(),
+			"opponent_id", user2.String(),
+			"status", lobbyStatusInGame,
+			"game_id", gameID,
+			"created_at", time.Now().UTC().Format(time.RFC3339Nano),
+			"mode", "matchmake",
+			"turn_time_sec", strconv.Itoa(turnTimeSec),
+			"grid_size", strconv.Itoa(gridSize),
+			"swap_rule", strconv.FormatBool(swapRule),
+			"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+			"stake_bronze", strconv.Itoa(stakeBronze),
+		)
+	}
 	pipe.Expire(ctx, lobbyKey, 24*time.Hour)
 
 	_, err = pipe.Exec(ctx)
@@ -1445,6 +1471,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		"game_id":     gameID,
 		"opponent_id": userID.String(),
 	})
+	// Дублируем game_started — ожидающий в лобби и AppShell сразу уводят обоих в игру.
+	h.publishGameStarted([]uuid.UUID{creatorUUID, userID}, gameID, lobbyID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
