@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
@@ -1862,18 +1863,36 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return entries;
   }
 
-  /// Непрочитанные в других чатах (текущий уже читаем — не считаем).
-  int _otherChatsUnreadCount() {
+  /// Сумма бейджей нижнего меню, пока открыт этот чат:
+  /// другие диалоги + игры (инвайты/ход) + друзья + главная.
+  int _shellNotificationCount() {
     final chats =
         ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     final localRead = ref.watch(locallyReadChatIdsProvider);
-    var sum = 0;
+    var otherChats = 0;
     for (final item in chats) {
       if (item.chatID == widget.chatID) continue;
       if (localRead.contains(item.chatID)) continue;
-      sum += item.unreadCount;
+      otherChats += item.unreadCount;
     }
-    return sum;
+    final incomingFriends = ref.watch(friendsIncomingCountProvider);
+    final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
+    final gameInvites = ref.watch(gameInvitesCountProvider);
+    final dailyReward =
+        ref.watch(dailyRewardAvailableProvider).valueOrNull == true ? 1 : 0;
+    final achievements =
+        ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final collectionIncome =
+        ref.watch(collectionIncomeAvailableProvider) ? 1 : 0;
+    final gifted = ref.watch(unreadGiftedCollectionsCountProvider);
+    return otherChats +
+        incomingFriends +
+        gamesMyTurn +
+        gameInvites +
+        dailyReward +
+        achievements +
+        collectionIncome +
+        gifted;
   }
 
   Widget _buildChatToolbar({
@@ -1885,8 +1904,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final statusText = presence == null
         ? null
         : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
-    final otherUnread = _otherChatsUnreadCount();
-    final unreadLabel = otherUnread > 99 ? '99+' : '$otherUnread';
+    final notifyCount = _shellNotificationCount();
+    final notifyLabel = notifyCount > 99 ? '99+' : '$notifyCount';
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Row(
@@ -1908,7 +1927,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     padding: EdgeInsets.fromLTRB(
                       8,
                       10,
-                      otherUnread > 0 ? 6 : 8,
+                      notifyCount > 0 ? 6 : 8,
                       10,
                     ),
                     child: Row(
@@ -1920,10 +1939,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               ? AppColors.textSecondary.withValues(alpha: 0.4)
                               : null,
                         ),
-                        if (otherUnread > 0) ...[
+                        if (notifyCount > 0) ...[
                           const SizedBox(width: 2),
                           Text(
-                            '($unreadLabel)',
+                            '($notifyLabel)',
                             style: TextStyle(
                               color: _leavingToChats
                                   ? AppColors.accentStart.withValues(alpha: 0.4)
