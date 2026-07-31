@@ -261,35 +261,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         isLoading: _isLoading,
                         expanded: true,
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 44,
-                        width: double.infinity,
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textPrimary,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            minimumSize: const Size(double.infinity, 44),
-                            padding: EdgeInsets.zero,
-                          ),
-                          onPressed: () => context.go(
-                            appendAuthQuery(
-                              '/login',
-                              redirect: _redirect,
-                              ref: _ref,
-                            ),
-                          ),
-                          child: Text(
-                            l10n.registerHaveAccount,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                      TextButton(
+                        onPressed: () => context.go(
+                          appendAuthQuery(
+                            '/login',
+                            redirect: _redirect,
+                            ref: _ref,
                           ),
                         ),
+                        child: Text(l10n.registerHaveAccount),
                       ),
                       OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],
