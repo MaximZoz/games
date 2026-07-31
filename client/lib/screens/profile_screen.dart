@@ -1034,9 +1034,19 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        content: Text(context.l10n.profileNameLatinOnly),
+        content: Text(
+          context.l10n.profileNameLatinOnly,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        backgroundColor: const Color(0xFF1E293B),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
