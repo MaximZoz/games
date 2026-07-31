@@ -609,33 +609,39 @@ class _CollectionSetFrame extends StatelessWidget {
     final complete = total > 0 && owned >= total;
     final header = Row(
       children: [
-        Flexible(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: onOpenShop != null
-                  ? AppColors.accentStart
-                  : AppColors.textPrimary,
-            ),
-            overflow: TextOverflow.ellipsis,
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: onOpenShop != null
+                        ? AppColors.accentStart
+                        : AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (setBonusBronze > 0) ...[
+                const SizedBox(width: 8),
+                BalanceDisplay(
+                  bronze: setBonusBronze,
+                  prefix: complete ? '+' : null,
+                  coinSize: 15,
+                  fontSize: 12,
+                  spacing: 4,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  opacity: complete ? 1 : 0.32,
+                ),
+              ],
+            ],
           ),
         ),
-        if (setBonusBronze > 0) ...[
-          const SizedBox(width: 8),
-          BalanceDisplay(
-            bronze: setBonusBronze,
-            prefix: complete ? '+' : null,
-            coinSize: 15,
-            fontSize: 12,
-            spacing: 4,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            opacity: complete ? 1 : 0.32,
-          ),
-        ],
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Text(
           countLabel,
           style: const TextStyle(
@@ -645,7 +651,7 @@ class _CollectionSetFrame extends StatelessWidget {
           ),
         ),
         if (onOpenShop != null) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: 2),
           Icon(
             Icons.chevron_right_rounded,
             size: 22,
