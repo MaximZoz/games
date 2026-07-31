@@ -92,7 +92,7 @@ type DeletedInviteChatMessage struct {
 }
 
 // DeleteInviteLobbyShareMessages удаляет все сообщения-ссылки на данное лобби
-// (у всех, кому отправили «Войти в игру»), когда игра уже началась.
+// (у всех, кому отправили «Войти в игру»), когда лобби закрыто или игра началась.
 func DeleteInviteLobbyShareMessages(
 	ctx context.Context,
 	pool *pgxpool.Pool,

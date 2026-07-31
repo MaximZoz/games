@@ -1120,6 +1120,8 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		// TTL/уже закрыто — убрать устаревшие ссылки из чатов.
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1299,6 +1301,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1450,6 +1453,9 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			h.Rdb.Del(ctx, k)
 			h.Rdb.Del(ctx, k+":invited")
 			staleLobbyID := strings.TrimPrefix(k, "lobby:")
+			if staleLobbyID != "" {
+				h.cleanupInviteLobbyChatMessages(ctx, staleLobbyID)
+			}
 			if isDupFromCreator && staleLobbyID != "" {
 				h.broadcast([]uuid.UUID{userID}, map[string]any{
 					"type":     "lobby_updated",
@@ -1483,7 +1489,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 }
 
 // cleanupInviteLobbyChatMessages удаляет chat-сообщения со ссылкой на лобби
-// и рассылает chat_message_deleted / chat_list_changed участникам.
+// (старт игры, закрытие лобби, отклонение инвайта) и шлёт realtime участникам.
 func (h *GamesHandler) cleanupInviteLobbyChatMessages(ctx context.Context, lobbyID string) {
 	if h == nil || h.Pool == nil {
 		return
@@ -1562,6 +1568,7 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 
 	clearUserActiveLobby(ctx, h.Rdb, userID)
 	h.Rdb.Del(ctx, key)
+	h.Rdb.Del(ctx, key+":invited")
 	if status == lobbyStatusWaitingMatchmake {
 		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 		gridSize, _ := strconv.Atoi(m["grid_size"])
@@ -1573,6 +1580,8 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		h.Rdb.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze), 0, userID.String()+":"+lobbyID)
 	}
+	// Ссылка «Войти в игру» в чатах больше не актуальна.
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"left": true})
@@ -1605,7 +1614,9 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
 	h.Rdb.Del(ctx, key)
+	h.Rdb.Del(ctx, key+":invited")
 	clearUserActiveLobby(ctx, h.Rdb, userID)
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
 	h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
 		"type":     "invite_declined",
