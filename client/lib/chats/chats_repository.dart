@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 
 class ChatUserItem {
@@ -166,7 +167,11 @@ class ChatMessageItem {
 
   String get previewText {
     final l10n = LocaleService.l10n;
-    final t = replaceAnimatedEmojiTokens(body.trim());
+    final raw = body.trim();
+    if (isInviteLobbyMessage(raw)) {
+      return formatChatMessagePreview(raw);
+    }
+    final t = replaceAnimatedEmojiTokens(raw);
     final n = imageCount > 0 ? imageCount : (hasImage ? 1 : 0);
     if (n > 1 && t.isEmpty) return l10n.photoCount(n);
     if (n > 1) return l10n.photoCountWithText(n, t);
