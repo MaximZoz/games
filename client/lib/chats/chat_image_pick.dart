@@ -77,25 +77,30 @@ Uint8List compressChatImageBytes(Uint8List source) {
   return best ?? source;
 }
 
-/// Выбор фото для чата (камера / галерея) с агрессивным JPEG-сжатием.
-Future<PickedChatImage?> pickAndCompressChatImage(ImageSource source) async {
-  Uint8List? raw;
+/// Сырые байты из галереи/камеры (без финального сжатия).
+Future<Uint8List?> pickChatImageRawBytes(ImageSource source) async {
   if (kIsWeb && source == ImageSource.gallery) {
-    raw = await pickImageBytesWeb();
-  } else {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: source,
-      // Предсжатие на нативе; финальное — compressChatImageBytes.
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 55,
-    );
-    if (file == null) return null;
-    raw = await file.readAsBytes();
+    final raw = await pickImageBytesWeb();
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
   }
-  if (raw == null || raw.isEmpty) return null;
+  final picker = ImagePicker();
+  final file = await picker.pickImage(
+    source: source,
+    // Предсжатие на нативе; финальное — compressChatImageBytes.
+    maxWidth: 1280,
+    maxHeight: 1280,
+    imageQuality: 55,
+  );
+  if (file == null) return null;
+  final raw = await file.readAsBytes();
+  if (raw.isEmpty) return null;
+  return raw;
+}
 
+/// Сжатие уже выбранных байтов в JPEG для отправки в чат.
+PickedChatImage? compressRawChatImage(Uint8List raw) {
+  if (raw.isEmpty) return null;
   final compressed = compressChatImageBytes(raw);
   if (compressed.isEmpty) return null;
   if (compressed.lengthInBytes > chatImageHardMaxBytes) {
@@ -110,10 +115,16 @@ Future<PickedChatImage?> pickAndCompressChatImage(ImageSource source) async {
       base64: base64Encode(tighter),
     );
   }
-
   return PickedChatImage(
     bytes: compressed,
     mime: 'image/jpeg',
     base64: base64Encode(compressed),
   );
+}
+
+/// Выбор фото для чата (камера / галерея) с агрессивным JPEG-сжатием.
+Future<PickedChatImage?> pickAndCompressChatImage(ImageSource source) async {
+  final raw = await pickChatImageRawBytes(source);
+  if (raw == null) return null;
+  return compressRawChatImage(raw);
 }

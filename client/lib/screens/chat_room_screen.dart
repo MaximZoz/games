@@ -104,8 +104,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   List<ChatMessageItem> _messages = const [];
   ChatMessageItem? _replyTo;
   ChatMessageItem? _editingMessage;
-  final List<PickedChatImage> _pendingImages = [];
+  final List<_PendingImageEntry> _pendingImages = [];
   static const int _maxPendingImages = 3;
+  int _pendingImageSeq = 0;
   static const Color _composerIconPurple = Color(0xFF8B5CF6);
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
   String? _highlightedMessageID;
@@ -523,14 +524,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       return;
     }
 
-    if (text.isEmpty && _pendingImages.isEmpty) return;
+    if (_pendingImages.any((e) => e.isLoading)) return;
+    final readyImages = [
+      for (final e in _pendingImages)
+        if (e.image != null) e.image!,
+    ];
+    if (text.isEmpty && readyImages.isEmpty) return;
 
     setState(() {
       _sending = true;
       _composerAlert = null;
     });
     try {
-      final images = List<PickedChatImage>.of(_pendingImages);
+      final images = readyImages;
       final replyID = _replyTo?.id;
       if (images.isEmpty) {
         final sent = await ref.read(chatsRepositoryProvider).sendMessage(
@@ -628,15 +634,36 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _pendingImages.length >= _maxPendingImages) {
       return;
     }
-    // Сразу галерея/фото, без нижней панели и без «файл».
-    final picked = await pickAndCompressChatImage(ImageSource.gallery);
-    if (!mounted) return;
-    if (picked == null) return;
+    // Сначала выбор файла; превью с лоадером — сразу после выбора, до сжатия.
+    final raw = await pickChatImageRawBytes(ImageSource.gallery);
+    if (!mounted || raw == null) return;
+    if (_pendingImages.length >= _maxPendingImages) return;
+
+    final entryId = 'pending_${_pendingImageSeq++}';
     setState(() {
-      if (_pendingImages.length < _maxPendingImages) {
-        _pendingImages.add(picked);
-      }
+      _pendingImages.add(_PendingImageEntry.loading(entryId));
       _composerAlert = null;
+    });
+    // Дать кадру отрисовать плейсхолдер с лоадером.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    PickedChatImage? picked;
+    try {
+      picked = await Future<PickedChatImage?>(() => compressRawChatImage(raw));
+    } catch (_) {
+      picked = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      final index = _pendingImages.indexWhere((e) => e.id == entryId);
+      if (index < 0) return;
+      if (picked == null) {
+        _pendingImages.removeAt(index);
+        _composerAlert = LocaleService.l10n.commonGenericError;
+      } else {
+        _pendingImages[index] = _PendingImageEntry.ready(entryId, picked);
+      }
     });
   }
 
@@ -2429,16 +2456,35 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
-                                      onTap: () => _previewPendingImage(
-                                        _pendingImages[i],
-                                      ),
+                                      onTap: _pendingImages[i].image == null
+                                          ? null
+                                          : () => _previewPendingImage(
+                                                _pendingImages[i].image!,
+                                              ),
                                       borderRadius: BorderRadius.circular(10),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
-                                        child: Image.memory(
-                                          _pendingImages[i].bytes,
-                                          fit: BoxFit.cover,
-                                        ),
+                                        child: _pendingImages[i].image == null
+                                            ? ColoredBox(
+                                                color: AppColors.accentSoft
+                                                    .withValues(alpha: 0.55),
+                                                child: const Center(
+                                                  child: SizedBox(
+                                                    width: 22,
+                                                    height: 22,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2.2,
+                                                      color:
+                                                          _composerIconPurple,
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : Image.memory(
+                                                _pendingImages[i].image!.bytes,
+                                                fit: BoxFit.cover,
+                                              ),
                                       ),
                                     ),
                                   ),
@@ -2618,7 +2664,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       ),
                     ),
                     IconButton(
-                      onPressed: _sending ? null : _sendMessage,
+                      onPressed: (_sending ||
+                              _pendingImages.any((e) => e.isLoading))
+                          ? null
+                          : _sendMessage,
                       tooltip: _editingMessage != null
                           ? context.l10n.commonSave
                           : context.l10n.commonSend,
@@ -3267,4 +3316,15 @@ class _ChatTimelineEntry {
 
   final String? headerLabel;
   final ChatMessageItem? message;
+}
+
+/// Слот превью вложения: сначала лоадер, затем готовое фото.
+class _PendingImageEntry {
+  const _PendingImageEntry.loading(this.id) : image = null;
+  const _PendingImageEntry.ready(this.id, this.image);
+
+  final String id;
+  final PickedChatImage? image;
+
+  bool get isLoading => image == null;
 }
