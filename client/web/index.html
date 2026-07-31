@@ -17,15 +17,21 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- interactive-widget=resizes-content: меньше рассинхрона hit-test при клавиатуре (Chrome/Android). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Zozu Games — online mini-games">
 
   <!-- iOS meta tags & icons (PWA / Web Push: нужна установка на «Домой») -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <!-- black-translucent: контент под status bar; фон body совпадает с панелью -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!--
+    ВАЖНО: не black-translucent.
+    На iOS PWA translucent даёт укороченный layout viewport и сдвиг hit-test
+    («кнопки жмутся сверху», пока не ткнёшь в TextField).
+    Meta читается при Add to Home Screen — после смены удалите иконку и добавьте снова.
+  -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Zozu Games">
   <meta name="theme-color" content="#E8ECF4">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -43,17 +49,21 @@
       margin: 0;
       padding: 0;
       width: 100%;
+      /* 100% + black-translucent ломали viewport; 100dvh — реальная высота экрана */
       height: 100%;
+      height: 100dvh;
+      min-height: 100%;
+      min-height: -webkit-fill-available;
       overflow: hidden;
       overflow-x: hidden;
       overscroll-behavior: none;
       overscroll-behavior-x: none;
-      /* После splash — цвет шапки/низа приложения */
       background-color: #E8ECF4;
     }
     body {
       background-color: #E8ECF4;
       touch-action: pan-y;
+      position: relative;
     }
     flt-glass-pane, flutter-view, flt-scene-host {
       display: block;
@@ -198,6 +208,46 @@
       window.addEventListener('flutter-first-frame', hideBoot, { once: true });
       // Fallback if the event is missed (old embed / race).
       setTimeout(hideBoot, 8000);
+
+      // iOS PWA/Safari: visualViewport.offsetTop ≠ 0 → Flutter рисует ниже,
+      // а hit-test остаётся выше («кнопки жмутся сверху»). Фокус в input
+      // случайно чинит это через resize — делаем то же явно.
+      function syncIosViewport() {
+        try {
+          if (window.scrollX !== 0 || window.scrollY !== 0) {
+            window.scrollTo(0, 0);
+          }
+          var vv = window.visualViewport;
+          if (vv && (vv.offsetTop !== 0 || vv.pageTop !== 0)) {
+            window.scrollTo(0, 0);
+          }
+          window.dispatchEvent(new Event('resize'));
+        } catch (e) {}
+      }
+      window.addEventListener('load', syncIosViewport);
+      window.addEventListener('pageshow', syncIosViewport);
+      window.addEventListener('orientationchange', function () {
+        setTimeout(syncIosViewport, 50);
+        setTimeout(syncIosViewport, 300);
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') syncIosViewport();
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncIosViewport);
+        window.visualViewport.addEventListener('scroll', syncIosViewport);
+      }
+      window.addEventListener('flutter-first-frame', function () {
+        syncIosViewport();
+        setTimeout(syncIosViewport, 50);
+        setTimeout(syncIosViewport, 250);
+        setTimeout(syncIosViewport, 800);
+      });
+      // Перед первым жестом — ещё один sync (если PWA открыли «криво»).
+      document.addEventListener('touchstart', function onFirstTouch() {
+        syncIosViewport();
+        document.removeEventListener('touchstart', onFirstTouch, true);
+      }, { capture: true, passive: true });
 
       let startX = 0;
       let startY = 0;
