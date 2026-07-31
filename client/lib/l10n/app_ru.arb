@@ -603,6 +603,9 @@
       }
     }
   },
+  "inventoryGiftAlreadyOwns": "У этого пользователя уже есть эта коллекция",
+  "inventoryGiftSelf": "Нельзя подарить коллекцию самому себе",
+  "inventoryGiftNotOwned": "У вас нет этого предмета",
   "inventoryLoadFailed": "Не удалось загрузить предметы",
   "inventoryNoCollections": "Нет коллекций — купите в магазине",
   "inventoryNoEmojis": "Нет смайликов — купите в магазине",
