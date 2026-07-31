@@ -1281,6 +1281,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	status := m["status"]
 
 	if status == lobbyStatusInGame {
+		// Подчистить устаревшие invite-ссылки в чатах, если игра уже идёт.
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusConflict, "game already started with another opponent")
 		return
 	}
@@ -1433,6 +1435,10 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		h.Rdb.Del(ctx, key+":invited")
 	}
 
+	// У всех, кому отправили ссылку «Войти в игру», убрать сообщение —
+	// лобби уже занято, карточка больше не актуальна.
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+
 	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
 		"type":        "lobby_updated",
 		"lobby_id":    lobbyID,
@@ -1446,6 +1452,36 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		"game_id": gameID,
 		"status":  lobbyStatusInGame,
 	})
+}
+
+// cleanupInviteLobbyChatMessages удаляет chat-сообщения со ссылкой на лобби
+// и рассылает chat_message_deleted / chat_list_changed участникам.
+func (h *GamesHandler) cleanupInviteLobbyChatMessages(ctx context.Context, lobbyID string) {
+	if h == nil || h.Pool == nil {
+		return
+	}
+	deleted, err := store.DeleteInviteLobbyShareMessages(ctx, h.Pool, lobbyID)
+	if err != nil || len(deleted) == 0 {
+		return
+	}
+	listChanged := make(map[uuid.UUID]struct{}, len(deleted)*2)
+	for _, item := range deleted {
+		h.broadcast([]uuid.UUID{item.LowUserID, item.HighUserID}, map[string]any{
+			"type":       "chat_message_deleted",
+			"chat_id":    item.ChatID.String(),
+			"message_id": item.MessageID.String(),
+		})
+		listChanged[item.LowUserID] = struct{}{}
+		listChanged[item.HighUserID] = struct{}{}
+	}
+	if len(listChanged) == 0 {
+		return
+	}
+	ids := make([]uuid.UUID, 0, len(listChanged))
+	for id := range listChanged {
+		ids = append(ids, id)
+	}
+	h.broadcast(ids, map[string]any{"type": "chat_list_changed"})
 }
 
 func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {

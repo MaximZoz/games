@@ -45,3 +45,15 @@ func TestIsInviteLobbyShareBody(t *testing.T) {
 		}
 	}
 }
+
+func TestInviteLobbyIDFromBody(t *testing.T) {
+	id, ok := InviteLobbyIDFromBody(
+		"https://example.com/games/tictactoe/lobby/abc-123?mode=invite",
+	)
+	if !ok || id != "abc-123" {
+		t.Fatalf("got (%q, %v), want (abc-123, true)", id, ok)
+	}
+	if _, ok := InviteLobbyIDFromBody("not a link"); ok {
+		t.Fatal("expected false for plain text")
+	}
+}
