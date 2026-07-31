@@ -78,13 +78,23 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     try {
       final cached = await repo.getStoredUser();
       state = AsyncValue.data(cached);
-      final fresh = await repo.fetchCurrentUser();
-      if (fresh != null) {
-        state = AsyncValue.data(fresh);
+      try {
+        final fresh = await repo.fetchCurrentUser();
+        if (fresh != null) {
+          state = AsyncValue.data(fresh);
+        }
+      } catch (_) {
+        // Сеть/401 на cold start не должны сбрасывать уже сохранённую сессию.
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
+  }
+
+  /// Сессия уже сохранена в репозитории (OAuth/GIS) — только обновить state.
+  void acceptSession(AuthResult result) {
+    clearUserScopedCaches(_ref);
+    state = AsyncValue.data(result.user);
   }
 
   Future<void> register({

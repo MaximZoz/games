@@ -262,6 +262,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         expanded: true,
                       ),
                       TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
                         onPressed: () => context.go(
                           appendAuthQuery(
                             '/login',

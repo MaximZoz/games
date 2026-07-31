@@ -141,7 +141,13 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                         : () {
                             final p = providers[i];
                             if (kIsWeb && p == 'google') {
-                              _startGoogleGis(context, info.googleClientId);
+                              // iOS PWA: GIS открывает ASWebAuthenticationSession →
+                              // белый accounts.google.com. Нужен top-level redirect.
+                              if (isIosStandalonePwa) {
+                                _startIosPwaGoogle(repo);
+                              } else {
+                                _startGoogleGis(context, info.googleClientId);
+                              }
                             } else if (kIsWeb) {
                               _startWebNavigate(p, repo);
                             } else {
@@ -187,7 +193,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  /// iOS PWA / web: GIS остаётся в приложении (не SFSafariViewController).
+  /// Desktop/Android web: GIS без ухода из вкладки.
   Future<void> _startGoogleGis(BuildContext context, String? clientId) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -210,10 +216,8 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                 ref: widget.refCode,
               );
       if (!mounted) return;
-      await ref.read(authStateProvider.notifier).loginWithTokens(
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-          );
+      // Не loginWithTokens: лишний /api/me может «сбросить» сессию при сбое сети.
+      ref.read(authStateProvider.notifier).acceptSession(result);
       if (!mounted) return;
       router.go(safeAuthRedirect(redirect) ?? '/games');
     } on AuthException catch (e) {
@@ -227,6 +231,44 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     } finally {
       if (mounted) setState(() => _busyProvider = null);
     }
+  }
+
+  /// iOS PWA: sync state + location.assign (не GIS / не target=_blank).
+  void _startIosPwaGoogle(AuthRepository repo) {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busyProvider = 'google');
+    final startUrl = repo.oauthStartUrl(
+      provider: 'google',
+      redirect: widget.redirect,
+      ref: widget.refCode,
+      poll: true,
+    );
+    final started = fetchOAuthPollStartSync(startUrl);
+    if (started != null) {
+      saveOAuthPendingState(started.state);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Завершите вход Google и вернитесь в Zozu Games с экрана «Домой»',
+          ),
+          duration: Duration(seconds: 8),
+        ),
+      );
+      openOAuthExternal(started.authorizeUrl);
+      // Poll при возврате в приложение (_resumePending).
+      return;
+    }
+    // Fallback: same-origin navigate=1 → cookie + 302 на Google.
+    saveOAuthPendingState(_cookiePendingSentinel);
+    openOAuthExternal(
+      repo.oauthStartUrl(
+        provider: 'google',
+        redirect: widget.redirect,
+        ref: widget.refCode,
+        poll: true,
+        navigate: true,
+      ),
+    );
   }
 
   /// Web: redirect-flow только для не-Google провайдеров.

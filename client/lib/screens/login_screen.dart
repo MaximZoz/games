@@ -240,6 +240,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         expanded: true,
                       ),
                       TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
                         onPressed: () => context.push(
                           appendAuthQuery(
                             '/register',

@@ -11,7 +11,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       background: #E8ECF4;
       color: #1a1a2e;
       padding: 24px;
@@ -38,16 +38,43 @@
       var params = new URLSearchParams(location.search);
       var err = params.get('error');
       var state = params.get('state') || '';
-      var q = 'oauth=1';
-      if (state) q += '&state=' + encodeURIComponent(state);
+
+      function isStandalone() {
+        try {
+          if (window.matchMedia('(display-mode: standalone)').matches) return true;
+          if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
+        } catch (e) {}
+        try {
+          if (typeof navigator.standalone === 'boolean' && navigator.standalone) return true;
+        } catch (e) {}
+        return false;
+      }
+
+      function loginUrl() {
+        var q = 'oauth=1';
+        if (state) q += '&state=' + encodeURIComponent(state);
+        if (err) q += '&error=' + encodeURIComponent(err);
+        return '/login?' + q;
+      }
+
       if (err) {
         document.getElementById('title').textContent = 'Ошибка входа';
-        document.getElementById('msg').textContent = err + '. Сейчас вернём на экран входа.';
-        q += '&error=' + encodeURIComponent(err);
-        setTimeout(function () { location.replace('/login?' + q); }, 900);
+        document.getElementById('msg').textContent = err + '. Закройте окно и попробуйте снова в приложении.';
+      }
+
+      // В PWA — сразу в Flutter (poll).
+      // В Safari / in-app browser — НЕ открывать Flutter: иначе poll «съест» токены
+      // в хранилище Safari, а PWA останется без сессии и снова покажет «Вход».
+      if (isStandalone()) {
+        location.replace(loginUrl());
         return;
       }
-      location.replace('/login?' + q);
+
+      document.getElementById('title').textContent = err ? 'Ошибка входа' : 'Готово';
+      document.getElementById('msg').textContent = err
+        ? (err + '. Закройте это окно и откройте Zozu Games с экрана «Домой».')
+        : 'Откройте Zozu Games с экрана «Домой» — вход завершится автоматически. Это окно можно закрыть.';
+      try { window.close(); } catch (e) {}
     })();
   </script>
 </body>
