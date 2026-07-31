@@ -32,6 +32,13 @@ void main() {
     expect(cell, 2);
   });
 
+  test('при humanStarts=false бот ходит первым', () {
+    final game = OfflineTicTacToeGame(gridSize: 3, humanStarts: false);
+    expect(game.humanMark, 'o');
+    expect(game.isHumanTurn, isTrue);
+    expect(game.board.where((c) => c.isNotEmpty).length, 1);
+  });
+
   test('локальная партия завершается победой или ничьей', () {
     final game = OfflineTicTacToeGame(gridSize: 3);
     // Заполняем доску вручную через ходы, пока возможно.

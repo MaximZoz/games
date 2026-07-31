@@ -46,13 +46,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOfflineModeTitle => 'Network mode';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and validated when the internet returns. Online turns on automatically when the network is available.';
+  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and validated when the internet returns. Online is on when there is internet or by the user setting.';
 
   @override
   String get settingsModeOnline => 'Online';
 
   @override
   String get settingsModeOffline => 'Offline';
+
+  @override
+  String get gamesAlternateStartsHint => 'Take turns starting each game';
+
+  @override
+  String get rulesAlternateStarts => 'Who goes first alternates from game to game.';
 
   @override
   String get offlineBadgeTooltip => 'Offline mode';

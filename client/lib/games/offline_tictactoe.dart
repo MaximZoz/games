@@ -6,13 +6,10 @@ import 'package:multigames_client/games/games_repository.dart';
 class OfflineTicTacToeGame {
   OfflineTicTacToeGame({
     this.gridSize = 3,
-    this.swapRule = false,
     this.firstMoveRestriction = false,
-    this.humanMark = 'x',
+    bool humanStarts = true,
   }) : board = List<String>.filled(gridSize * gridSize, '') {
-    if (swapRule && Random().nextBool()) {
-      humanMark = 'o';
-    }
+    humanMark = humanStarts ? 'x' : 'o';
     turn = 'x';
     if (humanMark != turn) {
       // Бот ходит первым.
@@ -21,9 +18,8 @@ class OfflineTicTacToeGame {
   }
 
   final int gridSize;
-  final bool swapRule;
   final bool firstMoveRestriction;
-  String humanMark;
+  late String humanMark;
   late final List<String> board;
   late String turn;
   String status = 'playing'; // playing | x_won | o_won | draw
@@ -32,6 +28,7 @@ class OfflineTicTacToeGame {
   String get botMark => humanMark == 'x' ? 'o' : 'x';
   bool get isHumanTurn => status == 'playing' && turn == humanMark;
   bool get isFinished => status != 'playing';
+  bool get humanStarts => humanMark == 'x';
 
   int get winLen => GameStateItem.winLength(gridSize);
 

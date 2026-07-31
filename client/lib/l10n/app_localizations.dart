@@ -230,7 +230,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsOfflineModeSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и проверяются при появлении интернета. Онлайн включается автоматически, когда сеть доступна.'**
+  /// **'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и проверяются при появлении интернета. Онлайн — когда есть интернет или по настройке пользователя.'**
   String get settingsOfflineModeSubtitle;
 
   /// No description provided for @settingsModeOnline.
@@ -244,6 +244,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Офлайн'**
   String get settingsModeOffline;
+
+  /// No description provided for @gamesAlternateStartsHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'По очереди кто начинает партию'**
+  String get gamesAlternateStartsHint;
+
+  /// No description provided for @rulesAlternateStarts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кто ходит первым чередуется от партии к партии.'**
+  String get rulesAlternateStarts;
 
   /// No description provided for @offlineBadgeTooltip.
   ///

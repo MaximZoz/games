@@ -50,5 +50,22 @@ void main() {
       expect(text, isNot(contains('Ставка')));
       expect(text, contains('10 с'));
     });
+
+    test('offline bot omits turn time and uses alternate starts', () {
+      final text = buildTictactoeRulesText(
+        gridSize: 3,
+        turnTimeSec: 30,
+        swapRule: true,
+        firstMoveRestriction: false,
+        stakeBronze: 0,
+        includeTurnTime: false,
+        offlineBot: true,
+      );
+      expect(text, isNot(contains('Ставка')));
+      expect(text, isNot(contains('30 с')));
+      expect(text, isNot(contains('Без ограничения')));
+      expect(text, contains('чередуется'));
+      expect(text, isNot(contains('O может поменяться')));
+    });
   });
 }

@@ -46,13 +46,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и проверяются при появлении интернета. Онлайн включается автоматически, когда сеть доступна.';
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и проверяются при появлении интернета. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
 
   @override
   String get settingsModeOffline => 'Офлайн';
+
+  @override
+  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+
+  @override
+  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';

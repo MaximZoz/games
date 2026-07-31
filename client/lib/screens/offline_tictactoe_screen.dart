@@ -5,6 +5,9 @@ import 'package:multigames_client/games/offline_tictactoe.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _keyLastHumanStarted = 'offline_ttt_last_human_started';
 
 /// Локальная игра с ботом: без ставок, наград и API.
 class OfflineTicTacToeScreen extends ConsumerStatefulWidget {
@@ -25,7 +28,8 @@ class OfflineTicTacToeScreen extends ConsumerStatefulWidget {
 }
 
 class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen> {
-  late OfflineTicTacToeGame _game;
+  OfflineTicTacToeGame? _game;
+  bool _starting = true;
 
   @override
   void initState() {
@@ -33,44 +37,56 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
     _restart();
   }
 
-  void _restart() {
+  Future<void> _restart() async {
+    setState(() => _starting = true);
+    var humanStarts = true;
+    if (widget.swapRule) {
+      final prefs = await SharedPreferences.getInstance();
+      final lastHumanStarted = prefs.getBool(_keyLastHumanStarted) ?? false;
+      humanStarts = !lastHumanStarted;
+      await prefs.setBool(_keyLastHumanStarted, humanStarts);
+    }
+    if (!mounted) return;
     setState(() {
       _game = OfflineTicTacToeGame(
         gridSize: widget.gridSize.clamp(3, 8),
-        swapRule: widget.swapRule,
         firstMoveRestriction: widget.firstMoveRestriction,
+        humanStarts: humanStarts,
       );
+      _starting = false;
     });
   }
 
   void _onCell(int index) {
-    if (!_game.playHuman(index)) return;
+    final game = _game;
+    if (game == null || !game.playHuman(index)) return;
     setState(() {});
   }
 
   String _statusText(BuildContext context) {
+    final game = _game;
+    if (game == null) return '';
     final l10n = context.l10n;
-    switch (_game.status) {
+    switch (game.status) {
       case 'x_won':
-        return _game.humanMark == 'x'
+        return game.humanMark == 'x'
             ? l10n.gameYouWon
             : l10n.offlineBotWon;
       case 'o_won':
-        return _game.humanMark == 'o'
+        return game.humanMark == 'o'
             ? l10n.gameYouWon
             : l10n.offlineBotWon;
       case 'draw':
         return l10n.gameDraw;
       default:
-        return _game.isHumanTurn ? l10n.gamesMyTurn : l10n.offlineBotThinking;
+        return game.isHumanTurn ? l10n.gamesMyTurn : l10n.offlineBotThinking;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     void goBack() => context.go('/games');
-    final n = _game.gridSize;
-    final win = _game.winningCells?.toSet() ?? const <int>{};
+    final game = _game;
 
     return SwipeBackScope(
       onBack: goBack,
@@ -95,97 +111,110 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              children: [
-                Text(
-                  context.l10n.offlineGameHint,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _statusText(context),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: n,
-                          crossAxisSpacing: 4,
-                          mainAxisSpacing: 4,
+            child: _starting || game == null
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      Text(
+                        context.l10n.offlineGameHint,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
                         ),
-                        itemCount: n * n,
-                        itemBuilder: (context, index) {
-                          final mark = _game.board[index];
-                          final isWin = win.contains(index);
-                          return Material(
-                            color: isWin
-                                ? AppColors.accentSoft
-                                : AppColors.surfaceCard,
-                            borderRadius: BorderRadius.circular(10),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(10),
-                              onTap: _game.isHumanTurn && mark.isEmpty
-                                  ? () => _onCell(index)
-                                  : null,
-                              child: Center(
-                                child: Text(
-                                  mark == 'x'
-                                      ? '✕'
-                                      : mark == 'o'
-                                          ? '○'
-                                          : '',
-                                  style: TextStyle(
-                                    fontSize: n <= 3 ? 36 : (n <= 5 ? 28 : 18),
-                                    fontWeight: FontWeight.w800,
-                                    color: mark == 'x'
-                                        ? AppColors.accentStart
-                                        : AppColors.textPrimary,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _statusText(context),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Builder(
+                              builder: (context) {
+                                final n = game.gridSize;
+                                final win =
+                                    game.winningCells?.toSet() ?? const <int>{};
+                                return GridView.builder(
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: n,
+                                    crossAxisSpacing: 4,
+                                    mainAxisSpacing: 4,
                                   ),
-                                ),
-                              ),
+                                  itemCount: n * n,
+                                  itemBuilder: (context, index) {
+                                    final mark = game.board[index];
+                                    final isWin = win.contains(index);
+                                    return Material(
+                                      color: isWin
+                                          ? AppColors.accentSoft
+                                          : AppColors.surfaceCard,
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(10),
+                                        onTap: game.isHumanTurn && mark.isEmpty
+                                            ? () => _onCell(index)
+                                            : null,
+                                        child: Center(
+                                          child: Text(
+                                            mark == 'x'
+                                                ? '✕'
+                                                : mark == 'o'
+                                                    ? '○'
+                                                    : '',
+                                            style: TextStyle(
+                                              fontSize: n <= 3
+                                                  ? 36
+                                                  : (n <= 5 ? 28 : 18),
+                                              fontWeight: FontWeight.w800,
+                                              color: mark == 'x'
+                                                  ? AppColors.accentStart
+                                                  : AppColors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: goBack,
-                        child: Text(context.l10n.commonBack),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: _restart,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.accentStart,
+                          ),
                         ),
-                        child: Text(context.l10n.offlinePlayAgain),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: goBack,
+                              child: Text(context.l10n.commonBack),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: _restart,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.accentStart,
+                              ),
+                              child: Text(context.l10n.offlinePlayAgain),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),

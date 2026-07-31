@@ -38,7 +38,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   _GamesTab _selectedTab = _GamesTab.games;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
   int _selectedGridSize = 3; // 3, 4, 5
-  bool _selectedSwapRule = false;
+  // В офлайне чип ⇄ = «по очереди кто начинает»; по умолчанию включён.
+  bool _selectedSwapRule = true;
   bool _selectedFirstMoveRestriction = false;
   int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
   bool _settingsHydrated = false;
@@ -1242,6 +1243,8 @@ class _TictactoeGameCard extends StatelessWidget {
         swapRule: swapRule,
         firstMoveRestriction: firstMoveRestriction,
         stakeBronze: stakeBronze,
+        includeTurnTime: !isOffline,
+        offlineBot: isOffline,
       );
 
   List<Widget> _buildChipList({
@@ -1290,49 +1293,50 @@ class _TictactoeGameCard extends StatelessWidget {
           ],
         ),
       ),
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isCreating || isFinding ? null : _cycleTurnTime,
-          borderRadius: BorderRadius.circular(10),
-          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-          child: Tooltip(
-            message: context.l10n.gamesTapChangeTurnTime,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-              decoration: BoxDecoration(
-                color: AppColors.accentSoft.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.3),
-                  width: 1,
+      if (!isOffline)
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isCreating || isFinding ? null : _cycleTurnTime,
+            borderRadius: BorderRadius.circular(10),
+            splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+            highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+            child: Tooltip(
+              message: context.l10n.gamesTapChangeTurnTime,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.accentStart.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    size: iconSz,
-                    color: AppColors.accentStart,
-                  ),
-                  SizedBox(width: compact ? 4 : 6),
-                  Text(
-                    formatTurnTime(turnTimeSec),
-                    style: theme?.bodyMedium?.copyWith(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.timer_outlined,
+                      size: iconSz,
                       color: AppColors.accentStart,
-                      fontWeight: FontWeight.w600,
-                      fontSize: fontSz,
-                      height: 1.35,
                     ),
-                  ),
-                ],
+                    SizedBox(width: compact ? 4 : 6),
+                    Text(
+                      formatTurnTime(turnTimeSec),
+                      style: theme?.bodyMedium?.copyWith(
+                        color: AppColors.accentStart,
+                        fontWeight: FontWeight.w600,
+                        fontSize: fontSz,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
       Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1386,7 +1390,9 @@ class _TictactoeGameCard extends StatelessWidget {
           splashColor: AppColors.accentStart.withValues(alpha: 0.2),
           highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
           child: Tooltip(
-            message: context.l10n.gamesSwapSidesHint,
+            message: isOffline
+                ? context.l10n.gamesAlternateStartsHint
+                : context.l10n.gamesSwapSidesHint,
             child: Container(
               padding: EdgeInsets.all(compact ? 4 : 6),
               decoration: BoxDecoration(

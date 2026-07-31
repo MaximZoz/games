@@ -106,57 +106,18 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          l10n.settingsOfflineModeTitle,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.settingsOfflineModeSubtitle,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 8),
-                        RadioListTile<OfflinePreference>(
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                          title: Text(l10n.settingsModeOnline),
-                          value: OfflinePreference.online,
-                          groupValue: offlineMode.preference,
-                          activeColor: AppColors.accentStart,
-                          onChanged: (v) {
-                            if (v == null) return;
-                            ref
-                                .read(offlineModeProvider.notifier)
-                                .setPreference(v);
-                          },
-                        ),
-                        RadioListTile<OfflinePreference>(
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                          title: Text(l10n.settingsModeOffline),
-                          value: OfflinePreference.offline,
-                          groupValue: offlineMode.preference,
-                          activeColor: AppColors.accentStart,
-                          onChanged: (v) {
-                            if (v == null) return;
-                            ref
-                                .read(offlineModeProvider.notifier)
-                                .setPreference(v);
-                          },
-                        ),
-                      ],
+                    child: _SwitchRow(
+                      title: l10n.settingsModeOffline,
+                      subtitle: l10n.settingsOfflineModeSubtitle,
+                      value: offlineMode.preference ==
+                          OfflinePreference.offline,
+                      onChanged: (v) {
+                        ref.read(offlineModeProvider.notifier).setPreference(
+                              v
+                                  ? OfflinePreference.offline
+                                  : OfflinePreference.online,
+                            );
+                      },
                     ),
                   ),
                   const SizedBox(height: 12),

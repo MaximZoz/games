@@ -158,22 +158,28 @@ String buildTictactoeRulesText({
   required bool swapRule,
   required bool firstMoveRestriction,
   int stakeBronze = 1,
+  bool includeTurnTime = true,
+  bool offlineBot = false,
 }) {
   final l10n = LocaleService.l10n;
   final winN = gridSize >= 6 ? 5 : gridSize;
   final parts = <String>[
     l10n.rulesIntro(formatGridSize(gridSize)),
     l10n.rulesWin(winN),
-    turnTimeSec == 0
-        ? l10n.rulesNoTimeLimit
-        : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
   ];
+  if (includeTurnTime) {
+    parts.add(
+      turnTimeSec == 0
+          ? l10n.rulesNoTimeLimit
+          : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
+    );
+  }
   // 0 — офлайн / без ставок: строку про ставку не показываем.
   if (stakeBronze > 0) {
     parts.add(l10n.rulesStake(formatBalance(stakeBronze)));
   }
   if (swapRule) {
-    parts.add(l10n.rulesSwap);
+    parts.add(offlineBot ? l10n.rulesAlternateStarts : l10n.rulesSwap);
   }
   if (firstMoveRestriction) {
     parts.add(l10n.rulesNoCenter);
