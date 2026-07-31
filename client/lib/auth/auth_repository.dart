@@ -837,8 +837,6 @@ class AuthRepository {
     for (var attempt = 0; attempt < 3; attempt++) {
       await init();
       if (_prefs == null) {
-        // Сброс флага недоступности и повтор.
-        _prefsUnavailable = false;
         await Future<void>.delayed(Duration(milliseconds: 40 * (attempt + 1)));
         continue;
       }
