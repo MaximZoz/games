@@ -1862,6 +1862,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return entries;
   }
 
+  /// Непрочитанные в других чатах (текущий уже читаем — не считаем).
+  int _otherChatsUnreadCount() {
+    final chats =
+        ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    final localRead = ref.watch(locallyReadChatIdsProvider);
+    var sum = 0;
+    for (final item in chats) {
+      if (item.chatID == widget.chatID) continue;
+      if (localRead.contains(item.chatID)) continue;
+      sum += item.unreadCount;
+    }
+    return sum;
+  }
+
   Widget _buildChatToolbar({
     required ChatUserItem? peerUser,
     required String title,
@@ -1871,6 +1885,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final statusText = presence == null
         ? null
         : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
+    final otherUnread = _otherChatsUnreadCount();
+    final unreadLabel = otherUnread > 99 ? '99+' : '$otherUnread';
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Row(
@@ -1879,10 +1895,50 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           if (widget.inSplitView && !widget.fromFriends && !widget.fromGames)
             const SizedBox(width: 8)
           else
-            IconButton(
-              onPressed: _leavingToChats ? null : _goBackToChats,
-              icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: widget.fromGames ? context.l10n.chatBackToGame : context.l10n.chatBackToChats,
+            Tooltip(
+              message: widget.fromGames
+                  ? context.l10n.chatBackToGame
+                  : context.l10n.chatBackToChats,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _leavingToChats ? null : _goBackToChats,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      8,
+                      10,
+                      otherUnread > 0 ? 6 : 8,
+                      10,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_rounded,
+                          color: _leavingToChats
+                              ? AppColors.textSecondary.withValues(alpha: 0.4)
+                              : null,
+                        ),
+                        if (otherUnread > 0) ...[
+                          const SizedBox(width: 2),
+                          Text(
+                            '($unreadLabel)',
+                            style: TextStyle(
+                              color: _leavingToChats
+                                  ? AppColors.accentStart.withValues(alpha: 0.4)
+                                  : AppColors.accentStart,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           Tooltip(
             message: context.l10n.userInfoTitle,
