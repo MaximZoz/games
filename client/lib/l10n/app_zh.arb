@@ -738,6 +738,7 @@
   "profileAgeInvalid": "请输入 1 到 111 之间的年龄",
   "profileSaveFailed": "无法保存个人资料",
   "profileNameHint": "拉丁字母、数字、_，最多 10 个字符",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1 到 111",
   "profileAboutHint": "最多 100 个字符（可选）",
   "profileProcessingPhoto": "正在处理照片…",

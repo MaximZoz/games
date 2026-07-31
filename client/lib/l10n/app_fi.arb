@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Anna ikä välillä 1–111",
   "profileSaveFailed": "Profiilia ei voitu tallentaa",
   "profileNameHint": "Latinalaiset kirjaimet, numerot, _ enintään 10 merkkiä",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1–111",
   "profileAboutHint": "Enintään 100 merkkiä (valinnainen)",
   "profileProcessingPhoto": "Käsitellään kuvaa…",

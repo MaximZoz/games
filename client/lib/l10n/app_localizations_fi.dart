@@ -1274,6 +1274,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get profileNameHint => 'Latinalaiset kirjaimet, numerot, _ enintään 10 merkkiä';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => '1–111';
 
   @override

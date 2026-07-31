@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Ange en ålder mellan 1 och 111",
   "profileSaveFailed": "Kunde inte spara profilen",
   "profileNameHint": "Latinska bokstäver, siffror, _ upp till 10 tecken",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Från 1 till 111",
   "profileAboutHint": "Upp till 100 tecken (valfritt)",
   "profileProcessingPhoto": "Bearbetar foto…",

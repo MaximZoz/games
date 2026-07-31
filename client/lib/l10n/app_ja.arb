@@ -738,6 +738,7 @@
   "profileAgeInvalid": "年齢は1〜111で入力してください",
   "profileSaveFailed": "プロフィールを保存できませんでした",
   "profileNameHint": "ラテン文字、数字、_、最大10文字",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1〜111",
   "profileAboutHint": "最大100文字（任意）",
   "profileProcessingPhoto": "写真を処理中…",

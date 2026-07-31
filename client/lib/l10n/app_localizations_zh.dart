@@ -1274,6 +1274,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileNameHint => '拉丁字母、数字、_，最多 10 个字符';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => '1 到 111';
 
   @override

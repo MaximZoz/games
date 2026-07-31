@@ -738,6 +738,7 @@
   "profileAgeInvalid": "أدخل عمرًا من 1 إلى 111",
   "profileSaveFailed": "تعذر حفظ الملف الشخصي",
   "profileNameHint": "حروف لاتينية وأرقام و_ حتى 10 أحرف",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "من 1 إلى 111",
   "profileAboutHint": "حتى 100 حرف (اختياري)",
   "profileProcessingPhoto": "جاري معالجة الصورة…",

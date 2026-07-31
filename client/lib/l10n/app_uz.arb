@@ -738,6 +738,7 @@
   "profileAgeInvalid": "1 dan 111 gacha yosh kiriting",
   "profileSaveFailed": "Profilni saqlab bo‘lmadi",
   "profileNameHint": "Lotin harflari, raqamlar, _ 10 belgigacha",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1 dan 111 gacha",
   "profileAboutHint": "100 belgigacha (ixtiyoriy)",
   "profileProcessingPhoto": "Foto qayta ishlanmoqda…",

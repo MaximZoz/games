@@ -2495,6 +2495,12 @@ abstract class AppLocalizations {
   /// **'Латиница, цифры, _ до 10 символов'**
   String get profileNameHint;
 
+  /// No description provided for @profileNameLatinOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только латинские символы'**
+  String get profileNameLatinOnly;
+
   /// No description provided for @profileAgeHint.
   ///
   /// In ru, this message translates to:

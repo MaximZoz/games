@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Введіть вік від 1 до 111",
   "profileSaveFailed": "Не вдалося зберегти профіль",
   "profileNameHint": "Латиниця, цифри, _ до 10 символів",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Від 1 до 111",
   "profileAboutHint": "До 100 символів (за бажанням)",
   "profileProcessingPhoto": "Обробка фото…",

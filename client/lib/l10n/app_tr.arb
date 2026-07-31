@@ -738,6 +738,7 @@
   "profileAgeInvalid": "1 ile 111 arasında bir yaş girin",
   "profileSaveFailed": "Profil kaydedilemedi",
   "profileNameHint": "Latin harfler, rakamlar, _ en fazla 10 karakter",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1 ile 111 arası",
   "profileAboutHint": "En fazla 100 karakter (isteğe bağlı)",
   "profileProcessingPhoto": "Fotoğraf işleniyor…",

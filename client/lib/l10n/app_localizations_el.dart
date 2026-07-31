@@ -1274,6 +1274,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get profileNameHint => 'Λατινικά γράμματα, ψηφία, _ έως 10 χαρακτήρες';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => 'Από 1 έως 111';
 
   @override

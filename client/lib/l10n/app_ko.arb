@@ -738,6 +738,7 @@
   "profileAgeInvalid": "나이는 1에서 111 사이로 입력하세요",
   "profileSaveFailed": "프로필을 저장하지 못했습니다",
   "profileNameHint": "라틴 문자, 숫자, _ 최대 10자",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1에서 111",
   "profileAboutHint": "최대 100자 (선택)",
   "profileProcessingPhoto": "사진 처리 중…",

@@ -1274,6 +1274,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get profileNameHint => 'Latinka, číslice, _ do 10 znaků';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => 'Od 1 do 111';
 
   @override

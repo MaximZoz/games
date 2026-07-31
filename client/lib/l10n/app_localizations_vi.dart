@@ -1274,6 +1274,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileNameHint => 'Chữ Latinh, số, _ tối đa 10 ký tự';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => 'Từ 1 đến 111';
 
   @override
