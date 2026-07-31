@@ -501,39 +501,37 @@ class _DiamondPainter extends CustomPainter {
 
 enum CoinType { bronze, silver, gold, diamond }
 
-/// Тип монеты для суммы: старший номинал после округления вверх.
+/// Тип монеты для суммы: старший ненулевой номинал без округления вверх.
 CoinType rewardCoinType(int bronze) {
   if (bronze <= 0) return CoinType.bronze;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) return CoinType.diamond;
-      return CoinType.gold;
-    }
-    return CoinType.silver;
-  }
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  if (diamond > BigInt.zero) return CoinType.diamond;
+  if (gold > BigInt.zero) return CoinType.gold;
+  if (silver > BigInt.zero) return CoinType.silver;
+  if (bronzeRest > BigInt.zero) return CoinType.bronze;
   return CoinType.bronze;
 }
 
-/// Человекочитаемая сумма: округление вверх до большей монеты.
-/// 150 бр → «2 серебряных», 10001 бр → «2 золотых».
+/// Человекочитаемая сумма без округления: 133 бр → «1 серебряных 33 бронзовых».
 String formatRewardBronze(int bronze, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
   if (bronze <= 0) return t.balanceZeroBronze;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) {
-        final diamond = (gold + 99) ~/ 100;
-        return t.balanceDiamonds(diamond);
-      }
-      return t.balanceGolds(gold);
-    }
-    return t.balanceSilvers(silver);
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  final parts = <String>[];
+  if (diamond > BigInt.zero) {
+    parts.add(t.balanceDiamonds(diamond.toInt()));
   }
-  return t.balanceBronzes(bronze);
+  if (gold > BigInt.zero) {
+    parts.add(t.balanceGolds(gold.toInt()));
+  }
+  if (silver > BigInt.zero) {
+    parts.add(t.balanceSilvers(silver.toInt()));
+  }
+  if (bronzeRest > BigInt.zero) {
+    parts.add(t.balanceBronzes(bronzeRest.toInt()));
+  }
+  if (parts.isEmpty) return t.balanceZeroBronze;
+  return parts.join(' ');
 }
 
 /// Сумма дохода с явным «в день».
@@ -542,19 +540,14 @@ String formatRewardBronzePerDay(int bronze, [AppLocalizations? l10n]) {
   return t.balancePerDay(formatRewardBronze(bronze, t));
 }
 
-/// Число монет после округления вверх (для иконки + цифры).
+/// Количество старшего ненулевого номинала (для компактной иконки).
 int rewardCoinAmount(int bronze) {
   if (bronze <= 0) return 0;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) return (gold + 99) ~/ 100;
-      return gold;
-    }
-    return silver;
-  }
-  return bronze;
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  if (diamond > BigInt.zero) return diamond.toInt();
+  if (gold > BigInt.zero) return gold.toInt();
+  if (silver > BigInt.zero) return silver.toInt();
+  return bronzeRest.toInt();
 }
 
 /// Разбивка баланса: 100 бр=1 с, 100 с=1 з, 100 з=1 ◆.
