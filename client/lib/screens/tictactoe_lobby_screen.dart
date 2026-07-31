@@ -451,8 +451,22 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       message: message,
       kind: AppSnackKind.error,
     );
+    if (isGone) {
+      unawaited(_deleteGoneInviteMessage());
+    }
     // Не clearLocal/leaveLobby: у пользователя может быть своё другое лобби.
     context.go(fromChat ? '/chats' : '/games');
+  }
+
+  /// Убрать карточку «Войти в игру», если сервер сказал, что лобби уже нет.
+  Future<void> _deleteGoneInviteMessage() async {
+    final messageId = widget.fromMessageId?.trim();
+    if (messageId != null && messageId.isNotEmpty) {
+      try {
+        await ref.read(chatsRepositoryProvider).deleteMessage(messageId);
+      } catch (_) {}
+    }
+    await refreshChatsList(ref, force: true).catchError((_) {});
   }
 
   Widget _buildShareInviteLinkCard(BuildContext context) {
@@ -574,6 +588,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         kind: AppSnackKind.error,
       );
       if (gone) {
+        await _deleteGoneInviteMessage();
+        if (!context.mounted) return;
         final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
         context.go(fromChat ? '/chats' : '/games');
       }
@@ -622,9 +638,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     // Из сообщения чата — обратно к списку чатов, иначе к играм.
     context.go(fromChat ? '/chats' : '/games');
 
-    unawaited(
-      repo.leaveLobby(lobbyId).catchError((_) {}),
-    );
+    unawaited(() async {
+      try {
+        await repo.leaveLobby(lobbyId);
+      } catch (_) {
+        // Лобби могли уже закрыть — сервер всё равно чистит invite-сообщения.
+      }
+      await refreshChatsList(ref, force: true).catchError((_) {});
+    }());
   }
 
   Widget _buildFriendAvatar(FriendUserItem user, double radius) {

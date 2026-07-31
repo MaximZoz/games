@@ -1535,6 +1535,8 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		// Лобби уже нет — всё равно убрать устаревшие invite-ссылки из чатов.
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
