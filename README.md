@@ -109,9 +109,15 @@ Go (net/http, middleware, auth, friends, chats, games, admin, logging)
   - `app_logs`;
   - `friendships`, `friend_requests`.
 - Auth API:
-  - `POST /api/auth/register`
+  - `POST /api/auth/register` — заявка + код на email; пользователь в БД создаётся только после verify
+  - `POST /api/auth/verify-email` — подтверждение кода, выдача JWT
+  - `POST /api/auth/resend-verification` — повторная отправка кода
+  - `POST /api/auth/forgot-password` — код сброса пароля на email
+  - `POST /api/auth/reset-password` — новый пароль по коду, выдача JWT
   - `POST /api/auth/login`
   - `POST /api/auth/refresh`
+  - `GET /api/auth/oauth/providers` — включённые OAuth (google/apple/yandex/vk)
+  - `GET /api/auth/oauth/{provider}/start` → callback → `/oauth/callback`
   - `GET /api/me`
   - `PUT /api/profile`
 - Friends API:
@@ -202,6 +208,10 @@ cp .env.example .env
 - `REDIS_URL`
 - `JWT_SECRET`
 - `ADMIN_INIT_SECRET`
+- `PUBLIC_BASE_URL`, `FRONTEND_URL` — для OAuth redirect_uri
+- `RESEND_API_KEY`, `MAIL_FROM` — письма с кодом через [Resend](https://resend.com) (предпочтительно). Код всегда адресуется на email из регистрации; с `onboarding@resend.dev` Resend доставляет только на email аккаунта Resend — после верификации домена поставьте `MAIL_FROM=ZozuGames <noreply@ваш-домен>`
+- `SMTP_*` — альтернатива Resend; без почты код только в логе сервера
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `APPLE_*`, `YANDEX_*`, `VK_*` — OAuth (пусто = кнопки скрыты)
 - `APP_LOG_FILE`, `APP_LOG_STATE_FILE`
 - `APP_LOG_SYNC_INTERVAL_SECONDS`
 - `APP_LOG_RETENTION_DAYS`

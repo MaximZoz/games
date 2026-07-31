@@ -20,6 +20,7 @@ import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/inventory_screen.dart';
 import 'package:multigames_client/screens/login_screen.dart';
+import 'package:multigames_client/screens/oauth_callback_screen.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
@@ -28,9 +29,19 @@ import 'package:multigames_client/screens/shop_emojis_screen.dart';
 import 'package:multigames_client/screens/shop_screen.dart';
 import 'package:multigames_client/screens/shop_section_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
+import 'package:multigames_client/screens/forgot_password_screen.dart';
+import 'package:multigames_client/screens/reset_password_screen.dart';
+import 'package:multigames_client/screens/verify_email_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
-const _publicPaths = <String>{'/login', '/register'};
+const _publicPaths = <String>{
+  '/login',
+  '/register',
+  '/verify-email',
+  '/forgot-password',
+  '/reset-password',
+  '/oauth/callback',
+};
 const _authRequiredPaths = <String>{
   '/',
   '/friends',
@@ -82,7 +93,14 @@ final _startupGamesGateProvider = Provider<_StartupGamesGate>((ref) {
 
 /// Deep-link / auth — не сбрасываем на /games при cold start.
 bool _preserveStartupPath(String path) {
-  if (path == '/login' || path == '/register') return true;
+  if (path == '/login' ||
+      path == '/register' ||
+      path == '/verify-email' ||
+      path == '/forgot-password' ||
+      path == '/reset-password') {
+    return true;
+  }
+  if (path == '/oauth/callback') return true;
   if (path.startsWith('/games/tictactoe/')) return true;
   // Комната чата /invite из пуша или ссылки.
   if (path.startsWith('/chats/') && path.length > '/chats/'.length) {
@@ -268,6 +286,44 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/register',
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const RegisterScreen()),
+              ),
+              GoRoute(
+                path: '/verify-email',
+                pageBuilder: (_, state) {
+                  final email =
+                      state.uri.queryParameters['email']?.trim() ?? '';
+                  return _noTransitionPage(
+                    state,
+                    VerifyEmailScreen(email: email),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/forgot-password',
+                pageBuilder: (_, state) {
+                  final email =
+                      state.uri.queryParameters['email']?.trim() ?? '';
+                  return _noTransitionPage(
+                    state,
+                    ForgotPasswordScreen(initialEmail: email),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/reset-password',
+                pageBuilder: (_, state) {
+                  final email =
+                      state.uri.queryParameters['email']?.trim() ?? '';
+                  return _noTransitionPage(
+                    state,
+                    ResetPasswordScreen(email: email),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/oauth/callback',
+                pageBuilder: (_, state) =>
+                    _noTransitionPage(state, const OAuthCallbackScreen()),
               ),
             ],
           ),

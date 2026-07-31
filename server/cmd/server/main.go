@@ -16,6 +16,7 @@ import (
 	"multigames/server/internal/api"
 	"multigames/server/internal/applog"
 	"multigames/server/internal/i18n"
+	"multigames/server/internal/mailer"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -269,7 +270,60 @@ func main() {
 		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
 	}
 
-	authHandler := &api.AuthHandler{Pool: pool, JWTSecret: []byte(jwtSecret), Push: pushSender}
+	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")
+	frontendURL := getEnv("FRONTEND_URL", publicBase)
+
+	mailFrom := getEnv("MAIL_FROM", "")
+	if mailFrom == "" {
+		mailFrom = getEnv("SMTP_FROM", "")
+	}
+	mail := mailer.New(mailer.Config{
+		ResendAPIKey: getEnv("RESEND_API_KEY", ""),
+		From:         mailFrom,
+		AppOrigin:    frontendURL,
+		Host:         getEnv("SMTP_HOST", ""),
+		Port:         getEnv("SMTP_PORT", "587"),
+		Username:     getEnv("SMTP_USER", ""),
+		Password:     getEnv("SMTP_PASSWORD", ""),
+	})
+	switch mail.Provider() {
+	case "resend":
+		log.Printf("Mailer: Resend enabled (from=%s)", mailFrom)
+		if strings.Contains(strings.ToLower(mailFrom), "onboarding@resend.dev") {
+			log.Printf("Mailer: Resend sandbox From — delivery only to your Resend account email until domain is verified")
+		}
+	case "smtp":
+		log.Printf("Mailer: SMTP enabled (%s)", getEnv("SMTP_HOST", ""))
+	default:
+		log.Printf("Mailer: not configured — set RESEND_API_KEY (or SMTP_*); codes logged only")
+	}
+	oauthCfg := &api.OAuthConfig{
+		PublicBaseURL:      publicBase,
+		FrontendURL:        frontendURL,
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		AppleClientID:      getEnv("APPLE_CLIENT_ID", ""),
+		AppleTeamID:        getEnv("APPLE_TEAM_ID", ""),
+		AppleKeyID:         getEnv("APPLE_KEY_ID", ""),
+		ApplePrivateKey:    getEnv("APPLE_PRIVATE_KEY", ""),
+		YandexClientID:     getEnv("YANDEX_CLIENT_ID", ""),
+		YandexClientSecret: getEnv("YANDEX_CLIENT_SECRET", ""),
+		VKClientID:         getEnv("VK_CLIENT_ID", ""),
+		VKClientSecret:     getEnv("VK_CLIENT_SECRET", ""),
+	}
+	if providers := oauthCfg.EnabledProviders(); len(providers) > 0 {
+		log.Printf("OAuth providers: %s", strings.Join(providers, ", "))
+	} else {
+		log.Printf("OAuth: no providers configured")
+	}
+
+	authHandler := &api.AuthHandler{
+		Pool:      pool,
+		JWTSecret: []byte(jwtSecret),
+		Push:      pushSender,
+		Mailer:    mail,
+		OAuth:     oauthCfg,
+	}
 	realtimeHub := api.NewRealtimeHub()
 	wsHandler := &api.RealtimeWSHandler{
 		Hub:           realtimeHub,
@@ -322,6 +376,29 @@ func main() {
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
+	mux.HandleFunc("/api/auth/verify-email", authHandler.VerifyEmail)
+	mux.HandleFunc("/api/auth/resend-verification", authHandler.ResendVerification)
+	mux.HandleFunc("/api/auth/forgot-password", authHandler.ForgotPassword)
+	mux.HandleFunc("/api/auth/reset-password", authHandler.ResetPassword)
+	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
+	mux.HandleFunc("/api/auth/oauth/poll", authHandler.OAuthPoll)
+	mux.HandleFunc("/api/auth/oauth/google/id-token", authHandler.GoogleIDTokenLogin)
+	mux.HandleFunc("/api/auth/oauth/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if strings.HasSuffix(path, "/start") {
+			authHandler.OAuthStart(w, r)
+			return
+		}
+		if strings.HasSuffix(path, "/callback") {
+			authHandler.OAuthCallback(w, r)
+			return
+		}
+		if strings.HasSuffix(path, "/id-token") {
+			authHandler.GoogleIDTokenLogin(w, r)
+			return
+		}
+		http.NotFound(w, r)
+	})
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/ws", http.HandlerFunc(wsHandler.ServeHTTP))
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
@@ -399,7 +476,8 @@ func main() {
 	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
 	log.Printf("GET /api/start -> %q", serverMessage)
-	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, GET /api/me (Bearer)")
+	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/verify-email, POST /api/auth/resend-verification, POST /api/auth/forgot-password, POST /api/auth/reset-password, GET /api/me (Bearer)")
+	log.Printf("OAuth: GET /api/auth/oauth/providers, GET /api/auth/oauth/{google|apple|yandex|vk}/start, /callback")
 	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
 	log.Printf("Friends API: GET /api/friends, GET /api/friends/search, POST /api/friends/* (Bearer)")
 	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/delivered, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")

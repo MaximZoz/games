@@ -1423,4 +1423,119 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'собеседнику';
+
+  @override
+  String get verifyEmailTitle => 'Подтверждение email';
+
+  @override
+  String verifyEmailSubtitle(String email) {
+    return 'Мы отправили код на $email';
+  }
+
+  @override
+  String get verifyEmailCodeLabel => 'Код из письма';
+
+  @override
+  String get verifyEmailCodeRequired => 'Введите код';
+
+  @override
+  String get verifyEmailSubmit => 'Подтвердить';
+
+  @override
+  String get verifyEmailResend => 'Отправить код ещё раз';
+
+  @override
+  String get verifyEmailResent => 'Новый код отправлен';
+
+  @override
+  String get oauthOrContinue => 'или войти через';
+
+  @override
+  String get oauthGoogle => 'Google';
+
+  @override
+  String get oauthApple => 'Apple';
+
+  @override
+  String get oauthYandex => 'Яндекс';
+
+  @override
+  String get oauthVK => 'VK';
+
+  @override
+  String get oauthError => 'Не удалось войти через сервис';
+
+  @override
+  String get oauthCallbackTitle => 'Вход…';
+
+  @override
+  String verifyEmailResendIn(String time) {
+    return 'Отправить код ещё раз через $time';
+  }
+
+  @override
+  String verifyEmailDevCodeHint(String code) {
+    return 'Почта ещё не настроена на сервере. Код для входа: $code';
+  }
+
+  @override
+  String get loginForgotPassword => 'Забыли пароль?';
+
+  @override
+  String get forgotPasswordTitle => 'Сброс пароля';
+
+  @override
+  String get forgotPasswordSubtitle => 'Введите email или логин — пришлём код на почту аккаунта';
+
+  @override
+  String get forgotPasswordSubmit => 'Отправить код';
+
+  @override
+  String get forgotPasswordSent => 'Если аккаунт существует, код отправлен на почту';
+
+  @override
+  String get resetPasswordTitle => 'Новый пароль';
+
+  @override
+  String resetPasswordSubtitle(String email) {
+    return 'Код отправлен на $email';
+  }
+
+  @override
+  String get resetPasswordCodeLabel => 'Код из письма';
+
+  @override
+  String get resetPasswordCodeRequired => 'Введите код';
+
+  @override
+  String get resetPasswordNewLabel => 'Новый пароль';
+
+  @override
+  String get resetPasswordNewRequired => 'Введите новый пароль';
+
+  @override
+  String get resetPasswordNewShort => 'Минимум 6 символов';
+
+  @override
+  String get resetPasswordConfirmLabel => 'Повторите пароль';
+
+  @override
+  String get resetPasswordConfirmMismatch => 'Пароли не совпадают';
+
+  @override
+  String get resetPasswordSubmit => 'Сохранить пароль';
+
+  @override
+  String get resetPasswordResend => 'Отправить код ещё раз';
+
+  @override
+  String get resetPasswordResent => 'Новый код отправлен';
+
+  @override
+  String resetPasswordResendIn(String time) {
+    return 'Отправить код ещё раз через $time';
+  }
+
+  @override
+  String get resetPasswordBackToLogin => 'Вернуться ко входу';
 }

@@ -8,6 +8,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
+import 'core/ios_viewport_sync.dart';
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
     as push_nav;
@@ -23,6 +24,8 @@ void main() {
   // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
   if (kIsWeb) {
     usePathUrlStrategy();
+    // iOS PWA: сброс visualViewport offset → hit-test совпадает с картинкой.
+    installIosViewportSync();
   }
   console_log.logToBrowser('main() started');
 

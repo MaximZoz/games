@@ -1423,4 +1423,119 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatReplyPeer => 'दूसरे व्यक्ति';
+
+  @override
+  String get verifyEmailTitle => 'Verify email';
+
+  @override
+  String verifyEmailSubtitle(String email) {
+    return 'We sent a code to $email';
+  }
+
+  @override
+  String get verifyEmailCodeLabel => 'Code from email';
+
+  @override
+  String get verifyEmailCodeRequired => 'Enter the code';
+
+  @override
+  String get verifyEmailSubmit => 'Verify';
+
+  @override
+  String get verifyEmailResend => 'Resend code';
+
+  @override
+  String get verifyEmailResent => 'A new code was sent';
+
+  @override
+  String get oauthOrContinue => 'or continue with';
+
+  @override
+  String get oauthGoogle => 'Google';
+
+  @override
+  String get oauthApple => 'Apple';
+
+  @override
+  String get oauthYandex => 'Yandex';
+
+  @override
+  String get oauthVK => 'VK';
+
+  @override
+  String get oauthError => 'Could not sign in with this service';
+
+  @override
+  String get oauthCallbackTitle => 'Signing in…';
+
+  @override
+  String verifyEmailResendIn(String time) {
+    return 'Resend code in $time';
+  }
+
+  @override
+  String verifyEmailDevCodeHint(String code) {
+    return 'Email is not configured on the server yet. Use this code: $code';
+  }
+
+  @override
+  String get loginForgotPassword => 'Forgot password?';
+
+  @override
+  String get forgotPasswordTitle => 'Reset password';
+
+  @override
+  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+
+  @override
+  String get forgotPasswordSubmit => 'Send code';
+
+  @override
+  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+
+  @override
+  String get resetPasswordTitle => 'New password';
+
+  @override
+  String resetPasswordSubtitle(String email) {
+    return 'We sent a code to $email';
+  }
+
+  @override
+  String get resetPasswordCodeLabel => 'Code from email';
+
+  @override
+  String get resetPasswordCodeRequired => 'Enter the code';
+
+  @override
+  String get resetPasswordNewLabel => 'New password';
+
+  @override
+  String get resetPasswordNewRequired => 'Enter a new password';
+
+  @override
+  String get resetPasswordNewShort => 'At least 6 characters';
+
+  @override
+  String get resetPasswordConfirmLabel => 'Confirm password';
+
+  @override
+  String get resetPasswordConfirmMismatch => 'Passwords do not match';
+
+  @override
+  String get resetPasswordSubmit => 'Save password';
+
+  @override
+  String get resetPasswordResend => 'Resend code';
+
+  @override
+  String get resetPasswordResent => 'A new code was sent';
+
+  @override
+  String resetPasswordResendIn(String time) {
+    return 'Resend code in $time';
+  }
+
+  @override
+  String get resetPasswordBackToLogin => 'Back to sign in';
 }
