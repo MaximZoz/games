@@ -658,43 +658,102 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         !isGiftCollectionMessage(message.body) &&
         !isInviteLobbyMessage(message.body);
 
-    final action = await showDialog<String>(
+    final media = MediaQuery.of(context);
+    final screen = media.size;
+    final pad = media.padding;
+    const menuWidth = 180.0;
+    const menuMaxHeight = 168.0;
+    const gap = 6.0;
+
+    double? left;
+    double? right;
+    var top = screen.height * 0.35;
+
+    final box =
+        _keyForMessage(message.id).currentContext?.findRenderObject() as RenderBox?;
+    if (box != null && box.hasSize && box.attached) {
+      final origin = box.localToGlobal(Offset.zero);
+      final bubble = box.size;
+      final spaceBelow = screen.height - pad.bottom - (origin.dy + bubble.height);
+      if (spaceBelow >= menuMaxHeight + gap) {
+        top = origin.dy + bubble.height + gap;
+      } else {
+        top = (origin.dy - menuMaxHeight - gap)
+            .clamp(pad.top + 8.0, screen.height - pad.bottom - menuMaxHeight);
+      }
+      if (mine) {
+        right = (screen.width - origin.dx - bubble.width)
+            .clamp(8.0, screen.width - menuWidth - 8.0);
+      } else {
+        left = origin.dx.clamp(8.0, screen.width - menuWidth - 8.0);
+      }
+    } else if (mine) {
+      right = 16;
+    } else {
+      left = 16;
+    }
+
+    final action = await showGeneralDialog<String>(
       context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.black26,
-      builder: (ctx) => Center(
-        child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          elevation: 8,
-          clipBehavior: Clip.antiAlias,
-          child: IntrinsicWidth(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _messageActionTile(
-                  ctx,
-                  value: 'reply',
-                  label: context.l10n.commonReply,
+      transitionDuration: const Duration(milliseconds: 120),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            Positioned(
+              left: left,
+              right: right,
+              top: top,
+              child: FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOut,
                 ),
-                if (canEdit)
-                  _messageActionTile(
-                    ctx,
-                    value: 'edit',
-                    label: context.l10n.commonEdit,
+                child: Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                  elevation: 8,
+                  clipBehavior: Clip.antiAlias,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 148,
+                      maxWidth: menuWidth,
+                    ),
+                    child: IntrinsicWidth(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _messageActionTile(
+                            ctx,
+                            value: 'reply',
+                            label: context.l10n.commonReply,
+                          ),
+                          if (canEdit)
+                            _messageActionTile(
+                              ctx,
+                              value: 'edit',
+                              label: context.l10n.commonEdit,
+                            ),
+                          if (mine)
+                            _messageActionTile(
+                              ctx,
+                              value: 'delete',
+                              label: context.l10n.commonDelete,
+                              danger: true,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                if (mine)
-                  _messageActionTile(
-                    ctx,
-                    value: 'delete',
-                    label: context.l10n.commonDelete,
-                    danger: true,
-                  ),
-              ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
+          ],
+        );
+      },
     );
     if (!mounted || action == null) return;
     switch (action) {
