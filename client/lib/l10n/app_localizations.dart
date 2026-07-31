@@ -2852,7 +2852,7 @@ abstract class AppLocalizations {
   /// No description provided for @forgotPasswordSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Введите email — пришлём код для нового пароля'**
+  /// **'Введите email или логин — пришлём код на почту аккаунта'**
   String get forgotPasswordSubtitle;
 
   /// No description provided for @forgotPasswordSubmit.

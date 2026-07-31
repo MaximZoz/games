@@ -922,7 +922,7 @@
   },
   "loginForgotPassword": "Забыли пароль?",
   "forgotPasswordTitle": "Сброс пароля",
-  "forgotPasswordSubtitle": "Введите email — пришлём код для нового пароля",
+  "forgotPasswordSubtitle": "Введите email или логин — пришлём код на почту аккаунта",
   "forgotPasswordSubmit": "Отправить код",
   "forgotPasswordSent": "Если аккаунт существует, код отправлен на почту",
   "resetPasswordTitle": "Новый пароль",

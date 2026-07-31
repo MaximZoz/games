@@ -50,9 +50,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       setState(() => _isLoading = false);
       return;
     }
-    final email = _emailController.text.trim().toLowerCase();
+    final login = _emailController.text.trim();
     try {
-      await ref.read(authRepositoryProvider).forgotPassword(email: email);
+      final email =
+          await ref.read(authRepositoryProvider).forgotPassword(login: login);
       if (!mounted) return;
       context.go(
         appendAuthQuery(

@@ -23,6 +23,15 @@ type SelfResetPasswordRequest struct {
 	NewPassword string `json:"new_password"`
 }
 
+func looksLikeEmail(s string) bool {
+	s = strings.TrimSpace(s)
+	at := strings.IndexByte(s, '@')
+	if at <= 0 || at == len(s)-1 {
+		return false
+	}
+	return strings.Contains(s[at+1:], ".")
+}
+
 func (h *AuthHandler) sendPasswordResetMail(email, code string) (mailSent bool, err error) {
 	if h.Mailer == nil || !h.Mailer.Enabled() {
 		log.Printf("[auth] password reset code for %s: %s (mail provider not configured)", email, code)
@@ -36,7 +45,9 @@ func (h *AuthHandler) sendPasswordResetMail(email, code string) (mailSent bool, 
 	return true, nil
 }
 
-// ForgotPassword — запрос кода сброса. Всегда отвечает одинаково (anti-enumeration).
+// ForgotPassword — запрос кода сброса.
+// Email: неизвестный адрес — мягкий OK (anti-enumeration).
+// Логин (не email): неизвестный — 404; известный — код на привязанный email.
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
@@ -47,39 +58,50 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
-	email := strings.TrimSpace(strings.ToLower(req.Email))
-	if email == "" {
+	login := strings.TrimSpace(req.Email)
+	if login == "" {
 		WriteErr(w, r, http.StatusBadRequest, "email required")
 		return
 	}
+	isEmail := looksLikeEmail(login)
 
-	genericOK := func(mailSent bool) {
+	writeOK := func(resolvedEmail string, mailSent bool) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"ok":        true,
-			"email":     email,
+			"email":     resolvedEmail,
 			"message":   "if the account exists, a reset code was sent",
 			"mail_sent": mailSent,
 		})
 	}
 
-	u, err := store.GetUserByEmail(r.Context(), h.Pool, email)
+	u, err := store.GetUserByEmailOrDisplayName(r.Context(), h.Pool, login)
 	if err == pgx.ErrNoRows {
-		genericOK(false)
+		if !isEmail {
+			WriteErr(w, r, http.StatusNotFound, "user not found")
+			return
+		}
+		// Email-формат, аккаунта нет — не раскрываем.
+		writeOK(strings.ToLower(login), false)
 		return
 	}
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	// OAuth-only без пароля — не шлём код, но отвечаем так же.
-	if strings.TrimSpace(u.PasswordHash) == "" {
-		genericOK(false)
+
+	resolvedEmail := strings.TrimSpace(strings.ToLower(u.Email))
+	if resolvedEmail == "" {
+		if !isEmail {
+			WriteErr(w, r, http.StatusNotFound, "user not found")
+			return
+		}
+		writeOK(strings.ToLower(login), false)
 		return
 	}
 
-	ok, err := store.CanResendPasswordReset(r.Context(), h.Pool, email)
+	ok, err := store.CanResendPasswordReset(r.Context(), h.Pool, resolvedEmail)
 	if err != nil && err != pgx.ErrNoRows {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -99,13 +121,13 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mailSent, err := h.sendPasswordResetMail(email, code)
+	mailSent, err := h.sendPasswordResetMail(resolvedEmail, code)
 	if err != nil {
 		_ = store.DeletePasswordResetCode(r.Context(), h.Pool, u.ID)
 		WriteErr(w, r, http.StatusBadGateway, mailSendUserMessage(err))
 		return
 	}
-	genericOK(mailSent)
+	writeOK(resolvedEmail, mailSent)
 }
 
 // ResetPassword — проверка кода и установка нового пароля; выдаёт сессию.

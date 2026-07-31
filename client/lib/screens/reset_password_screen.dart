@@ -126,7 +126,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       _resending = true;
     });
     try {
-      await ref.read(authRepositoryProvider).forgotPassword(email: widget.email);
+      await ref.read(authRepositoryProvider).forgotPassword(login: widget.email);
       if (mounted) {
         setState(() => _infoMessage = context.l10n.resetPasswordResent);
         _startResendCooldown();

@@ -249,17 +249,34 @@ class AuthRepository {
     }
   }
 
-  Future<void> forgotPassword({required String email}) async {
+  /// Запрос кода сброса. [login] — email или логин.
+  /// Возвращает email, на который ушёл код (для логина — привязанный email).
+  Future<String> forgotPassword({required String login}) async {
     await init();
+    final identifier = login.trim();
     final response = await ApiClient.post(
       Uri.parse('$apiBaseUrl/api/auth/forgot-password'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email.trim().toLowerCase()}),
+      // Не lower-case: логин case-sensitive (display_name).
+      body: jsonEncode({'email': identifier}),
       operation: 'AuthRepository.forgotPassword',
     );
     if (response.statusCode != 200) {
-      throw AuthException(response.statusCode, _messageFromResponse(response));
+      final raw = _messageFromResponse(response);
+      if (response.statusCode == 404 ||
+          raw.toLowerCase().contains('user not found')) {
+        throw AuthException(404, LocaleService.l10n.commonUserNotFound);
+      }
+      throw AuthException(response.statusCode, raw);
     }
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        final email = (body['email'] ?? '').toString().trim();
+        if (email.isNotEmpty) return email;
+      }
+    } catch (_) {}
+    return identifier;
   }
 
   Future<AuthResult> resetPassword({

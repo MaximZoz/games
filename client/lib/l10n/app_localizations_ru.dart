@@ -1485,7 +1485,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get forgotPasswordTitle => 'Сброс пароля';
 
   @override
-  String get forgotPasswordSubtitle => 'Введите email — пришлём код для нового пароля';
+  String get forgotPasswordSubtitle => 'Введите email или логин — пришлём код на почту аккаунта';
 
   @override
   String get forgotPasswordSubmit => 'Отправить код';

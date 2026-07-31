@@ -1485,7 +1485,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle => 'Enter email or username — we’ll send a code to the account email';
 
   @override
   String get forgotPasswordSubmit => 'Send code';

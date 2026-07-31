@@ -7,6 +7,27 @@ import (
 	"testing"
 )
 
+func TestLooksLikeEmail(t *testing.T) {
+	cases := []struct {
+		in   string
+		want bool
+	}{
+		{"a@b.c", true},
+		{"user@example.com", true},
+		{"Zoz", false},
+		{"zoz", false},
+		{"@x.com", false},
+		{"x@", false},
+		{"x@y", false},
+		{"", false},
+	}
+	for _, tc := range cases {
+		if got := looksLikeEmail(tc.in); got != tc.want {
+			t.Fatalf("looksLikeEmail(%q)=%v want %v", tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestForgotPassword_MethodNotAllowed(t *testing.T) {
 	h := &AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/api/auth/forgot-password", nil)

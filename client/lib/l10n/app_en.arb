@@ -922,7 +922,7 @@
   },
   "loginForgotPassword": "Forgot password?",
   "forgotPasswordTitle": "Reset password",
-  "forgotPasswordSubtitle": "Enter your email — we’ll send a code for a new password",
+  "forgotPasswordSubtitle": "Enter email or username — we’ll send a code to the account email",
   "forgotPasswordSubmit": "Send code",
   "forgotPasswordSent": "If the account exists, a code was sent to your email",
   "resetPasswordTitle": "New password",
