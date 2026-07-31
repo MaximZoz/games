@@ -55,11 +55,19 @@ String? _tagFromPath(String path) {
 
 void _postToPushSw(Map<String, Object?> payload) {
   try {
-    final ready = web.window.navigator.serviceWorker.ready;
-    ready.toDart.then((reg) {
-      final worker = reg.active;
-      if (worker == null) return;
-      worker.postMessage(payload.jsify());
+    // Шлём именно в push-sw.js — не в чужой flutter_service_worker.
+    web.window.navigator.serviceWorker.getRegistrations().toDart.then((regs) {
+      for (final reg in regs.toDart) {
+        final worker = reg.active;
+        if (worker == null) continue;
+        final url = worker.scriptURL;
+        if (!url.contains('push-sw.js')) continue;
+        worker.postMessage(payload.jsify());
+        return;
+      }
+      web.window.navigator.serviceWorker.ready.toDart.then((reg) {
+        reg.active?.postMessage(payload.jsify());
+      });
     });
   } catch (_) {}
 }
@@ -99,9 +107,11 @@ void reportPushSwActiveRoute(String path) {
 
 void _startHeartbeat() {
   _heartbeatTimer?.cancel();
-  _heartbeatTimer = Timer.periodic(const Duration(seconds: 8), (_) {
-    if (_lastReportedPath.isEmpty) return;
-    reportPushSwActiveRoute(_lastReportedPath);
+  // Чаще пингуем SW: между push Safari поднимает «чистый» worker.
+  _heartbeatTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+    reportPushSwActiveRoute(
+      _lastReportedPath.isEmpty ? '/' : _lastReportedPath,
+    );
   });
 }
 
@@ -200,6 +210,8 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
   } catch (_) {}
 
   _startHeartbeat();
+  // Сразу пометить PWA как foreground — до первого кадра AppShell.
+  reportPushSwActiveRoute('/');
 
   // Холодный старт / уже открытое приложение после клика по пушу.
   _consumePendingIfAny();

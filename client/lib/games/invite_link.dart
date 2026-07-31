@@ -19,6 +19,14 @@ class InviteLobbyLink {
 
   /// Путь приложения: `/games/tictactoe/lobby/{id}?mode=invite`.
   final String appPath;
+
+  /// Путь с id сообщения чата — после «Войти в игру» сообщение удалится.
+  String appPathFromMessage(String messageId) {
+    final id = messageId.trim();
+    if (id.isEmpty) return appPath;
+    final sep = appPath.contains('?') ? '&' : '?';
+    return '$appPath${sep}from_message=${Uri.encodeComponent(id)}';
+  }
 }
 
 /// Если [raw] — целиком ссылка на invite-лобби (абсолютная или относительная).

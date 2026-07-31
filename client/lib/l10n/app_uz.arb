@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "kuniga {amount}",
+  "balancePerDay": "{amount}/kun",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

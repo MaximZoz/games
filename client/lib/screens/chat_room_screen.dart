@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
@@ -16,6 +18,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -104,12 +107,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   List<ChatMessageItem> _messages = const [];
   ChatMessageItem? _replyTo;
   ChatMessageItem? _editingMessage;
-  final List<PickedChatImage> _pendingImages = [];
+  final List<_PendingImageEntry> _pendingImages = [];
   static const int _maxPendingImages = 3;
+  int _pendingImageSeq = 0;
   static const Color _composerIconPurple = Color(0xFF8B5CF6);
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
   String? _highlightedMessageID;
   bool _jumpingToMessage = false;
+
+  /// Всплывашка «Вставить» для скопированной invite-ссылки.
+  String? _pasteInviteUrl;
+  bool _pasteSuggestionVisible = false;
+  bool _applyingPaste = false;
 
   /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
   final Set<String> _pendingDeliveredIDs = <String>{};
@@ -130,6 +139,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       markChatReadInChatsCache(ref, widget.chatID);
+      unawaited(_maybeShowPasteSuggestion());
     });
   }
 
@@ -145,10 +155,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _emojiOnly = false;
       _composerAlert = null;
       _highlightedMessageID = null;
+      _pasteInviteUrl = null;
+      _pasteSuggestionVisible = false;
       _messageKeys.clear();
       _messageIDs.clear();
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_maybeShowPasteSuggestion());
+      });
     }
   }
 
@@ -176,8 +191,61 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _onComposerTextChanged() {
-    if (_composerAlert == null) return;
-    setState(() => _composerAlert = null);
+    if (_applyingPaste) return;
+    if (!_pasteSuggestionVisible && _composerAlert == null) return;
+    setState(() {
+      _pasteSuggestionVisible = false;
+      _composerAlert = null;
+    });
+  }
+
+  Future<void> _maybeShowPasteSuggestion() async {
+    if (!mounted || _textController.text.trim().isNotEmpty) return;
+
+    String? url = ref.read(pendingInvitePasteProvider)?.trim();
+    if (url == null || url.isEmpty || parseInviteLobbyShareUrl(url) == null) {
+      url = null;
+      try {
+        final data = await Clipboard.getData(Clipboard.kTextPlain);
+        final text = data?.text?.trim();
+        if (text != null &&
+            text.isNotEmpty &&
+            parseInviteLobbyShareUrl(text) != null) {
+          url = text;
+        }
+      } catch (_) {
+        // Safari/PWA часто блокирует чтение буфера без жеста.
+      }
+    }
+    if (!mounted || url == null) return;
+    if (_textController.text.trim().isNotEmpty) return;
+    setState(() {
+      _pasteInviteUrl = url;
+      _pasteSuggestionVisible = true;
+    });
+  }
+
+  void _dismissPasteSuggestion() {
+    if (!_pasteSuggestionVisible && _pasteInviteUrl == null) return;
+    setState(() {
+      _pasteSuggestionVisible = false;
+    });
+  }
+
+  void _applyPasteSuggestion() {
+    final url = _pasteInviteUrl?.trim();
+    if (url == null || url.isEmpty) return;
+    _applyingPaste = true;
+    _textController.text = url;
+    _textController.selection = TextSelection.collapsed(offset: url.length);
+    ref.read(pendingInvitePasteProvider.notifier).state = null;
+    setState(() {
+      _pasteSuggestionVisible = false;
+      _pasteInviteUrl = null;
+      _composerAlert = null;
+    });
+    _applyingPaste = false;
+    _composerFocusNode.requestFocus();
   }
 
   /// Диалог видим в shell (не фоновая вкладка и не уходим назад).
@@ -484,6 +552,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
     if (_sending) return;
+    _dismissPasteSuggestion();
     if (_editingMessage != null) {
       if (text.isEmpty && !_editingMessage!.hasImage) return;
       setState(() {
@@ -523,14 +592,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       return;
     }
 
-    if (text.isEmpty && _pendingImages.isEmpty) return;
+    if (_pendingImages.any((e) => e.isLoading)) return;
+    final readyImages = [
+      for (final e in _pendingImages)
+        if (e.image != null) e.image!,
+    ];
+    if (text.isEmpty && readyImages.isEmpty) return;
 
     setState(() {
       _sending = true;
       _composerAlert = null;
     });
     try {
-      final images = List<PickedChatImage>.of(_pendingImages);
+      final images = readyImages;
       final replyID = _replyTo?.id;
       if (images.isEmpty) {
         final sent = await ref.read(chatsRepositoryProvider).sendMessage(
@@ -592,21 +666,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _replyTo = message;
       _editingMessage = null;
       _composerAlert = null;
+      _pasteSuggestionVisible = false;
     });
     _composerFocusNode.requestFocus();
   }
 
   void _startEdit(ChatMessageItem message) {
+    _applyingPaste = true;
     setState(() {
       _editingMessage = message;
       _replyTo = null;
       _pendingImages.clear();
       _composerAlert = null;
+      _pasteSuggestionVisible = false;
       _textController.text = message.body;
       _textController.selection = TextSelection.collapsed(
         offset: _textController.text.length,
       );
     });
+    _applyingPaste = false;
     _composerFocusNode.requestFocus();
   }
 
@@ -615,6 +693,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     setState(() {
       _replyTo = null;
       _editingMessage = null;
+      _pasteSuggestionVisible = false;
       if (wasEditing) {
         _textController.clear();
       }
@@ -628,15 +707,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _pendingImages.length >= _maxPendingImages) {
       return;
     }
-    // Сразу галерея/фото, без нижней панели и без «файл».
-    final picked = await pickAndCompressChatImage(ImageSource.gallery);
-    if (!mounted) return;
-    if (picked == null) return;
+    _dismissPasteSuggestion();
+    // Сначала выбор файла; превью с лоадером — сразу после выбора, до сжатия.
+    final raw = await pickChatImageRawBytes(ImageSource.gallery);
+    if (!mounted || raw == null) return;
+    if (_pendingImages.length >= _maxPendingImages) return;
+
+    final entryId = 'pending_${_pendingImageSeq++}';
     setState(() {
-      if (_pendingImages.length < _maxPendingImages) {
-        _pendingImages.add(picked);
-      }
+      _pendingImages.add(_PendingImageEntry.loading(entryId));
       _composerAlert = null;
+    });
+    // Дать кадру отрисовать плейсхолдер с лоадером до тяжёлого сжатия.
+    await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 16));
+    if (!mounted) return;
+
+    PickedChatImage? picked;
+    try {
+      picked = await compressRawChatImageAsync(raw);
+    } catch (_) {
+      picked = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      final index = _pendingImages.indexWhere((e) => e.id == entryId);
+      if (index < 0) return;
+      if (picked == null) {
+        _pendingImages.removeAt(index);
+        _composerAlert = LocaleService.l10n.commonGenericError;
+      } else {
+        _pendingImages[index] = _PendingImageEntry.ready(entryId, picked);
+      }
     });
   }
 
@@ -1761,6 +1863,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return entries;
   }
 
+  /// Сумма бейджей нижнего меню, пока открыт этот чат:
+  /// другие диалоги + игры (инвайты/ход) + друзья + главная.
+  int _shellNotificationCount() {
+    final chats =
+        ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    final localRead = ref.watch(locallyReadChatIdsProvider);
+    var otherChats = 0;
+    for (final item in chats) {
+      if (item.chatID == widget.chatID) continue;
+      if (localRead.contains(item.chatID)) continue;
+      otherChats += item.unreadCount;
+    }
+    final incomingFriends = ref.watch(friendsIncomingCountProvider);
+    final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
+    final gameInvites = ref.watch(gameInvitesCountProvider);
+    final dailyReward =
+        ref.watch(dailyRewardAvailableProvider).valueOrNull == true ? 1 : 0;
+    final achievements =
+        ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final collectionIncome =
+        ref.watch(collectionIncomeAvailableProvider) ? 1 : 0;
+    final gifted = ref.watch(unreadGiftedCollectionsCountProvider);
+    return otherChats +
+        incomingFriends +
+        gamesMyTurn +
+        gameInvites +
+        dailyReward +
+        achievements +
+        collectionIncome +
+        gifted;
+  }
+
   Widget _buildChatToolbar({
     required ChatUserItem? peerUser,
     required String title,
@@ -1770,6 +1904,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final statusText = presence == null
         ? null
         : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
+    final notifyCount = _shellNotificationCount();
+    final notifyLabel = notifyCount > 99 ? '99+' : '$notifyCount';
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Row(
@@ -1778,10 +1914,50 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           if (widget.inSplitView && !widget.fromFriends && !widget.fromGames)
             const SizedBox(width: 8)
           else
-            IconButton(
-              onPressed: _leavingToChats ? null : _goBackToChats,
-              icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: widget.fromGames ? context.l10n.chatBackToGame : context.l10n.chatBackToChats,
+            Tooltip(
+              message: widget.fromGames
+                  ? context.l10n.chatBackToGame
+                  : context.l10n.chatBackToChats,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _leavingToChats ? null : _goBackToChats,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      8,
+                      10,
+                      notifyCount > 0 ? 6 : 8,
+                      10,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_rounded,
+                          color: _leavingToChats
+                              ? AppColors.textSecondary.withValues(alpha: 0.4)
+                              : null,
+                        ),
+                        if (notifyCount > 0) ...[
+                          const SizedBox(width: 2),
+                          Text(
+                            '($notifyLabel)',
+                            style: TextStyle(
+                              color: _leavingToChats
+                                  ? AppColors.accentStart.withValues(alpha: 0.4)
+                                  : AppColors.accentStart,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           Tooltip(
             message: context.l10n.userInfoTitle,
@@ -2068,7 +2244,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _ChatInviteCard(link: inviteLink),
+                            _ChatInviteCard(
+                              link: inviteLink,
+                              messageId: message.id,
+                            ),
                             const SizedBox(height: 6),
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -2409,6 +2588,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
+              if (_pasteSuggestionVisible && _pasteInviteUrl != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(48, 0, 12, 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _applyPasteSuggestion,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.borderCycle.first,
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.content_paste_rounded,
+                                size: 18,
+                                color: AppColors.accentStart,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                context.l10n.chatPaste,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (_pendingImages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
@@ -2429,16 +2659,39 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
-                                      onTap: () => _previewPendingImage(
-                                        _pendingImages[i],
-                                      ),
+                                      onTap: _pendingImages[i].image == null
+                                          ? null
+                                          : () => _previewPendingImage(
+                                                _pendingImages[i].image!,
+                                              ),
                                       borderRadius: BorderRadius.circular(10),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
-                                        child: Image.memory(
-                                          _pendingImages[i].bytes,
-                                          fit: BoxFit.cover,
-                                        ),
+                                        child: _pendingImages[i].image == null
+                                            ? ColoredBox(
+                                                color: const Color(0xFFE9E4F8),
+                                                child: Center(
+                                                  child: SizedBox(
+                                                    width: 28,
+                                                    height: 28,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 3,
+                                                      color:
+                                                          _composerIconPurple,
+                                                      backgroundColor: Colors
+                                                          .white
+                                                          .withValues(
+                                                        alpha: 0.85,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : Image.memory(
+                                                _pendingImages[i].image!.bytes,
+                                                fit: BoxFit.cover,
+                                              ),
                                       ),
                                     ),
                                   ),
@@ -2618,7 +2871,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       ),
                     ),
                     IconButton(
-                      onPressed: _sending ? null : _sendMessage,
+                      onPressed: (_sending ||
+                              _pendingImages.any((e) => e.isLoading))
+                          ? null
+                          : _sendMessage,
                       tooltip: _editingMessage != null
                           ? context.l10n.commonSave
                           : context.l10n.commonSend,
@@ -2659,6 +2915,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _openEmojiPicker() async {
+    _dismissPasteSuggestion();
     _composerFocusNode.unfocus();
     // Не invalidate: иначе на мобиле valueOrNull=null и панель «пустая».
     final cached = ref.read(inventoryListProvider).valueOrNull;
@@ -2936,9 +3193,13 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
 }
 
 class _ChatInviteCard extends StatelessWidget {
-  const _ChatInviteCard({required this.link});
+  const _ChatInviteCard({
+    required this.link,
+    required this.messageId,
+  });
 
   final InviteLobbyLink link;
+  final String messageId;
 
   @override
   Widget build(BuildContext context) {
@@ -2949,7 +3210,9 @@ class _ChatInviteCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () => context.push(link.appPath),
+          // go, не push: иначе «Своя игра» остаётся в истории и снова
+          // всплывает при возврате в Чаты.
+          onTap: () => context.go(link.appPathFromMessage(messageId)),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: BoxDecoration(
@@ -3267,4 +3530,15 @@ class _ChatTimelineEntry {
 
   final String? headerLabel;
   final ChatMessageItem? message;
+}
+
+/// Слот превью вложения: сначала лоадер, затем готовое фото.
+class _PendingImageEntry {
+  const _PendingImageEntry.loading(this.id) : image = null;
+  const _PendingImageEntry.ready(this.id, this.image);
+
+  final String id;
+  final PickedChatImage? image;
+
+  bool get isLoading => image == null;
 }

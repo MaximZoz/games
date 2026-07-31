@@ -405,24 +405,27 @@ func EditChatMessage(
 	return GetChatMessageByID(ctx, pool, chatID, editorUserID, messageID)
 }
 
-// DeleteChatMessage удаляет своё сообщение (для всех участников).
+// DeleteChatMessage удаляет сообщение для всех участников чата.
+// Свои сообщения — всегда; чужие — только invite-ссылки на «Свою игру»
+// (чтобы приглашённый мог убрать карточку после входа в матч).
 func DeleteChatMessage(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	messageID, actorUserID uuid.UUID,
 ) (chatID uuid.UUID, err error) {
 	var senderID uuid.UUID
+	var body string
 	err = pool.QueryRow(ctx, `
-		SELECT chat_id, sender_user_id
+		SELECT chat_id, sender_user_id, body
 		FROM chat_messages WHERE id = $1
-	`, messageID).Scan(&chatID, &senderID)
+	`, messageID).Scan(&chatID, &senderID, &body)
 	if err == pgx.ErrNoRows {
 		return uuid.Nil, ErrChatMessageNotFound
 	}
 	if err != nil {
 		return uuid.Nil, err
 	}
-	if senderID != actorUserID {
+	if senderID != actorUserID && !IsInviteLobbyShareBody(body) {
 		return uuid.Nil, ErrChatDeleteForbidden
 	}
 	if err := ensureChatMembership(ctx, pool, chatID, actorUserID); err != nil {

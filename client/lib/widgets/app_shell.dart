@@ -20,10 +20,22 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
+
+bool _activeGameUsable(ActiveGameItem? active) {
+  if (active == null) return false;
+  if (active.type == 'game') {
+    return active.gameId != null && active.gameId!.trim().isNotEmpty;
+  }
+  if (active.type == 'lobby') {
+    return active.lobbyId != null && active.lobbyId!.trim().isNotEmpty;
+  }
+  return false;
+}
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
@@ -216,8 +228,21 @@ class AppShell extends ConsumerWidget {
         ref.read(profileExitEditTickProvider.notifier).state++;
       }
 
-      // «Друзья» → корень вкладки + сброс поиска / таб «Друзья».
+      // «Друзья»: при входящих заявках с другой вкладки — сразу «Входящие».
       if (target == '/friends') {
+        final incoming = ref.read(friendsIncomingCountProvider);
+        final alreadyOnFriends = i == navigationShell.currentIndex;
+        if (!alreadyOnFriends && incoming > 0) {
+          Router.neglect(context, () {
+            context.go('/friends?tab=incoming');
+          });
+          unawaited(
+            ref
+                .read(friendsSnapshotProvider.future)
+                .then((_) {}, onError: (_, __) {}),
+          );
+          return;
+        }
         ref.read(friendsNavTapTickProvider.notifier).state++;
       }
 
@@ -225,28 +250,46 @@ class AppShell extends ConsumerWidget {
       // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
         final currentPath = path;
+        final activeNotifier = ref.read(activeGameProvider.notifier);
+        final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
+        final cacheUsable = _activeGameUsable(cachedActive);
         Router.neglect(context, () {
           _goGamesTab(context, currentPath, cachedActive);
         });
-        // Фон: обновить active/чаты для бейджей. Без повторного go —
-        // иначе гонка с мгновенным leave из лобби.
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        // Если кэш был пуст (создали лобби и ушли в чаты) — после refresh
+        // увести в «Своя игра». Epoch отсекает гонку с leaveLobby.
         unawaited(() async {
           try {
             ref.invalidate(activeGameProvider);
-            await ref.read(activeGameProvider.future);
+            final fresh = await ref.read(activeGameProvider.future);
+            if (!context.mounted) return;
+            if (ref.read(activeGameProvider.notifier).epoch != epochAtTap) {
+              return;
+            }
+            if (cacheUsable || fresh == null || !_activeGameUsable(fresh)) {
+              return;
+            }
+            final nowPath =
+                GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+            if (nowPath != '/games') return;
+            Router.neglect(context, () {
+              _goGamesTab(context, nowPath, fresh);
+            });
           } catch (_) {}
         }());
         return;
       }
 
       // Профиль: всегда /profile — иначе после логина ветка восстанавливает /login.
+      // Чаты: всегда список (не восстанавливать лобби/комнату поверх списка).
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
           initialLocation: i == navigationShell.currentIndex ||
-              target == '/profile',
+              target == '/profile' ||
+              target == '/chats',
         );
       });
 
@@ -305,18 +348,24 @@ class AppShell extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 8),
                         child: authState.when(
-                          data: (user) => user != null
-                              ? Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: ToolbarBalanceChip(
-                                      bronze: user.balanceBronze,
-                                      coinSize: 16,
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                          data: (user) {
+                            if (user == null) return const SizedBox.shrink();
+                            final gain = ref.watch(balanceGainProvider);
+                            final bronze =
+                                gain.displayBronze ?? user.balanceBronze;
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: ToolbarBalanceChip(
+                                  bronze: bronze,
+                                  coinSize: 16,
+                                  forceShow: gain.forceShow,
+                                  coinKeys: ref.watch(toolbarCoinKeysProvider),
+                                ),
+                              ),
+                            );
+                          },
                           loading: () => const SizedBox.shrink(),
                           error: (_, __) => const SizedBox.shrink(),
                         ),

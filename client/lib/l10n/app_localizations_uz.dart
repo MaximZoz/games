@@ -433,6 +433,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get lobbyEnterGame => 'O‘yinga kirish';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Taklif qilish';
 
   @override
@@ -476,6 +479,33 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get gameLeave => 'Chiqish';
+
+  @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
 
   @override
   String get gameConnecting => 'O‘yinga ulanilmoqda…';
@@ -545,6 +575,9 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get chatMessageHint => 'Xabar';
+
+  @override
+  String get chatPaste => 'Вставить';
 
   @override
   String get chatEmoji => 'Emoji';
@@ -802,7 +835,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return 'kuniga $amount';
+    return '$amount/kun';
   }
 
   @override
@@ -1088,6 +1121,15 @@ class AppLocalizationsUz extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+
+  @override
+  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+
+  @override
+  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+
+  @override
   String get inventoryLoadFailed => 'Buyumlarni yuklab bo‘lmadi';
 
   @override
@@ -1116,6 +1158,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return 'Ertangi daromad: $amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
 
   @override
   String inventoryStakeGold(String amount) {

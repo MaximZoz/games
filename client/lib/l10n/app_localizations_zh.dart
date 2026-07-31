@@ -433,6 +433,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbyEnterGame => '进入对局';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => '邀请';
 
   @override
@@ -476,6 +479,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gameLeave => '离开';
+
+  @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
 
   @override
   String get gameConnecting => '正在连接对局…';
@@ -545,6 +575,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatMessageHint => '消息';
+
+  @override
+  String get chatPaste => 'Вставить';
 
   @override
   String get chatEmoji => '表情';
@@ -802,7 +835,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '每天 $amount';
+    return '$amount/天';
   }
 
   @override
@@ -1088,6 +1121,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+
+  @override
+  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+
+  @override
+  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+
+  @override
   String get inventoryLoadFailed => '无法加载物品';
 
   @override
@@ -1116,6 +1158,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return '明日收益：$amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
 
   @override
   String inventoryStakeGold(String amount) {

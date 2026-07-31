@@ -128,11 +128,37 @@ void main() {
       );
     });
 
-    test('ignores unrelated routes and lobby updates without a game', () {
+    test('navigates from chats/friends when a game starts', () {
+      expect(
+        realtimeGameIdForNavigation(
+          const {
+            'type': 'game_started',
+            'lobby_id': 'lobby-1',
+            'game_id': 'game-1',
+          },
+          currentPath: '/chats',
+        ),
+        'game-1',
+      );
+      expect(
+        realtimeGameIdForNavigation(
+          const {
+            'type': 'lobby_updated',
+            'lobby_id': 'lobby-1',
+            'game_id': 'game-2',
+          },
+          currentPath: '/friends',
+          expectedLobbyId: 'lobby-1',
+        ),
+        'game-2',
+      );
+    });
+
+    test('ignores auth routes and lobby updates without a game', () {
       expect(
         realtimeGameIdForNavigation(
           const {'type': 'game_started', 'game_id': 'game-1'},
-          currentPath: '/chats',
+          currentPath: '/login',
         ),
         isNull,
       );
@@ -154,6 +180,18 @@ void main() {
             'game_id': 'game-2',
           },
           currentPath: '/games/tictactoe/lobby/lobby-1',
+          expectedLobbyId: 'lobby-1',
+        ),
+        isNull,
+      );
+      expect(
+        realtimeGameIdForNavigation(
+          const {
+            'type': 'game_started',
+            'lobby_id': 'lobby-2',
+            'game_id': 'game-2',
+          },
+          currentPath: '/chats',
           expectedLobbyId: 'lobby-1',
         ),
         isNull,

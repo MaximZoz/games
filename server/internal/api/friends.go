@@ -356,7 +356,7 @@ func (h *FriendsHandler) SendRequest(w http.ResponseWriter, r *http.Request) {
 		h.Push.NotifyUsers([]uuid.UUID{targetID}, store.WebPushCategoryFriends, PushPayload{
 			Title: i18n.Content(lang, "push.friend_request_title"),
 			Body:  i18n.Contentf(lang, "push.friend_request_body", map[string]string{"name": from}),
-			URL:   "/friends",
+			URL:   "/friends?tab=incoming",
 			Tag:   "friend_request",
 		})
 	}

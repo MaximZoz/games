@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 
 class ShopItem {
   const ShopItem({
@@ -247,6 +248,7 @@ class ShopRepository {
             (body['message'] ?? body['error'] ?? message).toString().trim();
       }
     } catch (_) {}
+    message = _localizeShopError(message, l10n);
     if (response.statusCode == 402) {
       throw AuthException(
         402,
@@ -257,6 +259,22 @@ class ShopRepository {
       response.statusCode,
       message.isEmpty ? (fallback ?? l10n.commonServerErrorShort) : message,
     );
+  }
+
+  /// Маппинг канонических EN-ключей API (и сырого текста) на локаль клиента.
+  static String _localizeShopError(String message, AppLocalizations l10n) {
+    final key = message.trim().toLowerCase();
+    if (key == 'target already owns item' ||
+        key.contains('target already owns')) {
+      return l10n.inventoryGiftAlreadyOwns;
+    }
+    if (key == 'cannot gift to self' || key.contains('cannot gift to self')) {
+      return l10n.inventoryGiftSelf;
+    }
+    if (key == 'emoji not owned' || key == 'not a collection item') {
+      return l10n.inventoryGiftNotOwned;
+    }
+    return message;
   }
 
   Future<List<ShopItem>> listShop() async {

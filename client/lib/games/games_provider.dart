@@ -10,6 +10,9 @@ final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
   return GamesRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
+/// Invite-ссылка, скопированная из лобби — для всплывашки «Вставить» в чате.
+final pendingInvitePasteProvider = StateProvider<String?>((ref) => null);
+
 class GameInvite {
   GameInvite({
     required this.lobbyId,
@@ -188,6 +191,11 @@ final activeGameProvider =
         ActiveGameNotifier.new);
 
 class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
+  /// Растёт при [clearLocal] — чтобы фоновый resume после тапа «Игры»
+  /// не вернул в лобби сразу после выхода.
+  int _epoch = 0;
+  int get epoch => _epoch;
+
   @override
   Future<ActiveGameItem?> build() async {
     ref.listen(
@@ -216,7 +224,13 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
 
   /// Мгновенно сбросить локально (выход из лобби без ожидания сети).
   void clearLocal() {
+    _epoch++;
     state = const AsyncValue.data(null);
+  }
+
+  /// Сразу после createLobby — чтобы таб «Игры» открывал «Своя игра».
+  void setLocal(ActiveGameItem item) {
+    state = AsyncValue.data(item);
   }
 }
 

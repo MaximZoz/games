@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} у дзень",
+  "balancePerDay": "{amount}/дзень",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} päivässä",
+  "balancePerDay": "{amount}/pv",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

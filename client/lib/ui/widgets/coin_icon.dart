@@ -501,60 +501,85 @@ class _DiamondPainter extends CustomPainter {
 
 enum CoinType { bronze, silver, gold, diamond }
 
-/// Тип монеты для суммы: старший номинал после округления вверх.
+/// Тип монеты для суммы: старший ненулевой номинал без округления вверх.
 CoinType rewardCoinType(int bronze) {
   if (bronze <= 0) return CoinType.bronze;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) return CoinType.diamond;
-      return CoinType.gold;
-    }
-    return CoinType.silver;
-  }
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  if (diamond > BigInt.zero) return CoinType.diamond;
+  if (gold > BigInt.zero) return CoinType.gold;
+  if (silver > BigInt.zero) return CoinType.silver;
+  if (bronzeRest > BigInt.zero) return CoinType.bronze;
   return CoinType.bronze;
 }
 
-/// Человекочитаемая сумма: округление вверх до большей монеты.
-/// 150 бр → «2 серебряных», 10001 бр → «2 золотых».
+/// Человекочитаемая сумма без округления: 133 бр → «1 серебряных 33 бронзовых».
 String formatRewardBronze(int bronze, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
   if (bronze <= 0) return t.balanceZeroBronze;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) {
-        final diamond = (gold + 99) ~/ 100;
-        return t.balanceDiamonds(diamond);
-      }
-      return t.balanceGolds(gold);
-    }
-    return t.balanceSilvers(silver);
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  final parts = <String>[];
+  if (diamond > BigInt.zero) {
+    parts.add(t.balanceDiamonds(diamond.toInt()));
   }
-  return t.balanceBronzes(bronze);
+  if (gold > BigInt.zero) {
+    parts.add(t.balanceGolds(gold.toInt()));
+  }
+  if (silver > BigInt.zero) {
+    parts.add(t.balanceSilvers(silver.toInt()));
+  }
+  if (bronzeRest > BigInt.zero) {
+    parts.add(t.balanceBronzes(bronzeRest.toInt()));
+  }
+  if (parts.isEmpty) return t.balanceZeroBronze;
+  return parts.join(' ');
 }
 
-/// Сумма дохода с явным «в день».
+/// Компактная сумма с аббревиатурами: 63 → «63 бр», 133 → «1 с. 33 бр».
+String formatRewardBronzeAbbr(int bronze, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  if (bronze <= 0) return '0 ${t.balanceAbbrBronze}';
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  final parts = <String>[];
+  if (diamond > BigInt.zero) {
+    parts.add('${diamond.toInt()} ◆');
+  }
+  if (gold > BigInt.zero) {
+    parts.add('${gold.toInt()} ${t.balanceAbbrGold}');
+  }
+  if (silver > BigInt.zero) {
+    parts.add('${silver.toInt()} ${t.balanceAbbrSilver}');
+  }
+  if (bronzeRest > BigInt.zero) {
+    parts.add('${bronzeRest.toInt()} ${t.balanceAbbrBronze}');
+  }
+  if (parts.isEmpty) return '0 ${t.balanceAbbrBronze}';
+  return parts.join(' ');
+}
+
+/// Суффикс «/день» из шаблона [AppLocalizations.balancePerDay].
+String balancePerDaySuffix([AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  const marker = '\u0001';
+  final sample = t.balancePerDay(marker);
+  final i = sample.indexOf(marker);
+  if (i < 0) return '/день';
+  return sample.substring(i + marker.length);
+}
+
+/// Сумма дохода: «63 бр/день», «1 с. 33 бр/день».
 String formatRewardBronzePerDay(int bronze, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
-  return t.balancePerDay(formatRewardBronze(bronze, t));
+  return t.balancePerDay(formatRewardBronzeAbbr(bronze, t));
 }
 
-/// Число монет после округления вверх (для иконки + цифры).
+/// Количество старшего ненулевого номинала (для компактной иконки).
 int rewardCoinAmount(int bronze) {
   if (bronze <= 0) return 0;
-  if (bronze >= 100) {
-    final silver = (bronze + 99) ~/ 100;
-    if (silver >= 100) {
-      final gold = (silver + 99) ~/ 100;
-      if (gold >= 100) return (gold + 99) ~/ 100;
-      return gold;
-    }
-    return silver;
-  }
-  return bronze;
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  if (diamond > BigInt.zero) return diamond.toInt();
+  if (gold > BigInt.zero) return gold.toInt();
+  if (silver > BigInt.zero) return silver.toInt();
+  return bronzeRest.toInt();
 }
 
 /// Разбивка баланса: 100 бр=1 с, 100 с=1 з, 100 з=1 ◆.
@@ -586,10 +611,14 @@ class ToolbarBalanceChip extends StatelessWidget {
     super.key,
     required this.bronze,
     this.coinSize = 20,
+    this.forceShow = const <CoinType>{},
+    this.coinKeys,
   });
 
   final int bronze;
   final double coinSize;
+  final Set<CoinType> forceShow;
+  final Map<CoinType, GlobalKey>? coinKeys;
 
   void _showBalancePopup(BuildContext context, int bronze) {
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
@@ -685,13 +714,20 @@ class ToolbarBalanceChip extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: BalanceDisplay(
-            bronze: bronze,
-            coinSize: coinSize,
-            fontSize: 12,
-            spacing: 4,
-            fontWeight: FontWeight.w600,
-            animate: true,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.centerLeft,
+            child: BalanceDisplay(
+              bronze: bronze,
+              coinSize: coinSize,
+              fontSize: 12,
+              spacing: 4,
+              fontWeight: FontWeight.w600,
+              animate: true,
+              forceShow: forceShow,
+              coinKeys: coinKeys,
+            ),
           ),
         ),
       ),
@@ -706,6 +742,8 @@ class _BalancePopupItem {
 }
 
 /// Сумма монет: `5` + серебро + `4` + бронза (только ненулевые номиналы).
+///
+/// При [perDay] в конце добавляется суффикс `/день` (иконки монет как обычно).
 class BalanceDisplay extends StatelessWidget {
   const BalanceDisplay({
     super.key,
@@ -715,8 +753,13 @@ class BalanceDisplay extends StatelessWidget {
     this.spacing = 6,
     this.fontWeight = FontWeight.w600,
     this.prefix,
+    this.suffix,
+    this.perDay = false,
     this.animate = false,
     this.color = AppColors.textPrimary,
+    this.opacity = 1,
+    this.forceShow = const <CoinType>{},
+    this.coinKeys,
   });
 
   final int bronze;
@@ -725,12 +768,26 @@ class BalanceDisplay extends StatelessWidget {
   final double spacing;
   final FontWeight fontWeight;
   final String? prefix;
+  final String? suffix;
+  /// Дневной доход: суффикс `/день` после иконок монет.
+  final bool perDay;
   final bool animate;
   final Color color;
+  /// 0…1 — для приглушённого бонуса незавершённой коллекции.
+  final double opacity;
+  /// Показать номинал даже при 0 (вставка новой монеты перед анимацией).
+  final Set<CoinType> forceShow;
+  final Map<CoinType, GlobalKey>? coinKeys;
 
   @override
   Widget build(BuildContext context) {
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+    final textStyle = TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
 
     final parts = <Widget>[];
     if (prefix != null && prefix!.isNotEmpty) {
@@ -745,23 +802,22 @@ class BalanceDisplay extends StatelessWidget {
     }
 
     void add(CoinType type, BigInt value) {
-      if (value <= BigInt.zero) return;
+      if (value <= BigInt.zero && !forceShow.contains(type)) return;
       if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
       parts.add(Text(
         value.toString(),
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-          color: color,
-        ),
+        style: textStyle,
         overflow: TextOverflow.clip,
       ));
       parts.add(const SizedBox(width: 3));
-      parts.add(CoinIcon(
-        coinType: type,
-        size: coinSize,
-        showBorder: true,
-        animate: animate,
+      parts.add(KeyedSubtree(
+        key: coinKeys?[type],
+        child: CoinIcon(
+          coinType: type,
+          size: coinSize,
+          showBorder: true,
+          animate: animate,
+        ),
       ));
     }
 
@@ -776,23 +832,38 @@ class BalanceDisplay extends StatelessWidget {
       }
       parts.add(Text(
         '0',
+        style: textStyle,
+        overflow: TextOverflow.clip,
+      ));
+      parts.add(const SizedBox(width: 3));
+      parts.add(KeyedSubtree(
+        key: coinKeys?[CoinType.bronze],
+        child: CoinIcon(
+          coinType: CoinType.bronze,
+          size: coinSize,
+          showBorder: true,
+          animate: animate,
+        ),
+      ));
+    }
+
+    final effectiveSuffix =
+        suffix ?? (perDay ? balancePerDaySuffix(context.l10n) : null);
+    if (effectiveSuffix != null && effectiveSuffix.isNotEmpty) {
+      // «/день» сразу после монеты: «63 🪙/день».
+      final tight = effectiveSuffix.startsWith('/');
+      if (!tight) parts.add(SizedBox(width: spacing));
+      parts.add(Text(
+        effectiveSuffix,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: fontWeight,
           color: color,
         ),
-        overflow: TextOverflow.clip,
-      ));
-      parts.add(const SizedBox(width: 3));
-      parts.add(CoinIcon(
-        coinType: CoinType.bronze,
-        size: coinSize,
-        showBorder: true,
-        animate: animate,
       ));
     }
 
-    return FittedBox(
+    final row = FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
       child: Row(
@@ -800,5 +871,7 @@ class BalanceDisplay extends StatelessWidget {
         children: parts,
       ),
     );
+    if (opacity >= 0.999) return row;
+    return Opacity(opacity: opacity.clamp(0.0, 1.0), child: row);
   }
 }

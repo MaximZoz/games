@@ -1580,41 +1580,18 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     );
   }
 
-  /// Рамка как у лупы поиска друзей: скруглённый квадрат, фиолетовый бордер.
+  /// Мягкая лавандовая рамка как у свайп-действий и поиска друзей.
   Widget _buildHeaderFrameIconButton({
     required IconData icon,
     required String tooltip,
     required VoidCallback? onPressed,
     Color? iconColor,
   }) {
-    final enabled = onPressed != null;
-    return Tooltip(
-      message: tooltip,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.6,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.accentStart, width: 2),
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: iconColor ?? AppColors.accentStart,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FramedIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      iconColor: iconColor ?? AppColors.accentStart,
     );
   }
 

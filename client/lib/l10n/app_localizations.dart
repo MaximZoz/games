@@ -977,6 +977,12 @@ abstract class AppLocalizations {
   /// **'Войти в игру'**
   String get lobbyEnterGame;
 
+  /// No description provided for @lobbyGone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этой игры уже нет'**
+  String get lobbyGone;
+
   /// No description provided for @lobbyInvite.
   ///
   /// In ru, this message translates to:
@@ -1066,6 +1072,60 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Выйти'**
   String get gameLeave;
+
+  /// No description provided for @gameSurrender.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдаться'**
+  String get gameSurrender;
+
+  /// No description provided for @gameSurrenderTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдаться?'**
+  String get gameSurrenderTitle;
+
+  /// No description provided for @gameSurrenderConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если вы сдадитесь, вы проиграете. Сдаться?'**
+  String get gameSurrenderConfirm;
+
+  /// No description provided for @gameOfferDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложить ничью'**
+  String get gameOfferDraw;
+
+  /// No description provided for @gameOfferDrawTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложить ничью?'**
+  String get gameOfferDrawTitle;
+
+  /// No description provided for @gameOfferDrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить сопернику предложение ничьей?'**
+  String get gameOfferDrawConfirm;
+
+  /// No description provided for @gameAcceptDrawTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять ничью?'**
+  String get gameAcceptDrawTitle;
+
+  /// No description provided for @gameAcceptDrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник предлагает ничью. Принять?'**
+  String get gameAcceptDrawConfirm;
+
+  /// No description provided for @gameDrawOffered.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ожидание ответа'**
+  String get gameDrawOffered;
 
   /// No description provided for @gameConnecting.
   ///
@@ -1204,6 +1264,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сообщение'**
   String get chatMessageHint;
+
+  /// No description provided for @chatPaste.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставить'**
+  String get chatPaste;
 
   /// No description provided for @chatEmoji.
   ///
@@ -1700,7 +1766,7 @@ abstract class AppLocalizations {
   /// No description provided for @balancePerDay.
   ///
   /// In ru, this message translates to:
-  /// **'{amount} в день'**
+  /// **'{amount}/день'**
   String balancePerDay(String amount);
 
   /// No description provided for @balanceAbbrBronze.
@@ -2171,6 +2237,24 @@ abstract class AppLocalizations {
   /// **'Подарено: {title}'**
   String inventoryGifted(String title);
 
+  /// No description provided for @inventoryGiftAlreadyOwns.
+  ///
+  /// In ru, this message translates to:
+  /// **'У этого пользователя уже есть эта коллекция'**
+  String get inventoryGiftAlreadyOwns;
+
+  /// No description provided for @inventoryGiftSelf.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя подарить коллекцию самому себе'**
+  String get inventoryGiftSelf;
+
+  /// No description provided for @inventoryGiftNotOwned.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас нет этого предмета'**
+  String get inventoryGiftNotOwned;
+
   /// No description provided for @inventoryLoadFailed.
   ///
   /// In ru, this message translates to:
@@ -2218,6 +2302,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Доход завтра: {amount}'**
   String inventoryIncomeTomorrow(String amount);
+
+  /// No description provided for @inventoryIncomeReadyLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход:'**
+  String get inventoryIncomeReadyLabel;
+
+  /// No description provided for @inventoryIncomeTomorrowLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход завтра:'**
+  String get inventoryIncomeTomorrowLabel;
 
   /// No description provided for @inventoryStakeGold.
   ///

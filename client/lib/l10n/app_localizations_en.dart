@@ -433,6 +433,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lobbyEnterGame => 'Enter game';
 
   @override
+  String get lobbyGone => 'This game is no longer available';
+
+  @override
   String get lobbyInvite => 'Invite';
 
   @override
@@ -476,6 +479,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameLeave => 'Leave';
+
+  @override
+  String get gameSurrender => 'Surrender';
+
+  @override
+  String get gameSurrenderTitle => 'Surrender?';
+
+  @override
+  String get gameSurrenderConfirm => 'If you surrender, you will lose. Surrender?';
+
+  @override
+  String get gameOfferDraw => 'Offer draw';
+
+  @override
+  String get gameOfferDrawTitle => 'Offer a draw?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Send a draw offer to your opponent?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Accept draw?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Your opponent offers a draw. Accept?';
+
+  @override
+  String get gameDrawOffered => 'Waiting for reply';
 
   @override
   String get gameConnecting => 'Connecting to game…';
@@ -545,6 +575,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatMessageHint => 'Message';
+
+  @override
+  String get chatPaste => 'Paste';
 
   @override
   String get chatEmoji => 'Emojis';
@@ -802,7 +835,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount per day';
+    return '$amount/day';
   }
 
   @override
@@ -1088,6 +1121,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'This user already has this collection';
+
+  @override
+  String get inventoryGiftSelf => 'You can\'t gift a collection to yourself';
+
+  @override
+  String get inventoryGiftNotOwned => 'You don\'t own this item';
+
+  @override
   String get inventoryLoadFailed => 'Could not load items';
 
   @override
@@ -1116,6 +1158,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return 'Income tomorrow: $amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Income:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Income tomorrow:';
 
   @override
   String inventoryStakeGold(String amount) {

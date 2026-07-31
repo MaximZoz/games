@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} denně",
+  "balancePerDay": "{amount}/den",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

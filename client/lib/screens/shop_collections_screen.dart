@@ -69,34 +69,20 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       bySet.putIfAbsent(s.isEmpty ? 'other' : s, () => []).add(e);
     }
     for (final list in bySet.values) {
-      list.sort((a, b) {
-        final byPrice = a.priceBronze.compareTo(b.priceBronze);
-        if (byPrice != 0) return byPrice;
-        return a.sortOrder.compareTo(b.sortOrder);
-      });
+      list.sort((a, b) => compareCollectionItemsByDaily(
+            a.dailyBronze,
+            b.dailyBronze,
+            a.sortOrder,
+            b.sortOrder,
+          ));
     }
 
     final orderedSets = bySet.keys.toList()
-      ..sort((a, b) {
-        final aItems = bySet[a]!;
-        final bItems = bySet[b]!;
-        final aDaily = aItems.fold<int>(0, (s, e) => s + e.dailyBronze);
-        final bDaily = bItems.fold<int>(0, (s, e) => s + e.dailyBronze);
-        final aPrice = aItems.fold<int>(0, (s, e) => s + e.priceBronze);
-        final bPrice = bItems.fold<int>(0, (s, e) => s + e.priceBronze);
-        // Цена за 1 бронзу дохода в день (меньше = выгоднее).
-        final aRatio = aDaily <= 0
-            ? double.infinity
-            : aPrice / aDaily;
-        final bRatio = bDaily <= 0
-            ? double.infinity
-            : bPrice / bDaily;
-        final byRatio = aRatio.compareTo(bRatio);
-        if (byRatio != 0) return byRatio;
-        final ai = collectionSetOrder.indexOf(a);
-        final bi = collectionSetOrder.indexOf(b);
-        return (ai < 0 ? 999 : ai).compareTo(bi < 0 ? 999 : bi);
-      });
+      ..sort((a, b) => compareCollectionSetsByDaily(
+            a,
+            b,
+            (set) => bySet[set]!.fold<int>(0, (s, e) => s + e.dailyBronze),
+          ));
 
     return SwipeBackScope(
       onBack: goBack,
@@ -179,13 +165,46 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      '${context.l10n.shopSetProgress(ownedCount, groupItems.length)} · '
-                                      '+${formatRewardBronzePerDay(setDaily)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          context.l10n.shopSetProgress(
+                                            ownedCount,
+                                            groupItems.length,
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        if (setDaily > 0) ...[
+                                          Text(
+                                            ' · ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textSecondary
+                                                  .withValues(alpha: 0.8),
+                                            ),
+                                          ),
+                                          BalanceDisplay(
+                                            bronze: setDaily,
+                                            prefix: ownedCount >=
+                                                    groupItems.length
+                                                ? '+'
+                                                : null,
+                                            perDay: true,
+                                            coinSize: 14,
+                                            fontSize: 12,
+                                            spacing: 4,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textSecondary,
+                                            opacity: ownedCount >=
+                                                    groupItems.length
+                                                ? 1
+                                                : 0.35,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -324,11 +343,12 @@ class _ShopCollectionGroupScreenState
         .where((e) =>
             e.kind == 'collection' && (e.collectionSet ?? 'other') == widget.set)
         .toList()
-      ..sort((a, b) {
-        final byPrice = a.priceBronze.compareTo(b.priceBronze);
-        if (byPrice != 0) return byPrice;
-        return a.sortOrder.compareTo(b.sortOrder);
-      });
+      ..sort((a, b) => compareCollectionItemsByDaily(
+            a.dailyBronze,
+            b.dailyBronze,
+            a.sortOrder,
+            b.sortOrder,
+          ));
 
     final setDaily =
         groupItems.fold<int>(0, (sum, e) => sum + e.dailyBronze);
@@ -371,16 +391,37 @@ class _ShopCollectionGroupScreenState
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       final l10n = context.l10n;
-                      final bonus =
-                          '+${formatRewardBronzePerDay(setDaily)}';
-                      return Text(
-                        complete
-                            ? '${l10n.shopSetComplete} · $bonus'
-                            : '${l10n.shopSetProgress(ownedCount, groupItems.length)} · $bonus',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                      return Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              complete
+                                  ? l10n.shopSetComplete
+                                  : l10n.shopSetProgress(
+                                      ownedCount,
+                                      groupItems.length,
+                                    ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (setDaily > 0) ...[
+                            const SizedBox(width: 8),
+                            BalanceDisplay(
+                              bronze: setDaily,
+                              prefix: complete ? '+' : null,
+                              perDay: true,
+                              coinSize: 14,
+                              fontSize: 12,
+                              spacing: 4,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              opacity: complete ? 1 : 0.32,
+                            ),
+                          ],
+                        ],
                       );
                     }
                     final item = groupItems[index - 1];

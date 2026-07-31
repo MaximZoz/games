@@ -180,6 +180,7 @@
   "lobbyInviteTitle": "Приглашение в игру",
   "lobbyInvitedToPlay": "Вас пригласили сыграть",
   "lobbyEnterGame": "Войти в игру",
+  "lobbyGone": "Этой игры уже нет",
   "lobbyInvite": "Пригласить",
   "lobbyInviteSent": "Приглашение отправлено",
   "lobbyCopyLink": "Отправить ссылку на игру",
@@ -195,6 +196,15 @@
   "gameExitConfirm": "Если вы выйдете, то вы проиграете. Выйти?",
   "gameStay": "Остаться",
   "gameLeave": "Выйти",
+  "gameSurrender": "Сдаться",
+  "gameSurrenderTitle": "Сдаться?",
+  "gameSurrenderConfirm": "Если вы сдадитесь, вы проиграете. Сдаться?",
+  "gameOfferDraw": "Предложить ничью",
+  "gameOfferDrawTitle": "Предложить ничью?",
+  "gameOfferDrawConfirm": "Отправить сопернику предложение ничьей?",
+  "gameAcceptDrawTitle": "Принять ничью?",
+  "gameAcceptDrawConfirm": "Соперник предлагает ничью. Принять?",
+  "gameDrawOffered": "Ожидание ответа",
   "gameConnecting": "Подключение к игре…",
   "gameWaitingOpponent": "Ожидание соперника",
   "gameRematchOffer": "Соперник предлагает реванш",
@@ -218,6 +228,7 @@
   "chatDialog": "Диалог",
   "chatEmpty": "Сообщений пока нет.\nНапишите первое сообщение.",
   "chatMessageHint": "Сообщение",
+  "chatPaste": "Вставить",
   "chatEmoji": "Смайлики",
   "chatBuyEmojiHint": "Купите смайлики в магазине на главной",
   "chatEditing": "Редактирование",
@@ -328,7 +339,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} в день",
+  "balancePerDay": "{amount}/день",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -600,6 +611,9 @@
       }
     }
   },
+  "inventoryGiftAlreadyOwns": "У этого пользователя уже есть эта коллекция",
+  "inventoryGiftSelf": "Нельзя подарить коллекцию самому себе",
+  "inventoryGiftNotOwned": "У вас нет этого предмета",
   "inventoryLoadFailed": "Не удалось загрузить предметы",
   "inventoryNoCollections": "Нет коллекций — купите в магазине",
   "inventoryNoEmojis": "Нет смайликов — купите в магазине",
@@ -629,6 +643,8 @@
       }
     }
   },
+  "inventoryIncomeReadyLabel": "Доход:",
+  "inventoryIncomeTomorrowLabel": "Доход завтра:",
   "inventoryStakeGold": "Можно ставить {amount} золота",
   "@inventoryStakeGold": {
     "placeholders": {

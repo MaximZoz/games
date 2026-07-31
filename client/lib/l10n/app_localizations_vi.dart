@@ -433,6 +433,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbyEnterGame => 'Vào trận';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Mời';
 
   @override
@@ -476,6 +479,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gameLeave => 'Rời';
+
+  @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
 
   @override
   String get gameConnecting => 'Đang kết nối trận…';
@@ -545,6 +575,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatMessageHint => 'Tin nhắn';
+
+  @override
+  String get chatPaste => 'Вставить';
 
   @override
   String get chatEmoji => 'Emoji';
@@ -802,7 +835,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount mỗi ngày';
+    return '$amount/ngày';
   }
 
   @override
@@ -1088,6 +1121,15 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+
+  @override
+  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+
+  @override
+  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+
+  @override
   String get inventoryLoadFailed => 'Không thể tải vật phẩm';
 
   @override
@@ -1116,6 +1158,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return 'Thu nhập ngày mai: $amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
 
   @override
   String inventoryStakeGold(String amount) {

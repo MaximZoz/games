@@ -180,6 +180,7 @@
   "lobbyInviteTitle": "Game invite",
   "lobbyInvitedToPlay": "You were invited to play",
   "lobbyEnterGame": "Enter game",
+  "lobbyGone": "This game is no longer available",
   "lobbyInvite": "Invite",
   "lobbyInviteSent": "Invite sent",
   "lobbyCopyLink": "Share game link",
@@ -195,6 +196,15 @@
   "gameExitConfirm": "If you leave, you will lose. Leave anyway?",
   "gameStay": "Stay",
   "gameLeave": "Leave",
+  "gameSurrender": "Surrender",
+  "gameSurrenderTitle": "Surrender?",
+  "gameSurrenderConfirm": "If you surrender, you will lose. Surrender?",
+  "gameOfferDraw": "Offer draw",
+  "gameOfferDrawTitle": "Offer a draw?",
+  "gameOfferDrawConfirm": "Send a draw offer to your opponent?",
+  "gameAcceptDrawTitle": "Accept draw?",
+  "gameAcceptDrawConfirm": "Your opponent offers a draw. Accept?",
+  "gameDrawOffered": "Waiting for reply",
   "gameConnecting": "Connecting to game…",
   "gameWaitingOpponent": "Waiting for opponent",
   "gameRematchOffer": "Opponent offers a rematch",
@@ -218,6 +228,7 @@
   "chatDialog": "Chat",
   "chatEmpty": "No messages yet.\nSend the first one.",
   "chatMessageHint": "Message",
+  "chatPaste": "Paste",
   "chatEmoji": "Emojis",
   "chatBuyEmojiHint": "Buy emojis in the shop on the home screen",
   "chatEditing": "Editing",
@@ -328,7 +339,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} per day",
+  "balancePerDay": "{amount}/day",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -600,6 +611,9 @@
       }
     }
   },
+  "inventoryGiftAlreadyOwns": "This user already has this collection",
+  "inventoryGiftSelf": "You can't gift a collection to yourself",
+  "inventoryGiftNotOwned": "You don't own this item",
   "inventoryLoadFailed": "Could not load items",
   "inventoryNoCollections": "No collections — buy them in the shop",
   "inventoryNoEmojis": "No emojis — buy them in the shop",
@@ -629,6 +643,8 @@
       }
     }
   },
+  "inventoryIncomeReadyLabel": "Income:",
+  "inventoryIncomeTomorrowLabel": "Income tomorrow:",
   "inventoryStakeGold": "You can bet {amount} gold",
   "@inventoryStakeGold": {
     "placeholders": {

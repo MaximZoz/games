@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} την ημέρα",
+  "balancePerDay": "{amount}/ημέρα",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
