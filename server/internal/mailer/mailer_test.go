@@ -15,6 +15,18 @@ func TestEnabled_Resend(t *testing.T) {
 	}
 }
 
+func TestNormalizeMailFrom(t *testing.T) {
+	if got := normalizeMailFrom("", true); got != "ZozuGames <onboarding@resend.dev>" {
+		t.Fatalf("empty resend: %q", got)
+	}
+	if got := normalizeMailFrom("MultiGames <noreply@zozugames.com>", true); got != "ZozuGames <noreply@zozugames.com>" {
+		t.Fatalf("legacy: %q", got)
+	}
+	if got := normalizeMailFrom("ZozuGames <noreply@zozugames.com>", true); got != "ZozuGames <noreply@zozugames.com>" {
+		t.Fatalf("keep: %q", got)
+	}
+}
+
 func TestEnabled_SMTP(t *testing.T) {
 	m := New(Config{Host: "smtp.gmail.com"})
 	if !m.Enabled() {

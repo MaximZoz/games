@@ -18,7 +18,7 @@ import (
 // Config — Resend (предпочтительно) или SMTP. Без обоих письма только логируются.
 type Config struct {
 	ResendAPIKey string
-	From         string // "MultiGames <noreply@zozu.games>" или onboarding@resend.dev
+	From         string // "ZozuGames <noreply@zozugames.com>" или onboarding@resend.dev
 	// AppOrigin — URL фронта (FRONTEND_URL). Хост используется в строке
 	// "@host #CODE" для автоподстановки OTP из письма (iOS/Safari и др.).
 	AppOrigin string
@@ -38,19 +38,31 @@ func New(cfg Config) *Mailer {
 	if cfg.Port == "" {
 		cfg.Port = "587"
 	}
-	if cfg.From == "" {
-		if strings.TrimSpace(cfg.ResendAPIKey) != "" {
-			cfg.From = "MultiGames <onboarding@resend.dev>"
-		} else {
-			cfg.From = "MultiGames <noreply@zozu.games>"
-		}
-	}
+	cfg.From = normalizeMailFrom(cfg.From, strings.TrimSpace(cfg.ResendAPIKey) != "")
 	return &Mailer{
 		cfg: cfg,
 		httpClient: &http.Client{
 			Timeout: 20 * time.Second,
 		},
 	}
+}
+
+// normalizeMailFrom — отображаемое имя ZozuGames; старый префикс MultiGames подменяется.
+func normalizeMailFrom(from string, resend bool) string {
+	from = strings.TrimSpace(from)
+	if from == "" {
+		if resend {
+			return "ZozuGames <onboarding@resend.dev>"
+		}
+		return "ZozuGames <noreply@zozugames.com>"
+	}
+	if strings.HasPrefix(from, "MultiGames <") {
+		return "ZozuGames <" + strings.TrimPrefix(from, "MultiGames <")
+	}
+	if strings.HasPrefix(from, "MultiGames ") {
+		return "ZozuGames " + strings.TrimPrefix(from, "MultiGames ")
+	}
+	return from
 }
 
 func (m *Mailer) Enabled() bool {
@@ -379,7 +391,7 @@ func (m *Mailer) otpEmailContent(titleLine, ignoreLine, code string) (textBody, 
 // SendVerificationCode отправляет 6-значный код на указанный адрес (to = email регистрации).
 // В конце тела — строка "@host #CODE" для автозаполнения OTP из почты.
 func (m *Mailer) SendVerificationCode(to, code string) error {
-	subject := "Код подтверждения MultiGames"
+	subject := "Код подтверждения ZozuGames"
 	textBody, htmlBody := m.otpEmailContent(
 		"Ваш код подтверждения:",
 		"Если вы не регистрировались — просто проигнорируйте письмо.",
@@ -390,7 +402,7 @@ func (m *Mailer) SendVerificationCode(to, code string) error {
 
 // SendPasswordResetCode отправляет код для сброса пароля.
 func (m *Mailer) SendPasswordResetCode(to, code string) error {
-	subject := "Сброс пароля MultiGames"
+	subject := "Сброс пароля ZozuGames"
 	textBody, htmlBody := m.otpEmailContent(
 		"Ваш код для сброса пароля:",
 		"Если вы не запрашивали сброс — просто проигнорируйте письмо.",

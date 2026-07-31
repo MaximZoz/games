@@ -69,7 +69,7 @@ fly secrets set ADMIN_INIT_SECRET="твой-секретный-пароль" --a
 # (в ответе register будет "mail_sent": false, код только в fly logs)
 fly secrets set \
   RESEND_API_KEY="re_xxxxxxxx" \
-  MAIL_FROM="MultiGames <noreply@zozugames.com>" \
+  MAIL_FROM="ZozuGames <noreply@zozugames.com>" \
   PUBLIC_BASE_URL="https://zozugames.com" \
   FRONTEND_URL="https://zozugames.com" \
   --app multigameszozu
