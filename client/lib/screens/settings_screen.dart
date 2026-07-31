@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -15,7 +16,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final addBotsAfter30s = ref.watch(addBotsAfter30sProvider);
+    final offlineMode = ref.watch(offlineModeProvider);
     final messagesFriendsOnly = ref.watch(messagesFriendsOnlyProvider);
     final webPushEnabled = ref.watch(webPushEnabledProvider);
     final pushCategories = ref.watch(webPushCategoriesProvider);
@@ -105,12 +106,57 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
-                    child: _SwitchRow(
-                      title: l10n.settingsAddBotsTitle,
-                      subtitle: l10n.settingsAddBotsSubtitle,
-                      value: addBotsAfter30s,
-                      onChanged: (v) =>
-                          ref.read(addBotsAfter30sProvider.notifier).set(v),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.settingsOfflineModeTitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.settingsOfflineModeSubtitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 8),
+                        RadioListTile<OfflinePreference>(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: Text(l10n.settingsModeOnline),
+                          value: OfflinePreference.online,
+                          groupValue: offlineMode.preference,
+                          activeColor: AppColors.accentStart,
+                          onChanged: (v) {
+                            if (v == null) return;
+                            ref
+                                .read(offlineModeProvider.notifier)
+                                .setPreference(v);
+                          },
+                        ),
+                        RadioListTile<OfflinePreference>(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: Text(l10n.settingsModeOffline),
+                          value: OfflinePreference.offline,
+                          groupValue: offlineMode.preference,
+                          activeColor: AppColors.accentStart,
+                          onChanged: (v) {
+                            if (v == null) return;
+                            ref
+                                .read(offlineModeProvider.notifier)
+                                .setPreference(v);
+                          },
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),

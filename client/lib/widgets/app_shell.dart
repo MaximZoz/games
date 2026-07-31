@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/push_notification_nav_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart';
@@ -23,6 +24,7 @@ import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
@@ -62,28 +64,55 @@ void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? activ
   }
 }
 
-List<_NavItem> _navItems(BuildContext context) {
+List<_NavItem> _navItems(BuildContext context, {required bool offline}) {
   final l10n = context.l10n;
-  return [
-    _NavItem(path: '/', icon: Icons.home, label: l10n.navHome),
-    _NavItem(path: '/profile', icon: Icons.person, label: l10n.navProfile),
-    _NavItem(path: '/friends', icon: Icons.people, label: l10n.navFriends),
+  final all = [
+    _NavItem(branchIndex: 0, path: '/', icon: Icons.home, label: l10n.navHome),
     _NavItem(
+      branchIndex: 1,
+      path: '/profile',
+      icon: Icons.person,
+      label: l10n.navProfile,
+    ),
+    _NavItem(
+      branchIndex: 2,
+      path: '/friends',
+      icon: Icons.people,
+      label: l10n.navFriends,
+    ),
+    _NavItem(
+      branchIndex: 3,
       path: '/chats',
       icon: Icons.chat_bubble_outline_rounded,
       label: l10n.navChats,
     ),
-    _NavItem(path: '/games', icon: Icons.sports_esports, label: l10n.navGames),
     _NavItem(
+      branchIndex: 4,
+      path: '/games',
+      icon: Icons.sports_esports,
+      label: l10n.navGames,
+    ),
+    _NavItem(
+      branchIndex: 5,
       path: '/settings',
       icon: Icons.settings,
       label: l10n.navSettings,
     ),
   ];
+  if (!offline) return all;
+  return all
+      .where((e) => e.path != '/friends' && e.path != '/chats')
+      .toList(growable: false);
 }
 
 class _NavItem {
-  const _NavItem({required this.path, required this.icon, required this.label});
+  const _NavItem({
+    required this.branchIndex,
+    required this.path,
+    required this.icon,
+    required this.label,
+  });
+  final int branchIndex;
   final String path;
   final IconData icon;
   final String label;
@@ -103,8 +132,11 @@ class AppShell extends ConsumerWidget {
     final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
+    final isOffline = ref.watch(isOfflineProvider);
+    // Очередь покупок: при выходе в онлайн — flush.
+    ref.watch(pendingPurchasesProvider);
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
-    if (isAuthorized) {
+    if (isAuthorized && !isOffline) {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
       ref.watch(chatDeliveryAckProvider);
@@ -112,6 +144,9 @@ class AppShell extends ConsumerWidget {
       ref.watch(userGameSettingsProvider);
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
+      // Прогрев каталога/инвентаря на случай потери сети.
+      ref.watch(shopCatalogProvider);
+      ref.watch(inventoryListProvider);
       // iOS PWA: после рестарта/смены SW заново привязываем Web Push.
       ref.listen(authStateProvider, (prev, next) {
         if (next.valueOrNull != null && prev?.valueOrNull == null) {
@@ -205,14 +240,21 @@ class AppShell extends ConsumerWidget {
     // dispose nav → сброс фокуса TextField. Вместо этого схлопываем
     // heightFactor=0 (поиск друзей и т.п.).
     final collapseBottomNav = ref.watch(collapseMobileBottomNavProvider);
-    final selectedIndex = navigationShell.currentIndex;
     final showBottomNav =
         narrow && !narrowLandscape && !inChatRoom && !onAuthScreen;
 
-    final navItems = _navItems(context);
+    final navItems = _navItems(context, offline: isOffline);
+    final selectedIndex = () {
+      final i = navItems.indexWhere(
+        (e) => e.branchIndex == navigationShell.currentIndex,
+      );
+      return i < 0 ? 0 : i;
+    }();
 
     void navigateWithPrefetch(int i) {
-      final target = navItems[i].path;
+      final item = navItems[i];
+      final target = item.path;
+      final branch = item.branchIndex;
 
       // «Главная» → карточки «Достижения» и «Монеты» (корень ветки).
       if (target == '/') {
@@ -231,7 +273,7 @@ class AppShell extends ConsumerWidget {
       // «Друзья»: при входящих заявках с другой вкладки — сразу «Входящие».
       if (target == '/friends') {
         final incoming = ref.read(friendsIncomingCountProvider);
-        final alreadyOnFriends = i == navigationShell.currentIndex;
+        final alreadyOnFriends = branch == navigationShell.currentIndex;
         if (!alreadyOnFriends && incoming > 0) {
           Router.neglect(context, () {
             context.go('/friends?tab=incoming');
@@ -250,6 +292,17 @@ class AppShell extends ConsumerWidget {
       // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
         final currentPath = path;
+        if (isOffline) {
+          Router.neglect(context, () {
+            if (currentPath != '/games' &&
+                !currentPath.startsWith('/games/tictactoe/offline')) {
+              context.go('/games');
+            } else {
+              navigationShell.goBranch(branch, initialLocation: true);
+            }
+          });
+          return;
+        }
         final activeNotifier = ref.read(activeGameProvider.notifier);
         final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
@@ -286,14 +339,14 @@ class AppShell extends ConsumerWidget {
       // Чаты: всегда список (не восстанавливать лобби/комнату поверх списка).
       Router.neglect(context, () {
         navigationShell.goBranch(
-          i,
-          initialLocation: i == navigationShell.currentIndex ||
+          branch,
+          initialLocation: branch == navigationShell.currentIndex ||
               target == '/profile' ||
               target == '/chats',
         );
       });
 
-      if (!isAuthorized) return;
+      if (!isAuthorized || isOffline) return;
       // Prefetch вкладок только после перехода, строго в фоне.
       if (target == '/chats') {
         unawaited(
@@ -409,6 +462,47 @@ class AppShell extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
+                                if (isOffline)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.cloud_off_rounded,
+                                      size: 20,
+                                    ),
+                                    tooltip: context.l10n.offlineBadgeTooltip,
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () {
+                                      showDialog<void>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: Text(
+                                            ctx.l10n.offlineModePopupTitle,
+                                          ),
+                                          content: Text(
+                                            ctx.l10n.offlineModePopupBody,
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(),
+                                              child: Text(
+                                                ctx.l10n.commonClose,
+                                              ),
+                                            ),
+                                            FilledButton(
+                                              onPressed: () {
+                                                Navigator.of(ctx).pop();
+                                                context.go('/settings');
+                                              },
+                                              child: Text(
+                                                ctx.l10n
+                                                    .offlineModePopupSettings,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 IconButton(
                                   icon: const Icon(Icons.logout),
                                   onPressed: () async {
@@ -518,9 +612,10 @@ class AppShell extends ConsumerWidget {
                     children: [
                       MediaQuery.withNoTextScaling(
                         child: _MobileBottomNav(
-                          key: const ValueKey('mobile-bottom-nav'),
+                          key: ValueKey('mobile-bottom-nav-$isOffline'),
                           selectedIndex: selectedIndex,
                           onTap: navigateWithPrefetch,
+                          offline: isOffline,
                           unreadChats: unreadChats,
                           incomingFriends: incomingFriends,
                           gamesMyTurn: gamesMyTurn,
@@ -571,6 +666,7 @@ class _MobileBottomNav extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.onTap,
+    required this.offline,
     required this.unreadChats,
     required this.incomingFriends,
     required this.gamesMyTurn,
@@ -581,6 +677,7 @@ class _MobileBottomNav extends StatelessWidget {
 
   final int selectedIndex;
   final ValueChanged<int> onTap;
+  final bool offline;
   final int unreadChats;
   final int incomingFriends;
   final int gamesMyTurn;
@@ -590,7 +687,7 @@ class _MobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navItems = _navItems(context);
+    final navItems = _navItems(context, offline: offline);
     final safeIndex = selectedIndex.clamp(0, navItems.length - 1);
     final label = navItems[safeIndex].label;
     return Padding(

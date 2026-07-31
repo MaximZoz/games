@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -106,17 +107,22 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       ];
     });
     try {
-      final result = await ref.read(shopRepositoryProvider).buy(item.code);
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
-      ref.invalidate(inventoryListProvider);
-      ref.invalidate(inventoryCapabilitiesProvider);
-      ref.invalidate(shopCatalogProvider);
+      final wasOffline = ref.read(isOfflineProvider);
+      await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
+      if (!wasOffline) {
+        ref.invalidate(inventoryListProvider);
+        ref.invalidate(inventoryCapabilitiesProvider);
+        ref.invalidate(shopCatalogProvider);
+      }
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: context.l10n.shopPurchased(
-          catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
-        ),
+        message: wasOffline
+            ? context.l10n.shopPurchaseQueued
+            : context.l10n.shopPurchased(
+                catalogTitle(item.code,
+                    fallback: item.title, l10n: context.l10n),
+              ),
         kind: AppSnackKind.success,
       );
     } catch (e) {

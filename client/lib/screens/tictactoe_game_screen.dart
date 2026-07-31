@@ -11,7 +11,6 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -1035,10 +1034,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isFindingGame = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      final addBotsAfter30s = ref.read(addBotsAfter30sProvider);
       final result = await repo.createLobby(
         mode: 'matchmake',
-        addBotsAfter30s: addBotsAfter30s,
+        addBotsAfter30s: false,
       );
       if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
