@@ -7,6 +7,7 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/core/offline_warmup.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/push_notification_nav_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart';
@@ -164,18 +165,24 @@ class AppShell extends ConsumerWidget {
         ref.read(pendingPurchaseFlushNoticeProvider.notifier).state = null;
       },
     );
+    // Данные и ассеты для офлайна: держим в памяти + прогрев при онлайне.
+    if (isAuthorized) {
+      ref.watch(offlineWarmupProvider);
+      ref.watch(shopCatalogProvider);
+      ref.watch(inventoryListProvider);
+      ref.watch(inventoryCapabilitiesProvider);
+      ref.watch(userGameSettingsProvider);
+      ref.watch(achievementsListProvider);
+      ref.watch(collectionIncomeProvider);
+      ref.watch(dailyRewardStatusProvider);
+    }
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
     if (isAuthorized && !isOffline) {
       ref.watch(realtimeEventsProvider);
       ref.watch(presenceMapProvider);
       ref.watch(chatDeliveryAckProvider);
-      // Лениво подтягиваем конфиг игр из БД после входа/старта.
-      ref.watch(userGameSettingsProvider);
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
-      // Прогрев каталога/инвентаря на случай потери сети.
-      ref.watch(shopCatalogProvider);
-      ref.watch(inventoryListProvider);
       // iOS PWA: после рестарта/смены SW заново привязываем Web Push.
       ref.listen(authStateProvider, (prev, next) {
         if (next.valueOrNull != null && prev?.valueOrNull == null) {

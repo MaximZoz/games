@@ -110,6 +110,18 @@ class ShopItem {
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'kind': kind,
+        'title': title,
+        'description': description,
+        'price_bronze': priceBronze,
+        'owned': owned,
+        'stock_remaining': stockRemaining,
+        'payload': payload,
+        'sort_order': sortOrder,
+      };
 }
 
 class InventoryItem {
@@ -188,6 +200,16 @@ class InventoryItem {
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'kind': kind,
+        'title': title,
+        'description': description,
+        'payload': payload,
+        'acquired_at': acquiredAt,
+        'quantity': quantity,
+      };
 }
 
 class InventoryCapabilities {
@@ -218,6 +240,12 @@ class InventoryCapabilities {
       frameCode: json['frame_code'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'allowed_stake_bronze': allowedStakeBronze,
+        'frame_color': frameColor,
+        'frame_code': frameCode,
+      };
 }
 
 class ShopBuyResult {
@@ -510,4 +538,14 @@ class CollectionIncomeInfo {
       nextClaimAt: json['next_claim_at'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'available': available,
+        'amount_bronze': amountBronze,
+        'owned_count': ownedCount,
+        'items_bronze': itemsBronze,
+        'set_bonus_bronze': setBonusBronze,
+        'completed_sets': completedSets,
+        'next_claim_at': nextClaimAt,
+      };
 }

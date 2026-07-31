@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -270,10 +272,19 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     });
     final user = ref.watch(authStateProvider).valueOrNull;
     if (user == null) return UserGameSettings.defaults;
+    final offline = ref.watch(isOfflineProvider);
+    if (offline) {
+      return await OfflineDiskCache.loadGameSettings(user.id) ??
+          UserGameSettings.defaults;
+    }
     try {
-      return await ref.read(gamesRepositoryProvider).getGameSettings();
+      final settings =
+          await ref.read(gamesRepositoryProvider).getGameSettings();
+      await OfflineDiskCache.saveGameSettings(user.id, settings);
+      return settings;
     } catch (_) {
-      return UserGameSettings.defaults;
+      return await OfflineDiskCache.loadGameSettings(user.id) ??
+          UserGameSettings.defaults;
     }
   }
 
@@ -282,6 +293,10 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     state = AsyncData(next);
     _pending = next;
     _repo = ref.read(gamesRepositoryProvider);
+    final user = ref.read(authStateProvider).valueOrNull;
+    if (user != null) {
+      unawaited(OfflineDiskCache.saveGameSettings(user.id, next));
+    }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 450), () {
       final toSave = _pending;
