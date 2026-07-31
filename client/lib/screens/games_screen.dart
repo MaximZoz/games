@@ -62,10 +62,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final saved = ref.read(userGameSettingsProvider).valueOrNull;
     if (saved == null) return;
     _settingsHydrated = true;
+    final offline = ref.read(isOfflineProvider);
     setState(() {
       _selectedTurnTimeSec = saved.turnTimeSec;
       _selectedGridSize = saved.gridSize;
-      _selectedSwapRule = saved.swapRule;
+      // В офлайне ⇄ = чередование первого хода (по умолчанию вкл.),
+      // а не онлайн-правило «смены сторон» из сохранённых настроек.
+      _selectedSwapRule = offline ? true : saved.swapRule;
       _selectedFirstMoveRestriction = saved.firstMoveRestriction;
       _selectedStakeBronze = saved.stakeBronze;
     });
@@ -126,10 +129,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
+      final offline = ref.read(isOfflineProvider);
       setState(() {
         _selectedTurnTimeSec = saved.turnTimeSec;
         _selectedGridSize = saved.gridSize;
-        _selectedSwapRule = saved.swapRule;
+        _selectedSwapRule = offline ? true : saved.swapRule;
         _selectedFirstMoveRestriction = saved.firstMoveRestriction;
         _selectedStakeBronze = saved.stakeBronze;
       });
