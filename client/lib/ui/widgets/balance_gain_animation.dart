@@ -50,7 +50,13 @@ class BalanceGainController extends StateNotifier<BalanceGainState> {
           await previous;
         } catch (_) {}
       }
-      await job();
+      try {
+        await job();
+      } catch (_) {
+        // Не оставляем тулбар залоченным после сбоя анимации.
+        end();
+        rethrow;
+      }
     }();
     _queue = current;
     return current;
@@ -61,10 +67,12 @@ class BalanceGainController extends StateNotifier<BalanceGainState> {
   }
 
   void setDisplay(int bronze) {
-    state = state.copyWith(displayBronze: bronze);
+    // Новый state всегда — чтобы Riverpod гарантированно перестроил тулбар.
+    state = BalanceGainState(displayBronze: bronze, forceShow: state.forceShow);
   }
 
   void end() {
+    if (state.displayBronze == null && state.forceShow.isEmpty) return;
     state = const BalanceGainState();
   }
 }
@@ -169,68 +177,44 @@ Future<void> playBalanceGain({
     // даже если auth уже обновлён.
     controller.begin(fromBronze: from, forceShow: forceShow);
 
-    if (!skipApply) {
-      await ref.read(authStateProvider.notifier).applyBalance(to);
-    }
-
-    // Дать тулбару вставить новую монету и измерить цель.
-    await WidgetsBinding.instance.endOfFrame;
-    if (!context.mounted) {
-      controller.end();
-      return;
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 40));
-    if (!context.mounted) {
-      controller.end();
-      return;
-    }
-
-    final coinKeys = ref.read(toolbarCoinKeysProvider);
-    var targetRect = globalRectOfKey(coinKeys[flyType]);
-    // Фоллбек: любая видимая монета / центр чипа.
-    if (targetRect == null) {
-      for (final type in CoinType.values) {
-        targetRect = globalRectOfKey(coinKeys[type]);
-        if (targetRect != null) break;
+    try {
+      if (!skipApply) {
+        await ref.read(authStateProvider.notifier).applyBalance(to);
       }
-    }
 
-    final startRect = sourceRect ?? globalRectOfKey(sourceKey);
-    if (startRect != null && targetRect != null && context.mounted) {
-      // Пересчёт баланса — только когда монета дошла до тулбара.
-      Future<void>? counting;
-      await _flyCoin(
-        context: context,
-        from: _centerOf(startRect),
-        to: _centerOf(targetRect),
-        coinType: flyType,
-        size: math.max(18, startRect.shortestSide.clamp(16, 28)),
-        onArrived: () {
-          counting = _countUp(
-            controller: controller,
-            from: from,
-            to: to,
-          );
-        },
-      );
-      if (counting != null) {
-        await counting;
-      } else if (context.mounted) {
-        await _countUp(controller: controller, from: from, to: to);
+      // Дать тулбару вставить новую монету и измерить цель.
+      await WidgetsBinding.instance.endOfFrame;
+      if (!context.mounted) return;
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      if (!context.mounted) return;
+
+      final coinKeys = ref.read(toolbarCoinKeysProvider);
+      var targetRect = globalRectOfKey(coinKeys[flyType]);
+      // Фоллбек: любая видимая монета / центр чипа.
+      if (targetRect == null) {
+        for (final type in CoinType.values) {
+          targetRect = globalRectOfKey(coinKeys[type]);
+          if (targetRect != null) break;
+        }
       }
-    } else {
-      await _countUp(
-        controller: controller,
-        from: from,
-        to: to,
-      );
-    }
 
-    if (!context.mounted) {
+      final startRect = sourceRect ?? globalRectOfKey(sourceKey);
+      if (startRect != null && targetRect != null && context.mounted) {
+        // Сначала полёт; пересчёт — строго после прилёта (без колбэка в тикере).
+        await _flyCoin(
+          context: context,
+          from: _centerOf(startRect),
+          to: _centerOf(targetRect),
+          coinType: flyType,
+          size: math.max(18, startRect.shortestSide.clamp(16, 28)),
+        );
+      }
+      if (!context.mounted) return;
+      await _countUp(controller: controller, from: from, to: to);
+    } finally {
+      // Снимаем лок — тулбар показывает актуальный auth-баланс.
       controller.end();
-      return;
     }
-    controller.end();
   });
 }
 

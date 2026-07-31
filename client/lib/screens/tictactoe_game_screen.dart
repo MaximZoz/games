@@ -386,26 +386,26 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   .read(gameInvitesProvider.notifier)
                   .removeByCreatorId(opponentId);
             }
-            unawaited(_onGameSettled(
-              // На счёт: победа +2×ставка, ничья возврат ставки.
-              creditBronze: iWonEarly
-                  ? game.stakeBronze * 2
-                  : isDraw
-                      ? game.stakeBronze
-                      : 0,
-              // В UI показываем чистый выигрыш (= ставка).
-              displayRewardBronze: iWonEarly ? game.stakeBronze : 0,
-            ));
+            // Не трогаем провайдеры баланса из build — только после кадра.
+            final settledCredit = iWonEarly
+                ? game.stakeBronze * 2
+                : isDraw
+                    ? game.stakeBronze
+                    : 0;
+            final settledReward = iWonEarly ? game.stakeBronze : 0;
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                setState(() {
-                  _rematchLobbyId = null;
-                  _rematchDeclined = false;
-                  _iDeclinedRematch = false;
-                  _isRematching = false;
-                  _isFindingGame = false;
-                });
-              }
+              if (!mounted) return;
+              setState(() {
+                _rematchLobbyId = null;
+                _rematchDeclined = false;
+                _iDeclinedRematch = false;
+                _isRematching = false;
+                _isFindingGame = false;
+              });
+              unawaited(_onGameSettled(
+                creditBronze: settledCredit,
+                displayRewardBronze: settledReward,
+              ));
             });
           } else {
             _prevGameStatus = game.status;
@@ -727,6 +727,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
+    _balanceGainPlayed = true;
     final fromBalance =
         ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
     final estimatedTo = fromBalance + creditBronze;
@@ -738,32 +739,32 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       rewardBronze:
           displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
     );
-    await ref.read(authStateProvider.notifier).refresh();
-    if (!mounted) {
-      ref.read(balanceGainProvider.notifier).end();
-      return;
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+      if (!mounted) return;
+      final toBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? fromBalance;
+      if (toBalance <= fromBalance) return;
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      if (!mounted) return;
+      await playBalanceGain(
+        ref: ref,
+        context: context,
+        newBalanceBronze: toBalance,
+        fromBronze: fromBalance,
+        rewardBronze:
+            displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
+        sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
+        skipApply: true,
+      );
+    } finally {
+      // Если анимация не сняла лок — всё равно показать актуальный баланс.
+      if (ref.read(balanceGainProvider).active) {
+        ref.read(balanceGainProvider.notifier).end();
+      }
     }
-    final toBalance =
-        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? fromBalance;
-    if (toBalance <= fromBalance) {
-      ref.read(balanceGainProvider.notifier).end();
-      return;
-    }
-    _balanceGainPlayed = true;
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
-    await Future<void>.delayed(const Duration(milliseconds: 80));
-    if (!mounted) return;
-    await playBalanceGain(
-      ref: ref,
-      context: context,
-      newBalanceBronze: toBalance,
-      fromBronze: fromBalance,
-      rewardBronze:
-          displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
-      sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
-      skipApply: true,
-    );
   }
 
   void _confirmSurrender(BuildContext context) {
