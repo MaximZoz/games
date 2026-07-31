@@ -36,6 +36,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   String? _busyProvider;
   String? _pollingState;
   bool _resuming = false;
+  bool _showStuckHelp = false;
 
   @override
   void initState() {
@@ -171,6 +172,47 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                   ),
                 ),
               ],
+              if (_showStuckHelp ||
+                  (readOAuthPendingState() ?? '').isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Если зависли на accounts.google.com / CheckCookie — '
+                  'закройте ту вкладку (PWA не может закрыть страницы Google). '
+                  'Инкогнито часто ломает вход Google.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _resuming
+                      ? null
+                      : () async {
+                          setState(() => _busyProvider ??= 'google');
+                          await _resumePending();
+                          if (!mounted) return;
+                          final user = ref.read(authStateProvider).valueOrNull;
+                          if (user != null) {
+                            GoRouter.of(context).go('/games');
+                          }
+                        },
+                  child: const Text('Продолжить вход в приложении'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    clearOAuthPendingState();
+                    setState(() {
+                      _showStuckHelp = false;
+                      _busyProvider = null;
+                    });
+                    GoRouter.of(context).go('/games');
+                  },
+                  child: const Text('Открыть игры'),
+                ),
+              ],
             ],
           ),
         );
@@ -244,18 +286,19 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       poll: true,
     );
     final started = fetchOAuthPollStartSync(startUrl);
+    setState(() => _showStuckHelp = true);
     if (started != null) {
       saveOAuthPendingState(started.state);
       messenger.showSnackBar(
         const SnackBar(
           content: Text(
-            'Завершите вход Google и вернитесь в Zozu Games с экрана «Домой»',
+            'Завершите Google и вернитесь в приложение. '
+            'Не используйте инкогнито — там зависает CheckCookie.',
           ),
-          duration: Duration(seconds: 8),
+          duration: Duration(seconds: 10),
         ),
       );
       openOAuthExternal(started.authorizeUrl);
-      // Poll при возврате в приложение (_resumePending).
       return;
     }
     // Fallback: same-origin navigate=1 → cookie + 302 на Google.

@@ -25,13 +25,27 @@
       box-shadow: 0 8px 24px rgba(30, 40, 80, 0.08);
     }
     h1 { font-size: 1.25rem; margin: 0 0 8px; }
-    p { margin: 0; color: #5a6275; line-height: 1.45; }
+    p { margin: 0 0 16px; color: #5a6275; line-height: 1.45; }
+    a.btn {
+      display: block;
+      text-decoration: none;
+      background: #fff;
+      color: #111;
+      font: 600 15px system-ui, -apple-system, sans-serif;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 8px;
+    }
+    .hint { font-size: 13px; color: #6b7280; margin-top: 14px; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1 id="title">Готово</h1>
     <p id="msg">Возвращаем в приложение…</p>
+    <a class="btn" id="openApp" href="/games">Открыть Zozu Games</a>
+    <p class="hint" id="hint"></p>
   </div>
   <script>
     (function () {
@@ -50,30 +64,39 @@
         return false;
       }
 
-      function loginUrl() {
+      function appUrl(path) {
         var q = 'oauth=1';
         if (state) q += '&state=' + encodeURIComponent(state);
         if (err) q += '&error=' + encodeURIComponent(err);
-        return '/login?' + q;
+        return path + '?' + q;
       }
+
+      var openBtn = document.getElementById('openApp');
+      // В PWA сразу в login (poll). Кнопка — запасной путь в /games.
+      openBtn.href = isStandalone() ? appUrl('/login') : '/games';
 
       if (err) {
         document.getElementById('title').textContent = 'Ошибка входа';
-        document.getElementById('msg').textContent = err + '. Закройте окно и попробуйте снова в приложении.';
-      }
-
-      // В PWA — сразу в Flutter (poll).
-      // В Safari / in-app browser — НЕ открывать Flutter: иначе poll «съест» токены
-      // в хранилище Safari, а PWA останется без сессии и снова покажет «Вход».
-      if (isStandalone()) {
-        location.replace(loginUrl());
+        document.getElementById('msg').textContent = err;
+        document.getElementById('hint').textContent =
+          'Закройте это окно и откройте Zozu Games с экрана «Домой». Инкогнито часто ломает вход Google.';
         return;
       }
 
-      document.getElementById('title').textContent = err ? 'Ошибка входа' : 'Готово';
-      document.getElementById('msg').textContent = err
-        ? (err + '. Закройте это окно и откройте Zozu Games с экрана «Домой».')
-        : 'Откройте Zozu Games с экрана «Домой» — вход завершится автоматически. Это окно можно закрыть.';
+      if (isStandalone()) {
+        location.replace(appUrl('/login'));
+        return;
+      }
+
+      // Safari / инкогнито / in-app browser: не запускаем Flutter здесь
+      // (иначе токены осядут не в PWA). Только кнопка возврата.
+      document.getElementById('title').textContent = 'Готово';
+      document.getElementById('msg').textContent =
+        'Если зависли на accounts.google.com / CheckCookie — закройте ту вкладку. Затем откройте приложение:';
+      document.getElementById('hint').textContent =
+        'Инкогнито и блокировка cookie ломают Google. Лучше обычный Safari → «На экран Домой», не из инкогнито.';
+      openBtn.href = '/games';
+      openBtn.textContent = 'Открыть игру';
       try { window.close(); } catch (e) {}
     })();
   </script>
