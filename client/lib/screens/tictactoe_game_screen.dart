@@ -309,6 +309,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     void goBack() => _handleClose(effectiveGameAsync.valueOrNull);
     final gameForBar = effectiveGameAsync.valueOrNull;
     final gameActive = gameForBar != null && gameForBar.status == 'active';
+    final showDrawButton =
+        gameForBar != null && gameForBar.status == 'active' && gameForBar.isActivePvp;
+    final meId = currentUser?.id;
+    final drawOfferBy = gameForBar?.drawOfferBy?.trim();
+    final iOfferedDraw =
+        drawOfferBy != null && meId != null && drawOfferBy == meId;
+    final opponentOfferedDraw = drawOfferBy != null &&
+        meId != null &&
+        drawOfferBy.isNotEmpty &&
+        drawOfferBy != meId;
+    // Крестик + сдаться (+ ничья) слева; правила справа на одной линии с крестиком.
+    final barHeight = showDrawButton
+        ? 132.0
+        : (gameActive ? 96.0 : kToolbarHeight);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -316,54 +330,87 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          toolbarHeight: gameActive ? 72 : kToolbarHeight,
-          leading: IconButton(
-            onPressed: goBack,
-            icon: const Icon(Icons.close_rounded),
-          ),
-          title: Text(context.l10n.gamesTicTacToe),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Column(
-                // На одном уровне с заголовком «Крестики-нолики», не у верхнего края.
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 28,
-                    width: 40,
-                    child: IconButton(
+          toolbarHeight: barHeight,
+          leadingWidth: 48,
+          leading: Align(
+            alignment: Alignment.topCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  onPressed: goBack,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+                if (gameActive) ...[
+                  const SizedBox(height: 8),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 36,
+                    ),
+                    iconSize: 22,
+                    icon: const Icon(Icons.flag_outlined),
+                    tooltip: context.l10n.gameSurrender,
+                    onPressed: () => _confirmSurrender(context),
+                  ),
+                  if (showDrawButton) ...[
+                    const SizedBox(height: 8),
+                    IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: 40,
-                        minHeight: 28,
+                        minHeight: 36,
                       ),
                       iconSize: 22,
-                      icon: const Icon(Icons.rule_rounded),
-                      tooltip: context.l10n.gamesRulesTitle,
-                      onPressed: () => _showGameRules(context),
-                    ),
-                  ),
-                  if (gameActive) ...[
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 28,
-                      width: 40,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 40,
-                          minHeight: 28,
-                        ),
-                        iconSize: 20,
-                        icon: const Icon(Icons.flag_outlined),
-                        tooltip: context.l10n.gameSurrender,
-                        onPressed: () => _confirmSurrender(context),
+                      icon: Icon(
+                        opponentOfferedDraw
+                            ? Icons.handshake_rounded
+                            : Icons.handshake_outlined,
+                        color: opponentOfferedDraw
+                            ? AppColors.accentStart
+                            : (iOfferedDraw
+                                ? AppColors.accentStart.withValues(alpha: 0.45)
+                                : null),
                       ),
+                      tooltip: opponentOfferedDraw
+                          ? context.l10n.gameAcceptDrawTitle
+                          : (iOfferedDraw
+                              ? context.l10n.gameDrawOffered
+                              : context.l10n.gameOfferDraw),
+                      onPressed: iOfferedDraw
+                          ? null
+                          : () => opponentOfferedDraw
+                              ? _confirmAcceptDraw(context)
+                              : _confirmOfferDraw(context),
                     ),
                   ],
                 ],
+              ],
+            ),
+          ),
+          title: Text(context.l10n.gamesTicTacToe),
+          actions: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 4, top: 0),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  iconSize: 22,
+                  icon: const Icon(Icons.rule_rounded),
+                  tooltip: context.l10n.gamesRulesTitle,
+                  onPressed: () => _showGameRules(context),
+                ),
               ),
             ),
           ],
@@ -799,6 +846,95 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
         } catch (_) {}
       }());
+    });
+  }
+
+  void _confirmOfferDraw(BuildContext context) {
+    final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.status != 'active' || !game.isActivePvp) return;
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.gameOfferDrawTitle),
+        content: Text(context.l10n.gameOfferDrawConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(context.l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: Text(context.l10n.gameOfferDraw),
+          ),
+        ],
+      ),
+    ).then((ok) async {
+      if (ok != true || !mounted) return;
+      final errMsg = context.l10n.commonGenericError;
+      try {
+        await ref.read(gamesRepositoryProvider).offerDraw(widget.gameId);
+        if (mounted) ref.invalidate(gameStateProvider(widget.gameId));
+      } catch (_) {
+        if (!mounted) return;
+        showAppSnackBar(
+          this.context,
+          message: errMsg,
+          kind: AppSnackKind.error,
+        );
+      }
+    });
+  }
+
+  void _confirmAcceptDraw(BuildContext context) {
+    final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.status != 'active') return;
+    final meId = ref.read(authStateProvider).valueOrNull?.id;
+    final offerBy = game.drawOfferBy?.trim();
+    if (meId == null ||
+        offerBy == null ||
+        offerBy.isEmpty ||
+        offerBy == meId) {
+      return;
+    }
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.gameAcceptDrawTitle),
+        content: Text(context.l10n.gameAcceptDrawConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(context.l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: Text(context.l10n.gameDraw),
+          ),
+        ],
+      ),
+    ).then((ok) async {
+      if (ok != true || !mounted) return;
+      final errMsg = context.l10n.commonGenericError;
+      try {
+        await ref.read(gamesRepositoryProvider).acceptDraw(widget.gameId);
+        if (mounted) {
+          ref.invalidate(gameStateProvider(widget.gameId));
+          ref.invalidate(activeGameProvider);
+        }
+      } catch (_) {
+        if (!mounted) return;
+        showAppSnackBar(
+          this.context,
+          message: errMsg,
+          kind: AppSnackKind.error,
+        );
+      }
     });
   }
 

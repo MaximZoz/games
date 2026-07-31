@@ -487,6 +487,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameSurrenderConfirm => 'If you surrender, you will lose. Surrender?';
 
   @override
+  String get gameOfferDraw => 'Offer draw';
+
+  @override
+  String get gameOfferDrawTitle => 'Offer a draw?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Send a draw offer to your opponent?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Accept draw?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Your opponent offers a draw. Accept?';
+
+  @override
+  String get gameDrawOffered => 'Waiting for reply';
+
+  @override
   String get gameConnecting => 'Connecting to game…';
 
   @override

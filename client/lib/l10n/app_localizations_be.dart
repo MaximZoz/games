@@ -487,6 +487,24 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
+
+  @override
   String get gameConnecting => 'Падключэнне да гульні…';
 
   @override

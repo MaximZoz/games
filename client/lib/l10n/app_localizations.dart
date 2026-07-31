@@ -1085,6 +1085,42 @@ abstract class AppLocalizations {
   /// **'Если вы сдадитесь, вы проиграете. Сдаться?'**
   String get gameSurrenderConfirm;
 
+  /// No description provided for @gameOfferDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложить ничью'**
+  String get gameOfferDraw;
+
+  /// No description provided for @gameOfferDrawTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложить ничью?'**
+  String get gameOfferDrawTitle;
+
+  /// No description provided for @gameOfferDrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить сопернику предложение ничьей?'**
+  String get gameOfferDrawConfirm;
+
+  /// No description provided for @gameAcceptDrawTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять ничью?'**
+  String get gameAcceptDrawTitle;
+
+  /// No description provided for @gameAcceptDrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник предлагает ничью. Принять?'**
+  String get gameAcceptDrawConfirm;
+
+  /// No description provided for @gameDrawOffered.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ожидание ответа'**
+  String get gameDrawOffered;
+
   /// No description provided for @gameConnecting.
   ///
   /// In ru, this message translates to:

@@ -107,6 +107,8 @@ type GameStateItem struct {
 	FirstMoveRestriction bool     `json:"first_move_restriction,omitempty"`
 	CanSwap              bool     `json:"can_swap,omitempty"` // O может сменить стороны
 	StakeBronze          int      `json:"stake_bronze,omitempty"`
+	// Кто предложил ничью (user id); пусто — предложения нет.
+	DrawOfferBy          string   `json:"draw_offer_by,omitempty"`
 	XDisplayName         *string  `json:"x_display_name,omitempty"`
 	ODisplayName         *string  `json:"o_display_name,omitempty"`
 	XAvatarKind          string   `json:"x_avatar_kind,omitempty"`
@@ -263,6 +265,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.SwapSides(w, r, gameID)
 		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
 			h.ForfeitGame(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+			h.OfferDraw(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+			h.AcceptDraw(w, r, gameID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
@@ -1744,6 +1750,7 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		StakeBronze:          stakeBronze,
 		Forfeit:              m["forfeit"] == "1",
 		Timeout:              m["timeout"] == "1",
+		DrawOfferBy:          m["draw_offer_by"],
 	}
 	if w := m["winner"]; w != "" {
 		item.Winner = &w
@@ -2172,6 +2179,125 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 	})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"status": status, "forfeit": true})
+}
+
+// OfferDraw предлагает ничью сопернику (только PvP).
+func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	if xUserID != userID.String() && oUserID != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
+		return
+	}
+	if isBot(xUserID) || isBot(oUserID) {
+		WriteErr(w, r, http.StatusBadRequest, "draw not available vs bot")
+		return
+	}
+	existing := strings.TrimSpace(m["draw_offer_by"])
+	if existing == userID.String() {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"offered":       true,
+			"draw_offer_by": existing,
+		})
+		return
+	}
+	if existing != "" {
+		WriteErr(w, r, http.StatusConflict, "opponent already offered draw")
+		return
+	}
+	if err := h.Rdb.HSet(ctx, key, "draw_offer_by", userID.String()).Err(); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+		"type":          "game_state",
+		"game_id":       gameID,
+		"status":        gameStatusActive,
+		"draw_offer_by": userID.String(),
+	})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"offered":       true,
+		"draw_offer_by": userID.String(),
+	})
+}
+
+// AcceptDraw принимает предложение ничьей от соперника.
+func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	if xUserID != userID.String() && oUserID != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
+		return
+	}
+	offerBy := strings.TrimSpace(m["draw_offer_by"])
+	if offerBy == "" {
+		WriteErr(w, r, http.StatusBadRequest, "no draw offer")
+		return
+	}
+	if offerBy == userID.String() {
+		WriteErr(w, r, http.StatusBadRequest, "cannot accept own draw offer")
+		return
+	}
+	gridSize := 3
+	if gs := m["grid_size"]; gs != "" {
+		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
+			gridSize = n
+		}
+	}
+	board := parseBoard(m["board"], gridSize)
+	pipe := h.Rdb.Pipeline()
+	pipe.HSet(ctx, key, "status", gameStatusDraw)
+	pipe.HDel(ctx, key, "draw_offer_by")
+	pipe.Expire(ctx, key, 24*time.Hour)
+	if _, err := pipe.Exec(ctx); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, gameStatusDraw)
+	for _, u := range humanUserIDs(xUserID, oUserID) {
+		clearUserActiveGame(ctx, h.Rdb, u)
+	}
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+		"type":    "game_state",
+		"game_id": gameID,
+		"board":   board,
+		"turn":    m["turn"],
+		"status":  gameStatusDraw,
+	})
+	writeJSON(w, http.StatusOK, map[string]any{"status": gameStatusDraw, "draw": true})
 }
 
 func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
