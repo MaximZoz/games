@@ -197,12 +197,32 @@ Future<void> playBalanceGain({
 
     final startRect = sourceRect ?? globalRectOfKey(sourceKey);
     if (startRect != null && targetRect != null && context.mounted) {
+      // Пересчёт баланса — только когда монета дошла до тулбара.
+      Future<void>? counting;
       await _flyCoin(
         context: context,
         from: _centerOf(startRect),
         to: _centerOf(targetRect),
         coinType: flyType,
         size: math.max(18, startRect.shortestSide.clamp(16, 28)),
+        onArrived: () {
+          counting = _countUp(
+            controller: controller,
+            from: from,
+            to: to,
+          );
+        },
+      );
+      if (counting != null) {
+        await counting;
+      } else if (context.mounted) {
+        await _countUp(controller: controller, from: from, to: to);
+      }
+    } else {
+      await _countUp(
+        controller: controller,
+        from: from,
+        to: to,
       );
     }
 
@@ -210,12 +230,6 @@ Future<void> playBalanceGain({
       controller.end();
       return;
     }
-
-    await _countUp(
-      controller: controller,
-      from: from,
-      to: to,
-    );
     controller.end();
   });
 }
@@ -243,6 +257,7 @@ Future<void> _flyCoin({
   required Offset to,
   required CoinType coinType,
   required double size,
+  VoidCallback? onArrived,
 }) async {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return;
@@ -255,6 +270,7 @@ Future<void> _flyCoin({
       to: to,
       coinType: coinType,
       size: size,
+      onArrived: onArrived,
       onDone: () {
         entry.remove();
         if (!completer.isCompleted) completer.complete();
@@ -272,6 +288,7 @@ class _FlyingCoinLayer extends StatefulWidget {
     required this.coinType,
     required this.size,
     required this.onDone,
+    this.onArrived,
   });
 
   final Offset from;
@@ -279,6 +296,7 @@ class _FlyingCoinLayer extends StatefulWidget {
   final CoinType coinType;
   final double size;
   final VoidCallback onDone;
+  final VoidCallback? onArrived;
 
   @override
   State<_FlyingCoinLayer> createState() => _FlyingCoinLayerState();
@@ -290,6 +308,7 @@ class _FlyingCoinLayerState extends State<_FlyingCoinLayer>
   late final Animation<double> _t;
   late final Animation<double> _scale;
   late final Animation<double> _opacity;
+  bool _arrivedNotified = false;
 
   @override
   void initState() {
@@ -307,6 +326,12 @@ class _FlyingCoinLayerState extends State<_FlyingCoinLayer>
       TweenSequenceItem(tween: ConstantTween(1.0), weight: 85),
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 15),
     ]).animate(_t);
+    // ~85% — монета у цели, начинается fade; с этого момента пересчёт.
+    _controller.addListener(() {
+      if (_arrivedNotified || _controller.value < 0.85) return;
+      _arrivedNotified = true;
+      widget.onArrived?.call();
+    });
     _controller.forward().whenComplete(widget.onDone);
   }
 

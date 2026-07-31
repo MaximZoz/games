@@ -44,4 +44,14 @@ void main() {
     expect(parseInviteLobbyShareUrl('https://example.com/other'), isNull);
     expect(isInviteLobbyMessage('я тоже'), isFalse);
   });
+
+  test('appPathFromMessage appends from_message query', () {
+    final link = parseInviteLobbyShareUrl(
+      '/games/tictactoe/lobby/abc-123?mode=invite',
+    );
+    expect(
+      link!.appPathFromMessage('msg-42'),
+      '/games/tictactoe/lobby/abc-123?mode=invite&from_message=msg-42',
+    );
+  });
 }

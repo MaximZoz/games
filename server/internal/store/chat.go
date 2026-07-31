@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -37,6 +38,43 @@ var (
 func IsRestrictedChatMessageAllowed(body string) bool {
 	text := strings.TrimSpace(body)
 	return animatedEmojiTokenRe.MatchString(text) || giftCollectionTokenRe.MatchString(text)
+}
+
+// IsInviteLobbyShareBody — тело сообщения целиком является ссылкой на «Свою игру».
+func IsInviteLobbyShareBody(body string) bool {
+	text := strings.TrimSpace(body)
+	if text == "" {
+		return false
+	}
+	var u *url.URL
+	var err error
+	if strings.HasPrefix(text, "http://") || strings.HasPrefix(text, "https://") {
+		u, err = url.Parse(text)
+	} else if strings.HasPrefix(text, "/games/") {
+		u, err = url.Parse("https://local.app" + text)
+	} else {
+		return false
+	}
+	if err != nil || u == nil {
+		return false
+	}
+	parts := make([]string, 0, 4)
+	for _, p := range strings.Split(strings.Trim(u.Path, "/"), "/") {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	if len(parts) < 4 {
+		return false
+	}
+	if parts[0] != "games" || parts[1] != "tictactoe" || parts[2] != "lobby" {
+		return false
+	}
+	id := strings.TrimSpace(parts[3])
+	if id == "" || strings.Contains(id, "/") || strings.Contains(id, " ") {
+		return false
+	}
+	return true
 }
 
 type ChatMessage struct {

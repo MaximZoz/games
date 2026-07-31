@@ -2095,7 +2095,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _ChatInviteCard(link: inviteLink),
+                            _ChatInviteCard(
+                              link: inviteLink,
+                              messageId: message.id,
+                            ),
                             const SizedBox(height: 6),
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -2985,9 +2988,13 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
 }
 
 class _ChatInviteCard extends StatelessWidget {
-  const _ChatInviteCard({required this.link});
+  const _ChatInviteCard({
+    required this.link,
+    required this.messageId,
+  });
 
   final InviteLobbyLink link;
+  final String messageId;
 
   @override
   Widget build(BuildContext context) {
@@ -2998,7 +3005,7 @@ class _ChatInviteCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () => context.push(link.appPath),
+          onTap: () => context.push(link.appPathFromMessage(messageId)),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: BoxDecoration(

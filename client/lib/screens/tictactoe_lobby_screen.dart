@@ -8,7 +8,6 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
@@ -31,10 +30,14 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
     super.key,
     required this.lobbyId,
     this.initialMode,
+    this.fromMessageId,
   });
 
   final String lobbyId;
   final String? initialMode;
+
+  /// Если открыли «Свою игру» из сообщения в чате — удалить его после входа.
+  final String? fromMessageId;
 
   @override
   ConsumerState<TicTacToeLobbyScreen> createState() =>
@@ -502,12 +505,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
-        navigateToGame(
-          GoRouter.of(context),
-          ref.read(gameNavigationCoordinatorProvider),
-          result.gameId,
-          expectedLobbyId: widget.lobbyId,
-        );
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+        ref.invalidate(activeGameProvider);
+
+        final messageId = widget.fromMessageId?.trim();
+        if (messageId != null && messageId.isNotEmpty) {
+          try {
+            await ref.read(chatsRepositoryProvider).deleteMessage(messageId);
+            await refreshChatsList(ref, force: true);
+          } catch (_) {
+            // Вход в игру важнее удаления сообщения.
+          }
+        }
+
+        if (!context.mounted) return;
+        // Закрыть «Свою игру» и сразу открыть матч (не push поверх лобби).
+        context.go('/games/tictactoe/game/${result.gameId}');
+        return;
       }
     } catch (e) {
       if (context.mounted) {

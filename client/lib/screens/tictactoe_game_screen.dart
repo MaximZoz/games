@@ -316,6 +316,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          toolbarHeight: gameActive ? 88 : kToolbarHeight,
           leading: IconButton(
             onPressed: goBack,
             icon: const Icon(Icons.close_rounded),
@@ -325,8 +326,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 4),
                   SizedBox(
                     height: 28,
                     width: 40,
@@ -342,7 +344,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       onPressed: () => _showGameRules(context),
                     ),
                   ),
-                  if (gameActive)
+                  if (gameActive) ...[
+                    const SizedBox(height: 14),
                     SizedBox(
                       height: 28,
                       width: 40,
@@ -358,6 +361,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         onPressed: () => _confirmSurrender(context),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),

@@ -25,3 +25,23 @@ func TestIsRestrictedChatMessageAllowed(t *testing.T) {
 		}
 	}
 }
+
+func TestIsInviteLobbyShareBody(t *testing.T) {
+	cases := []struct {
+		body string
+		ok   bool
+	}{
+		{"https://example.com/games/tictactoe/lobby/abc-123?mode=invite", true},
+		{"/games/tictactoe/lobby/abc-123?mode=invite", true},
+		{"  https://x.test/games/tictactoe/lobby/uuid  ", true},
+		{"https://example.com/games/tictactoe/game/abc", false},
+		{"hello https://example.com/games/tictactoe/lobby/abc", false},
+		{"", false},
+	}
+	for _, tc := range cases {
+		got := IsInviteLobbyShareBody(tc.body)
+		if got != tc.ok {
+			t.Fatalf("%q: got %v, want %v", tc.body, got, tc.ok)
+		}
+	}
+}
