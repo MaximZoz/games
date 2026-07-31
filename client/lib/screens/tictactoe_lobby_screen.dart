@@ -193,28 +193,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                         .watch(presenceMapProvider)
                                         .valueOrNull ??
                                     const {};
-                                final onlineFriends = friends
-                                    .where((f) {
-                                      final entry = presence[f.user.id];
-                                      return entry != null && entry.online;
-                                    })
+                                final inviteableFriends = friends
                                     .where((f) => !_invitedFriendIds
                                         .contains(f.user.id))
-                                    .toList();
-                                if (onlineFriends.isEmpty) {
-                                  final onlineInvitedCount = friends
-                                      .where((f) =>
-                                          (presence[f.user.id]?.online ??
-                                              false) &&
-                                          _invitedFriendIds
-                                              .contains(f.user.id))
-                                      .length;
+                                    .toList()
+                                  ..sort((a, b) {
+                                    final aOnline =
+                                        presence[a.user.id]?.online ?? false;
+                                    final bOnline =
+                                        presence[b.user.id]?.online ?? false;
+                                    if (aOnline == bOnline) return 0;
+                                    return aOnline ? -1 : 1;
+                                  });
+                                if (inviteableFriends.isEmpty) {
                                   return Text(
                                     friends.isEmpty
-                                        ? context.l10n.lobbyNoFriendsOnline
-                                        : onlineInvitedCount > 0
-                                            ? context.l10n.lobbyInvitesSentWaiting
-                                            : context.l10n.lobbyNoFriendsOnline,
+                                        ? context.l10n.friendsEmpty
+                                        : context.l10n.lobbyInvitesSentWaiting,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 14,
@@ -225,7 +220,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    ...onlineFriends.map((f) {
+                                    ...inviteableFriends.map((f) {
                                       final friendId = f.user.id;
                                       final isInvited =
                                           _invitedFriendIds.contains(friendId);
