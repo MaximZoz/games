@@ -46,7 +46,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOfflineModeTitle => 'Network mode';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and validated when the internet returns. Online is on when there is internet or by the user setting.';
+  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and applied in online mode. Online is on when there is internet or by the user setting.';
 
   @override
   String get settingsModeOnline => 'Online';
@@ -67,7 +67,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineModePopupTitle => 'Offline mode';
 
   @override
-  String get offlineModePopupBody => 'Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply when the internet returns.';
+  String get offlineModePopupBody => 'Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply in online mode.';
 
   @override
   String get offlineModePopupSettings => 'Settings';
@@ -91,7 +91,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlinePlayAgain => 'Play again';
 
   @override
-  String get shopPurchaseQueued => 'Purchase saved — will apply when you are online';
+  String get shopPurchaseQueued => 'Purchase saved — will apply in online mode';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — purchase applied';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — purchase not applied: $reason';
+  }
 
   @override
   String get settingsFriendsOnlyTitle => 'Messages from friends only';

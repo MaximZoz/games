@@ -230,7 +230,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsOfflineModeSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и проверяются при появлении интернета. Онлайн — когда есть интернет или по настройке пользователя.'**
+  /// **'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.'**
   String get settingsOfflineModeSubtitle;
 
   /// No description provided for @settingsModeOnline.
@@ -272,7 +272,7 @@ abstract class AppLocalizations {
   /// No description provided for @offlineModePopupBody.
   ///
   /// In ru, this message translates to:
-  /// **'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся после появления интернета.'**
+  /// **'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.'**
   String get offlineModePopupBody;
 
   /// No description provided for @offlineModePopupSettings.
@@ -320,8 +320,20 @@ abstract class AppLocalizations {
   /// No description provided for @shopPurchaseQueued.
   ///
   /// In ru, this message translates to:
-  /// **'Покупка сохранена — применится при появлении интернета'**
+  /// **'Покупка сохранена — применится в режиме онлайн'**
   String get shopPurchaseQueued;
+
+  /// No description provided for @shopPurchaseApplied.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} — покупка применена'**
+  String shopPurchaseApplied(String title);
+
+  /// No description provided for @shopPurchaseRejected.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} — покупка не применена: {reason}'**
+  String shopPurchaseRejected(String title, String reason);
 
   /// No description provided for @settingsFriendsOnlyTitle.
   ///

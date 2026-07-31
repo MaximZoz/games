@@ -6,6 +6,7 @@ import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
@@ -111,12 +112,20 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: l10n.settingsOfflineModeSubtitle,
                       value: offlineMode.preference ==
                           OfflinePreference.offline,
-                      onChanged: (v) {
-                        ref.read(offlineModeProvider.notifier).setPreference(
+                      onChanged: (v) async {
+                        await ref
+                            .read(offlineModeProvider.notifier)
+                            .setPreference(
                               v
                                   ? OfflinePreference.offline
                                   : OfflinePreference.online,
                             );
+                        // Явный flush при выходе из офлайна (на случай гонки слушателя).
+                        if (!v) {
+                          await ref
+                              .read(pendingPurchasesProvider.notifier)
+                              .flush();
+                        }
                       },
                     ),
                   ),

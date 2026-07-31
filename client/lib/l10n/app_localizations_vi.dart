@@ -46,7 +46,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и проверяются при появлении интернета. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -67,7 +67,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся после появления интернета.';
+  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +91,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится при появлении интернета';
+  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — покупка применена';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — покупка не применена: $reason';
+  }
 
   @override
   String get settingsFriendsOnlyTitle => 'Chỉ nhận tin từ bạn bè';

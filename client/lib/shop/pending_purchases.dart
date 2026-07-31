@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,22 +17,52 @@ class PendingPurchase {
   const PendingPurchase({
     required this.code,
     required this.queuedAtMs,
+    this.title = '',
   });
 
   final String code;
+  final String title;
   final int queuedAtMs;
 
   Map<String, dynamic> toJson() => {
         'code': code,
+        'title': title,
         'queued_at_ms': queuedAtMs,
       };
 
   factory PendingPurchase.fromJson(Map<String, dynamic> json) {
     return PendingPurchase(
       code: (json['code'] as String?) ?? '',
+      title: (json['title'] as String?) ?? '',
       queuedAtMs: (json['queued_at_ms'] as num?)?.toInt() ?? 0,
     );
   }
+}
+
+/// Итог синхронизации одной отложенной покупки (для всплывашек).
+class PendingPurchaseFlushItem {
+  const PendingPurchaseFlushItem({
+    required this.code,
+    required this.title,
+    this.reason,
+  });
+
+  final String code;
+  final String title;
+  final String? reason;
+}
+
+/// Пакет результатов flush — UI показывает тосты.
+class PendingPurchaseFlushNotice {
+  const PendingPurchaseFlushNotice({
+    required this.applied,
+    required this.failed,
+  });
+
+  final List<PendingPurchaseFlushItem> applied;
+  final List<PendingPurchaseFlushItem> failed;
+
+  bool get isEmpty => applied.isEmpty && failed.isEmpty;
 }
 
 final pendingPurchasesProvider =
@@ -39,19 +71,32 @@ final pendingPurchasesProvider =
   return PendingPurchasesNotifier(ref);
 });
 
+/// Последний результат применения очереди (null = нет события).
+final pendingPurchaseFlushNoticeProvider =
+    StateProvider<PendingPurchaseFlushNotice?>((ref) => null);
+
 class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   PendingPurchasesNotifier(this._ref) : super(const []) {
-    _load();
-    _ref.listen<OfflineModeState>(offlineModeProvider, (prev, next) {
-      final wasOffline = prev?.isOffline ?? true;
-      if (wasOffline && !next.isOffline) {
-        flush();
-      }
-    });
+    _ready = _init();
   }
 
   final Ref _ref;
   bool _flushing = false;
+  late final Future<void> _ready;
+
+  Future<void> _init() async {
+    await _load();
+    _ref.listen<OfflineModeState>(offlineModeProvider, (prev, next) {
+      final wasOffline = prev?.isOffline ?? true;
+      if (wasOffline && !next.isOffline) {
+        unawaited(flush());
+      }
+    });
+    // Старт уже в онлайне с непустой очередью (после перезапуска).
+    if (!_ref.read(isOfflineProvider) && state.isNotEmpty) {
+      await flush();
+    }
+  }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -84,8 +129,18 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
     );
   }
 
+  String _displayTitle(PendingPurchase item) {
+    final l10n = LocaleService.l10n;
+    return catalogTitle(
+      item.code,
+      fallback: item.title.isNotEmpty ? item.title : item.code,
+      l10n: l10n,
+    );
+  }
+
   /// Поставить покупку в очередь (офлайн) или купить сразу (онлайн).
   Future<ShopBuyResult> buyOrQueue(String code) async {
+    await _ready;
     final offline = _ref.read(isOfflineProvider);
     final repo = _ref.read(shopRepositoryProvider);
     if (!offline) {
@@ -113,11 +168,11 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
       throw AuthException(400, LocaleService.l10n.shopStakes);
     }
 
-    // Оптимистично: отмечаем owned в каталоге после очереди — UI вызывает setState.
     final next = [
       ...state.where((e) => e.code != code),
       PendingPurchase(
         code: code,
+        title: item?.title ?? code,
         queuedAtMs: DateTime.now().millisecondsSinceEpoch,
       ),
     ];
@@ -133,23 +188,35 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
 
   /// Синхронизация с сервером: валидные покупки применяются, ошибочные снимаются.
   Future<void> flush() async {
+    await _ready;
     if (_flushing) return;
     if (_ref.read(isOfflineProvider)) return;
     if (state.isEmpty) return;
     _flushing = true;
+    final applied = <PendingPurchaseFlushItem>[];
+    final failed = <PendingPurchaseFlushItem>[];
     try {
       final repo = _ref.read(shopRepositoryProvider);
       final remaining = <PendingPurchase>[];
       for (final item in List<PendingPurchase>.from(state)) {
+        final title = _displayTitle(item);
         try {
           final result = await repo.buy(item.code);
           await _ref
               .read(authStateProvider.notifier)
               .applyBalance(result.balanceBronze);
+          applied.add(PendingPurchaseFlushItem(code: item.code, title: title));
         } on AuthException catch (e) {
-          // Явная ошибка сервера — отменяем покупку.
+          // Сессия / сервер — оставить в очереди, без тоста «отклонено».
           if (e.statusCode == 401 || e.statusCode >= 500) {
             remaining.add(item);
+          } else {
+            // Явная ошибка (недостаточно монет, уже куплено и т.п.) — снимаем.
+            failed.add(PendingPurchaseFlushItem(
+              code: item.code,
+              title: title,
+              reason: e.message,
+            ));
           }
         } catch (_) {
           // Сеть/таймаут — оставить в очереди.
@@ -160,6 +227,10 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
       await _persist();
       _ref.invalidate(shopCatalogProvider);
       _ref.invalidate(inventoryListProvider);
+      if (applied.isNotEmpty || failed.isNotEmpty) {
+        _ref.read(pendingPurchaseFlushNoticeProvider.notifier).state =
+            PendingPurchaseFlushNotice(applied: applied, failed: failed);
+      }
     } finally {
       _flushing = false;
     }

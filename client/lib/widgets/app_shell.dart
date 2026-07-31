@@ -27,6 +27,7 @@ import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 bool _activeGameUsable(ActiveGameItem? active) {
   if (active == null) return false;
@@ -133,8 +134,36 @@ class AppShell extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
     final isOffline = ref.watch(isOfflineProvider);
-    // Очередь покупок: при выходе в онлайн — flush.
+    // Очередь покупок: при выходе в онлайн — flush + тосты результата.
     ref.watch(pendingPurchasesProvider);
+    ref.listen<PendingPurchaseFlushNotice?>(
+      pendingPurchaseFlushNoticeProvider,
+      (prev, next) {
+        if (next == null || next.isEmpty) return;
+        final l10n = context.l10n;
+        final lines = <String>[
+          for (final a in next.applied) l10n.shopPurchaseApplied(a.title),
+          for (final f in next.failed)
+            l10n.shopPurchaseRejected(
+              f.title,
+              (f.reason ?? '').trim().isEmpty
+                  ? l10n.commonGenericError
+                  : f.reason!.trim(),
+            ),
+        ];
+        final kind = next.failed.isEmpty
+            ? AppSnackKind.success
+            : (next.applied.isEmpty ? AppSnackKind.error : AppSnackKind.info);
+        showAppSnackBar(
+          context,
+          message: lines.join('\n'),
+          kind: kind,
+          duration: Duration(seconds: (4 + lines.length).clamp(4, 10)),
+        );
+        // Сбрасываем, чтобы то же событие не показалось повторно.
+        ref.read(pendingPurchaseFlushNoticeProvider.notifier).state = null;
+      },
+    );
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
     if (isAuthorized && !isOffline) {
       ref.watch(realtimeEventsProvider);
