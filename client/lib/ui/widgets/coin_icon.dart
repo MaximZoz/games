@@ -743,7 +743,7 @@ class _BalancePopupItem {
 
 /// Сумма монет: `5` + серебро + `4` + бронза (только ненулевые номиналы).
 ///
-/// При [perDay] бронза пишется как `63 (бр)`, а в конце — суффикс `/день`.
+/// При [perDay] в конце добавляется суффикс `/день` (иконки монет как обычно).
 class BalanceDisplay extends StatelessWidget {
   const BalanceDisplay({
     super.key,
@@ -769,7 +769,7 @@ class BalanceDisplay extends StatelessWidget {
   final FontWeight fontWeight;
   final String? prefix;
   final String? suffix;
-  /// Дневной доход: бронза как `(бр)`, суффикс `/день`.
+  /// Дневной доход: суффикс `/день` после иконок монет.
   final bool perDay;
   final bool animate;
   final Color color;
@@ -781,7 +781,6 @@ class BalanceDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
     final textStyle = TextStyle(
       fontSize: fontSize,
@@ -802,7 +801,7 @@ class BalanceDisplay extends StatelessWidget {
       ));
     }
 
-    void addIconCoin(CoinType type, BigInt value) {
+    void add(CoinType type, BigInt value) {
       if (value <= BigInt.zero && !forceShow.contains(type)) return;
       if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
       parts.add(Text(
@@ -822,54 +821,36 @@ class BalanceDisplay extends StatelessWidget {
       ));
     }
 
-    void addBronzeAbbr(BigInt value) {
-      if (value <= BigInt.zero && !forceShow.contains(CoinType.bronze)) return;
-      if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
-      parts.add(Text(
-        '${value.toInt()} (${l10n.balanceAbbrBronze})',
-        style: textStyle,
-        overflow: TextOverflow.clip,
-      ));
-    }
-
-    addIconCoin(CoinType.diamond, diamond);
-    addIconCoin(CoinType.gold, gold);
-    addIconCoin(CoinType.silver, silver);
-    if (perDay) {
-      addBronzeAbbr(bronzeRest);
-    } else {
-      addIconCoin(CoinType.bronze, bronzeRest);
-    }
+    add(CoinType.diamond, diamond);
+    add(CoinType.gold, gold);
+    add(CoinType.silver, silver);
+    add(CoinType.bronze, bronzeRest);
 
     if (parts.isEmpty || (prefix != null && parts.length == 1)) {
       if (prefix == null || prefix!.isEmpty) {
         parts.clear();
       }
-      if (perDay) {
-        addBronzeAbbr(BigInt.zero);
-      } else {
-        parts.add(Text(
-          '0',
-          style: textStyle,
-          overflow: TextOverflow.clip,
-        ));
-        parts.add(const SizedBox(width: 3));
-        parts.add(KeyedSubtree(
-          key: coinKeys?[CoinType.bronze],
-          child: CoinIcon(
-            coinType: CoinType.bronze,
-            size: coinSize,
-            showBorder: true,
-            animate: animate,
-          ),
-        ));
-      }
+      parts.add(Text(
+        '0',
+        style: textStyle,
+        overflow: TextOverflow.clip,
+      ));
+      parts.add(const SizedBox(width: 3));
+      parts.add(KeyedSubtree(
+        key: coinKeys?[CoinType.bronze],
+        child: CoinIcon(
+          coinType: CoinType.bronze,
+          size: coinSize,
+          showBorder: true,
+          animate: animate,
+        ),
+      ));
     }
 
     final effectiveSuffix =
-        suffix ?? (perDay ? balancePerDaySuffix(l10n) : null);
+        suffix ?? (perDay ? balancePerDaySuffix(context.l10n) : null);
     if (effectiveSuffix != null && effectiveSuffix.isNotEmpty) {
-      // «/день» без лишнего пробела: «63 (бр)/день».
+      // «/день» сразу после монеты: «63 🪙/день».
       final tight = effectiveSuffix.startsWith('/');
       if (!tight) parts.add(SizedBox(width: spacing));
       parts.add(Text(
