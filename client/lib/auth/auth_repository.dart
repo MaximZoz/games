@@ -328,9 +328,11 @@ class AuthRepository {
     String? redirect,
     String? ref,
     bool poll = false,
+    bool navigate = false,
   }) {
     final params = <String, String>{};
     if (poll) params['mode'] = 'poll';
+    if (navigate) params['navigate'] = '1';
     final r = (redirect ?? '').trim();
     if (r.isNotEmpty) params['redirect'] = r;
     final referral = (ref ?? '').trim();
@@ -375,15 +377,18 @@ class AuthRepository {
   /// Ждёт результат OAuth (после входа в popup/Safari).
   /// На iOS PWA JS может засыпать в фоне — при возврате опрашиваем сразу.
   Future<Map<String, String>> pollOAuthResult({
-    required String state,
+    String state = '',
     Duration timeout = const Duration(minutes: 5),
   }) async {
     await init();
     final deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {
+      final params = <String, String>{};
+      final s = state.trim();
+      if (s.isNotEmpty) params['state'] = s;
       final response = await ApiClient.get(
         Uri.parse('$apiBaseUrl/api/auth/oauth/poll').replace(
-          queryParameters: {'state': state},
+          queryParameters: params.isEmpty ? null : params,
         ),
         operation: 'AuthRepository.pollOAuthResult',
       );

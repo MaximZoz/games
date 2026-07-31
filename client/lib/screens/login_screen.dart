@@ -9,6 +9,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/widgets/native_web_button.dart';
 import 'package:multigames_client/widgets/oauth_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -240,31 +241,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         expanded: true,
                       ),
                       const SizedBox(height: 20),
-                      // Полный hit-target: иначе клик «проваливается» на Google ниже.
-                      SizedBox(
-                        height: 48,
-                        width: double.infinity,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => context.push(
-                              appendAuthQuery(
-                                '/register',
-                                redirect: _redirect,
-                                ref: _ref,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l10n.loginNoAccount,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                      // На web — нативный DOM hit-test (Flutter Material пересекается с Google).
+                      NativeWebTapTarget(
+                        label: l10n.loginNoAccount,
+                        onTap: () => context.push(
+                          appendAuthQuery(
+                            '/register',
+                            redirect: _redirect,
+                            ref: _ref,
                           ),
                         ),
                       ),

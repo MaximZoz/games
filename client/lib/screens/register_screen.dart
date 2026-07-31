@@ -10,6 +10,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/widgets/native_web_button.dart';
 import 'package:multigames_client/widgets/oauth_buttons.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -262,30 +263,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         expanded: true,
                       ),
                       const SizedBox(height: 20),
-                      SizedBox(
-                        height: 48,
-                        width: double.infinity,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => context.go(
-                              appendAuthQuery(
-                                '/login',
-                                redirect: _redirect,
-                                ref: _ref,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l10n.registerHaveAccount,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                      NativeWebTapTarget(
+                        label: l10n.registerHaveAccount,
+                        onTap: () => context.go(
+                          appendAuthQuery(
+                            '/login',
+                            redirect: _redirect,
+                            ref: _ref,
                           ),
                         ),
                       ),

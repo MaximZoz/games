@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,11 +7,14 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/widgets/native_web_button.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
 
 final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
   return ref.watch(authRepositoryProvider).fetchOAuthProviders();
 });
+
+const _cookiePendingSentinel = 'cookie';
 
 class OAuthButtons extends ConsumerStatefulWidget {
   const OAuthButtons({
@@ -30,6 +34,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     with WidgetsBindingObserver {
   String? _busyProvider;
   String? _pollingState;
+  bool _resuming = false;
 
   @override
   void initState() {
@@ -52,10 +57,31 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   }
 
   Future<void> _resumePending() async {
-    if (_busyProvider != null) return;
+    if (_busyProvider != null || _resuming) return;
+    final q = GoRouterState.of(context).uri.queryParameters;
+    final fromQuery = (q['state'] ?? '').trim();
+    final oauthQuery = q.containsKey('oauth');
     final pending = readOAuthPendingState();
-    if (pending == null || pending.isEmpty) return;
-    await _finishPoll(context, pending, providerLabel: 'google');
+    if (!oauthQuery &&
+        fromQuery.isEmpty &&
+        (pending == null || pending.isEmpty)) {
+      return;
+    }
+
+    String state = fromQuery;
+    if (state.isEmpty &&
+        pending != null &&
+        pending.isNotEmpty &&
+        pending != _cookiePendingSentinel) {
+      state = pending;
+    }
+
+    _resuming = true;
+    try {
+      await _finishPoll(context, state, providerLabel: 'google');
+    } finally {
+      _resuming = false;
+    }
   }
 
   @override
@@ -67,6 +93,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       data: (providers) {
         if (providers.isEmpty) return const SizedBox.shrink();
         final l10n = context.l10n;
+        final repo = ref.read(authRepositoryProvider);
         return Padding(
           padding: const EdgeInsets.only(top: 20),
           child: Column(
@@ -91,32 +118,50 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
               const SizedBox(height: 16),
               for (var i = 0; i < providers.length; i++) ...[
                 if (i > 0) const SizedBox(height: 10),
-                SizedBox(
-                  height: 48,
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                      maximumSize: const Size(double.infinity, 48),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                if (kIsWeb)
+                  NativeWebOutlinedLink(
+                    label: _busyProvider == providers[i]
+                        ? '…'
+                        : _label(l10n, providers[i]),
+                    href: repo.oauthStartUrl(
+                      provider: providers[i],
+                      redirect: widget.redirect,
+                      ref: widget.refCode,
+                      poll: true,
+                      navigate: true,
                     ),
-                    onPressed: _busyProvider != null
-                        ? null
-                        : () => _start(context, providers[i]),
-                    child: _busyProvider == providers[i]
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(_label(l10n, providers[i])),
+                    onBeforeNavigate: () {
+                      saveOAuthPendingState(_cookiePendingSentinel);
+                      setState(() => _busyProvider = providers[i]);
+                    },
+                  )
+                else
+                  SizedBox(
+                    height: 48,
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                        maximumSize: const Size(double.infinity, 48),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: _busyProvider != null
+                          ? null
+                          : () => _startNative(context, providers[i]),
+                      child: _busyProvider == providers[i]
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(_label(l10n, providers[i])),
+                    ),
                   ),
-                ),
               ],
             ],
           ),
@@ -140,43 +185,9 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  Future<void> _start(BuildContext context, String provider) async {
+  Future<void> _startNative(BuildContext context, String provider) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-
-    // iOS PWA: sync XHR + открытие без target=_blank (иначе in-app WebView).
-    if (isIosStandalonePwa) {
-      setState(() => _busyProvider = provider);
-      try {
-        final startUrl = ref.read(authRepositoryProvider).oauthStartUrl(
-              provider: provider,
-              redirect: widget.redirect,
-              ref: widget.refCode,
-              poll: true,
-            );
-        final started = fetchOAuthPollStartSync(startUrl);
-        if (started == null) {
-          throw AuthException(500, l10n.oauthError);
-        }
-        saveOAuthPendingState(started.state);
-        _pollingState = started.state;
-        openOAuthExternal(started.authorizeUrl);
-        if (!mounted) return;
-        await _finishPoll(context, started.state, providerLabel: provider);
-      } on AuthException catch (e) {
-        clearOAuthPendingState();
-        if (!mounted) return;
-        messenger.showSnackBar(SnackBar(content: Text(e.message)));
-      } catch (_) {
-        clearOAuthPendingState();
-        if (!mounted) return;
-        messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
-      } finally {
-        if (mounted) setState(() => _busyProvider = null);
-      }
-      return;
-    }
-
     final popup = openOAuthWindowBlank();
     setState(() => _busyProvider = provider);
     try {
@@ -189,7 +200,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       _pollingState = started.state;
       navigateOAuthWindow(popup, started.authorizeUrl);
       if (!mounted) return;
-      await _finishPoll(context, started.state, providerLabel: provider);
+      await _finishPoll(this.context, started.state, providerLabel: provider);
     } on AuthException catch (e) {
       closeOAuthWindow(popup);
       clearOAuthPendingState();
@@ -211,6 +222,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     required String providerLabel,
   }) async {
     if (_pollingState == state &&
+        state.isNotEmpty &&
         _busyProvider != null &&
         _busyProvider != providerLabel) {
       return;
@@ -218,6 +230,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    final redirect = widget.redirect;
     setState(() => _busyProvider ??= providerLabel);
     try {
       final result = await ref.read(authRepositoryProvider).pollOAuthResult(
@@ -238,7 +251,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
           );
       if (!mounted) return;
       final dest = safeAuthRedirect(result['redirect']) ??
-          safeAuthRedirect(widget.redirect) ??
+          safeAuthRedirect(redirect) ??
           '/games';
       router.go(dest);
     } on AuthException catch (e) {

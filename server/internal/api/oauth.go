@@ -309,7 +309,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		if state != "" {
 			h.OAuth.putResult(state, oauthResult{Error: "oauth denied: " + errMsg})
 		}
-		h.oauthDonePage(w, r, "oauth denied: "+errMsg)
+		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg)
 		return
 	}
 
@@ -325,7 +325,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	if code == "" {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth code required", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, "oauth code required")
+		h.oauthDonePage(w, r, state, "oauth code required")
 		return
 	}
 
@@ -333,7 +333,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] %s exchange failed: %v", provider, err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth exchange failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, "oauth exchange failed")
+		h.oauthDonePage(w, r, state, "oauth exchange failed")
 		return
 	}
 
@@ -356,7 +356,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] find/create user failed: %v", err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth user create failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, "oauth user create failed")
+		h.oauthDonePage(w, r, state, "oauth user create failed")
 		return
 	}
 	_ = created
@@ -364,7 +364,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	accessToken, refreshToken, _, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth session failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, "oauth session failed")
+		h.oauthDonePage(w, r, state, "oauth session failed")
 		return
 	}
 
@@ -373,11 +373,11 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 		Redirect:     st.Redirect,
 	})
-	// Страница «можно закрыть» — PWA забирает токены через /oauth/poll (localStorage Safari≠PWA).
-	h.oauthDonePage(w, r, "")
+	// PWA: oauth_done → /login?oauth=1&state=… → poll забирает токены.
+	h.oauthDonePage(w, r, state, "")
 }
 
-func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, errMsg string) {
+func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string) {
 	front := ""
 	if h.OAuth != nil {
 		front = strings.TrimRight(h.OAuth.FrontendURL, "/")
@@ -397,6 +397,9 @@ func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, errM
 	q := url.Values{}
 	if errMsg != "" {
 		q.Set("error", errMsg)
+	}
+	if s := strings.TrimSpace(state); s != "" {
+		q.Set("state", s)
 	}
 	dest := front + "/oauth_done.html"
 	if enc := q.Encode(); enc != "" {

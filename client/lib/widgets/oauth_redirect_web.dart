@@ -26,8 +26,9 @@ bool _isStandalone() {
   try {
     final nav = web.window.navigator as JSObject;
     final v = nav.getProperty('standalone'.toJS);
-    if (v != null && !v.isUndefined && !v.isNull && v.isA<JSBoolean>()) {
-      return (v as JSBoolean).toDart;
+    // iOS Safari: navigator.standalone === true в установленной PWA.
+    if (v != null && !v.isUndefined && !v.isNull) {
+      return v.dartify() == true;
     }
   } catch (_) {}
   return false;
@@ -76,41 +77,21 @@ void closeOAuthWindow(Object? handle) {
   }
 }
 
-/// iOS PWA: без target=_blank — иначе SFSafariViewController / in-app browser,
-/// где Google показывает белый экран. Cross-origin <a> отдаётся в Safari.
+/// Top-level навигация (без target=_blank) — в PWA остаётся Safari UA.
 void openOAuthExternal(String url) {
-  if (isIosStandalonePwa) {
+  try {
+    web.window.location.assign(url);
+  } catch (_) {
     try {
       final a = web.document.createElement('a') as web.HTMLAnchorElement;
       a.href = url;
       web.document.body?.appendChild(a);
       a.click();
       a.remove();
-      return;
     } catch (_) {}
-    try {
-      web.window.location.assign(url);
-    } catch (_) {}
-    return;
   }
-  try {
-    final a = web.document.createElement('a') as web.HTMLAnchorElement;
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    web.document.body?.appendChild(a);
-    a.click();
-    a.remove();
-    return;
-  } catch (_) {}
-  try {
-    web.window.open(url, '_blank');
-    return;
-  } catch (_) {}
-  web.window.location.assign(url);
 }
 
-/// Синхронный XHR в обработчике тапа — сохраняет user activation для открытия Safari.
 ({String authorizeUrl, String state})? fetchOAuthPollStartSync(String url) {
   try {
     final xhr = web.XMLHttpRequest();
