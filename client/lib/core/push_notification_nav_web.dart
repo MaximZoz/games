@@ -107,9 +107,11 @@ void reportPushSwActiveRoute(String path) {
 
 void _startHeartbeat() {
   _heartbeatTimer?.cancel();
-  _heartbeatTimer = Timer.periodic(const Duration(seconds: 8), (_) {
-    if (_lastReportedPath.isEmpty) return;
-    reportPushSwActiveRoute(_lastReportedPath);
+  // Чаще пингуем SW: между push Safari поднимает «чистый» worker.
+  _heartbeatTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+    reportPushSwActiveRoute(
+      _lastReportedPath.isEmpty ? '/' : _lastReportedPath,
+    );
   });
 }
 
@@ -208,6 +210,8 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
   } catch (_) {}
 
   _startHeartbeat();
+  // Сразу пометить PWA как foreground — до первого кадра AppShell.
+  reportPushSwActiveRoute('/');
 
   // Холодный старт / уже открытое приложение после клика по пушу.
   _consumePendingIfAny();

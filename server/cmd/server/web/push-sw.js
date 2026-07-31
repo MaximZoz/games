@@ -1,17 +1,20 @@
 /* Web Push service worker for Zozu Games PWA.
- * v9: в foreground (heartbeat Flutter) глушим ВСЕ пуши — не только тот же чат.
- *     На Safari PWA client.focused часто false при открытом приложении.
- * v8: глушим пуш, если Flutter сообщает что открыт тот же чат/матч.
- * v7: clear_all_notifications при logout (снять баннеры + pending).
- * v6: при клике / открытии из пуша снимаем уведомление из шторки (iOS).
- * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
+ * v10: viewer в Cache (SW убивается между push — память пустая);
+ *      visible client = приложение открыто (Safari focused часто false).
+ * v9: в foreground глушим ВСЕ пуши.
+ * v8: глушим пуш, если открыт тот же чат/матч.
+ * v7: clear_all_notifications при logout.
+ * v6: при клике снимаем уведомление из шторки (iOS).
+ * v5: системный пуш только когда PWA не в фокусе.
  */
 /* eslint-disable no-undef */
 
 const PENDING_CACHE = 'zozu-push-pending-v1';
 const PENDING_KEY = '/__pending_nav';
+const VIEWER_CACHE = 'zozu-push-viewer-v1';
+const VIEWER_KEY = '/__viewer';
 /** Пока Flutter шлёт heartbeat — считаем экран «смотрит» приложение. */
-const VIEWER_TTL_MS = 25000;
+const VIEWER_TTL_MS = 45000;
 
 /** Состояние экрана из Flutter (надёжнее client.focused на iOS). */
 let viewer = {
@@ -19,6 +22,31 @@ let viewer = {
   foreground: false,
   at: 0,
 };
+
+async function saveViewerState(state) {
+  try {
+    const cache = await caches.open(VIEWER_CACHE);
+    await cache.put(
+      VIEWER_KEY,
+      new Response(JSON.stringify(state), {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+  } catch (err) {
+    console.warn('[push-sw] saveViewerState failed', err);
+  }
+}
+
+async function loadViewerState() {
+  try {
+    const cache = await caches.open(VIEWER_CACHE);
+    const res = await cache.match(VIEWER_KEY);
+    if (!res) return null;
+    return await res.json();
+  } catch (_) {
+    return null;
+  }
+}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -178,19 +206,16 @@ async function closeShownNotifications({ tag, path } = {}) {
  * На iOS при сворачивании visibility часто остаётся visible, а focused=false —
  * поэтому для подавления пуша требуем focused === true.
  */
-function clientIsFocusedForeground(client) {
+function clientLooksOpen(client) {
   if (!client) return false;
-  if (client.visibilityState && client.visibilityState !== 'visible') {
-    return false;
-  }
-  if ('focused' in client) {
-    return client.focused === true;
-  }
-  // Старые движки без focused: ориентируемся только на visibility.
-  return client.visibilityState === 'visible';
+  // Safari PWA: при открытом приложении focused часто false, а
+  // visibilityState === 'visible' — надёжный сигнал «пользователь внутри».
+  if (client.visibilityState === 'visible') return true;
+  if ('focused' in client && client.focused === true) return true;
+  return false;
 }
 
-async function isPwaFocusedForeground() {
+async function isPwaWindowOpen() {
   const clientsList = await self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
@@ -203,48 +228,29 @@ async function isPwaFocusedForeground() {
       continue;
     }
     if (!sameOrigin) continue;
-    if (clientIsFocusedForeground(client)) return true;
+    if (clientLooksOpen(client)) return true;
   }
   return false;
 }
 
-function isViewerReportedlyForeground() {
-  if (!viewer.foreground) return false;
-  return Date.now() - viewer.at < VIEWER_TTL_MS;
+function viewerStateIsFreshForeground(state) {
+  if (!state || state.foreground !== true) return false;
+  const at = typeof state.at === 'number' ? state.at : 0;
+  return Date.now() - at < VIEWER_TTL_MS;
 }
 
-/**
- * Пуш про тот же экран, который сейчас открыт (чат / матч / лобби).
- * Другие чаты/игры — не глушим.
- */
-function pathsMatchForSuppress(activePath, notifPath) {
-  const a = stripQueryHash(activePath);
-  const n = stripQueryHash(notifPath);
-  if (!a || !n || a === '/' || n === '/') return false;
-  if (a === n) return true;
-
-  const chatA = a.match(/^\/chats\/([^/]+)/);
-  const chatN = n.match(/^\/chats\/([^/]+)/);
-  if (chatA && chatN) return chatA[1] === chatN[1];
-
-  const gameA = a.match(/^\/games\/tictactoe\/game\/([^/]+)/);
-  const gameN = n.match(/^\/games\/tictactoe\/game\/([^/]+)/);
-  if (gameA && gameN) return gameA[1] === gameN[1];
-
-  const lobbyA = a.match(/^\/games\/tictactoe\/lobby\/([^/]+)/);
-  const lobbyN = n.match(/^\/games\/tictactoe\/lobby\/([^/]+)/);
-  if (lobbyA && lobbyN) return lobbyA[1] === lobbyN[1];
-
-  return false;
+async function isViewerReportedlyForeground() {
+  if (viewerStateIsFreshForeground(viewer)) return true;
+  // SW часто убивают между heartbeat и push — читаем Cache.
+  const saved = await loadViewerState();
+  return viewerStateIsFreshForeground(saved);
 }
 
-async function shouldSuppressPush(notifPath) {
-  // Классика: окно в фокусе (Desktop / когда iOS правильно отдаёт focused).
-  if (await isPwaFocusedForeground()) return true;
-  // Safari PWA: focused часто false при открытом приложении — доверяем
-  // heartbeat из Flutter (visibility + active_route). Пока PWA на экране
-  // не показываем системные баннеры вообще.
-  if (isViewerReportedlyForeground()) return true;
+async function shouldSuppressPush(_notifPath) {
+  // 1) Есть видимое окно PWA — пользователь в приложении.
+  if (await isPwaWindowOpen()) return true;
+  // 2) Flutter недавно подтвердил foreground (Cache + память).
+  if (await isViewerReportedlyForeground()) return true;
   return false;
 }
 
@@ -374,12 +380,17 @@ self.addEventListener('message', (event) => {
 
   if (data.type === 'active_route') {
     const path = data.path != null ? String(data.path) : '';
-    const foreground = data.foreground === true;
+    // jsify/structured clone: true | 'true' | 1
+    const foreground =
+      data.foreground === true ||
+      data.foreground === 'true' ||
+      data.foreground === 1;
     viewer = {
       path: path,
       foreground: foreground,
       at: Date.now(),
     };
+    event.waitUntil(saveViewerState(viewer));
     return;
   }
 
