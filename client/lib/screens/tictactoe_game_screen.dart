@@ -950,10 +950,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           result.gameId!.isNotEmpty) {
         setState(() => _isRematching = false);
         final gameId = result.gameId!;
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'game', gameId: gameId),
+            );
         ref.invalidate(gameStateProvider(gameId));
         if (!context.mounted) return;
         context.go('/games/tictactoe/game/$gameId');
       } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
+            );
         setState(() {
           _rematchLobbyId = result.lobbyId;
           _rematchDeclined = false;
@@ -1037,8 +1043,18 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
       if (result.matched && result.gameId != null) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: result.gameId,
+                lobbyId: result.lobbyId,
+              ),
+            );
         context.go('/games/tictactoe/game/${result.gameId}');
       } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
+            );
         context.go(
           '/games/tictactoe/lobby/${result.lobbyId}?mode=matchmake',
         );

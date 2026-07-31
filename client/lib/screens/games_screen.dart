@@ -255,8 +255,21 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: result.gameId,
+                lobbyId: result.lobbyId,
+              ),
+            );
         context.push('/games/tictactoe/game/${result.gameId}');
       } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: result.lobbyId,
+              ),
+            );
         context.push(
           '/games/tictactoe/lobby/${result.lobbyId}?mode=$mode',
         );

@@ -26,6 +26,17 @@ import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
+bool _activeGameUsable(ActiveGameItem? active) {
+  if (active == null) return false;
+  if (active.type == 'game') {
+    return active.gameId != null && active.gameId!.trim().isNotEmpty;
+  }
+  if (active.type == 'lobby') {
+    return active.lobbyId != null && active.lobbyId!.trim().isNotEmpty;
+  }
+  return false;
+}
+
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
   if (active != null &&
@@ -239,17 +250,33 @@ class AppShell extends ConsumerWidget {
       // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
         final currentPath = path;
+        final activeNotifier = ref.read(activeGameProvider.notifier);
+        final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
+        final cacheUsable = _activeGameUsable(cachedActive);
         Router.neglect(context, () {
           _goGamesTab(context, currentPath, cachedActive);
         });
-        // Фон: обновить active/чаты для бейджей. Без повторного go —
-        // иначе гонка с мгновенным leave из лобби.
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        // Если кэш был пуст (создали лобби и ушли в чаты) — после refresh
+        // увести в «Своя игра». Epoch отсекает гонку с leaveLobby.
         unawaited(() async {
           try {
             ref.invalidate(activeGameProvider);
-            await ref.read(activeGameProvider.future);
+            final fresh = await ref.read(activeGameProvider.future);
+            if (!context.mounted) return;
+            if (ref.read(activeGameProvider.notifier).epoch != epochAtTap) {
+              return;
+            }
+            if (cacheUsable || fresh == null || !_activeGameUsable(fresh)) {
+              return;
+            }
+            final nowPath =
+                GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+            if (nowPath != '/games') return;
+            Router.neglect(context, () {
+              _goGamesTab(context, nowPath, fresh);
+            });
           } catch (_) {}
         }());
         return;

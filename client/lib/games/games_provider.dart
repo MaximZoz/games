@@ -191,6 +191,11 @@ final activeGameProvider =
         ActiveGameNotifier.new);
 
 class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
+  /// Растёт при [clearLocal] — чтобы фоновый resume после тапа «Игры»
+  /// не вернул в лобби сразу после выхода.
+  int _epoch = 0;
+  int get epoch => _epoch;
+
   @override
   Future<ActiveGameItem?> build() async {
     ref.listen(
@@ -219,7 +224,13 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
 
   /// Мгновенно сбросить локально (выход из лобби без ожидания сети).
   void clearLocal() {
+    _epoch++;
     state = const AsyncValue.data(null);
+  }
+
+  /// Сразу после createLobby — чтобы таб «Игры» открывал «Своя игра».
+  void setLocal(ActiveGameItem item) {
+    state = AsyncValue.data(item);
   }
 }
 
