@@ -478,6 +478,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameLeave => '나가기';
 
   @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
   String get gameConnecting => '게임에 연결 중…';
 
   @override

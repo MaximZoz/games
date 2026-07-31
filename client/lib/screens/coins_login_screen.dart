@@ -46,6 +46,15 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
     });
 
     try {
+      final expectedTo = fromBalance + (expectedReward > 0 ? expectedReward : 0);
+      if (expectedReward > 0) {
+        lockBalanceDisplay(
+          ref: ref,
+          fromBronze: fromBalance,
+          toBronze: expectedTo,
+          rewardBronze: expectedReward,
+        );
+      }
       final result =
           await ref.read(authStateProvider.notifier).claimDailyReward();
       if (!mounted) return;
@@ -71,9 +80,14 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
             sourceKey: _claimSourceKey,
             skipApply: true,
           );
+        } else {
+          ref.read(balanceGainProvider.notifier).end();
         }
+      } else {
+        ref.read(balanceGainProvider.notifier).end();
       }
     } catch (_) {
+      ref.read(balanceGainProvider.notifier).end();
       if (!mounted) return;
       setState(() => _optimisticStatus = previous);
     } finally {

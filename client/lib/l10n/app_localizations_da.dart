@@ -478,6 +478,15 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gameLeave => 'Forlad';
 
   @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
   String get gameConnecting => 'Forbinder til spillet…';
 
   @override

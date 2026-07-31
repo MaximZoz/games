@@ -478,6 +478,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameLeave => 'Leave';
 
   @override
+  String get gameSurrender => 'Surrender';
+
+  @override
+  String get gameSurrenderTitle => 'Surrender?';
+
+  @override
+  String get gameSurrenderConfirm => 'If you surrender, you will lose. Surrender?';
+
+  @override
   String get gameConnecting => 'Connecting to game…';
 
   @override

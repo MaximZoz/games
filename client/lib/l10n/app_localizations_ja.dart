@@ -478,6 +478,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameLeave => '退出';
 
   @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
   String get gameConnecting => 'ゲームに接続中…';
 
   @override

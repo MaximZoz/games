@@ -108,9 +108,29 @@ Rect? globalRectOfKey(GlobalKey? key) {
 
 Offset _centerOf(Rect rect) => rect.center;
 
+/// Зафиксировать отображаемый баланс до обновления auth, чтобы не было скачка.
+void lockBalanceDisplay({
+  required WidgetRef ref,
+  required int fromBronze,
+  required int toBronze,
+  int? rewardBronze,
+}) {
+  final delta = rewardBronze ?? (toBronze - fromBronze);
+  final flyType = rewardCoinType(delta > 0 ? delta : 1);
+  ref.read(balanceGainProvider.notifier).begin(
+        fromBronze: fromBronze,
+        forceShow: {
+          ...emergingDenominations(fromBronze, toBronze),
+          if (delta > 0 && denominationOf(flyType, fromBronze) == BigInt.zero)
+            flyType,
+        },
+      );
+}
+
 /// Анимация пополнения: полёт монеты из карточки в тулбар + счётчик баланса.
 ///
 /// [skipApply] — если баланс уже обновлён (например, после `refresh()`).
+/// Перед [skipApply]/вызовами с обновлением auth вызовите [lockBalanceDisplay].
 Future<void> playBalanceGain({
   required WidgetRef ref,
   required BuildContext context,
@@ -131,6 +151,7 @@ Future<void> playBalanceGain({
         user.balanceBronze;
     final to = newBalanceBronze;
     if (to <= from) {
+      controller.end();
       if (!skipApply) {
         await ref.read(authStateProvider.notifier).applyBalance(to);
       }
@@ -144,6 +165,8 @@ Future<void> playBalanceGain({
       if (denominationOf(flyType, from) == BigInt.zero) flyType,
     };
 
+    // Всегда держим тулбар на [from], пока не дорисуем счётчик —
+    // даже если auth уже обновлён.
     controller.begin(fromBronze: from, forceShow: forceShow);
 
     if (!skipApply) {

@@ -478,6 +478,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get gameLeave => 'Keluar';
 
   @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
   String get gameConnecting => 'Menghubungkan ke game…';
 
   @override

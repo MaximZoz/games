@@ -478,6 +478,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameLeave => '离开';
 
   @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
   String get gameConnecting => '正在连接对局…';
 
   @override

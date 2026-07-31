@@ -1067,6 +1067,24 @@ abstract class AppLocalizations {
   /// **'Выйти'**
   String get gameLeave;
 
+  /// No description provided for @gameSurrender.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдаться'**
+  String get gameSurrender;
+
+  /// No description provided for @gameSurrenderTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдаться?'**
+  String get gameSurrenderTitle;
+
+  /// No description provided for @gameSurrenderConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если вы сдадитесь, вы проиграете. Сдаться?'**
+  String get gameSurrenderConfirm;
+
   /// No description provided for @gameConnecting.
   ///
   /// In ru, this message translates to:

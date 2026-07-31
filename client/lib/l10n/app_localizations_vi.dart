@@ -478,6 +478,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameLeave => 'Rời';
 
   @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
   String get gameConnecting => 'Đang kết nối trận…';
 
   @override
