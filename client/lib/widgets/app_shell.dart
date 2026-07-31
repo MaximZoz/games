@@ -612,7 +612,7 @@ class AppShell extends ConsumerWidget {
                     children: [
                       MediaQuery.withNoTextScaling(
                         child: _MobileBottomNav(
-                          key: ValueKey('mobile-bottom-nav-$isOffline'),
+                          key: const ValueKey('mobile-bottom-nav'),
                           selectedIndex: selectedIndex,
                           onTap: navigateWithPrefetch,
                           offline: isOffline,
