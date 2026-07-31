@@ -57,7 +57,7 @@ function pathFromTag(tag) {
     const id = t.slice('chat_'.length);
     return id ? `/chats/${id}` : '/chats';
   }
-  if (t === 'friend_request') return '/friends';
+  if (t === 'friend_request') return '/friends?tab=incoming';
   if (t.startsWith('game_invite_')) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';

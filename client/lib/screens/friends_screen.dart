@@ -70,12 +70,38 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   int _incomingVisibleCount = _pageSize;
   int _outgoingVisibleCount = _pageSize;
 
+  /// Deep-link `/friends?tab=incoming` (пуш / бейдж) — применить один раз.
+  bool _deepLinkIncomingApplied = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _currentTabs.length, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchFocusNode.addListener(_onSearchFocusChanged);
+  }
+
+  void _applyIncomingDeepLinkIfNeeded() {
+    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
+    if (tab != 'incoming') {
+      _deepLinkIncomingApplied = false;
+      return;
+    }
+    if (_deepLinkIncomingApplied) return;
+    final index = _currentTabs.indexOf(_FriendsTabKind.incoming);
+    if (index < 0 || index >= _tabController.length) return;
+    _deepLinkIncomingApplied = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (index < _tabController.length && _tabController.index != index) {
+        _tabController.index = index;
+      }
+      // Убрать query, чтобы повторный build не дёргал таб.
+      final uri = GoRouterState.of(context).uri;
+      if (uri.path == '/friends' && uri.queryParameters['tab'] == 'incoming') {
+        context.go('/friends');
+      }
+    });
   }
 
   void _onTabChanged() {
@@ -1995,6 +2021,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         _tabController.length != tabs.length) {
       _syncTabController(tabs);
     }
+    _applyIncomingDeepLinkIfNeeded();
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
     final path = ref.watch(currentRoutePathProvider);

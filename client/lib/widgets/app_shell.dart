@@ -217,8 +217,21 @@ class AppShell extends ConsumerWidget {
         ref.read(profileExitEditTickProvider.notifier).state++;
       }
 
-      // «Друзья» → корень вкладки + сброс поиска / таб «Друзья».
+      // «Друзья»: при входящих заявках с другой вкладки — сразу «Входящие».
       if (target == '/friends') {
+        final incoming = ref.read(friendsIncomingCountProvider);
+        final alreadyOnFriends = i == navigationShell.currentIndex;
+        if (!alreadyOnFriends && incoming > 0) {
+          Router.neglect(context, () {
+            context.go('/friends?tab=incoming');
+          });
+          unawaited(
+            ref
+                .read(friendsSnapshotProvider.future)
+                .then((_) {}, onError: (_, __) {}),
+          );
+          return;
+        }
         ref.read(friendsNavTapTickProvider.notifier).state++;
       }
 
