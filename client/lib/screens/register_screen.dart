@@ -10,6 +10,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/widgets/oauth_buttons.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -89,6 +90,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ref: _ref,
           );
       if (mounted) context.go(_redirect ?? '/games');
+    } on EmailVerificationRequiredException catch (e) {
+      if (mounted) {
+        final email = e.email.isNotEmpty
+            ? e.email
+            : _emailController.text.trim().toLowerCase();
+        context.go(
+          appendAuthQuery(
+            '/verify-email',
+            redirect: _redirect,
+            ref: _ref,
+            email: email,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -246,8 +261,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         isLoading: _isLoading,
                         expanded: true,
                       ),
-                      const SizedBox(height: 16),
                       TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
                         onPressed: () => context.go(
                           appendAuthQuery(
                             '/login',
@@ -257,6 +278,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         child: Text(l10n.registerHaveAccount),
                       ),
+                      OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],
                   ),
                 ),

@@ -882,5 +882,75 @@
     }
   },
   "chatReplySelf": "себе",
-  "chatReplyPeer": "собеседнику"
+  "chatReplyPeer": "собеседнику",
+  "verifyEmailTitle": "Подтверждение email",
+  "verifyEmailSubtitle": "Мы отправили код на {email}",
+  "@verifyEmailSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailCodeLabel": "Код из письма",
+  "verifyEmailCodeRequired": "Введите код",
+  "verifyEmailSubmit": "Подтвердить",
+  "verifyEmailResend": "Отправить код ещё раз",
+  "verifyEmailResent": "Новый код отправлен",
+  "oauthOrContinue": "или войти через",
+  "oauthGoogle": "Google",
+  "oauthApple": "Apple",
+  "oauthYandex": "Яндекс",
+  "oauthVK": "VK",
+  "oauthError": "Не удалось войти через сервис",
+  "oauthCallbackTitle": "Вход…",
+  "verifyEmailResendIn": "Отправить код ещё раз через {time}",
+  "@verifyEmailResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailDevCodeHint": "Почта ещё не настроена на сервере. Код для входа: {code}",
+  "@verifyEmailDevCodeHint": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "loginForgotPassword": "Забыли пароль?",
+  "forgotPasswordTitle": "Сброс пароля",
+  "forgotPasswordSubtitle": "Введите email или логин — пришлём код на почту аккаунта",
+  "forgotPasswordSubmit": "Отправить код",
+  "forgotPasswordSent": "Если аккаунт существует, код отправлен на почту",
+  "resetPasswordTitle": "Новый пароль",
+  "resetPasswordSubtitle": "Код отправлен на {email}",
+  "@resetPasswordSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordCodeLabel": "Код из письма",
+  "resetPasswordCodeRequired": "Введите код",
+  "resetPasswordNewLabel": "Новый пароль",
+  "resetPasswordNewRequired": "Введите новый пароль",
+  "resetPasswordNewShort": "Минимум 6 символов",
+  "resetPasswordConfirmLabel": "Повторите пароль",
+  "resetPasswordConfirmMismatch": "Пароли не совпадают",
+  "resetPasswordSubmit": "Сохранить пароль",
+  "resetPasswordResend": "Отправить код ещё раз",
+  "resetPasswordResent": "Новый код отправлен",
+  "resetPasswordResendIn": "Отправить код ещё раз через {time}",
+  "@resetPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordBackToLogin": "Вернуться ко входу"
 }

@@ -17,15 +17,21 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- interactive-widget=resizes-content: меньше рассинхрона hit-test при клавиатуре (Chrome/Android). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Zozu Games — online mini-games">
 
   <!-- iOS meta tags & icons (PWA / Web Push: нужна установка на «Домой») -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <!-- black-translucent: контент под status bar; фон body совпадает с панелью -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!--
+    ВАЖНО: не black-translucent.
+    На iOS PWA translucent даёт укороченный layout viewport и сдвиг hit-test
+    («кнопки жмутся сверху», пока не ткнёшь в TextField).
+    Meta читается при Add to Home Screen — после смены удалите иконку и добавьте снова.
+  -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Zozu Games">
   <meta name="theme-color" content="#E8ECF4">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -43,17 +49,21 @@
       margin: 0;
       padding: 0;
       width: 100%;
+      /* 100% + black-translucent ломали viewport; 100dvh — реальная высота экрана */
       height: 100%;
+      height: 100dvh;
+      min-height: 100%;
+      min-height: -webkit-fill-available;
       overflow: hidden;
       overflow-x: hidden;
       overscroll-behavior: none;
       overscroll-behavior-x: none;
-      /* После splash — цвет шапки/низа приложения */
       background-color: #E8ECF4;
     }
     body {
       background-color: #E8ECF4;
       touch-action: pan-y;
+      position: relative;
     }
     flt-glass-pane, flutter-view, flt-scene-host {
       display: block;
@@ -185,6 +195,111 @@
     }
   </script>
   <script>
+    // Google Identity Services — вход в той же вкладке (One Tap / FedCM), без popup/Safari.
+    window.__mgGoogleSignIn = function (clientId) {
+      return new Promise(function (resolve, reject) {
+        var settled = false;
+        function cleanup() {
+          var el = document.getElementById('mg-gsi-host');
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+        function ok(cred) {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve(cred);
+        }
+        function fail(msg) {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(new Error(msg || 'google sign-in failed'));
+        }
+        function onCred(resp) {
+          if (resp && resp.credential) ok(resp.credential);
+          else fail('no credential');
+        }
+        // Запасной путь: официальная кнопка Google в странице (не модалка и не новое окно).
+        function showInlineButton() {
+          if (settled || document.getElementById('mg-gsi-host')) return;
+          var host = document.createElement('div');
+          host.id = 'mg-gsi-host';
+          host.style.cssText =
+            'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2147483646;' +
+            'display:flex;flex-direction:column;align-items:center;gap:8px;';
+          var btnWrap = document.createElement('div');
+          btnWrap.id = 'mg-gsi-btn';
+          var cancel = document.createElement('button');
+          cancel.type = 'button';
+          cancel.textContent = 'Отмена';
+          cancel.style.cssText =
+            'border:0;background:transparent;color:#555;font:500 13px system-ui,-apple-system,sans-serif;cursor:pointer';
+          cancel.onclick = function () { fail('cancelled'); };
+          host.appendChild(btnWrap);
+          host.appendChild(cancel);
+          document.body.appendChild(host);
+          try {
+            google.accounts.id.renderButton(btnWrap, {
+              theme: 'outline',
+              size: 'large',
+              shape: 'rectangular',
+              text: 'signin_with',
+              width: 280,
+              locale: 'ru'
+            });
+          } catch (e) {
+            fail(String(e));
+          }
+        }
+        function start() {
+          try {
+            google.accounts.id.initialize({
+              client_id: clientId,
+              callback: onCred,
+              auto_select: true,
+              cancel_on_tap_outside: true,
+              use_fedcm_for_prompt: true,
+              itp_support: true
+            });
+            google.accounts.id.prompt(function (notification) {
+              try {
+                if (notification.isDismissedMoment && notification.isDismissedMoment()) {
+                  var reason = '';
+                  try { reason = notification.getDismissedReason() || ''; } catch (e) {}
+                  if (reason === 'credential_returned') return;
+                  fail('cancelled');
+                  return;
+                }
+                if (
+                  (notification.isNotDisplayed && notification.isNotDisplayed()) ||
+                  (notification.isSkippedMoment && notification.isSkippedMoment())
+                ) {
+                  showInlineButton();
+                }
+              } catch (e) {
+                showInlineButton();
+              }
+            });
+          } catch (e) {
+            fail(String(e));
+          }
+        }
+        if (window.google && google.accounts && google.accounts.id) {
+          start();
+          return;
+        }
+        var s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.onload = start;
+        s.onerror = function () {
+          fail('gsi load failed');
+        };
+        document.head.appendChild(s);
+      });
+    };
+  </script>
+  <script>
     (function () {
       function hideBoot() {
         var el = document.getElementById('zozu-boot');
@@ -198,6 +313,46 @@
       window.addEventListener('flutter-first-frame', hideBoot, { once: true });
       // Fallback if the event is missed (old embed / race).
       setTimeout(hideBoot, 8000);
+
+      // iOS PWA/Safari: visualViewport.offsetTop ≠ 0 → Flutter рисует ниже,
+      // а hit-test остаётся выше («кнопки жмутся сверху»). Фокус в input
+      // случайно чинит это через resize — делаем то же явно.
+      function syncIosViewport() {
+        try {
+          if (window.scrollX !== 0 || window.scrollY !== 0) {
+            window.scrollTo(0, 0);
+          }
+          var vv = window.visualViewport;
+          if (vv && (vv.offsetTop !== 0 || vv.pageTop !== 0)) {
+            window.scrollTo(0, 0);
+          }
+          window.dispatchEvent(new Event('resize'));
+        } catch (e) {}
+      }
+      window.addEventListener('load', syncIosViewport);
+      window.addEventListener('pageshow', syncIosViewport);
+      window.addEventListener('orientationchange', function () {
+        setTimeout(syncIosViewport, 50);
+        setTimeout(syncIosViewport, 300);
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') syncIosViewport();
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncIosViewport);
+        window.visualViewport.addEventListener('scroll', syncIosViewport);
+      }
+      window.addEventListener('flutter-first-frame', function () {
+        syncIosViewport();
+        setTimeout(syncIosViewport, 50);
+        setTimeout(syncIosViewport, 250);
+        setTimeout(syncIosViewport, 800);
+      });
+      // Перед первым жестом — ещё один sync (если PWA открыли «криво»).
+      document.addEventListener('touchstart', function onFirstTouch() {
+        syncIosViewport();
+        document.removeEventListener('touchstart', onFirstTouch, true);
+      }, { capture: true, passive: true });
 
       let startX = 0;
       let startY = 0;

@@ -10,7 +10,15 @@ String? safeAuthRedirect(String? raw) {
   if (value == '/login' ||
       value.startsWith('/login?') ||
       value == '/register' ||
-      value.startsWith('/register?')) {
+      value.startsWith('/register?') ||
+      value == '/verify-email' ||
+      value.startsWith('/verify-email?') ||
+      value == '/forgot-password' ||
+      value.startsWith('/forgot-password?') ||
+      value == '/reset-password' ||
+      value.startsWith('/reset-password?') ||
+      value == '/oauth/callback' ||
+      value.startsWith('/oauth/callback?')) {
     return null;
   }
   return value;
@@ -26,12 +34,15 @@ String appendAuthQuery(
   String path, {
   String? redirect,
   String? ref,
+  String? email,
 }) {
   final params = <String, String>{};
   final safe = safeAuthRedirect(redirect);
   if (safe != null) params['redirect'] = safe;
   final referral = (ref ?? '').trim();
   if (referral.isNotEmpty) params['ref'] = referral;
+  final mail = (email ?? '').trim();
+  if (mail.isNotEmpty) params['email'] = mail;
   if (params.isEmpty) return path;
   return Uri(path: path, queryParameters: params).toString();
 }

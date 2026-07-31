@@ -9,6 +9,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/widgets/oauth_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -76,6 +77,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
       if (mounted) context.go(_redirect ?? '/games');
+    } on EmailVerificationRequiredException catch (e) {
+      if (mounted) {
+        final email = e.email.isNotEmpty
+            ? e.email
+            : _emailController.text.trim().toLowerCase();
+        context.go(
+          appendAuthQuery(
+            '/verify-email',
+            redirect: _redirect,
+            ref: _ref,
+            email: email,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -193,22 +208,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           return null;
                         },
                       ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          onPressed: () => context.push(
+                            appendAuthQuery(
+                              '/forgot-password',
+                              redirect: _redirect,
+                              email: _emailController.text.trim(),
+                            ),
+                          ),
+                          child: Text(l10n.loginForgotPassword),
+                        ),
+                      ),
                       if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         MessageBanner(
                           message: _errorMessage!,
                           type: BannerType.error,
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       AppButton(
                         onPressed: _submit,
                         label: l10n.loginSubmit,
                         isLoading: _isLoading,
                         expanded: true,
                       ),
-                      const SizedBox(height: 16),
                       TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
                         onPressed: () => context.push(
                           appendAuthQuery(
                             '/register',
@@ -218,6 +256,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         child: Text(l10n.loginNoAccount),
                       ),
+                      OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],
                   ),
                 ),

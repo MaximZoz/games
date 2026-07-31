@@ -21,6 +21,7 @@ class AuthUser {
   final String avatarKind;
   final String? avatarValue;
   final int balanceBronze;
+  final bool emailVerified;
 
   AuthUser({
     required this.id,
@@ -33,6 +34,7 @@ class AuthUser {
     this.avatarKind = 'letter',
     this.avatarValue,
     this.balanceBronze = 0,
+    this.emailVerified = true,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,7 @@ class AuthUser {
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
       balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
+      emailVerified: json['email_verified'] as bool? ?? true,
     );
   }
 
@@ -61,6 +64,7 @@ class AuthUser {
         'avatar_kind': avatarKind,
         'avatar_value': avatarValue,
         'balance_bronze': balanceBronze,
+        'email_verified': emailVerified,
       };
 }
 
@@ -192,6 +196,7 @@ class AuthRepository {
       }),
       operation: 'AuthRepository.register',
     );
+    _throwIfVerificationRequired(response);
     return _handleAuthResponse(response);
   }
 
@@ -210,7 +215,284 @@ class AuthRepository {
       }),
       operation: 'AuthRepository.login',
     );
+    _throwIfVerificationRequired(response);
     return _handleAuthResponse(response);
+  }
+
+  Future<AuthResult> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/verify-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim().toLowerCase(),
+        'code': code.trim(),
+      }),
+      operation: 'AuthRepository.verifyEmail',
+    );
+    return _handleAuthResponse(response);
+  }
+
+  Future<void> resendVerification({required String email}) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/resend-verification'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email.trim().toLowerCase()}),
+      operation: 'AuthRepository.resendVerification',
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(response.statusCode, _messageFromResponse(response));
+    }
+  }
+
+  /// Запрос кода сброса. [login] — email или логин.
+  /// Возвращает email, на который ушёл код (для логина — привязанный email).
+  Future<String> forgotPassword({required String login}) async {
+    await init();
+    final identifier = login.trim();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      // Не lower-case: логин case-sensitive (display_name).
+      body: jsonEncode({'email': identifier}),
+      operation: 'AuthRepository.forgotPassword',
+    );
+    if (response.statusCode != 200) {
+      final raw = _messageFromResponse(response);
+      if (response.statusCode == 404 ||
+          raw.toLowerCase().contains('user not found')) {
+        throw AuthException(404, LocaleService.l10n.commonUserNotFound);
+      }
+      throw AuthException(response.statusCode, raw);
+    }
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        final email = (body['email'] ?? '').toString().trim();
+        if (email.isNotEmpty) return email;
+      }
+    } catch (_) {}
+    return identifier;
+  }
+
+  Future<AuthResult> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await init();
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim().toLowerCase(),
+        'code': code.trim(),
+        'new_password': newPassword,
+      }),
+      operation: 'AuthRepository.resetPassword',
+    );
+    return _handleAuthResponse(response);
+  }
+
+  Future<AuthResult> applySessionTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await init();
+    _memoryAccessToken = accessToken;
+    _memoryRefreshToken = refreshToken;
+    final user = await fetchCurrentUser();
+    if (user == null) {
+      await logout();
+      throw AuthException(401, LocaleService.l10n.sessionExpired);
+    }
+    await _safePersistSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: user,
+    );
+    return AuthResult(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      expiresIn: 900,
+      user: user,
+    );
+  }
+
+  Future<List<String>> fetchOAuthProviders() async {
+    final info = await fetchOAuthProvidersInfo();
+    return info.providers;
+  }
+
+  Future<({List<String> providers, String? googleClientId})>
+      fetchOAuthProvidersInfo() async {
+    try {
+      final response = await ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/auth/oauth/providers'),
+        operation: 'AuthRepository.fetchOAuthProvidersInfo',
+      );
+      if (response.statusCode != 200) {
+        return (providers: const <String>[], googleClientId: null);
+      }
+      final body = jsonDecode(response.body);
+      if (body is! Map) {
+        return (providers: const <String>[], googleClientId: null);
+      }
+      final raw = body['providers'];
+      final providers = raw is List
+          ? raw.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
+          : const <String>[];
+      final gid = (body['google_client_id'] ?? '').toString().trim();
+      return (
+        providers: providers,
+        googleClientId: gid.isEmpty ? null : gid,
+      );
+    } catch (_) {
+      return (providers: const <String>[], googleClientId: null);
+    }
+  }
+
+  /// Вход через Google Identity Services (JWT credential), без redirect.
+  Future<AuthResult> loginWithGoogleIdToken({
+    required String credential,
+    String? redirect,
+    String? ref,
+  }) async {
+    await init();
+    final payload = <String, dynamic>{
+      'credential': credential,
+    };
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) payload['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) payload['ref'] = referral;
+
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/oauth/google/id-token'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+      operation: 'AuthRepository.loginWithGoogleIdToken',
+    );
+    return _handleAuthResponse(response);
+  }
+
+  String oauthStartUrl({
+    required String provider,
+    String? redirect,
+    String? ref,
+    bool poll = false,
+    bool navigate = false,
+  }) {
+    final params = <String, String>{};
+    if (poll) params['mode'] = 'poll';
+    if (navigate) params['navigate'] = '1';
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) params['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) params['ref'] = referral;
+    return Uri.parse('$apiBaseUrl/api/auth/oauth/$provider/start')
+        .replace(queryParameters: params.isEmpty ? null : params)
+        .toString();
+  }
+
+  /// Старт OAuth для PWA: JSON с authorize_url + state, дальше poll.
+  Future<({String authorizeUrl, String state})> startOAuthPoll({
+    required String provider,
+    String? redirect,
+    String? ref,
+  }) async {
+    await init();
+    final params = <String, String>{'mode': 'poll'};
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) params['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) params['ref'] = referral;
+    final response = await ApiClient.get(
+      Uri.parse('$apiBaseUrl/api/auth/oauth/$provider/start')
+          .replace(queryParameters: params),
+      operation: 'AuthRepository.startOAuthPoll',
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(response.statusCode, _messageFromResponse(response));
+    }
+    final body = jsonDecode(response.body);
+    if (body is! Map) {
+      throw AuthException(500, LocaleService.l10n.oauthError);
+    }
+    final url = (body['authorize_url'] ?? '').toString();
+    final state = (body['state'] ?? '').toString();
+    if (url.isEmpty || state.isEmpty) {
+      throw AuthException(500, LocaleService.l10n.oauthError);
+    }
+    return (authorizeUrl: url, state: state);
+  }
+
+  /// Ждёт результат OAuth (после входа в popup/Safari).
+  /// На iOS PWA JS может засыпать в фоне — при возврате опрашиваем сразу.
+  Future<Map<String, String>> pollOAuthResult({
+    String state = '',
+    Duration timeout = const Duration(minutes: 5),
+  }) async {
+    await init();
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      final params = <String, String>{};
+      final s = state.trim();
+      if (s.isNotEmpty) params['state'] = s;
+      final response = await ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/auth/oauth/poll').replace(
+          queryParameters: params.isEmpty ? null : params,
+        ),
+        operation: 'AuthRepository.pollOAuthResult',
+      );
+      if (response.statusCode == 202) {
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        continue;
+      }
+      if (response.statusCode != 200) {
+        throw AuthException(response.statusCode, _messageFromResponse(response));
+      }
+      final body = jsonDecode(response.body);
+      if (body is! Map) {
+        throw AuthException(500, LocaleService.l10n.oauthError);
+      }
+      final status = (body['status'] ?? '').toString();
+      if (status == 'pending') {
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        continue;
+      }
+      if (status == 'error') {
+        final err = (body['error'] ?? LocaleService.l10n.oauthError).toString();
+        throw AuthException(400, err);
+      }
+      return {
+        'access_token': (body['access_token'] ?? '').toString(),
+        'refresh_token': (body['refresh_token'] ?? '').toString(),
+        'redirect': (body['redirect'] ?? '').toString(),
+      };
+    }
+    throw AuthException(408, LocaleService.l10n.oauthError);
+  }
+
+  void _throwIfVerificationRequired(http.Response response) {
+    if (response.statusCode != 200 && response.statusCode != 403) return;
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map && body['requires_verification'] == true) {
+        final email = (body['email'] ?? '').toString();
+        final message = (body['message'] ?? body['error'] ?? '').toString();
+        throw EmailVerificationRequiredException(
+          email: email,
+          message: message.isEmpty ? 'email not verified' : message,
+        );
+      }
+    } catch (e) {
+      if (e is EmailVerificationRequiredException) rethrow;
+    }
   }
 
   static String _messageFromResponse(http.Response response) {
@@ -496,6 +778,7 @@ class AuthRepository {
             about: about,
             avatarKind: avatarKind ?? 'letter',
             avatarValue: avatarValue,
+            emailVerified: current.emailVerified,
           );
     await _saveUser(user);
     return user;
@@ -614,4 +897,15 @@ class AuthException implements Exception {
   AuthException(this.statusCode, this.message);
   @override
   String toString() => message;
+}
+
+class EmailVerificationRequiredException implements Exception {
+  final String email;
+  final String message;
+  EmailVerificationRequiredException({
+    required this.email,
+    this.message = '',
+  });
+  @override
+  String toString() => message.isEmpty ? 'email not verified' : message;
 }

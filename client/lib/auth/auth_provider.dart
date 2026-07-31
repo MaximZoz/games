@@ -78,13 +78,23 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     try {
       final cached = await repo.getStoredUser();
       state = AsyncValue.data(cached);
-      final fresh = await repo.fetchCurrentUser();
-      if (fresh != null) {
-        state = AsyncValue.data(fresh);
+      try {
+        final fresh = await repo.fetchCurrentUser();
+        if (fresh != null) {
+          state = AsyncValue.data(fresh);
+        }
+      } catch (_) {
+        // Сеть/401 на cold start не должны сбрасывать уже сохранённую сессию.
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
+  }
+
+  /// Сессия уже сохранена в репозитории (OAuth/GIS) — только обновить state.
+  void acceptSession(AuthResult result) {
+    clearUserScopedCaches(_ref);
+    state = AsyncValue.data(result.user);
   }
 
   Future<void> register({
@@ -104,6 +114,45 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     state = AsyncValue.data(result.user);
     // Новым аккаунтам по умолчанию включаем Web Push (запрос permission).
     unawaited(_enablePushForNewUser());
+  }
+
+  Future<void> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.verifyEmail(email: email, code: code);
+    state = AsyncValue.data(result.user);
+    unawaited(_enablePushForNewUser());
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.resetPassword(
+      email: email,
+      code: code,
+      newPassword: newPassword,
+    );
+    state = AsyncValue.data(result.user);
+  }
+
+  Future<void> loginWithTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.applySessionTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+    state = AsyncValue.data(result.user);
   }
 
   Future<void> _enablePushForNewUser() async {
@@ -159,6 +208,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
       avatarKind: user.avatarKind,
       avatarValue: user.avatarValue,
       balanceBronze: balanceBronze,
+      emailVerified: user.emailVerified,
     );
     state = AsyncValue.data(updated);
     await _ref.read(authRepositoryProvider).updateStoredUser(updated);
@@ -185,6 +235,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         avatarKind: user.avatarKind,
         avatarValue: user.avatarValue,
         balanceBronze: result.balanceBronze,
+        emailVerified: user.emailVerified,
       );
       state = AsyncValue.data(updated);
       await repo.updateStoredUser(updated);

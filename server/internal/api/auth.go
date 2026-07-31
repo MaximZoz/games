@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"multigames/server/internal/auth"
+	"multigames/server/internal/mailer"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -28,6 +29,8 @@ type AuthHandler struct {
 	Pool      *pgxpool.Pool
 	JWTSecret []byte
 	Push      *WebPushSender
+	Mailer    *mailer.Mailer
+	OAuth     *OAuthConfig
 }
 
 type RegisterRequest struct {
@@ -64,6 +67,7 @@ type UserResponse struct {
 	AvatarKind    string  `json:"avatar_kind,omitempty"`
 	AvatarValue   *string `json:"avatar_value,omitempty"`
 	BalanceBronze int     `json:"balance_bronze"`
+	EmailVerified bool    `json:"email_verified"`
 }
 
 func userToResponse(u *store.User) UserResponse {
@@ -78,6 +82,7 @@ func userToResponse(u *store.User) UserResponse {
 		AvatarKind:    u.AvatarKind,
 		AvatarValue:   u.AvatarValue,
 		BalanceBronze: u.BalanceBronze,
+		EmailVerified: u.EmailVerified(),
 	}
 }
 
@@ -128,6 +133,29 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	displayName := strings.TrimSpace(req.DisplayName)
+
+	taken, err := store.EmailTakenByUser(r.Context(), h.Pool, req.Email)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	if taken {
+		WriteErr(w, r, http.StatusConflict, "email already registered")
+		return
+	}
+	if displayName != "" {
+		nameTaken, err := store.DisplayNameTakenByUser(r.Context(), h.Pool, displayName)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if nameTaken {
+			WriteErr(w, r, http.StatusConflict, "login already taken")
+			return
+		}
+	}
+
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -141,23 +169,29 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	u, err := store.CreateUser(r.Context(), h.Pool, req.Email, hash, req.DisplayName, referredBy)
-	if err != nil {
-		if msg, ok := createUserConflictMessage(err); ok {
-			WriteErr(w, r, http.StatusConflict, msg)
-			return
-		}
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
-		return
-	}
-
-	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
+	code, err := generateEmailCode()
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
-	writeTokenResponse(w, accessToken, refreshToken, expiresIn, u)
+	// Пользователь в users НЕ создаётся — только заявка до подтверждения кода.
+	if _, err := store.UpsertPendingRegistration(
+		r.Context(), h.Pool, req.Email, hash, displayName, code, referredBy,
+	); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+
+	mailSent, err := h.sendVerificationMail(req.Email, code)
+	if err != nil {
+		_ = store.DeletePendingRegistration(r.Context(), h.Pool, req.Email)
+		WriteErr(w, r, http.StatusBadGateway, mailSendUserMessage(err))
+		return
+	}
+
+	_ = code // код только в письме / логе сервера, не отдаём клиенту
+	writeVerificationRequired(w, http.StatusOK, req.Email, "verification code sent", mailSent)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -181,7 +215,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
-	if !auth.CheckPassword(req.Password, u.PasswordHash) {
+	if u.PasswordHash == "" || !auth.CheckPassword(req.Password, u.PasswordHash) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
 		return
 	}

@@ -882,5 +882,75 @@
     }
   },
   "chatReplySelf": "te stesso",
-  "chatReplyPeer": "all'interlocutore"
+  "chatReplyPeer": "all'interlocutore",
+  "verifyEmailTitle": "Verify email",
+  "verifyEmailSubtitle": "We sent a code to {email}",
+  "@verifyEmailSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailCodeLabel": "Code from email",
+  "verifyEmailCodeRequired": "Enter the code",
+  "verifyEmailSubmit": "Verify",
+  "verifyEmailResend": "Resend code",
+  "verifyEmailResent": "A new code was sent",
+  "oauthOrContinue": "or continue with",
+  "oauthGoogle": "Google",
+  "oauthApple": "Apple",
+  "oauthYandex": "Yandex",
+  "oauthVK": "VK",
+  "oauthError": "Could not sign in with this service",
+  "oauthCallbackTitle": "Signing in…",
+  "verifyEmailResendIn": "Resend code in {time}",
+  "@verifyEmailResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailDevCodeHint": "Email is not configured on the server yet. Use this code: {code}",
+  "@verifyEmailDevCodeHint": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "loginForgotPassword": "Forgot password?",
+  "forgotPasswordTitle": "Reset password",
+  "forgotPasswordSubtitle": "Enter your email — we’ll send a code for a new password",
+  "forgotPasswordSubmit": "Send code",
+  "forgotPasswordSent": "If the account exists, a code was sent to your email",
+  "resetPasswordTitle": "New password",
+  "resetPasswordSubtitle": "We sent a code to {email}",
+  "@resetPasswordSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordCodeLabel": "Code from email",
+  "resetPasswordCodeRequired": "Enter the code",
+  "resetPasswordNewLabel": "New password",
+  "resetPasswordNewRequired": "Enter a new password",
+  "resetPasswordNewShort": "At least 6 characters",
+  "resetPasswordConfirmLabel": "Confirm password",
+  "resetPasswordConfirmMismatch": "Passwords do not match",
+  "resetPasswordSubmit": "Save password",
+  "resetPasswordResend": "Resend code",
+  "resetPasswordResent": "A new code was sent",
+  "resetPasswordResendIn": "Resend code in {time}",
+  "@resetPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordBackToLogin": "Back to sign in"
 }
