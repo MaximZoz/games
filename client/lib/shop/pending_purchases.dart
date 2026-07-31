@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -89,10 +90,27 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
     final repo = _ref.read(shopRepositoryProvider);
     if (!offline) {
       final result = await repo.buy(code);
-      _ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      await _ref
+          .read(authStateProvider.notifier)
+          .applyBalance(result.balanceBronze);
       _ref.invalidate(shopCatalogProvider);
       _ref.invalidate(inventoryListProvider);
       return result;
+    }
+
+    // Ставки в офлайне недоступны — не ставим в очередь.
+    final catalog = _ref.read(shopCatalogProvider).valueOrNull;
+    ShopItem? item;
+    if (catalog != null) {
+      for (final e in catalog) {
+        if (e.code == code) {
+          item = e;
+          break;
+        }
+      }
+    }
+    if (item?.kind == 'stake_unlock') {
+      throw AuthException(400, LocaleService.l10n.shopStakes);
     }
 
     // Оптимистично: отмечаем owned в каталоге после очереди — UI вызывает setState.

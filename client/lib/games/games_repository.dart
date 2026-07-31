@@ -160,7 +160,6 @@ String buildTictactoeRulesText({
   int stakeBronze = 1,
 }) {
   final l10n = LocaleService.l10n;
-  final stake = stakeBronze < 1 ? 1 : stakeBronze;
   final winN = gridSize >= 6 ? 5 : gridSize;
   final parts = <String>[
     l10n.rulesIntro(formatGridSize(gridSize)),
@@ -168,8 +167,11 @@ String buildTictactoeRulesText({
     turnTimeSec == 0
         ? l10n.rulesNoTimeLimit
         : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    l10n.rulesStake(formatBalance(stake)),
   ];
+  // 0 — офлайн / без ставок: строку про ставку не показываем.
+  if (stakeBronze > 0) {
+    parts.add(l10n.rulesStake(formatBalance(stakeBronze)));
+  }
   if (swapRule) {
     parts.add(l10n.rulesSwap);
   }

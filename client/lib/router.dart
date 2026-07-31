@@ -169,7 +169,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
       if (isAdminRoute && user != null && !user.isAdmin) return '/games';
 
-      // Офлайн: чаты/друзья/лобби недоступны.
+      // Офлайн: чаты/друзья/лобби/ставки недоступны.
       if (user != null && ref.read(isOfflineProvider)) {
         if (path == '/friends' ||
             path == '/chats' ||
@@ -178,6 +178,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
         if (path.startsWith('/games/tictactoe/lobby/')) {
           return '/games';
+        }
+        if (path == '/shop/stakes' || path.endsWith('/shop/stakes')) {
+          return '/shop';
         }
       }
 
