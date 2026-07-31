@@ -1766,7 +1766,7 @@ abstract class AppLocalizations {
   /// No description provided for @balancePerDay.
   ///
   /// In ru, this message translates to:
-  /// **'{amount} в день'**
+  /// **'{amount}/день'**
   String balancePerDay(String amount);
 
   /// No description provided for @balanceAbbrBronze.

@@ -534,10 +534,42 @@ String formatRewardBronze(int bronze, [AppLocalizations? l10n]) {
   return parts.join(' ');
 }
 
-/// Сумма дохода с явным «в день».
+/// Компактная сумма с аббревиатурами: 63 → «63 бр», 133 → «1 с. 33 бр».
+String formatRewardBronzeAbbr(int bronze, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  if (bronze <= 0) return '0 ${t.balanceAbbrBronze}';
+  final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+  final parts = <String>[];
+  if (diamond > BigInt.zero) {
+    parts.add('${diamond.toInt()} ◆');
+  }
+  if (gold > BigInt.zero) {
+    parts.add('${gold.toInt()} ${t.balanceAbbrGold}');
+  }
+  if (silver > BigInt.zero) {
+    parts.add('${silver.toInt()} ${t.balanceAbbrSilver}');
+  }
+  if (bronzeRest > BigInt.zero) {
+    parts.add('${bronzeRest.toInt()} ${t.balanceAbbrBronze}');
+  }
+  if (parts.isEmpty) return '0 ${t.balanceAbbrBronze}';
+  return parts.join(' ');
+}
+
+/// Суффикс «/день» из шаблона [AppLocalizations.balancePerDay].
+String balancePerDaySuffix([AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  const marker = '\u0001';
+  final sample = t.balancePerDay(marker);
+  final i = sample.indexOf(marker);
+  if (i < 0) return '/день';
+  return sample.substring(i + marker.length);
+}
+
+/// Сумма дохода: «63 бр/день», «1 с. 33 бр/день».
 String formatRewardBronzePerDay(int bronze, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
-  return t.balancePerDay(formatRewardBronze(bronze, t));
+  return t.balancePerDay(formatRewardBronzeAbbr(bronze, t));
 }
 
 /// Количество старшего ненулевого номинала (для компактной иконки).
@@ -710,6 +742,8 @@ class _BalancePopupItem {
 }
 
 /// Сумма монет: `5` + серебро + `4` + бронза (только ненулевые номиналы).
+///
+/// При [perDay] бронза пишется как `63 (бр)`, а в конце — суффикс `/день`.
 class BalanceDisplay extends StatelessWidget {
   const BalanceDisplay({
     super.key,
@@ -720,6 +754,7 @@ class BalanceDisplay extends StatelessWidget {
     this.fontWeight = FontWeight.w600,
     this.prefix,
     this.suffix,
+    this.perDay = false,
     this.animate = false,
     this.color = AppColors.textPrimary,
     this.opacity = 1,
@@ -734,6 +769,8 @@ class BalanceDisplay extends StatelessWidget {
   final FontWeight fontWeight;
   final String? prefix;
   final String? suffix;
+  /// Дневной доход: бронза как `(бр)`, суффикс `/день`.
+  final bool perDay;
   final bool animate;
   final Color color;
   /// 0…1 — для приглушённого бонуса незавершённой коллекции.
@@ -744,7 +781,14 @@ class BalanceDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
+    final textStyle = TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
 
     final parts = <Widget>[];
     if (prefix != null && prefix!.isNotEmpty) {
@@ -758,17 +802,12 @@ class BalanceDisplay extends StatelessWidget {
       ));
     }
 
-    void add(CoinType type, BigInt value) {
+    void addIconCoin(CoinType type, BigInt value) {
       if (value <= BigInt.zero && !forceShow.contains(type)) return;
       if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
       parts.add(Text(
         value.toString(),
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-          color: color,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
+        style: textStyle,
         overflow: TextOverflow.clip,
       ));
       parts.add(const SizedBox(width: 3));
@@ -783,41 +822,58 @@ class BalanceDisplay extends StatelessWidget {
       ));
     }
 
-    add(CoinType.diamond, diamond);
-    add(CoinType.gold, gold);
-    add(CoinType.silver, silver);
-    add(CoinType.bronze, bronzeRest);
+    void addBronzeAbbr(BigInt value) {
+      if (value <= BigInt.zero && !forceShow.contains(CoinType.bronze)) return;
+      if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
+      parts.add(Text(
+        '${value.toInt()} (${l10n.balanceAbbrBronze})',
+        style: textStyle,
+        overflow: TextOverflow.clip,
+      ));
+    }
+
+    addIconCoin(CoinType.diamond, diamond);
+    addIconCoin(CoinType.gold, gold);
+    addIconCoin(CoinType.silver, silver);
+    if (perDay) {
+      addBronzeAbbr(bronzeRest);
+    } else {
+      addIconCoin(CoinType.bronze, bronzeRest);
+    }
 
     if (parts.isEmpty || (prefix != null && parts.length == 1)) {
       if (prefix == null || prefix!.isEmpty) {
         parts.clear();
       }
-      parts.add(Text(
-        '0',
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-          color: color,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-        overflow: TextOverflow.clip,
-      ));
-      parts.add(const SizedBox(width: 3));
-      parts.add(KeyedSubtree(
-        key: coinKeys?[CoinType.bronze],
-        child: CoinIcon(
-          coinType: CoinType.bronze,
-          size: coinSize,
-          showBorder: true,
-          animate: animate,
-        ),
-      ));
+      if (perDay) {
+        addBronzeAbbr(BigInt.zero);
+      } else {
+        parts.add(Text(
+          '0',
+          style: textStyle,
+          overflow: TextOverflow.clip,
+        ));
+        parts.add(const SizedBox(width: 3));
+        parts.add(KeyedSubtree(
+          key: coinKeys?[CoinType.bronze],
+          child: CoinIcon(
+            coinType: CoinType.bronze,
+            size: coinSize,
+            showBorder: true,
+            animate: animate,
+          ),
+        ));
+      }
     }
 
-    if (suffix != null && suffix!.isNotEmpty) {
-      parts.add(SizedBox(width: spacing));
+    final effectiveSuffix =
+        suffix ?? (perDay ? balancePerDaySuffix(l10n) : null);
+    if (effectiveSuffix != null && effectiveSuffix.isNotEmpty) {
+      // «/день» без лишнего пробела: «63 (бр)/день».
+      final tight = effectiveSuffix.startsWith('/');
+      if (!tight) parts.add(SizedBox(width: spacing));
       parts.add(Text(
-        suffix!,
+        effectiveSuffix,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: fontWeight,

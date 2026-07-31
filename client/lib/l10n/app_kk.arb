@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "күніне {amount}",
+  "balancePerDay": "{amount}/күн",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

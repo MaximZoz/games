@@ -835,7 +835,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '하루 $amount';
+    return '$amount/일';
   }
 
   @override

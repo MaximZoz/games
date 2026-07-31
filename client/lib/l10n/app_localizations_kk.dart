@@ -835,7 +835,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return 'күніне $amount';
+    return '$amount/күн';
   }
 
   @override

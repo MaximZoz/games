@@ -26,13 +26,18 @@ void main() {
     expect(formatRewardBronze(10001), '1 золотых 1 бронзовых');
   });
 
+  test('formatRewardBronzeAbbr', () {
+    expect(formatRewardBronzeAbbr(10), '10 бр');
+    expect(formatRewardBronzeAbbr(63), '63 бр');
+    expect(formatRewardBronzeAbbr(100), '1 с.');
+    expect(formatRewardBronzeAbbr(133), '1 с. 33 бр');
+  });
+
   test('formatRewardBronzePerDay', () {
-    expect(formatRewardBronzePerDay(10), '10 бронзовых в день');
-    expect(formatRewardBronzePerDay(100), '1 серебряных в день');
-    expect(
-      formatRewardBronzePerDay(133),
-      '1 серебряных 33 бронзовых в день',
-    );
+    expect(formatRewardBronzePerDay(10), '10 бр/день');
+    expect(formatRewardBronzePerDay(63), '63 бр/день');
+    expect(formatRewardBronzePerDay(100), '1 с./день');
+    expect(formatRewardBronzePerDay(133), '1 с. 33 бр/день');
   });
 
   test('rewardCoinType — старший ненулевой номинал', () {

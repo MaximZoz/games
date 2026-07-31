@@ -206,6 +206,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                                     groupItems.length
                                                 ? '+'
                                                 : null,
+                                            perDay: true,
                                             coinSize: 14,
                                             fontSize: 12,
                                             spacing: 4,
@@ -424,6 +425,7 @@ class _ShopCollectionGroupScreenState
                             BalanceDisplay(
                               bronze: setDaily,
                               prefix: complete ? '+' : null,
+                              perDay: true,
                               coinSize: 14,
                               fontSize: 12,
                               spacing: 4,

@@ -835,7 +835,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount per hari';
+    return '$amount/hari';
   }
 
   @override

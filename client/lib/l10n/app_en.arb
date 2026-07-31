@@ -339,7 +339,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} per day",
+  "balancePerDay": "{amount}/day",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

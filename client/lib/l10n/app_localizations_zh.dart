@@ -835,7 +835,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '每天 $amount';
+    return '$amount/天';
   }
 
   @override

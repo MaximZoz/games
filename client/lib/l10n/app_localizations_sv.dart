@@ -835,7 +835,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount per dag';
+    return '$amount/dag';
   }
 
   @override

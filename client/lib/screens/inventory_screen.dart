@@ -429,6 +429,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                               bronze: income.amountBronze,
                                               prefix:
                                                   income.available ? '+' : null,
+                                              perDay: true,
                                               coinSize: 16,
                                               fontSize: 13,
                                               spacing: 5,
@@ -630,6 +631,7 @@ class _CollectionSetFrame extends StatelessWidget {
                 BalanceDisplay(
                   bronze: setBonusBronze,
                   prefix: complete ? '+' : null,
+                  perDay: true,
                   coinSize: 15,
                   fontSize: 12,
                   spacing: 4,
@@ -804,6 +806,7 @@ class _CollectionInvTile extends StatelessWidget {
                   BalanceDisplay(
                     bronze: item.dailyBronze,
                     prefix: '+',
+                    perDay: true,
                     coinSize: 14,
                     fontSize: 12,
                     spacing: 4,

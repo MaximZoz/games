@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "하루 {amount}",
+  "balancePerDay": "{amount}/일",
   "@balancePerDay": {
     "placeholders": {
       "amount": {

@@ -835,7 +835,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return 'kuniga $amount';
+    return '$amount/kun';
   }
 
   @override

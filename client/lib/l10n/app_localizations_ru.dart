@@ -835,7 +835,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount в день';
+    return '$amount/день';
   }
 
   @override

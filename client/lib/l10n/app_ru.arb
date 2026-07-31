@@ -339,7 +339,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} в день",
+  "balancePerDay": "{amount}/день",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
