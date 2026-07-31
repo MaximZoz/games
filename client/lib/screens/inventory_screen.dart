@@ -309,10 +309,23 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       final s = (it.collectionSet ?? 'other').trim();
       collectionsBySet.putIfAbsent(s.isEmpty ? 'other' : s, () => []).add(it);
     }
-    final collectionSetKeys = [
-      ...collectionSetOrder.where(collectionsBySet.containsKey),
-      ...collectionsBySet.keys.where((k) => !collectionSetOrder.contains(k)),
-    ];
+    for (final list in collectionsBySet.values) {
+      list.sort((a, b) => compareCollectionItemsByDaily(
+            a.dailyBronze,
+            b.dailyBronze,
+            0,
+            0,
+          ));
+    }
+    final collectionSetKeys = collectionsBySet.keys.toList()
+      ..sort((a, b) => compareCollectionSetsByDaily(
+            a,
+            b,
+            (set) =>
+                catalogDailyBySet[set] ??
+                (collectionsBySet[set] ?? const [])
+                    .fold<int>(0, (s, e) => s + e.dailyBronze),
+          ));
 
     final grouped = <String, List<InventoryItem>>{};
     for (final e in emojis) {
