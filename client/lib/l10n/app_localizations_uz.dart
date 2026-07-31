@@ -1274,6 +1274,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get profileNameHint => 'Lotin harflari, raqamlar, _ 10 belgigacha';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => '1 dan 111 gacha';
 
   @override

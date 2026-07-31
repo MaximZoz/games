@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Masukkan usia dari 1 hingga 111",
   "profileSaveFailed": "Gagal menyimpan profil",
   "profileNameHint": "Huruf Latin, angka, _ hingga 10 karakter",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Dari 1 hingga 111",
   "profileAboutHint": "Hingga 100 karakter (opsional)",
   "profileProcessingPhoto": "Memproses foto…",

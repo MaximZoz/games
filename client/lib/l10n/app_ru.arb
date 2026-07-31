@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Введите возраст от 1 до 111",
   "profileSaveFailed": "Не удалось сохранить профиль",
   "profileNameHint": "Латиница, цифры, _ до 10 символов",
+  "profileNameLatinOnly": "Только латинские символы",
   "profileAgeHint": "От 1 до 111",
   "profileAboutHint": "До 100 символов (по желанию)",
   "profileProcessingPhoto": "Обработка фото…",

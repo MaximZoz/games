@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Voer een leeftijd van 1 tot 111 in",
   "profileSaveFailed": "Profiel kon niet worden opgeslagen",
   "profileNameHint": "Latijnse letters, cijfers, _ tot 10 tekens",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Van 1 tot 111",
   "profileAboutHint": "Tot 100 tekens (optioneel)",
   "profileProcessingPhoto": "Foto verwerken…",

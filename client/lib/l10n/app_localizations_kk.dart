@@ -1274,6 +1274,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get profileNameHint => 'Латын әріптері, цифрлар, _ 10 таңбаға дейін';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => '1-ден 111-ге дейін';
 
   @override

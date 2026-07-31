@@ -738,6 +738,7 @@
   "profileAgeInvalid": "1 से 111 तक आयु दर्ज करें",
   "profileSaveFailed": "प्रोफ़ाइल सहेजी नहीं जा सकी",
   "profileNameHint": "लैटिन अक्षर, अंक, _ अधिकतम 10 वर्ण",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1 से 111",
   "profileAboutHint": "अधिकतम 100 वर्ण (वैकल्पिक)",
   "profileProcessingPhoto": "फ़ोटो प्रोसेस हो रही है…",

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:lottie/lottie.dart';
 import 'package:multigames_client/shop/emoji_asset_catalog.dart';
@@ -102,6 +103,10 @@ String formatChatMessagePreview(String body) {
         ? gift.emoji
         : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');
     return '🎁 $emoji $title';
+  }
+  if (isInviteLobbyMessage(body)) {
+    final l10n = LocaleService.l10n;
+    return '${l10n.lobbyInviteTitle}: ${l10n.gamesTicTacToe}';
   }
   return replaceAnimatedEmojiTokens(body);
 }

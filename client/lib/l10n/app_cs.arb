@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Zadejte věk od 1 do 111",
   "profileSaveFailed": "Nepodařilo se uložit profil",
   "profileNameHint": "Latinka, číslice, _ do 10 znaků",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Od 1 do 111",
   "profileAboutHint": "Až 100 znaků (volitelné)",
   "profileProcessingPhoto": "Zpracování fotky…",
