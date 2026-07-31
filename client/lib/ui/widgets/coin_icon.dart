@@ -586,10 +586,14 @@ class ToolbarBalanceChip extends StatelessWidget {
     super.key,
     required this.bronze,
     this.coinSize = 20,
+    this.forceShow = const <CoinType>{},
+    this.coinKeys,
   });
 
   final int bronze;
   final double coinSize;
+  final Set<CoinType> forceShow;
+  final Map<CoinType, GlobalKey>? coinKeys;
 
   void _showBalancePopup(BuildContext context, int bronze) {
     final (diamond, gold, silver, bronzeRest) = parseBalance(bronze);
@@ -685,13 +689,20 @@ class ToolbarBalanceChip extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: BalanceDisplay(
-            bronze: bronze,
-            coinSize: coinSize,
-            fontSize: 12,
-            spacing: 4,
-            fontWeight: FontWeight.w600,
-            animate: true,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.centerLeft,
+            child: BalanceDisplay(
+              bronze: bronze,
+              coinSize: coinSize,
+              fontSize: 12,
+              spacing: 4,
+              fontWeight: FontWeight.w600,
+              animate: true,
+              forceShow: forceShow,
+              coinKeys: coinKeys,
+            ),
           ),
         ),
       ),
@@ -717,6 +728,8 @@ class BalanceDisplay extends StatelessWidget {
     this.prefix,
     this.animate = false,
     this.color = AppColors.textPrimary,
+    this.forceShow = const <CoinType>{},
+    this.coinKeys,
   });
 
   final int bronze;
@@ -727,6 +740,9 @@ class BalanceDisplay extends StatelessWidget {
   final String? prefix;
   final bool animate;
   final Color color;
+  /// Показать номинал даже при 0 (вставка новой монеты перед анимацией).
+  final Set<CoinType> forceShow;
+  final Map<CoinType, GlobalKey>? coinKeys;
 
   @override
   Widget build(BuildContext context) {
@@ -745,7 +761,7 @@ class BalanceDisplay extends StatelessWidget {
     }
 
     void add(CoinType type, BigInt value) {
-      if (value <= BigInt.zero) return;
+      if (value <= BigInt.zero && !forceShow.contains(type)) return;
       if (parts.isNotEmpty) parts.add(SizedBox(width: spacing));
       parts.add(Text(
         value.toString(),
@@ -753,15 +769,19 @@ class BalanceDisplay extends StatelessWidget {
           fontSize: fontSize,
           fontWeight: fontWeight,
           color: color,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
         overflow: TextOverflow.clip,
       ));
       parts.add(const SizedBox(width: 3));
-      parts.add(CoinIcon(
-        coinType: type,
-        size: coinSize,
-        showBorder: true,
-        animate: animate,
+      parts.add(KeyedSubtree(
+        key: coinKeys?[type],
+        child: CoinIcon(
+          coinType: type,
+          size: coinSize,
+          showBorder: true,
+          animate: animate,
+        ),
       ));
     }
 
@@ -780,15 +800,19 @@ class BalanceDisplay extends StatelessWidget {
           fontSize: fontSize,
           fontWeight: fontWeight,
           color: color,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
         overflow: TextOverflow.clip,
       ));
       parts.add(const SizedBox(width: 3));
-      parts.add(CoinIcon(
-        coinType: CoinType.bronze,
-        size: coinSize,
-        showBorder: true,
-        animate: animate,
+      parts.add(KeyedSubtree(
+        key: coinKeys?[CoinType.bronze],
+        child: CoinIcon(
+          coinType: CoinType.bronze,
+          size: coinSize,
+          showBorder: true,
+          animate: animate,
+        ),
       ));
     }
 

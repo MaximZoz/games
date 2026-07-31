@@ -20,6 +20,8 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
@@ -89,6 +91,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   String? _prevGameStatus;
   bool _providerBindingsInitialized = false;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
+  final GlobalKey _winRewardKey = GlobalKey();
+  bool _balanceGainPlayed = false;
 
   @override
   void didChangeDependencies() {
@@ -112,6 +116,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (oldWidget.gameId != widget.gameId) {
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
+      _balanceGainPlayed = false;
       ref.invalidate(gameStateProvider(widget.gameId));
       setState(() {
         _rematchLobbyId = null;
@@ -327,6 +332,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final isOver = game.status != 'active';
           final opponentId =
               game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
+          final iWonEarly = isOver &&
+              ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
+                  (game.status == 'o_won' && game.oUserId == currentUser?.id));
+          final isDraw = isOver && game.status == 'draw';
           if (isOver &&
               (_prevGameStatus == 'active' || _prevGameStatus == null)) {
             _rematchPollTimer?.cancel();
@@ -336,7 +345,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   .read(gameInvitesProvider.notifier)
                   .removeByCreatorId(opponentId);
             }
-            unawaited(ref.read(authStateProvider.notifier).refresh());
+            unawaited(_onGameSettled(
+              gainedCoins: iWonEarly || isDraw,
+              rewardBronze: iWonEarly
+                  ? game.stakeBronze * 2
+                  : isDraw
+                      ? game.stakeBronze
+                      : 0,
+            ));
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 setState(() {
@@ -408,9 +424,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               !_isSwapping &&
               !_isMakingMove;
 
-          final iWon = isOver &&
-              ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
-                  (game.status == 'o_won' && game.oUserId == currentUser?.id));
+          final iWon = iWonEarly;
+          final showRewardChip =
+              isOver && (iWon || isDraw) && game.stakeBronze > 0;
+          final rewardBronze =
+              iWon ? game.stakeBronze * 2 : game.stakeBronze;
           final isDesktop = isWide(context);
           final narrow = isNarrow(context);
           final contentPadding = narrow ? 12.0 : 24.0;
@@ -464,6 +482,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                     fontSize: narrow ? 15 : null,
                                   ),
                             ),
+                            if (showRewardChip)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: _GameRewardChip(
+                                  key: _winRewardKey,
+                                  rewardBronze: rewardBronze,
+                                ),
+                              ),
                             if (showSwapButton)
                               Padding(
                                 padding: const EdgeInsets.only(top: 12),
@@ -574,6 +600,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                             fontSize: narrow ? 15 : null,
                                           ),
                                     ),
+                                    if (showRewardChip)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: _GameRewardChip(
+                                          key: _winRewardKey,
+                                          rewardBronze: rewardBronze,
+                                        ),
+                                      ),
                                     if (showSwapButton)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 12),
@@ -665,6 +699,36 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ),
         ),
       ),
+    );
+  }
+
+  Future<void> _onGameSettled({
+    required bool gainedCoins,
+    required int rewardBronze,
+  }) async {
+    final fromBalance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    await ref.read(authStateProvider.notifier).refresh();
+    if (!mounted || _balanceGainPlayed || !gainedCoins || rewardBronze <= 0) {
+      return;
+    }
+    final toBalance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? fromBalance;
+    if (toBalance <= fromBalance) return;
+    _balanceGainPlayed = true;
+    // Дождаться появления чипа награды в дереве.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (!mounted) return;
+    await playBalanceGain(
+      ref: ref,
+      context: context,
+      newBalanceBronze: toBalance,
+      fromBronze: fromBalance,
+      rewardBronze: rewardBronze,
+      sourceKey: _winRewardKey,
+      skipApply: true,
     );
   }
 
@@ -2058,6 +2122,49 @@ class _WinningLinePainter extends CustomPainter {
       old.progress != progress ||
       old.winningCells != winningCells ||
       old.gridSize != gridSize;
+}
+
+/// Чип награды после победы / ничьей — источник полёта монеты в баланс.
+class _GameRewardChip extends StatelessWidget {
+  const _GameRewardChip({
+    super.key,
+    required this.rewardBronze,
+  });
+
+  final int rewardBronze;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.accentSoft.withValues(alpha: 0.9),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '+${formatStakeAmount(rewardBronze)}',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 6),
+          CoinIcon(
+            coinType: stakeCoinType(rewardBronze),
+            size: 22,
+            showBorder: true,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ConfettiOverlay extends StatefulWidget {

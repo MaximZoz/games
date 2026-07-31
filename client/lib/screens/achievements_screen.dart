@@ -10,6 +10,7 @@ import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
@@ -25,6 +26,10 @@ class AchievementsScreen extends ConsumerStatefulWidget {
 class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   List<AchievementItem> _items = const [];
   final Set<String> _claimInFlight = {};
+  final Map<String, GlobalKey> _rewardKeys = {};
+
+  GlobalKey _rewardKeyFor(String code) =>
+      _rewardKeys.putIfAbsent(code, GlobalKey.new);
 
   @override
   void initState() {
@@ -81,9 +86,22 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     try {
       final result =
           await ref.read(achievementsRepositoryProvider).claim(item.code);
-      await ref
-          .read(authStateProvider.notifier)
-          .applyBalance(result.balanceBronze);
+      final reward = result.rewardBronze > 0
+          ? result.rewardBronze
+          : item.rewardBronze;
+      if (mounted && reward > 0) {
+        await playBalanceGain(
+          ref: ref,
+          context: context,
+          newBalanceBronze: result.balanceBronze,
+          rewardBronze: reward,
+          sourceKey: _rewardKeyFor(item.code),
+        );
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .applyBalance(result.balanceBronze);
+      }
       ref.invalidate(achievementsUnclaimedCountProvider);
       ref.invalidate(inventoryCapabilitiesProvider);
       ref.invalidate(inventoryListProvider);
@@ -156,6 +174,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                         final item = items[i];
                         return _AchievementCard(
                           item: item,
+                          rewardKey: _rewardKeyFor(item.code),
                           onClaim: item.isUnlocked
                               ? () => unawaited(_claim(item))
                               : null,
@@ -173,10 +192,12 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
 class _AchievementCard extends StatelessWidget {
   const _AchievementCard({
     required this.item,
+    required this.rewardKey,
     required this.onClaim,
   });
 
   final AchievementItem item;
+  final GlobalKey rewardKey;
   final VoidCallback? onClaim;
 
   IconData get _icon {
@@ -258,14 +279,20 @@ class _AchievementCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${item.rewardBronze}',
+                      '${rewardCoinAmount(item.rewardBronze)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const CoinIcon(coinType: CoinType.bronze, size: 18),
+                    KeyedSubtree(
+                      key: rewardKey,
+                      child: CoinIcon(
+                        coinType: rewardCoinType(item.rewardBronze),
+                        size: 18,
+                      ),
+                    ),
                   ],
                 ),
               ],

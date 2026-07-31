@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -162,6 +163,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (lobby.stakeBronze > 0) ...[
+                          _LobbyStakeChip(stakeBronze: lobby.stakeBronze),
+                          const SizedBox(height: 16),
+                        ],
                         if (isInviteMode && isCreator) ...[
                           _buildShareInviteLinkCard(context),
                           const SizedBox(height: 16),
@@ -785,6 +790,57 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               text ?? '',
               style: TextStyle(fontSize: 13, color: fg),
             ),
+    );
+  }
+}
+
+/// Ставка лобби: сумма + иконка монеты (как на карточке игры).
+class _LobbyStakeChip extends StatelessWidget {
+  const _LobbyStakeChip({required this.stakeBronze});
+
+  final int stakeBronze;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: AppColors.accentSoft.withValues(alpha: 0.9),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.shopStakes,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              formatStakeAmount(stakeBronze),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            CoinIcon(
+              coinType: stakeCoinType(stakeBronze),
+              size: 22,
+              showBorder: true,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

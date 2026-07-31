@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
@@ -22,12 +23,17 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
   bool _claimInFlight = false;
   /// Локальный статус после клейма — без спиннера на время invalidate.
   DailyRewardStatus? _optimisticStatus;
+  final GlobalKey _claimSourceKey = GlobalKey();
 
   Future<void> _claim(DailyRewardStatus status) async {
     if (_claimInFlight || !status.available) return;
     _claimInFlight = true;
 
     final previous = _optimisticStatus;
+    final fromBalance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final expectedReward = status.milestonesBronze[status.nextStreak] ??
+        status.nextRewardBronze;
     // Мгновенно: кнопка → «Уже получено», карточки обновляют прогресс.
     setState(() {
       _optimisticStatus = DailyRewardStatus(
@@ -53,6 +59,19 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
             milestonesBronze: status.milestonesBronze,
           );
         });
+        final reward =
+            result.rewardBronze > 0 ? result.rewardBronze : expectedReward;
+        if (reward > 0) {
+          await playBalanceGain(
+            ref: ref,
+            context: context,
+            newBalanceBronze: result.balanceBronze,
+            fromBronze: fromBalance,
+            rewardBronze: reward,
+            sourceKey: _claimSourceKey,
+            skipApply: true,
+          );
+        }
       }
     } catch (_) {
       if (!mounted) return;
@@ -99,6 +118,7 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
               child: status != null
                   ? _LoginRewardsBody(
                       status: status,
+                      claimSourceKey: _claimSourceKey,
                       onClaim: () => unawaited(_claim(status)),
                     )
                   : dailyRewardAsync.hasError
@@ -122,10 +142,12 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
 class _LoginRewardsBody extends StatelessWidget {
   const _LoginRewardsBody({
     required this.status,
+    required this.claimSourceKey,
     required this.onClaim,
   });
 
   final DailyRewardStatus status;
+  final GlobalKey claimSourceKey;
   final VoidCallback onClaim;
 
   static const _milestones = [1, 3, 7, 30];
@@ -153,6 +175,9 @@ class _LoginRewardsBody extends StatelessWidget {
                       streak: status.streak,
                       nextStreak: status.nextStreak,
                       availableToday: status.available,
+                      rewardKey: status.nextStreak == _milestones[i]
+                          ? claimSourceKey
+                          : null,
                     ),
                   ),
                 ],
@@ -194,6 +219,7 @@ class _CompactMilestoneCard extends StatelessWidget {
     required this.streak,
     required this.nextStreak,
     required this.availableToday,
+    this.rewardKey,
   });
 
   final int targetDays;
@@ -201,6 +227,7 @@ class _CompactMilestoneCard extends StatelessWidget {
   final int streak;
   final int nextStreak;
   final bool availableToday;
+  final GlobalKey? rewardKey;
 
   @override
   Widget build(BuildContext context) {
@@ -259,12 +286,15 @@ class _CompactMilestoneCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              BalanceDisplay(
-                bronze: rewardBronze,
-                coinSize: 18,
-                fontSize: 13,
-                spacing: 4,
-                animate: isTodaysTarget || pendingToday,
+              KeyedSubtree(
+                key: rewardKey,
+                child: BalanceDisplay(
+                  bronze: rewardBronze,
+                  coinSize: 18,
+                  fontSize: 13,
+                  spacing: 4,
+                  animate: isTodaysTarget || pendingToday,
+                ),
               ),
             ],
           ),

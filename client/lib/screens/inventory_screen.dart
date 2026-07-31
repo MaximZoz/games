@@ -13,6 +13,7 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -46,6 +47,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   /// Копии непрочитанных подарков на момент открытия экрана (для бейджа на плитке).
   Set<String> _highlightGifts = const {};
   bool _clearedUnread = false;
+  final GlobalKey _claimIncomeKey = GlobalKey();
+  final Map<String, GlobalKey> _sellKeys = {};
+
+  GlobalKey _sellKeyFor(String code) =>
+      _sellKeys.putIfAbsent(code, GlobalKey.new);
 
   @override
   void initState() {
@@ -63,9 +69,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     if (_claimBusy) return;
     setState(() => _claimBusy = true);
     try {
+      final fromBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
       final result =
           await ref.read(shopRepositoryProvider).claimCollectionIncome();
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      if (!mounted) return;
+      if (result.quantity > 0) {
+        await playBalanceGain(
+          ref: ref,
+          context: context,
+          newBalanceBronze: result.balanceBronze,
+          fromBronze: fromBalance,
+          rewardBronze: result.quantity,
+          sourceKey: _claimIncomeKey,
+        );
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .applyBalance(result.balanceBronze);
+      }
       if (!mounted) return;
       showAppSnackBar(
         context,
@@ -112,9 +134,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
     if (ok != true || !mounted) return;
     try {
+      final fromBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
       final result =
           await ref.read(shopRepositoryProvider).sellCollection(item.code);
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      if (!mounted) return;
+      if (result.quantity > 0) {
+        await playBalanceGain(
+          ref: ref,
+          context: context,
+          newBalanceBronze: result.balanceBronze,
+          fromBronze: fromBalance,
+          rewardBronze: result.quantity,
+          sourceKey: _sellKeyFor(item.code),
+        );
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .applyBalance(result.balanceBronze);
+      }
       ref.invalidate(inventoryListProvider);
       ref.invalidate(shopCatalogProvider);
       ref.invalidate(collectionIncomeProvider);
@@ -381,13 +419,39 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (income.available)
-                                      FilledButton(
-                                        onPressed:
-                                            _claimBusy ? null : _claimIncome,
-                                        child: Text(
-                                            _claimBusy ? '…' : context.l10n.inventoryClaim),
+                                    KeyedSubtree(
+                                      key: _claimIncomeKey,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '+${rewardCoinAmount(income.amountBronze)}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          CoinIcon(
+                                            coinType: rewardCoinType(
+                                                income.amountBronze),
+                                            size: 18,
+                                          ),
+                                          if (income.available) ...[
+                                            const SizedBox(width: 8),
+                                            FilledButton(
+                                              onPressed: _claimBusy
+                                                  ? null
+                                                  : _claimIncome,
+                                              child: Text(_claimBusy
+                                                  ? '…'
+                                                  : context
+                                                      .l10n.inventoryClaim),
+                                            ),
+                                          ],
+                                        ],
                                       ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -411,6 +475,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                             const <InventoryItem>[])
                                       _CollectionInvTile(
                                         item: it,
+                                        sellSourceKey: _sellKeyFor(it.code),
                                         highlightGift:
                                             _highlightGifts.contains(it.code),
                                         onOpen: () => showCollectionFullscreen(
@@ -602,6 +667,7 @@ class _CollectionInvTile extends StatelessWidget {
     required this.onOpen,
     required this.onGift,
     required this.onSell,
+    required this.sellSourceKey,
     this.highlightGift = false,
   });
 
@@ -609,6 +675,7 @@ class _CollectionInvTile extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onGift;
   final VoidCallback onSell;
+  final GlobalKey sellSourceKey;
   final bool highlightGift;
 
   @override
@@ -712,10 +779,13 @@ class _CollectionInvTile extends StatelessWidget {
             onPressed: onGift,
             icon: const Icon(Icons.card_giftcard_outlined),
           ),
-          IconButton(
-            tooltip: context.l10n.inventorySell,
-            onPressed: onSell,
-            icon: const Icon(Icons.sell_outlined),
+          KeyedSubtree(
+            key: sellSourceKey,
+            child: IconButton(
+              tooltip: context.l10n.inventorySell,
+              onPressed: onSell,
+              icon: const Icon(Icons.sell_outlined),
+            ),
           ),
         ],
       ),

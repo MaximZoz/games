@@ -20,6 +20,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -305,18 +306,24 @@ class AppShell extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 8),
                         child: authState.when(
-                          data: (user) => user != null
-                              ? Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: ToolbarBalanceChip(
-                                      bronze: user.balanceBronze,
-                                      coinSize: 16,
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                          data: (user) {
+                            if (user == null) return const SizedBox.shrink();
+                            final gain = ref.watch(balanceGainProvider);
+                            final bronze =
+                                gain.displayBronze ?? user.balanceBronze;
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: ToolbarBalanceChip(
+                                  bronze: bronze,
+                                  coinSize: 16,
+                                  forceShow: gain.forceShow,
+                                  coinKeys: ref.watch(toolbarCoinKeysProvider),
+                                ),
+                              ),
+                            );
+                          },
                           loading: () => const SizedBox.shrink(),
                           error: (_, __) => const SizedBox.shrink(),
                         ),
