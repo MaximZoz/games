@@ -297,10 +297,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final headerBadge = (incomeAvailable ? 1 : 0) + unreadGiftCount;
 
     final catalogBySet = <String, int>{};
+    final catalogDailyBySet = <String, int>{};
     for (final e in catalog.where((e) => e.kind == 'collection')) {
       final s = (e.collectionSet ?? 'other').trim();
       if (s.isEmpty) continue;
       catalogBySet[s] = (catalogBySet[s] ?? 0) + 1;
+      catalogDailyBySet[s] = (catalogDailyBySet[s] ?? 0) + e.dailyBronze;
     }
     final collectionsBySet = <String, List<InventoryItem>>{};
     for (final it in collections) {
@@ -404,58 +406,47 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        income.available
-                                            ? context.l10n.inventoryIncomeReady(
-                                                formatRewardBronzePerDay(
-                                                  income.amountBronze,
-                                                ),
-                                              )
-                                            : context.l10n
-                                                .inventoryIncomeTomorrow(
-                                                formatRewardBronzePerDay(
-                                                  income.amountBronze,
-                                                ),
+                                      child: KeyedSubtree(
+                                        key: _claimIncomeKey,
+                                        child: Wrap(
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: [
+                                            Text(
+                                              income.available
+                                                  ? context.l10n
+                                                      .inventoryIncomeReadyLabel
+                                                  : context.l10n
+                                                      .inventoryIncomeTomorrowLabel,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: AppColors.textSecondary,
                                               ),
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ),
-                                    KeyedSubtree(
-                                      key: _claimIncomeKey,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            '+${rewardCoinAmount(income.amountBronze)}',
-                                            style: const TextStyle(
+                                            ),
+                                            BalanceDisplay(
+                                              bronze: income.amountBronze,
+                                              prefix:
+                                                  income.available ? '+' : null,
+                                              coinSize: 16,
+                                              fontSize: 13,
+                                              spacing: 5,
                                               fontWeight: FontWeight.w700,
                                               color: AppColors.textPrimary,
                                             ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          CoinIcon(
-                                            coinType: rewardCoinType(
-                                                income.amountBronze),
-                                            size: 18,
-                                          ),
-                                          if (income.available) ...[
-                                            const SizedBox(width: 8),
-                                            FilledButton(
-                                              onPressed: _claimBusy
-                                                  ? null
-                                                  : _claimIncome,
-                                              child: Text(_claimBusy
-                                                  ? '…'
-                                                  : context
-                                                      .l10n.inventoryClaim),
-                                            ),
                                           ],
-                                        ],
+                                        ),
                                       ),
                                     ),
+                                    if (income.available)
+                                      FilledButton(
+                                        onPressed:
+                                            _claimBusy ? null : _claimIncome,
+                                        child: Text(_claimBusy
+                                            ? '…'
+                                            : context.l10n.inventoryClaim),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -463,38 +454,57 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               const SizedBox.shrink()
                             else
                               for (final set in collectionSetKeys) ...[
-                                _CollectionSetFrame(
-                                  title: collectionSetTitle(set),
-                                  owned: collectionsBySet[set]?.length ?? 0,
-                                  total: catalogBySet[set] ??
-                                      (collectionsBySet[set]?.length ?? 0),
-                                  onOpenShop: set == 'other'
-                                      ? null
-                                      : () => context.push(
-                                            '/shop/collections/$set',
+                                Builder(
+                                  builder: (context) {
+                                    final ownedCount =
+                                        collectionsBySet[set]?.length ?? 0;
+                                    final totalCount = catalogBySet[set] ??
+                                        ownedCount;
+                                    final setBonus = catalogDailyBySet[set] ??
+                                        (collectionsBySet[set] ?? const [])
+                                            .fold<int>(
+                                          0,
+                                          (s, e) => s + e.dailyBronze,
+                                        );
+                                    return _CollectionSetFrame(
+                                      title: collectionSetTitle(set),
+                                      owned: ownedCount,
+                                      total: totalCount,
+                                      setBonusBronze: setBonus,
+                                      onOpenShop: set == 'other'
+                                          ? null
+                                          : () => context.push(
+                                                '/shop/collections/$set',
+                                              ),
+                                      children: [
+                                        for (final it
+                                            in collectionsBySet[set] ??
+                                                const <InventoryItem>[])
+                                          _CollectionInvTile(
+                                            item: it,
+                                            sellSourceKey:
+                                                _sellKeyFor(it.code),
+                                            highlightGift: _highlightGifts
+                                                .contains(it.code),
+                                            onOpen: () =>
+                                                showCollectionFullscreen(
+                                              context,
+                                              title: catalogTitle(
+                                                it.code,
+                                                fallback: it.title,
+                                                l10n: context.l10n,
+                                              ),
+                                              animatedName: it.animatedName ??
+                                                  'sparkles',
+                                              fallback: it.emoji,
+                                              subtitle: null,
+                                            ),
+                                            onGift: () => _gift(it),
+                                            onSell: () => _sell(it),
                                           ),
-                                  children: [
-                                    for (final it
-                                        in collectionsBySet[set] ??
-                                            const <InventoryItem>[])
-                                      _CollectionInvTile(
-                                        item: it,
-                                        sellSourceKey: _sellKeyFor(it.code),
-                                        highlightGift:
-                                            _highlightGifts.contains(it.code),
-                                        onOpen: () => showCollectionFullscreen(
-                                          context,
-                                          title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
-                                          animatedName:
-                                              it.animatedName ?? 'sparkles',
-                                          fallback: it.emoji,
-                                          subtitle:
-                                              '+${formatRewardBronzePerDay(it.dailyBronze)}',
-                                        ),
-                                        onGift: () => _gift(it),
-                                        onSell: () => _sell(it),
-                                      ),
-                                  ],
+                                      ],
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 10),
                               ],
@@ -582,21 +592,24 @@ class _CollectionSetFrame extends StatelessWidget {
     required this.owned,
     required this.total,
     required this.children,
+    this.setBonusBronze = 0,
     this.onOpenShop,
   });
 
   final String title;
   final int owned;
   final int total;
+  final int setBonusBronze;
   final List<Widget> children;
   final VoidCallback? onOpenShop;
 
   @override
   Widget build(BuildContext context) {
     final countLabel = total > 0 ? '$owned/$total' : '$owned';
+    final complete = total > 0 && owned >= total;
     final header = Row(
       children: [
-        Expanded(
+        Flexible(
           child: Text(
             title,
             style: TextStyle(
@@ -606,8 +619,23 @@ class _CollectionSetFrame extends StatelessWidget {
                   ? AppColors.accentStart
                   : AppColors.textPrimary,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (setBonusBronze > 0) ...[
+          const SizedBox(width: 8),
+          BalanceDisplay(
+            bronze: setBonusBronze,
+            prefix: complete ? '+' : null,
+            coinSize: 15,
+            fontSize: 12,
+            spacing: 4,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            opacity: complete ? 1 : 0.32,
+          ),
+        ],
+        const SizedBox(width: 8),
         Text(
           countLabel,
           style: const TextStyle(
@@ -767,12 +795,14 @@ class _CollectionInvTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    '+${formatRewardBronzePerDay(item.dailyBronze)}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
+                  BalanceDisplay(
+                    bronze: item.dailyBronze,
+                    prefix: '+',
+                    coinSize: 14,
+                    fontSize: 12,
+                    spacing: 4,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
                 ],
               ),

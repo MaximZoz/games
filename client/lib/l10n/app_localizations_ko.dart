@@ -1136,6 +1136,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+
+  @override
   String inventoryStakeGold(String amount) {
     return '$amount 골드를 걸 수 있습니다';
   }

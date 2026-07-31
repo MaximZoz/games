@@ -719,8 +719,10 @@ class BalanceDisplay extends StatelessWidget {
     this.spacing = 6,
     this.fontWeight = FontWeight.w600,
     this.prefix,
+    this.suffix,
     this.animate = false,
     this.color = AppColors.textPrimary,
+    this.opacity = 1,
     this.forceShow = const <CoinType>{},
     this.coinKeys,
   });
@@ -731,8 +733,11 @@ class BalanceDisplay extends StatelessWidget {
   final double spacing;
   final FontWeight fontWeight;
   final String? prefix;
+  final String? suffix;
   final bool animate;
   final Color color;
+  /// 0…1 — для приглушённого бонуса незавершённой коллекции.
+  final double opacity;
   /// Показать номинал даже при 0 (вставка новой монеты перед анимацией).
   final Set<CoinType> forceShow;
   final Map<CoinType, GlobalKey>? coinKeys;
@@ -809,7 +814,19 @@ class BalanceDisplay extends StatelessWidget {
       ));
     }
 
-    return FittedBox(
+    if (suffix != null && suffix!.isNotEmpty) {
+      parts.add(SizedBox(width: spacing));
+      parts.add(Text(
+        suffix!,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+      ));
+    }
+
+    final row = FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
       child: Row(
@@ -817,5 +834,7 @@ class BalanceDisplay extends StatelessWidget {
         children: parts,
       ),
     );
+    if (opacity >= 0.999) return row;
+    return Opacity(opacity: opacity.clamp(0.0, 1.0), child: row);
   }
 }

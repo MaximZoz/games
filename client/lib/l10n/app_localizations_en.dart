@@ -1136,6 +1136,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get inventoryIncomeReadyLabel => 'Income:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Income tomorrow:';
+
+  @override
   String inventoryStakeGold(String amount) {
     return 'You can bet $amount gold';
   }

@@ -1136,6 +1136,12 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+
+  @override
   String inventoryStakeGold(String amount) {
     return 'Du kan satse $amount gull';
   }

@@ -179,13 +179,45 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      '${context.l10n.shopSetProgress(ownedCount, groupItems.length)} · '
-                                      '+${formatRewardBronzePerDay(setDaily)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          context.l10n.shopSetProgress(
+                                            ownedCount,
+                                            groupItems.length,
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        if (setDaily > 0) ...[
+                                          Text(
+                                            ' · ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textSecondary
+                                                  .withValues(alpha: 0.8),
+                                            ),
+                                          ),
+                                          BalanceDisplay(
+                                            bronze: setDaily,
+                                            prefix: ownedCount >=
+                                                    groupItems.length
+                                                ? '+'
+                                                : null,
+                                            coinSize: 14,
+                                            fontSize: 12,
+                                            spacing: 4,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textSecondary,
+                                            opacity: ownedCount >=
+                                                    groupItems.length
+                                                ? 1
+                                                : 0.35,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -371,16 +403,36 @@ class _ShopCollectionGroupScreenState
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       final l10n = context.l10n;
-                      final bonus =
-                          '+${formatRewardBronzePerDay(setDaily)}';
-                      return Text(
-                        complete
-                            ? '${l10n.shopSetComplete} · $bonus'
-                            : '${l10n.shopSetProgress(ownedCount, groupItems.length)} · $bonus',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                      return Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              complete
+                                  ? l10n.shopSetComplete
+                                  : l10n.shopSetProgress(
+                                      ownedCount,
+                                      groupItems.length,
+                                    ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (setDaily > 0) ...[
+                            const SizedBox(width: 8),
+                            BalanceDisplay(
+                              bronze: setDaily,
+                              prefix: complete ? '+' : null,
+                              coinSize: 14,
+                              fontSize: 12,
+                              spacing: 4,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              opacity: complete ? 1 : 0.32,
+                            ),
+                          ],
+                        ],
                       );
                     }
                     final item = groupItems[index - 1];

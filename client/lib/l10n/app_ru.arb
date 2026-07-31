@@ -635,6 +635,8 @@
       }
     }
   },
+  "inventoryIncomeReadyLabel": "Доход:",
+  "inventoryIncomeTomorrowLabel": "Доход завтра:",
   "inventoryStakeGold": "Можно ставить {amount} золота",
   "@inventoryStakeGold": {
     "placeholders": {

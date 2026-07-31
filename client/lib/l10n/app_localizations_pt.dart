@@ -1136,6 +1136,12 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+
+  @override
   String inventoryStakeGold(String amount) {
     return 'Pode apostar $amount de ouro';
   }

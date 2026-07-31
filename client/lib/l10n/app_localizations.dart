@@ -2255,6 +2255,18 @@ abstract class AppLocalizations {
   /// **'Доход завтра: {amount}'**
   String inventoryIncomeTomorrow(String amount);
 
+  /// No description provided for @inventoryIncomeReadyLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход:'**
+  String get inventoryIncomeReadyLabel;
+
+  /// No description provided for @inventoryIncomeTomorrowLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход завтра:'**
+  String get inventoryIncomeTomorrowLabel;
+
   /// No description provided for @inventoryStakeGold.
   ///
   /// In ru, this message translates to:

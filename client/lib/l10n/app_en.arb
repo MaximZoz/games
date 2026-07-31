@@ -635,6 +635,8 @@
       }
     }
   },
+  "inventoryIncomeReadyLabel": "Income:",
+  "inventoryIncomeTomorrowLabel": "Income tomorrow:",
   "inventoryStakeGold": "You can bet {amount} gold",
   "@inventoryStakeGold": {
     "placeholders": {
