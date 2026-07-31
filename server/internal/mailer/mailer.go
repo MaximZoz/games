@@ -78,33 +78,41 @@ func (m *Mailer) smtpEnabled() bool {
 // SendPlain отправляет текстовое письмо.
 // Без Resend/SMTP пишет в лог и не падает (dev).
 func (m *Mailer) SendPlain(to, subject, body string) error {
+	return m.Send(to, subject, body, "")
+}
+
+// Send отправляет письмо (text + опциональный html).
+func (m *Mailer) Send(to, subject, textBody, htmlBody string) error {
 	to = strings.TrimSpace(to)
 	if to == "" {
 		return fmt.Errorf("empty recipient")
 	}
 	if !m.Enabled() {
-		log.Printf("[mailer] no provider — to=%s subject=%q body=%q", to, subject, body)
-		if code := extractVerificationCode(body); code != "" {
+		log.Printf("[mailer] no provider — to=%s subject=%q body=%q", to, subject, textBody)
+		if code := extractVerificationCode(textBody); code != "" {
 			log.Printf("[auth] verification code for %s: %s", to, code)
 		}
 		return nil
 	}
 
 	if m.resendEnabled() {
-		if err := m.sendResend(to, subject, body); err != nil {
+		if err := m.sendResend(to, subject, textBody, htmlBody); err != nil {
 			return fmt.Errorf("resend: %w", err)
 		}
 		return nil
 	}
-	return m.sendSMTP(to, subject, body)
+	return m.sendSMTP(to, subject, textBody, htmlBody)
 }
 
-func (m *Mailer) sendResend(to, subject, body string) error {
+func (m *Mailer) sendResend(to, subject, textBody, htmlBody string) error {
 	payload := map[string]any{
 		"from":    m.cfg.From,
 		"to":      []string{to},
 		"subject": subject,
-		"text":    body,
+		"text":    textBody,
+	}
+	if strings.TrimSpace(htmlBody) != "" {
+		payload["html"] = htmlBody
 	}
 	raw, err := json.Marshal(payload)
 	if err != nil {
@@ -144,7 +152,7 @@ func isResendTestingRestriction(msg string) bool {
 		strings.Contains(lower, "only send testing")
 }
 
-func (m *Mailer) sendSMTP(to, subject, body string) error {
+func (m *Mailer) sendSMTP(to, subject, textBody, htmlBody string) error {
 	from := strings.TrimSpace(m.cfg.From)
 	// Для SMTP Envelope лучше голый email.
 	fromAddr := from
@@ -154,16 +162,43 @@ func (m *Mailer) sendSMTP(to, subject, body string) error {
 		}
 	}
 
-	msg := strings.Join([]string{
-		"From: " + from,
-		"To: " + to,
-		"Subject: " + encodeSubject(subject),
-		"MIME-Version: 1.0",
-		"Content-Type: text/plain; charset=UTF-8",
-		"Content-Transfer-Encoding: 8bit",
-		"",
-		body,
-	}, "\r\n")
+	var msg string
+	if strings.TrimSpace(htmlBody) == "" {
+		msg = strings.Join([]string{
+			"From: " + from,
+			"To: " + to,
+			"Subject: " + encodeSubject(subject),
+			"MIME-Version: 1.0",
+			"Content-Type: text/plain; charset=UTF-8",
+			"Content-Transfer-Encoding: 8bit",
+			"",
+			textBody,
+		}, "\r\n")
+	} else {
+		boundary := fmt.Sprintf("mg_alt_%d", time.Now().UnixNano())
+		msg = strings.Join([]string{
+			"From: " + from,
+			"To: " + to,
+			"Subject: " + encodeSubject(subject),
+			"MIME-Version: 1.0",
+			"Content-Type: multipart/alternative; boundary=" + boundary,
+			"",
+			"--" + boundary,
+			"Content-Type: text/plain; charset=UTF-8",
+			"Content-Transfer-Encoding: 8bit",
+			"",
+			textBody,
+			"",
+			"--" + boundary,
+			"Content-Type: text/html; charset=UTF-8",
+			"Content-Transfer-Encoding: 8bit",
+			"",
+			htmlBody,
+			"",
+			"--" + boundary + "--",
+			"",
+		}, "\r\n")
+	}
 
 	addr := net.JoinHostPort(m.cfg.Host, m.cfg.Port)
 	var auth smtp.Auth
@@ -267,39 +302,112 @@ func extractVerificationCode(body string) string {
 }
 
 func (m *Mailer) otpDomain() string {
-	raw := strings.TrimSpace(m.cfg.AppOrigin)
-	if raw == "" {
-		return "localhost"
-	}
-	if !strings.Contains(raw, "://") {
-		raw = "https://" + raw
-	}
-	u, err := url.Parse(raw)
+	u, err := url.Parse(m.appBaseURL())
 	if err != nil || u.Hostname() == "" {
 		return "localhost"
 	}
 	return u.Hostname()
 }
 
+func (m *Mailer) appBaseURL() string {
+	raw := strings.TrimSpace(m.cfg.AppOrigin)
+	if raw == "" {
+		return ""
+	}
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	return strings.TrimRight(u.Scheme+"://"+u.Host, "/")
+}
+
+func (m *Mailer) copyCodeURL(code string) string {
+	base := m.appBaseURL()
+	if base == "" {
+		return ""
+	}
+	return base + "/copy-code.html?c=" + url.QueryEscape(code)
+}
+
+func escapeHTML(s string) string {
+	replacer := strings.NewReplacer(
+		"&", "&amp;",
+		"<", "&lt;",
+		">", "&gt;",
+		`"`, "&quot;",
+		"'", "&#39;",
+	)
+	return replacer.Replace(s)
+}
+
+// otpEmailContent — text + HTML с кликабельным кодом (копирование через /copy-code.html).
+func (m *Mailer) otpEmailContent(titleLine, ignoreLine, code string) (textBody, htmlBody string) {
+	domain := m.otpDomain()
+	code = strings.TrimSpace(code)
+	copyURL := m.copyCodeURL(code)
+
+	textBody = fmt.Sprintf(
+		"%s %s\n\nНажмите на код в письме (HTML), чтобы скопировать.\nКод действует 15 минут.\n%s\n\n@%s #%s\n",
+		titleLine, code, ignoreLine, domain, code,
+	)
+
+	codeHTML := escapeHTML(code)
+	var codeBlock string
+	if copyURL != "" {
+		codeBlock = fmt.Sprintf(
+			`<a href="%s" style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.22em;color:#4F46E5;text-decoration:underline;text-underline-offset:6px;border:2px dashed #A5B4FC;border-radius:12px;padding:14px 22px;background:#EEF2FF;">%s</a>`,
+			escapeHTML(copyURL), codeHTML,
+		)
+	} else {
+		codeBlock = fmt.Sprintf(
+			`<span style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.22em;color:#4F46E5;text-decoration:underline;text-underline-offset:6px;border:2px dashed #A5B4FC;border-radius:12px;padding:14px 22px;background:#EEF2FF;-webkit-user-select:all;user-select:all;">%s</span>`,
+			codeHTML,
+		)
+	}
+
+	htmlBody = fmt.Sprintf(`<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:24px;background:#E8ECF4;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1a1a2e;">
+  <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #c7d2fe;">
+    <p style="margin:0 0 8px;font-size:16px;font-weight:600;">%s</p>
+    <p style="margin:20px 0 8px;text-align:center;">%s</p>
+    <p style="margin:0 0 20px;text-align:center;font-size:13px;color:#4F46E5;text-decoration:underline;">Нажмите на код, чтобы скопировать</p>
+    <p style="margin:0 0 8px;font-size:14px;color:#5a6275;line-height:1.45;">Код действует 15 минут.</p>
+    <p style="margin:0;font-size:14px;color:#5a6275;line-height:1.45;">%s</p>
+    <p style="margin:20px 0 0;font-size:12px;color:#94a3b8;">@%s #%s</p>
+  </div>
+</body></html>`,
+		escapeHTML(titleLine),
+		codeBlock,
+		escapeHTML(ignoreLine),
+		escapeHTML(domain),
+		codeHTML,
+	)
+	return textBody, htmlBody
+}
+
 // SendVerificationCode отправляет 6-значный код на указанный адрес (to = email регистрации).
 // В конце тела — строка "@host #CODE" для автозаполнения OTP из почты.
 func (m *Mailer) SendVerificationCode(to, code string) error {
 	subject := "Код подтверждения MultiGames"
-	domain := m.otpDomain()
-	body := fmt.Sprintf(
-		"Ваш код подтверждения: %s\n\nКод действует 15 минут.\nЕсли вы не регистрировались — просто проигнорируйте письмо.\n\n@%s #%s\n",
-		code, domain, code,
+	textBody, htmlBody := m.otpEmailContent(
+		"Ваш код подтверждения:",
+		"Если вы не регистрировались — просто проигнорируйте письмо.",
+		code,
 	)
-	return m.SendPlain(to, subject, body)
+	return m.Send(to, subject, textBody, htmlBody)
 }
 
 // SendPasswordResetCode отправляет код для сброса пароля.
 func (m *Mailer) SendPasswordResetCode(to, code string) error {
 	subject := "Сброс пароля MultiGames"
-	domain := m.otpDomain()
-	body := fmt.Sprintf(
-		"Ваш код для сброса пароля: %s\n\nКод действует 15 минут.\nЕсли вы не запрашивали сброс — просто проигнорируйте письмо.\n\n@%s #%s\n",
-		code, domain, code,
+	textBody, htmlBody := m.otpEmailContent(
+		"Ваш код для сброса пароля:",
+		"Если вы не запрашивали сброс — просто проигнорируйте письмо.",
+		code,
 	)
-	return m.SendPlain(to, subject, body)
+	return m.Send(to, subject, textBody, htmlBody)
 }

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Код скопирован</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #E8ECF4;
+      color: #1a1a2e;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(30, 40, 80, 0.08);
+      border: 1px solid #c7d2fe;
+    }
+    h1 { font-size: 1.2rem; margin: 0 0 8px; }
+    p { margin: 0 0 12px; color: #5a6275; line-height: 1.45; font-size: 14px; }
+    .code {
+      display: inline-block;
+      margin: 12px 0 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: #4F46E5;
+      text-decoration: underline;
+      text-underline-offset: 6px;
+      cursor: pointer;
+      user-select: all;
+      -webkit-user-select: all;
+      border: 2px dashed #a5b4fc;
+      border-radius: 12px;
+      padding: 12px 18px 12px 22px;
+      background: #eef2ff;
+    }
+    .ok { color: #15803d; font-weight: 600; min-height: 1.3em; }
+    .err { color: #b91c1c; }
+    a.back {
+      display: inline-block;
+      margin-top: 16px;
+      color: #4F46E5;
+      font-weight: 600;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">Ваш код</h1>
+    <p id="hint">Нажмите на код, чтобы скопировать</p>
+    <div class="code" id="code" role="button" tabindex="0" title="Нажмите, чтобы скопировать">······</div>
+    <p class="ok" id="status" aria-live="polite"></p>
+    <a class="back" href="/games">Открыть Zozu Games</a>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var code = (params.get('c') || params.get('code') || '').replace(/\D/g, '');
+      var el = document.getElementById('code');
+      var status = document.getElementById('status');
+      var hint = document.getElementById('hint');
+
+      if (!code) {
+        document.getElementById('title').textContent = 'Код не найден';
+        hint.textContent = 'Откройте ссылку из письма ещё раз.';
+        el.textContent = '—';
+        return;
+      }
+
+      el.textContent = code;
+
+      function setStatus(msg, isErr) {
+        status.textContent = msg;
+        status.className = isErr ? 'err' : 'ok';
+      }
+
+      function copy() {
+        var text = code;
+        function ok() {
+          setStatus('Скопировано в буфер обмена');
+          hint.textContent = 'Вставьте код в приложении';
+        }
+        function fail() {
+          setStatus('Не удалось скопировать автоматически — выделите код вручную', true);
+          try {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } catch (e) {}
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(ok).catch(function () {
+            // fallback
+            try {
+              var ta = document.createElement('textarea');
+              ta.value = text;
+              ta.setAttribute('readonly', '');
+              ta.style.position = 'fixed';
+              ta.style.left = '-9999px';
+              document.body.appendChild(ta);
+              ta.select();
+              if (document.execCommand('copy')) {
+                document.body.removeChild(ta);
+                ok();
+              } else {
+                document.body.removeChild(ta);
+                fail();
+              }
+            } catch (e) {
+              fail();
+            }
+          });
+          return;
+        }
+        try {
+          var ta2 = document.createElement('textarea');
+          ta2.value = text;
+          ta2.setAttribute('readonly', '');
+          ta2.style.position = 'fixed';
+          ta2.style.left = '-9999px';
+          document.body.appendChild(ta2);
+          ta2.select();
+          if (document.execCommand('copy')) {
+            document.body.removeChild(ta2);
+            ok();
+          } else {
+            document.body.removeChild(ta2);
+            fail();
+          }
+        } catch (e) {
+          fail();
+        }
+      }
+
+      el.addEventListener('click', copy);
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          copy();
+        }
+      });
+      // Сразу при открытии из письма — копируем в буфер.
+      copy();
+    })();
+  </script>
+</body>
+</html>

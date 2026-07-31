@@ -65,13 +65,33 @@ func TestIsResendTestingRestriction(t *testing.T) {
 
 func TestSendVerificationCode_BodyContainsOTPBinding(t *testing.T) {
 	m := New(Config{AppOrigin: "https://app.zozu.games"})
-	// без провайдера — только лог; проверяем тело через extract + формат
-	body := "Ваш код подтверждения: 654321\n\nКод действует 15 минут.\nЕсли вы не регистрировались — просто проигнорируйте письмо.\n\n@app.zozu.games #654321\n"
-	if extractVerificationCode(body) != "654321" {
-		t.Fatal("code extract failed")
+	textBody, htmlBody := m.otpEmailContent(
+		"Ваш код подтверждения:",
+		"Если вы не регистрировались — просто проигнорируйте письмо.",
+		"654321",
+	)
+	if extractVerificationCode(textBody) != "654321" {
+		t.Fatalf("code extract failed: %q", textBody)
 	}
-	if !strings.Contains(body, "@app.zozu.games #654321") {
+	if !strings.Contains(textBody, "@app.zozu.games #654321") {
 		t.Fatal("missing OTP autofill binding line")
 	}
-	_ = m
+	if !strings.Contains(htmlBody, "copy-code.html?c=654321") {
+		t.Fatal("missing copy-code link in HTML")
+	}
+	if !strings.Contains(htmlBody, "Нажмите на код, чтобы скопировать") {
+		t.Fatal("missing copy hint in HTML")
+	}
+	if !strings.Contains(htmlBody, "text-decoration:underline") {
+		t.Fatal("code should be underlined")
+	}
+}
+
+func TestCopyCodeURL(t *testing.T) {
+	m := New(Config{AppOrigin: "https://zozugames.com/"})
+	got := m.copyCodeURL("640732")
+	want := "https://zozugames.com/copy-code.html?c=640732"
+	if got != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
 }
