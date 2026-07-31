@@ -40,4 +40,23 @@ void main() {
     expect(loaded?.frameCode, 'frame_gold');
     expect(loaded?.allowedStakeBronze, [1, 10, 50, 100]);
   });
+
+  test('пустой saveShop не затирает memory-кэш', () async {
+    const items = [
+      ShopItem(
+        code: 'emoji_joy',
+        kind: 'emoji',
+        title: 'Joy',
+        description: '',
+        priceBronze: 10,
+        owned: false,
+        payload: {'animated_name': 'joy', 'group': 'emotions'},
+      ),
+    ];
+    await OfflineDiskCache.saveShop('u2', items);
+    await OfflineDiskCache.saveShop('u2', const []);
+    final loaded = await OfflineDiskCache.loadShop('u2');
+    expect(loaded, isNotNull);
+    expect(loaded!.single.code, 'emoji_joy');
+  });
 }
