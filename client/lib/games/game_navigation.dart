@@ -59,9 +59,20 @@ String? realtimeGameIdForNavigation(
     return null;
   }
 
+  final eventLobbyId = event['lobby_id']?.toString().trim();
+  // Watcher конкретного лобби: чужие события не трогаем.
+  if (expectedLobbyId != null &&
+      eventLobbyId != null &&
+      eventLobbyId.isNotEmpty &&
+      eventLobbyId != expectedLobbyId) {
+    return null;
+  }
+
   final currentLobbyId = _lobbyIdFromPath(currentPath);
   if (currentLobbyId != null &&
-      event['lobby_id']?.toString().trim() != currentLobbyId) {
+      eventLobbyId != null &&
+      eventLobbyId.isNotEmpty &&
+      eventLobbyId != currentLobbyId) {
     return null;
   }
 
@@ -69,15 +80,27 @@ String? realtimeGameIdForNavigation(
   return gameId == null || gameId.isEmpty ? null : gameId;
 }
 
+/// Авто-вход в партию с любой вкладки (чаты, друзья, главная…),
+/// кроме экранов авторизации. Иначе создатель инвайта, ушедший со страницы
+/// лобби, не попадает в игру, когда соперник принял приглашение.
 bool _allowsAutomaticGameNavigation(
   String currentPath, {
   String? expectedLobbyId,
 }) {
-  if (expectedLobbyId != null) {
-    return currentPath == '/games/tictactoe/lobby/$expectedLobbyId';
-  }
-  return currentPath == '/games' ||
-      currentPath.startsWith('/games/tictactoe/lobby/');
+  if (_isAuthOrPublicPath(currentPath)) return false;
+  // expectedLobbyId ограничивает только совпадение lobby_id в событии
+  // (см. realtimeGameIdForNavigation), а не текущий URL — пользователь
+  // мог переключить вкладку, пока лобби ещё ждёт.
+  return true;
+}
+
+bool _isAuthOrPublicPath(String path) {
+  return path == '/login' ||
+      path == '/register' ||
+      path == '/verify-email' ||
+      path == '/forgot-password' ||
+      path == '/reset-password' ||
+      path == '/oauth/callback';
 }
 
 String? _lobbyIdFromPath(String currentPath) {
