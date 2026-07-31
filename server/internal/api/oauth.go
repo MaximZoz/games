@@ -205,8 +205,24 @@ func (h *AuthHandler) OAuthStart(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	// mode=poll — для PWA: клиент открывает authorize_url и ждёт /oauth/poll.
-	if strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("mode")), "poll") {
+	modePoll := strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("mode")), "poll")
+	navigate := strings.TrimSpace(r.URL.Query().Get("navigate")) == "1"
+	// mode=poll&navigate=1 — браузерный редирект (cookie для poll без state в query).
+	if modePoll && navigate {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "oauth_pending_state",
+			Value:    state,
+			Path:     "/",
+			MaxAge:   600,
+			HttpOnly: true,
+			Secure:   strings.HasPrefix(strings.ToLower(h.OAuth.PublicBaseURL), "https://"),
+			SameSite: http.SameSiteLaxMode,
+		})
+		http.Redirect(w, r, authURL, http.StatusFound)
+		return
+	}
+	// mode=poll — JSON: клиент открывает authorize_url и ждёт /oauth/poll.
+	if modePoll {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"authorize_url": authURL,
@@ -228,6 +244,11 @@ func (h *AuthHandler) OAuthPoll(w http.ResponseWriter, r *http.Request) {
 	}
 	state := strings.TrimSpace(r.URL.Query().Get("state"))
 	if state == "" {
+		if c, err := r.Cookie("oauth_pending_state"); err == nil {
+			state = strings.TrimSpace(c.Value)
+		}
+	}
+	if state == "" {
 		WriteErr(w, r, http.StatusBadRequest, "state required")
 		return
 	}
@@ -238,6 +259,15 @@ func (h *AuthHandler) OAuthPoll(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"status": "pending"})
 		return
 	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_pending_state",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   h.OAuth != nil && strings.HasPrefix(strings.ToLower(h.OAuth.PublicBaseURL), "https://"),
+		SameSite: http.SameSiteLaxMode,
+	})
 	w.Header().Set("Content-Type", "application/json")
 	if res.Error != "" {
 		_ = json.NewEncoder(w).Encode(map[string]any{

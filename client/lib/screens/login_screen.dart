@@ -239,24 +239,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         isLoading: _isLoading,
                         expanded: true,
                       ),
-                      // TextButton выше OAuth: в Column hit-test идёт снизу вверх,
-                      // иначе «Зарегистрироваться» перехватывает тап по Google.
-                      const SizedBox(height: 4),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                        ),
-                        onPressed: () => context.push(
-                          appendAuthQuery(
-                            '/register',
-                            redirect: _redirect,
-                            ref: _ref,
+                      const SizedBox(height: 20),
+                      // Полный hit-target: иначе клик «проваливается» на Google ниже.
+                      SizedBox(
+                        height: 48,
+                        width: double.infinity,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => context.push(
+                              appendAuthQuery(
+                                '/register',
+                                redirect: _redirect,
+                                ref: _ref,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                l10n.loginNoAccount,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        child: Text(l10n.loginNoAccount),
                       ),
                       OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],

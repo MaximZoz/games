@@ -327,8 +327,10 @@ class AuthRepository {
     required String provider,
     String? redirect,
     String? ref,
+    bool poll = false,
   }) {
     final params = <String, String>{};
+    if (poll) params['mode'] = 'poll';
     final r = (redirect ?? '').trim();
     if (r.isNotEmpty) params['redirect'] = r;
     final referral = (ref ?? '').trim();
@@ -371,9 +373,10 @@ class AuthRepository {
   }
 
   /// Ждёт результат OAuth (после входа в popup/Safari).
+  /// На iOS PWA JS может засыпать в фоне — при возврате опрашиваем сразу.
   Future<Map<String, String>> pollOAuthResult({
     required String state,
-    Duration timeout = const Duration(minutes: 3),
+    Duration timeout = const Duration(minutes: 5),
   }) async {
     await init();
     final deadline = DateTime.now().add(timeout);
@@ -385,7 +388,7 @@ class AuthRepository {
         operation: 'AuthRepository.pollOAuthResult',
       );
       if (response.statusCode == 202) {
-        await Future<void>.delayed(const Duration(milliseconds: 700));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         continue;
       }
       if (response.statusCode != 200) {
@@ -397,7 +400,7 @@ class AuthRepository {
       }
       final status = (body['status'] ?? '').toString();
       if (status == 'pending') {
-        await Future<void>.delayed(const Duration(milliseconds: 700));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         continue;
       }
       if (status == 'error') {

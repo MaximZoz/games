@@ -1,10 +1,19 @@
-/// Заглушка окна OAuth для VM-тестов.
-class OAuthWindowHandle {
-  const OAuthWindowHandle();
-}
+bool get isIosStandalonePwa => false;
 
-OAuthWindowHandle? openOAuthWindowBlank() => const OAuthWindowHandle();
+Object? openOAuthWindowBlank() => null;
 
-void navigateOAuthWindow(OAuthWindowHandle? handle, String url) {}
+void navigateOAuthWindow(Object? handle, String url) {}
 
-void closeOAuthWindow(OAuthWindowHandle? handle) {}
+void closeOAuthWindow(Object? handle) {}
+
+/// iOS PWA: открыть OAuth во внешнем Safari (не WKWebView).
+void openOAuthExternal(String url) {}
+
+({String authorizeUrl, String state})? fetchOAuthPollStartSync(String url) =>
+    null;
+
+void saveOAuthPendingState(String state) {}
+
+String? readOAuthPendingState() => null;
+
+void clearOAuthPendingState() {}
