@@ -167,11 +167,136 @@ func (h *AuthHandler) OAuthProviders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	providers := []string{}
+	out := map[string]any{"providers": providers}
 	if h.OAuth != nil {
 		providers = h.OAuth.EnabledProviders()
+		out["providers"] = providers
+		// Публичный client_id для Google Identity Services (кнопка без ухода в Safari).
+		if h.OAuth.GoogleClientID != "" {
+			out["google_client_id"] = h.OAuth.GoogleClientID
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"providers": providers})
+	_ = json.NewEncoder(w).Encode(out)
+}
+
+// GoogleIDTokenLogin — вход по GIS credential (JWT) без redirect/popup.
+// Нужен для iOS PWA: redirect открывает SFSafariViewController, Google показывает белый экран.
+func (h *AuthHandler) GoogleIDTokenLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	if h.OAuth == nil || h.OAuth.GoogleClientID == "" {
+		WriteErr(w, r, http.StatusServiceUnavailable, "oauth not configured")
+		return
+	}
+	var body struct {
+		Credential string `json:"credential"`
+		Redirect   string `json:"redirect"`
+		Ref        string `json:"ref"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	cred := strings.TrimSpace(body.Credential)
+	if cred == "" {
+		WriteErr(w, r, http.StatusBadRequest, "credential required")
+		return
+	}
+	identity, err := h.verifyGoogleIDToken(r.Context(), cred)
+	if err != nil {
+		log.Printf("[oauth] google id_token verify failed: %v", err)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid google credential")
+		return
+	}
+
+	var referredBy *uuid.UUID
+	if refRaw := strings.TrimSpace(body.Ref); refRaw != "" {
+		if id, parseErr := uuid.Parse(refRaw); parseErr == nil {
+			referredBy = &id
+		}
+	}
+	u, _, err := store.FindOrCreateOAuthUser(
+		r.Context(),
+		h.Pool,
+		"google",
+		identity.Subject,
+		identity.Email,
+		identity.Name,
+		referredBy,
+	)
+	if err != nil {
+		log.Printf("[oauth] find/create user failed: %v", err)
+		WriteErr(w, r, http.StatusInternalServerError, "oauth user create failed")
+		return
+	}
+	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "oauth session failed")
+		return
+	}
+	redirect := strings.TrimSpace(body.Redirect)
+	if redirect == "" {
+		redirect = "/games"
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    expiresIn,
+		"redirect":      redirect,
+		"user":          userToResponse(u),
+	})
+}
+
+func (h *AuthHandler) verifyGoogleIDToken(ctx context.Context, idToken string) (*oauthIdentity, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		"https://oauth2.googleapis.com/tokeninfo?id_token="+url.QueryEscape(idToken),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("tokeninfo: %s", string(raw))
+	}
+	var info struct {
+		Aud           string `json:"aud"`
+		Sub           string `json:"sub"`
+		Email         string `json:"email"`
+		EmailVerified string `json:"email_verified"`
+		Name          string `json:"name"`
+	}
+	if err := json.Unmarshal(raw, &info); err != nil {
+		return nil, err
+	}
+	if info.Sub == "" {
+		return nil, fmt.Errorf("empty sub")
+	}
+	if info.Aud != h.OAuth.GoogleClientID {
+		return nil, fmt.Errorf("aud mismatch")
+	}
+	if info.EmailVerified != "true" && info.EmailVerified != "1" {
+		// tokeninfo иногда отдаёт bool как строку; пустой email тоже допустим редко
+		if info.Email != "" && info.EmailVerified == "false" {
+			return nil, fmt.Errorf("email not verified")
+		}
+	}
+	return &oauthIdentity{
+		Subject: info.Sub,
+		Email:   info.Email,
+		Name:    info.Name,
+	}, nil
 }
 
 func (h *AuthHandler) OAuthStart(w http.ResponseWriter, r *http.Request) {

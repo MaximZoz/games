@@ -307,20 +307,60 @@ class AuthRepository {
   }
 
   Future<List<String>> fetchOAuthProviders() async {
+    final info = await fetchOAuthProvidersInfo();
+    return info.providers;
+  }
+
+  Future<({List<String> providers, String? googleClientId})>
+      fetchOAuthProvidersInfo() async {
     try {
       final response = await ApiClient.get(
         Uri.parse('$apiBaseUrl/api/auth/oauth/providers'),
-        operation: 'AuthRepository.fetchOAuthProviders',
+        operation: 'AuthRepository.fetchOAuthProvidersInfo',
       );
-      if (response.statusCode != 200) return const [];
+      if (response.statusCode != 200) {
+        return (providers: const <String>[], googleClientId: null);
+      }
       final body = jsonDecode(response.body);
-      if (body is! Map) return const [];
+      if (body is! Map) {
+        return (providers: const <String>[], googleClientId: null);
+      }
       final raw = body['providers'];
-      if (raw is! List) return const [];
-      return raw.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+      final providers = raw is List
+          ? raw.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
+          : const <String>[];
+      final gid = (body['google_client_id'] ?? '').toString().trim();
+      return (
+        providers: providers,
+        googleClientId: gid.isEmpty ? null : gid,
+      );
     } catch (_) {
-      return const [];
+      return (providers: const <String>[], googleClientId: null);
     }
+  }
+
+  /// Вход через Google Identity Services (JWT credential), без redirect.
+  Future<AuthResult> loginWithGoogleIdToken({
+    required String credential,
+    String? redirect,
+    String? ref,
+  }) async {
+    await init();
+    final payload = <String, dynamic>{
+      'credential': credential,
+    };
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) payload['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) payload['ref'] = referral;
+
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/oauth/google/id-token'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+      operation: 'AuthRepository.loginWithGoogleIdToken',
+    );
+    return _handleAuthResponse(response);
   }
 
   String oauthStartUrl({

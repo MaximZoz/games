@@ -7,10 +7,12 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/widgets/google_gis.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
 
-final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
-  return ref.watch(authRepositoryProvider).fetchOAuthProviders();
+final oauthProvidersProvider =
+    FutureProvider<({List<String> providers, String? googleClientId})>((ref) async {
+  return ref.watch(authRepositoryProvider).fetchOAuthProvidersInfo();
 });
 
 const _cookiePendingSentinel = 'cookie';
@@ -89,7 +91,8 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     return async.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
-      data: (providers) {
+      data: (info) {
+        final providers = info.providers;
         if (providers.isEmpty) return const SizedBox.shrink();
         final l10n = context.l10n;
         final repo = ref.read(authRepositoryProvider);
@@ -136,10 +139,13 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                     onPressed: _busyProvider != null
                         ? null
                         : () {
-                            if (kIsWeb) {
-                              _startWebNavigate(providers[i], repo);
+                            final p = providers[i];
+                            if (kIsWeb && p == 'google') {
+                              _startGoogleGis(context, info.googleClientId);
+                            } else if (kIsWeb) {
+                              _startWebNavigate(p, repo);
                             } else {
-                              _startNative(context, providers[i]);
+                              _startNative(context, p);
                             }
                           },
                     child: _busyProvider == providers[i]
@@ -181,7 +187,49 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  /// Web/PWA: top-level navigate (без HtmlElementView — не залипает после входа).
+  /// iOS PWA / web: GIS остаётся в приложении (не SFSafariViewController).
+  Future<void> _startGoogleGis(BuildContext context, String? clientId) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final redirect = widget.redirect;
+    if (clientId == null || clientId.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      return;
+    }
+    setState(() => _busyProvider = 'google');
+    try {
+      final cred = await requestGoogleIdToken(clientId);
+      if (cred == null || cred.isEmpty) {
+        throw AuthException(400, l10n.oauthError);
+      }
+      final result =
+          await ref.read(authRepositoryProvider).loginWithGoogleIdToken(
+                credential: cred,
+                redirect: redirect,
+                ref: widget.refCode,
+              );
+      if (!mounted) return;
+      await ref.read(authStateProvider.notifier).loginWithTokens(
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+          );
+      if (!mounted) return;
+      router.go(safeAuthRedirect(redirect) ?? '/games');
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('cancelled') || msg.contains('cancel')) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+    } finally {
+      if (mounted) setState(() => _busyProvider = null);
+    }
+  }
+
+  /// Web: redirect-flow только для не-Google провайдеров.
   void _startWebNavigate(String provider, AuthRepository repo) {
     saveOAuthPendingState(_cookiePendingSentinel);
     setState(() => _busyProvider = provider);

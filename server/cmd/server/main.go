@@ -382,6 +382,7 @@ func main() {
 	mux.HandleFunc("/api/auth/reset-password", authHandler.ResetPassword)
 	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
 	mux.HandleFunc("/api/auth/oauth/poll", authHandler.OAuthPoll)
+	mux.HandleFunc("/api/auth/oauth/google/id-token", authHandler.GoogleIDTokenLogin)
 	mux.HandleFunc("/api/auth/oauth/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasSuffix(path, "/start") {
@@ -390,6 +391,10 @@ func main() {
 		}
 		if strings.HasSuffix(path, "/callback") {
 			authHandler.OAuthCallback(w, r)
+			return
+		}
+		if strings.HasSuffix(path, "/id-token") {
+			authHandler.GoogleIDTokenLogin(w, r)
 			return
 		}
 		http.NotFound(w, r)

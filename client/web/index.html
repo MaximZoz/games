@@ -195,6 +195,127 @@
     }
   </script>
   <script>
+    // Google Identity Services — вход без redirect/SFSafariViewController (iOS PWA).
+    window.__mgGoogleSignIn = function (clientId) {
+      return new Promise(function (resolve, reject) {
+        function cleanup() {
+          var el = document.getElementById('mg-gsi-overlay');
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+        function fail(msg) {
+          cleanup();
+          reject(new Error(msg || 'google sign-in failed'));
+        }
+        function showButton() {
+          cleanup();
+          var overlay = document.createElement('div');
+          overlay.id = 'mg-gsi-overlay';
+          overlay.setAttribute('role', 'dialog');
+          overlay.style.cssText =
+            'position:fixed;inset:0;z-index:2147483646;background:rgba(15,23,42,0.4);' +
+            'display:flex;align-items:center;justify-content:center;padding:24px;';
+          var box = document.createElement('div');
+          box.style.cssText =
+            'background:#fff;border-radius:16px;padding:24px 20px;max-width:320px;width:100%;' +
+            'text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.18);';
+          box.innerHTML =
+            '<p style="margin:0 0 16px;font:600 16px system-ui,-apple-system,sans-serif;color:#111">Войти через Google</p>' +
+            '<div id="mg-gsi-btn" style="display:flex;justify-content:center"></div>' +
+            '<button type="button" id="mg-gsi-cancel" style="margin-top:14px;border:0;background:transparent;' +
+            'color:#555;font:500 14px system-ui,-apple-system,sans-serif;cursor:pointer">Отмена</button>';
+          overlay.appendChild(box);
+          document.body.appendChild(overlay);
+          document.getElementById('mg-gsi-cancel').onclick = function () {
+            fail('cancelled');
+          };
+          overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) fail('cancelled');
+          });
+          try {
+            google.accounts.id.initialize({
+              client_id: clientId,
+              callback: function (resp) {
+                cleanup();
+                if (resp && resp.credential) resolve(resp.credential);
+                else fail('no credential');
+              },
+              auto_select: false,
+              cancel_on_tap_outside: true,
+              use_fedcm_for_prompt: true
+            });
+            google.accounts.id.renderButton(document.getElementById('mg-gsi-btn'), {
+              theme: 'outline',
+              size: 'large',
+              shape: 'rectangular',
+              text: 'signin_with',
+              width: 280,
+              locale: 'ru'
+            });
+          } catch (e) {
+            fail(String(e));
+          }
+        }
+        function start() {
+          try {
+            google.accounts.id.initialize({
+              client_id: clientId,
+              callback: function (resp) {
+                cleanup();
+                if (resp && resp.credential) resolve(resp.credential);
+                else fail('no credential');
+              },
+              auto_select: false,
+              cancel_on_tap_outside: true,
+              use_fedcm_for_prompt: true
+            });
+            google.accounts.id.prompt(function (notification) {
+              try {
+                if (
+                  notification.isNotDisplayed() ||
+                  notification.isSkippedMoment() ||
+                  notification.isDismissedMoment()
+                ) {
+                  showButton();
+                }
+              } catch (e) {
+                showButton();
+              }
+            });
+            // iOS PWA часто глушит One Tap — через мгновение показываем кнопку.
+            setTimeout(function () {
+              if (!document.getElementById('mg-gsi-overlay')) {
+                try {
+                  if (
+                    !document.querySelector('[data-gsi-iframe]') &&
+                    !document.getElementById('credential_picker_container')
+                  ) {
+                    showButton();
+                  }
+                } catch (e) {
+                  showButton();
+                }
+              }
+            }, 700);
+          } catch (e) {
+            showButton();
+          }
+        }
+        if (window.google && google.accounts && google.accounts.id) {
+          start();
+          return;
+        }
+        var s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.onload = start;
+        s.onerror = function () {
+          fail('gsi load failed');
+        };
+        document.head.appendChild(s);
+      });
+    };
+  </script>
+  <script>
     (function () {
       function hideBoot() {
         var el = document.getElementById('zozu-boot');
