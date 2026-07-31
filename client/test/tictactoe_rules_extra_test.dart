@@ -39,7 +39,7 @@ void main() {
       expect(text, contains('1 с'));
     });
 
-    test('stake below 1 becomes 1', () {
+    test('stake 0 omits stake line (offline)', () {
       final text = buildTictactoeRulesText(
         gridSize: 3,
         turnTimeSec: 10,
@@ -47,7 +47,7 @@ void main() {
         firstMoveRestriction: false,
         stakeBronze: 0,
       );
-      expect(text, contains('1 бр'));
+      expect(text, isNot(contains('Ставка')));
       expect(text, contains('10 с'));
     });
   });
