@@ -852,28 +852,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   void _confirmOfferDraw(BuildContext context) {
     final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
     if (game == null || game.status != 'active' || !game.isActivePvp) return;
+    final l10n = context.l10n;
     showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gameOfferDrawTitle),
-        content: Text(context.l10n.gameOfferDrawConfirm),
+        title: Text(l10n.gameOfferDrawTitle),
+        content: Text(l10n.gameOfferDrawConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.l10n.commonCancel),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accentStart,
             ),
-            child: Text(context.l10n.gameOfferDraw),
+            child: Text(l10n.gameOfferDraw),
           ),
         ],
       ),
     ).then((ok) async {
       if (ok != true || !mounted) return;
-      final errMsg = context.l10n.commonGenericError;
       try {
         await ref.read(gamesRepositoryProvider).offerDraw(widget.gameId);
         if (mounted) ref.invalidate(gameStateProvider(widget.gameId));
@@ -881,7 +881,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (!mounted) return;
         showAppSnackBar(
           this.context,
-          message: errMsg,
+          message: l10n.commonGenericError,
           kind: AppSnackKind.error,
         );
       }
@@ -899,28 +899,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         offerBy == meId) {
       return;
     }
+    final l10n = context.l10n;
     showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gameAcceptDrawTitle),
-        content: Text(context.l10n.gameAcceptDrawConfirm),
+        title: Text(l10n.gameAcceptDrawTitle),
+        content: Text(l10n.gameAcceptDrawConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.l10n.commonCancel),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accentStart,
             ),
-            child: Text(context.l10n.gameDraw),
+            child: Text(l10n.gameDraw),
           ),
         ],
       ),
     ).then((ok) async {
       if (ok != true || !mounted) return;
-      final errMsg = context.l10n.commonGenericError;
       try {
         await ref.read(gamesRepositoryProvider).acceptDraw(widget.gameId);
         if (mounted) {
@@ -931,7 +931,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (!mounted) return;
         showAppSnackBar(
           this.context,
-          message: errMsg,
+          message: l10n.commonGenericError,
           kind: AppSnackKind.error,
         );
       }
