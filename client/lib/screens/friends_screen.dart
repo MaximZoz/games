@@ -1281,45 +1281,16 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     bool danger = false,
     bool loading = false,
   }) {
-    final enabled = onPressed != null && !loading;
-    final borderColor = danger
-        ? Colors.red.shade300
-        : AppColors.accentStart.withValues(alpha: 0.55);
-    final iconColor = danger ? Colors.red.shade700 : AppColors.textPrimary;
-    return Tooltip(
-      message: tooltip,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.6,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            onTap: enabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: borderColor, width: 1.5),
-              ),
-              child: Center(
-                child: loading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.textPrimary,
-                        ),
-                      )
-                    : Icon(icon, size: 18, color: iconColor),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FramedIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      loading: loading,
+      size: 34,
+      iconSize: 18,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      iconColor: danger ? Colors.red.shade700 : AppColors.textPrimary,
     );
   }
 
@@ -1353,29 +1324,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required VoidCallback onPressed,
     bool active = false,
   }) {
-    // Активный поиск: фиолетовая рамка как у обычной лупы, без белой заливки.
-    // Неактивный: та же рамка + белый фон.
-    final iconColor = active ? Colors.red.shade700 : AppColors.textPrimary;
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: active ? Colors.transparent : AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accentStart, width: 2),
-            ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-        ),
-      ),
+    // Та же мягкая лавандовая рамка, что у свайп-кнопок / «добавить» в чатах.
+    return FramedIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      filled: !active,
+      iconColor: active ? Colors.red.shade700 : AppColors.textPrimary,
     );
   }
 
