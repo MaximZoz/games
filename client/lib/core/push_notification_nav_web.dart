@@ -55,11 +55,19 @@ String? _tagFromPath(String path) {
 
 void _postToPushSw(Map<String, Object?> payload) {
   try {
-    final ready = web.window.navigator.serviceWorker.ready;
-    ready.toDart.then((reg) {
-      final worker = reg.active;
-      if (worker == null) return;
-      worker.postMessage(payload.jsify());
+    // Шлём именно в push-sw.js — не в чужой flutter_service_worker.
+    web.window.navigator.serviceWorker.getRegistrations().toDart.then((regs) {
+      for (final reg in regs.toDart) {
+        final worker = reg.active;
+        if (worker == null) continue;
+        final url = worker.scriptURL;
+        if (!url.contains('push-sw.js')) continue;
+        worker.postMessage(payload.jsify());
+        return;
+      }
+      web.window.navigator.serviceWorker.ready.toDart.then((reg) {
+        reg.active?.postMessage(payload.jsify());
+      });
     });
   } catch (_) {}
 }

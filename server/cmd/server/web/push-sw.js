@@ -1,6 +1,7 @@
 /* Web Push service worker for Zozu Games PWA.
- * v8: глушим пуш, если Flutter сообщает что открыт тот же чат/матч
- *     (на iOS client.focused часто false даже когда PWA на экране).
+ * v9: в foreground (heartbeat Flutter) глушим ВСЕ пуши — не только тот же чат.
+ *     На Safari PWA client.focused часто false при открытом приложении.
+ * v8: глушим пуш, если Flutter сообщает что открыт тот же чат/матч.
  * v7: clear_all_notifications при logout (снять баннеры + pending).
  * v6: при клике / открытии из пуша снимаем уведомление из шторки (iOS).
  * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
@@ -57,7 +58,7 @@ function pathFromTag(tag) {
     const id = t.slice('chat_'.length);
     return id ? `/chats/${id}` : '/chats';
   }
-  if (t === 'friend_request') return '/friends';
+  if (t === 'friend_request') return '/friends?tab=incoming';
   if (t.startsWith('game_invite_')) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
@@ -240,13 +241,10 @@ function pathsMatchForSuppress(activePath, notifPath) {
 async function shouldSuppressPush(notifPath) {
   // Классика: окно в фокусе (Desktop / когда iOS правильно отдаёт focused).
   if (await isPwaFocusedForeground()) return true;
-  // iOS: focused часто false на открытом PWA — смотрим heartbeat из Flutter.
-  if (
-    isViewerReportedlyForeground() &&
-    pathsMatchForSuppress(viewer.path, notifPath)
-  ) {
-    return true;
-  }
+  // Safari PWA: focused часто false при открытом приложении — доверяем
+  // heartbeat из Flutter (visibility + active_route). Пока PWA на экране
+  // не показываем системные баннеры вообще.
+  if (isViewerReportedlyForeground()) return true;
   return false;
 }
 
