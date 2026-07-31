@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Nhập tuổi từ 1 đến 111",
   "profileSaveFailed": "Không thể lưu hồ sơ",
   "profileNameHint": "Chữ Latinh, số, _ tối đa 10 ký tự",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Từ 1 đến 111",
   "profileAboutHint": "Tối đa 100 ký tự (tùy chọn)",
   "profileProcessingPhoto": "Đang xử lý ảnh…",

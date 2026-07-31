@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Εισαγάγετε ηλικία από 1 έως 111",
   "profileSaveFailed": "Αποτυχία αποθήκευσης προφίλ",
   "profileNameHint": "Λατινικά γράμματα, ψηφία, _ έως 10 χαρακτήρες",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Από 1 έως 111",
   "profileAboutHint": "Έως 100 χαρακτήρες (προαιρετικά)",
   "profileProcessingPhoto": "Επεξεργασία φωτογραφίας…",

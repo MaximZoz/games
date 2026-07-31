@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Enter an age from 1 to 111",
   "profileSaveFailed": "Could not save profile",
   "profileNameHint": "Latin letters, digits, _ up to 10 characters",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "From 1 to 111",
   "profileAboutHint": "Up to 100 characters (optional)",
   "profileProcessingPhoto": "Processing photo…",

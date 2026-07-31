@@ -20,6 +20,7 @@ import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/latin_login_input_formatter.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
@@ -931,12 +932,6 @@ class _ProfileEditForm extends StatefulWidget {
   State<_ProfileEditForm> createState() => _ProfileEditFormState();
 }
 
-/// Только латиница, макс. 10 символов (логин).
-final _displayNameFormatters = [
-  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
-  LengthLimitingTextInputFormatter(10),
-];
-
 /// Только цифры, макс. 3 (возраст 1–111).
 final _ageFormatters = [
   FilteringTextInputFormatter.digitsOnly,
@@ -955,6 +950,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _aboutTypingActive = false;
   String? _ageError;
   String? _saveError;
+  DateTime? _lastLatinOnlyToastAt;
   late String _lastAboutText;
   late TextEditingController _ageController;
   late TextEditingController _aboutController;
@@ -1018,6 +1014,32 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
         _ageError = null;
         _saveError = null;
       });
+
+  /// Только латиница, макс. 10 символов (логин).
+  List<TextInputFormatter> get _displayNameFormatters => [
+        LatinLoginInputFormatter(onRejected: _showLatinOnlyToast),
+        LengthLimitingTextInputFormatter(10),
+      ];
+
+  void _showLatinOnlyToast() {
+    if (!mounted) return;
+    final now = DateTime.now();
+    final last = _lastLatinOnlyToastAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastLatinOnlyToastAt = now;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.profileNameLatinOnly),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   bool get _hasChanges {
     final name = widget.displayNameController.text.trim();

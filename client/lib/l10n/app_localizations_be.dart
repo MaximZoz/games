@@ -1274,6 +1274,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get profileNameHint => 'Лацініца, лічбы, _ да 10 сімвалаў';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => 'Ад 1 да 111';
 
   @override

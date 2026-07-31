@@ -1274,6 +1274,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileNameHint => '라틴 문자, 숫자, _ 최대 10자';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => '1에서 111';
 
   @override

@@ -1274,6 +1274,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get profileNameHint => 'Латиниця, цифри, _ до 10 символів';
 
   @override
+  String get profileNameLatinOnly => 'Latin characters only';
+
+  @override
   String get profileAgeHint => 'Від 1 до 111';
 
   @override

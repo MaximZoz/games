@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Entrez un âge de 1 à 111",
   "profileSaveFailed": "Impossible d’enregistrer le profil",
   "profileNameHint": "Lettres latines, chiffres, _ jusqu’à 10 caractères",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "De 1 à 111",
   "profileAboutHint": "Jusqu’à 100 caractères (facultatif)",
   "profileProcessingPhoto": "Traitement de la photo…",
