@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
@@ -100,25 +100,39 @@ Future<Uint8List?> pickChatImageRawBytes(ImageSource source) async {
 
 /// Сжатие уже выбранных байтов в JPEG для отправки в чат.
 PickedChatImage? compressRawChatImage(Uint8List raw) {
+  final bytes = _compressRawChatImageBytes(raw);
+  if (bytes == null) return null;
+  return PickedChatImage(
+    bytes: bytes,
+    mime: 'image/jpeg',
+    base64: base64Encode(bytes),
+  );
+}
+
+/// Только JPEG-байты — удобно для [compute] (без кастомных классов).
+Uint8List? _compressRawChatImageBytes(Uint8List raw) {
   if (raw.isEmpty) return null;
   final compressed = compressChatImageBytes(raw);
   if (compressed.isEmpty) return null;
   if (compressed.lengthInBytes > chatImageHardMaxBytes) {
-    // Ещё один проход с меньшим лимитом стороны.
     final tighter = compressChatImageBytes(compressed);
     if (tighter.lengthInBytes > chatImageHardMaxBytes) {
       return null;
     }
-    return PickedChatImage(
-      bytes: tighter,
-      mime: 'image/jpeg',
-      base64: base64Encode(tighter),
-    );
+    return tighter;
   }
+  return compressed;
+}
+
+/// Сжатие вне UI-потока, чтобы лоадер в композере крутился.
+Future<PickedChatImage?> compressRawChatImageAsync(Uint8List raw) async {
+  if (raw.isEmpty) return null;
+  final bytes = await compute(_compressRawChatImageBytes, raw);
+  if (bytes == null || bytes.isEmpty) return null;
   return PickedChatImage(
-    bytes: compressed,
+    bytes: bytes,
     mime: 'image/jpeg',
-    base64: base64Encode(compressed),
+    base64: base64Encode(bytes),
   );
 }
 
@@ -126,5 +140,5 @@ PickedChatImage? compressRawChatImage(Uint8List raw) {
 Future<PickedChatImage?> pickAndCompressChatImage(ImageSource source) async {
   final raw = await pickChatImageRawBytes(source);
   if (raw == null) return null;
-  return compressRawChatImage(raw);
+  return compressRawChatImageAsync(raw);
 }

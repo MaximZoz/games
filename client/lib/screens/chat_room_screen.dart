@@ -644,13 +644,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _pendingImages.add(_PendingImageEntry.loading(entryId));
       _composerAlert = null;
     });
-    // Дать кадру отрисовать плейсхолдер с лоадером.
+    // Дать кадру отрисовать плейсхолдер с лоадером до тяжёлого сжатия.
     await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 16));
     if (!mounted) return;
 
     PickedChatImage? picked;
     try {
-      picked = await Future<PickedChatImage?>(() => compressRawChatImage(raw));
+      picked = await compressRawChatImageAsync(raw);
     } catch (_) {
       picked = null;
     }
@@ -2469,17 +2470,21 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                         borderRadius: BorderRadius.circular(10),
                                         child: _pendingImages[i].image == null
                                             ? ColoredBox(
-                                                color: AppColors.accentSoft
-                                                    .withValues(alpha: 0.55),
-                                                child: const Center(
+                                                color: const Color(0xFFE9E4F8),
+                                                child: Center(
                                                   child: SizedBox(
-                                                    width: 22,
-                                                    height: 22,
+                                                    width: 28,
+                                                    height: 28,
                                                     child:
                                                         CircularProgressIndicator(
-                                                      strokeWidth: 2.2,
+                                                      strokeWidth: 3,
                                                       color:
                                                           _composerIconPurple,
+                                                      backgroundColor: Colors
+                                                          .white
+                                                          .withValues(
+                                                        alpha: 0.85,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
