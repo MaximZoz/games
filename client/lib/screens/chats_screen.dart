@@ -1886,7 +1886,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () => _loadChats(refreshOnline: true),
-                child: CustomScrollView(
+                // Один открытый свайп: при открытии второго предыдущий закрывается.
+                child: SlidableAutoCloseBehavior(
+                  child: CustomScrollView(
                   controller: _chatsScrollController,
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: ClampingScrollPhysics(),
@@ -1972,6 +1974,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                 ),
                                 child: Slidable(
                                   key: ValueKey('chat_${item.chatID}'),
+                                  groupTag: 'chats_list',
                                   enabled: !itemBusy,
                                   endActionPane: ActionPane(
                                     motion: const DrawerMotion(),
@@ -2282,6 +2285,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                         ),
                       ),
                   ],
+                ),
                 ),
               ),
             ),
