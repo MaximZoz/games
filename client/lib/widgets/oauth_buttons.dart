@@ -191,24 +191,26 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                   onPressed: _resuming
                       ? null
                       : () async {
+                          final router = GoRouter.of(context);
                           setState(() => _busyProvider ??= 'google');
                           await _resumePending();
                           if (!mounted) return;
                           final user = ref.read(authStateProvider).valueOrNull;
                           if (user != null) {
-                            GoRouter.of(context).go('/games');
+                            router.go('/games');
                           }
                         },
                   child: const Text('Продолжить вход в приложении'),
                 ),
                 TextButton(
                   onPressed: () {
+                    final router = GoRouter.of(context);
                     clearOAuthPendingState();
                     setState(() {
                       _showStuckHelp = false;
                       _busyProvider = null;
                     });
-                    GoRouter.of(context).go('/games');
+                    router.go('/games');
                   },
                   child: const Text('Открыть игры'),
                 ),
