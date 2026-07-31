@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -178,9 +179,18 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
     ];
     state = next;
     await _persist();
+    // Оптимистично обновляем дисковый кэш каталога (owned), чтобы после
+    // перезапуска в офлайне предмет оставался «купленным».
+    final user = _ref.read(authStateProvider).valueOrNull;
+    if (user != null && catalog != null) {
+      final patched = [
+        for (final e in catalog)
+          if (e.code == code) e.copyWith(owned: true) else e,
+      ];
+      await OfflineDiskCache.saveShop(user.id, patched);
+    }
     // Локальный «успех»: баланс не меняем — сервер применит при flush.
-    final balance =
-        _ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final balance = user?.balanceBronze ?? 0;
     return ShopBuyResult(balanceBronze: balance, quantity: 1);
   }
 
