@@ -3010,7 +3010,9 @@ class _ChatInviteCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () => context.push(link.appPathFromMessage(messageId)),
+          // go, не push: иначе «Своя игра» остаётся в истории и снова
+          // всплывает при возврате в Чаты.
+          onTap: () => context.go(link.appPathFromMessage(messageId)),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: BoxDecoration(

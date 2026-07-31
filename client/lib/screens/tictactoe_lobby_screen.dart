@@ -519,7 +519,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         }
 
         if (!context.mounted) return;
-        // Закрыть «Свою игру» и сразу открыть матч (не push поверх лобби).
+        // Закрыть «Свою игру» и сразу открыть матч (go затирает лобби в истории).
         context.go('/games/tictactoe/game/${result.gameId}');
         return;
       }
@@ -567,12 +567,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
     final lobbyId = widget.lobbyId;
     final repo = ref.read(gamesRepositoryProvider);
+    final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
 
-    // Сразу на список игр — не ждём сеть и не трогаем lobbyDetail
+    // Сразу уходим с экрана — не ждём сеть и не трогаем lobbyDetail
     // (invalidate после leave давал AsyncError → спиннер → мигание карточек).
     ref.read(activeGameProvider.notifier).clearLocal();
     ref.invalidate(openLobbiesProvider);
-    context.go('/games');
+    // Из сообщения чата — обратно к списку чатов, иначе к играм.
+    context.go(fromChat ? '/chats' : '/games');
 
     unawaited(
       repo.leaveLobby(lobbyId).catchError((_) {}),

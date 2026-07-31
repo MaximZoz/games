@@ -243,11 +243,13 @@ class AppShell extends ConsumerWidget {
       }
 
       // Профиль: всегда /profile — иначе после логина ветка восстанавливает /login.
+      // Чаты: всегда список (не восстанавливать лобби/комнату поверх списка).
       Router.neglect(context, () {
         navigationShell.goBranch(
           i,
           initialLocation: i == navigationShell.currentIndex ||
-              target == '/profile',
+              target == '/profile' ||
+              target == '/chats',
         );
       });
 
