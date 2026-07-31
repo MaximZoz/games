@@ -324,14 +324,6 @@ func (m *Mailer) appBaseURL() string {
 	return strings.TrimRight(u.Scheme+"://"+u.Host, "/")
 }
 
-func (m *Mailer) copyCodeURL(code string) string {
-	base := m.appBaseURL()
-	if base == "" {
-		return ""
-	}
-	return base + "/copy-code.html?c=" + url.QueryEscape(code)
-}
-
 func escapeHTML(s string) string {
 	replacer := strings.NewReplacer(
 		"&", "&amp;",
@@ -343,30 +335,25 @@ func escapeHTML(s string) string {
 	return replacer.Replace(s)
 }
 
-// otpEmailContent — text + HTML с кликабельным кодом (копирование через /copy-code.html).
+// otpEmailContent — text + HTML.
+// В почте нельзя выполнить JS «скопировать по клику» без перехода на сайт,
+// поэтому код — крупный выделяемый блок (user-select:all), без ссылок.
+// Строка "@host #CODE" нужна для автоподстановки OTP в форме приложения.
 func (m *Mailer) otpEmailContent(titleLine, ignoreLine, code string) (textBody, htmlBody string) {
 	domain := m.otpDomain()
 	code = strings.TrimSpace(code)
-	copyURL := m.copyCodeURL(code)
 
 	textBody = fmt.Sprintf(
-		"%s %s\n\nНажмите на код в письме (HTML), чтобы скопировать.\nКод действует 15 минут.\n%s\n\n@%s #%s\n",
+		"%s %s\n\nКод действует 15 минут.\n%s\n\n@%s #%s\n",
 		titleLine, code, ignoreLine, domain, code,
 	)
 
 	codeHTML := escapeHTML(code)
-	var codeBlock string
-	if copyURL != "" {
-		codeBlock = fmt.Sprintf(
-			`<a href="%s" style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.22em;color:#4F46E5;text-decoration:underline;text-underline-offset:6px;border:2px dashed #A5B4FC;border-radius:12px;padding:14px 22px;background:#EEF2FF;">%s</a>`,
-			escapeHTML(copyURL), codeHTML,
-		)
-	} else {
-		codeBlock = fmt.Sprintf(
-			`<span style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.22em;color:#4F46E5;text-decoration:underline;text-underline-offset:6px;border:2px dashed #A5B4FC;border-radius:12px;padding:14px 22px;background:#EEF2FF;-webkit-user-select:all;user-select:all;">%s</span>`,
-			codeHTML,
-		)
-	}
+	// Без <a>: только span. user-select:all — тройной клик / долгий тап выделяет весь код.
+	codeBlock := fmt.Sprintf(
+		`<span style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.22em;color:#4F46E5;text-decoration:underline;text-underline-offset:6px;border:2px dashed #A5B4FC;border-radius:12px;padding:14px 22px;background:#EEF2FF;-webkit-user-select:all;user-select:all;">%s</span>`,
+		codeHTML,
+	)
 
 	htmlBody = fmt.Sprintf(`<!DOCTYPE html>
 <html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -374,7 +361,7 @@ func (m *Mailer) otpEmailContent(titleLine, ignoreLine, code string) (textBody, 
   <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #c7d2fe;">
     <p style="margin:0 0 8px;font-size:16px;font-weight:600;">%s</p>
     <p style="margin:20px 0 8px;text-align:center;">%s</p>
-    <p style="margin:0 0 20px;text-align:center;font-size:13px;color:#4F46E5;text-decoration:underline;">Нажмите на код, чтобы скопировать</p>
+    <p style="margin:0 0 20px;text-align:center;font-size:13px;color:#64748b;">Удерживайте код → «Скопировать»</p>
     <p style="margin:0 0 8px;font-size:14px;color:#5a6275;line-height:1.45;">Код действует 15 минут.</p>
     <p style="margin:0;font-size:14px;color:#5a6275;line-height:1.45;">%s</p>
     <p style="margin:20px 0 0;font-size:12px;color:#94a3b8;">@%s #%s</p>

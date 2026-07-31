@@ -76,22 +76,13 @@ func TestSendVerificationCode_BodyContainsOTPBinding(t *testing.T) {
 	if !strings.Contains(textBody, "@app.zozu.games #654321") {
 		t.Fatal("missing OTP autofill binding line")
 	}
-	if !strings.Contains(htmlBody, "copy-code.html?c=654321") {
-		t.Fatal("missing copy-code link in HTML")
+	if strings.Contains(htmlBody, "<a ") || strings.Contains(htmlBody, "href=") {
+		t.Fatal("OTP email must not contain links")
 	}
-	if !strings.Contains(htmlBody, "Нажмите на код, чтобы скопировать") {
-		t.Fatal("missing copy hint in HTML")
+	if !strings.Contains(htmlBody, "user-select:all") {
+		t.Fatal("code should be easily selectable")
 	}
 	if !strings.Contains(htmlBody, "text-decoration:underline") {
 		t.Fatal("code should be underlined")
-	}
-}
-
-func TestCopyCodeURL(t *testing.T) {
-	m := New(Config{AppOrigin: "https://zozugames.com/"})
-	got := m.copyCodeURL("640732")
-	want := "https://zozugames.com/copy-code.html?c=640732"
-	if got != want {
-		t.Fatalf("got %q want %q", got, want)
 	}
 }
