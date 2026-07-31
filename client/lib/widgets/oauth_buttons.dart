@@ -7,7 +7,6 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/widgets/native_web_button.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
 
 final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
@@ -118,50 +117,47 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
               const SizedBox(height: 16),
               for (var i = 0; i < providers.length; i++) ...[
                 if (i > 0) const SizedBox(height: 10),
-                if (kIsWeb)
-                  NativeWebOutlinedLink(
-                    label: _busyProvider == providers[i]
-                        ? '…'
-                        : _label(l10n, providers[i]),
-                    href: repo.oauthStartUrl(
-                      provider: providers[i],
-                      redirect: widget.redirect,
-                      ref: widget.refCode,
-                      poll: true,
-                      navigate: true,
-                    ),
-                    onBeforeNavigate: () {
-                      saveOAuthPendingState(_cookiePendingSentinel);
-                      setState(() => _busyProvider = providers[i]);
-                    },
-                  )
-                else
-                  SizedBox(
-                    height: 48,
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        maximumSize: const Size(double.infinity, 48),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                SizedBox(
+                  height: 48,
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      minimumSize: const Size(double.infinity, 48),
+                      maximumSize: const Size(double.infinity, 48),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      side: const BorderSide(color: AppColors.accentSoft),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      onPressed: _busyProvider != null
-                          ? null
-                          : () => _startNative(context, providers[i]),
-                      child: _busyProvider == providers[i]
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_label(l10n, providers[i])),
                     ),
+                    onPressed: _busyProvider != null
+                        ? null
+                        : () {
+                            if (kIsWeb) {
+                              _startWebNavigate(providers[i], repo);
+                            } else {
+                              _startNative(context, providers[i]);
+                            }
+                          },
+                    child: _busyProvider == providers[i]
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _label(l10n, providers[i]),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
                   ),
+                ),
               ],
             ],
           ),
@@ -183,6 +179,20 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       default:
         return provider;
     }
+  }
+
+  /// Web/PWA: top-level navigate (без HtmlElementView — не залипает после входа).
+  void _startWebNavigate(String provider, AuthRepository repo) {
+    saveOAuthPendingState(_cookiePendingSentinel);
+    setState(() => _busyProvider = provider);
+    final href = repo.oauthStartUrl(
+      provider: provider,
+      redirect: widget.redirect,
+      ref: widget.refCode,
+      poll: true,
+      navigate: true,
+    );
+    openOAuthExternal(href);
   }
 
   Future<void> _startNative(BuildContext context, String provider) async {
