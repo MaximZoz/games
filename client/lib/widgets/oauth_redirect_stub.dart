@@ -1,5 +1,10 @@
-/// Результат OAuth из popup. `null` = ушли полным редиректом (или отмена).
-Future<Map<String, String>?> openOAuthUrl(String url) async => null;
+/// Заглушка окна OAuth для VM-тестов.
+class OAuthWindowHandle {
+  const OAuthWindowHandle();
+}
 
-/// В popup: передать результат opener и закрыть. На VM — false.
-bool completeOAuthPopup(Map<String, String> params) => false;
+OAuthWindowHandle? openOAuthWindowBlank() => const OAuthWindowHandle();
+
+void navigateOAuthWindow(OAuthWindowHandle? handle, String url) {}
+
+void closeOAuthWindow(OAuthWindowHandle? handle) {}

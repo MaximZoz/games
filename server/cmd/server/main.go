@@ -381,6 +381,7 @@ func main() {
 	mux.HandleFunc("/api/auth/forgot-password", authHandler.ForgotPassword)
 	mux.HandleFunc("/api/auth/reset-password", authHandler.ResetPassword)
 	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
+	mux.HandleFunc("/api/auth/oauth/poll", authHandler.OAuthPoll)
 	mux.HandleFunc("/api/auth/oauth/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasSuffix(path, "/start") {

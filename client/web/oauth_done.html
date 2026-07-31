@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход выполнен</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      background: #E8ECF4;
+      color: #1a1a2e;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 24px;
+      max-width: 360px;
+      box-shadow: 0 8px 24px rgba(30, 40, 80, 0.08);
+    }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { margin: 0; color: #5a6275; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">Готово</h1>
+    <p id="msg">Можно закрыть это окно и вернуться в приложение Zozu Games.</p>
+  </div>
+  <script>
+    (function () {
+      var err = new URLSearchParams(location.search).get('error');
+      if (err) {
+        document.getElementById('title').textContent = 'Ошибка входа';
+        document.getElementById('msg').textContent = err + '. Закройте окно и попробуйте снова в приложении.';
+      }
+      try { window.close(); } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

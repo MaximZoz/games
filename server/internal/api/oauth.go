@@ -42,8 +42,9 @@ type OAuthConfig struct {
 	VKClientID     string
 	VKClientSecret string
 
-	mu     sync.Mutex
-	states map[string]oauthState // state → data; cleanup по TTL
+	mu      sync.Mutex
+	states  map[string]oauthState  // state → data; cleanup по TTL
+	results map[string]oauthResult // state → токены для poll (PWA)
 }
 
 type oauthState struct {
@@ -53,10 +54,48 @@ type oauthState struct {
 	Expires  time.Time
 }
 
+type oauthResult struct {
+	AccessToken  string
+	RefreshToken string
+	Redirect     string
+	Error        string
+	Expires      time.Time
+}
+
 func (c *OAuthConfig) ensureStates() {
 	if c.states == nil {
 		c.states = make(map[string]oauthState)
 	}
+	if c.results == nil {
+		c.results = make(map[string]oauthResult)
+	}
+}
+
+func (c *OAuthConfig) putResult(state string, res oauthResult) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.ensureStates()
+	res.Expires = time.Now().Add(5 * time.Minute)
+	c.results[state] = res
+	now := time.Now()
+	for k, v := range c.results {
+		if now.After(v.Expires) {
+			delete(c.results, k)
+		}
+	}
+}
+
+func (c *OAuthConfig) takeResult(state string) (oauthResult, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.ensureStates()
+	res, ok := c.results[state]
+	if !ok || time.Now().After(res.Expires) {
+		delete(c.results, state)
+		return oauthResult{}, false
+	}
+	delete(c.results, state)
+	return res, true
 }
 
 func (c *OAuthConfig) putState(provider, redirect, ref string) (string, error) {
@@ -166,7 +205,53 @@ func (h *AuthHandler) OAuthStart(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	// mode=poll — для PWA: клиент открывает authorize_url и ждёт /oauth/poll.
+	if strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("mode")), "poll") {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"authorize_url": authURL,
+			"state":         state,
+		})
+		return
+	}
 	http.Redirect(w, r, authURL, http.StatusFound)
+}
+
+func (h *AuthHandler) OAuthPoll(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	if h.OAuth == nil {
+		WriteErr(w, r, http.StatusServiceUnavailable, "oauth not configured")
+		return
+	}
+	state := strings.TrimSpace(r.URL.Query().Get("state"))
+	if state == "" {
+		WriteErr(w, r, http.StatusBadRequest, "state required")
+		return
+	}
+	res, ok := h.OAuth.takeResult(state)
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "pending"})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if res.Error != "" {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status": "error",
+			"error":  res.Error,
+		})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"status":        "ok",
+		"access_token":  res.AccessToken,
+		"refresh_token": res.RefreshToken,
+		"redirect":      res.Redirect,
+	})
 }
 
 func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
@@ -184,16 +269,20 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errMsg := r.URL.Query().Get("error"); errMsg != "" {
-		h.oauthRedirectError(w, r, "oauth denied: "+errMsg)
-		return
-	}
-
 	state := r.URL.Query().Get("state")
 	if state == "" && r.Method == http.MethodPost {
 		_ = r.ParseForm()
 		state = r.FormValue("state")
 	}
+
+	if errMsg := r.URL.Query().Get("error"); errMsg != "" {
+		if state != "" {
+			h.OAuth.putResult(state, oauthResult{Error: "oauth denied: " + errMsg})
+		}
+		h.oauthDonePage(w, r, "oauth denied: "+errMsg)
+		return
+	}
+
 	st, ok := h.OAuth.takeState(state)
 	if !ok || st.Provider != provider {
 		WriteErr(w, r, http.StatusBadRequest, "invalid oauth state")
@@ -205,14 +294,16 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		code = r.FormValue("code")
 	}
 	if code == "" {
-		WriteErr(w, r, http.StatusBadRequest, "oauth code required")
+		h.OAuth.putResult(state, oauthResult{Error: "oauth code required", Redirect: st.Redirect})
+		h.oauthDonePage(w, r, "oauth code required")
 		return
 	}
 
 	identity, err := h.oauthExchange(r.Context(), provider, code)
 	if err != nil {
 		log.Printf("[oauth] %s exchange failed: %v", provider, err)
-		h.oauthRedirectError(w, r, "oauth exchange failed")
+		h.OAuth.putResult(state, oauthResult{Error: "oauth exchange failed", Redirect: st.Redirect})
+		h.oauthDonePage(w, r, "oauth exchange failed")
 		return
 	}
 
@@ -234,30 +325,29 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Printf("[oauth] find/create user failed: %v", err)
-		h.oauthRedirectError(w, r, "oauth user create failed")
+		h.OAuth.putResult(state, oauthResult{Error: "oauth user create failed", Redirect: st.Redirect})
+		h.oauthDonePage(w, r, "oauth user create failed")
 		return
 	}
 	_ = created
 
 	accessToken, refreshToken, _, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
-		h.oauthRedirectError(w, r, "oauth session failed")
+		h.OAuth.putResult(state, oauthResult{Error: "oauth session failed", Redirect: st.Redirect})
+		h.oauthDonePage(w, r, "oauth session failed")
 		return
 	}
 
-	front := strings.TrimRight(h.OAuth.FrontendURL, "/")
-	if front == "" {
-		front = strings.TrimRight(h.OAuth.PublicBaseURL, "/")
-	}
-	q := url.Values{}
-	q.Set("access_token", accessToken)
-	q.Set("refresh_token", refreshToken)
-	q.Set("redirect", st.Redirect)
-	// Статический bridge: в PWA-popup закрывается мгновенно, без загрузки Flutter.
-	http.Redirect(w, r, front+"/oauth_bridge.html?"+q.Encode(), http.StatusFound)
+	h.OAuth.putResult(state, oauthResult{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Redirect:     st.Redirect,
+	})
+	// Страница «можно закрыть» — PWA забирает токены через /oauth/poll (localStorage Safari≠PWA).
+	h.oauthDonePage(w, r, "")
 }
 
-func (h *AuthHandler) oauthRedirectError(w http.ResponseWriter, r *http.Request, msg string) {
+func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, errMsg string) {
 	front := ""
 	if h.OAuth != nil {
 		front = strings.TrimRight(h.OAuth.FrontendURL, "/")
@@ -266,12 +356,23 @@ func (h *AuthHandler) oauthRedirectError(w http.ResponseWriter, r *http.Request,
 		}
 	}
 	if front == "" {
-		WriteErr(w, r, http.StatusBadRequest, msg)
+		if errMsg != "" {
+			WriteErr(w, r, http.StatusBadRequest, errMsg)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("OK — вернитесь в приложение"))
 		return
 	}
 	q := url.Values{}
-	q.Set("error", msg)
-	http.Redirect(w, r, front+"/oauth_bridge.html?"+q.Encode(), http.StatusFound)
+	if errMsg != "" {
+		q.Set("error", errMsg)
+	}
+	dest := front + "/oauth_done.html"
+	if enc := q.Encode(); enc != "" {
+		dest += "?" + enc
+	}
+	http.Redirect(w, r, dest, http.StatusFound)
 }
 
 type oauthIdentity struct {

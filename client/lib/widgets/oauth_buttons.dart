@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
@@ -38,7 +39,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons> {
         if (providers.isEmpty) return const SizedBox.shrink();
         final l10n = context.l10n;
         return Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 4),
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -66,7 +67,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
-                      tapTargetSize: MaterialTapTargetSize.padded,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -108,29 +109,28 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons> {
 
   Future<void> _start(BuildContext context, String provider) async {
     final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+
+    // Синхронно в том же gesture — иначе iOS блокирует popup.
+    final popup = openOAuthWindowBlank();
+
     setState(() => _busyProvider = provider);
     try {
-      final url = ref.read(authRepositoryProvider).oauthStartUrl(
+      final started = await ref.read(authRepositoryProvider).startOAuthPoll(
             provider: provider,
             redirect: widget.redirect,
             ref: widget.refCode,
           );
-      final result = await openOAuthUrl(url);
+      navigateOAuthWindow(popup, started.authorizeUrl);
+      final result = await ref.read(authRepositoryProvider).pollOAuthResult(
+            state: started.state,
+          );
       if (!mounted) return;
-      // null = полный редирект (ушли со страницы) или пользователь закрыл popup.
-      if (result == null) return;
-
-      final err = (result['error'] ?? '').trim();
-      if (err.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-        return;
-      }
       final access = (result['access_token'] ?? '').trim();
       final refresh = (result['refresh_token'] ?? '').trim();
       if (access.isEmpty || refresh.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oauthError)),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
         return;
       }
       await ref.read(authStateProvider.notifier).loginWithTokens(
@@ -141,12 +141,15 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons> {
       final dest = safeAuthRedirect(result['redirect']) ??
           safeAuthRedirect(widget.redirect) ??
           '/games';
-      context.go(dest);
-    } catch (_) {
+      router.go(dest);
+    } on AuthException catch (e) {
+      closeOAuthWindow(popup);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oauthError)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      closeOAuthWindow(popup);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
     } finally {
       if (mounted) setState(() => _busyProvider = null);
     }

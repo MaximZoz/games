@@ -261,13 +261,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         isLoading: _isLoading,
                         expanded: true,
                       ),
-                      OAuthButtons(redirect: _redirect, refCode: _ref),
-                      const SizedBox(height: 8),
+                      // TextButton выше OAuth — иначе на PWA тап по Google
+                      // срабатывает как «Уже есть аккаунт? Войти».
+                      const SizedBox(height: 4),
                       TextButton(
                         style: TextButton.styleFrom(
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          minimumSize: Size.zero,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
                         ),
                         onPressed: () => context.go(
                           appendAuthQuery(
@@ -278,6 +280,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         child: Text(l10n.registerHaveAccount),
                       ),
+                      OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],
                   ),
                 ),

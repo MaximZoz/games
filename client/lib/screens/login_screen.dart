@@ -239,13 +239,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         isLoading: _isLoading,
                         expanded: true,
                       ),
-                      OAuthButtons(redirect: _redirect, refCode: _ref),
-                      const SizedBox(height: 8),
+                      // TextButton выше OAuth: в Column hit-test идёт снизу вверх,
+                      // иначе «Зарегистрироваться» перехватывает тап по Google.
+                      const SizedBox(height: 4),
                       TextButton(
                         style: TextButton.styleFrom(
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          minimumSize: Size.zero,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
                         ),
                         onPressed: () => context.push(
                           appendAuthQuery(
@@ -256,6 +258,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         child: Text(l10n.loginNoAccount),
                       ),
+                      OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],
                   ),
                 ),

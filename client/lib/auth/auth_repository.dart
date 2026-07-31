@@ -338,6 +338,81 @@ class AuthRepository {
         .toString();
   }
 
+  /// Старт OAuth для PWA: JSON с authorize_url + state, дальше poll.
+  Future<({String authorizeUrl, String state})> startOAuthPoll({
+    required String provider,
+    String? redirect,
+    String? ref,
+  }) async {
+    await init();
+    final params = <String, String>{'mode': 'poll'};
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) params['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) params['ref'] = referral;
+    final response = await ApiClient.get(
+      Uri.parse('$apiBaseUrl/api/auth/oauth/$provider/start')
+          .replace(queryParameters: params),
+      operation: 'AuthRepository.startOAuthPoll',
+    );
+    if (response.statusCode != 200) {
+      throw AuthException(response.statusCode, _messageFromResponse(response));
+    }
+    final body = jsonDecode(response.body);
+    if (body is! Map) {
+      throw AuthException(500, LocaleService.l10n.oauthError);
+    }
+    final url = (body['authorize_url'] ?? '').toString();
+    final state = (body['state'] ?? '').toString();
+    if (url.isEmpty || state.isEmpty) {
+      throw AuthException(500, LocaleService.l10n.oauthError);
+    }
+    return (authorizeUrl: url, state: state);
+  }
+
+  /// Ждёт результат OAuth (после входа в popup/Safari).
+  Future<Map<String, String>> pollOAuthResult({
+    required String state,
+    Duration timeout = const Duration(minutes: 3),
+  }) async {
+    await init();
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      final response = await ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/auth/oauth/poll').replace(
+          queryParameters: {'state': state},
+        ),
+        operation: 'AuthRepository.pollOAuthResult',
+      );
+      if (response.statusCode == 202) {
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+        continue;
+      }
+      if (response.statusCode != 200) {
+        throw AuthException(response.statusCode, _messageFromResponse(response));
+      }
+      final body = jsonDecode(response.body);
+      if (body is! Map) {
+        throw AuthException(500, LocaleService.l10n.oauthError);
+      }
+      final status = (body['status'] ?? '').toString();
+      if (status == 'pending') {
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+        continue;
+      }
+      if (status == 'error') {
+        final err = (body['error'] ?? LocaleService.l10n.oauthError).toString();
+        throw AuthException(400, err);
+      }
+      return {
+        'access_token': (body['access_token'] ?? '').toString(),
+        'refresh_token': (body['refresh_token'] ?? '').toString(),
+        'redirect': (body['redirect'] ?? '').toString(),
+      };
+    }
+    throw AuthException(408, LocaleService.l10n.oauthError);
+  }
+
   void _throwIfVerificationRequired(http.Response response) {
     if (response.statusCode != 200 && response.statusCode != 403) return;
     try {
