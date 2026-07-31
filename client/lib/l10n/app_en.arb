@@ -180,6 +180,7 @@
   "lobbyInviteTitle": "Game invite",
   "lobbyInvitedToPlay": "You were invited to play",
   "lobbyEnterGame": "Enter game",
+  "lobbyGone": "This game is no longer available",
   "lobbyInvite": "Invite",
   "lobbyInviteSent": "Invite sent",
   "lobbyCopyLink": "Share game link",

@@ -433,6 +433,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get lobbyEnterGame => 'O‘yinga kirish';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Taklif qilish';
 
   @override

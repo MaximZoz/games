@@ -433,6 +433,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbyEnterGame => '进入对局';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => '邀请';
 
   @override

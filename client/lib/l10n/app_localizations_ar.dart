@@ -433,6 +433,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lobbyEnterGame => 'ادخل اللعبة';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'دعوة';
 
   @override

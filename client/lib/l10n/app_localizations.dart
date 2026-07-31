@@ -977,6 +977,12 @@ abstract class AppLocalizations {
   /// **'Войти в игру'**
   String get lobbyEnterGame;
 
+  /// No description provided for @lobbyGone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этой игры уже нет'**
+  String get lobbyGone;
+
   /// No description provided for @lobbyInvite.
   ///
   /// In ru, this message translates to:

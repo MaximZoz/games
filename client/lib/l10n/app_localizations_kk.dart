@@ -433,6 +433,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get lobbyEnterGame => 'Ойынға кіру';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Шақыру';
 
   @override

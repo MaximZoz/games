@@ -433,6 +433,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get lobbyEnterGame => 'Masuk game';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Undang';
 
   @override

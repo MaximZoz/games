@@ -433,6 +433,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbyEnterGame => 'Vstoupit do hry';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Pozvat';
 
   @override

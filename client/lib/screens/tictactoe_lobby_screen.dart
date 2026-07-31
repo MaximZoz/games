@@ -48,13 +48,18 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
 ///
 /// Пока деталь лобби не загружена, опираемся на [initialMode] из query
 /// (`?mode=invite|matchmake`), чтобы не показывать «Лобби» для своей игры.
+/// Ссылки из чата ([fromInviteLink]) — не «Своя игра»: это вход гостя.
 String tictactoeLobbyAppBarTitle({
   String? status,
   String? initialMode,
+  bool fromInviteLink = false,
 }) {
   final l10n = LocaleService.l10n;
   if (status == 'waiting_matchmake') return l10n.lobbyMatchmake;
-  if (status == 'waiting_invite') return l10n.lobbyPrivateGame;
+  if (status == 'waiting_invite') {
+    return fromInviteLink ? l10n.lobbyEnterGame : l10n.lobbyPrivateGame;
+  }
+  if (fromInviteLink) return l10n.lobbyEnterGame;
   if (initialMode == 'matchmake') return l10n.lobbyMatchmake;
   if (initialMode == 'invite') return l10n.lobbyPrivateGame;
   return '';
@@ -78,6 +83,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   bool _isLeaving = false;
   bool _isJoining = false;
   bool _linkCopied = false;
+  bool _missingLobbyHandled = false;
   Timer? _chatsRefreshTimer;
   Timer? _linkCopiedTimer;
 
@@ -135,6 +141,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               tictactoeLobbyAppBarTitle(
                 status: lobbyAsync.valueOrNull?.status,
                 initialMode: widget.initialMode,
+                fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
+                        true ||
+                    (lobbyAsync.valueOrNull != null &&
+                        currentUser != null &&
+                        lobbyAsync.valueOrNull!.creatorId != currentUser.id),
               ),
             ),
           ),
@@ -406,16 +417,42 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               color: AppColors.accentStart,
             ),
           ),
-          error: (_, __) => const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
-            ),
-          ),
+          error: (error, _) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _handleLobbyMissing(error);
+            });
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
+              ),
+            );
+          },
         ),
         ),
       ),
     );
+  }
+
+  /// Ссылка на лобби устарела / лобби закрыто — уведомление, без «Своя игра».
+  void _handleLobbyMissing(Object error) {
+    if (!mounted || _missingLobbyHandled || _isLeaving) return;
+    _missingLobbyHandled = true;
+    final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
+    final isGone = error is GamesException &&
+        (error.statusCode == 404 ||
+            error.statusCode == 409 ||
+            error.statusCode == 400);
+    final message = isGone
+        ? context.l10n.lobbyGone
+        : formatUserError(error, fallback: context.l10n.lobbyGone);
+    showAppSnackBar(
+      context,
+      message: message,
+      kind: AppSnackKind.error,
+    );
+    // Не clearLocal/leaveLobby: у пользователя может быть своё другое лобби.
+    context.go(fromChat ? '/chats' : '/games');
   }
 
   Widget _buildShareInviteLinkCard(BuildContext context) {
@@ -526,12 +563,19 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         return;
       }
     } catch (e) {
-      if (context.mounted) {
-        showAppSnackBar(
-          context,
-          message: formatUserError(e),
-          kind: AppSnackKind.error,
-        );
+      if (!context.mounted) return;
+      final gone = e is GamesException &&
+          (e.statusCode == 404 || e.statusCode == 409 || e.statusCode == 400);
+      showAppSnackBar(
+        context,
+        message: gone
+            ? context.l10n.lobbyGone
+            : formatUserError(e, fallback: context.l10n.lobbyGone),
+        kind: AppSnackKind.error,
+      );
+      if (gone) {
+        final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
+        context.go(fromChat ? '/chats' : '/games');
       }
     } finally {
       if (mounted) setState(() => _isJoining = false);

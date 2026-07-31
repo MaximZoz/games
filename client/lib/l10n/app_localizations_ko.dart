@@ -433,6 +433,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbyEnterGame => '게임 입장';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => '초대';
 
   @override

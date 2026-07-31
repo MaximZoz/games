@@ -433,6 +433,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get lobbyEnterGame => 'Entra nella partita';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Invita';
 
   @override

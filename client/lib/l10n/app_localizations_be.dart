@@ -433,6 +433,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get lobbyEnterGame => 'Увайсці ў гульню';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Запрасіць';
 
   @override

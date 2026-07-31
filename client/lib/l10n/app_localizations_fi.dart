@@ -433,6 +433,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbyEnterGame => 'Siirry peliin';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Kutsu';
 
   @override

@@ -32,9 +32,10 @@ final lobbyGameRecoveryProvider =
   }
 
   final activeGameId = active?.gameId?.trim();
-  // Active game — источник истины: при матчмейкинге lobby_id в событии
-  // мог раньше не совпадать с URL ожидания.
+  // Только игра этого лобби — иначе битая invite-ссылка уводила
+  // в чужую активную партию / «Свою игру».
   if (active?.type == 'game' &&
+      active?.lobbyId == lobbyId &&
       activeGameId != null &&
       activeGameId.isNotEmpty) {
     return activeGameId;
