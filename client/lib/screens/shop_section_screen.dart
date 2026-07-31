@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
@@ -50,7 +52,16 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() => _items = items);
     } catch (_) {}

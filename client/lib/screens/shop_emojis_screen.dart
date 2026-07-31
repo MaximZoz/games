@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -64,7 +66,16 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() {
         _items = items;
@@ -79,6 +90,15 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
   @override
   Widget build(BuildContext context) {
     void goBack() => context.pop();
+    ref.listen<AsyncValue<List<ShopItem>>>(shopCatalogProvider, (prev, next) {
+      final data = next.asData?.value;
+      if (data != null && data.isNotEmpty && mounted) {
+        setState(() {
+          _items = data;
+          _loading = false;
+        });
+      }
+    });
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
     final byGroup = <String, List<ShopItem>>{};
@@ -239,7 +259,16 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() {
         _items = items;
@@ -351,6 +380,15 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
   @override
   Widget build(BuildContext context) {
     void goBack() => context.pop();
+    ref.listen<AsyncValue<List<ShopItem>>>(shopCatalogProvider, (prev, next) {
+      final data = next.asData?.value;
+      if (data != null && data.isNotEmpty && mounted) {
+        setState(() {
+          _items = data;
+          _loading = false;
+        });
+      }
+    });
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
     final emojis = items

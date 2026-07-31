@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -43,7 +45,16 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() => _items = items);
     } catch (_) {}
@@ -56,12 +67,12 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     // сразу подхватить owned, а не держать устаревший _items.
     ref.listen<AsyncValue<List<ShopItem>>>(shopCatalogProvider, (prev, next) {
       final data = next.asData?.value;
-      if (data != null && mounted) {
+      if (data != null && data.isNotEmpty && mounted) {
         setState(() => _items = data);
       }
     });
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
-    final items = cached ?? _items;
+    final items = (cached != null && cached.isNotEmpty) ? cached : _items;
     final collections = items.where((e) => e.kind == 'collection').toList();
 
     final bySet = <String, List<ShopItem>>{};
@@ -258,7 +269,16 @@ class _ShopCollectionGroupScreenState
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() => _items = items);
     } catch (_) {}

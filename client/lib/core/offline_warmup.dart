@@ -36,9 +36,32 @@ class OfflineWarmup {
       } catch (_) {}
 
       final freshUser = ref.read(authStateProvider).valueOrNull ?? user;
+      final uid = freshUser.id;
       await _precacheAvatar(freshUser.avatarValue);
 
-      // Сброс и параллельная подгрузка всех экранов, нужных офлайну.
+      // Каталог/инвентарь — напрямую в memory+disk, до invalidate провайдеров.
+      // Иначе экран «Смайлики» в офлайне видит пусто: provider пересобрался,
+      // а диск ещё не был записан.
+      final repo = ref.read(shopRepositoryProvider);
+      List<ShopItem>? shop;
+      List<InventoryItem>? inv;
+      try {
+        shop = await repo.listShop();
+        if (shop.isNotEmpty) await OfflineDiskCache.saveShop(uid, shop);
+      } catch (_) {}
+      try {
+        inv = await repo.listInventory();
+        await OfflineDiskCache.saveInventory(uid, inv);
+      } catch (_) {}
+      try {
+        final caps = await repo.capabilities();
+        await OfflineDiskCache.saveCapabilities(uid, caps);
+      } catch (_) {}
+      try {
+        final income = await repo.collectionIncome();
+        await OfflineDiskCache.saveCollectionIncome(uid, income);
+      } catch (_) {}
+
       ref.invalidate(shopCatalogProvider);
       ref.invalidate(inventoryListProvider);
       ref.invalidate(inventoryCapabilitiesProvider);
@@ -59,16 +82,17 @@ class OfflineWarmup {
         _awaitIgnore(ref.read(dailyRewardStatusProvider.future)),
       ]);
 
-      final shop = ref.read(shopCatalogProvider).valueOrNull;
-      final inv = ref.read(inventoryListProvider).valueOrNull;
+      shop ??= ref.read(shopCatalogProvider).valueOrNull;
+      inv ??= ref.read(inventoryListProvider).valueOrNull;
       final caps = ref.read(inventoryCapabilitiesProvider).valueOrNull;
       final settings = ref.read(userGameSettingsProvider).valueOrNull;
       final achievements = ref.read(achievementsListProvider).valueOrNull;
       final income = ref.read(collectionIncomeProvider).valueOrNull;
       final daily = ref.read(dailyRewardStatusProvider).valueOrNull;
 
-      final uid = freshUser.id;
-      if (shop != null) await OfflineDiskCache.saveShop(uid, shop);
+      if (shop != null && shop.isNotEmpty) {
+        await OfflineDiskCache.saveShop(uid, shop);
+      }
       if (inv != null) await OfflineDiskCache.saveInventory(uid, inv);
       if (caps != null) await OfflineDiskCache.saveCapabilities(uid, caps);
       if (settings != null) {
