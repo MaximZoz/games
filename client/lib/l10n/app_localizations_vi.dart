@@ -1116,7 +1116,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopBuyOnce => 'Mua một lần';
 
   @override
-  String get shopSellRefund => 'Bán sẽ hoàn lại một phần chi phí';
+  String get shopSellRefund => 'Bán sẽ hoàn lại 80% chi phí';
 
   @override
   String shopCollectionAdded(String title) {

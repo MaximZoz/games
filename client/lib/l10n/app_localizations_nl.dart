@@ -1116,7 +1116,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopBuyOnce => 'Eenmalige aankoop';
 
   @override
-  String get shopSellRefund => 'Verkopen geeft een deel van de prijs terug';
+  String get shopSellRefund => 'Verkopen geeft 80% van de prijs terug';
 
   @override
   String shopCollectionAdded(String title) {

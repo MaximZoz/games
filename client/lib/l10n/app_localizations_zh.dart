@@ -1116,7 +1116,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopBuyOnce => '一次性购买';
 
   @override
-  String get shopSellRefund => '出售可返还部分费用';
+  String get shopSellRefund => '出售可返还 80% 费用';
 
   @override
   String shopCollectionAdded(String title) {

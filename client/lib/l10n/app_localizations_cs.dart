@@ -1116,7 +1116,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopBuyOnce => 'Jednorázový nákup';
 
   @override
-  String get shopSellRefund => 'Prodej vrátí část ceny';
+  String get shopSellRefund => 'Prodej vrátí 80% ceny';
 
   @override
   String shopCollectionAdded(String title) {

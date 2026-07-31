@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Acquisto una tantum",
-  "shopSellRefund": "La vendita rimborsa parte del costo",
+  "shopSellRefund": "La vendita rimborsa l'80% del costo",
   "shopCollectionAdded": "{title} aggiunto al profilo",
   "@shopCollectionAdded": {
     "placeholders": {

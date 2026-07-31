@@ -1116,7 +1116,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get shopBuyOnce => 'Engangskøb';
 
   @override
-  String get shopSellRefund => 'Salg returnerer en del af prisen';
+  String get shopSellRefund => 'Salg returnerer 80% af prisen';
 
   @override
   String shopCollectionAdded(String title) {

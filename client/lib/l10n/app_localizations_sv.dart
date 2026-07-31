@@ -1116,7 +1116,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get shopBuyOnce => 'Engångsköp';
 
   @override
-  String get shopSellRefund => 'Försäljning återbetalar en del av kostnaden';
+  String get shopSellRefund => 'Försäljning återbetalar 80% av kostnaden';
 
   @override
   String shopCollectionAdded(String title) {

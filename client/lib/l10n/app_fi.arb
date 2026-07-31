@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Kertaluonteinen osto",
-  "shopSellRefund": "Myynti palauttaa osan hinnasta",
+  "shopSellRefund": "Myynti palauttaa 80% hinnasta",
   "shopCollectionAdded": "{title} lisätty profiiliin",
   "@shopCollectionAdded": {
     "placeholders": {

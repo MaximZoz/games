@@ -1116,7 +1116,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopBuyOnce => 'Бір рет сатып алу';
 
   @override
-  String get shopSellRefund => 'Сату құнының бір бөлігін қайтарады';
+  String get shopSellRefund => 'Сату құнының 80%-ін қайтарады';
 
   @override
   String shopCollectionAdded(String title) {

@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Compra única",
-  "shopSellRefund": "Vender devolve parte do custo",
+  "shopSellRefund": "Vender devolve 80% do custo",
   "shopCollectionAdded": "{title} adicionado ao perfil",
   "@shopCollectionAdded": {
     "placeholders": {

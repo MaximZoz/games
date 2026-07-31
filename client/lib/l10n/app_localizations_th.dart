@@ -1116,7 +1116,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopBuyOnce => 'ซื้อครั้งเดียว';
 
   @override
-  String get shopSellRefund => 'การขายคืนส่วนหนึ่งของราคา';
+  String get shopSellRefund => 'การขายคืน 80% ของราคา';
 
   @override
   String shopCollectionAdded(String title) {

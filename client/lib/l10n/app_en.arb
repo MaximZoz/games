@@ -559,7 +559,7 @@
     }
   },
   "shopBuyOnce": "One-time purchase",
-  "shopSellRefund": "Selling returns part of the cost",
+  "shopSellRefund": "Selling returns 80% of the cost",
   "shopCollectionAdded": "{title} added to profile",
   "@shopCollectionAdded": {
     "placeholders": {

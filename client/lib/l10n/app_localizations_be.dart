@@ -1116,7 +1116,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopBuyOnce => 'Пакупка адзін раз';
 
   @override
-  String get shopSellRefund => 'Продаж верне частку кошту';
+  String get shopSellRefund => 'Продаж верне 80% кошту';
 
   @override
   String shopCollectionAdded(String title) {

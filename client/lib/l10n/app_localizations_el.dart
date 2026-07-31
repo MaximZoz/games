@@ -1116,7 +1116,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopBuyOnce => 'Εφάπαξ αγορά';
 
   @override
-  String get shopSellRefund => 'Η πώληση επιστρέφει μέρος του κόστους';
+  String get shopSellRefund => 'Η πώληση επιστρέφει το 80% του κόστους';
 
   @override
   String shopCollectionAdded(String title) {

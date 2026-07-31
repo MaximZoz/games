@@ -1116,7 +1116,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopBuyOnce => 'Tek seferlik satın alma';
 
   @override
-  String get shopSellRefund => 'Satış maliyetin bir kısmını iade eder';
+  String get shopSellRefund => 'Satış maliyetin %80\'ini iade eder';
 
   @override
   String shopCollectionAdded(String title) {

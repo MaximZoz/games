@@ -1116,7 +1116,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopBuyOnce => 'Achat unique';
 
   @override
-  String get shopSellRefund => 'La vente rembourse une partie du prix';
+  String get shopSellRefund => 'La vente rembourse 80% du prix';
 
   @override
   String shopCollectionAdded(String title) {

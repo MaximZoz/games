@@ -2258,7 +2258,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopSellRefund.
   ///
   /// In ru, this message translates to:
-  /// **'Продажа вернёт часть стоимости'**
+  /// **'Продажа вернет 80% стоимости'**
   String get shopSellRefund;
 
   /// No description provided for @shopCollectionAdded.

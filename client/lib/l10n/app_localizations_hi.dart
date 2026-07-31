@@ -1116,7 +1116,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopBuyOnce => 'एक बार की खरीद';
 
   @override
-  String get shopSellRefund => 'बेचने पर लागत का कुछ हिस्सा वापस मिलता है';
+  String get shopSellRefund => 'बेचने पर लागत का 80% वापस मिलता है';
 
   @override
   String shopCollectionAdded(String title) {

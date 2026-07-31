@@ -1116,7 +1116,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopBuyOnce => 'Bir martalik xarid';
 
   @override
-  String get shopSellRefund => 'Sotish narxning bir qismini qaytaradi';
+  String get shopSellRefund => 'Sotish narxning 80%ini qaytaradi';
 
   @override
   String shopCollectionAdded(String title) {

@@ -1116,7 +1116,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shopBuyOnce => 'Acquisto una tantum';
 
   @override
-  String get shopSellRefund => 'La vendita rimborsa parte del costo';
+  String get shopSellRefund => 'La vendita rimborsa l\'80% del costo';
 
   @override
   String shopCollectionAdded(String title) {

@@ -1116,7 +1116,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopBuyOnce => 'Kertaluonteinen osto';
 
   @override
-  String get shopSellRefund => 'Myynti palauttaa osan hinnasta';
+  String get shopSellRefund => 'Myynti palauttaa 80% hinnasta';
 
   @override
   String shopCollectionAdded(String title) {

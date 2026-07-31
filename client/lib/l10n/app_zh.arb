@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "一次性购买",
-  "shopSellRefund": "出售可返还部分费用",
+  "shopSellRefund": "出售可返还 80% 费用",
   "shopCollectionAdded": "{title} 已添加到个人资料",
   "@shopCollectionAdded": {
     "placeholders": {

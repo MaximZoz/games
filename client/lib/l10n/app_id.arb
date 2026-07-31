@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Pembelian sekali",
-  "shopSellRefund": "Menjual mengembalikan sebagian biaya",
+  "shopSellRefund": "Menjual mengembalikan 80% biaya",
   "shopCollectionAdded": "{title} ditambahkan ke profil",
   "@shopCollectionAdded": {
     "placeholders": {

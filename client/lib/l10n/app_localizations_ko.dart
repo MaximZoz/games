@@ -1116,7 +1116,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopBuyOnce => '일회성 구매';
 
   @override
-  String get shopSellRefund => '판매 시 비용의 일부가 반환됩니다';
+  String get shopSellRefund => '판매 시 비용의 80%가 반환됩니다';
 
   @override
   String shopCollectionAdded(String title) {

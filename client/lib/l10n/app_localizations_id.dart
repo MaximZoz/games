@@ -1116,7 +1116,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopBuyOnce => 'Pembelian sekali';
 
   @override
-  String get shopSellRefund => 'Menjual mengembalikan sebagian biaya';
+  String get shopSellRefund => 'Menjual mengembalikan 80% biaya';
 
   @override
   String shopCollectionAdded(String title) {

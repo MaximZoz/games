@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Εφάπαξ αγορά",
-  "shopSellRefund": "Η πώληση επιστρέφει μέρος του κόστους",
+  "shopSellRefund": "Η πώληση επιστρέφει το 80% του κόστους",
   "shopCollectionAdded": "Το {title} προστέθηκε στο προφίλ",
   "@shopCollectionAdded": {
     "placeholders": {
