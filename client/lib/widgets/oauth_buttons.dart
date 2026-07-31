@@ -36,7 +36,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   String? _busyProvider;
   String? _pollingState;
   bool _resuming = false;
-  bool _showStuckHelp = false;
 
   @override
   void initState() {
@@ -142,13 +141,8 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                         : () {
                             final p = providers[i];
                             if (kIsWeb && p == 'google') {
-                              // iOS PWA: GIS открывает ASWebAuthenticationSession →
-                              // белый accounts.google.com. Нужен top-level redirect.
-                              if (isIosStandalonePwa) {
-                                _startIosPwaGoogle(repo);
-                              } else {
-                                _startGoogleGis(context, info.googleClientId);
-                              }
+                              // GIS: вход в той же вкладке, без Safari/новой окна.
+                              _startGoogleGis(context, info.googleClientId);
                             } else if (kIsWeb) {
                               _startWebNavigate(p, repo);
                             } else {
@@ -170,49 +164,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                             ),
                           ),
                   ),
-                ),
-              ],
-              if (_showStuckHelp ||
-                  (readOAuthPendingState() ?? '').isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Text(
-                  'Если зависли на accounts.google.com / CheckCookie — '
-                  'закройте ту вкладку (PWA не может закрыть страницы Google). '
-                  'Инкогнито часто ломает вход Google.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: _resuming
-                      ? null
-                      : () async {
-                          final router = GoRouter.of(context);
-                          setState(() => _busyProvider ??= 'google');
-                          await _resumePending();
-                          if (!mounted) return;
-                          final user = ref.read(authStateProvider).valueOrNull;
-                          if (user != null) {
-                            router.go('/games');
-                          }
-                        },
-                  child: const Text('Продолжить вход в приложении'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    final router = GoRouter.of(context);
-                    clearOAuthPendingState();
-                    setState(() {
-                      _showStuckHelp = false;
-                      _busyProvider = null;
-                    });
-                    router.go('/games');
-                  },
-                  child: const Text('Открыть игры'),
                 ),
               ],
             ],
@@ -237,7 +188,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  /// Desktop/Android web: GIS без ухода из вкладки.
+  /// Web: GIS в той же странице (One Tap / FedCM), без redirect и popup.
   Future<void> _startGoogleGis(BuildContext context, String? clientId) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -275,45 +226,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     } finally {
       if (mounted) setState(() => _busyProvider = null);
     }
-  }
-
-  /// iOS PWA: sync state + location.assign (не GIS / не target=_blank).
-  void _startIosPwaGoogle(AuthRepository repo) {
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _busyProvider = 'google');
-    final startUrl = repo.oauthStartUrl(
-      provider: 'google',
-      redirect: widget.redirect,
-      ref: widget.refCode,
-      poll: true,
-    );
-    final started = fetchOAuthPollStartSync(startUrl);
-    setState(() => _showStuckHelp = true);
-    if (started != null) {
-      saveOAuthPendingState(started.state);
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Завершите Google и вернитесь в приложение. '
-            'Не используйте инкогнито — там зависает CheckCookie.',
-          ),
-          duration: Duration(seconds: 10),
-        ),
-      );
-      openOAuthExternal(started.authorizeUrl);
-      return;
-    }
-    // Fallback: same-origin navigate=1 → cookie + 302 на Google.
-    saveOAuthPendingState(_cookiePendingSentinel);
-    openOAuthExternal(
-      repo.oauthStartUrl(
-        provider: 'google',
-        redirect: widget.redirect,
-        ref: widget.refCode,
-        poll: true,
-        navigate: true,
-      ),
-    );
   }
 
   /// Web: redirect-flow только для не-Google провайдеров.

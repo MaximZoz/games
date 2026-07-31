@@ -195,55 +195,51 @@
     }
   </script>
   <script>
-    // Google Identity Services — вход без redirect/SFSafariViewController (iOS PWA).
+    // Google Identity Services — вход в той же вкладке (One Tap / FedCM), без popup/Safari.
     window.__mgGoogleSignIn = function (clientId) {
       return new Promise(function (resolve, reject) {
+        var settled = false;
         function cleanup() {
-          var el = document.getElementById('mg-gsi-overlay');
+          var el = document.getElementById('mg-gsi-host');
           if (el && el.parentNode) el.parentNode.removeChild(el);
         }
+        function ok(cred) {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve(cred);
+        }
         function fail(msg) {
+          if (settled) return;
+          settled = true;
           cleanup();
           reject(new Error(msg || 'google sign-in failed'));
         }
-        function showButton() {
-          cleanup();
-          var overlay = document.createElement('div');
-          overlay.id = 'mg-gsi-overlay';
-          overlay.setAttribute('role', 'dialog');
-          overlay.style.cssText =
-            'position:fixed;inset:0;z-index:2147483646;background:rgba(15,23,42,0.4);' +
-            'display:flex;align-items:center;justify-content:center;padding:24px;';
-          var box = document.createElement('div');
-          box.style.cssText =
-            'background:#fff;border-radius:16px;padding:24px 20px;max-width:320px;width:100%;' +
-            'text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.18);';
-          box.innerHTML =
-            '<p style="margin:0 0 16px;font:600 16px system-ui,-apple-system,sans-serif;color:#111">Войти через Google</p>' +
-            '<div id="mg-gsi-btn" style="display:flex;justify-content:center"></div>' +
-            '<button type="button" id="mg-gsi-cancel" style="margin-top:14px;border:0;background:transparent;' +
-            'color:#555;font:500 14px system-ui,-apple-system,sans-serif;cursor:pointer">Отмена</button>';
-          overlay.appendChild(box);
-          document.body.appendChild(overlay);
-          document.getElementById('mg-gsi-cancel').onclick = function () {
-            fail('cancelled');
-          };
-          overlay.addEventListener('click', function (e) {
-            if (e.target === overlay) fail('cancelled');
-          });
+        function onCred(resp) {
+          if (resp && resp.credential) ok(resp.credential);
+          else fail('no credential');
+        }
+        // Запасной путь: официальная кнопка Google в странице (не модалка и не новое окно).
+        function showInlineButton() {
+          if (settled || document.getElementById('mg-gsi-host')) return;
+          var host = document.createElement('div');
+          host.id = 'mg-gsi-host';
+          host.style.cssText =
+            'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2147483646;' +
+            'display:flex;flex-direction:column;align-items:center;gap:8px;';
+          var btnWrap = document.createElement('div');
+          btnWrap.id = 'mg-gsi-btn';
+          var cancel = document.createElement('button');
+          cancel.type = 'button';
+          cancel.textContent = 'Отмена';
+          cancel.style.cssText =
+            'border:0;background:transparent;color:#555;font:500 13px system-ui,-apple-system,sans-serif;cursor:pointer';
+          cancel.onclick = function () { fail('cancelled'); };
+          host.appendChild(btnWrap);
+          host.appendChild(cancel);
+          document.body.appendChild(host);
           try {
-            google.accounts.id.initialize({
-              client_id: clientId,
-              callback: function (resp) {
-                cleanup();
-                if (resp && resp.credential) resolve(resp.credential);
-                else fail('no credential');
-              },
-              auto_select: false,
-              cancel_on_tap_outside: true,
-              use_fedcm_for_prompt: true
-            });
-            google.accounts.id.renderButton(document.getElementById('mg-gsi-btn'), {
+            google.accounts.id.renderButton(btnWrap, {
               theme: 'outline',
               size: 'large',
               shape: 'rectangular',
@@ -259,45 +255,33 @@
           try {
             google.accounts.id.initialize({
               client_id: clientId,
-              callback: function (resp) {
-                cleanup();
-                if (resp && resp.credential) resolve(resp.credential);
-                else fail('no credential');
-              },
-              auto_select: false,
+              callback: onCred,
+              auto_select: true,
               cancel_on_tap_outside: true,
-              use_fedcm_for_prompt: true
+              use_fedcm_for_prompt: true,
+              itp_support: true
             });
             google.accounts.id.prompt(function (notification) {
               try {
+                if (notification.isDismissedMoment && notification.isDismissedMoment()) {
+                  var reason = '';
+                  try { reason = notification.getDismissedReason() || ''; } catch (e) {}
+                  if (reason === 'credential_returned') return;
+                  fail('cancelled');
+                  return;
+                }
                 if (
-                  notification.isNotDisplayed() ||
-                  notification.isSkippedMoment() ||
-                  notification.isDismissedMoment()
+                  (notification.isNotDisplayed && notification.isNotDisplayed()) ||
+                  (notification.isSkippedMoment && notification.isSkippedMoment())
                 ) {
-                  showButton();
+                  showInlineButton();
                 }
               } catch (e) {
-                showButton();
+                showInlineButton();
               }
             });
-            // iOS PWA часто глушит One Tap — через мгновение показываем кнопку.
-            setTimeout(function () {
-              if (!document.getElementById('mg-gsi-overlay')) {
-                try {
-                  if (
-                    !document.querySelector('[data-gsi-iframe]') &&
-                    !document.getElementById('credential_picker_container')
-                  ) {
-                    showButton();
-                  }
-                } catch (e) {
-                  showButton();
-                }
-              }
-            }, 700);
           } catch (e) {
-            showButton();
+            fail(String(e));
           }
         }
         if (window.google && google.accounts && google.accounts.id) {
