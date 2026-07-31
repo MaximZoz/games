@@ -556,6 +556,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatMessageHint => 'Meddelande';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => 'Emojis';
 
   @override

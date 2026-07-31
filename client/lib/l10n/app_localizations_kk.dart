@@ -556,6 +556,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get chatMessageHint => 'Хабарлама';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => 'Эмодзи';
 
   @override

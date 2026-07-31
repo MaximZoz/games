@@ -556,6 +556,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chatMessageHint => '메시지';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => '이모지';
 
   @override

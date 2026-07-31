@@ -221,6 +221,7 @@
   "chatDialog": "Диалог",
   "chatEmpty": "Сообщений пока нет.\nНапишите первое сообщение.",
   "chatMessageHint": "Сообщение",
+  "chatPaste": "Вставить",
   "chatEmoji": "Смайлики",
   "chatBuyEmojiHint": "Купите смайлики в магазине на главной",
   "chatEditing": "Редактирование",

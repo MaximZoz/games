@@ -1223,6 +1223,12 @@ abstract class AppLocalizations {
   /// **'Сообщение'**
   String get chatMessageHint;
 
+  /// No description provided for @chatPaste.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставить'**
+  String get chatPaste;
+
   /// No description provided for @chatEmoji.
   ///
   /// In ru, this message translates to:

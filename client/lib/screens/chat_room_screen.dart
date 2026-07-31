@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -16,6 +17,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -112,6 +114,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String? _highlightedMessageID;
   bool _jumpingToMessage = false;
 
+  /// Всплывашка «Вставить» для скопированной invite-ссылки.
+  String? _pasteInviteUrl;
+  bool _pasteSuggestionVisible = false;
+  bool _applyingPaste = false;
+
   /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
   final Set<String> _pendingDeliveredIDs = <String>{};
   final Set<String> _pendingReadIDs = <String>{};
@@ -131,6 +138,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       markChatReadInChatsCache(ref, widget.chatID);
+      unawaited(_maybeShowPasteSuggestion());
     });
   }
 
@@ -146,10 +154,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _emojiOnly = false;
       _composerAlert = null;
       _highlightedMessageID = null;
+      _pasteInviteUrl = null;
+      _pasteSuggestionVisible = false;
       _messageKeys.clear();
       _messageIDs.clear();
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_maybeShowPasteSuggestion());
+      });
     }
   }
 
@@ -177,8 +190,61 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _onComposerTextChanged() {
-    if (_composerAlert == null) return;
-    setState(() => _composerAlert = null);
+    if (_applyingPaste) return;
+    if (!_pasteSuggestionVisible && _composerAlert == null) return;
+    setState(() {
+      _pasteSuggestionVisible = false;
+      _composerAlert = null;
+    });
+  }
+
+  Future<void> _maybeShowPasteSuggestion() async {
+    if (!mounted || _textController.text.trim().isNotEmpty) return;
+
+    String? url = ref.read(pendingInvitePasteProvider)?.trim();
+    if (url == null || url.isEmpty || parseInviteLobbyShareUrl(url) == null) {
+      url = null;
+      try {
+        final data = await Clipboard.getData(Clipboard.kTextPlain);
+        final text = data?.text?.trim();
+        if (text != null &&
+            text.isNotEmpty &&
+            parseInviteLobbyShareUrl(text) != null) {
+          url = text;
+        }
+      } catch (_) {
+        // Safari/PWA часто блокирует чтение буфера без жеста.
+      }
+    }
+    if (!mounted || url == null) return;
+    if (_textController.text.trim().isNotEmpty) return;
+    setState(() {
+      _pasteInviteUrl = url;
+      _pasteSuggestionVisible = true;
+    });
+  }
+
+  void _dismissPasteSuggestion() {
+    if (!_pasteSuggestionVisible && _pasteInviteUrl == null) return;
+    setState(() {
+      _pasteSuggestionVisible = false;
+    });
+  }
+
+  void _applyPasteSuggestion() {
+    final url = _pasteInviteUrl?.trim();
+    if (url == null || url.isEmpty) return;
+    _applyingPaste = true;
+    _textController.text = url;
+    _textController.selection = TextSelection.collapsed(offset: url.length);
+    ref.read(pendingInvitePasteProvider.notifier).state = null;
+    setState(() {
+      _pasteSuggestionVisible = false;
+      _pasteInviteUrl = null;
+      _composerAlert = null;
+    });
+    _applyingPaste = false;
+    _composerFocusNode.requestFocus();
   }
 
   /// Диалог видим в shell (не фоновая вкладка и не уходим назад).
@@ -485,6 +551,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
     if (_sending) return;
+    _dismissPasteSuggestion();
     if (_editingMessage != null) {
       if (text.isEmpty && !_editingMessage!.hasImage) return;
       setState(() {
@@ -598,21 +665,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _replyTo = message;
       _editingMessage = null;
       _composerAlert = null;
+      _pasteSuggestionVisible = false;
     });
     _composerFocusNode.requestFocus();
   }
 
   void _startEdit(ChatMessageItem message) {
+    _applyingPaste = true;
     setState(() {
       _editingMessage = message;
       _replyTo = null;
       _pendingImages.clear();
       _composerAlert = null;
+      _pasteSuggestionVisible = false;
       _textController.text = message.body;
       _textController.selection = TextSelection.collapsed(
         offset: _textController.text.length,
       );
     });
+    _applyingPaste = false;
     _composerFocusNode.requestFocus();
   }
 
@@ -621,6 +692,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     setState(() {
       _replyTo = null;
       _editingMessage = null;
+      _pasteSuggestionVisible = false;
       if (wasEditing) {
         _textController.clear();
       }
@@ -634,6 +706,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _pendingImages.length >= _maxPendingImages) {
       return;
     }
+    _dismissPasteSuggestion();
     // Сначала выбор файла; превью с лоадером — сразу после выбора, до сжатия.
     final raw = await pickChatImageRawBytes(ImageSource.gallery);
     if (!mounted || raw == null) return;
@@ -2440,6 +2513,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
+              if (_pasteSuggestionVisible && _pasteInviteUrl != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(48, 0, 12, 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _applyPasteSuggestion,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.borderCycle.first,
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.content_paste_rounded,
+                                size: 18,
+                                color: AppColors.accentStart,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                context.l10n.chatPaste,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (_pendingImages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
@@ -2716,6 +2840,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _openEmojiPicker() async {
+    _dismissPasteSuggestion();
     _composerFocusNode.unfocus();
     // Не invalidate: иначе на мобиле valueOrNull=null и панель «пустая».
     final cached = ref.read(inventoryListProvider).valueOrNull;

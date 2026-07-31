@@ -556,6 +556,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get chatMessageHint => 'Besked';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => 'Emojis';
 
   @override

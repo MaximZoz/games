@@ -556,6 +556,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatMessageHint => 'Tin nhắn';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => 'Emoji';
 
   @override

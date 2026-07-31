@@ -556,6 +556,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get chatMessageHint => 'Xabar';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => 'Emoji';
 
   @override

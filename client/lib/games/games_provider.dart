@@ -10,6 +10,9 @@ final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
   return GamesRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
+/// Invite-ссылка, скопированная из лобби — для всплывашки «Вставить» в чате.
+final pendingInvitePasteProvider = StateProvider<String?>((ref) => null);
+
 class GameInvite {
   GameInvite({
     required this.lobbyId,

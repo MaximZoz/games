@@ -489,6 +489,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       baseUri: Uri.base,
     );
     await Clipboard.setData(ClipboardData(text: url));
+    // Чтобы в чате сразу показать «Вставить» без чтения буфера (Safari).
+    ref.read(pendingInvitePasteProvider.notifier).state = url;
     if (!mounted) return;
     setState(() => _linkCopied = true);
     _linkCopiedTimer?.cancel();

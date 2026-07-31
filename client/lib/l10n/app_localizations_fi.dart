@@ -556,6 +556,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatMessageHint => 'Viesti';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => 'Emojit';
 
   @override

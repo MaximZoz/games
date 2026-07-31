@@ -556,6 +556,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatMessageHint => '消息';
 
   @override
+  String get chatPaste => 'Вставить';
+
+  @override
   String get chatEmoji => '表情';
 
   @override
