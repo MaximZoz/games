@@ -43,64 +43,64 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'Verkkotila';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Offline: pelaa heti bottia vastaan ilman panoksia ja palkintoja, ilman chatteja ja ystäviä. Ostokset tallentuvat ja otetaan käyttöön online-tilassa. Online — kun internet on käytettävissä tai käyttäjän asetuksen mukaan.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'Online';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'Offline';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'Vuorotellen kuka aloittaa pelin';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Kuka aloittaa vuorottelee peleistä toiseen.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'Offline-tila';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'Offline-tila';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Offline-tila on päällä. Pelaa botia vastaan ilman panoksia ja palkintoja. Chatit, ystävät ja lobby on piilotettu. Ostokset otetaan käyttöön online-tilassa.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'Asetukset';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'Pelaa';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'Peli bottia vastaan';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'Ilman panoksia ja palkintoja · vain offline';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'Botti voitti';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'Botti miettii…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'Uudelleen';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Ostos tallennettu — otetaan käyttöön online-tilassa';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — ostos otettu käyttöön';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — ostosta ei otettu käyttöön: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbyEnterGame => 'Siirry peliin';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'Lobby ei ole enää saatavilla';
 
   @override
   String get lobbyInvite => 'Kutsu';
@@ -542,31 +542,31 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gameLeave => 'Poistu';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'Luovuta';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'Luovuta?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Häviät pelin ja panoskolikot.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'Tarjoa tasapeliä';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'Tarjoa tasapeliä?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'Vastustaja voi hyväksyä tai hylätä tasapelin.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'Hyväksy tasapeli?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'Peli päättyy tasapeliin.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'Vastustaja tarjoaa tasapeliä';
 
   @override
   String get gameConnecting => 'Yhdistetään peliin…';
@@ -638,7 +638,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatMessageHint => 'Viesti';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'Liitä';
 
   @override
   String get chatEmoji => 'Emojit';
@@ -797,7 +797,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopStakes => 'Panokset';
 
   @override
-  String get shopStakesSubtitle => 'Avaa hopeapanokset';
+  String get shopStakesSubtitle => 'Avaa korkeammat panokset';
 
   @override
   String get inventoryTitle => 'Esineet';
@@ -1182,13 +1182,13 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'Pelaajalla on jo tämä esine';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'Et voi antaa itsellesi lahjaa';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'Tätä esinettä ei ole inventaariossasi';
 
   @override
   String get inventoryLoadFailed => 'Esineitä ei voitu ladata';
@@ -1221,10 +1221,10 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'Valmis';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'Huomenna';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,84 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'Tilastot';
+
+  @override
+  String get statsLoadFailed => 'Tilastojen lataus epäonnistui';
+
+  @override
+  String get statsAllGames => 'Kaikki pelit';
+
+  @override
+  String get statsEmptyTitle => 'Ei vielä pelattuja pelejä';
+
+  @override
+  String get statsEmptyHint => 'Pelaa ensimmäinen pelisi nähdäksesi tilastot täällä.';
+
+  @override
+  String get statsWins => 'Voitot';
+
+  @override
+  String get statsDraws => 'Tasapelit';
+
+  @override
+  String get statsLosses => 'Tappiot';
+
+  @override
+  String get statsWinRate => 'Voittoprosentti';
+
+  @override
+  String get statsTopWon => 'Eniten voittoja vastaan';
+
+  @override
+  String get statsTopDrawn => 'Eniten tasapelejä kanssa';
+
+  @override
+  String get statsTopLost => 'Eniten tappioita vastaan';
+
+  @override
+  String get statsTimePlayed => 'Peliaika';
+
+  @override
+  String get statsYourScore => 'Tilanteesi';
+
+  @override
+  String get profileShowStats => 'Näytä tilastot';
+
+  @override
+  String get statsDurationZeroMinutes => '0 min';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Vastustaja luovutti. Voitit!';
+
+  @override
+  String get lobbyLeaveTitle => 'Poistu lobbysta?';
+
+  @override
+  String get lobbyLeaveConfirm => 'Lobbyn poistetaan poistumisen jälkeen. Kutsutut ystävät saavat hylkäyksen.';
+
+  @override
+  String get lobbyLeave => 'Poistu';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours t';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours t $minutes min';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Luovutit. $name voitti';
+  }
 }

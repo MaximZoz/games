@@ -19,6 +19,7 @@ class SwipeBackScope extends StatefulWidget {
     this.triggerDistance = 20,
     this.topInset,
     this.bottomInset = 0,
+    this.opaqueEdge = true,
   });
 
   final VoidCallback onBack;
@@ -37,6 +38,10 @@ class SwipeBackScope extends StatefulWidget {
 
   /// Отступ снизу под композер / нижние контролы.
   final double bottomInset;
+
+  /// `true` — зона края всегда в hit-test (удобно против горизонтальных ListView).
+  /// `false` — тапы проходят к виджетам под полосой (чекбоксы у левого края).
+  final bool opaqueEdge;
 
   @override
   State<SwipeBackScope> createState() => _SwipeBackScopeState();
@@ -80,8 +85,11 @@ class _SwipeBackScopeState extends State<SwipeBackScope> {
           bottom: excludedBottom,
           width: widget.edgeWidth,
           child: GestureDetector(
-            // opaque: зона всегда в hit-test, даже будучи прозрачной.
-            behavior: HitTestBehavior.opaque,
+            // opaque — перехват до горизонтальных ListView; translucent — тапы
+            // доходят до контролов под полосой (чекбокс у левого края формы).
+            behavior: widget.opaqueEdge
+                ? HitTestBehavior.opaque
+                : HitTestBehavior.translucent,
             onHorizontalDragStart: _onDragStart,
             onHorizontalDragUpdate: _onDragUpdate,
             onHorizontalDragEnd: (_) => _reset(),

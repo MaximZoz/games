@@ -797,7 +797,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shopStakes => 'Ставки';
 
   @override
-  String get shopStakesSubtitle => 'Разблокировка серебряных ставок';
+  String get shopStakesSubtitle => 'Разблокировка повышенных ставок';
 
   @override
   String get inventoryTitle => 'Предметы';
@@ -1650,4 +1650,84 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Вернуться ко входу';
+
+  @override
+  String get statsTitle => 'Статистика';
+
+  @override
+  String get statsLoadFailed => 'Не удалось загрузить статистику';
+
+  @override
+  String get statsAllGames => 'Все игры';
+
+  @override
+  String get statsEmptyTitle => 'Пока нет сыгранных партий';
+
+  @override
+  String get statsEmptyHint => 'Сыграйте первую игру, чтобы здесь появилась статистика.';
+
+  @override
+  String get statsWins => 'Победы';
+
+  @override
+  String get statsDraws => 'Ничьи';
+
+  @override
+  String get statsLosses => 'Поражения';
+
+  @override
+  String get statsWinRate => 'Процент побед';
+
+  @override
+  String get statsTopWon => 'Больше всего выиграл у';
+
+  @override
+  String get statsTopDrawn => 'Больше всего ничьих с';
+
+  @override
+  String get statsTopLost => 'Больше всего проиграл';
+
+  @override
+  String get statsTimePlayed => 'Время в игре';
+
+  @override
+  String get statsYourScore => 'Ваш счёт';
+
+  @override
+  String get profileShowStats => 'Показывать статистику';
+
+  @override
+  String get statsDurationZeroMinutes => '0 мин';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Соперник сдался. Вы победили!';
+
+  @override
+  String get lobbyLeaveTitle => 'Покинуть лобби?';
+
+  @override
+  String get lobbyLeaveConfirm => 'Лобби будет удалено после выхода. Приглашённые друзья получат отказ.';
+
+  @override
+  String get lobbyLeave => 'Покинуть';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours ч';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours ч $minutes мин';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes мин';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Вы сдались. $name победил';
+  }
 }

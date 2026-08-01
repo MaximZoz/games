@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -220,6 +221,10 @@ class _GiftFriendPickerDialogState
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                  HeadToHeadSection(
+                    opponentId: user.id,
+                    opponentName: user.displayName,
+                  ),
                   PeerCollectionsSection(userId: user.id),
                 ],
               ),

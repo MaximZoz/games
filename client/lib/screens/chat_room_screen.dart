@@ -19,6 +19,7 @@ import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -1836,6 +1837,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                HeadToHeadSection(
+                  opponentId: user.id,
+                  opponentName: user.displayName,
+                ),
                 PeerCollectionsSection(userId: user.id),
               ],
             ),

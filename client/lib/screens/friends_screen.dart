@@ -13,6 +13,7 @@ import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -434,6 +435,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                  HeadToHeadSection(
+                    opponentId: user.id,
+                    opponentName: user.displayName,
+                  ),
                   PeerCollectionsSection(userId: user.id),
                 ],
               ),

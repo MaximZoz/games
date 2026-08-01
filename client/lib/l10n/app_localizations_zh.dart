@@ -43,64 +43,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAddBotsSubtitle => '匹配中：若 30 秒内未找到对手，将与机器人开始对局（赌注重置为 1 青铜）';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => '网络模式';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => '离线：立即与机器人对战，无赌注和奖励，无聊天和好友。购买会保存并在在线模式下生效。在线 — 有网络时或按用户设置。';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => '在线';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => '离线';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => '轮流决定谁先开局';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => '谁先手每局轮换。';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => '离线模式';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => '离线模式';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => '离线模式已开启。与机器人对战，无赌注和奖励。聊天、好友和大厅已隐藏。购买将在在线模式下生效。';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => '设置';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => '开始';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => '与机器人对战';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => '无赌注和奖励 · 仅离线';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => '机器人获胜';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => '机器人思考中…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => '再来一局';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => '购买已保存 — 将在在线模式下生效';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — 购买已生效';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — 购买未生效：$reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbyEnterGame => '进入对局';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => '大厅已不可用';
 
   @override
   String get lobbyInvite => '邀请';
@@ -542,31 +542,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameLeave => '离开';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => '认输';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => '认输？';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => '你将输掉对局和赌注币。';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => '提议和棋';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => '提议和棋？';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => '对手可以接受或拒绝和棋。';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => '接受和棋？';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => '对局将以和棋结束。';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => '对手提出和棋';
 
   @override
   String get gameConnecting => '正在连接对局…';
@@ -638,7 +638,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatMessageHint => '消息';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => '粘贴';
 
   @override
   String get chatEmoji => '表情';
@@ -797,7 +797,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopStakes => '赌注';
 
   @override
-  String get shopStakesSubtitle => '解锁白银赌注';
+  String get shopStakesSubtitle => '解锁更高赌注';
 
   @override
   String get inventoryTitle => '物品';
@@ -1182,13 +1182,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => '该玩家已拥有此物品';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => '不能送给自己';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => '物品不在你的背包中';
 
   @override
   String get inventoryLoadFailed => '无法加载物品';
@@ -1221,10 +1221,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => '可领取';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => '明天';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,84 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => '统计';
+
+  @override
+  String get statsLoadFailed => '无法加载统计';
+
+  @override
+  String get statsAllGames => '全部游戏';
+
+  @override
+  String get statsEmptyTitle => '暂无已完成的对局';
+
+  @override
+  String get statsEmptyHint => '先玩一局，统计就会显示在这里。';
+
+  @override
+  String get statsWins => '胜场';
+
+  @override
+  String get statsDraws => '平局';
+
+  @override
+  String get statsLosses => '负场';
+
+  @override
+  String get statsWinRate => '胜率';
+
+  @override
+  String get statsTopWon => '胜场最多对手';
+
+  @override
+  String get statsTopDrawn => '平局最多对手';
+
+  @override
+  String get statsTopLost => '负场最多对手';
+
+  @override
+  String get statsTimePlayed => '游戏时长';
+
+  @override
+  String get statsYourScore => '你们的比分';
+
+  @override
+  String get profileShowStats => '显示统计';
+
+  @override
+  String get statsDurationZeroMinutes => '0 分钟';
+
+  @override
+  String get gameYouWonOpponentForfeit => '对手认输了。你赢了！';
+
+  @override
+  String get lobbyLeaveTitle => '离开大厅？';
+
+  @override
+  String get lobbyLeaveConfirm => '离开后大厅将被删除。受邀好友会收到拒绝。';
+
+  @override
+  String get lobbyLeave => '离开';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours 小时';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return '你认输了。$name 获胜';
+  }
 }

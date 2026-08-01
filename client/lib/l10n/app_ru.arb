@@ -317,7 +317,7 @@
   "shopCollections": "Коллекции",
   "shopCollectionsSubtitle": "Витрина профиля, подарки и доход",
   "shopStakes": "Ставки",
-  "shopStakesSubtitle": "Разблокировка серебряных ставок",
+  "shopStakesSubtitle": "Разблокировка повышенных ставок",
   "inventoryTitle": "Предметы",
   "inventoryEmpty": "Пока ничего нет — загляните в магазин",
   "inventoryFrames": "Рамки",
@@ -1005,5 +1005,60 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Вернуться ко входу"
+  "resetPasswordBackToLogin": "Вернуться ко входу",
+  "statsTitle": "Статистика",
+  "statsLoadFailed": "Не удалось загрузить статистику",
+  "statsAllGames": "Все игры",
+  "statsEmptyTitle": "Пока нет сыгранных партий",
+  "statsEmptyHint": "Сыграйте первую игру, чтобы здесь появилась статистика.",
+  "statsWins": "Победы",
+  "statsDraws": "Ничьи",
+  "statsLosses": "Поражения",
+  "statsWinRate": "Процент побед",
+  "statsTopWon": "Больше всего выиграл у",
+  "statsTopDrawn": "Больше всего ничьих с",
+  "statsTopLost": "Больше всего проиграл",
+  "statsTimePlayed": "Время в игре",
+  "statsYourScore": "Ваш счёт",
+  "profileShowStats": "Показывать статистику",
+  "statsDurationZeroMinutes": "0 мин",
+  "gameYouWonOpponentForfeit": "Соперник сдался. Вы победили!",
+  "lobbyLeaveTitle": "Покинуть лобби?",
+  "lobbyLeaveConfirm": "Лобби будет удалено после выхода. Приглашённые друзья получат отказ.",
+  "lobbyLeave": "Покинуть",
+  "statsDurationHours": "{hours} ч",
+  "@statsDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "statsDurationHoursMinutes": "{hours} ч {minutes} мин",
+  "@statsDurationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "statsDurationMinutes": "{minutes} мин",
+  "@statsDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "gameYouForfeitOpponentWon": "Вы сдались. {name} победил",
+  "@gameYouForfeitOpponentWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

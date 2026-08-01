@@ -43,64 +43,64 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Khi ghép trận: nếu không tìm thấy đối thủ trong 30 giây, trận sẽ bắt đầu với bot (cược đặt lại thành 1 đồng bronze)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'Chế độ mạng';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Ngoại tuyến: chơi bot ngay, không cược và phần thưởng, không chat và bạn bè. Giao dịch được lưu và áp dụng ở chế độ trực tuyến. Trực tuyến — khi có internet hoặc theo cài đặt người dùng.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'Trực tuyến';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'Ngoại tuyến';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'Lần lượt ai bắt đầu ván';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Người đi trước luân phiên theo từng ván.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'Chế độ ngoại tuyến';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'Chế độ ngoại tuyến';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Chế độ ngoại tuyến đang bật. Chơi bot không cược và phần thưởng. Chat, bạn bè và sảnh bị ẩn. Giao dịch áp dụng ở chế độ trực tuyến.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'Cài đặt';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'Chơi';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'Chơi với bot';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'Không cược và thưởng · chỉ ngoại tuyến';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'Bot thắng';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'Bot đang nghĩ…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'Chơi lại';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Đã lưu giao dịch — sẽ áp dụng ở chế độ trực tuyến';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — đã áp dụng giao dịch';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — không áp dụng giao dịch: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbyEnterGame => 'Vào trận';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'Sảnh không còn khả dụng';
 
   @override
   String get lobbyInvite => 'Mời';
@@ -542,31 +542,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameLeave => 'Rời';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'Đầu hàng';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'Đầu hàng?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Bạn sẽ thua ván và xu cược.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'Đề nghị hòa';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'Đề nghị hòa?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'Đối thủ có thể chấp nhận hoặc từ chối hòa.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'Chấp nhận hòa?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'Ván sẽ kết thúc hòa.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'Đối thủ đề nghị hòa';
 
   @override
   String get gameConnecting => 'Đang kết nối trận…';
@@ -638,7 +638,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatMessageHint => 'Tin nhắn';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'Dán';
 
   @override
   String get chatEmoji => 'Emoji';
@@ -797,7 +797,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopStakes => 'Cược';
 
   @override
-  String get shopStakesSubtitle => 'Mở khóa cược bạc';
+  String get shopStakesSubtitle => 'Mở khóa cược cao hơn';
 
   @override
   String get inventoryTitle => 'Vật phẩm';
@@ -1182,13 +1182,13 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'Người chơi đã sở hữu vật phẩm này';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'Bạn không thể tặng cho chính mình';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'Vật phẩm này không có trong túi đồ';
 
   @override
   String get inventoryLoadFailed => 'Không thể tải vật phẩm';
@@ -1221,10 +1221,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'Sẵn sàng';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'Ngày mai';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,84 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'Thống kê';
+
+  @override
+  String get statsLoadFailed => 'Không tải được thống kê';
+
+  @override
+  String get statsAllGames => 'Tất cả trò chơi';
+
+  @override
+  String get statsEmptyTitle => 'Chưa có ván nào';
+
+  @override
+  String get statsEmptyHint => 'Chơi ván đầu để thống kê hiện ở đây.';
+
+  @override
+  String get statsWins => 'Thắng';
+
+  @override
+  String get statsDraws => 'Hòa';
+
+  @override
+  String get statsLosses => 'Thua';
+
+  @override
+  String get statsWinRate => 'Tỷ lệ thắng';
+
+  @override
+  String get statsTopWon => 'Thắng nhiều nhất trước';
+
+  @override
+  String get statsTopDrawn => 'Hòa nhiều nhất với';
+
+  @override
+  String get statsTopLost => 'Thua nhiều nhất trước';
+
+  @override
+  String get statsTimePlayed => 'Thời gian chơi';
+
+  @override
+  String get statsYourScore => 'Tỷ số của bạn';
+
+  @override
+  String get profileShowStats => 'Hiện thống kê';
+
+  @override
+  String get statsDurationZeroMinutes => '0 phút';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Đối thủ đầu hàng. Bạn thắng!';
+
+  @override
+  String get lobbyLeaveTitle => 'Rời sảnh?';
+
+  @override
+  String get lobbyLeaveConfirm => 'Sảnh sẽ bị xóa sau khi bạn rời. Bạn bè được mời sẽ nhận từ chối.';
+
+  @override
+  String get lobbyLeave => 'Rời';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours giờ';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours giờ $minutes phút';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Bạn đầu hàng. $name thắng';
+  }
 }

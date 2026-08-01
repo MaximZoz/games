@@ -797,7 +797,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopStakes => 'Stakes';
 
   @override
-  String get shopStakesSubtitle => 'Unlock silver stakes';
+  String get shopStakesSubtitle => 'Unlock higher stakes';
 
   @override
   String get inventoryTitle => 'Items';
@@ -1650,4 +1650,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'Statistics';
+
+  @override
+  String get statsLoadFailed => 'Failed to load statistics';
+
+  @override
+  String get statsAllGames => 'All games';
+
+  @override
+  String get statsEmptyTitle => 'No games played yet';
+
+  @override
+  String get statsEmptyHint => 'Play your first game to see statistics here.';
+
+  @override
+  String get statsWins => 'Wins';
+
+  @override
+  String get statsDraws => 'Draws';
+
+  @override
+  String get statsLosses => 'Losses';
+
+  @override
+  String get statsWinRate => 'Win rate';
+
+  @override
+  String get statsTopWon => 'Most wins against';
+
+  @override
+  String get statsTopDrawn => 'Most draws with';
+
+  @override
+  String get statsTopLost => 'Most losses to';
+
+  @override
+  String get statsTimePlayed => 'Time played';
+
+  @override
+  String get statsYourScore => 'Your score';
+
+  @override
+  String get profileShowStats => 'Show statistics';
+
+  @override
+  String get statsDurationZeroMinutes => '0 min';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Opponent surrendered. You won!';
+
+  @override
+  String get lobbyLeaveTitle => 'Leave lobby?';
+
+  @override
+  String get lobbyLeaveConfirm => 'The lobby will be deleted after you leave. Invited friends will get a decline.';
+
+  @override
+  String get lobbyLeave => 'Leave';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'You surrendered. $name won';
+  }
 }

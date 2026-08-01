@@ -12,6 +12,7 @@ class AnimatedBorderBox extends StatefulWidget {
     this.borderWidth = 2,
     this.borderRadius,
     this.animateBorder = false,
+    this.expand = false,
   });
 
   final Widget child;
@@ -21,6 +22,8 @@ class AnimatedBorderBox extends StatefulWidget {
   final double? borderRadius;
   /// Включает циклическую анимацию градиентной рамки.
   final bool animateBorder;
+  /// Растянуть карточку на всю доступную ширину/высоту родителя.
+  final bool expand;
 
   @override
   State<AnimatedBorderBox> createState() => _AnimatedBorderBoxState();
@@ -56,12 +59,16 @@ class _AnimatedBorderBoxState extends State<AnimatedBorderBox>
 
   Widget _buildContainer(Gradient gradient, double r) {
     return Container(
+      width: widget.expand ? double.infinity : null,
+      height: widget.expand ? double.infinity : null,
       padding: EdgeInsets.all(widget.borderWidth),
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(r + widget.borderWidth),
       ),
       child: Container(
+        width: widget.expand ? double.infinity : null,
+        height: widget.expand ? double.infinity : null,
         padding: widget.padding ?? const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,

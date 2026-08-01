@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -318,80 +319,27 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         meId != null &&
         drawOfferBy.isNotEmpty &&
         drawOfferBy != meId;
-    // Крестик + сдаться (+ ничья) слева; правила справа на одной линии с крестиком.
-    final barHeight = showDrawButton
-        ? 132.0
-        : (gameActive ? 96.0 : kToolbarHeight);
-
+    // Крестик — в AppBar.leading (нажимается штатно).
+    // «Сдаться» и «ничья» — overlay справа сверху, под кнопкой «правила»
+    // (правый край AppBar). В углу контент игры их не перекрывает → тапы
+    // доходят; кнопки идут вертикально друг под другом.
+    final topPad = MediaQuery.paddingOf(context).top;
     return SwipeBackScope(
       onBack: goBack,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          toolbarHeight: barHeight,
+          toolbarHeight: kToolbarHeight,
           leadingWidth: 48,
-          leading: Align(
-            alignment: Alignment.topCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
-                  ),
-                  onPressed: goBack,
-                  icon: const Icon(Icons.close_rounded),
-                ),
-                if (gameActive) ...[
-                  const SizedBox(height: 8),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 36,
-                    ),
-                    iconSize: 22,
-                    icon: const Icon(Icons.flag_outlined),
-                    tooltip: context.l10n.gameSurrender,
-                    onPressed: () => _confirmSurrender(context),
-                  ),
-                  if (showDrawButton) ...[
-                    const SizedBox(height: 8),
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 36,
-                      ),
-                      iconSize: 22,
-                      icon: Icon(
-                        opponentOfferedDraw
-                            ? Icons.handshake_rounded
-                            : Icons.handshake_outlined,
-                        color: opponentOfferedDraw
-                            ? AppColors.accentStart
-                            : (iOfferedDraw
-                                ? AppColors.accentStart.withValues(alpha: 0.45)
-                                : null),
-                      ),
-                      tooltip: opponentOfferedDraw
-                          ? context.l10n.gameAcceptDrawTitle
-                          : (iOfferedDraw
-                              ? context.l10n.gameDrawOffered
-                              : context.l10n.gameOfferDraw),
-                      onPressed: iOfferedDraw
-                          ? null
-                          : () => opponentOfferedDraw
-                              ? _confirmAcceptDraw(context)
-                              : _confirmOfferDraw(context),
-                    ),
-                  ],
-                ],
-              ],
+          leading: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(
+              minWidth: 44,
+              minHeight: 44,
             ),
+            onPressed: goBack,
+            icon: const Icon(Icons.close_rounded),
           ),
           title: Text(context.l10n.gamesTicTacToe),
           actions: [
@@ -482,24 +430,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               final iWon = game.xUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? context.l10n.gameYouWonOpponentLeft
+                      ? context.l10n.gameYouWonOpponentForfeit
                       : game.timeout
                           ? context.l10n.gameYouWonOpponentTimeout
                           : context.l10n.gameYouWon)
-                  : (game.timeout
-                      ? context.l10n.gameOpponentWonTimeout(opponentName)
-                      : context.l10n.gameOpponentWon(opponentName));
+                  : (game.forfeit
+                      ? context.l10n.gameYouForfeitOpponentWon(opponentName)
+                      : game.timeout
+                          ? context.l10n.gameOpponentWonTimeout(opponentName)
+                          : context.l10n.gameOpponentWon(opponentName));
             } else if (game.status == 'o_won') {
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? context.l10n.gameYouWonOpponentLeft
+                      ? context.l10n.gameYouWonOpponentForfeit
                       : game.timeout
                           ? context.l10n.gameYouWonOpponentTimeout
                           : context.l10n.gameYouWon)
-                  : (game.timeout
-                      ? context.l10n.gameOpponentWonTimeout(opponentName)
-                      : context.l10n.gameOpponentWon(opponentName));
+                  : (game.forfeit
+                      ? context.l10n.gameYouForfeitOpponentWon(opponentName)
+                      : game.timeout
+                          ? context.l10n.gameOpponentWonTimeout(opponentName)
+                          : context.l10n.gameOpponentWon(opponentName));
             } else if (game.status == 'draw') {
               statusText = context.l10n.gameDraw;
             }
@@ -745,6 +697,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 Positioned.fill(
                   child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
                 ),
+              // «Сдаться» и «ничья» — справа сверху, в одну линию с «правилами».
+              if (gameActive)
+                Positioned(
+                  right: 4,
+                  top: topPad + 4,
+                  child: _GameActionsOverlay(
+                    canDraw: showDrawButton,
+                    iOfferedDraw: iOfferedDraw,
+                    opponentOfferedDraw: opponentOfferedDraw,
+                    onSurrender: () => _confirmSurrender(context),
+                    onDraw: () => opponentOfferedDraw
+                        ? _confirmAcceptDraw(context)
+                        : _confirmOfferDraw(context),
+                  ),
+                ),
             ],
           );
         },
@@ -838,8 +805,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     ).then((ok) {
       if (ok != true || !mounted || !context.mounted) return;
       final gameId = widget.gameId;
-      ref.read(activeGameProvider.notifier).clearLocal();
-      context.go('/games');
+      // Не выходим из игры: после forfeit сервер завершит партию, статус
+      // обновится и покажется «Вы сдались» + кнопки «Повторить» / «Другой
+      // соперник». clearLocal()/context.go здесь нельзя — иначе игрок не
+      // увидит итог сдачи.
       unawaited(() async {
         try {
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
@@ -1298,6 +1267,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                    HeadToHeadSection(
+                      opponentId: opponentId,
+                      opponentName: friendUser?.displayName ?? displayName,
+                    ),
                     PeerCollectionsSection(userId: opponentId),
                   ],
                 );
@@ -2363,15 +2336,22 @@ class _StatusWithReward extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w400,
           color: AppColors.textPrimary,
           fontSize: fontSize,
         );
+    // Обычный вес, перенос строк разрешён (длинные статусы вроде
+    // «Вы победили, время соперника вышло» переносятся на вторую строку).
     if (!showReward) {
-      return Text(statusText, textAlign: TextAlign.center, style: style);
+      return Text(
+        statusText,
+        textAlign: TextAlign.center,
+        style: style,
+      );
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(
           child: Text(
@@ -2429,6 +2409,118 @@ class _GameRewardChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Overlay «сдаться» и «ничья» справа сверху под кнопкой «правила».
+/// Кнопки идут вертикально. Когда соперник предложил ничью, иконка ничьи
+/// у принимающего мигает фиолетовый↔чёрный (анимация ColorTween).
+class _GameActionsOverlay extends StatefulWidget {
+  const _GameActionsOverlay({
+    required this.canDraw,
+    required this.iOfferedDraw,
+    required this.opponentOfferedDraw,
+    required this.onSurrender,
+    required this.onDraw,
+  });
+
+  final bool canDraw;
+  final bool iOfferedDraw;
+  final bool opponentOfferedDraw;
+  final VoidCallback onSurrender;
+  final VoidCallback onDraw;
+
+  @override
+  State<_GameActionsOverlay> createState() => _GameActionsOverlayState();
+}
+
+class _GameActionsOverlayState extends State<_GameActionsOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink;
+  late final Animation<Color?> _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _blink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _color = ColorTween(
+      begin: AppColors.accentStart,
+      end: AppColors.textPrimary,
+    ).animate(_blink);
+    _applyBlink();
+  }
+
+  @override
+  void didUpdateWidget(covariant _GameActionsOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.opponentOfferedDraw != widget.opponentOfferedDraw) {
+      _applyBlink();
+    }
+  }
+
+  void _applyBlink() {
+    if (widget.opponentOfferedDraw) {
+      _blink.repeat(reverse: true);
+    } else {
+      _blink.stop();
+      _blink.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          iconSize: 22,
+          icon: const Icon(Icons.flag_outlined),
+          tooltip: context.l10n.gameSurrender,
+          onPressed: widget.onSurrender,
+        ),
+        if (widget.canDraw) ...[
+          const SizedBox(height: 4),
+          AnimatedBuilder(
+            animation: _color,
+            builder: (_, child) => child!,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              iconSize: 22,
+              icon: Icon(
+                widget.opponentOfferedDraw
+                    ? Icons.handshake_rounded
+                    : Icons.handshake_outlined,
+                color: widget.opponentOfferedDraw
+                    ? _color.value
+                    : (widget.iOfferedDraw
+                        ? AppColors.accentStart.withValues(alpha: 0.45)
+                        : null),
+              ),
+              tooltip: widget.opponentOfferedDraw
+                  ? context.l10n.gameAcceptDrawTitle
+                  : (widget.iOfferedDraw
+                      ? context.l10n.gameDrawOffered
+                      : context.l10n.gameOfferDraw),
+              onPressed: widget.iOfferedDraw
+                  ? null
+                  : widget.onDraw,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

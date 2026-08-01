@@ -43,64 +43,64 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'בשידוך: אם לא נמצא יריב תוך 30 שניות, המשחק מתחיל עם בוט (ההימור מתאפס ל־1 ברונזה)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'מצב רשת';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'אופליין: משחק מיידי מול בוט, בלי הימורים ופרסים, בלי צ׳אטים וחברים. רכישות נשמרות ומיושמות במצב אונליין. אונליין — כשיש אינטרנט או לפי הגדרת המשתמש.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'אונליין';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'אופליין';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'לסירוגין מי מתחיל את המשחק';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'מי מתחיל מתחלף ממשחק למשחק.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'מצב אופליין';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'מצב אופליין';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'מצב אופליין פעיל. שחקו מול בוט בלי הימורים ופרסים. צ׳אטים, חברים ולובי מוסתרים. רכישות יוחלו במצב אונליין.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'הגדרות';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'שחק';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'משחק מול בוט';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'בלי הימורים ופרסים · אופליין בלבד';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'הבוט ניצח';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'הבוט חושב…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'שוב';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'הרכישה נשמרה — תוחל במצב אונליין';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — הרכישה הוחלה';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — הרכישה לא הוחלה: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get lobbyEnterGame => 'כניסה למשחק';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'הלובי כבר לא זמין';
 
   @override
   String get lobbyInvite => 'הזמנה';
@@ -542,31 +542,31 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gameLeave => 'יציאה';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'הכנע';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'להיכנע?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'תפסידו את המשחק ואת מטבעות ההימור.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'הצע תיקו';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'להציע תיקו?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'היריב יכול לקבל או לדחות את התיקו.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'לקבל תיקו?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'המשחק יסתיים בתיקו.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'היריב מציע תיקו';
 
   @override
   String get gameConnecting => 'מתחבר למשחק…';
@@ -638,7 +638,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get chatMessageHint => 'הודעה';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'הדבק';
 
   @override
   String get chatEmoji => 'אימוג׳ים';
@@ -797,7 +797,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopStakes => 'הימורים';
 
   @override
-  String get shopStakesSubtitle => 'פתיחת הימורי כסף';
+  String get shopStakesSubtitle => 'פתיחת הימורים גבוהים יותר';
 
   @override
   String get inventoryTitle => 'פריטים';
@@ -1182,13 +1182,13 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'לשחקן כבר יש את הפריט הזה';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'אי אפשר להעניק לעצמך';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'הפריט הזה לא במלאי שלך';
 
   @override
   String get inventoryLoadFailed => 'לא ניתן לטעון פריטים';
@@ -1221,10 +1221,10 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'מוכן';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'מחר';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,84 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'סטטיסטיקה';
+
+  @override
+  String get statsLoadFailed => 'טעינת הסטטיסטיקה נכשלה';
+
+  @override
+  String get statsAllGames => 'כל המשחקים';
+
+  @override
+  String get statsEmptyTitle => 'עדיין אין משחקים';
+
+  @override
+  String get statsEmptyHint => 'שחקו משחק ראשון כדי לראות כאן סטטיסטיקה.';
+
+  @override
+  String get statsWins => 'ניצחונות';
+
+  @override
+  String get statsDraws => 'תיקו';
+
+  @override
+  String get statsLosses => 'הפסדים';
+
+  @override
+  String get statsWinRate => 'אחוז ניצחונות';
+
+  @override
+  String get statsTopWon => 'הכי הרבה ניצחונות מול';
+
+  @override
+  String get statsTopDrawn => 'הכי הרבה תיקו עם';
+
+  @override
+  String get statsTopLost => 'הכי הרבה הפסדים מול';
+
+  @override
+  String get statsTimePlayed => 'זמן משחק';
+
+  @override
+  String get statsYourScore => 'התוצאה שלך';
+
+  @override
+  String get profileShowStats => 'הצג סטטיסטיקה';
+
+  @override
+  String get statsDurationZeroMinutes => '0 דק׳';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'היריב נכנע. ניצחת!';
+
+  @override
+  String get lobbyLeaveTitle => 'לעזוב את הלובי?';
+
+  @override
+  String get lobbyLeaveConfirm => 'הלובי יימחק לאחר היציאה. חברים שהוזמנו יקבלו דחייה.';
+
+  @override
+  String get lobbyLeave => 'עזוב';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours שע׳';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours שע׳ $minutes דק׳';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes דק׳';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'נכנעת. $name ניצח';
+  }
 }
