@@ -14,6 +14,8 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
+import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -841,6 +843,12 @@ class _ProfileView extends ConsumerWidget {
                 CollectionShowcaseGrid(items: collections),
               ],
             );
+          },
+        ),
+        Builder(
+          builder: (context) {
+            final stats = ref.watch(gameStatsProvider).valueOrNull;
+            return _StatsPreviewCard(stats: stats);
           },
         ),
         SizedBox(height: shortScreen ? 16 : 20),
@@ -1948,5 +1956,88 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
         ),
       ],
     );
+  }
+}
+
+/// Карточка-превью статистики в профиле. Тап → экран полной статистики.
+class _StatsPreviewCard extends StatelessWidget {
+  const _StatsPreviewCard({required this.stats});
+
+  final GameStats? stats;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.go('/profile/stats'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.bar_chart_rounded,
+                    color: AppColors.accentStart,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Статистика',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _subtitle(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _subtitle() {
+    if (stats == null) return 'Загрузка…';
+    final s = stats!;
+    if (s.isEmpty) return 'Нет сыгранных партий';
+    return '${s.wins}В · ${s.draws}Н · ${s.losses}П';
   }
 }

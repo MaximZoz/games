@@ -13,6 +13,7 @@
 - presence (онлайн-статус пользователей);
 - монеты и ежедневная награда;
 - крестики-нолики (лобби, invite/matchmake, игра 3×3–8×8, ставки, бот);
+- статистика игрока (победы/ничьи/поражения, win-rate, время в игре, топ соперников, счёт head-to-head в попапе профиля);
 - магазин и инвентарь (эмоции, коллекции, рамки, подарки, доход коллекций);
 - достижения с наградами (рамки);
 - Web Push-уведомления (PWA) с категориями (чат/друзья/игры/награды);
@@ -108,7 +109,7 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
 │   │   ├── i18n/              # локализация серверных сообщений
 │   │   ├── mailer/            # почта: Resend или SMTP (коды подтверждения)
 │   │   └── store/             # слой БД (stateless-функции, pgx)
-│   ├── migrations/            # миграции golang-migrate (001..044)
+│   ├── migrations/            # миграции golang-migrate (001..045)
 │   └── go.mod
 ├── launcher/                  # скрипты запуска/тестов/деплоя
 ├── docs/
@@ -170,6 +171,8 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
   - `POST /api/games/tictactoe/rematch` — реванш
   - `GET /api/games/tictactoe/active` — активная игра/лобби
   - `GET /api/games/tictactoe/game/:id`, `POST /api/games/tictactoe/game/:id/move|swap|forfeit|draw-offer|draw-accept`
+  - `GET /api/games/stats` — своя статистика (W/D/L, win-rate, время в игре, топ соперников; без Redis)
+  - `GET /api/games/head-to-head?user_id=<uuid>` — счёт между двумя игроками (без ботов)
 - Shop & inventory API:
   - `GET /api/shop`, `POST /api/shop/buy`
   - `GET /api/inventory`, `GET /api/inventory/capabilities`

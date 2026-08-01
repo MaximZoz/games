@@ -322,3 +322,17 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     }
   }
 }
+
+/// Статистика текущего игрока (W/D/L, win-rate, время, топ соперников).
+final gameStatsProvider =
+    FutureProvider.autoDispose<GameStats>((ref) async {
+  final repo = ref.watch(gamesRepositoryProvider);
+  return repo.getStats();
+});
+
+/// Счёт head-to-head между текущим игроком и указанным соперником.
+final headToHeadProvider =
+    FutureProvider.autoDispose.family<HeadToHead, String>((ref, opponentId) async {
+  final repo = ref.watch(gamesRepositoryProvider);
+  return repo.getHeadToHead(opponentId);
+});

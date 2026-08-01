@@ -12,6 +12,7 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
@@ -1543,6 +1544,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                   ),
                 ],
                 PeerCollectionsSection(userId: user.id),
+                HeadToHeadSection(opponentId: user.id),
               ],
             ),
           ),

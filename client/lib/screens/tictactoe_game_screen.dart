@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -1299,6 +1300,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ),
                     ],
                     PeerCollectionsSection(userId: opponentId),
+                    HeadToHeadSection(opponentId: opponentId),
                   ],
                 );
               },

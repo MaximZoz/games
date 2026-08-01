@@ -32,6 +32,7 @@ import 'package:multigames_client/screens/shop_screen.dart';
 import 'package:multigames_client/screens/shop_section_screen.dart';
 import 'package:multigames_client/screens/tournaments_screen.dart';
 import 'package:multigames_client/screens/forgot_password_screen.dart';
+import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/reset_password_screen.dart';
 import 'package:multigames_client/screens/verify_email_screen.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
@@ -299,6 +300,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/profile',
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const ProfileScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'stats',
+                    pageBuilder: (_, state) =>
+                        _noTransitionPage(state, const GameStatsScreen()),
+                  ),
+                ],
               ),
               GoRoute(
                 path: '/login',

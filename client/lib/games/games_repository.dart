@@ -586,6 +586,110 @@ class JoinLobbyResult {
   }
 }
 
+/// Агрегированная статистика игрока (W/D/L, win-rate, время в игре).
+class GameStats {
+  const GameStats({
+    required this.wins,
+    required this.draws,
+    required this.losses,
+    required this.totalPlayed,
+    required this.winRate,
+    required this.totalDurationSec,
+    required this.topWon,
+    required this.topLost,
+  });
+
+  final int wins;
+  final int draws;
+  final int losses;
+  final int totalPlayed;
+  final double winRate;
+  final int totalDurationSec;
+  final List<OpponentStat> topWon;
+  final List<OpponentStat> topLost;
+
+  bool get isEmpty => totalPlayed == 0;
+
+  factory GameStats.fromJson(Map<String, dynamic> json) {
+    return GameStats(
+      wins: (json['wins'] as num?)?.toInt() ?? 0,
+      draws: (json['draws'] as num?)?.toInt() ?? 0,
+      losses: (json['losses'] as num?)?.toInt() ?? 0,
+      totalPlayed: (json['total_played'] as num?)?.toInt() ?? 0,
+      winRate: (json['win_rate'] as num?)?.toDouble() ?? 0,
+      totalDurationSec: (json['total_duration_sec'] as num?)?.toInt() ?? 0,
+      topWon: _opponentList(json['top_won']),
+      topLost: _opponentList(json['top_lost']),
+    );
+  }
+
+  static List<OpponentStat> _opponentList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => OpponentStat.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
+}
+
+/// Счёт против конкретного соперника (для топа и head-to-head).
+class OpponentStat {
+  const OpponentStat({
+    required this.opponentId,
+    required this.displayName,
+    required this.won,
+    required this.drawn,
+    required this.lost,
+  });
+
+  final String opponentId;
+  final String displayName;
+  final int won;
+  final int drawn;
+  final int lost;
+
+  int get total => won + drawn + lost;
+
+  factory OpponentStat.fromJson(Map<String, dynamic> json) {
+    return OpponentStat(
+      opponentId: json['opponent_id'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? '',
+      won: (json['won'] as num?)?.toInt() ?? 0,
+      drawn: (json['drawn'] as num?)?.toInt() ?? 0,
+      lost: (json['lost'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// Результат head-to-head: счёт между мной и соперником.
+class HeadToHead {
+  const HeadToHead({
+    required this.opponentId,
+    required this.displayName,
+    required this.won,
+    required this.drawn,
+    required this.lost,
+  });
+
+  final String opponentId;
+  final String displayName;
+  final int won;
+  final int drawn;
+  final int lost;
+
+  bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
+
+  factory HeadToHead.fromJson(Map<String, dynamic> json) {
+    return HeadToHead(
+      opponentId: json['opponent_id'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? '',
+      won: (json['won'] as num?)?.toInt() ?? 0,
+      drawn: (json['drawn'] as num?)?.toInt() ?? 0,
+      lost: (json['lost'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 class GamesRepository {
   GamesRepository({required AuthRepository authRepository})
       : _auth = authRepository;
@@ -957,5 +1061,39 @@ class GamesRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return UserGameSettings.fromJson(body);
+  }
+
+  /// GET /api/games/stats — своя статистика (W/D/L, win-rate, время, топ соперников).
+  Future<GameStats> getStats() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/games/stats'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.getStats',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return GameStats.fromJson(body);
+  }
+
+  /// GET /api/games/head-to-head?user_id=... — счёт между мной и соперником.
+  Future<HeadToHead> getHeadToHead(String opponentUserId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse(
+          '$apiBaseUrl/api/games/head-to-head?user_id=$opponentUserId',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.getHeadToHead',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return HeadToHead.fromJson(body);
   }
 }
