@@ -9,6 +9,7 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/shop/emoji_asset_catalog.dart';
+import 'package:multigames_client/shop/flag_asset_cache.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -144,10 +145,17 @@ class OfflineWarmup {
     List<ShopItem>? shop,
     List<InventoryItem>? inventory,
   }) async {
+    // Флаги — всегда целиком: на Web PNG ходятся по HTTP и без прогрева
+    // в офлайне дают «битую» картинку. Раньше лимит 120 отрезал флаги
+    // (они в конце каталога после emotions/game).
+    try {
+      await FlagAssetCache.preloadAll();
+    } catch (_) {}
+
     final names = <String>{};
     void collect(String? name) {
       final n = name?.trim() ?? '';
-      if (n.isNotEmpty) names.add(n);
+      if (n.isNotEmpty && !isCountryFlagAnimatedName(n)) names.add(n);
     }
 
     for (final item in shop ?? const <ShopItem>[]) {
@@ -157,33 +165,9 @@ class OfflineWarmup {
       collect(item.animatedName);
     }
 
-    // Лимит, чтобы не забивать память на огромном каталоге.
-    final batch = names.take(120).toList();
+    final batch = names.take(160).toList();
     for (final name in batch) {
       try {
-        if (isCountryFlagAnimatedName(name)) {
-          final iso = countryFlagIsoFromName(name);
-          if (iso != null) {
-            final provider = AssetImage(countryFlagAssetPath(iso));
-            final stream = provider.resolve(const ImageConfiguration());
-            final done = Completer<void>();
-            late ImageStreamListener listener;
-            listener = ImageStreamListener(
-              (info, sync) {
-                if (!done.isCompleted) done.complete();
-                stream.removeListener(listener);
-              },
-              onError: (e, st) {
-                if (!done.isCompleted) done.complete();
-                stream.removeListener(listener);
-              },
-            );
-            stream.addListener(listener);
-            await done.future
-                .timeout(const Duration(seconds: 2), onTimeout: () {});
-          }
-          continue;
-        }
         if (hasBundledEmojiLottie(name)) {
           await AssetLottie(bundledEmojiLottieAsset(name))
               .load()
