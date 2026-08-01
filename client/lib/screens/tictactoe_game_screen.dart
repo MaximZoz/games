@@ -319,12 +319,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         meId != null &&
         drawOfferBy.isNotEmpty &&
         drawOfferBy != meId;
-    // Крестик + сдаться (+ ничья) слева; правила справа на одной линии с крестиком.
-    // Размеры подобраны под фактическую высоту кнопок (каждая ~44 + gap 6),
-    // чтобы иконки не обрезались по высоте и были тапабельны.
-    final barHeight = showDrawButton
-        ? 160.0
-        : (gameActive ? 110.0 : kToolbarHeight);
+    // Крестик — в AppBar.leading (нажимается штатно).
+    // «Сдаться» и «ничья» вынесены в overlay поверх body: Material AppBar
+    // ограничивает hit-test зону leading стандартной высотой тулбара, поэтому
+    // нижние кнопки в нём тапов не получали. В Stack overlay они тапабельны.
+    final topPad = MediaQuery.paddingOf(context).top;
 
     return SwipeBackScope(
       onBack: goBack,
@@ -332,70 +331,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          toolbarHeight: barHeight,
+          toolbarHeight: kToolbarHeight,
           leadingWidth: 48,
-          leading: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 44,
-                    minHeight: 44,
-                  ),
-                  onPressed: goBack,
-                  icon: const Icon(Icons.close_rounded),
-                ),
-                if (gameActive) ...[
-                  const SizedBox(height: 6),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 44,
-                      minHeight: 44,
-                    ),
-                    iconSize: 22,
-                    icon: const Icon(Icons.flag_outlined),
-                    tooltip: context.l10n.gameSurrender,
-                    onPressed: () => _confirmSurrender(context),
-                  ),
-                  if (showDrawButton) ...[
-                    const SizedBox(height: 6),
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
-                      iconSize: 22,
-                      icon: Icon(
-                        opponentOfferedDraw
-                            ? Icons.handshake_rounded
-                            : Icons.handshake_outlined,
-                        color: opponentOfferedDraw
-                            ? AppColors.accentStart
-                            : (iOfferedDraw
-                                ? AppColors.accentStart.withValues(alpha: 0.45)
-                                : null),
-                      ),
-                      tooltip: opponentOfferedDraw
-                          ? context.l10n.gameAcceptDrawTitle
-                          : (iOfferedDraw
-                              ? context.l10n.gameDrawOffered
-                              : context.l10n.gameOfferDraw),
-                      onPressed: iOfferedDraw
-                          ? null
-                          : () => opponentOfferedDraw
-                              ? _confirmAcceptDraw(context)
-                              : _confirmOfferDraw(context),
-                    ),
-                  ],
-                ],
-              ],
+          leading: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(
+              minWidth: 44,
+              minHeight: 44,
             ),
+            onPressed: goBack,
+            icon: const Icon(Icons.close_rounded),
           ),
           title: Text(context.l10n.gamesTicTacToe),
           actions: [
@@ -527,6 +472,62 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           return Stack(
             fit: StackFit.expand,
             children: [
+              // Overlay «сдаться» / «ничья» слева сверху, под AppBar.
+              // Material AppBar не отдаёт тапы кнопкам за пределами тулбара,
+              // поэтому держим их в Stack overlay — здесь они тапабельны.
+              if (gameActive)
+                Positioned(
+                  left: 2,
+                  top: topPad + kToolbarHeight,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        iconSize: 22,
+                        icon: const Icon(Icons.flag_outlined),
+                        tooltip: context.l10n.gameSurrender,
+                        onPressed: () => _confirmSurrender(context),
+                      ),
+                      if (showDrawButton) ...[
+                        const SizedBox(height: 4),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 44,
+                            minHeight: 44,
+                          ),
+                          iconSize: 22,
+                          icon: Icon(
+                            opponentOfferedDraw
+                                ? Icons.handshake_rounded
+                                : Icons.handshake_outlined,
+                            color: opponentOfferedDraw
+                                ? AppColors.accentStart
+                                : (iOfferedDraw
+                                    ? AppColors.accentStart
+                                        .withValues(alpha: 0.45)
+                                    : null),
+                          ),
+                          tooltip: opponentOfferedDraw
+                              ? context.l10n.gameAcceptDrawTitle
+                              : (iOfferedDraw
+                                  ? context.l10n.gameDrawOffered
+                                  : context.l10n.gameOfferDraw),
+                          onPressed: iOfferedDraw
+                              ? null
+                              : () => opponentOfferedDraw
+                                  ? _confirmAcceptDraw(context)
+                                  : _confirmOfferDraw(context),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               SafeArea(
                 child: Padding(
                   padding: EdgeInsets.all(contentPadding),
@@ -2375,21 +2376,13 @@ class _StatusWithReward extends StatelessWidget {
           color: AppColors.textPrimary,
           fontSize: fontSize,
         );
-    // maxLines: 1 — статус всегда в одну строку. FittedBox поджимает шрифт,
-    // если длинный текст (напр. «Вы победили, время соперника вышло») не
-    // помещается на узком экране — без переноса и обрезки.
+    // Обычный вес, перенос строк разрешён (длинные статусы вроде
+    // «Вы победили, время соперника вышло» переносятся на вторую строку).
     if (!showReward) {
-      return FractionallySizedBox(
-        widthFactor: 1,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            statusText,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            style: style,
-          ),
-        ),
+      return Text(
+        statusText,
+        textAlign: TextAlign.center,
+        style: style,
       );
     }
     return Row(
@@ -2400,8 +2393,6 @@ class _StatusWithReward extends StatelessWidget {
           child: Text(
             statusText,
             textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: style,
           ),
         ),
