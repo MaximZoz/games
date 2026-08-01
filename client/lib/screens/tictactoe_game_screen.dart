@@ -430,24 +430,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               final iWon = game.xUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? context.l10n.gameYouWonOpponentLeft
+                      ? 'Соперник сдался. Вы победили!'
                       : game.timeout
                           ? context.l10n.gameYouWonOpponentTimeout
                           : context.l10n.gameYouWon)
-                  : (game.timeout
-                      ? context.l10n.gameOpponentWonTimeout(opponentName)
-                      : context.l10n.gameOpponentWon(opponentName));
+                  : (game.forfeit
+                      ? 'Вы сдались. $opponentName победил'
+                      : game.timeout
+                          ? context.l10n.gameOpponentWonTimeout(opponentName)
+                          : context.l10n.gameOpponentWon(opponentName));
             } else if (game.status == 'o_won') {
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? context.l10n.gameYouWonOpponentLeft
+                      ? 'Соперник сдался. Вы победили!'
                       : game.timeout
                           ? context.l10n.gameYouWonOpponentTimeout
                           : context.l10n.gameYouWon)
-                  : (game.timeout
-                      ? context.l10n.gameOpponentWonTimeout(opponentName)
-                      : context.l10n.gameOpponentWon(opponentName));
+                  : (game.forfeit
+                      ? 'Вы сдались. $opponentName победил'
+                      : game.timeout
+                          ? context.l10n.gameOpponentWonTimeout(opponentName)
+                          : context.l10n.gameOpponentWon(opponentName));
             } else if (game.status == 'draw') {
               statusText = context.l10n.gameDraw;
             }
@@ -801,8 +805,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     ).then((ok) {
       if (ok != true || !mounted || !context.mounted) return;
       final gameId = widget.gameId;
-      ref.read(activeGameProvider.notifier).clearLocal();
-      context.go('/games');
+      // Не выходим из игры: после forfeit сервер завершит партию, статус
+      // обновится и покажется «Вы сдались» + кнопки «Повторить» / «Другой
+      // соперник». clearLocal()/context.go здесь нельзя — иначе игрок не
+      // увидит итог сдачи.
       unawaited(() async {
         try {
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
