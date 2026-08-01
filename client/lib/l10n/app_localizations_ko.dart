@@ -43,64 +43,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAddBotsSubtitle => '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => '네트워크 모드';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => '오프라인: 즉시 봇과 플레이, 배팅·보상 없음, 채팅·친구 없음. 구매는 저장되며 온라인 모드에서 적용됩니다. 온라인 — 인터넷이 있거나 사용자 설정에 따라.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => '온라인';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => '오프라인';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => '번갈아 누가 대국을 시작하는지';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => '선공은 대국마다 번갈아 바뀝니다.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => '오프라인 모드';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => '오프라인 모드';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => '오프라인 모드가 켜져 있습니다. 배팅과 보상 없이 봇과 플레이하세요. 채팅, 친구, 로비는 숨겨집니다. 구매는 온라인 모드에서 적용됩니다.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => '설정';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => '플레이';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => '봇과 대국';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => '배팅·보상 없음 · 오프라인 전용';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => '봇 승리';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => '봇이 생각 중…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => '다시';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => '구매가 저장됨 — 온라인 모드에서 적용됩니다';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — 구매 적용됨';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — 구매 미적용: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbyEnterGame => '게임 입장';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => '로비를 더 이상 사용할 수 없습니다';
 
   @override
   String get lobbyInvite => '초대';
@@ -542,31 +542,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameLeave => '나가기';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => '기권';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => '기권하시겠습니까?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => '대국과 배팅 코인을 잃습니다.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => '무승부 제안';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => '무승부를 제안하시겠습니까?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => '상대가 무승부를 수락하거나 거절할 수 있습니다.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => '무승부를 수락하시겠습니까?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => '대국이 무승부로 끝납니다.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => '상대가 무승부를 제안했습니다';
 
   @override
   String get gameConnecting => '게임에 연결 중…';
@@ -638,7 +638,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chatMessageHint => '메시지';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => '붙여넣기';
 
   @override
   String get chatEmoji => '이모지';
@@ -1182,13 +1182,13 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => '상대가 이미 이 아이템을 보유하고 있습니다';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => '자기 자신에게는 선물할 수 없습니다';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => '이 아이템은 인벤토리에 없습니다';
 
   @override
   String get inventoryLoadFailed => '아이템을 불러오지 못했습니다';
@@ -1221,10 +1221,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => '수령 가능';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => '내일';
 
   @override
   String inventoryStakeGold(String amount) {
