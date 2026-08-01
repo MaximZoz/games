@@ -661,12 +661,10 @@ class _ProfileContent extends StatelessWidget {
                     key: const ValueKey('view'),
                     user: user,
                     profileExtra: profileExtra,
+                    onEdit: onStartEdit,
                   ),
           ),
         ),
-        // Статистика, коллекции и edit — за рамкой карточки с инфо о пользователе.
-        if (!isEditing)
-          _ProfileBelowFrame(onEdit: onStartEdit),
       ],
     );
   }
@@ -677,10 +675,12 @@ class _ProfileView extends ConsumerWidget {
     super.key,
     required this.user,
     required this.profileExtra,
+    required this.onEdit,
   });
 
   final AuthUser user;
   final ProfileExtra profileExtra;
+  final VoidCallback onEdit;
 
   String get _displayTitle => user.displayName?.trim().isNotEmpty == true
       ? user.displayName!
@@ -819,70 +819,59 @@ class _ProfileView extends ConsumerWidget {
             ),
           ),
         ],
-      ],
-    );
-  }
-}
-
-/// Статистика → коллекции → «Редактировать» — снаружи карточки профиля.
-class _ProfileBelowFrame extends ConsumerWidget {
-  const _ProfileBelowFrame({required this.onEdit});
-
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final shortScreen = MediaQuery.sizeOf(context).height < 700;
-    final inv =
-        ref.watch(inventoryListProvider).valueOrNull ?? const <InventoryItem>[];
-    final collections = inv.where((e) => e.kind == 'collection').toList();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 14, 4, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _OwnScoreSection(),
-          if (collections.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                context.l10n.profileCollections,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: AppColors.textPrimary,
+        // Статистика — сразу под блоком инфо о пользователе.
+        SizedBox(height: gapSection + 2),
+        const _OwnScoreSection(),
+        Builder(
+          builder: (context) {
+            final inv = ref.watch(inventoryListProvider).valueOrNull ??
+                const <InventoryItem>[];
+            final collections =
+                inv.where((e) => e.kind == 'collection').toList();
+            if (collections.isEmpty) return const SizedBox.shrink();
+            return Column(
+              children: [
+                SizedBox(height: gapSection + 2),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    context.l10n.profileCollections,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                CollectionShowcaseGrid(items: collections),
+              ],
+            );
+          },
+        ),
+        SizedBox(height: shortScreen ? 16 : 20),
+        OutlinedButton.icon(
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: Text(
+            context.l10n.profileEdit,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.accentStart,
+            padding: EdgeInsets.symmetric(
+              horizontal: 22,
+              vertical: shortScreen ? 11 : 13,
             ),
-            const SizedBox(height: 8),
-            CollectionShowcaseGrid(items: collections),
-          ],
-          SizedBox(height: shortScreen ? 16 : 20),
-          OutlinedButton.icon(
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined, size: 18),
-            label: Text(
-              context.l10n.profileEdit,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            side: BorderSide(
+              color: AppColors.accentStart.withValues(alpha: 0.6),
             ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accentStart,
-              padding: EdgeInsets.symmetric(
-                horizontal: 22,
-                vertical: shortScreen ? 11 : 13,
-              ),
-              side: BorderSide(
-                color: AppColors.accentStart.withValues(alpha: 0.6),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
