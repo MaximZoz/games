@@ -149,6 +149,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                         lobbyAsync.valueOrNull!.creatorId != currentUser.id),
               ),
             ),
+            // Иконка правил — в AppBar, на одной высоте со стрелкой «Назад».
+            actions: [
+              if (() {
+                    final lobby = lobbyAsync.valueOrNull;
+                    return lobby != null &&
+                        lobby.status == 'waiting_invite' &&
+                        currentUser?.id == lobby.creatorId;
+                  }())
+                IconButton(
+                  tooltip: context.l10n.gamesRulesTitle,
+                  icon: const Icon(Icons.rule_rounded),
+                  onPressed: () {
+                    final lobby = lobbyAsync.valueOrNull;
+                    if (lobby != null) _showRules(context, lobby);
+                  },
+                ),
+            ],
           ),
           body: lobbyAsync.when(
           skipLoadingOnReload: true,
@@ -187,7 +204,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                         ],
                         if (isInviteMode && isCreator) ...[
                           // Заголовок «Своя игра» + иконка правил справа.
-                          _buildInviteHeaderRow(context, lobby),
+                          _buildInviteHeaderRow(context),
                           const SizedBox(height: 12),
                           // Ссылка — максимально высоко.
                           _buildShareInviteLinkCard(context),
@@ -364,26 +381,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     await refreshChatsList(ref, force: true).catchError((_) {});
   }
 
-  /// Заголовок «Своя игра» + иконка правил справа в правом углу.
-  Widget _buildInviteHeaderRow(BuildContext context, LobbyItem lobby) {
-    return Row(
-      children: [
-        const Expanded(
-          child: Text(
-            'Своя игра',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
-          ),
+  /// Заголовок «Своя игра» (иконка правил — в AppBar, на уровне крестика).
+  Widget _buildInviteHeaderRow(BuildContext context) {
+    return const Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        'Своя игра',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
         ),
-        IconButton(
-          tooltip: context.l10n.gamesRulesTitle,
-          icon: const Icon(Icons.rule_rounded),
-          onPressed: () => _showRules(context, lobby),
-        ),
-      ],
+      ),
     );
   }
 
