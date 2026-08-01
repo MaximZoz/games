@@ -9,6 +9,72 @@ import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
+/// Всплывашка со статистикой игрока (из попапа профиля).
+Future<void> showGameStatsDialog(
+  BuildContext context, {
+  String? userId,
+  String? displayName,
+}) {
+  final isOwn = userId == null || userId.isEmpty;
+  final title = isOwn
+      ? 'Статистика'
+      : (displayName?.trim().isNotEmpty == true ? displayName!.trim() : 'Игрок');
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      final maxH = MediaQuery.sizeOf(dialogContext).height * 0.85;
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+        backgroundColor: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 420, maxHeight: maxH),
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.zero,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 4, 0),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Закрыть',
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: GameStatsBody(
+                    userId: userId,
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 /// Полный экран статистики игрока: победы/ничьи/поражения, win-rate,
 /// время в игре, топ соперников (больше всего выиграл / проиграл).
 ///
@@ -31,8 +97,6 @@ class GameStatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(gameStatsProvider(userId));
-    final narrow = MediaQuery.sizeOf(context).shortestSide < 700;
     final title = _isOwn
         ? 'Статистика'
         : (displayName?.trim().isNotEmpty == true ? displayName! : 'Игрок');
@@ -59,56 +123,78 @@ class GameStatsScreen extends ConsumerWidget {
             ),
           ),
         ),
-        body: statsAsync.when(
-          loading: () => const Padding(
-            padding: EdgeInsets.all(24),
-            child: _StatsSkeleton(),
+        body: GameStatsBody(userId: userId),
+      ),
+    );
+  }
+}
+
+/// Содержимое статистики — для экрана и всплывашки.
+class GameStatsBody extends ConsumerWidget {
+  const GameStatsBody({
+    super.key,
+    this.userId,
+    this.padding,
+  });
+
+  final String? userId;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(gameStatsProvider(userId));
+    final narrow = MediaQuery.sizeOf(context).shortestSide < 700;
+    final contentPadding = padding ??
+        EdgeInsets.fromLTRB(
+          narrow ? 12 : 24,
+          4,
+          narrow ? 12 : 24,
+          32,
+        );
+    return statsAsync.when(
+      loading: () => Padding(
+        padding: contentPadding,
+        child: const _StatsSkeleton(),
+      ),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Не удалось загрузить статистику',
+            style: const TextStyle(color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
           ),
-          error: (e, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Не удалось загрузить статистику',
-                style: const TextStyle(color: AppColors.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          data: (stats) => stats.isEmpty
-              ? const _EmptyStats()
-              : ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    narrow ? 12 : 24,
-                    4,
-                    narrow ? 12 : 24,
-                    32,
-                  ),
-                  children: [
-                    _SummarySection(stats: stats, narrow: narrow),
-                    const SizedBox(height: 16),
-                    _TimeSection(totalDurationSec: stats.totalDurationSec),
-                    const SizedBox(height: 16),
-                    if (stats.topWon.isNotEmpty) ...[
-                      _OpponentsSection(
-                        title: 'Чаще всего побеждали',
-                        accent: _StatColor.win,
-                        opponents: stats.topWon,
-                        metric: _Metric.won,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    if (stats.topLost.isNotEmpty) ...[
-                      _OpponentsSection(
-                        title: 'Чаще всего проигрывали',
-                        accent: _StatColor.loss,
-                        opponents: stats.topLost,
-                        metric: _Metric.lost,
-                      ),
-                    ],
-                  ],
-                ),
         ),
       ),
+      data: (stats) => stats.isEmpty
+          ? const _EmptyStats()
+          : ListView(
+              padding: contentPadding,
+              shrinkWrap: true,
+              children: [
+                _SummarySection(stats: stats, narrow: narrow),
+                const SizedBox(height: 16),
+                _TimeSection(totalDurationSec: stats.totalDurationSec),
+                const SizedBox(height: 16),
+                if (stats.topWon.isNotEmpty) ...[
+                  _OpponentsSection(
+                    title: 'Чаще всего побеждали',
+                    accent: _StatColor.win,
+                    opponents: stats.topWon,
+                    metric: _Metric.won,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (stats.topLost.isNotEmpty) ...[
+                  _OpponentsSection(
+                    title: 'Чаще всего проигрывали',
+                    accent: _StatColor.loss,
+                    opponents: stats.topLost,
+                    metric: _Metric.lost,
+                  ),
+                ],
+              ],
+            ),
     );
   }
 }

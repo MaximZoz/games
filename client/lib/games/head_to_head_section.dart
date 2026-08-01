@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Секция head-to-head: счёт между текущим игроком и соперником в попапе профиля.
 ///
-/// Компактно: иконка игры слева, справа от неё по вертикали —
-/// победа (зелёный) / ничья (жёлтый) / проигрыш (красный).
-/// Рядом — фиолетовая иконка статистики; тап → экран статистики этого игрока.
+/// Заголовок «Ваш счёт» над карточкой (как «Коллекции»).
+/// В карточке: иконка игры, справа — зелёная сверху, красная снизу,
+/// жёлтая справа от красной. После блока счёта — кнопка статистики
+/// (тап → всплывашка со статистикой игрока).
 class HeadToHeadSection extends ConsumerWidget {
   const HeadToHeadSection({
     super.key,
@@ -17,7 +18,7 @@ class HeadToHeadSection extends ConsumerWidget {
     this.padding = const EdgeInsets.only(top: 12),
   });
 
-  /// ID соперника (для запроса head-to-head и перехода в его статистику).
+  /// ID соперника (для запроса head-to-head и статистики).
   final String opponentId;
   final String? opponentName;
   final EdgeInsets padding;
@@ -38,19 +39,14 @@ class HeadToHeadSection extends ConsumerWidget {
                 won: h2h.won,
                 drawn: h2h.drawn,
                 lost: h2h.lost,
-                onTapStats: () => _goToStats(context),
+                onTapStats: () => showGameStatsDialog(
+                  context,
+                  userId: opponentId,
+                  displayName: opponentName,
+                ),
               ),
       ),
     );
-  }
-
-  void _goToStats(BuildContext context) {
-    final qs = <String>['user_id=$opponentId'];
-    final name = opponentName?.trim();
-    if (name != null && name.isNotEmpty) {
-      qs.add('name=${Uri.encodeQueryComponent(name)}');
-    }
-    context.go('/profile/stats?${qs.join('&')}');
   }
 }
 
@@ -69,76 +65,82 @@ class _HeadToHeadBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
-      decoration: BoxDecoration(
-        color: AppColors.accentSoft.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 2),
-            child: Text(
-              'Ваш счёт',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ваш счёт',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(width: 8),
-          // Иконка игры (крестики-нолики).
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.accentStart, AppColors.accentEnd],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.grid_3x3_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          decoration: BoxDecoration(
+            color: AppColors.accentSoft.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(14),
           ),
-          const SizedBox(width: 8),
-          // W/D/L по вертикали справа от иконки.
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _ScoreRow(
-                icon: Icons.check_circle_rounded,
-                value: won,
-                color: const Color(0xFF2E7D32), // зелёный
+              // Иконка игры (крестики-нолики).
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.accentStart, AppColors.accentEnd],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.tag_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-              const SizedBox(height: 2),
-              _ScoreRow(
-                icon: Icons.remove_circle_rounded,
-                value: drawn,
-                color: const Color(0xFFF9A825), // жёлтый
-              ),
-              const SizedBox(height: 2),
-              _ScoreRow(
-                icon: Icons.cancel_rounded,
-                value: lost,
-                color: const Color(0xFFC62828), // красный
+              const SizedBox(width: 10),
+              // Зелёная сверху; снизу красная, жёлтая справа от красной.
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ScoreRow(
+                    icon: Icons.check_rounded,
+                    value: won,
+                    color: const Color(0xFF2E7D32),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ScoreRow(
+                        icon: Icons.close_rounded,
+                        value: lost,
+                        color: const Color(0xFFC62828),
+                      ),
+                      const SizedBox(width: 10),
+                      _ScoreRow(
+                        icon: Icons.remove_rounded,
+                        value: drawn,
+                        color: const Color(0xFFF9A825),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(width: 6),
-          // Фиолетовая иконка-кнопка → переход в статистику игрока.
-          _StatsIconButton(onTap: onTapStats),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        // Статистика — отдельный блок после счёта.
+        _StatsRowButton(onTap: onTapStats),
+      ],
     );
   }
 }
@@ -159,8 +161,16 @@ class _ScoreRow extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 3),
+        Container(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 12, color: Colors.white),
+        ),
+        const SizedBox(width: 4),
         Text(
           '$value',
           style: TextStyle(
@@ -174,9 +184,9 @@ class _ScoreRow extends StatelessWidget {
   }
 }
 
-/// Фиолетовая иконка статистики — тап открывает экран статистики игрока.
-class _StatsIconButton extends StatelessWidget {
-  const _StatsIconButton({required this.onTap});
+/// Кнопка «Статистика» после блока счёта — открывает всплывашку.
+class _StatsRowButton extends StatelessWidget {
+  const _StatsRowButton({required this.onTap});
 
   final VoidCallback onTap;
 
@@ -185,25 +195,52 @@ class _StatsIconButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
-        child: Tooltip(
-          message: 'Статистика игрока',
-          child: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: AppColors.accentStart.withValues(alpha: 0.35),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.accentSoft.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.accentStart.withValues(alpha: 0.25),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.accentStart.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.bar_chart_rounded,
+                  size: 18,
+                  color: AppColors.accentStart,
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.bar_chart_rounded,
-              size: 18,
-              color: AppColors.accentStart,
-            ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Статистика',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
+              ),
+            ],
           ),
         ),
       ),
@@ -216,12 +253,26 @@ class _HeadToHeadSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        color: AppColors.accentSoft.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(14),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 72,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppColors.accentSoft.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 54,
+          decoration: BoxDecoration(
+            color: AppColors.accentSoft.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ],
     );
   }
 }

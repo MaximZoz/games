@@ -1543,11 +1543,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                PeerCollectionsSection(userId: user.id),
                 HeadToHeadSection(
                   opponentId: user.id,
                   opponentName: user.displayName,
                 ),
+                PeerCollectionsSection(userId: user.id),
               ],
             ),
           ),

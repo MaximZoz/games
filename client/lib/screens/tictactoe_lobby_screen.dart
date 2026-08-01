@@ -9,6 +9,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -801,6 +802,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
+                      HeadToHeadSection(
+                        opponentId: user.id,
+                        opponentName: user.displayName,
+                      ),
                       PeerCollectionsSection(userId: user.id),
                     ],
                   ),

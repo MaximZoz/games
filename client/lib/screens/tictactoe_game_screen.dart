@@ -1299,11 +1299,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    PeerCollectionsSection(userId: opponentId),
                     HeadToHeadSection(
                       opponentId: opponentId,
                       opponentName: friendUser?.displayName ?? displayName,
                     ),
+                    PeerCollectionsSection(userId: opponentId),
                   ],
                 );
               },
