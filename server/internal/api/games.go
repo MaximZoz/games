@@ -2823,18 +2823,38 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5)
+	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5, "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 5)
+	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 5, "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	if byGame == nil {
-		byGame = []store.GameTypeScore{}
+		byGame = []store.GameTypeStats{}
+	}
+	for i := range byGame {
+		gWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5, byGame[i].GameType)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		gLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 5, byGame[i].GameType)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if gWon == nil {
+			gWon = []store.OpponentStat{}
+		}
+		if gLost == nil {
+			gLost = []store.OpponentStat{}
+		}
+		byGame[i].TopWon = gWon
+		byGame[i].TopLost = gLost
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"wins":               stats.Wins,

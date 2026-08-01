@@ -172,44 +172,31 @@ class GameStatsBody extends ConsumerWidget {
               padding: contentPadding,
               shrinkWrap: true,
               children: [
-                _SummarySection(
+                _GameStatsBlock(
                   title: 'Все игры',
+                  icon: Icons.sports_esports_rounded,
                   wins: stats.wins,
                   draws: stats.draws,
                   losses: stats.losses,
                   winRate: stats.winRate,
+                  totalDurationSec: stats.totalDurationSec,
+                  topWon: stats.topWon,
+                  topLost: stats.topLost,
                   narrow: narrow,
                 ),
                 for (final g in stats.games) ...[
                   const SizedBox(height: 12),
-                  _SummarySection(
+                  _GameStatsBlock(
                     title: _gameTypeTitle(g.gameType),
+                    icon: _gameTypeIcon(g.gameType),
                     wins: g.won,
                     draws: g.drawn,
                     losses: g.lost,
                     winRate: _winRate(g.won, g.drawn, g.lost),
+                    totalDurationSec: g.totalDurationSec,
+                    topWon: g.topWon,
+                    topLost: g.topLost,
                     narrow: narrow,
-                    showWinRate: true,
-                  ),
-                ],
-                const SizedBox(height: 16),
-                _TimeSection(totalDurationSec: stats.totalDurationSec),
-                const SizedBox(height: 16),
-                if (stats.topWon.isNotEmpty) ...[
-                  _OpponentsSection(
-                    title: 'Чаще всего побеждали',
-                    accent: _StatColor.win,
-                    opponents: stats.topWon,
-                    metric: _Metric.won,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                if (stats.topLost.isNotEmpty) ...[
-                  _OpponentsSection(
-                    title: 'Чаще всего проигрывали',
-                    accent: _StatColor.loss,
-                    opponents: stats.topLost,
-                    metric: _Metric.lost,
                   ),
                 ],
               ],
@@ -224,6 +211,15 @@ String _gameTypeTitle(String gameType) {
       return 'Крестики-нолики';
     default:
       return gameType;
+  }
+}
+
+IconData _gameTypeIcon(String gameType) {
+  switch (gameType) {
+    case 'tictactoe':
+      return Icons.grid_3x3_rounded;
+    default:
+      return Icons.sports_esports_rounded;
   }
 }
 
@@ -280,25 +276,31 @@ class _EmptyStats extends StatelessWidget {
   }
 }
 
-/// Итоговый блок: W/D/L пилюли + win-rate прогресс-бар.
-class _SummarySection extends StatelessWidget {
-  const _SummarySection({
+/// Блок статистики одной игры / «Все игры»: W/D/L, время, топ соперников.
+class _GameStatsBlock extends StatelessWidget {
+  const _GameStatsBlock({
     required this.title,
+    required this.icon,
     required this.wins,
     required this.draws,
     required this.losses,
     required this.winRate,
+    required this.totalDurationSec,
+    required this.topWon,
+    required this.topLost,
     required this.narrow,
-    this.showWinRate = true,
   });
 
   final String title;
+  final IconData icon;
   final int wins;
   final int draws;
   final int losses;
   final double winRate;
+  final int totalDurationSec;
+  final List<OpponentStat> topWon;
+  final List<OpponentStat> topLost;
   final bool narrow;
-  final bool showWinRate;
 
   @override
   Widget build(BuildContext context) {
@@ -308,15 +310,35 @@ class _SummarySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.accentStart, AppColors.accentEnd],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -344,42 +366,112 @@ class _SummarySection extends StatelessWidget {
               ),
             ],
           ),
-          if (showWinRate) ...[
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Процент побед',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Процент побед',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
                 ),
-                Text(
-                  '${(winRate * 100).round()}%',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.accentStart,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: winRate.clamp(0.0, 1.0),
-                minHeight: 6,
-                backgroundColor: AppColors.accentSoft,
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppColors.accentStart),
               ),
+              Text(
+                '${(winRate * 100).round()}%',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentStart,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: winRate.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: AppColors.accentSoft,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.accentStart),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _InlineTimeRow(totalDurationSec: totalDurationSec),
+          if (topWon.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _OpponentsSection(
+              title: 'Чаще всего побеждали',
+              accent: _StatColor.win,
+              opponents: topWon,
+              metric: _Metric.won,
+              nested: true,
+            ),
+          ],
+          if (topLost.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _OpponentsSection(
+              title: 'Чаще всего проигрывали',
+              accent: _StatColor.loss,
+              opponents: topLost,
+              metric: _Metric.lost,
+              nested: true,
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _InlineTimeRow extends StatelessWidget {
+  const _InlineTimeRow({required this.totalDurationSec});
+
+  final int totalDurationSec;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppColors.accentSoft,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.timer_outlined,
+            color: AppColors.accentStart,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Время в игре',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                _formatDuration(totalDurationSec),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -427,62 +519,6 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-/// Карточка времени в игре.
-class _TimeSection extends StatelessWidget {
-  const _TimeSection({required this.totalDurationSec});
-
-  final int totalDurationSec;
-
-  @override
-  Widget build(BuildContext context) {
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.timer_outlined,
-              color: AppColors.accentStart,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Время в игре',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _formatDuration(totalDurationSec),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 enum _Metric { won, lost }
 
 /// Список топа соперников.
@@ -492,38 +528,52 @@ class _OpponentsSection extends StatelessWidget {
     required this.accent,
     required this.opponents,
     required this.metric,
+    this.nested = false,
   });
 
   final String title;
   final _StatColor accent;
   final List<OpponentStat> opponents;
   final _Metric metric;
+  final bool nested;
 
   @override
   Widget build(BuildContext context) {
+    final list = Column(
+      children: [
+        for (final o in opponents) _OpponentTile(stat: o, metric: metric),
+      ],
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: nested ? 0 : 4, bottom: 8),
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: nested ? 14 : 16,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
         ),
-        GradientCard(
-          animate: false,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Column(
-            children: [
-              for (final o in opponents) _OpponentTile(stat: o, metric: metric),
-            ],
+        if (nested)
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: list,
+          )
+        else
+          GradientCard(
+            animate: false,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: list,
           ),
-        ),
       ],
     );
   }

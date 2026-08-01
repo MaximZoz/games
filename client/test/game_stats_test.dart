@@ -18,7 +18,19 @@ void main() {
           {'opponent_id': 'u2', 'display_name': 'Bob', 'won': 0, 'drawn': 1, 'lost': 3},
         ],
         'games': [
-          {'game_type': 'tictactoe', 'won': 5, 'drawn': 2, 'lost': 3},
+          {
+            'game_type': 'tictactoe',
+            'won': 5,
+            'drawn': 2,
+            'lost': 3,
+            'total_duration_sec': 900,
+            'top_won': [
+              {'opponent_id': 'u1', 'display_name': 'Alice', 'won': 4, 'drawn': 0, 'lost': 1},
+            ],
+            'top_lost': [
+              {'opponent_id': 'u2', 'display_name': 'Bob', 'won': 0, 'drawn': 1, 'lost': 3},
+            ],
+          },
         ],
       };
       final s = GameStats.fromJson(json);
@@ -35,6 +47,9 @@ void main() {
       expect(s.topLost.first.lost, 3);
       expect(s.games, hasLength(1));
       expect(s.games.first.gameType, 'tictactoe');
+      expect(s.games.first.totalDurationSec, 900);
+      expect(s.games.first.topWon, hasLength(1));
+      expect(s.games.first.topLost.first.displayName, 'Bob');
       expect(s.isEmpty, isFalse);
     });
 

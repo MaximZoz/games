@@ -57,6 +57,17 @@ type GameTypeScore struct {
 	Lost     int    `json:"lost"`
 }
 
+// GameTypeStats — статистика игрока по одному типу игры (для экрана статистики).
+type GameTypeStats struct {
+	GameType         string         `json:"game_type"`
+	Won              int            `json:"won"`
+	Drawn            int            `json:"drawn"`
+	Lost             int            `json:"lost"`
+	TotalDurationSec int            `json:"total_duration_sec"`
+	TopWon           []OpponentStat `json:"top_won"`
+	TopLost          []OpponentStat `json:"top_lost"`
+}
+
 // HeadToHead — счёт между двумя игроками с разбивкой по играм.
 type HeadToHead struct {
 	OpponentID  uuid.UUID       `json:"opponent_id"`
@@ -112,13 +123,14 @@ func GetGameStats(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (Ga
 }
 
 // GetGameStatsByType — статистика игрока с разбивкой по типу игры.
-func GetGameStatsByType(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]GameTypeScore, error) {
+func GetGameStatsByType(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]GameTypeStats, error) {
 	rows, err := pool.Query(ctx, `
 		SELECT
 			COALESCE(NULLIF(game_type, ''), 'tictactoe') AS game_type,
 			COUNT(*) FILTER (WHERE winner_user_id = $1)::int                          AS wins,
 			COUNT(*) FILTER (WHERE winner_user_id IS NULL)::int                       AS draws,
-			COUNT(*) FILTER (WHERE winner_user_id IS NOT NULL AND winner_user_id <> $1)::int AS losses
+			COUNT(*) FILTER (WHERE winner_user_id IS NOT NULL AND winner_user_id <> $1)::int AS losses,
+			COALESCE(SUM(duration_sec), 0)::int                                        AS total_duration
 		FROM game_results
 		WHERE (x_user_id = $1 OR o_user_id = $1)
 		  AND x_user_id IS NOT NULL
@@ -131,15 +143,17 @@ func GetGameStatsByType(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 	}
 	defer rows.Close()
 
-	out := make([]GameTypeScore, 0)
+	out := make([]GameTypeStats, 0)
 	for rows.Next() {
-		var g GameTypeScore
-		if err := rows.Scan(&g.GameType, &g.Won, &g.Drawn, &g.Lost); err != nil {
+		var g GameTypeStats
+		if err := rows.Scan(&g.GameType, &g.Won, &g.Drawn, &g.Lost, &g.TotalDurationSec); err != nil {
 			return nil, err
 		}
 		if g.Won == 0 && g.Drawn == 0 && g.Lost == 0 {
 			continue
 		}
+		g.TopWon = []OpponentStat{}
+		g.TopLost = []OpponentStat{}
 		out = append(out, g)
 	}
 	return out, rows.Err()
@@ -192,7 +206,8 @@ func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID u
 
 // GetTopOpponents возвращает соперников, отсортированных по указанному критерию.
 // metric: "won" — больше всего побед над ними; "lost" — больше всего поражений от них.
-func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, metric string, limit int) ([]OpponentStat, error) {
+// gameType пустой — по всем играм; иначе фильтр по типу.
+func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, metric string, limit int, gameType string) ([]OpponentStat, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
 	}
@@ -207,6 +222,7 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 			  AND x_user_id IS NOT NULL
 			  AND o_user_id IS NOT NULL
 			  AND (x_user_id = $1 OR o_user_id = $1)
+			  AND ($2 = '' OR COALESCE(NULLIF(game_type, ''), 'tictactoe') = $2)
 		)
 		SELECT
 			opponent_id,
@@ -215,7 +231,7 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 			COUNT(*) FILTER (WHERE winner_user_id = opponent_id)::int AS lost
 		FROM pairs
 		GROUP BY opponent_id
-	`, userID)
+	`, userID, gameType)
 	if err != nil {
 		return nil, err
 	}
@@ -233,13 +249,25 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 		return nil, err
 	}
 
-	// Сортировка в Go (всего соперников немного — дешевле, чем тащить display_name в группировке).
+	// Только соперники с ненулевой метрикой; сортировка в Go.
+	filtered := all[:0]
 	switch metric {
 	case "lost":
-		sortOpponents(all, func(a, b OpponentStat) bool { return a.Lost > b.Lost })
+		for _, o := range all {
+			if o.Lost > 0 {
+				filtered = append(filtered, o)
+			}
+		}
+		sortOpponents(filtered, func(a, b OpponentStat) bool { return a.Lost > b.Lost })
 	default:
-		sortOpponents(all, func(a, b OpponentStat) bool { return a.Won > b.Won })
+		for _, o := range all {
+			if o.Won > 0 {
+				filtered = append(filtered, o)
+			}
+		}
+		sortOpponents(filtered, func(a, b OpponentStat) bool { return a.Won > b.Won })
 	}
+	all = filtered
 	if len(all) > limit {
 		all = all[:limit]
 	}

@@ -673,19 +673,25 @@ class OpponentStat {
   }
 }
 
-/// Счёт head-to-head по одному типу игры.
+/// Счёт / статистика по одному типу игры.
 class GameTypeScore {
   const GameTypeScore({
     required this.gameType,
     required this.won,
     required this.drawn,
     required this.lost,
+    this.totalDurationSec = 0,
+    this.topWon = const [],
+    this.topLost = const [],
   });
 
   final String gameType;
   final int won;
   final int drawn;
   final int lost;
+  final int totalDurationSec;
+  final List<OpponentStat> topWon;
+  final List<OpponentStat> topLost;
 
   bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
 
@@ -695,6 +701,9 @@ class GameTypeScore {
       won: (json['won'] as num?)?.toInt() ?? 0,
       drawn: (json['drawn'] as num?)?.toInt() ?? 0,
       lost: (json['lost'] as num?)?.toInt() ?? 0,
+      totalDurationSec: (json['total_duration_sec'] as num?)?.toInt() ?? 0,
+      topWon: GameStats._opponentList(json['top_won']),
+      topLost: GameStats._opponentList(json['top_lost']),
     );
   }
 }

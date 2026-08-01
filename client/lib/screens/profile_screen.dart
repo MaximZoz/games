@@ -14,7 +14,6 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
-import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
@@ -335,7 +334,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _exitEditingImmediate();
     });
 
-    Widget scrollableBody(Widget child) {
+    Widget scrollableBody(Widget child, {bool expandCard = false}) {
+      if (expandCard) {
+        // Свой профиль: карточка на всю доступную высоту (скролл — внутри карточки).
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: child,
+        );
+      }
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -387,9 +393,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 Widget buildProfile(ProfileExtra extra) {
                   if (mobile && _isEditing) {
-                    // SwipeBack снаружи формы — край не перекрывают TextField/ListView.
+                    // Узкая полоса свайпа: иначе opaque-зона перекрывает
+                    // чекбокс «Показывать статистику» у левого края.
                     return SwipeBackScope(
                       onBack: _cancelEditing,
+                      edgeWidth: 22,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
                         child: SizedBox.expand(
@@ -415,6 +423,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     profileExtra: extra,
                     isEditing: _isEditing,
                     isClosing: _isClosing,
+                    expandToFill: !_isEditing,
                     displayNameController: _displayNameController,
                     displayNameFocus: _displayNameFocus,
                     onStartEdit: () => _startEditing(
@@ -432,7 +441,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }
                   // Важно: при полном заполнении (о себе + коллекции + чипы)
                   // карточка выше экрана — нужен скролл, а не Center.
-                  return scrollableBody(content);
+                  // Свой профиль (не edit) — растягиваем карточку на весь экран.
+                  return scrollableBody(content, expandCard: !_isEditing);
                 }
 
                 return extraAsync.when(
@@ -598,6 +608,7 @@ class _ProfileContent extends StatelessWidget {
     required this.profileExtra,
     required this.isEditing,
     required this.isClosing,
+    required this.expandToFill,
     required this.displayNameController,
     required this.displayNameFocus,
     required this.onStartEdit,
@@ -610,6 +621,7 @@ class _ProfileContent extends StatelessWidget {
   final ProfileExtra profileExtra;
   final bool isEditing;
   final bool isClosing;
+  final bool expandToFill;
   final TextEditingController displayNameController;
   final FocusNode displayNameFocus;
   final VoidCallback onStartEdit;
@@ -618,55 +630,59 @@ class _ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedBorderBox(
-          key: cardKey,
-          padding: EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
-          ),
-          child: AnimatedSwitcher(
-            duration: AppDurations.medium,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.04),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
-            ),
-            child: isEditing
-                ? AnimatedOpacity(
-                    key: const ValueKey('edit'),
-                    opacity: isClosing ? 0 : 1,
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOut,
-                    child: _ProfileEditForm(
-                      key: const ValueKey('edit_form'),
-                      user: user,
-                      profileExtra: profileExtra,
-                      displayNameController: displayNameController,
-                      focusNode: displayNameFocus,
-                      onCancel: onCancelEdit,
-                      onSave: onSave,
-                    ),
-                  )
-                : _ProfileView(
-                    key: const ValueKey('view'),
-                    user: user,
-                    profileExtra: profileExtra,
-                    onEdit: onStartEdit,
-                  ),
+    final card = AnimatedBorderBox(
+      key: cardKey,
+      expand: expandToFill,
+      padding: EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
+      ),
+      child: AnimatedSwitcher(
+        duration: AppDurations.medium,
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.04),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
           ),
         ),
-      ],
+        child: isEditing
+            ? AnimatedOpacity(
+                key: const ValueKey('edit'),
+                opacity: isClosing ? 0 : 1,
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOut,
+                child: _ProfileEditForm(
+                  key: const ValueKey('edit_form'),
+                  user: user,
+                  profileExtra: profileExtra,
+                  displayNameController: displayNameController,
+                  focusNode: displayNameFocus,
+                  onCancel: onCancelEdit,
+                  onSave: onSave,
+                ),
+              )
+            : _ProfileView(
+                key: const ValueKey('view'),
+                user: user,
+                profileExtra: profileExtra,
+                onEdit: onStartEdit,
+                expandToFill: expandToFill,
+              ),
+      ),
     );
+    if (!expandToFill) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [card],
+      );
+    }
+    return SizedBox.expand(child: card);
   }
 }
 
@@ -676,11 +692,13 @@ class _ProfileView extends ConsumerWidget {
     required this.user,
     required this.profileExtra,
     required this.onEdit,
+    this.expandToFill = false,
   });
 
   final AuthUser user;
   final ProfileExtra profileExtra;
   final VoidCallback onEdit;
+  final bool expandToFill;
 
   String get _displayTitle => user.displayName?.trim().isNotEmpty == true
       ? user.displayName!
@@ -715,7 +733,7 @@ class _ProfileView extends ConsumerWidget {
         ) !=
         null;
 
-    return Column(
+    final infoBlock = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (hasFrame)
@@ -819,9 +837,6 @@ class _ProfileView extends ConsumerWidget {
             ),
           ),
         ],
-        // Статистика — сразу под блоком инфо о пользователе.
-        SizedBox(height: gapSection + 2),
-        const _OwnScoreSection(),
         Builder(
           builder: (context) {
             final inv = ref.watch(inventoryListProvider).valueOrNull ??
@@ -849,30 +864,73 @@ class _ProfileView extends ConsumerWidget {
             );
           },
         ),
-        SizedBox(height: shortScreen ? 16 : 20),
-        OutlinedButton.icon(
-          onPressed: onEdit,
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          label: Text(
-            context.l10n.profileEdit,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+      ],
+    );
+
+    final editButton = OutlinedButton.icon(
+      onPressed: onEdit,
+      icon: const Icon(Icons.edit_outlined, size: 18),
+      label: Text(
+        context.l10n.profileEdit,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.accentStart,
+        padding: EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: shortScreen ? 11 : 13,
+        ),
+        side: BorderSide(
+          color: AppColors.accentStart.withValues(alpha: 0.6),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+
+    final Widget column;
+    if (expandToFill) {
+      // Карточка на весь экран: инфо скроллится, «Редактировать» внизу.
+      column = Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: infoBlock,
+            ),
           ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentStart,
-            padding: EdgeInsets.symmetric(
-              horizontal: 22,
-              vertical: shortScreen ? 11 : 13,
-            ),
-            side: BorderSide(
-              color: AppColors.accentStart.withValues(alpha: 0.6),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+          SizedBox(height: shortScreen ? 16 : 20),
+          editButton,
+        ],
+      );
+    } else {
+      column = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          infoBlock,
+          SizedBox(height: shortScreen ? 16 : 20),
+          editButton,
+        ],
+      );
+    }
+
+    // Иконка статистики — в правом верхнем углу карточки (не в потоке).
+    final body = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        expandToFill ? SizedBox.expand(child: column) : column,
+        Positioned(
+          top: 0,
+          right: 0,
+          child: StatsIconButton(
+            onTap: () => showGameStatsDialog(context),
           ),
         ),
       ],
     );
+
+    if (!expandToFill) return body;
+    return SizedBox.expand(child: body);
   }
 }
 
@@ -1579,23 +1637,43 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Widget _buildShowStatsCheckbox() {
-    // Кликается только сам чекбокс — подпись не переключает значение.
+    // Кликается только квадрат (не подпись). Слева отступ — зона свайпа
+    // «назад» (SwipeBackScope) иначе перехватывает тапы у края экрана.
+    final checked = _showStatsToOthers;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.fromLTRB(widget.compact ? 28 : 0, 2, 0, 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: Checkbox(
-              value: _showStatsToOthers,
-              onChanged: (v) => setState(() => _showStatsToOthers = v ?? false),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _showStatsToOthers = !checked),
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: checked ? AppColors.accentStart : Colors.transparent,
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(
+                      color: checked
+                          ? AppColors.accentStart
+                          : AppColors.textSecondary.withValues(alpha: 0.55),
+                      width: 2,
+                    ),
+                  ),
+                  child: checked
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 4),
           const Expanded(
             child: Text(
               'Показывать статистику другим игрокам',
@@ -1997,74 +2075,3 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
   }
 }
 
-/// Статистика за рамкой карточки: все игры + разбивка по каждой игре.
-class _OwnScoreSection extends ConsumerWidget {
-  const _OwnScoreSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(gameStatsProvider(null)).valueOrNull;
-    final games = stats?.games ?? const [];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Статистика',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ScoreTripletCard(
-                    won: stats?.wins ?? 0,
-                    lost: stats?.losses ?? 0,
-                    drawn: stats?.draws ?? 0,
-                  ),
-                  if (games.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentSoft.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Wrap(
-                        spacing: 16,
-                        runSpacing: 12,
-                        children: [
-                          for (final g in games)
-                            GameTypeScoreChip(
-                              gameType: g.gameType,
-                              won: g.won,
-                              lost: g.lost,
-                              drawn: g.drawn,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: StatsIconButton(
-                onTap: () => showGameStatsDialog(context),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
