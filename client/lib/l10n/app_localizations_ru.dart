@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsAddBotsTitle => 'Добавлять ботов через 30 с';
 
   @override
-  String get settingsAddBotsSubtitle => 'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)';
+  String get settingsAddBotsSubtitle =>
+      'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Сообщения только от друзей';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.';
+  String get settingsFriendsOnlySubtitle =>
+      'Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.';
 
   @override
   String get settingsNotifications => 'Уведомления';
@@ -482,7 +490,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lobbySearchingOpponent => 'Поиск соперника…';
 
   @override
-  String get lobbyWaitingJoin => 'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»';
+  String get lobbyWaitingJoin =>
+      'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»';
 
   @override
   String get lobbyInviteTitle => 'Приглашение в игру';
@@ -509,7 +518,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lobbyLinkCopied => 'Ссылка скопирована';
 
   @override
-  String get lobbyNoFriendsOnline => 'Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.';
+  String get lobbyNoFriendsOnline =>
+      'Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.';
 
   @override
   String get gameBot => 'Бот';
@@ -548,7 +558,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +607,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatsTitle => 'Чаты';
 
   @override
-  String get chatsEmpty => 'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.';
+  String get chatsEmpty =>
+      'Пока нет чатов.\nНажмите на иконку справа сверху, чтобы выбрать друга и начать диалог.';
 
   @override
   String get chatsNewChat => 'Новый чат';
@@ -608,7 +620,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatsClearTitle => 'Очистить переписку?';
 
   @override
-  String get chatsClearDesc => 'Диалог будет удалён без возможности восстановления.';
+  String get chatsClearDesc =>
+      'Диалог будет удалён без возможности восстановления.';
 
   @override
   String get chatsClearConfirm => 'Очистить';
@@ -617,7 +630,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatsBlockTitle => 'Заблокировать пользователя?';
 
   @override
-  String get chatsBlockDesc => 'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.';
+  String get chatsBlockDesc =>
+      'Вы больше не сможете писать друг другу. Диалог и дружба будут удалены.';
 
   @override
   String get chatsBlockConfirm => 'Заблокировать';
@@ -707,7 +721,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get friendsSearchHint => 'Поиск по нику';
 
   @override
-  String get friendsSearchPrompt => 'Используйте поиск, чтобы найти новых друзей';
+  String get friendsSearchPrompt =>
+      'Используйте поиск, чтобы найти новых друзей';
 
   @override
   String get friendsNothingFound => 'Ничего не найдено';
@@ -797,7 +812,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shopStakes => 'Ставки';
 
   @override
-  String get shopStakesSubtitle => 'Разблокировка серебряных ставок';
+  String get shopStakesSubtitle => 'Разблокировка повышенных ставок';
 
   @override
   String get inventoryTitle => 'Предметы';
@@ -854,7 +869,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errSettingsSaveFailed => 'Не удалось сохранить настройку';
 
   @override
-  String get errPushPermission => 'Разрешите уведомления в настройках браузера или системы.';
+  String get errPushPermission =>
+      'Разрешите уведомления в настройках браузера или системы.';
 
   @override
   String get balanceTitle => 'Баланс';
@@ -1182,7 +1198,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1200,7 +1217,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inventoryNoEmojis => 'Нет смайликов — купите в магазине';
 
   @override
-  String get inventoryNoFrames => 'Нет рамок — выиграйте 10 игр в лиге (достижения)';
+  String get inventoryNoFrames =>
+      'Нет рамок — выиграйте 10 игр в лиге (достижения)';
 
   @override
   String get inventoryNoStakes => 'Нет купленных ставок';
@@ -1259,7 +1277,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatsCreateFailed => 'Не удалось создать чат';
 
   @override
-  String get chatsNeedFriendsFirst => 'Сначала добавьте друзей, потом можно открыть чат.';
+  String get chatsNeedFriendsFirst =>
+      'Сначала добавьте друзей, потом можно открыть чат.';
 
   @override
   String get chatsFriendsNotFound => 'Друзья не найдены';
@@ -1339,7 +1358,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lobbyInviteSentShort => 'Отправлено';
 
   @override
-  String get lobbyInvitesSentWaiting => 'Приглашения отправлены. Ожидайте ответа.';
+  String get lobbyInvitesSentWaiting =>
+      'Приглашения отправлены. Ожидайте ответа.';
 
   @override
   String get lobbyLinkCopiedHint => 'Вставьте её в чат или сообщение другу';
@@ -1441,10 +1461,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get rulesSwap => 'Смена сторон: O может поменяться местами с X после первого хода X.';
+  String get rulesSwap =>
+      'Смена сторон: O может поменяться местами с X после первого хода X.';
 
   @override
-  String get rulesNoCenter => 'Запрет центра: X не может ходить в центр первым ходом.';
+  String get rulesNoCenter =>
+      'Запрет центра: X не может ходить в центр первым ходом.';
 
   @override
   String get collectionSetLegends => 'Легенды';
@@ -1597,13 +1619,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get forgotPasswordTitle => 'Сброс пароля';
 
   @override
-  String get forgotPasswordSubtitle => 'Введите email или логин — пришлём код на почту аккаунта';
+  String get forgotPasswordSubtitle =>
+      'Введите email или логин — пришлём код на почту аккаунта';
 
   @override
   String get forgotPasswordSubmit => 'Отправить код';
 
   @override
-  String get forgotPasswordSent => 'Если аккаунт существует, код отправлен на почту';
+  String get forgotPasswordSent =>
+      'Если аккаунт существует, код отправлен на почту';
 
   @override
   String get resetPasswordTitle => 'Новый пароль';

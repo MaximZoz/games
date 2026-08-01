@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAddBotsTitle => '30초 후 봇 추가';
 
   @override
-  String get settingsAddBotsSubtitle => '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
+  String get settingsAddBotsSubtitle =>
+      '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFriendsOnlyTitle => '친구 메시지만 받기';
 
   @override
-  String get settingsFriendsOnlySubtitle => '친구가 아닌 사용자는 이모지만 보낼 수 있습니다. 스팸이 문제라면 일시적으로 차단하세요.';
+  String get settingsFriendsOnlySubtitle =>
+      '친구가 아닌 사용자는 이모지만 보낼 수 있습니다. 스팸이 문제라면 일시적으로 차단하세요.';
 
   @override
   String get settingsNotifications => '알림';
@@ -509,7 +517,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbyLinkCopied => '링크가 복사되었습니다';
 
   @override
-  String get lobbyNoFriendsOnline => '온라인인 친구가 없습니다. 위 게임 링크를 공유하거나 친구가 접속할 때까지 기다리세요.';
+  String get lobbyNoFriendsOnline =>
+      '온라인인 친구가 없습니다. 위 게임 링크를 공유하거나 친구가 접속할 때까지 기다리세요.';
 
   @override
   String get gameBot => 'Bot';
@@ -548,7 +557,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -797,7 +807,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopStakes => '배팅';
 
   @override
-  String get shopStakesSubtitle => '실버 배팅 잠금 해제';
+  String get shopStakesSubtitle => '더 높은 배팅 잠금 해제';
 
   @override
   String get inventoryTitle => '아이템';
@@ -1182,7 +1192,8 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1597,13 +1608,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

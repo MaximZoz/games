@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsAddBotsTitle => 'Lägg till bottar efter 30 s';
 
   @override
-  String get settingsAddBotsSubtitle => 'Vid matchning: om ingen motståndare hittas inom 30 sekunder startar spelet med en bot (insatsen återställs till 1 brons)';
+  String get settingsAddBotsSubtitle =>
+      'Vid matchning: om ingen motståndare hittas inom 30 sekunder startar spelet med en bot (insatsen återställs till 1 brons)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Meddelanden endast från vänner';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Icke-vänner kan bara skicka emojis. Vid spam, blockera användaren tillfälligt.';
+  String get settingsFriendsOnlySubtitle =>
+      'Icke-vänner kan bara skicka emojis. Vid spam, blockera användaren tillfälligt.';
 
   @override
   String get settingsNotifications => 'Aviseringar';
@@ -482,7 +490,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get lobbySearchingOpponent => 'Söker motståndare…';
 
   @override
-  String get lobbyWaitingJoin => 'Väntar på att någon trycker på ”Hitta ett spel” eller ”Gå med”';
+  String get lobbyWaitingJoin =>
+      'Väntar på att någon trycker på ”Hitta ett spel” eller ”Gå med”';
 
   @override
   String get lobbyInviteTitle => 'Spelinbjudan';
@@ -509,7 +518,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get lobbyLinkCopied => 'Länk kopierad';
 
   @override
-  String get lobbyNoFriendsOnline => 'Inga vänner online. Dela spellänken ovan eller vänta tills vänner kommer online.';
+  String get lobbyNoFriendsOnline =>
+      'Inga vänner online. Dela spellänken ovan eller vänta tills vänner kommer online.';
 
   @override
   String get gameBot => 'Bot';
@@ -524,7 +534,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gameYouWonOpponentLeft => 'Du vann — motståndaren lämnade';
 
   @override
-  String get gameYouWonOpponentTimeout => 'Du vann — motståndarens tid tog slut';
+  String get gameYouWonOpponentTimeout =>
+      'Du vann — motståndarens tid tog slut';
 
   @override
   String get gameDraw => 'Oavgjort';
@@ -548,7 +559,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +608,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatsTitle => 'Chattar';
 
   @override
-  String get chatsEmpty => 'Inga chattar ännu.\nTryck på ikonen uppe till höger för att välja en vän och börja chatta.';
+  String get chatsEmpty =>
+      'Inga chattar ännu.\nTryck på ikonen uppe till höger för att välja en vän och börja chatta.';
 
   @override
   String get chatsNewChat => 'Ny chatt';
@@ -617,7 +630,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatsBlockTitle => 'Blockera den här användaren?';
 
   @override
-  String get chatsBlockDesc => 'Ni kan inte längre skicka meddelanden till varandra. Chatten och vänskapen tas bort.';
+  String get chatsBlockDesc =>
+      'Ni kan inte längre skicka meddelanden till varandra. Chatten och vänskapen tas bort.';
 
   @override
   String get chatsBlockConfirm => 'Blockera';
@@ -791,13 +805,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get shopCollections => 'Samlingar';
 
   @override
-  String get shopCollectionsSubtitle => 'Profilutställning, presenter och intäkter';
+  String get shopCollectionsSubtitle =>
+      'Profilutställning, presenter och intäkter';
 
   @override
   String get shopStakes => 'Insatser';
 
   @override
-  String get shopStakesSubtitle => 'Lås upp silverinsatser';
+  String get shopStakesSubtitle => 'Lås upp högre insatser';
 
   @override
   String get inventoryTitle => 'Föremål';
@@ -854,7 +869,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get errSettingsSaveFailed => 'Kunde inte spara inställningen';
 
   @override
-  String get errPushPermission => 'Tillåt aviseringar i webbläsarens eller systemets inställningar.';
+  String get errPushPermission =>
+      'Tillåt aviseringar i webbläsarens eller systemets inställningar.';
 
   @override
   String get balanceTitle => 'Saldo';
@@ -1182,7 +1198,8 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1200,7 +1217,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get inventoryNoEmojis => 'Inga emojis — köp i butiken';
 
   @override
-  String get inventoryNoFrames => 'Inga ramar — vinn 10 ligamatcher (prestationer)';
+  String get inventoryNoFrames =>
+      'Inga ramar — vinn 10 ligamatcher (prestationer)';
 
   @override
   String get inventoryNoStakes => 'Inga köpta insatser';
@@ -1259,7 +1277,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatsCreateFailed => 'Kunde inte skapa chatt';
 
   @override
-  String get chatsNeedFriendsFirst => 'Lägg till vänner först, sedan kan du öppna en chatt.';
+  String get chatsNeedFriendsFirst =>
+      'Lägg till vänner först, sedan kan du öppna en chatt.';
 
   @override
   String get chatsFriendsNotFound => 'Inga vänner hittades';
@@ -1339,10 +1358,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get lobbyInviteSentShort => 'Skickat';
 
   @override
-  String get lobbyInvitesSentWaiting => 'Inbjudningar skickade. Väntar på svar.';
+  String get lobbyInvitesSentWaiting =>
+      'Inbjudningar skickade. Väntar på svar.';
 
   @override
-  String get lobbyLinkCopiedHint => 'Klistra in den i en chatt eller ett meddelande till en vän';
+  String get lobbyLinkCopiedHint =>
+      'Klistra in den i en chatt eller ett meddelande till en vän';
 
   @override
   String get lobbyCopyLinkHint => 'Kopiera länk till urklipp';
@@ -1380,7 +1401,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get profileSaveFailed => 'Kunde inte spara profilen';
 
   @override
-  String get profileNameHint => 'Latinska bokstäver, siffror, _ upp till 10 tecken';
+  String get profileNameHint =>
+      'Latinska bokstäver, siffror, _ upp till 10 tecken';
 
   @override
   String get profileNameLatinOnly => 'Latin characters only';
@@ -1444,7 +1466,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesSwap => 'Sidbyte: O kan byta med X efter X:s första drag.';
 
   @override
-  String get rulesNoCenter => 'Inget mittfält: X får inte spela i mitten på första draget.';
+  String get rulesNoCenter =>
+      'Inget mittfält: X får inte spela i mitten på första draget.';
 
   @override
   String get collectionSetLegends => 'Legender';
@@ -1597,13 +1620,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

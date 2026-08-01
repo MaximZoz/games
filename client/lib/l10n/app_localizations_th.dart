@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsAddBotsTitle => 'เพิ่มบอทหลัง 30 วินาที';
 
   @override
-  String get settingsAddBotsSubtitle => 'ในการจับคู่: หากไม่พบคู่แข่งใน 30 วินาที เกมจะเริ่มกับบอท (เงินเดิมพันรีเซ็ตเป็น 1 บรอนซ์)';
+  String get settingsAddBotsSubtitle =>
+      'ในการจับคู่: หากไม่พบคู่แข่งใน 30 วินาที เกมจะเริ่มกับบอท (เงินเดิมพันรีเซ็ตเป็น 1 บรอนซ์)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'ข้อความจากเพื่อนเท่านั้น';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'ผู้ที่ไม่ใช่เพื่อนส่งได้เฉพาะอีโมจิ หากถูกรบกวน ให้บล็อกผู้ใช้นั้นชั่วคราว';
+  String get settingsFriendsOnlySubtitle =>
+      'ผู้ที่ไม่ใช่เพื่อนส่งได้เฉพาะอีโมจิ หากถูกรบกวน ให้บล็อกผู้ใช้นั้นชั่วคราว';
 
   @override
   String get settingsNotifications => 'การแจ้งเตือน';
@@ -509,7 +517,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get lobbyLinkCopied => 'คัดลอกลิงก์แล้ว';
 
   @override
-  String get lobbyNoFriendsOnline => 'ไม่มีเพื่อนออนไลน์ แชร์ลิงก์ด้านบน หรือรอให้เพื่อนออนไลน์';
+  String get lobbyNoFriendsOnline =>
+      'ไม่มีเพื่อนออนไลน์ แชร์ลิงก์ด้านบน หรือรอให้เพื่อนออนไลน์';
 
   @override
   String get gameBot => 'Bot';
@@ -548,7 +557,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +606,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get chatsTitle => 'แชท';
 
   @override
-  String get chatsEmpty => 'ยังไม่มีแชท\nแตะไอคอนมุมขวาบนเพื่อเลือกเพื่อนและเริ่มสนทนา';
+  String get chatsEmpty =>
+      'ยังไม่มีแชท\nแตะไอคอนมุมขวาบนเพื่อเลือกเพื่อนและเริ่มสนทนา';
 
   @override
   String get chatsNewChat => 'แชทใหม่';
@@ -617,7 +628,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get chatsBlockTitle => 'บล็อกผู้ใช้นี้?';
 
   @override
-  String get chatsBlockDesc => 'คุณจะส่งข้อความถึงกันไม่ได้อีก แชทและมิตรภาพจะถูกลบ';
+  String get chatsBlockDesc =>
+      'คุณจะส่งข้อความถึงกันไม่ได้อีก แชทและมิตรภาพจะถูกลบ';
 
   @override
   String get chatsBlockConfirm => 'บล็อก';
@@ -797,7 +809,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopStakes => 'เดิมพัน';
 
   @override
-  String get shopStakesSubtitle => 'ปลดล็อกเดิมพันเงิน';
+  String get shopStakesSubtitle => 'ปลดล็อกเดิมพันที่สูงขึ้น';
 
   @override
   String get inventoryTitle => 'ไอเท็ม';
@@ -854,7 +866,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errSettingsSaveFailed => 'บันทึกการตั้งค่าไม่ได้';
 
   @override
-  String get errPushPermission => 'อนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์หรือระบบ';
+  String get errPushPermission =>
+      'อนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์หรือระบบ';
 
   @override
   String get balanceTitle => 'ยอดคงเหลือ';
@@ -1182,7 +1195,8 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1597,13 +1611,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

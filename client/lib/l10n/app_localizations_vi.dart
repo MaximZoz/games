@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAddBotsTitle => 'Thêm bot sau 30 giây';
 
   @override
-  String get settingsAddBotsSubtitle => 'Khi ghép trận: nếu không tìm thấy đối thủ trong 30 giây, trận sẽ bắt đầu với bot (cược đặt lại thành 1 đồng bronze)';
+  String get settingsAddBotsSubtitle =>
+      'Khi ghép trận: nếu không tìm thấy đối thủ trong 30 giây, trận sẽ bắt đầu với bot (cược đặt lại thành 1 đồng bronze)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Chỉ nhận tin từ bạn bè';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Người không phải bạn bè chỉ gửi được emoji. Nếu bị spam, hãy tạm chặn người đó.';
+  String get settingsFriendsOnlySubtitle =>
+      'Người không phải bạn bè chỉ gửi được emoji. Nếu bị spam, hãy tạm chặn người đó.';
 
   @override
   String get settingsNotifications => 'Thông báo';
@@ -482,7 +490,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbySearchingOpponent => 'Đang tìm đối thủ…';
 
   @override
-  String get lobbyWaitingJoin => 'Đang chờ ai đó nhấn “Tìm trận” hoặc “Tham gia”';
+  String get lobbyWaitingJoin =>
+      'Đang chờ ai đó nhấn “Tìm trận” hoặc “Tham gia”';
 
   @override
   String get lobbyInviteTitle => 'Lời mời chơi';
@@ -509,7 +518,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbyLinkCopied => 'Đã sao chép liên kết';
 
   @override
-  String get lobbyNoFriendsOnline => 'Không có bạn bè đang online. Chia sẻ liên kết phía trên hoặc chờ bạn bè online.';
+  String get lobbyNoFriendsOnline =>
+      'Không có bạn bè đang online. Chia sẻ liên kết phía trên hoặc chờ bạn bè online.';
 
   @override
   String get gameBot => 'Bot';
@@ -548,7 +558,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +607,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatsTitle => 'Trò chuyện';
 
   @override
-  String get chatsEmpty => 'Chưa có cuộc trò chuyện.\nChạm biểu tượng góc trên bên phải để chọn bạn và bắt đầu.';
+  String get chatsEmpty =>
+      'Chưa có cuộc trò chuyện.\nChạm biểu tượng góc trên bên phải để chọn bạn và bắt đầu.';
 
   @override
   String get chatsNewChat => 'Trò chuyện mới';
@@ -617,7 +629,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatsBlockTitle => 'Chặn người dùng này?';
 
   @override
-  String get chatsBlockDesc => 'Hai bên sẽ không thể nhắn tin cho nhau. Cuộc trò chuyện và tình bạn sẽ bị xóa.';
+  String get chatsBlockDesc =>
+      'Hai bên sẽ không thể nhắn tin cho nhau. Cuộc trò chuyện và tình bạn sẽ bị xóa.';
 
   @override
   String get chatsBlockConfirm => 'Chặn';
@@ -797,7 +810,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopStakes => 'Cược';
 
   @override
-  String get shopStakesSubtitle => 'Mở khóa cược bạc';
+  String get shopStakesSubtitle => 'Mở khóa cược cao hơn';
 
   @override
   String get inventoryTitle => 'Vật phẩm';
@@ -854,7 +867,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errSettingsSaveFailed => 'Không thể lưu cài đặt';
 
   @override
-  String get errPushPermission => 'Cho phép thông báo trong trình duyệt hoặc cài đặt hệ thống.';
+  String get errPushPermission =>
+      'Cho phép thông báo trong trình duyệt hoặc cài đặt hệ thống.';
 
   @override
   String get balanceTitle => 'Số dư';
@@ -1182,7 +1196,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1194,13 +1209,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get inventoryLoadFailed => 'Không thể tải vật phẩm';
 
   @override
-  String get inventoryNoCollections => 'Không có bộ sưu tập — mua trong cửa hàng';
+  String get inventoryNoCollections =>
+      'Không có bộ sưu tập — mua trong cửa hàng';
 
   @override
   String get inventoryNoEmojis => 'Không có emoji — mua trong cửa hàng';
 
   @override
-  String get inventoryNoFrames => 'Không có khung — thắng 10 trận giải (thành tựu)';
+  String get inventoryNoFrames =>
+      'Không có khung — thắng 10 trận giải (thành tựu)';
 
   @override
   String get inventoryNoStakes => 'Không có mức cược đã mua';
@@ -1597,13 +1614,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

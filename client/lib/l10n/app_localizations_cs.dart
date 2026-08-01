@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsAddBotsTitle => 'Přidávat boty po 30 s';
 
   @override
-  String get settingsAddBotsSubtitle => 'Ve vyhledávání hry: pokud se do 30 sekund nenajde soupeř, hra začne s botem (sázka se resetuje na 1 bronz)';
+  String get settingsAddBotsSubtitle =>
+      'Ve vyhledávání hry: pokud se do 30 sekund nenajde soupeř, hra začne s botem (sázka se resetuje na 1 bronz)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Zprávy jen od přátel';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Kdo není v přátelích, může posílat jen emoji. Pokud vadí spam, uživatele dočasně zablokujte.';
+  String get settingsFriendsOnlySubtitle =>
+      'Kdo není v přátelích, může posílat jen emoji. Pokud vadí spam, uživatele dočasně zablokujte.';
 
   @override
   String get settingsNotifications => 'Oznámení';
@@ -482,7 +490,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbySearchingOpponent => 'Hledání soupeře…';
 
   @override
-  String get lobbyWaitingJoin => 'Čekáme, až někdo stiskne „Najít hru“ nebo „Připojit se“';
+  String get lobbyWaitingJoin =>
+      'Čekáme, až někdo stiskne „Najít hru“ nebo „Připojit se“';
 
   @override
   String get lobbyInviteTitle => 'Pozvánka do hry';
@@ -509,7 +518,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbyLinkCopied => 'Odkaz zkopírován';
 
   @override
-  String get lobbyNoFriendsOnline => 'Žádní přátelé online. Sdílejte odkaz na hru výše nebo počkejte, až budou přátelé online.';
+  String get lobbyNoFriendsOnline =>
+      'Žádní přátelé online. Sdílejte odkaz na hru výše nebo počkejte, až budou přátelé online.';
 
   @override
   String get gameBot => 'Bot';
@@ -548,7 +558,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +607,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get chatsTitle => 'Chaty';
 
   @override
-  String get chatsEmpty => 'Zatím žádné chaty.\nKlepněte na ikonu vpravo nahoře, vyberte přítele a začněte konverzaci.';
+  String get chatsEmpty =>
+      'Zatím žádné chaty.\nKlepněte na ikonu vpravo nahoře, vyberte přítele a začněte konverzaci.';
 
   @override
   String get chatsNewChat => 'Nový chat';
@@ -617,7 +629,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get chatsBlockTitle => 'Zablokovat tohoto uživatele?';
 
   @override
-  String get chatsBlockDesc => 'Už si nebudete moci psát. Chat a přátelství budou odstraněny.';
+  String get chatsBlockDesc =>
+      'Už si nebudete moci psát. Chat a přátelství budou odstraněny.';
 
   @override
   String get chatsBlockConfirm => 'Zablokovat';
@@ -797,7 +810,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopStakes => 'Sázky';
 
   @override
-  String get shopStakesSubtitle => 'Odemkněte stříbrné sázky';
+  String get shopStakesSubtitle => 'Odemknutí vyšších sázek';
 
   @override
   String get inventoryTitle => 'Předměty';
@@ -854,7 +867,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get errSettingsSaveFailed => 'Nepodařilo se uložit nastavení';
 
   @override
-  String get errPushPermission => 'Povolte oznámení v nastavení prohlížeče nebo systému.';
+  String get errPushPermission =>
+      'Povolte oznámení v nastavení prohlížeče nebo systému.';
 
   @override
   String get balanceTitle => 'Zůstatek';
@@ -1182,7 +1196,8 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1200,7 +1215,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get inventoryNoEmojis => 'Žádná emoji — kupte je v obchodě';
 
   @override
-  String get inventoryNoFrames => 'Žádné rámečky — vyhrajte 10 ligových her (úspěchy)';
+  String get inventoryNoFrames =>
+      'Žádné rámečky — vyhrajte 10 ligových her (úspěchy)';
 
   @override
   String get inventoryNoStakes => 'Žádné zakoupené sázky';
@@ -1259,7 +1275,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get chatsCreateFailed => 'Nepodařilo se vytvořit chat';
 
   @override
-  String get chatsNeedFriendsFirst => 'Nejprve přidejte přátele, pak můžete otevřít chat.';
+  String get chatsNeedFriendsFirst =>
+      'Nejprve přidejte přátele, pak můžete otevřít chat.';
 
   @override
   String get chatsFriendsNotFound => 'Přátelé nenalezeni';
@@ -1339,7 +1356,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbyInviteSentShort => 'Odesláno';
 
   @override
-  String get lobbyInvitesSentWaiting => 'Pozvánky odeslány. Čekejte na odpověď.';
+  String get lobbyInvitesSentWaiting =>
+      'Pozvánky odeslány. Čekejte na odpověď.';
 
   @override
   String get lobbyLinkCopiedHint => 'Vložte ji do chatu nebo zprávy příteli';
@@ -1441,10 +1459,12 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get rulesSwap => 'Výměna stran: O se může prohodit s X po prvním tahu X.';
+  String get rulesSwap =>
+      'Výměna stran: O se může prohodit s X po prvním tahu X.';
 
   @override
-  String get rulesNoCenter => 'Zákaz středu: X nesmí v prvním tahu hrát do středu.';
+  String get rulesNoCenter =>
+      'Zákaz středu: X nesmí v prvním tahu hrát do středu.';
 
   @override
   String get collectionSetLegends => 'Legendy';
@@ -1597,13 +1617,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

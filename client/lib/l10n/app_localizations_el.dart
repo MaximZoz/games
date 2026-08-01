@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsAddBotsTitle => 'Προσθήκη bot μετά από 30 δευτ.';
 
   @override
-  String get settingsAddBotsSubtitle => 'Στο matchmaking: αν δεν βρεθεί αντίπαλος σε 30 δευτερόλεπτα, το παιχνίδι ξεκινά με bot (το ποντάρισμα επαναφέρεται σε 1 μπρούντζο)';
+  String get settingsAddBotsSubtitle =>
+      'Στο matchmaking: αν δεν βρεθεί αντίπαλος σε 30 δευτερόλεπτα, το παιχνίδι ξεκινά με bot (το ποντάρισμα επαναφέρεται σε 1 μπρούντζο)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Μηνύματα μόνο από φίλους';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Οι μη φίλοι μπορούν να στέλνουν μόνο emoji. Αν υπάρχει spam, αποκλείστε προσωρινά τον χρήστη.';
+  String get settingsFriendsOnlySubtitle =>
+      'Οι μη φίλοι μπορούν να στέλνουν μόνο emoji. Αν υπάρχει spam, αποκλείστε προσωρινά τον χρήστη.';
 
   @override
   String get settingsNotifications => 'Ειδοποιήσεις';
@@ -197,7 +205,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get registerPasswordHint => 'Τουλάχιστον 6 χαρακτήρες';
 
   @override
-  String get registerPasswordMin => 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες';
+  String get registerPasswordMin =>
+      'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες';
 
   @override
   String get commonCancel => 'Ακύρωση';
@@ -482,7 +491,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbySearchingOpponent => 'Αναζήτηση αντιπάλου…';
 
   @override
-  String get lobbyWaitingJoin => 'Αναμονή να πατήσει κάποιος «Εύρεση παιχνιδιού» ή «Συμμετοχή»';
+  String get lobbyWaitingJoin =>
+      'Αναμονή να πατήσει κάποιος «Εύρεση παιχνιδιού» ή «Συμμετοχή»';
 
   @override
   String get lobbyInviteTitle => 'Πρόσκληση παιχνιδιού';
@@ -509,7 +519,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbyLinkCopied => 'Ο σύνδεσμος αντιγράφηκε';
 
   @override
-  String get lobbyNoFriendsOnline => 'Κανένας φίλος σε σύνδεση. Κοινοποιήστε τον σύνδεσμο παραπάνω ή περιμένετε να συνδεθούν φίλοι.';
+  String get lobbyNoFriendsOnline =>
+      'Κανένας φίλος σε σύνδεση. Κοινοποιήστε τον σύνδεσμο παραπάνω ή περιμένετε να συνδεθούν φίλοι.';
 
   @override
   String get gameBot => 'Bot';
@@ -524,7 +535,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameYouWonOpponentLeft => 'Κερδίσατε — ο αντίπαλος αποχώρησε';
 
   @override
-  String get gameYouWonOpponentTimeout => 'Κερδίσατε — έληξε ο χρόνος του αντιπάλου';
+  String get gameYouWonOpponentTimeout =>
+      'Κερδίσατε — έληξε ο χρόνος του αντιπάλου';
 
   @override
   String get gameDraw => 'Ισοπαλία';
@@ -533,7 +545,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameExitTitle => 'Αποχώρηση από το παιχνίδι';
 
   @override
-  String get gameExitConfirm => 'Αν αποχωρήσετε, θα χάσετε. Αποχώρηση ούτως ή άλλως;';
+  String get gameExitConfirm =>
+      'Αν αποχωρήσετε, θα χάσετε. Αποχώρηση ούτως ή άλλως;';
 
   @override
   String get gameStay => 'Παραμονή';
@@ -548,7 +561,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +610,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get chatsTitle => 'Συνομιλίες';
 
   @override
-  String get chatsEmpty => 'Δεν υπάρχουν ακόμα συνομιλίες.\nΠατήστε το εικονίδιο πάνω δεξιά για να επιλέξετε φίλο και να ξεκινήσετε.';
+  String get chatsEmpty =>
+      'Δεν υπάρχουν ακόμα συνομιλίες.\nΠατήστε το εικονίδιο πάνω δεξιά για να επιλέξετε φίλο και να ξεκινήσετε.';
 
   @override
   String get chatsNewChat => 'Νέα συνομιλία';
@@ -617,7 +632,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get chatsBlockTitle => 'Αποκλεισμός αυτού του χρήστη;';
 
   @override
-  String get chatsBlockDesc => 'Δεν θα μπορείτε πλέον να ανταλλάσσετε μηνύματα. Η συνομιλία και η φιλία θα αφαιρεθούν.';
+  String get chatsBlockDesc =>
+      'Δεν θα μπορείτε πλέον να ανταλλάσσετε μηνύματα. Η συνομιλία και η φιλία θα αφαιρεθούν.';
 
   @override
   String get chatsBlockConfirm => 'Αποκλεισμός';
@@ -644,7 +660,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get chatEmoji => 'Emoji';
 
   @override
-  String get chatBuyEmojiHint => 'Αγοράστε emoji στο κατάστημα της αρχικής οθόνης';
+  String get chatBuyEmojiHint =>
+      'Αγοράστε emoji στο κατάστημα της αρχικής οθόνης';
 
   @override
   String get chatEditing => 'Επεξεργασία';
@@ -707,7 +724,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get friendsSearchHint => 'Αναζήτηση με όνομα χρήστη';
 
   @override
-  String get friendsSearchPrompt => 'Χρησιμοποιήστε την αναζήτηση για νέους φίλους';
+  String get friendsSearchPrompt =>
+      'Χρησιμοποιήστε την αναζήτηση για νέους φίλους';
 
   @override
   String get friendsNothingFound => 'Δεν βρέθηκε τίποτα';
@@ -797,7 +815,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopStakes => 'Πονταρίσματα';
 
   @override
-  String get shopStakesSubtitle => 'Ξεκλείδωμα ασημένιων πονταρισμάτων';
+  String get shopStakesSubtitle => 'Ξεκλείδωμα υψηλότερων πονταρισμάτων';
 
   @override
   String get inventoryTitle => 'Αντικείμενα';
@@ -848,13 +866,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get errTimeout => 'Λήξη χρονικού ορίου αιτήματος. Δοκιμάστε ξανά.';
 
   @override
-  String get errGamesUnavailable => 'Τα παιχνίδια δεν είναι προσωρινά διαθέσιμα';
+  String get errGamesUnavailable =>
+      'Τα παιχνίδια δεν είναι προσωρινά διαθέσιμα';
 
   @override
   String get errSettingsSaveFailed => 'Αδυναμία αποθήκευσης ρύθμισης';
 
   @override
-  String get errPushPermission => 'Επιτρέψτε τις ειδοποιήσεις στο πρόγραμμα περιήγησης ή στις ρυθμίσεις συστήματος.';
+  String get errPushPermission =>
+      'Επιτρέψτε τις ειδοποιήσεις στο πρόγραμμα περιήγησης ή στις ρυθμίσεις συστήματος.';
 
   @override
   String get balanceTitle => 'Υπόλοιπο';
@@ -1182,7 +1202,8 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1194,13 +1215,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get inventoryLoadFailed => 'Αποτυχία φόρτωσης αντικειμένων';
 
   @override
-  String get inventoryNoCollections => 'Δεν υπάρχουν συλλογές — αγοράστε στο κατάστημα';
+  String get inventoryNoCollections =>
+      'Δεν υπάρχουν συλλογές — αγοράστε στο κατάστημα';
 
   @override
   String get inventoryNoEmojis => 'Δεν υπάρχουν emoji — αγοράστε στο κατάστημα';
 
   @override
-  String get inventoryNoFrames => 'Δεν υπάρχουν πλαίσια — κερδίστε 10 παιχνίδια λίγκας (επιτεύγματα)';
+  String get inventoryNoFrames =>
+      'Δεν υπάρχουν πλαίσια — κερδίστε 10 παιχνίδια λίγκας (επιτεύγματα)';
 
   @override
   String get inventoryNoStakes => 'Δεν υπάρχουν αγορασμένα πονταρίσματα';
@@ -1259,7 +1282,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get chatsCreateFailed => 'Αποτυχία δημιουργίας συνομιλίας';
 
   @override
-  String get chatsNeedFriendsFirst => 'Προσθέστε πρώτα φίλους και μετά μπορείτε να ανοίξετε συνομιλία.';
+  String get chatsNeedFriendsFirst =>
+      'Προσθέστε πρώτα φίλους και μετά μπορείτε να ανοίξετε συνομιλία.';
 
   @override
   String get chatsFriendsNotFound => 'Δεν βρέθηκαν φίλοι';
@@ -1333,16 +1357,19 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesSwapSidesHint => 'Το O μπορεί να γίνει X μετά την 1η κίνηση';
 
   @override
-  String get gamesNoCenterHint => 'Η πρώτη κίνηση δεν μπορεί να είναι στο κέντρο';
+  String get gamesNoCenterHint =>
+      'Η πρώτη κίνηση δεν μπορεί να είναι στο κέντρο';
 
   @override
   String get lobbyInviteSentShort => 'Εστάλη';
 
   @override
-  String get lobbyInvitesSentWaiting => 'Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.';
+  String get lobbyInvitesSentWaiting =>
+      'Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.';
 
   @override
-  String get lobbyLinkCopiedHint => 'Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο';
+  String get lobbyLinkCopiedHint =>
+      'Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο';
 
   @override
   String get lobbyCopyLinkHint => 'Αντιγραφή συνδέσμου στο πρόχειρο';
@@ -1441,10 +1468,12 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
-  String get rulesSwap => 'Αλλαγή πλευρών: ο O μπορεί να αλλάξει με τον X μετά την πρώτη κίνηση του X.';
+  String get rulesSwap =>
+      'Αλλαγή πλευρών: ο O μπορεί να αλλάξει με τον X μετά την πρώτη κίνηση του X.';
 
   @override
-  String get rulesNoCenter => 'Απαγόρευση κέντρου: ο X δεν μπορεί να παίξει στο κέντρο στην πρώτη κίνηση.';
+  String get rulesNoCenter =>
+      'Απαγόρευση κέντρου: ο X δεν μπορεί να παίξει στο κέντρο στην πρώτη κίνηση.';
 
   @override
   String get collectionSetLegends => 'Θρύλοι';
@@ -1597,13 +1626,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

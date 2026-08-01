@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAddBotsTitle => 'Add bots after 30s';
 
   @override
-  String get settingsAddBotsSubtitle => 'In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)';
+  String get settingsAddBotsSubtitle =>
+      'In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)';
 
   @override
   String get settingsOfflineModeTitle => 'Network mode';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and applied in online mode. Online is on when there is internet or by the user setting.';
+  String get settingsOfflineModeSubtitle =>
+      'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and applied in online mode. Online is on when there is internet or by the user setting.';
 
   @override
   String get settingsModeOnline => 'Online';
@@ -58,7 +62,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesAlternateStartsHint => 'Take turns starting each game';
 
   @override
-  String get rulesAlternateStarts => 'Who goes first alternates from game to game.';
+  String get rulesAlternateStarts =>
+      'Who goes first alternates from game to game.';
 
   @override
   String get offlineBadgeTooltip => 'Offline mode';
@@ -67,7 +72,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineModePopupTitle => 'Offline mode';
 
   @override
-  String get offlineModePopupBody => 'Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply in online mode.';
+  String get offlineModePopupBody =>
+      'Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply in online mode.';
 
   @override
   String get offlineModePopupSettings => 'Settings';
@@ -107,7 +113,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Messages from friends only';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Non-friends can only send emojis. If spam is a problem, temporarily block the user.';
+  String get settingsFriendsOnlySubtitle =>
+      'Non-friends can only send emojis. If spam is a problem, temporarily block the user.';
 
   @override
   String get settingsNotifications => 'Notifications';
@@ -482,7 +489,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lobbySearchingOpponent => 'Looking for an opponent…';
 
   @override
-  String get lobbyWaitingJoin => 'Waiting for someone to tap “Find a game” or “Join”';
+  String get lobbyWaitingJoin =>
+      'Waiting for someone to tap “Find a game” or “Join”';
 
   @override
   String get lobbyInviteTitle => 'Game invite';
@@ -509,7 +517,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lobbyLinkCopied => 'Link copied';
 
   @override
-  String get lobbyNoFriendsOnline => 'No friends online. Share the game link above or wait until friends come online.';
+  String get lobbyNoFriendsOnline =>
+      'No friends online. Share the game link above or wait until friends come online.';
 
   @override
   String get gameBot => 'Bot';
@@ -548,7 +557,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameSurrenderTitle => 'Surrender?';
 
   @override
-  String get gameSurrenderConfirm => 'If you surrender, you will lose. Surrender?';
+  String get gameSurrenderConfirm =>
+      'If you surrender, you will lose. Surrender?';
 
   @override
   String get gameOfferDraw => 'Offer draw';
@@ -596,7 +606,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsTitle => 'Chats';
 
   @override
-  String get chatsEmpty => 'No chats yet.\nTap the icon at the top right to pick a friend and start a conversation.';
+  String get chatsEmpty =>
+      'No chats yet.\nTap the icon at the top right to pick a friend and start a conversation.';
 
   @override
   String get chatsNewChat => 'New chat';
@@ -617,7 +628,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsBlockTitle => 'Block this user?';
 
   @override
-  String get chatsBlockDesc => 'You will no longer be able to message each other. The chat and friendship will be removed.';
+  String get chatsBlockDesc =>
+      'You will no longer be able to message each other. The chat and friendship will be removed.';
 
   @override
   String get chatsBlockConfirm => 'Block';
@@ -797,7 +809,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopStakes => 'Stakes';
 
   @override
-  String get shopStakesSubtitle => 'Unlock silver stakes';
+  String get shopStakesSubtitle => 'Unlock higher stakes';
 
   @override
   String get inventoryTitle => 'Items';
@@ -854,7 +866,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errSettingsSaveFailed => 'Could not save setting';
 
   @override
-  String get errPushPermission => 'Allow notifications in your browser or system settings.';
+  String get errPushPermission =>
+      'Allow notifications in your browser or system settings.';
 
   @override
   String get balanceTitle => 'Balance';
@@ -1182,7 +1195,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'This user already has this collection';
+  String get inventoryGiftAlreadyOwns =>
+      'This user already has this collection';
 
   @override
   String get inventoryGiftSelf => 'You can\'t gift a collection to yourself';
@@ -1200,7 +1214,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inventoryNoEmojis => 'No emojis — buy them in the shop';
 
   @override
-  String get inventoryNoFrames => 'No frames — win 10 league games (achievements)';
+  String get inventoryNoFrames =>
+      'No frames — win 10 league games (achievements)';
 
   @override
   String get inventoryNoStakes => 'No purchased stakes';
@@ -1259,7 +1274,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsCreateFailed => 'Could not create chat';
 
   @override
-  String get chatsNeedFriendsFirst => 'Add friends first, then you can open a chat.';
+  String get chatsNeedFriendsFirst =>
+      'Add friends first, then you can open a chat.';
 
   @override
   String get chatsFriendsNotFound => 'Friends not found';
@@ -1271,7 +1287,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsSelectChat => 'Select a chat';
 
   @override
-  String get chatsSelectHint => 'Select a conversation from the list on the left';
+  String get chatsSelectHint =>
+      'Select a conversation from the list on the left';
 
   @override
   String get chatEditFailed => 'Could not edit message';
@@ -1444,7 +1461,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesSwap => 'Side swap: O may swap with X after X’s first move.';
 
   @override
-  String get rulesNoCenter => 'No center: X cannot play in the center on the first move.';
+  String get rulesNoCenter =>
+      'No center: X cannot play in the center on the first move.';
 
   @override
   String get collectionSetLegends => 'Legends';
@@ -1597,13 +1615,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter email or username — we’ll send a code to the account email';
+  String get forgotPasswordSubtitle =>
+      'Enter email or username — we’ll send a code to the account email';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';

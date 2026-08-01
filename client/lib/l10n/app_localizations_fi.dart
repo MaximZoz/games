@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -40,13 +42,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsAddBotsTitle => 'Lisää botteja 30 s jälkeen';
 
   @override
-  String get settingsAddBotsSubtitle => 'Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)';
+  String get settingsAddBotsSubtitle =>
+      'Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle =>
+      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -58,7 +62,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts =>
+      'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -67,7 +72,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody =>
+      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -91,7 +97,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued =>
+      'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -107,7 +114,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsFriendsOnlyTitle => 'Viestit vain kavereilta';
 
   @override
-  String get settingsFriendsOnlySubtitle => 'Muut kuin kaverit voivat lähettää vain emojeja. Jos spam häiritsee, estä käyttäjä tilapäisesti.';
+  String get settingsFriendsOnlySubtitle =>
+      'Muut kuin kaverit voivat lähettää vain emojeja. Jos spam häiritsee, estä käyttäjä tilapäisesti.';
 
   @override
   String get settingsNotifications => 'Ilmoitukset';
@@ -401,7 +409,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get homeCoinsSubtitle => 'Saldo ja palkinnot';
 
   @override
-  String get homeCoinsDailyReward => 'Päivittäinen kirjautumispalkinto saatavilla';
+  String get homeCoinsDailyReward =>
+      'Päivittäinen kirjautumispalkinto saatavilla';
 
   @override
   String get homeItems => 'Esineet';
@@ -482,7 +491,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbySearchingOpponent => 'Etsitään vastustajaa…';
 
   @override
-  String get lobbyWaitingJoin => 'Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”';
+  String get lobbyWaitingJoin =>
+      'Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”';
 
   @override
   String get lobbyInviteTitle => 'Pelikutsu';
@@ -509,7 +519,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbyLinkCopied => 'Linkki kopioitu';
 
   @override
-  String get lobbyNoFriendsOnline => 'Ei kavereita paikalla. Jaa yllä oleva pelilinkki tai odota, että kaverit tulevat paikalle.';
+  String get lobbyNoFriendsOnline =>
+      'Ei kavereita paikalla. Jaa yllä oleva pelilinkki tai odota, että kaverit tulevat paikalle.';
 
   @override
   String get gameBot => 'Bot';
@@ -548,7 +559,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm =>
+      'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -596,7 +608,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatsTitle => 'Keskustelut';
 
   @override
-  String get chatsEmpty => 'Ei vielä keskusteluja.\nNapauta oikean yläkulman kuvaketta valitaksesi kaverin ja aloittaaksesi keskustelun.';
+  String get chatsEmpty =>
+      'Ei vielä keskusteluja.\nNapauta oikean yläkulman kuvaketta valitaksesi kaverin ja aloittaaksesi keskustelun.';
 
   @override
   String get chatsNewChat => 'Uusi keskustelu';
@@ -617,7 +630,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatsBlockTitle => 'Estetäänkö tämä käyttäjä?';
 
   @override
-  String get chatsBlockDesc => 'Ette voi enää lähettää viestejä toisillenne. Keskustelu ja kaveruus poistetaan.';
+  String get chatsBlockDesc =>
+      'Ette voi enää lähettää viestejä toisillenne. Keskustelu ja kaveruus poistetaan.';
 
   @override
   String get chatsBlockConfirm => 'Estä';
@@ -797,7 +811,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopStakes => 'Panokset';
 
   @override
-  String get shopStakesSubtitle => 'Avaa hopeapanokset';
+  String get shopStakesSubtitle => 'Avaa korkeammat panokset';
 
   @override
   String get inventoryTitle => 'Esineet';
@@ -854,7 +868,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get errSettingsSaveFailed => 'Asetusta ei voitu tallentaa';
 
   @override
-  String get errPushPermission => 'Salli ilmoitukset selaimen tai järjestelmän asetuksissa.';
+  String get errPushPermission =>
+      'Salli ilmoitukset selaimen tai järjestelmän asetuksissa.';
 
   @override
   String get balanceTitle => 'Saldo';
@@ -1182,7 +1197,8 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns =>
+      'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1200,7 +1216,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get inventoryNoEmojis => 'Ei emojeja — osta kaupasta';
 
   @override
-  String get inventoryNoFrames => 'Ei kehyksiä — voita 10 liigaottelua (saavutukset)';
+  String get inventoryNoFrames =>
+      'Ei kehyksiä — voita 10 liigaottelua (saavutukset)';
 
   @override
   String get inventoryNoStakes => 'Ei ostettuja panoksia';
@@ -1259,7 +1276,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatsCreateFailed => 'Chattia ei voitu luoda';
 
   @override
-  String get chatsNeedFriendsFirst => 'Lisää ensin kavereita, sitten voit avata chatin.';
+  String get chatsNeedFriendsFirst =>
+      'Lisää ensin kavereita, sitten voit avata chatin.';
 
   @override
   String get chatsFriendsNotFound => 'Kavereita ei löytynyt';
@@ -1271,7 +1289,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatsSelectChat => 'Valitse chat';
 
   @override
-  String get chatsSelectHint => 'Valitse keskustelu vasemmalla olevasta listasta';
+  String get chatsSelectHint =>
+      'Valitse keskustelu vasemmalla olevasta listasta';
 
   @override
   String get chatEditFailed => 'Viestiä ei voitu muokata';
@@ -1339,7 +1358,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbyInviteSentShort => 'Lähetetty';
 
   @override
-  String get lobbyInvitesSentWaiting => 'Kutsut lähetetty. Odotetaan vastausta.';
+  String get lobbyInvitesSentWaiting =>
+      'Kutsut lähetetty. Odotetaan vastausta.';
 
   @override
   String get lobbyLinkCopiedHint => 'Liitä se chattiin tai viestiin kaverille';
@@ -1380,7 +1400,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get profileSaveFailed => 'Profiilia ei voitu tallentaa';
 
   @override
-  String get profileNameHint => 'Latinalaiset kirjaimet, numerot, _ enintään 10 merkkiä';
+  String get profileNameHint =>
+      'Latinalaiset kirjaimet, numerot, _ enintään 10 merkkiä';
 
   @override
   String get profileNameLatinOnly => 'Latin characters only';
@@ -1441,10 +1462,12 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get rulesSwap => 'Puolenvaihto: O voi vaihtaa X:n kanssa X:n ensimmäisen siirron jälkeen.';
+  String get rulesSwap =>
+      'Puolenvaihto: O voi vaihtaa X:n kanssa X:n ensimmäisen siirron jälkeen.';
 
   @override
-  String get rulesNoCenter => 'Kielto keskelle: X ei saa pelata keskelle ensimmäisellä siirrolla.';
+  String get rulesNoCenter =>
+      'Kielto keskelle: X ei saa pelata keskelle ensimmäisellä siirrolla.';
 
   @override
   String get collectionSetLegends => 'Legendat';
@@ -1597,13 +1620,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle =>
+      'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent =>
+      'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';
