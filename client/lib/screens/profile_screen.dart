@@ -621,48 +621,53 @@ class _ProfileContent extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedBorderBox(
-          key: cardKey,
-          padding: EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
-          ),
-          child: AnimatedSwitcher(
-            duration: AppDurations.medium,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.04),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: AnimatedBorderBox(
+              key: cardKey,
+              padding: EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
+              ),
+              child: AnimatedSwitcher(
+                duration: AppDurations.medium,
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.04),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                ),
+                child: isEditing
+                    ? AnimatedOpacity(
+                        key: const ValueKey('edit'),
+                        opacity: isClosing ? 0 : 1,
+                        duration: const Duration(milliseconds: 280),
+                        curve: Curves.easeOut,
+                        child: _ProfileEditForm(
+                          key: const ValueKey('edit_form'),
+                          user: user,
+                          profileExtra: profileExtra,
+                          displayNameController: displayNameController,
+                          focusNode: displayNameFocus,
+                          onCancel: onCancelEdit,
+                          onSave: onSave,
+                        ),
+                      )
+                    : _ProfileView(
+                        key: const ValueKey('view'),
+                        user: user,
+                        profileExtra: profileExtra,
+                        onEdit: onStartEdit,
+                      ),
               ),
             ),
-            child: isEditing
-                ? AnimatedOpacity(
-                    key: const ValueKey('edit'),
-                    opacity: isClosing ? 0 : 1,
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOut,
-                    child: _ProfileEditForm(
-                      key: const ValueKey('edit_form'),
-                      user: user,
-                      profileExtra: profileExtra,
-                      displayNameController: displayNameController,
-                      focusNode: displayNameFocus,
-                      onCancel: onCancelEdit,
-                      onSave: onSave,
-                    ),
-                  )
-                : _ProfileView(
-                    key: const ValueKey('view'),
-                    user: user,
-                    profileExtra: profileExtra,
-                    onEdit: onStartEdit,
-                  ),
           ),
         ),
       ],

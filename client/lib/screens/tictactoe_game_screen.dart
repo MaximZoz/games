@@ -320,9 +320,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         drawOfferBy.isNotEmpty &&
         drawOfferBy != meId;
     // Крестик + сдаться (+ ничья) слева; правила справа на одной линии с крестиком.
+    // Размеры подобраны под фактическую высоту кнопок (каждая ~44 + gap 6),
+    // чтобы иконки не обрезались по высоте и были тапабельны.
     final barHeight = showDrawButton
-        ? 132.0
-        : (gameActive ? 96.0 : kToolbarHeight);
+        ? 160.0
+        : (gameActive ? 110.0 : kToolbarHeight);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -332,27 +334,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           backgroundColor: Colors.transparent,
           toolbarHeight: barHeight,
           leadingWidth: 48,
-          leading: Align(
-            alignment: Alignment.topCenter,
+          leading: Padding(
+            padding: const EdgeInsets.only(top: 4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
+                    minWidth: 44,
+                    minHeight: 44,
                   ),
                   onPressed: goBack,
                   icon: const Icon(Icons.close_rounded),
                 ),
                 if (gameActive) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 36,
+                      minWidth: 44,
+                      minHeight: 44,
                     ),
                     iconSize: 22,
                     icon: const Icon(Icons.flag_outlined),
@@ -360,12 +363,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     onPressed: () => _confirmSurrender(context),
                   ),
                   if (showDrawButton) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 36,
+                        minWidth: 44,
+                        minHeight: 44,
                       ),
                       iconSize: 22,
                       icon: Icon(
