@@ -697,11 +697,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 Positioned.fill(
                   child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
                 ),
-              // «Сдаться» и «ничья» — справа сверху, под кнопкой «правила».
+              // «Сдаться» и «ничья» — справа сверху, чуть выше, с отступом
+              // от иконки «правила» (не вплотную к ней).
               if (gameActive)
                 Positioned(
-                  right: 4,
-                  top: topPad + kToolbarHeight + 4,
+                  right: 52,
+                  top: topPad + 4,
                   child: _GameActionsOverlay(
                     canDraw: showDrawButton,
                     iOfferedDraw: iOfferedDraw,
