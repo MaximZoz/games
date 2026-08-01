@@ -14,6 +14,9 @@ void main() {
         'top_won': [
           {'opponent_id': 'u1', 'display_name': 'Alice', 'won': 4, 'drawn': 0, 'lost': 1},
         ],
+        'top_drawn': [
+          {'opponent_id': 'u3', 'display_name': 'Cara', 'won': 0, 'drawn': 5, 'lost': 0},
+        ],
         'top_lost': [
           {'opponent_id': 'u2', 'display_name': 'Bob', 'won': 0, 'drawn': 1, 'lost': 3},
         ],
@@ -26,6 +29,9 @@ void main() {
             'total_duration_sec': 900,
             'top_won': [
               {'opponent_id': 'u1', 'display_name': 'Alice', 'won': 4, 'drawn': 0, 'lost': 1},
+            ],
+            'top_drawn': [
+              {'opponent_id': 'u3', 'display_name': 'Cara', 'won': 0, 'drawn': 2, 'lost': 0},
             ],
             'top_lost': [
               {'opponent_id': 'u2', 'display_name': 'Bob', 'won': 0, 'drawn': 1, 'lost': 3},
@@ -43,12 +49,15 @@ void main() {
       expect(s.topWon, hasLength(1));
       expect(s.topWon.first.opponentId, 'u1');
       expect(s.topWon.first.won, 4);
+      expect(s.topDrawn, hasLength(1));
+      expect(s.topDrawn.first.drawn, 5);
       expect(s.topLost, hasLength(1));
       expect(s.topLost.first.lost, 3);
       expect(s.games, hasLength(1));
       expect(s.games.first.gameType, 'tictactoe');
       expect(s.games.first.totalDurationSec, 900);
       expect(s.games.first.topWon, hasLength(1));
+      expect(s.games.first.topDrawn.first.displayName, 'Cara');
       expect(s.games.first.topLost.first.displayName, 'Bob');
       expect(s.isEmpty, isFalse);
     });
@@ -62,6 +71,7 @@ void main() {
         winRate: 0,
         totalDurationSec: 0,
         topWon: [],
+        topDrawn: [],
         topLost: [],
       );
       expect(s.isEmpty, isTrue);

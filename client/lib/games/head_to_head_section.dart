@@ -114,7 +114,7 @@ class _HeadToHeadBody extends StatelessWidget {
   }
 }
 
-/// Одна игра: иконка + цифры W/L/D сверху вниз на высоту иконки.
+/// Одна игра: компактная иконка, под ней цифры W/L/D слева направо.
 class GameTypeScoreChip extends StatelessWidget {
   const GameTypeScoreChip({
     super.key,
@@ -122,7 +122,7 @@ class GameTypeScoreChip extends StatelessWidget {
     required this.won,
     required this.lost,
     required this.drawn,
-    this.iconSize = 56,
+    this.iconSize = 36,
   });
 
   final String gameType;
@@ -146,11 +146,8 @@ class GameTypeScoreChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final digitHeight = iconSize / 3;
-    final fontSize = (digitHeight * 0.78).clamp(12.0, 18.0);
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: iconSize,
@@ -161,75 +158,45 @@ class GameTypeScoreChip extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             _gameIcon,
             color: Colors.white,
-            size: iconSize * 0.48,
+            size: iconSize * 0.52,
           ),
         ),
-        const SizedBox(width: 10),
-        SizedBox(
-          height: iconSize,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _DigitLine(
-                value: won,
-                color: _win,
-                height: digitHeight,
-                fontSize: fontSize,
-              ),
-              _DigitLine(
-                value: lost,
-                color: _loss,
-                height: digitHeight,
-                fontSize: fontSize,
-              ),
-              _DigitLine(
-                value: drawn,
-                color: _draw,
-                height: digitHeight,
-                fontSize: fontSize,
-              ),
-            ],
-          ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _DigitChip(value: won, color: _win),
+            const SizedBox(width: 6),
+            _DigitChip(value: lost, color: _loss),
+            const SizedBox(width: 6),
+            _DigitChip(value: drawn, color: _draw),
+          ],
         ),
       ],
     );
   }
 }
 
-class _DigitLine extends StatelessWidget {
-  const _DigitLine({
-    required this.value,
-    required this.color,
-    required this.height,
-    required this.fontSize,
-  });
+class _DigitChip extends StatelessWidget {
+  const _DigitChip({required this.value, required this.color});
 
   final int value;
   final Color color;
-  final double height;
-  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          '$value',
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w800,
-            height: 1,
-            color: color,
-          ),
-        ),
+    return Text(
+      '$value',
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.w800,
+        fontSize: 13,
+        height: 1,
       ),
     );
   }

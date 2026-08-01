@@ -2823,12 +2823,17 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5, "")
+	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 5, "")
+	topDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, "")
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -2837,12 +2842,17 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		byGame = []store.GameTypeStats{}
 	}
 	for i := range byGame {
-		gWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5, byGame[i].GameType)
+		gWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, byGame[i].GameType)
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
-		gLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 5, byGame[i].GameType)
+		gDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, byGame[i].GameType)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		gLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, byGame[i].GameType)
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
@@ -2850,10 +2860,14 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		if gWon == nil {
 			gWon = []store.OpponentStat{}
 		}
+		if gDrawn == nil {
+			gDrawn = []store.OpponentStat{}
+		}
 		if gLost == nil {
 			gLost = []store.OpponentStat{}
 		}
 		byGame[i].TopWon = gWon
+		byGame[i].TopDrawn = gDrawn
 		byGame[i].TopLost = gLost
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -2865,6 +2879,7 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		"total_duration_sec": stats.TotalDurationSec,
 		"games":              byGame,
 		"top_won":            topWon,
+		"top_drawn":          topDrawn,
 		"top_lost":           topLost,
 	})
 }

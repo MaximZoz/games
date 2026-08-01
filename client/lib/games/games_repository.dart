@@ -596,6 +596,7 @@ class GameStats {
     required this.winRate,
     required this.totalDurationSec,
     required this.topWon,
+    required this.topDrawn,
     required this.topLost,
     this.games = const [],
   });
@@ -607,6 +608,7 @@ class GameStats {
   final double winRate;
   final int totalDurationSec;
   final List<OpponentStat> topWon;
+  final List<OpponentStat> topDrawn;
   final List<OpponentStat> topLost;
   /// Разбивка по типам игр.
   final List<GameTypeScore> games;
@@ -630,6 +632,7 @@ class GameStats {
       winRate: (json['win_rate'] as num?)?.toDouble() ?? 0,
       totalDurationSec: (json['total_duration_sec'] as num?)?.toInt() ?? 0,
       topWon: _opponentList(json['top_won']),
+      topDrawn: _opponentList(json['top_drawn']),
       topLost: _opponentList(json['top_lost']),
       games: games,
     );
@@ -682,6 +685,7 @@ class GameTypeScore {
     required this.lost,
     this.totalDurationSec = 0,
     this.topWon = const [],
+    this.topDrawn = const [],
     this.topLost = const [],
   });
 
@@ -691,6 +695,7 @@ class GameTypeScore {
   final int lost;
   final int totalDurationSec;
   final List<OpponentStat> topWon;
+  final List<OpponentStat> topDrawn;
   final List<OpponentStat> topLost;
 
   bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
@@ -703,6 +708,7 @@ class GameTypeScore {
       lost: (json['lost'] as num?)?.toInt() ?? 0,
       totalDurationSec: (json['total_duration_sec'] as num?)?.toInt() ?? 0,
       topWon: GameStats._opponentList(json['top_won']),
+      topDrawn: GameStats._opponentList(json['top_drawn']),
       topLost: GameStats._opponentList(json['top_lost']),
     );
   }

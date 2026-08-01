@@ -181,6 +181,7 @@ class GameStatsBody extends ConsumerWidget {
                   winRate: stats.winRate,
                   totalDurationSec: stats.totalDurationSec,
                   topWon: stats.topWon,
+                  topDrawn: stats.topDrawn,
                   topLost: stats.topLost,
                   narrow: narrow,
                 ),
@@ -195,6 +196,7 @@ class GameStatsBody extends ConsumerWidget {
                     winRate: _winRate(g.won, g.drawn, g.lost),
                     totalDurationSec: g.totalDurationSec,
                     topWon: g.topWon,
+                    topDrawn: g.topDrawn,
                     topLost: g.topLost,
                     narrow: narrow,
                   ),
@@ -287,6 +289,7 @@ class _GameStatsBlock extends StatelessWidget {
     required this.winRate,
     required this.totalDurationSec,
     required this.topWon,
+    required this.topDrawn,
     required this.topLost,
     required this.narrow,
   });
@@ -299,6 +302,7 @@ class _GameStatsBlock extends StatelessWidget {
   final double winRate;
   final int totalDurationSec;
   final List<OpponentStat> topWon;
+  final List<OpponentStat> topDrawn;
   final List<OpponentStat> topLost;
   final bool narrow;
 
@@ -403,17 +407,27 @@ class _GameStatsBlock extends StatelessWidget {
           if (topWon.isNotEmpty) ...[
             const SizedBox(height: 14),
             _OpponentsSection(
-              title: 'Чаще всего побеждали',
+              title: 'Больше всего выиграл у',
               accent: _StatColor.win,
               opponents: topWon,
               metric: _Metric.won,
               nested: true,
             ),
           ],
+          if (topDrawn.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _OpponentsSection(
+              title: 'Больше всего ничьих с',
+              accent: _StatColor.draw,
+              opponents: topDrawn,
+              metric: _Metric.drawn,
+              nested: true,
+            ),
+          ],
           if (topLost.isNotEmpty) ...[
             const SizedBox(height: 14),
             _OpponentsSection(
-              title: 'Чаще всего проигрывали',
+              title: 'Больше всего проиграл',
               accent: _StatColor.loss,
               opponents: topLost,
               metric: _Metric.lost,
@@ -519,7 +533,7 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-enum _Metric { won, lost }
+enum _Metric { won, drawn, lost }
 
 /// Список топа соперников.
 class _OpponentsSection extends StatelessWidget {
@@ -643,7 +657,7 @@ class _MiniScore extends StatelessWidget {
       children: [
         _scoreChip('${stat.won}', _StatColor.win, highlight == _Metric.won),
         const SizedBox(width: 6),
-        _scoreChip('${stat.drawn}', _StatColor.draw, false),
+        _scoreChip('${stat.drawn}', _StatColor.draw, highlight == _Metric.drawn),
         const SizedBox(width: 6),
         _scoreChip('${stat.lost}', _StatColor.loss, highlight == _Metric.lost),
       ],

@@ -334,14 +334,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _exitEditingImmediate();
     });
 
-    Widget scrollableBody(Widget child, {bool expandCard = false}) {
-      if (expandCard) {
-        // Свой профиль: карточка на всю доступную высоту (скролл — внутри карточки).
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          child: child,
-        );
-      }
+    Widget scrollableBody(Widget child) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -393,11 +386,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 Widget buildProfile(ProfileExtra extra) {
                   if (mobile && _isEditing) {
-                    // Узкая полоса свайпа: иначе opaque-зона перекрывает
-                    // чекбокс «Показывать статистику» у левого края.
+                    // translucent edge: чекбокс у левого края остаётся кликабельным.
                     return SwipeBackScope(
                       onBack: _cancelEditing,
-                      edgeWidth: 22,
+                      opaqueEdge: false,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
                         child: SizedBox.expand(
@@ -423,7 +415,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     profileExtra: extra,
                     isEditing: _isEditing,
                     isClosing: _isClosing,
-                    expandToFill: !_isEditing,
                     displayNameController: _displayNameController,
                     displayNameFocus: _displayNameFocus,
                     onStartEdit: () => _startEditing(
@@ -441,8 +432,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }
                   // Важно: при полном заполнении (о себе + коллекции + чипы)
                   // карточка выше экрана — нужен скролл, а не Center.
-                  // Свой профиль (не edit) — растягиваем карточку на весь экран.
-                  return scrollableBody(content, expandCard: !_isEditing);
+                  return scrollableBody(content);
                 }
 
                 return extraAsync.when(
@@ -608,7 +598,6 @@ class _ProfileContent extends StatelessWidget {
     required this.profileExtra,
     required this.isEditing,
     required this.isClosing,
-    required this.expandToFill,
     required this.displayNameController,
     required this.displayNameFocus,
     required this.onStartEdit,
@@ -621,7 +610,6 @@ class _ProfileContent extends StatelessWidget {
   final ProfileExtra profileExtra;
   final bool isEditing;
   final bool isClosing;
-  final bool expandToFill;
   final TextEditingController displayNameController;
   final FocusNode displayNameFocus;
   final VoidCallback onStartEdit;
@@ -630,59 +618,55 @@ class _ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = AnimatedBorderBox(
-      key: cardKey,
-      expand: expandToFill,
-      padding: EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
-      ),
-      child: AnimatedSwitcher(
-        duration: AppDurations.medium,
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.04),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedBorderBox(
+          key: cardKey,
+          padding: EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
+          ),
+          child: AnimatedSwitcher(
+            duration: AppDurations.medium,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.04),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: isEditing
+                ? AnimatedOpacity(
+                    key: const ValueKey('edit'),
+                    opacity: isClosing ? 0 : 1,
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOut,
+                    child: _ProfileEditForm(
+                      key: const ValueKey('edit_form'),
+                      user: user,
+                      profileExtra: profileExtra,
+                      displayNameController: displayNameController,
+                      focusNode: displayNameFocus,
+                      onCancel: onCancelEdit,
+                      onSave: onSave,
+                    ),
+                  )
+                : _ProfileView(
+                    key: const ValueKey('view'),
+                    user: user,
+                    profileExtra: profileExtra,
+                    onEdit: onStartEdit,
+                  ),
           ),
         ),
-        child: isEditing
-            ? AnimatedOpacity(
-                key: const ValueKey('edit'),
-                opacity: isClosing ? 0 : 1,
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOut,
-                child: _ProfileEditForm(
-                  key: const ValueKey('edit_form'),
-                  user: user,
-                  profileExtra: profileExtra,
-                  displayNameController: displayNameController,
-                  focusNode: displayNameFocus,
-                  onCancel: onCancelEdit,
-                  onSave: onSave,
-                ),
-              )
-            : _ProfileView(
-                key: const ValueKey('view'),
-                user: user,
-                profileExtra: profileExtra,
-                onEdit: onStartEdit,
-                expandToFill: expandToFill,
-              ),
-      ),
+      ],
     );
-    if (!expandToFill) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [card],
-      );
-    }
-    return SizedBox.expand(child: card);
   }
 }
 
@@ -692,13 +676,11 @@ class _ProfileView extends ConsumerWidget {
     required this.user,
     required this.profileExtra,
     required this.onEdit,
-    this.expandToFill = false,
   });
 
   final AuthUser user;
   final ProfileExtra profileExtra;
   final VoidCallback onEdit;
-  final bool expandToFill;
 
   String get _displayTitle => user.displayName?.trim().isNotEmpty == true
       ? user.displayName!
@@ -733,192 +715,166 @@ class _ProfileView extends ConsumerWidget {
         ) !=
         null;
 
-    final infoBlock = Column(
-      mainAxisSize: MainAxisSize.min,
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        if (hasFrame)
-          FramedAvatar(
-            size: 80,
-            borderWidth: 4.5,
-            frameCode: caps?.frameCode,
-            frameColor: caps?.frameColor,
-            child: _buildAvatar(),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppColors.accentStart, AppColors.accentEnd],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceCard,
-                shape: BoxShape.circle,
-              ),
-              child: _buildAvatar(),
-            ),
-          ),
-        SizedBox(height: gapAfterAvatar),
-        Text(
-          _displayTitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-          textAlign: TextAlign.center,
-        ),
-        if (user.displayName?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 2),
-          Text(
-            user.email,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-        if (profileExtra.age != null ||
-            (profileExtra.gender != null &&
-                profileExtra.gender!.isNotEmpty)) ...[
-          SizedBox(height: gapSection),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (profileExtra.age != null)
-                _ProfileInfoChip(
-                  icon: Icons.cake_outlined,
-                  label: context.l10n.profileAgeYears(profileExtra.age!),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasFrame)
+              FramedAvatar(
+                size: 80,
+                borderWidth: 4.5,
+                frameCode: caps?.frameCode,
+                frameColor: caps?.frameColor,
+                child: _buildAvatar(),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [AppColors.accentStart, AppColors.accentEnd],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-              if (profileExtra.gender != null &&
-                  profileExtra.gender!.isNotEmpty)
-                _ProfileInfoChip(
-                  icon: isFemaleGender(profileExtra.gender)
-                      ? Icons.female_rounded
-                      : Icons.male_rounded,
-                  label: localizeGender(profileExtra.gender, context.l10n),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    shape: BoxShape.circle,
+                  ),
+                  child: _buildAvatar(),
                 ),
-            ],
-          ),
-        ],
-        if (profileExtra.about != null &&
-            profileExtra.about!.trim().isNotEmpty) ...[
-          SizedBox(height: gapSection),
-          Container(
-            width: double.infinity,
-            constraints: const BoxConstraints(maxHeight: 96),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(16),
+              ),
+            SizedBox(height: gapAfterAvatar),
+            Text(
+              _displayTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+              textAlign: TextAlign.center,
             ),
-            child: SingleChildScrollView(
-              child: Text(
-                profileExtra.about!.trim(),
+            if (user.displayName?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 2),
+              Text(
+                user.email,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: AppColors.textPrimary,
+                  color: AppColors.textSecondary,
                   fontSize: 14,
-                  height: 1.35,
                 ),
                 textAlign: TextAlign.center,
               ),
-            ),
-          ),
-        ],
-        Builder(
-          builder: (context) {
-            final inv = ref.watch(inventoryListProvider).valueOrNull ??
-                const <InventoryItem>[];
-            final collections =
-                inv.where((e) => e.kind == 'collection').toList();
-            if (collections.isEmpty) return const SizedBox.shrink();
-            return Column(
-              children: [
-                SizedBox(height: gapSection + 2),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    context.l10n.profileCollections,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: AppColors.textPrimary,
+            ],
+            if (profileExtra.age != null ||
+                (profileExtra.gender != null &&
+                    profileExtra.gender!.isNotEmpty)) ...[
+              SizedBox(height: gapSection),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (profileExtra.age != null)
+                    _ProfileInfoChip(
+                      icon: Icons.cake_outlined,
+                      label: context.l10n.profileAgeYears(profileExtra.age!),
                     ),
+                  if (profileExtra.gender != null &&
+                      profileExtra.gender!.isNotEmpty)
+                    _ProfileInfoChip(
+                      icon: isFemaleGender(profileExtra.gender)
+                          ? Icons.female_rounded
+                          : Icons.male_rounded,
+                      label: localizeGender(profileExtra.gender, context.l10n),
+                    ),
+                ],
+              ),
+            ],
+            if (profileExtra.about != null &&
+                profileExtra.about!.trim().isNotEmpty) ...[
+              SizedBox(height: gapSection),
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 96),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    profileExtra.about!.trim(),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      height: 1.35,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 8),
-                CollectionShowcaseGrid(items: collections),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-
-    final editButton = OutlinedButton.icon(
-      onPressed: onEdit,
-      icon: const Icon(Icons.edit_outlined, size: 18),
-      label: Text(
-        context.l10n.profileEdit,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.accentStart,
-        padding: EdgeInsets.symmetric(
-          horizontal: 22,
-          vertical: shortScreen ? 11 : 13,
-        ),
-        side: BorderSide(
-          color: AppColors.accentStart.withValues(alpha: 0.6),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-    );
-
-    final Widget column;
-    if (expandToFill) {
-      // Карточка на весь экран: инфо скроллится, «Редактировать» внизу.
-      column = Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: infoBlock,
+              ),
+            ],
+            Builder(
+              builder: (context) {
+                final inv = ref.watch(inventoryListProvider).valueOrNull ??
+                    const <InventoryItem>[];
+                final collections =
+                    inv.where((e) => e.kind == 'collection').toList();
+                if (collections.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  children: [
+                    SizedBox(height: gapSection + 2),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        context.l10n.profileCollections,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CollectionShowcaseGrid(items: collections),
+                  ],
+                );
+              },
             ),
-          ),
-          SizedBox(height: shortScreen ? 16 : 20),
-          editButton,
-        ],
-      );
-    } else {
-      column = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          infoBlock,
-          SizedBox(height: shortScreen ? 16 : 20),
-          editButton,
-        ],
-      );
-    }
-
-    // Иконка статистики — в правом верхнем углу карточки (не в потоке).
-    final body = Stack(
-      clipBehavior: Clip.none,
-      children: [
-        expandToFill ? SizedBox.expand(child: column) : column,
+            SizedBox(height: shortScreen ? 16 : 20),
+            OutlinedButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(
+                context.l10n.profileEdit,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.accentStart,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: shortScreen ? 11 : 13,
+                ),
+                side: BorderSide(
+                  color: AppColors.accentStart.withValues(alpha: 0.6),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Иконка статистики — правый верхний угол карточки.
         Positioned(
           top: 0,
           right: 0,
@@ -928,9 +884,6 @@ class _ProfileView extends ConsumerWidget {
         ),
       ],
     );
-
-    if (!expandToFill) return body;
-    return SizedBox.expand(child: body);
   }
 }
 
@@ -1637,11 +1590,10 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Widget _buildShowStatsCheckbox() {
-    // Кликается только квадрат (не подпись). Слева отступ — зона свайпа
-    // «назад» (SwipeBackScope) иначе перехватывает тапы у края экрана.
+    // Кликается только квадрат (не подпись). Выровнен по левому краю как поля.
     final checked = _showStatsToOthers;
     return Padding(
-      padding: EdgeInsets.fromLTRB(widget.compact ? 28 : 0, 2, 0, 2),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -1649,9 +1601,10 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             behavior: HitTestBehavior.opaque,
             onTap: () => setState(() => _showStatsToOthers = !checked),
             child: SizedBox(
-              width: 44,
-              height: 44,
-              child: Center(
+              width: 40,
+              height: 40,
+              child: Align(
+                alignment: Alignment.centerLeft,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 140),
                   width: 22,
@@ -1673,10 +1626,10 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
           const Expanded(
             child: Text(
-              'Показывать статистику другим игрокам',
+              'Показывать статистику',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

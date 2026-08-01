@@ -65,6 +65,7 @@ type GameTypeStats struct {
 	Lost             int            `json:"lost"`
 	TotalDurationSec int            `json:"total_duration_sec"`
 	TopWon           []OpponentStat `json:"top_won"`
+	TopDrawn         []OpponentStat `json:"top_drawn"`
 	TopLost          []OpponentStat `json:"top_lost"`
 }
 
@@ -153,6 +154,7 @@ func GetGameStatsByType(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 			continue
 		}
 		g.TopWon = []OpponentStat{}
+		g.TopDrawn = []OpponentStat{}
 		g.TopLost = []OpponentStat{}
 		out = append(out, g)
 	}
@@ -205,7 +207,7 @@ func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID u
 }
 
 // GetTopOpponents возвращает соперников, отсортированных по указанному критерию.
-// metric: "won" — больше всего побед над ними; "lost" — больше всего поражений от них.
+// metric: "won" | "drawn" | "lost". В список попадают только с метрикой > 0.
 // gameType пустой — по всем играм; иначе фильтр по типу.
 func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, metric string, limit int, gameType string) ([]OpponentStat, error) {
 	if limit <= 0 || limit > 50 {
@@ -249,7 +251,7 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 		return nil, err
 	}
 
-	// Только соперники с ненулевой метрикой; сортировка в Go.
+	// Только соперники с ненулевой метрикой.
 	filtered := all[:0]
 	switch metric {
 	case "lost":
@@ -259,6 +261,13 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 			}
 		}
 		sortOpponents(filtered, func(a, b OpponentStat) bool { return a.Lost > b.Lost })
+	case "drawn":
+		for _, o := range all {
+			if o.Drawn > 0 {
+				filtered = append(filtered, o)
+			}
+		}
+		sortOpponents(filtered, func(a, b OpponentStat) bool { return a.Drawn > b.Drawn })
 	default:
 		for _, o := range all {
 			if o.Won > 0 {
