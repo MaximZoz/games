@@ -2371,20 +2371,37 @@ class _StatusWithReward extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w400,
           color: AppColors.textPrimary,
           fontSize: fontSize,
         );
+    // maxLines: 1 — статус всегда в одну строку. FittedBox поджимает шрифт,
+    // если длинный текст (напр. «Вы победили, время соперника вышло») не
+    // помещается на узком экране — без переноса и обрезки.
     if (!showReward) {
-      return Text(statusText, textAlign: TextAlign.center, style: style);
+      return FractionallySizedBox(
+        widthFactor: 1,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            statusText,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            style: style,
+          ),
+        ),
+      );
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(
           child: Text(
             statusText,
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: style,
           ),
         ),
