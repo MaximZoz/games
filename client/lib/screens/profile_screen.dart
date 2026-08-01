@@ -14,8 +14,6 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
-import 'package:multigames_client/admin/admin_provider.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
@@ -857,32 +855,7 @@ class _ProfileView extends ConsumerWidget {
                 );
               },
             ),
-            SizedBox(height: shortScreen ? 12 : 16),
-            // Написать в поддержку: открывает обычный чат с системным support-юзером.
-            Builder(builder: (context) {
-              return OutlinedButton.icon(
-                onPressed: () => _openSupport(context, ref),
-                icon: const Icon(Icons.support_agent_rounded, size: 18),
-                label: const Text(
-                  'Поддержка',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.accentStart,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: shortScreen ? 11 : 13,
-                  ),
-                  side: BorderSide(
-                    color: AppColors.accentStart.withValues(alpha: 0.6),
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              );
-            }),
-            SizedBox(height: shortScreen ? 12 : 16),
+            SizedBox(height: shortScreen ? 16 : 20),
             OutlinedButton.icon(
               onPressed: onEdit,
               icon: const Icon(Icons.edit_outlined, size: 18),
@@ -918,34 +891,6 @@ class _ProfileView extends ConsumerWidget {
     );
   }
 
-  /// Открывает диалог с поддержкой: определяет support-юзера, создаёт чат, переходит.
-  Future<void> _openSupport(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(adminRepositoryProvider);
-    final chats = ref.read(chatsRepositoryProvider);
-    try {
-      final support = await repo.getSupportUser();
-      if (support == null) {
-        if (!context.mounted) return;
-        showAppSnackBar(
-          context,
-          message: 'Поддержка недоступна',
-          kind: AppSnackKind.error,
-        );
-        return;
-      }
-      final chatId = await chats.startChat(support.id);
-      if (!context.mounted) return;
-      ref.invalidate(chatsListProvider);
-      context.go('/chats/$chatId?name=${Uri.encodeQueryComponent(support.displayName)}');
-    } catch (e) {
-      if (!context.mounted) return;
-      showAppSnackBar(
-        context,
-        message: formatUserError(e, fallback: 'Не удалось открыть чат'),
-        kind: AppSnackKind.error,
-      );
-    }
-  }
 }
 
 class _ProfileInfoChip extends StatelessWidget {

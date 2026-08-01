@@ -25,6 +25,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
@@ -731,6 +732,30 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       if (mounted) {
         setState(() => _isStartingChat = false);
       }
+    }
+  }
+
+  /// Открывает чат с поддержкой: определяет support-юзера, создаёт чат, открывает.
+  Future<void> _openSupport() async {
+    if (_isStartingChat || _isNavigatingToChat) return;
+    setState(() => _isStartingChat = true);
+    try {
+      final repo = ref.read(adminRepositoryProvider);
+      final support = await repo.getSupportUser();
+      if (!mounted) return;
+      if (support == null) {
+        setState(() => _error = 'Поддержка недоступна');
+        return;
+      }
+      final chatID = await ref.read(chatsRepositoryProvider).startChat(support.id);
+      if (!mounted || chatID.isEmpty) return;
+      unawaited(_loadChats());
+      _openChatRoute(chatID: chatID, peerName: support.displayName);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = 'Не удалось открыть чат с поддержкой');
+    } finally {
+      if (mounted) setState(() => _isStartingChat = false);
     }
   }
 
@@ -1564,6 +1589,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Поддержка — рядом с «Новый чат», на одной строке.
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: _buildHeaderFrameIconButton(
+            icon: Icons.support_agent_rounded,
+            tooltip: 'Поддержка',
+            onPressed: actionBusy ? null : _openSupport,
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 4),
           child: _buildHeaderFrameIconButton(

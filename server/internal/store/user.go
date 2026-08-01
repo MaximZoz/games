@@ -212,6 +212,21 @@ func GetSupportUser(ctx context.Context, pool *pgxpool.Pool) (*User, error) {
 	return scanUser(row)
 }
 
+// EnsureSupportUser создаёт системный аккаунт поддержки, если его нет
+// (например, был удалён). Идемпотентно — вызывается при старте сервера.
+func EnsureSupportUser(ctx context.Context, pool *pgxpool.Pool) error {
+	_, err := GetSupportUser(ctx, pool)
+	if err == nil {
+		return nil // уже есть
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO users (email, password_hash, display_name, is_admin, is_support, avatar_kind)
+		VALUES ('support@zozu', '', 'Поддержка', true, true, 'letter')
+		ON CONFLICT (email) DO UPDATE SET is_support = true, is_admin = true
+	`)
+	return err
+}
+
 func CreateUser(
 	ctx context.Context,
 	pool *pgxpool.Pool,

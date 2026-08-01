@@ -17,6 +17,7 @@ import (
 	"multigames/server/internal/applog"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/mailer"
+	"multigames/server/internal/store"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -174,6 +175,13 @@ func main() {
 		log.Fatalf("Postgres ping: %v", err)
 	}
 	log.Println("Postgres: connected")
+
+	// Гарантировать наличие системного аккаунта поддержки (идемпотентно).
+	if err := store.EnsureSupportUser(ctx, pool); err != nil {
+		log.Printf("Support user: %v", err)
+	} else {
+		log.Println("Support user: ok")
+	}
 
 	redisURL := getEnv("REDIS_URL", "")
 	var rdb *redis.Client
@@ -456,7 +464,6 @@ func main() {
 	mux.Handle("/api/admin/logs/clear", adminAuth(http.HandlerFunc(adminHandler.ClearLogs)))
 	mux.Handle("/api/admin/users/set-admin", adminAuth(http.HandlerFunc(adminHandler.SetAdmin)))
 	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
-	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
 	mux.Handle("/api/admin/users/freeze", adminAuth(http.HandlerFunc(adminHandler.FreezeUser)))
 	mux.Handle("/api/admin/users/grant-coins", adminAuth(http.HandlerFunc(adminHandler.GrantCoins)))
 	mux.Handle("/api/admin/support/chats", adminAuth(http.HandlerFunc(adminHandler.SupportChats)))

@@ -228,11 +228,24 @@ func (h *AdminHandler) SetAdmin(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
 		return
 	}
+	if h.isSupportID(r.Context(), id) {
+		WriteErr(w, r, http.StatusBadRequest, "cannot modify support account")
+		return
+	}
 	if err := store.SetUserAdmin(r.Context(), h.Pool, id, req.IsAdmin); err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// isSupportID проверяет, является ли пользователь системным support-аккаунтом.
+func (h *AdminHandler) isSupportID(ctx context.Context, id uuid.UUID) bool {
+	su, err := store.GetSupportUser(ctx, h.Pool)
+	if err != nil || su == nil {
+		return false
+	}
+	return su.ID == id
 }
 
 // ResetPassword сбрасывает пароль пользователю.
@@ -267,32 +280,10 @@ func (h *AdminHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// DeleteUser удаляет пользователя.
+// DeleteUser отключён: удаление пользователей из админки запрещено
+// (защита системного аккаунта поддержки и чужих данных).
 func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-	var req DeleteUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
-		return
-	}
-	id, err := uuid.Parse(req.UserID)
-	if err != nil {
-		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
-		return
-	}
-	currentID, _ := GetUserID(r.Context())
-	if id == currentID {
-		WriteErr(w, r, http.StatusBadRequest, "cannot delete yourself")
-		return
-	}
-	if err := store.DeleteUser(r.Context(), h.Pool, id); err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
+	WriteErr(w, r, http.StatusForbidden, "user deletion disabled")
 }
 
 // ListLogs возвращает логи, загруженные в БД из файла.
@@ -460,6 +451,10 @@ func (h *AdminHandler) FreezeUser(w http.ResponseWriter, r *http.Request) {
 	currentID, _ := GetUserID(r.Context())
 	if id == currentID {
 		WriteErr(w, r, http.StatusBadRequest, "cannot freeze yourself")
+		return
+	}
+	if h.isSupportID(r.Context(), id) {
+		WriteErr(w, r, http.StatusBadRequest, "cannot freeze support account")
 		return
 	}
 	if err := store.SetUserFrozen(r.Context(), h.Pool, id, req.Frozen); err != nil {

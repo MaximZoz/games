@@ -317,23 +317,6 @@ class AdminRepository {
     }
   }
 
-  Future<void> deleteUser(String userId) async {
-    final response = await _authorizedRequest(
-      (token) => ApiClient.post(
-        Uri.parse('$apiBaseUrl/api/admin/users/delete'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'user_id': userId}),
-        operation: 'AdminRepository.deleteUser',
-      ),
-    );
-    if (response.statusCode != 204) {
-      _throwForErrorResponse(response);
-    }
-  }
-
   Future<void> freezeUser(String userId, bool frozen) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(

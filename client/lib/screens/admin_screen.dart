@@ -615,15 +615,6 @@ class _UserCard extends ConsumerWidget {
                   _showResetPasswordDialog(context);
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                title: const Text('Удалить', style: TextStyle(color: Colors.red)),
-                enabled: !isSelf,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _confirmDelete(context);
-                },
-              ),
               const SizedBox(height: 8),
             ],
           ),
@@ -737,34 +728,6 @@ class _UserCard extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  void _confirmDelete(BuildContext context) {
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Удалить пользователя?'),
-        content: const Text('Действие необратимо.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
-    ).then((ok) async {
-      if (ok != true) return;
-      await _doAction(
-        context,
-        () => repo.deleteUser(user.id),
-        success: 'Пользователь удалён',
-      );
-    });
   }
 }
 
