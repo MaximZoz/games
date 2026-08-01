@@ -737,15 +737,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       final repo = ref.read(gamesRepositoryProvider);
       await repo.inviteToLobby(widget.lobbyId, friendUserId);
       if (context.mounted) {
+        // Без всплывашки: визуальный отклик — кнопка превращается в «Отправлено»
+        // с галочкой (через _invitedFriendIds).
         setState(() {
           _invitedFriendIds.add(friendUserId);
           _invitingFriendIds.remove(friendUserId);
         });
-        showAppSnackBar(
-          context,
-          message: context.l10n.lobbyInviteSent,
-          kind: AppSnackKind.success,
-        );
       }
     } catch (e) {
       if (context.mounted) context.go('/games');

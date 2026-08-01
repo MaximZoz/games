@@ -320,11 +320,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         drawOfferBy.isNotEmpty &&
         drawOfferBy != meId;
     // Крестик — в AppBar.leading (нажимается штатно).
-    // «Сдаться» и «ничья» вынесены в overlay поверх body: Material AppBar
-    // ограничивает hit-test зону leading стандартной высотой тулбара, поэтому
-    // нижние кнопки в нём тапов не получали. В Stack overlay они тапабельны.
-    final topPad = MediaQuery.paddingOf(context).top;
-
+    // «Сдаться» и «ничья» — в AppBar.bottom: стандартный слот для контролов
+    // под тулбаром, гарантированно тапабельный (в отличие от leading с
+    // переполнением или overlay, который перекрывался игровым полем).
     return SwipeBackScope(
       onBack: goBack,
       child: Scaffold(
@@ -362,6 +360,68 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               ),
             ),
           ],
+          // «Сдаться» и «ничья» — в bottom-слоте AppBar: это стандартное
+          // место для контролов под тулбаром, гарантированно тапабельное
+          // (в отличие от leading с переполнением по высоте).
+          bottom: gameActive
+              ? PreferredSize(
+                  preferredSize: const Size.fromHeight(48),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
+                            ),
+                            iconSize: 22,
+                            icon: const Icon(Icons.flag_outlined),
+                            tooltip: context.l10n.gameSurrender,
+                            onPressed: () => _confirmSurrender(context),
+                          ),
+                          if (showDrawButton) ...[
+                            const SizedBox(width: 4),
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
+                              ),
+                              iconSize: 22,
+                              icon: Icon(
+                                opponentOfferedDraw
+                                    ? Icons.handshake_rounded
+                                    : Icons.handshake_outlined,
+                                color: opponentOfferedDraw
+                                    ? AppColors.accentStart
+                                    : (iOfferedDraw
+                                        ? AppColors.accentStart
+                                            .withValues(alpha: 0.45)
+                                        : null),
+                              ),
+                              tooltip: opponentOfferedDraw
+                                  ? context.l10n.gameAcceptDrawTitle
+                                  : (iOfferedDraw
+                                      ? context.l10n.gameDrawOffered
+                                      : context.l10n.gameOfferDraw),
+                              onPressed: iOfferedDraw
+                                  ? null
+                                  : () => opponentOfferedDraw
+                                      ? _confirmAcceptDraw(context)
+                                      : _confirmOfferDraw(context),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : null,
         ),
         body: effectiveGameAsync.when(
         data: (game) {
@@ -693,63 +753,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               if (iWon)
                 Positioned.fill(
                   child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
-                ),
-              // Overlay «сдаться» / «ничья» слева сверху, под AppBar.
-              // Material AppBar не отдаёт тапы кнопкам за пределами тулбара,
-              // поэтому держим их последним ребёнком Stack — поверх контента,
-              // чтобы тапы по ним не перехватывались игровым полем.
-              if (gameActive)
-                Positioned(
-                  left: 2,
-                  top: topPad + kToolbarHeight,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                        iconSize: 22,
-                        icon: const Icon(Icons.flag_outlined),
-                        tooltip: context.l10n.gameSurrender,
-                        onPressed: () => _confirmSurrender(context),
-                      ),
-                      if (showDrawButton) ...[
-                        const SizedBox(height: 4),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 44,
-                            minHeight: 44,
-                          ),
-                          iconSize: 22,
-                          icon: Icon(
-                            opponentOfferedDraw
-                                ? Icons.handshake_rounded
-                                : Icons.handshake_outlined,
-                            color: opponentOfferedDraw
-                                ? AppColors.accentStart
-                                : (iOfferedDraw
-                                    ? AppColors.accentStart
-                                        .withValues(alpha: 0.45)
-                                    : null),
-                          ),
-                          tooltip: opponentOfferedDraw
-                              ? context.l10n.gameAcceptDrawTitle
-                              : (iOfferedDraw
-                                  ? context.l10n.gameDrawOffered
-                                  : context.l10n.gameOfferDraw),
-                          onPressed: iOfferedDraw
-                              ? null
-                              : () => opponentOfferedDraw
-                                  ? _confirmAcceptDraw(context)
-                                  : _confirmOfferDraw(context),
-                        ),
-                      ],
-                    ],
-                  ),
                 ),
             ],
           );
