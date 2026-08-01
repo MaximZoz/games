@@ -2240,6 +2240,9 @@ func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID 
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	// Таймаут ничьи: через 10 сек предложение автоматически снимается,
+	// если его не приняли (состояние сбрасывается у обоих, можно предложить снова).
+	go h.scheduleDrawOfferExpiry(context.Background(), gameID, userID.String())
 	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
 		"type":          "game_state",
 		"game_id":       gameID,
@@ -2313,6 +2316,44 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 		"status":  gameStatusDraw,
 	})
 	writeJSON(w, http.StatusOK, map[string]any{"status": gameStatusDraw, "draw": true})
+}
+
+// scheduleDrawOfferExpiry снимает предложение ничьей через 10 секунд, если
+// его не приняли. Срабатывает только если draw_offer_by всё ещё наш, а игра
+// активна — иначе ничего не делает (ничью приняли/игра кончилась/перепредложили).
+func (h *GamesHandler) scheduleDrawOfferExpiry(ctx context.Context, gameID, offeredBy string) {
+	timer := time.NewTimer(10 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return
+	case <-timer.C:
+	}
+	if h.Rdb == nil {
+		return
+	}
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		return
+	}
+	if strings.TrimSpace(m["draw_offer_by"]) != offeredBy {
+		return // уже принято/снято/перезаписано
+	}
+	if m["status"] != gameStatusActive {
+		return // игра завершилась
+	}
+	if err := h.Rdb.HDel(ctx, key, "draw_offer_by").Err(); err != nil {
+		return
+	}
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+		"type":     "game_state",
+		"game_id":  gameID,
+		"status":   gameStatusActive,
+		"draw_offer_by": "",
+	})
 }
 
 func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
