@@ -49,6 +49,24 @@ type OpponentStat struct {
 	TotalDuration int       `json:"-"`
 }
 
+// GameTypeScore — счёт head-to-head по одному типу игры.
+type GameTypeScore struct {
+	GameType string `json:"game_type"`
+	Won      int    `json:"won"`
+	Drawn    int    `json:"drawn"`
+	Lost     int    `json:"lost"`
+}
+
+// HeadToHead — счёт между двумя игроками с разбивкой по играм.
+type HeadToHead struct {
+	OpponentID  uuid.UUID       `json:"opponent_id"`
+	DisplayName string          `json:"display_name"`
+	Won         int             `json:"won"`
+	Drawn       int             `json:"drawn"`
+	Lost        int             `json:"lost"`
+	Games       []GameTypeScore `json:"games"`
+}
+
 // RecordGameResult сохраняет результат завершённой партии.
 func RecordGameResult(ctx context.Context, pool *pgxpool.Pool, r GameResult) error {
 	gameType := r.GameType
@@ -93,25 +111,49 @@ func GetGameStats(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (Ga
 	return s, nil
 }
 
-// GetHeadToHead возвращает счёт between userID и opponentID (только живые PvP, без ботов).
-func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID uuid.UUID) (OpponentStat, error) {
-	var os OpponentStat
-	os.OpponentID = opponentID
-	err := pool.QueryRow(ctx, `
+// GetHeadToHead возвращает счёт between userID и opponentID (только живые PvP, без ботов),
+// с разбивкой по типу игры.
+func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID uuid.UUID) (HeadToHead, error) {
+	h := HeadToHead{
+		OpponentID: opponentID,
+		Games:      []GameTypeScore{},
+	}
+	_ = pool.QueryRow(ctx, `SELECT COALESCE(display_name, '') FROM users WHERE id = $1`, opponentID).Scan(&h.DisplayName)
+
+	rows, err := pool.Query(ctx, `
 		SELECT
+			COALESCE(NULLIF(game_type, ''), 'tictactoe') AS game_type,
 			COUNT(*) FILTER (WHERE winner_user_id = $1)::int                          AS won,
 			COUNT(*) FILTER (WHERE winner_user_id IS NULL)::int                       AS drawn,
 			COUNT(*) FILTER (WHERE winner_user_id = $2)::int                          AS lost
 		FROM game_results
 		WHERE NOT against_bot
 		  AND ((x_user_id = $1 AND o_user_id = $2) OR (x_user_id = $2 AND o_user_id = $1))
-	`, userID, opponentID).Scan(&os.Won, &os.Drawn, &os.Lost)
+		GROUP BY 1
+		ORDER BY 1
+	`, userID, opponentID)
 	if err != nil {
-		return OpponentStat{}, err
+		return HeadToHead{}, err
 	}
-	// display_name соперника (для показа в UI, если нужно отдельно от попапа).
-	_ = pool.QueryRow(ctx, `SELECT COALESCE(display_name, '') FROM users WHERE id = $1`, opponentID).Scan(&os.DisplayName)
-	return os, nil
+	defer rows.Close()
+
+	for rows.Next() {
+		var g GameTypeScore
+		if err := rows.Scan(&g.GameType, &g.Won, &g.Drawn, &g.Lost); err != nil {
+			return HeadToHead{}, err
+		}
+		if g.Won == 0 && g.Drawn == 0 && g.Lost == 0 {
+			continue
+		}
+		h.Games = append(h.Games, g)
+		h.Won += g.Won
+		h.Drawn += g.Drawn
+		h.Lost += g.Lost
+	}
+	if err := rows.Err(); err != nil {
+		return HeadToHead{}, err
+	}
+	return h, nil
 }
 
 // GetTopOpponents возвращает соперников, отсортированных по указанному критерию.

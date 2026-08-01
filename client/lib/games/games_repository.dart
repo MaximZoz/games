@@ -661,6 +661,32 @@ class OpponentStat {
   }
 }
 
+/// Счёт head-to-head по одному типу игры.
+class GameTypeScore {
+  const GameTypeScore({
+    required this.gameType,
+    required this.won,
+    required this.drawn,
+    required this.lost,
+  });
+
+  final String gameType;
+  final int won;
+  final int drawn;
+  final int lost;
+
+  bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
+
+  factory GameTypeScore.fromJson(Map<String, dynamic> json) {
+    return GameTypeScore(
+      gameType: json['game_type'] as String? ?? 'tictactoe',
+      won: (json['won'] as num?)?.toInt() ?? 0,
+      drawn: (json['drawn'] as num?)?.toInt() ?? 0,
+      lost: (json['lost'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 /// Результат head-to-head: счёт между мной и соперником.
 class HeadToHead {
   const HeadToHead({
@@ -669,6 +695,7 @@ class HeadToHead {
     required this.won,
     required this.drawn,
     required this.lost,
+    this.games = const [],
     this.showStatsToOthers = false,
   });
 
@@ -677,18 +704,48 @@ class HeadToHead {
   final int won;
   final int drawn;
   final int lost;
+  /// Счёт по каждой игре (tictactoe, …).
+  final List<GameTypeScore> games;
   /// Разрешил ли соперник показывать свою статистику другим.
   final bool showStatsToOthers;
 
-  bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
+  bool get isEmpty => won == 0 && drawn == 0 && lost == 0 && games.isEmpty;
 
   factory HeadToHead.fromJson(Map<String, dynamic> json) {
+    final gamesRaw = json['games'];
+    final games = gamesRaw is List
+        ? gamesRaw
+            .whereType<Map>()
+            .map((e) => GameTypeScore.fromJson(Map<String, dynamic>.from(e)))
+            .where((g) => !g.isEmpty)
+            .toList(growable: false)
+        : const <GameTypeScore>[];
+    // Обратная совместимость: если games нет, собираем из суммарных полей.
+    final fallbackGames = games.isNotEmpty
+        ? games
+        : (() {
+            final won = (json['won'] as num?)?.toInt() ?? 0;
+            final drawn = (json['drawn'] as num?)?.toInt() ?? 0;
+            final lost = (json['lost'] as num?)?.toInt() ?? 0;
+            if (won == 0 && drawn == 0 && lost == 0) {
+              return const <GameTypeScore>[];
+            }
+            return [
+              GameTypeScore(
+                gameType: 'tictactoe',
+                won: won,
+                drawn: drawn,
+                lost: lost,
+              ),
+            ];
+          })();
     return HeadToHead(
       opponentId: json['opponent_id'] as String? ?? '',
       displayName: json['display_name'] as String? ?? '',
       won: (json['won'] as num?)?.toInt() ?? 0,
       drawn: (json['drawn'] as num?)?.toInt() ?? 0,
       lost: (json['lost'] as num?)?.toInt() ?? 0,
+      games: fallbackGames,
       showStatsToOthers: json['show_stats_to_others'] as bool? ?? false,
     );
   }

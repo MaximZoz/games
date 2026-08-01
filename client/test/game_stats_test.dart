@@ -71,6 +71,14 @@ void main() {
         'drawn': 1,
         'lost': 2,
         'show_stats_to_others': true,
+        'games': [
+          {
+            'game_type': 'tictactoe',
+            'won': 3,
+            'drawn': 1,
+            'lost': 2,
+          },
+        ],
       });
       expect(h.opponentId, 'u1');
       expect(h.won, 3);
@@ -78,12 +86,27 @@ void main() {
       expect(h.lost, 2);
       expect(h.showStatsToOthers, isTrue);
       expect(h.isEmpty, isFalse);
+      expect(h.games, hasLength(1));
+      expect(h.games.first.gameType, 'tictactoe');
+      expect(h.games.first.won, 3);
+    });
+
+    test('fromJson falls back to tictactoe when games missing', () {
+      final h = HeadToHead.fromJson({
+        'won': 1,
+        'drawn': 0,
+        'lost': 2,
+      });
+      expect(h.games, hasLength(1));
+      expect(h.games.first.gameType, 'tictactoe');
+      expect(h.games.first.lost, 2);
     });
 
     test('isEmpty when all zeros', () {
       final h = HeadToHead.fromJson({});
       expect(h.isEmpty, isTrue);
       expect(h.won, 0);
+      expect(h.games, isEmpty);
       expect(h.showStatsToOthers, isFalse);
     });
   });

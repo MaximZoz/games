@@ -2869,11 +2869,12 @@ func (h *GamesHandler) GetHeadToHead(w http.ResponseWriter, r *http.Request) {
 		showStats = opponent.ShowStatsToOthers
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"opponent_id":           h2h.OpponentID,
-		"display_name":          h2h.DisplayName,
-		"won":                   h2h.Won,
-		"drawn":                 h2h.Drawn,
-		"lost":                  h2h.Lost,
-		"show_stats_to_others":  showStats,
+		"opponent_id":          h2h.OpponentID,
+		"display_name":         h2h.DisplayName,
+		"won":                  h2h.Won,
+		"drawn":                h2h.Drawn,
+		"lost":                 h2h.Lost,
+		"games":                h2h.Games,
+		"show_stats_to_others": showStats,
 	})
 }

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Секция счёта head-to-head в попапе профиля.
+/// Секция счёта head-to-head в попапе профиля при клике на игрока.
 ///
-/// Заголовок «Ваш счёт» над карточкой. В карточке — крупные иконки
-/// победа/поражение/ничья и цифры сверху вниз. Сразу за карточкой —
-/// иконка статистики (без текста), если соперник разрешил показ.
+/// По каждой игре: иконка игры + цифры победа/поражение/ничья сверху вниз
+/// на высоту иконки. Сразу за блоком — иконка статистики (если разрешено).
 class HeadToHeadSection extends ConsumerWidget {
   const HeadToHeadSection({
     super.key,
@@ -32,14 +32,11 @@ class HeadToHeadSection extends ConsumerWidget {
         loading: () => const _HeadToHeadSkeleton(),
         error: (_, __) => const SizedBox.shrink(),
         data: (h2h) {
-          final hasScore = !h2h.isEmpty;
+          final games = h2h.games;
           final showStats = h2h.showStatsToOthers;
-          if (!hasScore && !showStats) return const SizedBox.shrink();
+          if (games.isEmpty && !showStats) return const SizedBox.shrink();
           return _HeadToHeadBody(
-            won: h2h.won,
-            drawn: h2h.drawn,
-            lost: h2h.lost,
-            hasScore: hasScore,
+            games: games,
             showStats: showStats,
             onTapStats: () => showGameStatsDialog(
               context,
@@ -55,23 +52,18 @@ class HeadToHeadSection extends ConsumerWidget {
 
 class _HeadToHeadBody extends StatelessWidget {
   const _HeadToHeadBody({
-    required this.won,
-    required this.drawn,
-    required this.lost,
-    required this.hasScore,
+    required this.games,
     required this.showStats,
     required this.onTapStats,
   });
 
-  final int won;
-  final int drawn;
-  final int lost;
-  final bool hasScore;
+  final List<GameTypeScore> games;
   final bool showStats;
   final VoidCallback onTapStats;
 
   @override
   Widget build(BuildContext context) {
+    final hasScore = games.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -90,10 +82,27 @@ class _HeadToHeadBody extends StatelessWidget {
           children: [
             if (hasScore)
               Flexible(
-                child: ScoreTripletCard(
-                  won: won,
-                  lost: lost,
-                  drawn: drawn,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      for (final g in games)
+                        GameTypeScoreChip(
+                          gameType: g.gameType,
+                          won: g.won,
+                          lost: g.lost,
+                          drawn: g.drawn,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             if (hasScore && showStats) const SizedBox(width: 8),
@@ -105,7 +114,128 @@ class _HeadToHeadBody extends StatelessWidget {
   }
 }
 
-/// Карточка W/L/D: крупные иконки слева, цифры сверху вниз справа.
+/// Одна игра: иконка + цифры W/L/D сверху вниз на высоту иконки.
+class GameTypeScoreChip extends StatelessWidget {
+  const GameTypeScoreChip({
+    super.key,
+    required this.gameType,
+    required this.won,
+    required this.lost,
+    required this.drawn,
+    this.iconSize = 56,
+  });
+
+  final String gameType;
+  final int won;
+  final int lost;
+  final int drawn;
+  final double iconSize;
+
+  static const _win = Color(0xFF2E7D32);
+  static const _loss = Color(0xFFC62828);
+  static const _draw = Color(0xFFF9A825);
+
+  IconData get _gameIcon {
+    switch (gameType) {
+      case 'tictactoe':
+        return Icons.grid_3x3_rounded;
+      default:
+        return Icons.sports_esports_rounded;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final digitHeight = iconSize / 3;
+    final fontSize = (digitHeight * 0.78).clamp(12.0, 18.0);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: iconSize,
+          height: iconSize,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.accentStart, AppColors.accentEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            _gameIcon,
+            color: Colors.white,
+            size: iconSize * 0.48,
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          height: iconSize,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DigitLine(
+                value: won,
+                color: _win,
+                height: digitHeight,
+                fontSize: fontSize,
+              ),
+              _DigitLine(
+                value: lost,
+                color: _loss,
+                height: digitHeight,
+                fontSize: fontSize,
+              ),
+              _DigitLine(
+                value: drawn,
+                color: _draw,
+                height: digitHeight,
+                fontSize: fontSize,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DigitLine extends StatelessWidget {
+  const _DigitLine({
+    required this.value,
+    required this.color,
+    required this.height,
+    required this.fontSize,
+  });
+
+  final int value;
+  final Color color;
+  final double height;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          '$value',
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w800,
+            height: 1,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Карточка суммарного W/L/D (свой профиль): цветные иконки + цифры.
 class ScoreTripletCard extends StatelessWidget {
   const ScoreTripletCard({
     super.key,
@@ -137,7 +267,6 @@ class ScoreTripletCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Иконки победа / поражение / ничья — высота как у трёх цифр.
           const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -267,7 +396,7 @@ class _HeadToHeadSkeleton extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Container(
-          height: 96,
+          height: 76,
           decoration: BoxDecoration(
             color: AppColors.accentSoft.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(14),
