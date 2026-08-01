@@ -1838,7 +1838,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
                 ],
                 PeerCollectionsSection(userId: user.id),
-                HeadToHeadSection(opponentId: user.id),
+                HeadToHeadSection(
+                  opponentId: user.id,
+                  opponentName: user.displayName,
+                ),
               ],
             ),
           ),

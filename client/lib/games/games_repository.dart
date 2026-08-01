@@ -1063,11 +1063,15 @@ class GamesRepository {
     return UserGameSettings.fromJson(body);
   }
 
-  /// GET /api/games/stats — своя статистика (W/D/L, win-rate, время, топ соперников).
-  Future<GameStats> getStats() async {
+  /// GET /api/games/stats — статистика (W/D/L, win-rate, время, топ соперников).
+  /// Без [userId] — своя статистика; с [userId] — статистика другого игрока.
+  Future<GameStats> getStats({String? userId}) async {
+    final uri = userId == null || userId.isEmpty
+        ? Uri.parse('$apiBaseUrl/api/games/stats')
+        : Uri.parse('$apiBaseUrl/api/games/stats?user_id=$userId');
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
-        Uri.parse('$apiBaseUrl/api/games/stats'),
+        uri,
         headers: {'Authorization': 'Bearer $token'},
         operation: 'GamesRepository.getStats',
       ),

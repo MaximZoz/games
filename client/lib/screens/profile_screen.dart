@@ -847,7 +847,7 @@ class _ProfileView extends ConsumerWidget {
         ),
         Builder(
           builder: (context) {
-            final stats = ref.watch(gameStatsProvider).valueOrNull;
+            final stats = ref.watch(gameStatsProvider(null)).valueOrNull;
             return _StatsPreviewCard(stats: stats);
           },
         ),
@@ -1959,7 +1959,8 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
   }
 }
 
-/// Карточка-превью статистики в профиле. Тап → экран полной статистики.
+/// Карточка статистики в профиле: иконка игры + W/D/L иконки горизонтально
+/// (тот же стиль, что в попапе игрока). Тап → экран полной статистики.
 class _StatsPreviewCard extends StatelessWidget {
   const _StatsPreviewCard({required this.stats});
 
@@ -1975,7 +1976,7 @@ class _StatsPreviewCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: () => context.go('/profile/stats'),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.surfaceCard,
               borderRadius: BorderRadius.circular(16),
@@ -1985,46 +1986,57 @@ class _StatsPreviewCard extends StatelessWidget {
             ),
             child: Row(
               children: [
+                const Text(
+                  'Статистика',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Иконка игры (крестики-нолики) — единая со стилем попапа.
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      colors: [AppColors.accentStart, AppColors.accentEnd],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
-                    Icons.bar_chart_rounded,
-                    color: AppColors.accentStart,
-                    size: 22,
+                    Icons.grid_3x3_rounded,
+                    color: Colors.white,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Статистика',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _subtitle(),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                const Spacer(),
+                // W/D/L горизонтально — тот же стиль, что в попапе игрока.
+                _ProfileScoreItem(
+                  icon: Icons.check_circle_rounded,
+                  value: stats?.wins,
+                  color: const Color(0xFF2E7D32),
                 ),
+                const SizedBox(width: 10),
+                _ProfileScoreItem(
+                  icon: Icons.remove_circle_rounded,
+                  value: stats?.draws,
+                  color: const Color(0xFFF9A825),
+                ),
+                const SizedBox(width: 10),
+                _ProfileScoreItem(
+                  icon: Icons.cancel_rounded,
+                  value: stats?.losses,
+                  color: const Color(0xFFC62828),
+                ),
+                const SizedBox(width: 6),
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.textSecondary,
+                  size: 20,
                 ),
               ],
             ),
@@ -2033,11 +2045,36 @@ class _StatsPreviewCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _subtitle() {
-    if (stats == null) return 'Загрузка…';
-    final s = stats!;
-    if (s.isEmpty) return 'Нет сыгранных партий';
-    return '${s.wins}В · ${s.draws}Н · ${s.losses}П';
+class _ProfileScoreItem extends StatelessWidget {
+  const _ProfileScoreItem({
+    required this.icon,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final int? value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = value != null;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 3),
+        Text(
+          hasValue ? '$value' : '–',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+      ],
+    );
   }
 }

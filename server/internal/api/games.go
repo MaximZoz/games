@@ -2788,23 +2788,31 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 // (победы/ничьи/поражения, всего партий, win-rate, суммарное время в игре)
 // и топ соперников (больше всего побед/поражений).
 func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
-	userID, ok := currentUserIDFromGames(r)
+	currentID, ok := currentUserIDFromGames(r)
 	if !ok {
 		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
+	// Опциональный user_id: если задан и не равен текущему — статистика
+	// другого игрока (для перехода из попапа профиля). Иначе — своя.
+	targetID := currentID
+	if raw := strings.TrimSpace(r.URL.Query().Get("user_id")); raw != "" {
+		if parsed, err := uuid.Parse(raw); err == nil {
+			targetID = parsed
+		}
+	}
 	ctx := r.Context()
-	stats, err := store.GetGameStats(ctx, h.Pool, userID)
+	stats, err := store.GetGameStats(ctx, h.Pool, targetID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topWon, err := store.GetTopOpponents(ctx, h.Pool, userID, "won", 5)
+	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topLost, err := store.GetTopOpponents(ctx, h.Pool, userID, "lost", 5)
+	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 5)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return

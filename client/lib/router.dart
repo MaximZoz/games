@@ -303,8 +303,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'stats',
-                    pageBuilder: (_, state) =>
-                        _noTransitionPage(state, const GameStatsScreen()),
+                    pageBuilder: (_, state) {
+                      final uid = state.uri.queryParameters['user_id'];
+                      final name = state.uri.queryParameters['name'];
+                      return _noTransitionPage(
+                        state,
+                        GameStatsScreen(
+                          userId: (uid == null || uid.isEmpty) ? null : uid,
+                          displayName: name,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

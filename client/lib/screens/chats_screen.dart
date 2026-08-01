@@ -1544,7 +1544,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                   ),
                 ],
                 PeerCollectionsSection(userId: user.id),
-                HeadToHeadSection(opponentId: user.id),
+                HeadToHeadSection(
+                  opponentId: user.id,
+                  opponentName: user.displayName,
+                ),
               ],
             ),
           ),

@@ -222,7 +222,10 @@ class _GiftFriendPickerDialogState
                     ),
                   ],
                   PeerCollectionsSection(userId: user.id),
-                  HeadToHeadSection(opponentId: user.id),
+                  HeadToHeadSection(
+                    opponentId: user.id,
+                    opponentName: user.displayName,
+                  ),
                 ],
               ),
             ),

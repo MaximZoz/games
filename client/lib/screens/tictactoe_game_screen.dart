@@ -1300,7 +1300,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ),
                     ],
                     PeerCollectionsSection(userId: opponentId),
-                    HeadToHeadSection(opponentId: opponentId),
+                    HeadToHeadSection(
+                      opponentId: opponentId,
+                      opponentName: friendUser?.displayName ?? displayName,
+                    ),
                   ],
                 );
               },

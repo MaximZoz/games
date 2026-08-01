@@ -7,89 +7,107 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 /// Полный экран статистики игрока: победы/ничьи/поражения, win-rate,
 /// время в игре, топ соперников (больше всего выиграл / проиграл).
+///
+/// [userId] — чью статистику показать. null/пусто — своя.
 class GameStatsScreen extends ConsumerWidget {
-  const GameStatsScreen({super.key});
+  const GameStatsScreen({super.key, this.userId, this.displayName});
+
+  final String? userId;
+  final String? displayName;
+
+  bool get _isOwn => userId == null || userId!.isEmpty;
+
+  void _goBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/profile');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(gameStatsProvider);
+    final statsAsync = ref.watch(gameStatsProvider(userId));
     final narrow = MediaQuery.sizeOf(context).shortestSide < 700;
-    return Scaffold(
-      backgroundColor: AppColors.surfaceUnified,
-      appBar: AppBar(
+    final title = _isOwn
+        ? 'Статистика'
+        : (displayName?.trim().isNotEmpty == true ? displayName! : 'Игрок');
+    return SwipeBackScope(
+      onBack: () => _goBack(context),
+      child: Scaffold(
         backgroundColor: AppColors.surfaceUnified,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: 'Назад',
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/profile');
-            }
-          },
-        ),
-        title: const Text(
-          'Статистика',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+        appBar: AppBar(
+          backgroundColor: AppColors.surfaceUnified,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: 'Назад',
+            onPressed: () => _goBack(context),
           ),
-        ),
-      ),
-      body: statsAsync.when(
-        loading: () => const Padding(
-          padding: EdgeInsets.all(24),
-          child: _StatsSkeleton(),
-        ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'Не удалось загрузить статистику',
-              style: const TextStyle(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
+          title: Text(
+            _isOwn ? 'Статистика' : title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
-        data: (stats) => stats.isEmpty
-            ? const _EmptyStats()
-            : ListView(
-                padding: EdgeInsets.fromLTRB(
-                  narrow ? 12 : 24,
-                  4,
-                  narrow ? 12 : 24,
-                  32,
-                ),
-                children: [
-                  _SummarySection(stats: stats, narrow: narrow),
-                  const SizedBox(height: 16),
-                  _TimeSection(totalDurationSec: stats.totalDurationSec),
-                  const SizedBox(height: 16),
-                  if (stats.topWon.isNotEmpty) ...[
-                    _OpponentsSection(
-                      title: 'Чаще всего побеждали',
-                      accent: _StatColor.win,
-                      opponents: stats.topWon,
-                      metric: _Metric.won,
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (stats.topLost.isNotEmpty) ...[
-                    _OpponentsSection(
-                      title: 'Чаще всего проигрывали',
-                      accent: _StatColor.loss,
-                      opponents: stats.topLost,
-                      metric: _Metric.lost,
-                    ),
-                  ],
-                ],
+        body: statsAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(24),
+            child: _StatsSkeleton(),
+          ),
+          error: (e, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Не удалось загрузить статистику',
+                style: const TextStyle(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
               ),
+            ),
+          ),
+          data: (stats) => stats.isEmpty
+              ? const _EmptyStats()
+              : ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    narrow ? 12 : 24,
+                    4,
+                    narrow ? 12 : 24,
+                    32,
+                  ),
+                  children: [
+                    _SummarySection(stats: stats, narrow: narrow),
+                    const SizedBox(height: 16),
+                    _TimeSection(totalDurationSec: stats.totalDurationSec),
+                    const SizedBox(height: 16),
+                    if (stats.topWon.isNotEmpty) ...[
+                      _OpponentsSection(
+                        title: 'Чаще всего побеждали',
+                        accent: _StatColor.win,
+                        opponents: stats.topWon,
+                        metric: _Metric.won,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (stats.topLost.isNotEmpty) ...[
+                      _OpponentsSection(
+                        title: 'Чаще всего проигрывали',
+                        accent: _StatColor.loss,
+                        opponents: stats.topLost,
+                        metric: _Metric.lost,
+                      ),
+                    ],
+                  ],
+                ),
+        ),
       ),
     );
   }

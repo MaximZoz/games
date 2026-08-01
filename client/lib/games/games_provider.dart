@@ -323,11 +323,12 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
   }
 }
 
-/// Статистика текущего игрока (W/D/L, win-rate, время, топ соперников).
+/// Статистика игрока (W/D/L, win-rate, время, топ соперников).
+/// Параметр — userId статистики: null/пусто = своя статистика.
 final gameStatsProvider =
-    FutureProvider.autoDispose<GameStats>((ref) async {
+    FutureProvider.autoDispose.family<GameStats, String?>((ref, userId) async {
   final repo = ref.watch(gamesRepositoryProvider);
-  return repo.getStats();
+  return repo.getStats(userId: userId);
 });
 
 /// Счёт head-to-head между текущим игроком и указанным соперником.
