@@ -10,7 +10,12 @@ class AdminUserItem {
   final String email;
   final String? displayName;
   final bool isAdmin;
+  final bool isSupport;
+  final bool isFrozen;
+  final String? frozenAt;
   final String createdAt;
+  final String? lastSeenAt;
+  final int balanceBronze;
   final int? age;
   final String? gender;
   final String? about;
@@ -22,7 +27,12 @@ class AdminUserItem {
     required this.email,
     this.displayName,
     required this.isAdmin,
+    this.isSupport = false,
+    this.isFrozen = false,
+    this.frozenAt,
     required this.createdAt,
+    this.lastSeenAt,
+    this.balanceBronze = 0,
     this.age,
     this.gender,
     this.about,
@@ -36,7 +46,12 @@ class AdminUserItem {
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
       isAdmin: json['is_admin'] as bool? ?? false,
+      isSupport: json['is_support'] as bool? ?? false,
+      isFrozen: json['is_frozen'] as bool? ?? false,
+      frozenAt: json['frozen_at'] as String?,
       createdAt: json['created_at'] as String? ?? '',
+      lastSeenAt: json['last_seen_at'] as String?,
+      balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
       age: json['age'] as int?,
       gender: json['gender'] as String?,
       about: json['about'] as String?,
@@ -46,57 +61,154 @@ class AdminUserItem {
   }
 }
 
-class AdminLogItem {
-  final String eventId;
-  final String eventTime;
-  final String source;
-  final String methodName;
-  final String? httpMethod;
-  final String? path;
-  final int? statusCode;
-  final int? durationMs;
-  final String? userId;
-  final String? ip;
-  final String? userAgent;
-  final String level;
-  final String? message;
-  final Map<String, dynamic>? metadata;
-
-  AdminLogItem({
-    required this.eventId,
-    required this.eventTime,
-    required this.source,
-    required this.methodName,
-    this.httpMethod,
-    this.path,
-    this.statusCode,
-    this.durationMs,
-    this.userId,
-    this.ip,
-    this.userAgent,
-    required this.level,
-    this.message,
-    this.metadata,
+/// Параметры поиска/сортировки/пагинации пользователей админкой.
+class AdminUsersQuery {
+  const AdminUsersQuery({
+    this.q = '',
+    this.sort = 'created_at',
+    this.order = 'desc',
+    this.adminFilter = 'all',
+    this.frozenFilter = 'all',
+    this.limit = 20,
+    this.offset = 0,
   });
 
-  factory AdminLogItem.fromJson(Map<String, dynamic> json) {
-    return AdminLogItem(
-      eventId: json['event_id'] as String? ?? '',
-      eventTime: json['event_time'] as String? ?? '',
-      source: json['source'] as String? ?? '',
-      methodName: json['method_name'] as String? ?? '',
-      httpMethod: json['http_method'] as String?,
-      path: json['path'] as String?,
-      statusCode: json['status_code'] as int?,
-      durationMs: json['duration_ms'] as int?,
-      userId: json['user_id'] as String?,
-      ip: json['ip'] as String?,
-      userAgent: json['user_agent'] as String?,
-      level: json['level'] as String? ?? 'info',
-      message: json['message'] as String?,
-      metadata: json['metadata'] == null
-          ? null
-          : Map<String, dynamic>.from(json['metadata'] as Map),
+  final String q;
+  final String sort; // created_at | last_seen | email
+  final String order; // asc | desc
+  final String adminFilter; // all | admin | user
+  final String frozenFilter; // all | frozen | active
+  final int limit;
+  final int offset;
+
+  AdminUsersQuery copyWith({
+    String? q,
+    String? sort,
+    String? order,
+    String? adminFilter,
+    String? frozenFilter,
+    int? limit,
+    int? offset,
+  }) {
+    return AdminUsersQuery(
+      q: q ?? this.q,
+      sort: sort ?? this.sort,
+      order: order ?? this.order,
+      adminFilter: adminFilter ?? this.adminFilter,
+      frozenFilter: frozenFilter ?? this.frozenFilter,
+      limit: limit ?? this.limit,
+      offset: offset ?? this.offset,
+    );
+  }
+
+  Map<String, String> toQueryParams() {
+    return {
+      if (q.trim().isNotEmpty) 'q': q.trim(),
+      'sort': sort,
+      'order': order,
+      'admin': adminFilter,
+      'frozen': frozenFilter,
+      'limit': '$limit',
+      'offset': '$offset',
+    };
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AdminUsersQuery &&
+          q == other.q &&
+          sort == other.sort &&
+          order == other.order &&
+          adminFilter == other.adminFilter &&
+          frozenFilter == other.frozenFilter &&
+          limit == other.limit &&
+          offset == other.offset;
+
+  @override
+  int get hashCode => Object.hash(
+      q, sort, order, adminFilter, frozenFilter, limit, offset);
+}
+
+/// Страница списка пользователей.
+class AdminUsersPage {
+  final List<AdminUserItem> users;
+  final int total;
+
+  const AdminUsersPage({required this.users, required this.total});
+}
+
+/// Превью диалога поддержки.
+class SupportChatItem {
+  final String chatId;
+  final String peerId;
+  final String? peerName;
+  final String? lastMessage;
+  final String? lastMessageAt;
+  final int unreadCount;
+  final String? avatarKind;
+  final String? avatarValue;
+
+  const SupportChatItem({
+    required this.chatId,
+    required this.peerId,
+    this.peerName,
+    this.lastMessage,
+    this.lastMessageAt,
+    this.unreadCount = 0,
+    this.avatarKind,
+    this.avatarValue,
+  });
+
+  factory SupportChatItem.fromJson(Map<String, dynamic> json) {
+    return SupportChatItem(
+      chatId: json['id'] as String? ?? '',
+      peerId: json['peer_id'] as String? ?? json['user_id'] as String? ?? '',
+      peerName: json['peer_name'] as String? ?? json['display_name'] as String?,
+      lastMessage: json['last_message'] as String?,
+      lastMessageAt: json['last_message_at'] as String? ?? json['created_at'] as String?,
+      unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      avatarKind: json['avatar_kind'] as String?,
+      avatarValue: json['avatar_value'] as String?,
+    );
+  }
+}
+
+/// Сообщение поддержки (переиспользует формат чата).
+class SupportMessageItem {
+  final String id;
+  final String body;
+  final String createdAt;
+  final bool isMine; // true — от поддержки (админ)
+
+  const SupportMessageItem({
+    required this.id,
+    required this.body,
+    required this.createdAt,
+    required this.isMine,
+  });
+
+  factory SupportMessageItem.fromJson(Map<String, dynamic> json, String myUserId) {
+    return SupportMessageItem(
+      id: json['id'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      createdAt: json['created_at'] as String? ?? '',
+      isMine: (json['sender_user_id'] as String?) == myUserId,
+    );
+  }
+}
+
+/// Контакт аккаунта поддержки (для обычного пользователя).
+class SupportContact {
+  final String id;
+  final String displayName;
+
+  const SupportContact({required this.id, required this.displayName});
+
+  factory SupportContact.fromJson(Map<String, dynamic> json) {
+    return SupportContact(
+      id: json['id'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? 'Поддержка',
     );
   }
 }
@@ -148,10 +260,11 @@ class AdminRepository {
     return map[m] ?? msg;
   }
 
-  Future<List<AdminUserItem>> listUsers() async {
+  Future<AdminUsersPage> listUsers(AdminUsersQuery query) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
-        Uri.parse('$apiBaseUrl/api/admin/users'),
+        Uri.parse('$apiBaseUrl/api/admin/users')
+            .replace(queryParameters: query.toQueryParams()),
         headers: {'Authorization': 'Bearer $token'},
         operation: 'AdminRepository.listUsers',
       ),
@@ -160,10 +273,14 @@ class AdminRepository {
       _throwForErrorResponse(response);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final list = body['users'] as List<dynamic>;
-    return list
+    final list = body['users'] as List<dynamic>? ?? const [];
+    final users = list
         .map((e) => AdminUserItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
+    return AdminUsersPage(
+      users: users,
+      total: (body['total'] as num?)?.toInt() ?? users.length,
+    );
   }
 
   Future<void> setAdmin(String userId, bool isAdmin) async {
@@ -217,55 +334,119 @@ class AdminRepository {
     }
   }
 
-  Future<List<AdminLogItem>> listLogs({
-    int limit = 100,
-    int offset = 0,
-    String? userId,
-    String? source,
-    String? methodName,
-    DateTime? from,
-    DateTime? to,
-  }) async {
-    final query = <String, String>{
-      'limit': '$limit',
-      'offset': '$offset',
-      if (userId != null && userId.isNotEmpty) 'user_id': userId,
-      if (source != null && source.isNotEmpty) 'source': source,
-      if (methodName != null && methodName.isNotEmpty) 'method_name': methodName,
-      if (from != null) 'from': from.toUtc().toIso8601String(),
-      if (to != null) 'to': to.toUtc().toIso8601String(),
-    };
+  Future<void> freezeUser(String userId, bool frozen) async {
     final response = await _authorizedRequest(
-      (token) => ApiClient.get(
-        Uri.parse('$apiBaseUrl/api/admin/logs').replace(queryParameters: query),
-        headers: {'Authorization': 'Bearer $token'},
-        operation: 'AdminRepository.listLogs',
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/admin/users/freeze'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'user_id': userId, 'frozen': frozen}),
+        operation: 'AdminRepository.freezeUser',
+      ),
+    );
+    if (response.statusCode != 204) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<int> grantCoins(String userId, int amountBronze, {String reason = ''}) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/admin/users/grant-coins'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'user_id': userId,
+          'amount_bronze': amountBronze,
+          'reason': reason,
+        }),
+        operation: 'AdminRepository.grantCoins',
       ),
     );
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final list = body['logs'] as List<dynamic>? ?? const [];
+    return (body['balance_bronze'] as num?)?.toInt() ?? 0;
+  }
+
+  Future<List<SupportChatItem>> listSupportChats() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/admin/support/chats'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AdminRepository.listSupportChats',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['chats'] as List<dynamic>? ?? const [];
     return list
-        .map((e) => AdminLogItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map((e) => SupportChatItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
 
-  Future<void> clearLogs() async {
+  Future<List<SupportMessageItem>> listSupportMessages(
+    String userId,
+    String myUserId,
+  ) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/admin/support/chats/$userId/messages'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AdminRepository.listSupportMessages',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['messages'] as List<dynamic>? ?? const [];
+    return list
+        .map((e) => SupportMessageItem.fromJson(
+              Map<String, dynamic>.from(e as Map),
+              myUserId,
+            ))
+        .toList();
+  }
+
+  Future<void> sendSupportMessage(String userId, String body) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
-        Uri.parse('$apiBaseUrl/api/admin/logs/clear'),
+        Uri.parse('$apiBaseUrl/api/admin/support/chats/$userId/messages'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        operation: 'AdminRepository.clearLogs',
+        body: jsonEncode({'body': body}),
+        operation: 'AdminRepository.sendSupportMessage',
       ),
     );
-    if (response.statusCode != 204) {
+    if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
+  }
+
+  Future<SupportContact?> getSupportUser() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/support-user'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AdminRepository.getSupportUser',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    if (body.isEmpty) return null;
+    return SupportContact.fromJson(body);
   }
 }
 

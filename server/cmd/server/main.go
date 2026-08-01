@@ -359,6 +359,7 @@ func main() {
 		JWTSecret:   []byte(jwtSecret),
 		InitSecret:  adminInitSecret,
 		LogImporter: logImporter,
+		Hub:         realtimeHub,
 	}
 	frontendLogHandler := &api.FrontendLogHandler{
 		Writer:    logWriter,
@@ -401,6 +402,7 @@ func main() {
 	})
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/ws", http.HandlerFunc(wsHandler.ServeHTTP))
+	mux.Handle("/api/support-user", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(adminHandler.SupportUserInfo)))
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
@@ -455,6 +457,10 @@ func main() {
 	mux.Handle("/api/admin/users/set-admin", adminAuth(http.HandlerFunc(adminHandler.SetAdmin)))
 	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
 	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
+	mux.Handle("/api/admin/users/freeze", adminAuth(http.HandlerFunc(adminHandler.FreezeUser)))
+	mux.Handle("/api/admin/users/grant-coins", adminAuth(http.HandlerFunc(adminHandler.GrantCoins)))
+	mux.Handle("/api/admin/support/chats", adminAuth(http.HandlerFunc(adminHandler.SupportChats)))
+	mux.Handle("/api/admin/support/chats/", adminAuth(http.HandlerFunc(adminHandler.SupportMessages)))
 
 	directDB := appLogEnabled
 	corsHandler := api.CORS(api.RequestLogger([]byte(jwtSecret), logWriter, pool, directDB, mux))

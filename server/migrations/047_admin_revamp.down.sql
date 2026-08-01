@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS admin_coin_grants;
+ALTER TABLE users DROP COLUMN IF EXISTS is_support;
+ALTER TABLE users DROP COLUMN IF EXISTS frozen_at;

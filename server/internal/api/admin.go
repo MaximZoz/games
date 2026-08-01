@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -21,6 +22,7 @@ type AdminHandler struct {
 	JWTSecret   []byte
 	InitSecret  string // секрет для однократного создания первого админа
 	LogImporter *applog.Importer
+	Hub         *RealtimeHub // для WS-уведомлений админу/пользователю
 }
 
 type AdminInitRequest struct {
@@ -29,16 +31,51 @@ type AdminInitRequest struct {
 }
 
 type AdminUserItem struct {
-	ID          string  `json:"id"`
-	Email       string  `json:"email"`
-	DisplayName *string `json:"display_name,omitempty"`
-	IsAdmin     bool    `json:"is_admin"`
-	CreatedAt   string  `json:"created_at"`
-	Age         *int    `json:"age,omitempty"`
-	Gender      *string `json:"gender,omitempty"`
-	About       *string `json:"about,omitempty"`
-	AvatarKind  string  `json:"avatar_kind,omitempty"`
-	AvatarValue *string `json:"avatar_value,omitempty"`
+	ID           string  `json:"id"`
+	Email        string  `json:"email"`
+	DisplayName  *string `json:"display_name,omitempty"`
+	IsAdmin      bool    `json:"is_admin"`
+	IsSupport    bool    `json:"is_support"`
+	IsFrozen     bool    `json:"is_frozen"`
+	FrozenAt     *string `json:"frozen_at,omitempty"`
+	CreatedAt    string  `json:"created_at"`
+	LastSeenAt   *string `json:"last_seen_at,omitempty"`
+	BalanceBronze int    `json:"balance_bronze"`
+	Age          *int    `json:"age,omitempty"`
+	Gender       *string `json:"gender,omitempty"`
+	About        *string `json:"about,omitempty"`
+	AvatarKind   string  `json:"avatar_kind,omitempty"`
+	AvatarValue  *string `json:"avatar_value,omitempty"`
+}
+
+func adminUserItemFromUser(u *store.User) AdminUserItem {
+	var frozenAt *string
+	if u.FrozenAt != nil {
+		s := u.FrozenAt.Format(time.RFC3339Nano)
+		frozenAt = &s
+	}
+	var lastSeen *string
+	if u.LastSeenAt != nil {
+		s := u.LastSeenAt.Format(time.RFC3339Nano)
+		lastSeen = &s
+	}
+	return AdminUserItem{
+		ID:            u.ID.String(),
+		Email:         u.Email,
+		DisplayName:   u.DisplayName,
+		IsAdmin:       u.IsAdmin,
+		IsSupport:     u.IsSupport,
+		IsFrozen:      u.IsFrozen(),
+		FrozenAt:      frozenAt,
+		CreatedAt:     u.CreatedAt,
+		LastSeenAt:    lastSeen,
+		BalanceBronze: u.BalanceBronze,
+		Age:           u.Age,
+		Gender:        u.Gender,
+		About:         u.About,
+		AvatarKind:    u.AvatarKind,
+		AvatarValue:   u.AvatarValue,
+	}
 }
 
 type SetAdminRequest struct {
@@ -131,34 +168,48 @@ func (h *AdminHandler) Init(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListUsers возвращает список всех пользователей.
+// ListUsers возвращает постраничный список пользователей с поиском/сортировкой.
 func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
-	list, err := store.ListUsers(r.Context(), h.Pool)
+	q := r.URL.Query()
+	limit := 20
+	if raw := strings.TrimSpace(q.Get("limit")); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 200 {
+			limit = n
+		}
+	}
+	offset := 0
+	if raw := strings.TrimSpace(q.Get("offset")); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+	result, err := store.ListUsersPaged(r.Context(), h.Pool, store.ListUsersParams{
+		Query:        strings.TrimSpace(q.Get("q")),
+		Sort:         strings.TrimSpace(q.Get("sort")),
+		Order:        strings.TrimSpace(q.Get("order")),
+		AdminFilter:  strings.TrimSpace(q.Get("admin")),
+		FrozenFilter: strings.TrimSpace(q.Get("frozen")),
+		Limit:        limit,
+		Offset:       offset,
+	})
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	items := make([]AdminUserItem, 0, len(list))
-	for _, u := range list {
-		items = append(items, AdminUserItem{
-			ID:          u.ID.String(),
-			Email:       u.Email,
-			DisplayName: u.DisplayName,
-			IsAdmin:     u.IsAdmin,
-			CreatedAt:   u.CreatedAt,
-			Age:         u.Age,
-			Gender:      u.Gender,
-			About:       u.About,
-			AvatarKind:  u.AvatarKind,
-			AvatarValue: u.AvatarValue,
-		})
+	items := make([]AdminUserItem, 0, len(result.Users))
+	for _, u := range result.Users {
+		items = append(items, adminUserItemFromUser(u))
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"users": items})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"users":  items,
+		"total":  result.Total,
+		"limit":  limit,
+		"offset": offset,
+	})
 }
 
 // SetAdmin выставляет или снимает флаг админа у пользователя.
@@ -382,4 +433,213 @@ func (h *AdminHandler) ClearLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// FreezeUserRequest — тело запроса заморозки/разморозки.
+type FreezeUserRequest struct {
+	UserID  string `json:"user_id"`
+	Frozen  bool   `json:"frozen"`
+}
+
+// FreezeUser замораживает/размораживает пользователя.
+func (h *AdminHandler) FreezeUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	var req FreezeUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	id, err := uuid.Parse(req.UserID)
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+	currentID, _ := GetUserID(r.Context())
+	if id == currentID {
+		WriteErr(w, r, http.StatusBadRequest, "cannot freeze yourself")
+		return
+	}
+	if err := store.SetUserFrozen(r.Context(), h.Pool, id, req.Frozen); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	// WS-уведомление пользователю об изменении статуса.
+	if h.Hub != nil {
+		h.Hub.PublishToUsers([]uuid.UUID{id}, map[string]any{
+			"type":   "account_frozen",
+			"frozen": req.Frozen,
+		})
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// GrantCoinsRequest — тело запроса начисления/списания монет.
+type GrantCoinsRequest struct {
+	UserID       string `json:"user_id"`
+	AmountBronze int    `json:"amount_bronze"`
+	Reason       string `json:"reason"`
+}
+
+// GrantCoins начисляет (amount>0) или списывает (amount<0) монеты пользователю.
+func (h *AdminHandler) GrantCoins(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	var req GrantCoinsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if req.AmountBronze == 0 {
+		WriteErr(w, r, http.StatusBadRequest, "amount_bronze must not be 0")
+		return
+	}
+	id, err := uuid.Parse(req.UserID)
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+	ctx := r.Context()
+	adminID, _ := GetUserID(ctx)
+	if err := store.AddCoinsSigned(ctx, h.Pool, id, req.AmountBronze); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	_ = store.RecordAdminCoinGrant(ctx, h.Pool, id, adminID, req.AmountBronze, strings.TrimSpace(req.Reason))
+	balance, _ := store.GetBalance(ctx, h.Pool, id)
+	// WS-уведомление пользователю для мгновенного обновления баланса.
+	if h.Hub != nil {
+		h.Hub.PublishToUsers([]uuid.UUID{id}, map[string]any{
+			"type":    "coins_granted",
+			"amount":  req.AmountBronze,
+			"balance": balance,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"balance_bronze": balance})
+}
+
+// supportUserID возвращает ID системного аккаунта поддержки.
+func (h *AdminHandler) supportUserID(ctx context.Context) (uuid.UUID, bool) {
+	su, err := store.GetSupportUser(ctx, h.Pool)
+	if err != nil || su == nil {
+		return uuid.Nil, false
+	}
+	return su.ID, true
+}
+
+// SupportChats возвращает список диалогов support-аккаунта.
+func (h *AdminHandler) SupportChats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	ctx := r.Context()
+	suID, ok := h.supportUserID(ctx)
+	if !ok {
+		writeJSON(w, http.StatusOK, map[string]any{"chats": []any{}})
+		return
+	}
+	chats, err := store.ListChatsForUser(ctx, h.Pool, suID, 100, 0)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"chats": chats})
+}
+
+// SupportMessages обслуживает чтение (GET) и отправку (POST) сообщений
+// в диалоге support↔пользователь. :userId — ID пользователя (peer).
+func (h *AdminHandler) SupportMessages(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	suID, ok := h.supportUserID(ctx)
+	if !ok {
+		WriteErr(w, r, http.StatusInternalServerError, "support user not found")
+		return
+	}
+	// peer ID из пути: /api/admin/support/chats/:userId/messages
+	path := strings.TrimPrefix(r.URL.Path, "/api/admin/support/chats/")
+	parts := strings.Split(path, "/")
+	if len(parts) < 2 || parts[1] != "messages" {
+		WriteErr(w, r, http.StatusNotFound, "not found")
+		return
+	}
+	peerID, err := uuid.Parse(parts[0])
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+	chatID, err := store.EnsureDirectChat(ctx, h.Pool, suID, peerID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		msgs, err := store.ListChatMessages(ctx, h.Pool, chatID, suID, 100, nil)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"messages": msgs, "chat_id": chatID})
+	case http.MethodPost:
+		var body struct {
+			Body string `json:"body"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+			return
+		}
+		msg, err := store.SendChatMessageOpts(ctx, h.Pool, chatID, suID, store.SendChatOptions{Body: body.Body})
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		// WS-уведомление пользователю + админам (badge).
+		if h.Hub != nil {
+			h.Hub.PublishToUsers([]uuid.UUID{peerID}, map[string]any{
+				"type": "chat_message", "chat_id": chatID, "message": msg,
+			})
+			h.broadcastToAdmins(ctx, map[string]any{
+				"type": "support_message", "user_id": peerID, "chat_id": chatID,
+			})
+		}
+		writeJSON(w, http.StatusOK, msg)
+	default:
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+	}
+}
+
+// broadcastToAdmins шлёт payload всем онлайн-админам (для badge поддержки).
+func (h *AdminHandler) broadcastToAdmins(ctx context.Context, payload map[string]any) {
+	if h.Hub == nil {
+		return
+	}
+	admins, err := store.ListAdminIDs(ctx, h.Pool)
+	if err != nil || len(admins) == 0 {
+		return
+	}
+	h.Hub.PublishToUsers(admins, payload)
+}
+
+// SupportUserInfo возвращает контакт системного аккаунта поддержки
+// (id, display_name), чтобы пользователь мог начать диалог. GET /api/support-user.
+func (h *AdminHandler) SupportUserInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	su, err := store.GetSupportUser(r.Context(), h.Pool)
+	if err != nil || su == nil {
+		writeJSON(w, http.StatusOK, map[string]any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"id":           su.ID.String(),
+		"display_name": "Поддержка",
+		"email":        su.Email,
+	})
 }

@@ -24,6 +24,9 @@ type User struct {
 	BalanceBronze     int
 	ShowStatsToOthers bool
 	EmailVerifiedAt   *time.Time
+	FrozenAt          *time.Time
+	IsSupport         bool
+	LastSeenAt        *time.Time
 	CreatedAt         string
 	UpdatedAt         string
 }
@@ -33,6 +36,9 @@ const selectUserCols = `id, email, COALESCE(password_hash, ''), display_name, is
 	balance_bronze,
 	COALESCE(show_stats_to_others, false),
 	email_verified_at,
+	frozen_at,
+	COALESCE(is_support, false),
+	last_seen_at,
 	created_at::text, updated_at::text`
 
 func scanUser(row pgx.Row) (*User, error) {
@@ -43,6 +49,9 @@ func scanUser(row pgx.Row) (*User, error) {
 		&u.BalanceBronze,
 		&u.ShowStatsToOthers,
 		&u.EmailVerifiedAt,
+		&u.FrozenAt,
+		&u.IsSupport,
+		&u.LastSeenAt,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
@@ -53,6 +62,154 @@ func scanUser(row pgx.Row) (*User, error) {
 
 func (u *User) EmailVerified() bool {
 	return u != nil && u.EmailVerifiedAt != nil
+}
+
+func (u *User) IsFrozen() bool {
+	return u != nil && u.FrozenAt != nil
+}
+
+// ListUsersParams — параметры поиска/сортировки/пагинации пользователей админом.
+type ListUsersParams struct {
+	Query        string // ILIKE по email/display_name
+	Sort         string // created_at | last_seen | email
+	Order        string // asc | desc
+	AdminFilter  string // all | admin | user
+	FrozenFilter string // all | frozen | active
+	Limit        int
+	Offset       int
+}
+
+// ListUsersResult — страница списка пользователей + общее число.
+type ListUsersResult struct {
+	Users []*User
+	Total int
+}
+
+// ListUsersPaged — поиск/сортировка/пагинация пользователей для админки.
+func ListUsersPaged(ctx context.Context, pool *pgxpool.Pool, p ListUsersParams) (ListUsersResult, error) {
+	if p.Limit <= 0 || p.Limit > 200 {
+		p.Limit = 20
+	}
+	if p.Offset < 0 {
+		p.Offset = 0
+	}
+
+	var (
+		where []string
+		args  []any
+		n     = 1
+	)
+	if q := strings.TrimSpace(p.Query); q != "" {
+		like := "%" + q + "%"
+		where = append(where, "(email ILIKE $1 OR COALESCE(display_name, '') ILIKE $1)")
+		args = append(args, like)
+		n = 2
+	}
+	switch p.AdminFilter {
+	case "admin":
+		where = append(where, "is_admin = true")
+	case "user":
+		where = append(where, "is_admin = false")
+	}
+	switch p.FrozenFilter {
+	case "frozen":
+		where = append(where, "frozen_at IS NOT NULL")
+	case "active":
+		where = append(where, "frozen_at IS NULL")
+	}
+	// Системный support-аккаунт не показываем в общем списке.
+	where = append(where, "COALESCE(is_support, false) = false")
+
+	whereClause := ""
+	if len(where) > 0 {
+		whereClause = " WHERE " + strings.Join(where, " AND ")
+	}
+
+	// Сортировка по whitelist-колонке.
+	orderCol := "created_at"
+	switch p.Sort {
+	case "last_seen":
+		orderCol = "last_seen_at"
+	case "email":
+		orderCol = "email"
+	}
+	dir := "DESC"
+	if strings.EqualFold(p.Order, "asc") {
+		dir = "ASC"
+	}
+
+	// Общее число (с теми же фильтрами).
+	var total int
+	countSQL := "SELECT COUNT(*) FROM users" + whereClause
+	if err := pool.QueryRow(ctx, countSQL, args...).Scan(&total); err != nil {
+		return ListUsersResult{}, err
+	}
+
+	listSQL := "SELECT " + selectUserCols + " FROM users" + whereClause +
+		" ORDER BY " + orderCol + " " + dir + " NULLS LAST, created_at DESC LIMIT $" + itoa(n) +
+		" OFFSET $" + itoa(n+1)
+	args = append(args, p.Limit, p.Offset)
+
+	rows, err := pool.Query(ctx, listSQL, args...)
+	if err != nil {
+		return ListUsersResult{}, err
+	}
+	defer rows.Close()
+
+	var users []*User
+	for rows.Next() {
+		u, err := scanUser(rows)
+		if err != nil {
+			return ListUsersResult{}, err
+		}
+		users = append(users, u)
+	}
+	return ListUsersResult{Users: users, Total: total}, rows.Err()
+}
+
+func itoa(i int) string {
+	if i == 0 {
+		return "0"
+	}
+	var b [20]byte
+	pos := len(b)
+	for i > 0 {
+		pos--
+		b[pos] = byte('0' + i%10)
+		i /= 10
+	}
+	return string(b[pos:])
+}
+
+// SetUserFrozen замораживает/размораживает пользователя.
+func SetUserFrozen(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, frozen bool) error {
+	var val *time.Time
+	if frozen {
+		now := time.Now().UTC()
+		val = &now
+	}
+	_, err := pool.Exec(ctx,
+		`UPDATE users SET frozen_at = $2, updated_at = now() WHERE id = $1`, id, val)
+	return err
+}
+
+// IsUserFrozen возвращает true, если пользователь заморожен.
+func IsUserFrozen(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) (bool, error) {
+	var frozenAt *time.Time
+	err := pool.QueryRow(ctx, `SELECT frozen_at FROM users WHERE id = $1`, id).Scan(&frozenAt)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return frozenAt != nil, nil
+}
+
+// GetSupportUser возвращает системный аккаунт поддержки.
+func GetSupportUser(ctx context.Context, pool *pgxpool.Pool) (*User, error) {
+	row := pool.QueryRow(ctx, "SELECT "+selectUserCols+" FROM users WHERE is_support = true LIMIT 1")
+	return scanUser(row)
 }
 
 func CreateUser(
@@ -182,6 +339,24 @@ func CountAdmins(ctx context.Context, pool *pgxpool.Pool) (int, error) {
 	var n int
 	err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE is_admin = true`).Scan(&n)
 	return n, err
+}
+
+// ListAdminIDs возвращает ID всех админов (для WS-бродкаста).
+func ListAdminIDs(ctx context.Context, pool *pgxpool.Pool) ([]uuid.UUID, error) {
+	rows, err := pool.Query(ctx, `SELECT id FROM users WHERE is_admin = true`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
 }
 
 func CountUsers(ctx context.Context, pool *pgxpool.Pool) (int, error) {

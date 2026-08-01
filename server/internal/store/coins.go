@@ -54,6 +54,33 @@ func AddCoins(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, amountB
 	return err
 }
 
+// AddCoinsSigned меняет баланс на amountBronze (может быть отрицательным — списание).
+// Не даёт балансу уйти ниже нуля при списании. Для админского начисления/списания.
+func AddCoinsSigned(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, amountBronze int) error {
+	if amountBronze == 0 {
+		return nil
+	}
+	if amountBronze > 0 {
+		return AddCoins(ctx, pool, userID, amountBronze)
+	}
+	// Списание: не ниже нуля.
+	_, err := pool.Exec(ctx,
+		`UPDATE users SET balance_bronze = GREATEST(0, balance_bronze + $2), updated_at = now()
+		 WHERE id = $1`,
+		userID, amountBronze,
+	)
+	return err
+}
+
+// RecordAdminCoinGrant фиксирует операцию начисления/списания монет админом (аудит).
+func RecordAdminCoinGrant(ctx context.Context, pool *pgxpool.Pool, userID, adminID uuid.UUID, amountBronze int, reason string) error {
+	_, err := pool.Exec(ctx, `
+		INSERT INTO admin_coin_grants (user_id, admin_id, amount_bronze, reason)
+		VALUES ($1, $2, $3, $4)
+	`, userID, adminID, amountBronze, reason)
+	return err
+}
+
 // DeductCoinsTwo deducts from both users in one transaction. Returns on first failure.
 func DeductCoinsTwo(ctx context.Context, pool *pgxpool.Pool, user1, user2 uuid.UUID, amountBronze int) error {
 	if amountBronze <= 0 {
