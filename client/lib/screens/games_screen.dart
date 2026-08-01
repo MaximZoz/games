@@ -154,6 +154,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final isMedium = width >= 700 && width < 950;
     final contentPadding = isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0);
     final isOffline = ref.watch(isOfflineProvider);
+    // При входе в офлайн включаем ⇄ (чередование первого хода с ботом).
+    // Локально — без persist в онлайн-настройки pie-rule.
+    ref.listen<bool>(isOfflineProvider, (prev, next) {
+      if (next && prev != true && mounted && !_selectedSwapRule) {
+        setState(() => _selectedSwapRule = true);
+      }
+    });
+    if (isOffline && !_selectedSwapRule) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !ref.read(isOfflineProvider)) return;
+        if (_selectedSwapRule) return;
+        setState(() => _selectedSwapRule = true);
+      });
+    }
     if (isOffline && _selectedTab != _GamesTab.games) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _selectedTab = _GamesTab.games);
@@ -163,7 +177,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     void playOffline() {
       final qs = <String, String>{
         'grid': '$_selectedGridSize',
-        if (_selectedSwapRule) 'swap': '1',
+        // В офлайне всегда чередуем, кто начинает (даже если чип ещё не
+        // успел включиться после перехода из онлайна).
+        'swap': '1',
         if (_selectedFirstMoveRestriction) 'nocenter': '1',
       };
       final uri = Uri(

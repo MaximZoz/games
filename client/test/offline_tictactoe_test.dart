@@ -37,6 +37,14 @@ void main() {
     expect(game.humanMark, 'o');
     expect(game.isHumanTurn, isTrue);
     expect(game.board.where((c) => c.isNotEmpty).length, 1);
+    expect(game.humanStarts, isFalse);
+  });
+
+  test('при humanStarts=true доска пустая и ход игрока', () {
+    final game = OfflineTicTacToeGame(gridSize: 3, humanStarts: true);
+    expect(game.humanMark, 'x');
+    expect(game.isHumanTurn, isTrue);
+    expect(game.board.every((c) => c.isEmpty), isTrue);
   });
 
   test('локальная партия завершается победой или ничьей', () {

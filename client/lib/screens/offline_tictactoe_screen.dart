@@ -39,8 +39,10 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
 
   Future<void> _restart() async {
     setState(() => _starting = true);
+    // По умолчанию в офлайне чередуем первого; чип ⇄=выкл — всегда игрок.
     var humanStarts = true;
-    if (widget.swapRule) {
+    final alternate = widget.swapRule;
+    if (alternate) {
       final prefs = await SharedPreferences.getInstance();
       final lastHumanStarted = prefs.getBool(_keyLastHumanStarted) ?? false;
       humanStarts = !lastHumanStarted;
@@ -142,6 +144,9 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
                                 final n = game.gridSize;
                                 final win =
                                     game.winningCells?.toSet() ?? const <int>{};
+                                final markSize = n <= 3
+                                    ? 42.0
+                                    : (n <= 5 ? 32.0 : 22.0);
                                 return GridView.builder(
                                   physics:
                                       const NeverScrollableScrollPhysics(),
@@ -166,22 +171,17 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
                                             ? () => _onCell(index)
                                             : null,
                                         child: Center(
-                                          child: Text(
-                                            mark == 'x'
-                                                ? '✕'
-                                                : mark == 'o'
-                                                    ? '○'
-                                                    : '',
-                                            style: TextStyle(
-                                              fontSize: n <= 3
-                                                  ? 36
-                                                  : (n <= 5 ? 28 : 18),
-                                              fontWeight: FontWeight.w800,
-                                              color: mark == 'x'
-                                                  ? AppColors.accentStart
-                                                  : AppColors.textPrimary,
-                                            ),
-                                          ),
+                                          child: mark.isEmpty
+                                              ? const SizedBox.shrink()
+                                              : CustomPaint(
+                                                  size: Size.square(markSize),
+                                                  painter: _OfflineMarkPainter(
+                                                    isX: mark == 'x',
+                                                    color: mark == 'x'
+                                                        ? AppColors.accentStart
+                                                        : AppColors.textPrimary,
+                                                  ),
+                                                ),
                                         ),
                                       ),
                                     );
@@ -220,4 +220,46 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
       ),
     );
   }
+}
+
+/// X/O через Canvas — без unicode-глифов шрифта Syne (иначе «tofu» □✕).
+class _OfflineMarkPainter extends CustomPainter {
+  _OfflineMarkPainter({required this.isX, required this.color});
+
+  final bool isX;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeWidth = size.width * 0.12;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    if (isX) {
+      final padding = size.width * 0.15;
+      canvas.drawLine(
+        Offset(padding, padding),
+        Offset(size.width - padding, size.height - padding),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(size.width - padding, padding),
+        Offset(padding, size.height - padding),
+        paint,
+      );
+    } else {
+      canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2),
+        (size.width - strokeWidth) / 2,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OfflineMarkPainter old) =>
+      old.isX != isX || old.color != color;
 }
