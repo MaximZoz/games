@@ -78,6 +78,7 @@ final profileExtraProvider = Provider<AsyncValue<ProfileExtra?>>((ref) {
         orElse: () => AvatarKind.letter,
       ),
       avatarValue: user.avatarValue,
+      showStatsToOthers: user.showStatsToOthers,
     );
   });
 });
@@ -224,6 +225,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
       avatarKind: user.avatarKind,
       avatarValue: user.avatarValue,
       balanceBronze: balanceBronze,
+      showStatsToOthers: user.showStatsToOthers,
       emailVerified: user.emailVerified,
     );
     state = AsyncValue.data(updated);
@@ -251,6 +253,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         avatarKind: user.avatarKind,
         avatarValue: user.avatarValue,
         balanceBronze: result.balanceBronze,
+        showStatsToOthers: user.showStatsToOthers,
         emailVerified: user.emailVerified,
       );
       state = AsyncValue.data(updated);
@@ -275,6 +278,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         about: extra?.about,
         avatarKind: extra?.avatarKind.name,
         avatarValue: extra?.avatarValue,
+        showStatsToOthers: extra?.showStatsToOthers,
       );
       state = AsyncValue.data(updated);
     } on AuthException catch (e) {

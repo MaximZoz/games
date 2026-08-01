@@ -15,7 +15,8 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/games/games_provider.dart';
-import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/head_to_head_section.dart';
+import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -660,10 +661,14 @@ class _ProfileContent extends StatelessWidget {
                     key: const ValueKey('view'),
                     user: user,
                     profileExtra: profileExtra,
-                    onEdit: onStartEdit,
                   ),
           ),
         ),
+        // Счёт, коллекции и «Редактировать» — за рамкой блока с инфо о пользователе.
+        if (!isEditing)
+          _ProfileBelowFrame(
+            onEdit: onStartEdit,
+          ),
       ],
     );
   }
@@ -674,12 +679,10 @@ class _ProfileView extends ConsumerWidget {
     super.key,
     required this.user,
     required this.profileExtra,
-    required this.onEdit,
   });
 
   final AuthUser user;
   final ProfileExtra profileExtra;
-  final VoidCallback onEdit;
 
   String get _displayTitle => user.displayName?.trim().isNotEmpty == true
       ? user.displayName!
@@ -818,64 +821,72 @@ class _ProfileView extends ConsumerWidget {
             ),
           ),
         ],
-        Builder(
-          builder: (context) {
-            final inv = ref.watch(inventoryListProvider).valueOrNull ??
-                const <InventoryItem>[];
-            final collections =
-                inv.where((e) => e.kind == 'collection').toList();
-            if (collections.isEmpty) return const SizedBox.shrink();
-            return Column(
-              children: [
-                SizedBox(height: gapSection + 2),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    context.l10n.profileCollections,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                CollectionShowcaseGrid(items: collections),
-              ],
-            );
-          },
-        ),
-        Builder(
-          builder: (context) {
-            final stats = ref.watch(gameStatsProvider(null)).valueOrNull;
-            return _StatsPreviewCard(stats: stats);
-          },
-        ),
-        SizedBox(height: shortScreen ? 16 : 20),
-        OutlinedButton.icon(
-          onPressed: onEdit,
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          label: Text(
-            context.l10n.profileEdit,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentStart,
-            padding: EdgeInsets.symmetric(
-              horizontal: 22,
-              vertical: shortScreen ? 11 : 13,
-            ),
-            side: BorderSide(
-              color: AppColors.accentStart.withValues(alpha: 0.6),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
       ],
+    );
+  }
+}
+
+/// Счёт, коллекции и кнопка редактирования — снаружи рамки инфо-блока.
+class _ProfileBelowFrame extends ConsumerWidget {
+  const _ProfileBelowFrame({required this.onEdit});
+
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shortScreen = MediaQuery.sizeOf(context).height < 700;
+    final inv =
+        ref.watch(inventoryListProvider).valueOrNull ?? const <InventoryItem>[];
+    final collections = inv.where((e) => e.kind == 'collection').toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 14, 4, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _OwnScoreSection(),
+          if (collections.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                context.l10n.profileCollections,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            CollectionShowcaseGrid(items: collections),
+          ],
+          SizedBox(height: shortScreen ? 16 : 20),
+          OutlinedButton.icon(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: Text(
+              context.l10n.profileEdit,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.accentStart,
+              padding: EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: shortScreen ? 11 : 13,
+              ),
+              side: BorderSide(
+                color: AppColors.accentStart.withValues(alpha: 0.6),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -966,6 +977,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   late String? _gender;
   late AvatarKind _avatarKind;
   late String? _avatarValue;
+  late bool _showStatsToOthers;
   late String _initialDisplayName;
   ProfileExtra? _initialExtra;
   String? _avatarCacheKey;
@@ -991,6 +1003,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
+    _showStatsToOthers = widget.profileExtra.showStatsToOthers;
   }
 
   void _onAboutFocusChanged() {
@@ -1075,6 +1088,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     if (about != initialAbout) return true;
     if (_avatarKind != initial.avatarKind) return true;
     if ((_avatarValue ?? '') != (initial.avatarValue ?? '')) return true;
+    if (_showStatsToOthers != initial.showStatsToOthers) return true;
     return false;
   }
 
@@ -1236,6 +1250,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
           : _aboutController.text.trim(),
       avatarKind: _avatarKind,
       avatarValue: _avatarValue,
+      showStatsToOthers: _showStatsToOthers,
     );
     setState(() {
       _isSaving = true;
@@ -1547,7 +1562,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                _buildShowStatsCheckbox(),
+                const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed:
                       (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1573,6 +1590,44 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             ),
           ),
         ],
+    );
+  }
+
+  Widget _buildShowStatsCheckbox() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => setState(() => _showStatsToOthers = !_showStatsToOthers),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: _showStatsToOthers,
+                onChanged: (v) =>
+                    setState(() => _showStatsToOthers = v ?? false),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Показывать статистику другим игрокам',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1657,6 +1712,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   maxLines: 3,
                   maxLength: 100,
                 ),
+                const SizedBox(height: 12),
+                _buildShowStatsCheckbox(),
                 const SizedBox(height: 20),
                 Text(
                   context.l10n.profileAvatar,
@@ -1959,120 +2016,39 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
   }
 }
 
-/// Карточка статистики в профиле: иконка игры + W/D/L иконки горизонтально
-/// (тот же стиль, что в попапе игрока). Тап → экран полной статистики.
-class _StatsPreviewCard extends StatelessWidget {
-  const _StatsPreviewCard({required this.stats});
-
-  final GameStats? stats;
+/// Счёт и иконка статистики (общая по всем играм).
+class _OwnScoreSection extends ConsumerWidget {
+  const _OwnScoreSection();
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => context.go('/profile/stats'),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.accentStart.withValues(alpha: 0.25),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Text(
-                  'Статистика',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Иконка игры (крестики-нолики) — единая со стилем попапа.
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.accentStart, AppColors.accentEnd],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.grid_3x3_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const Spacer(),
-                // W/D/L горизонтально — тот же стиль, что в попапе игрока.
-                _ProfileScoreItem(
-                  icon: Icons.check_circle_rounded,
-                  value: stats?.wins,
-                  color: const Color(0xFF2E7D32),
-                ),
-                const SizedBox(width: 10),
-                _ProfileScoreItem(
-                  icon: Icons.remove_circle_rounded,
-                  value: stats?.draws,
-                  color: const Color(0xFFF9A825),
-                ),
-                const SizedBox(width: 10),
-                _ProfileScoreItem(
-                  icon: Icons.cancel_rounded,
-                  value: stats?.losses,
-                  color: const Color(0xFFC62828),
-                ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
-              ],
-            ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stats = ref.watch(gameStatsProvider(null)).valueOrNull;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ваш счёт',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ProfileScoreItem extends StatelessWidget {
-  const _ProfileScoreItem({
-    required this.icon,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final int? value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasValue = value != null;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 3),
-        Text(
-          hasValue ? '$value' : '–',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Flexible(
+              child: ScoreTripletCard(
+                won: stats?.wins ?? 0,
+                lost: stats?.losses ?? 0,
+                drawn: stats?.draws ?? 0,
+              ),
+            ),
+            const SizedBox(width: 8),
+            StatsIconButton(
+              onTap: () => showGameStatsDialog(context),
+            ),
+          ],
         ),
       ],
     );

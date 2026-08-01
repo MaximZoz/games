@@ -24,6 +24,7 @@ class AuthUser {
   final String avatarKind;
   final String? avatarValue;
   final int balanceBronze;
+  final bool showStatsToOthers;
   final bool emailVerified;
 
   AuthUser({
@@ -37,6 +38,7 @@ class AuthUser {
     this.avatarKind = 'letter',
     this.avatarValue,
     this.balanceBronze = 0,
+    this.showStatsToOthers = false,
     this.emailVerified = true,
   });
 
@@ -52,6 +54,7 @@ class AuthUser {
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
       balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
+      showStatsToOthers: json['show_stats_to_others'] as bool? ?? false,
       emailVerified: json['email_verified'] as bool? ?? true,
     );
   }
@@ -67,6 +70,7 @@ class AuthUser {
         'avatar_kind': avatarKind,
         'avatar_value': avatarValue,
         'balance_bronze': balanceBronze,
+        'show_stats_to_others': showStatsToOthers,
         'email_verified': emailVerified,
       };
 }
@@ -765,6 +769,7 @@ class AuthRepository {
     String? about,
     String? avatarKind,
     String? avatarValue,
+    bool? showStatsToOthers,
   }) async {
     await init();
     final current = await getStoredUser();
@@ -789,6 +794,7 @@ class AuthRepository {
           'about': about,
           'avatar_kind': avatarKind,
           'avatar_value': avatarValue,
+          'show_stats_to_others': showStatsToOthers,
         }),
         operation: 'AuthRepository.updateProfile',
       ),
@@ -811,6 +817,8 @@ class AuthRepository {
             about: about,
             avatarKind: avatarKind ?? 'letter',
             avatarValue: avatarValue,
+            showStatsToOthers:
+                showStatsToOthers ?? current.showStatsToOthers,
             emailVerified: current.emailVerified,
           );
     await _saveUser(user);

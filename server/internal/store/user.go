@@ -11,25 +11,27 @@ import (
 )
 
 type User struct {
-	ID              uuid.UUID
-	Email           string
-	PasswordHash    string
-	DisplayName     *string
-	IsAdmin         bool
-	Age             *int
-	Gender          *string
-	About           *string
-	AvatarKind      string
-	AvatarValue     *string
-	BalanceBronze   int
-	EmailVerifiedAt *time.Time
-	CreatedAt       string
-	UpdatedAt       string
+	ID                uuid.UUID
+	Email             string
+	PasswordHash      string
+	DisplayName       *string
+	IsAdmin           bool
+	Age               *int
+	Gender            *string
+	About             *string
+	AvatarKind        string
+	AvatarValue       *string
+	BalanceBronze     int
+	ShowStatsToOthers bool
+	EmailVerifiedAt   *time.Time
+	CreatedAt         string
+	UpdatedAt         string
 }
 
 const selectUserCols = `id, email, COALESCE(password_hash, ''), display_name, is_admin,
 	age, gender, about, avatar_kind, avatar_value,
 	balance_bronze,
+	COALESCE(show_stats_to_others, false),
 	email_verified_at,
 	created_at::text, updated_at::text`
 
@@ -39,6 +41,7 @@ func scanUser(row pgx.Row) (*User, error) {
 		&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName, &u.IsAdmin,
 		&u.Age, &u.Gender, &u.About, &u.AvatarKind, &u.AvatarValue,
 		&u.BalanceBronze,
+		&u.ShowStatsToOthers,
 		&u.EmailVerifiedAt,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
@@ -188,13 +191,14 @@ func CountUsers(ctx context.Context, pool *pgxpool.Pool) (int, error) {
 }
 
 type UpdateProfileParams struct {
-	ID          uuid.UUID
-	DisplayName *string
-	Age         *int
-	Gender      *string
-	About       *string
-	AvatarKind  *string
-	AvatarValue *string
+	ID                uuid.UUID
+	DisplayName       *string
+	Age               *int
+	Gender            *string
+	About             *string
+	AvatarKind        *string
+	AvatarValue       *string
+	ShowStatsToOthers *bool
 }
 
 func UpdateUserProfile(ctx context.Context, pool *pgxpool.Pool, p UpdateProfileParams) (*User, error) {
@@ -206,10 +210,11 @@ func UpdateUserProfile(ctx context.Context, pool *pgxpool.Pool, p UpdateProfileP
 			about         = $5,
 			avatar_kind   = COALESCE($6, avatar_kind),
 			avatar_value  = $7,
+			show_stats_to_others = COALESCE($8, show_stats_to_others),
 			updated_at    = now()
 		 WHERE id = $1
 		 RETURNING `+selectUserCols,
-		p.ID, p.DisplayName, p.Age, p.Gender, p.About, p.AvatarKind, p.AvatarValue,
+		p.ID, p.DisplayName, p.Age, p.Gender, p.About, p.AvatarKind, p.AvatarValue, p.ShowStatsToOthers,
 	)
 	return scanUser(row)
 }

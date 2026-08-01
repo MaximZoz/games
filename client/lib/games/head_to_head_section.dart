@@ -4,12 +4,11 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Секция head-to-head: счёт между текущим игроком и соперником в попапе профиля.
+/// Секция счёта head-to-head в попапе профиля.
 ///
-/// Заголовок «Ваш счёт» над карточкой (как «Коллекции»).
-/// В карточке: иконка игры, справа — зелёная сверху, красная снизу,
-/// жёлтая справа от красной. После блока счёта — кнопка статистики
-/// (тап → всплывашка со статистикой игрока).
+/// Заголовок «Ваш счёт» над карточкой. В карточке — крупные иконки
+/// победа/поражение/ничья и цифры сверху вниз. Сразу за карточкой —
+/// иконка статистики (без текста), если соперник разрешил показ.
 class HeadToHeadSection extends ConsumerWidget {
   const HeadToHeadSection({
     super.key,
@@ -18,7 +17,6 @@ class HeadToHeadSection extends ConsumerWidget {
     this.padding = const EdgeInsets.only(top: 12),
   });
 
-  /// ID соперника (для запроса head-to-head и статистики).
   final String opponentId;
   final String? opponentName;
   final EdgeInsets padding;
@@ -33,18 +31,23 @@ class HeadToHeadSection extends ConsumerWidget {
       child: h2hAsync.when(
         loading: () => const _HeadToHeadSkeleton(),
         error: (_, __) => const SizedBox.shrink(),
-        data: (h2h) => h2h.isEmpty
-            ? const SizedBox.shrink()
-            : _HeadToHeadBody(
-                won: h2h.won,
-                drawn: h2h.drawn,
-                lost: h2h.lost,
-                onTapStats: () => showGameStatsDialog(
-                  context,
-                  userId: opponentId,
-                  displayName: opponentName,
-                ),
-              ),
+        data: (h2h) {
+          final hasScore = !h2h.isEmpty;
+          final showStats = h2h.showStatsToOthers;
+          if (!hasScore && !showStats) return const SizedBox.shrink();
+          return _HeadToHeadBody(
+            won: h2h.won,
+            drawn: h2h.drawn,
+            lost: h2h.lost,
+            hasScore: hasScore,
+            showStats: showStats,
+            onTapStats: () => showGameStatsDialog(
+              context,
+              userId: opponentId,
+              displayName: opponentName ?? h2h.displayName,
+            ),
+          );
+        },
       ),
     );
   }
@@ -55,12 +58,16 @@ class _HeadToHeadBody extends StatelessWidget {
     required this.won,
     required this.drawn,
     required this.lost,
+    required this.hasScore,
+    required this.showStats,
     required this.onTapStats,
   });
 
   final int won;
   final int drawn;
   final int lost;
+  final bool hasScore;
+  final bool showStats;
   final VoidCallback onTapStats;
 
   @override
@@ -68,125 +75,146 @@ class _HeadToHeadBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Ваш счёт',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+        if (hasScore) ...[
+          const Text(
+            'Ваш счёт',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          decoration: BoxDecoration(
-            color: AppColors.accentSoft.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Иконка игры (крестики-нолики).
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.accentStart, AppColors.accentEnd],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.tag_rounded,
-                  color: Colors.white,
-                  size: 18,
+          const SizedBox(height: 8),
+        ],
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (hasScore)
+              Flexible(
+                child: ScoreTripletCard(
+                  won: won,
+                  lost: lost,
+                  drawn: drawn,
                 ),
               ),
-              const SizedBox(width: 10),
-              // Зелёная сверху; снизу красная, жёлтая справа от красной.
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _ScoreRow(
-                    icon: Icons.check_rounded,
-                    value: won,
-                    color: const Color(0xFF2E7D32),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _ScoreRow(
-                        icon: Icons.close_rounded,
-                        value: lost,
-                        color: const Color(0xFFC62828),
-                      ),
-                      const SizedBox(width: 10),
-                      _ScoreRow(
-                        icon: Icons.remove_rounded,
-                        value: drawn,
-                        color: const Color(0xFFF9A825),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+            if (hasScore && showStats) const SizedBox(width: 8),
+            if (showStats) StatsIconButton(onTap: onTapStats),
+          ],
         ),
-        const SizedBox(height: 8),
-        // Статистика — отдельный блок после счёта.
-        _StatsRowButton(onTap: onTapStats),
       ],
     );
   }
 }
 
-class _ScoreRow extends StatelessWidget {
-  const _ScoreRow({
-    required this.icon,
-    required this.value,
-    required this.color,
+/// Карточка W/L/D: крупные иконки слева, цифры сверху вниз справа.
+class ScoreTripletCard extends StatelessWidget {
+  const ScoreTripletCard({
+    super.key,
+    required this.won,
+    required this.lost,
+    required this.drawn,
+    this.width = double.infinity,
   });
 
+  final int won;
+  final int lost;
+  final int drawn;
+  final double width;
+
+  static const _win = Color(0xFF2E7D32);
+  static const _loss = Color(0xFFC62828);
+  static const _draw = Color(0xFFF9A825);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.fromLTRB(14, 10, 16, 10),
+      decoration: BoxDecoration(
+        color: AppColors.accentSoft.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Иконки победа / поражение / ничья — высота как у трёх цифр.
+          const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TallScoreIcon(icon: Icons.check_rounded, color: _win),
+              SizedBox(height: 6),
+              _TallScoreIcon(icon: Icons.close_rounded, color: _loss),
+              SizedBox(height: 6),
+              _TallScoreIcon(icon: Icons.remove_rounded, color: _draw),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ScoreDigit(value: won, color: _win),
+              const SizedBox(height: 6),
+              _ScoreDigit(value: lost, color: _loss),
+              const SizedBox(height: 6),
+              _ScoreDigit(value: drawn, color: _draw),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TallScoreIcon extends StatelessWidget {
+  const _TallScoreIcon({required this.icon, required this.color});
+
   final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 16, color: Colors.white),
+    );
+  }
+}
+
+class _ScoreDigit extends StatelessWidget {
+  const _ScoreDigit({required this.value, required this.color});
+
   final int value;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 12, color: Colors.white),
-        ),
-        const SizedBox(width: 4),
-        Text(
+    return SizedBox(
+      height: 26,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
           '$value',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 18,
             fontWeight: FontWeight.w800,
+            height: 1,
             color: color,
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-/// Кнопка «Статистика» после блока счёта — открывает всплывашку.
-class _StatsRowButton extends StatelessWidget {
-  const _StatsRowButton({required this.onTap});
+/// Иконка статистики без текста — сразу за блоком счёта.
+class StatsIconButton extends StatelessWidget {
+  const StatsIconButton({super.key, required this.onTap});
 
   final VoidCallback onTap;
 
@@ -195,52 +223,25 @@ class _StatsRowButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.accentSoft.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.accentStart.withValues(alpha: 0.25),
+        child: Tooltip(
+          message: 'Статистика',
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35),
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.accentStart.withValues(alpha: 0.35),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.bar_chart_rounded,
-                  size: 18,
-                  color: AppColors.accentStart,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Статистика',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
-              ),
-            ],
+            child: const Icon(
+              Icons.bar_chart_rounded,
+              size: 22,
+              color: AppColors.accentStart,
+            ),
           ),
         ),
       ),
@@ -266,7 +267,7 @@ class _HeadToHeadSkeleton extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Container(
-          height: 54,
+          height: 96,
           decoration: BoxDecoration(
             color: AppColors.accentSoft.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(14),

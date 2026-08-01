@@ -669,6 +669,7 @@ class HeadToHead {
     required this.won,
     required this.drawn,
     required this.lost,
+    this.showStatsToOthers = false,
   });
 
   final String opponentId;
@@ -676,6 +677,8 @@ class HeadToHead {
   final int won;
   final int drawn;
   final int lost;
+  /// Разрешил ли соперник показывать свою статистику другим.
+  final bool showStatsToOthers;
 
   bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
 
@@ -686,6 +689,7 @@ class HeadToHead {
       won: (json['won'] as num?)?.toInt() ?? 0,
       drawn: (json['drawn'] as num?)?.toInt() ?? 0,
       lost: (json['lost'] as num?)?.toInt() ?? 0,
+      showStatsToOthers: json['show_stats_to_others'] as bool? ?? false,
     );
   }
 }

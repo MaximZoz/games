@@ -2802,6 +2802,17 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	ctx := r.Context()
+	if targetID != currentID {
+		target, err := store.GetUserByID(ctx, h.Pool, targetID)
+		if err != nil {
+			WriteErr(w, r, http.StatusNotFound, "user not found")
+			return
+		}
+		if !target.ShowStatsToOthers {
+			WriteErr(w, r, http.StatusForbidden, "stats are private")
+			return
+		}
+	}
 	stats, err := store.GetGameStats(ctx, h.Pool, targetID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -2853,11 +2864,16 @@ func (h *GamesHandler) GetHeadToHead(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	showStats := false
+	if opponent, err := store.GetUserByID(ctx, h.Pool, opponentID); err == nil && opponent != nil {
+		showStats = opponent.ShowStatsToOthers
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"opponent_id":  h2h.OpponentID,
-		"display_name": h2h.DisplayName,
-		"won":          h2h.Won,
-		"drawn":        h2h.Drawn,
-		"lost":         h2h.Lost,
+		"opponent_id":           h2h.OpponentID,
+		"display_name":          h2h.DisplayName,
+		"won":                   h2h.Won,
+		"drawn":                 h2h.Drawn,
+		"lost":                  h2h.Lost,
+		"show_stats_to_others":  showStats,
 	})
 }

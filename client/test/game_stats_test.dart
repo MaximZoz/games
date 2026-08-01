@@ -63,18 +63,20 @@ void main() {
   });
 
   group('HeadToHead', () {
-    test('fromJson parses score', () {
+    test('fromJson parses score and show_stats_to_others', () {
       final h = HeadToHead.fromJson({
         'opponent_id': 'u1',
         'display_name': 'Alice',
         'won': 3,
         'drawn': 1,
         'lost': 2,
+        'show_stats_to_others': true,
       });
       expect(h.opponentId, 'u1');
       expect(h.won, 3);
       expect(h.drawn, 1);
       expect(h.lost, 2);
+      expect(h.showStatsToOthers, isTrue);
       expect(h.isEmpty, isFalse);
     });
 
@@ -82,6 +84,7 @@ void main() {
       final h = HeadToHead.fromJson({});
       expect(h.isEmpty, isTrue);
       expect(h.won, 0);
+      expect(h.showStatsToOthers, isFalse);
     });
   });
 

@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS show_stats_to_others BOOLEAN NOT NULL DEFAULT false;
