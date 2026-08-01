@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
@@ -68,9 +69,9 @@ class _HeadToHeadBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (hasScore) ...[
-          const Text(
-            'Ваш счёт',
-            style: TextStyle(
+          Text(
+            context.l10n.statsYourScore,
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
@@ -323,7 +324,7 @@ class StatsIconButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Tooltip(
-          message: 'Статистика',
+          message: context.l10n.statsTitle,
           child: Container(
             width: 44,
             height: 44,

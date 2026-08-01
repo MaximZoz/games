@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "สถิติ",
+  "statsLoadFailed": "โหลดสถิติไม่สำเร็จ",
+  "statsAllGames": "เกมทั้งหมด",
+  "statsEmptyTitle": "ยังไม่มีเกมที่เล่น",
+  "statsEmptyHint": "เล่นเกมแรกเพื่อดูสถิติที่นี่",
+  "statsWins": "ชนะ",
+  "statsDraws": "เสมอ",
+  "statsLosses": "แพ้",
+  "statsWinRate": "อัตราชนะ",
+  "statsTopWon": "ชนะมากที่สุดกับ",
+  "statsTopDrawn": "เสมอมากที่สุดกับ",
+  "statsTopLost": "แพ้มากที่สุดกับ",
+  "statsTimePlayed": "เวลาที่เล่น",
+  "statsYourScore": "สกอร์ของคุณ",
+  "profileShowStats": "แสดงสถิติ",
+  "statsDurationZeroMinutes": "0 นาที",
+  "gameYouWonOpponentForfeit": "คู่แข่งยอมแพ้ คุณชนะ!",
+  "lobbyLeaveTitle": "ออกจากล็อบบี้?",
+  "lobbyLeaveConfirm": "ล็อบบี้จะถูกลบหลังออก เพื่อนที่ถูกเชิญจะได้รับการปฏิเสธ",
+  "lobbyLeave": "ออก",
+  "statsDurationHours": "{hours} ชม.",
+  "statsDurationHoursMinutes": "{hours} ชม. {minutes} นาที",
+  "statsDurationMinutes": "{minutes} นาที",
+  "gameYouForfeitOpponentWon": "คุณยอมแพ้ {name} ชนะ"
 }

@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Estatísticas",
+  "statsLoadFailed": "Falha ao carregar as estatísticas",
+  "statsAllGames": "Todos os jogos",
+  "statsEmptyTitle": "Ainda não há partidas jogadas",
+  "statsEmptyHint": "Jogue sua primeira partida para ver as estatísticas aqui.",
+  "statsWins": "Vitórias",
+  "statsDraws": "Empates",
+  "statsLosses": "Derrotas",
+  "statsWinRate": "Taxa de vitórias",
+  "statsTopWon": "Mais vitórias contra",
+  "statsTopDrawn": "Mais empates com",
+  "statsTopLost": "Mais derrotas contra",
+  "statsTimePlayed": "Tempo de jogo",
+  "statsYourScore": "Seu placar",
+  "profileShowStats": "Mostrar estatísticas",
+  "statsDurationZeroMinutes": "0 min",
+  "gameYouWonOpponentForfeit": "O adversário desistiu. Você venceu!",
+  "lobbyLeaveTitle": "Sair do lobby?",
+  "lobbyLeaveConfirm": "O lobby será excluído após a saída. Amigos convidados receberão uma recusa.",
+  "lobbyLeave": "Sair",
+  "statsDurationHours": "{hours} h",
+  "statsDurationHoursMinutes": "{hours} h {minutes} min",
+  "statsDurationMinutes": "{minutes} min",
+  "gameYouForfeitOpponentWon": "Você desistiu. {name} venceu"
 }

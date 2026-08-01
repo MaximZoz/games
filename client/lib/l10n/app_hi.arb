@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "आँकड़े",
+  "statsLoadFailed": "आँकड़े लोड नहीं हो सके",
+  "statsAllGames": "सभी खेल",
+  "statsEmptyTitle": "अभी कोई मैच नहीं खेला गया",
+  "statsEmptyHint": "यहाँ आँकड़े देखने के लिए अपना पहला गेम खेलें।",
+  "statsWins": "जीत",
+  "statsDraws": "ड्रॉ",
+  "statsLosses": "हार",
+  "statsWinRate": "जीत दर",
+  "statsTopWon": "सबसे अधिक जीत के विरुद्ध",
+  "statsTopDrawn": "सबसे अधिक ड्रॉ के साथ",
+  "statsTopLost": "सबसे अधिक हार के विरुद्ध",
+  "statsTimePlayed": "खेल का समय",
+  "statsYourScore": "आपका स्कोर",
+  "profileShowStats": "आँकड़े दिखाएँ",
+  "statsDurationZeroMinutes": "0 मि",
+  "gameYouWonOpponentForfeit": "प्रतिद्वंद्वी हार मान गया। आप जीत गए!",
+  "lobbyLeaveTitle": "लॉबी छोड़ें?",
+  "lobbyLeaveConfirm": "बाहर निकलने के बाद लॉबी हटा दी जाएगी। आमंत्रित मित्रों को अस्वीकृति मिलेगी।",
+  "lobbyLeave": "छोड़ें",
+  "statsDurationHours": "{hours} घं",
+  "statsDurationHoursMinutes": "{hours} घं {minutes} मि",
+  "statsDurationMinutes": "{minutes} मि",
+  "gameYouForfeitOpponentWon": "आपने हार मान ली। {name} जीत गया"
 }

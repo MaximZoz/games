@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Статыстыка",
+  "statsLoadFailed": "Не ўдалося загрузіць статыстыку",
+  "statsAllGames": "Усе гульні",
+  "statsEmptyTitle": "Пакуль няма згуляных партый",
+  "statsEmptyHint": "Згуляйце першую гульню, каб тут з’явілася статыстыка.",
+  "statsWins": "Перамогі",
+  "statsDraws": "Нічыі",
+  "statsLosses": "Паражэнні",
+  "statsWinRate": "Адсотак перамог",
+  "statsTopWon": "Найбольш перамог супраць",
+  "statsTopDrawn": "Найбольш нічыіх з",
+  "statsTopLost": "Найбольш паражэнняў ад",
+  "statsTimePlayed": "Час у гульні",
+  "statsYourScore": "Ваш лік",
+  "profileShowStats": "Паказваць статыстыку",
+  "statsDurationZeroMinutes": "0 хв",
+  "gameYouWonOpponentForfeit": "Супернік здаўся. Вы перамаглі!",
+  "lobbyLeaveTitle": "Пакінуць лобі?",
+  "lobbyLeaveConfirm": "Лобі будзе выдалена пасля выхаду. Запрошаныя сябры атрымаюць адмову.",
+  "lobbyLeave": "Пакінуць",
+  "statsDurationHours": "{hours} гадз",
+  "statsDurationHoursMinutes": "{hours} гадз {minutes} хв",
+  "statsDurationMinutes": "{minutes} хв",
+  "gameYouForfeitOpponentWon": "Вы здаліся. {name} перамог"
 }

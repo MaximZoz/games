@@ -430,12 +430,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               final iWon = game.xUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? 'Соперник сдался. Вы победили!'
+                      ? context.l10n.gameYouWonOpponentForfeit
                       : game.timeout
                           ? context.l10n.gameYouWonOpponentTimeout
                           : context.l10n.gameYouWon)
                   : (game.forfeit
-                      ? 'Вы сдались. $opponentName победил'
+                      ? context.l10n.gameYouForfeitOpponentWon(opponentName)
                       : game.timeout
                           ? context.l10n.gameOpponentWonTimeout(opponentName)
                           : context.l10n.gameOpponentWon(opponentName));
@@ -443,12 +443,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               final iWon = game.oUserId == currentUser?.id;
               statusText = iWon
                   ? (game.forfeit
-                      ? 'Соперник сдался. Вы победили!'
+                      ? context.l10n.gameYouWonOpponentForfeit
                       : game.timeout
                           ? context.l10n.gameYouWonOpponentTimeout
                           : context.l10n.gameYouWon)
                   : (game.forfeit
-                      ? 'Вы сдались. $opponentName победил'
+                      ? context.l10n.gameYouForfeitOpponentWon(opponentName)
                       : game.timeout
                           ? context.l10n.gameOpponentWonTimeout(opponentName)
                           : context.l10n.gameOpponentWon(opponentName));

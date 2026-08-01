@@ -1005,5 +1005,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statistics",
+  "statsLoadFailed": "Failed to load statistics",
+  "statsAllGames": "All games",
+  "statsEmptyTitle": "No games played yet",
+  "statsEmptyHint": "Play your first game to see statistics here.",
+  "statsWins": "Wins",
+  "statsDraws": "Draws",
+  "statsLosses": "Losses",
+  "statsWinRate": "Win rate",
+  "statsTopWon": "Most wins against",
+  "statsTopDrawn": "Most draws with",
+  "statsTopLost": "Most losses to",
+  "statsTimePlayed": "Time played",
+  "statsYourScore": "Your score",
+  "profileShowStats": "Show statistics",
+  "statsDurationZeroMinutes": "0 min",
+  "gameYouWonOpponentForfeit": "Opponent surrendered. You won!",
+  "lobbyLeaveTitle": "Leave lobby?",
+  "lobbyLeaveConfirm": "The lobby will be deleted after you leave. Invited friends will get a decline.",
+  "lobbyLeave": "Leave",
+  "statsDurationHours": "{hours} h",
+  "statsDurationHoursMinutes": "{hours} h {minutes} min",
+  "statsDurationMinutes": "{minutes} min",
+  "gameYouForfeitOpponentWon": "You surrendered. {name} won"
 }

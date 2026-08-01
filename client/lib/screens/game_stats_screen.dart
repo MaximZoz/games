@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
@@ -15,10 +16,13 @@ Future<void> showGameStatsDialog(
   String? userId,
   String? displayName,
 }) {
+  final l10n = context.l10n;
   final isOwn = userId == null || userId.isEmpty;
   final title = isOwn
-      ? 'Статистика'
-      : (displayName?.trim().isNotEmpty == true ? displayName!.trim() : 'Игрок');
+      ? l10n.statsTitle
+      : (displayName?.trim().isNotEmpty == true
+          ? displayName!.trim()
+          : l10n.commonPlayer);
   return showDialog<void>(
     context: context,
     builder: (dialogContext) {
@@ -53,7 +57,7 @@ Future<void> showGameStatsDialog(
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Закрыть',
+                        tooltip: dialogContext.l10n.commonClose,
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.of(dialogContext).pop(),
                       ),
@@ -97,9 +101,12 @@ class GameStatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final title = _isOwn
-        ? 'Статистика'
-        : (displayName?.trim().isNotEmpty == true ? displayName! : 'Игрок');
+        ? l10n.statsTitle
+        : (displayName?.trim().isNotEmpty == true
+            ? displayName!
+            : l10n.commonPlayer);
     return SwipeBackScope(
       onBack: () => _goBack(context),
       child: Scaffold(
@@ -110,11 +117,11 @@ class GameStatsScreen extends ConsumerWidget {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            tooltip: 'Назад',
+            tooltip: l10n.commonBack,
             onPressed: () => _goBack(context),
           ),
           title: Text(
-            _isOwn ? 'Статистика' : title,
+            _isOwn ? l10n.statsTitle : title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -142,6 +149,7 @@ class GameStatsBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final statsAsync = ref.watch(gameStatsProvider(userId));
     final narrow = MediaQuery.sizeOf(context).shortestSide < 700;
     final contentPadding = padding ??
@@ -160,7 +168,7 @@ class GameStatsBody extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Не удалось загрузить статистику',
+            l10n.statsLoadFailed,
             style: const TextStyle(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
@@ -173,7 +181,7 @@ class GameStatsBody extends ConsumerWidget {
               shrinkWrap: true,
               children: [
                 _GameStatsBlock(
-                  title: 'Все игры',
+                  title: l10n.statsAllGames,
                   icon: Icons.sports_esports_rounded,
                   wins: stats.wins,
                   draws: stats.draws,
@@ -188,7 +196,7 @@ class GameStatsBody extends ConsumerWidget {
                 for (final g in stats.games) ...[
                   const SizedBox(height: 12),
                   _GameStatsBlock(
-                    title: _gameTypeTitle(g.gameType),
+                    title: _gameTypeTitle(l10n, g.gameType),
                     icon: _gameTypeIcon(g.gameType),
                     wins: g.won,
                     draws: g.drawn,
@@ -207,10 +215,10 @@ class GameStatsBody extends ConsumerWidget {
   }
 }
 
-String _gameTypeTitle(String gameType) {
+String _gameTypeTitle(AppLocalizations l10n, String gameType) {
   switch (gameType) {
     case 'tictactoe':
-      return 'Крестики-нолики';
+      return l10n.gamesTicTacToe;
     default:
       return gameType;
   }
@@ -256,9 +264,9 @@ class _EmptyStats extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Пока нет сыгранных партий',
-              style: TextStyle(
+            Text(
+              context.l10n.statsEmptyTitle,
+              style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -266,9 +274,9 @@ class _EmptyStats extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Сыграйте первую игру, чтобы здесь появилась статистика.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            Text(
+              context.l10n.statsEmptyHint,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -308,6 +316,7 @@ class _GameStatsBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GradientCard(
       animate: false,
       padding: EdgeInsets.all(narrow ? 14 : 18),
@@ -347,7 +356,7 @@ class _GameStatsBlock extends StatelessWidget {
             children: [
               Expanded(
                 child: _StatPill(
-                  label: 'Победы',
+                  label: l10n.statsWins,
                   value: wins,
                   color: _StatColor.win,
                 ),
@@ -355,7 +364,7 @@ class _GameStatsBlock extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _StatPill(
-                  label: 'Ничьи',
+                  label: l10n.statsDraws,
                   value: draws,
                   color: _StatColor.draw,
                 ),
@@ -363,7 +372,7 @@ class _GameStatsBlock extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _StatPill(
-                  label: 'Поражения',
+                  label: l10n.statsLosses,
                   value: losses,
                   color: _StatColor.loss,
                 ),
@@ -374,9 +383,9 @@ class _GameStatsBlock extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Процент побед',
-                style: TextStyle(
+              Text(
+                l10n.statsWinRate,
+                style: const TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary,
                 ),
@@ -407,7 +416,7 @@ class _GameStatsBlock extends StatelessWidget {
           if (topWon.isNotEmpty) ...[
             const SizedBox(height: 14),
             _OpponentsSection(
-              title: 'Больше всего выиграл у',
+              title: l10n.statsTopWon,
               accent: _StatColor.win,
               opponents: topWon,
               metric: _Metric.won,
@@ -417,7 +426,7 @@ class _GameStatsBlock extends StatelessWidget {
           if (topDrawn.isNotEmpty) ...[
             const SizedBox(height: 14),
             _OpponentsSection(
-              title: 'Больше всего ничьих с',
+              title: l10n.statsTopDrawn,
               accent: _StatColor.draw,
               opponents: topDrawn,
               metric: _Metric.drawn,
@@ -427,7 +436,7 @@ class _GameStatsBlock extends StatelessWidget {
           if (topLost.isNotEmpty) ...[
             const SizedBox(height: 14),
             _OpponentsSection(
-              title: 'Больше всего проиграл',
+              title: l10n.statsTopLost,
               accent: _StatColor.loss,
               opponents: topLost,
               metric: _Metric.lost,
@@ -467,15 +476,15 @@ class _InlineTimeRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Время в игре',
-                style: TextStyle(
+              Text(
+                context.l10n.statsTimePlayed,
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),
               ),
               Text(
-                _formatDuration(totalDurationSec),
+                _formatDuration(context.l10n, totalDurationSec),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -603,7 +612,7 @@ class _OpponentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = stat.displayName.trim().isNotEmpty
         ? stat.displayName.trim()
-        : 'Игрок';
+        : context.l10n.commonPlayer;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
@@ -699,17 +708,19 @@ class _StatColor {
   static const loss = _StatColor._(Color(0xFFC62828), Color(0xFFFFEBEE));
 }
 
-String _formatDuration(int totalSec) {
-  if (totalSec <= 0) return '0 мин';
+String _formatDuration(AppLocalizations l10n, int totalSec) {
+  if (totalSec <= 0) return l10n.statsDurationZeroMinutes;
   final hours = totalSec ~/ 3600;
   final minutes = (totalSec % 3600) ~/ 60;
   if (hours >= 1) {
     final remMin = minutes;
-    return remMin == 0 ? '$hours ч' : '$hours ч $remMin мин';
+    return remMin == 0
+        ? l10n.statsDurationHours(hours)
+        : l10n.statsDurationHoursMinutes(hours, remMin);
   }
-  if (minutes >= 1) return '$minutes мин';
+  if (minutes >= 1) return l10n.statsDurationMinutes(minutes);
   final seconds = totalSec % 60;
-  return '$seconds с';
+  return l10n.timeSecondsShort(seconds);
 }
 
 /// Переливающийся плейсхолдер на время загрузки.

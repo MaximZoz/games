@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statistik",
+  "statsLoadFailed": "Gagal memuat statistik",
+  "statsAllGames": "Semua game",
+  "statsEmptyTitle": "Belum ada pertandingan",
+  "statsEmptyHint": "Mainkan game pertama agar statistik muncul di sini.",
+  "statsWins": "Menang",
+  "statsDraws": "Seri",
+  "statsLosses": "Kalah",
+  "statsWinRate": "Persentase kemenangan",
+  "statsTopWon": "Paling sering menang melawan",
+  "statsTopDrawn": "Paling sering seri dengan",
+  "statsTopLost": "Paling sering kalah melawan",
+  "statsTimePlayed": "Waktu bermain",
+  "statsYourScore": "Skor Anda",
+  "profileShowStats": "Tampilkan statistik",
+  "statsDurationZeroMinutes": "0 mnt",
+  "gameYouWonOpponentForfeit": "Lawan menyerah. Anda menang!",
+  "lobbyLeaveTitle": "Tinggalkan lobi?",
+  "lobbyLeaveConfirm": "Lobi akan dihapus setelah Anda keluar. Teman yang diundang akan mendapat penolakan.",
+  "lobbyLeave": "Keluar",
+  "statsDurationHours": "{hours} jam",
+  "statsDurationHoursMinutes": "{hours} jam {minutes} mnt",
+  "statsDurationMinutes": "{minutes} mnt",
+  "gameYouForfeitOpponentWon": "Anda menyerah. {name} menang"
 }

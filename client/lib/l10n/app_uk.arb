@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Статистика",
+  "statsLoadFailed": "Не вдалося завантажити статистику",
+  "statsAllGames": "Усі ігри",
+  "statsEmptyTitle": "Поки немає зіграних партій",
+  "statsEmptyHint": "Зіграйте першу гру, щоб тут з’явилася статистика.",
+  "statsWins": "Перемоги",
+  "statsDraws": "Нічиї",
+  "statsLosses": "Поразки",
+  "statsWinRate": "Відсоток перемог",
+  "statsTopWon": "Найбільше перемог проти",
+  "statsTopDrawn": "Найбільше нічиїх з",
+  "statsTopLost": "Найбільше поразок від",
+  "statsTimePlayed": "Час у грі",
+  "statsYourScore": "Ваш рахунок",
+  "profileShowStats": "Показувати статистику",
+  "statsDurationZeroMinutes": "0 хв",
+  "gameYouWonOpponentForfeit": "Суперник здався. Ви перемогли!",
+  "lobbyLeaveTitle": "Покинути лобі?",
+  "lobbyLeaveConfirm": "Лобі буде видалено після виходу. Запрошені друзі отримають відмову.",
+  "lobbyLeave": "Покинути",
+  "statsDurationHours": "{hours} год",
+  "statsDurationHoursMinutes": "{hours} год {minutes} хв",
+  "statsDurationMinutes": "{minutes} хв",
+  "gameYouForfeitOpponentWon": "Ви здалися. {name} переміг"
 }

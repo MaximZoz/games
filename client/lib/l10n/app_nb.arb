@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statistikk",
+  "statsLoadFailed": "Kunne ikke laste statistikk",
+  "statsAllGames": "Alle spill",
+  "statsEmptyTitle": "Ingen spill spilt ennå",
+  "statsEmptyHint": "Spill ditt første spill for å se statistikk her.",
+  "statsWins": "Seire",
+  "statsDraws": "Uavgjort",
+  "statsLosses": "Tap",
+  "statsWinRate": "Seiersprosent",
+  "statsTopWon": "Flest seire mot",
+  "statsTopDrawn": "Flest uavgjort med",
+  "statsTopLost": "Flest tap mot",
+  "statsTimePlayed": "Spilletid",
+  "statsYourScore": "Din stilling",
+  "profileShowStats": "Vis statistikk",
+  "statsDurationZeroMinutes": "0 min",
+  "gameYouWonOpponentForfeit": "Motstanderen ga opp. Du vant!",
+  "lobbyLeaveTitle": "Forlate lobby?",
+  "lobbyLeaveConfirm": "Lobbyen slettes når du går. Inviterte venner får et avslag.",
+  "lobbyLeave": "Forlat",
+  "statsDurationHours": "{hours} t",
+  "statsDurationHoursMinutes": "{hours} t {minutes} min",
+  "statsDurationMinutes": "{minutes} min",
+  "gameYouForfeitOpponentWon": "Du ga opp. {name} vant"
 }

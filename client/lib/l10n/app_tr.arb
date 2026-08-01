@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "İstatistikler",
+  "statsLoadFailed": "İstatistikler yüklenemedi",
+  "statsAllGames": "Tüm oyunlar",
+  "statsEmptyTitle": "Henüz oynanan maç yok",
+  "statsEmptyHint": "İstatistikleri burada görmek için ilk oyununuzu oynayın.",
+  "statsWins": "Galibiyetler",
+  "statsDraws": "Beraberlikler",
+  "statsLosses": "Mağlubiyetler",
+  "statsWinRate": "Galibiyet oranı",
+  "statsTopWon": "En çok galibiyet alınan",
+  "statsTopDrawn": "En çok beraberlik",
+  "statsTopLost": "En çok mağlubiyet alınan",
+  "statsTimePlayed": "Oyun süresi",
+  "statsYourScore": "Skorunuz",
+  "profileShowStats": "İstatistikleri göster",
+  "statsDurationZeroMinutes": "0 dk",
+  "gameYouWonOpponentForfeit": "Rakip teslim oldu. Kazandınız!",
+  "lobbyLeaveTitle": "Lobiden çıkılsın mı?",
+  "lobbyLeaveConfirm": "Çıktıktan sonra lobi silinecek. Davet edilen arkadaşlar red alacak.",
+  "lobbyLeave": "Ayrıl",
+  "statsDurationHours": "{hours} sa",
+  "statsDurationHoursMinutes": "{hours} sa {minutes} dk",
+  "statsDurationMinutes": "{minutes} dk",
+  "gameYouForfeitOpponentWon": "Teslim oldunuz. {name} kazandı"
 }

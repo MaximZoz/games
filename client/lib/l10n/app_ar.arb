@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "الإحصائيات",
+  "statsLoadFailed": "تعذر تحميل الإحصائيات",
+  "statsAllGames": "كل الألعاب",
+  "statsEmptyTitle": "لا توجد مباريات بعد",
+  "statsEmptyHint": "العب لعبتك الأولى لترى الإحصائيات هنا.",
+  "statsWins": "انتصارات",
+  "statsDraws": "تعادل",
+  "statsLosses": "هزائم",
+  "statsWinRate": "نسبة الفوز",
+  "statsTopWon": "أكثر الانتصارات ضد",
+  "statsTopDrawn": "أكثر التعادلات مع",
+  "statsTopLost": "أكثر الهزائم أمام",
+  "statsTimePlayed": "وقت اللعب",
+  "statsYourScore": "نتيجتك",
+  "profileShowStats": "إظهار الإحصائيات",
+  "statsDurationZeroMinutes": "0 د",
+  "gameYouWonOpponentForfeit": "استسلم الخصم. لقد فزت!",
+  "lobbyLeaveTitle": "مغادرة الردهة؟",
+  "lobbyLeaveConfirm": "سيتم حذف الردهة بعد المغادرة. سيتلقى الأصدقاء المدعوون رفضًا.",
+  "lobbyLeave": "مغادرة",
+  "statsDurationHours": "{hours} س",
+  "statsDurationHoursMinutes": "{hours} س {minutes} د",
+  "statsDurationMinutes": "{minutes} د",
+  "gameYouForfeitOpponentWon": "استسلمت. فاز {name}"
 }

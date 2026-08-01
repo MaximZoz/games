@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "统计",
+  "statsLoadFailed": "无法加载统计",
+  "statsAllGames": "全部游戏",
+  "statsEmptyTitle": "暂无已完成的对局",
+  "statsEmptyHint": "先玩一局，统计就会显示在这里。",
+  "statsWins": "胜场",
+  "statsDraws": "平局",
+  "statsLosses": "负场",
+  "statsWinRate": "胜率",
+  "statsTopWon": "胜场最多对手",
+  "statsTopDrawn": "平局最多对手",
+  "statsTopLost": "负场最多对手",
+  "statsTimePlayed": "游戏时长",
+  "statsYourScore": "你们的比分",
+  "profileShowStats": "显示统计",
+  "statsDurationZeroMinutes": "0 分钟",
+  "gameYouWonOpponentForfeit": "对手认输了。你赢了！",
+  "lobbyLeaveTitle": "离开大厅？",
+  "lobbyLeaveConfirm": "离开后大厅将被删除。受邀好友会收到拒绝。",
+  "lobbyLeave": "离开",
+  "statsDurationHours": "{hours} 小时",
+  "statsDurationHoursMinutes": "{hours} 小时 {minutes} 分钟",
+  "statsDurationMinutes": "{minutes} 分钟",
+  "gameYouForfeitOpponentWon": "你认输了。{name} 获胜"
 }

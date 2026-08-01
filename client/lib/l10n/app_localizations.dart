@@ -89,8 +89,7 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -98,8 +97,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -111,8 +109,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -3169,10 +3166,153 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вернуться ко входу'**
   String get resetPasswordBackToLogin;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Статистика'**
+  String get statsTitle;
+
+  /// No description provided for @statsLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить статистику'**
+  String get statsLoadFailed;
+
+  /// No description provided for @statsAllGames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все игры'**
+  String get statsAllGames;
+
+  /// No description provided for @statsEmptyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет сыгранных партий'**
+  String get statsEmptyTitle;
+
+  /// No description provided for @statsEmptyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сыграйте первую игру, чтобы здесь появилась статистика.'**
+  String get statsEmptyHint;
+
+  /// No description provided for @statsWins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победы'**
+  String get statsWins;
+
+  /// No description provided for @statsDraws.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничьи'**
+  String get statsDraws;
+
+  /// No description provided for @statsLosses.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поражения'**
+  String get statsLosses;
+
+  /// No description provided for @statsWinRate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Процент побед'**
+  String get statsWinRate;
+
+  /// No description provided for @statsTopWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше всего выиграл у'**
+  String get statsTopWon;
+
+  /// No description provided for @statsTopDrawn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше всего ничьих с'**
+  String get statsTopDrawn;
+
+  /// No description provided for @statsTopLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше всего проиграл'**
+  String get statsTopLost;
+
+  /// No description provided for @statsTimePlayed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время в игре'**
+  String get statsTimePlayed;
+
+  /// No description provided for @statsYourScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш счёт'**
+  String get statsYourScore;
+
+  /// No description provided for @profileShowStats.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показывать статистику'**
+  String get profileShowStats;
+
+  /// No description provided for @statsDurationZeroMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'0 мин'**
+  String get statsDurationZeroMinutes;
+
+  /// No description provided for @gameYouWonOpponentForfeit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник сдался. Вы победили!'**
+  String get gameYouWonOpponentForfeit;
+
+  /// No description provided for @lobbyLeaveTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покинуть лобби?'**
+  String get lobbyLeaveTitle;
+
+  /// No description provided for @lobbyLeaveConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лобби будет удалено после выхода. Приглашённые друзья получат отказ.'**
+  String get lobbyLeaveConfirm;
+
+  /// No description provided for @lobbyLeave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покинуть'**
+  String get lobbyLeave;
+
+  /// No description provided for @statsDurationHours.
+  ///
+  /// In ru, this message translates to:
+  /// **'{hours} ч'**
+  String statsDurationHours(int hours);
+
+  /// No description provided for @statsDurationHoursMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{hours} ч {minutes} мин'**
+  String statsDurationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @statsDurationMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes} мин'**
+  String statsDurationMinutes(int minutes);
+
+  /// No description provided for @gameYouForfeitOpponentWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы сдались. {name} победил'**
+  String gameYouForfeitOpponentWon(String name);
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3181,108 +3321,52 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) => <String>[
-        'ar',
-        'be',
-        'cs',
-        'da',
-        'de',
-        'el',
-        'en',
-        'es',
-        'fi',
-        'fr',
-        'he',
-        'hi',
-        'id',
-        'it',
-        'ja',
-        'kk',
-        'ko',
-        'nb',
-        'nl',
-        'pl',
-        'pt',
-        'ru',
-        'sv',
-        'th',
-        'tr',
-        'uk',
-        'uz',
-        'vi',
-        'zh'
-      ].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'be', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'he', 'hi', 'id', 'it', 'ja', 'kk', 'ko', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'th', 'tr', 'uk', 'uz', 'vi', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar':
-      return AppLocalizationsAr();
-    case 'be':
-      return AppLocalizationsBe();
-    case 'cs':
-      return AppLocalizationsCs();
-    case 'da':
-      return AppLocalizationsDa();
-    case 'de':
-      return AppLocalizationsDe();
-    case 'el':
-      return AppLocalizationsEl();
-    case 'en':
-      return AppLocalizationsEn();
-    case 'es':
-      return AppLocalizationsEs();
-    case 'fi':
-      return AppLocalizationsFi();
-    case 'fr':
-      return AppLocalizationsFr();
-    case 'he':
-      return AppLocalizationsHe();
-    case 'hi':
-      return AppLocalizationsHi();
-    case 'id':
-      return AppLocalizationsId();
-    case 'it':
-      return AppLocalizationsIt();
-    case 'ja':
-      return AppLocalizationsJa();
-    case 'kk':
-      return AppLocalizationsKk();
-    case 'ko':
-      return AppLocalizationsKo();
-    case 'nb':
-      return AppLocalizationsNb();
-    case 'nl':
-      return AppLocalizationsNl();
-    case 'pl':
-      return AppLocalizationsPl();
-    case 'pt':
-      return AppLocalizationsPt();
-    case 'ru':
-      return AppLocalizationsRu();
-    case 'sv':
-      return AppLocalizationsSv();
-    case 'th':
-      return AppLocalizationsTh();
-    case 'tr':
-      return AppLocalizationsTr();
-    case 'uk':
-      return AppLocalizationsUk();
-    case 'uz':
-      return AppLocalizationsUz();
-    case 'vi':
-      return AppLocalizationsVi();
-    case 'zh':
-      return AppLocalizationsZh();
+    case 'ar': return AppLocalizationsAr();
+    case 'be': return AppLocalizationsBe();
+    case 'cs': return AppLocalizationsCs();
+    case 'da': return AppLocalizationsDa();
+    case 'de': return AppLocalizationsDe();
+    case 'el': return AppLocalizationsEl();
+    case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
+    case 'fi': return AppLocalizationsFi();
+    case 'fr': return AppLocalizationsFr();
+    case 'he': return AppLocalizationsHe();
+    case 'hi': return AppLocalizationsHi();
+    case 'id': return AppLocalizationsId();
+    case 'it': return AppLocalizationsIt();
+    case 'ja': return AppLocalizationsJa();
+    case 'kk': return AppLocalizationsKk();
+    case 'ko': return AppLocalizationsKo();
+    case 'nb': return AppLocalizationsNb();
+    case 'nl': return AppLocalizationsNl();
+    case 'pl': return AppLocalizationsPl();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
+    case 'sv': return AppLocalizationsSv();
+    case 'th': return AppLocalizationsTh();
+    case 'tr': return AppLocalizationsTr();
+    case 'uk': return AppLocalizationsUk();
+    case 'uz': return AppLocalizationsUz();
+    case 'vi': return AppLocalizationsVi();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

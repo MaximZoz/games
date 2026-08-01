@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -42,15 +40,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAddBotsTitle => '30 秒后加入机器人';
 
   @override
-  String get settingsAddBotsSubtitle =>
-      '匹配中：若 30 秒内未找到对手，将与机器人开始对局（赌注重置为 1 青铜）';
+  String get settingsAddBotsSubtitle => '匹配中：若 30 秒内未找到对手，将与机器人开始对局（赌注重置为 1 青铜）';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle =>
-      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -62,8 +58,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts =>
-      'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -72,8 +67,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody =>
-      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -97,8 +91,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued =>
-      'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -555,8 +548,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm =>
-      'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -1190,8 +1182,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns =>
-      'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1606,15 +1597,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle =>
-      'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent =>
-      'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';
@@ -1661,4 +1650,84 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => '统计';
+
+  @override
+  String get statsLoadFailed => '无法加载统计';
+
+  @override
+  String get statsAllGames => '全部游戏';
+
+  @override
+  String get statsEmptyTitle => '暂无已完成的对局';
+
+  @override
+  String get statsEmptyHint => '先玩一局，统计就会显示在这里。';
+
+  @override
+  String get statsWins => '胜场';
+
+  @override
+  String get statsDraws => '平局';
+
+  @override
+  String get statsLosses => '负场';
+
+  @override
+  String get statsWinRate => '胜率';
+
+  @override
+  String get statsTopWon => '胜场最多对手';
+
+  @override
+  String get statsTopDrawn => '平局最多对手';
+
+  @override
+  String get statsTopLost => '负场最多对手';
+
+  @override
+  String get statsTimePlayed => '游戏时长';
+
+  @override
+  String get statsYourScore => '你们的比分';
+
+  @override
+  String get profileShowStats => '显示统计';
+
+  @override
+  String get statsDurationZeroMinutes => '0 分钟';
+
+  @override
+  String get gameYouWonOpponentForfeit => '对手认输了。你赢了！';
+
+  @override
+  String get lobbyLeaveTitle => '离开大厅？';
+
+  @override
+  String get lobbyLeaveConfirm => '离开后大厅将被删除。受邀好友会收到拒绝。';
+
+  @override
+  String get lobbyLeave => '离开';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours 小时';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return '你认输了。$name 获胜';
+  }
 }

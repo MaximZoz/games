@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "통계",
+  "statsLoadFailed": "통계를 불러오지 못했습니다",
+  "statsAllGames": "모든 게임",
+  "statsEmptyTitle": "아직 플레이한 경기가 없습니다",
+  "statsEmptyHint": "여기에 통계를 보려면 첫 게임을 플레이하세요.",
+  "statsWins": "승리",
+  "statsDraws": "무승부",
+  "statsLosses": "패배",
+  "statsWinRate": "승률",
+  "statsTopWon": "가장 많이 이긴 상대",
+  "statsTopDrawn": "가장 많이 비긴 상대",
+  "statsTopLost": "가장 많이 진 상대",
+  "statsTimePlayed": "플레이 시간",
+  "statsYourScore": "상대 전적",
+  "profileShowStats": "통계 표시",
+  "statsDurationZeroMinutes": "0분",
+  "gameYouWonOpponentForfeit": "상대가 기권했습니다. 당신이 이겼습니다!",
+  "lobbyLeaveTitle": "로비를 나가시겠습니까?",
+  "lobbyLeaveConfirm": "나가면 로비가 삭제됩니다. 초대된 친구는 거절 알림을 받습니다.",
+  "lobbyLeave": "나가기",
+  "statsDurationHours": "{hours}시간",
+  "statsDurationHoursMinutes": "{hours}시간 {minutes}분",
+  "statsDurationMinutes": "{minutes}분",
+  "gameYouForfeitOpponentWon": "기권했습니다. {name} 님이 이겼습니다"
 }

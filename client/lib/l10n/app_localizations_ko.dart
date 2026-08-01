@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -42,15 +40,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAddBotsTitle => '30초 후 봇 추가';
 
   @override
-  String get settingsAddBotsSubtitle =>
-      '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
+  String get settingsAddBotsSubtitle => '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
-  String get settingsOfflineModeSubtitle =>
-      'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
 
   @override
   String get settingsModeOnline => 'Онлайн';
@@ -62,8 +58,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
 
   @override
-  String get rulesAlternateStarts =>
-      'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
 
   @override
   String get offlineBadgeTooltip => 'Офлайн режим';
@@ -72,8 +67,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlineModePopupTitle => 'Офлайн режим';
 
   @override
-  String get offlineModePopupBody =>
-      'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
 
   @override
   String get offlineModePopupSettings => 'Настройки';
@@ -97,8 +91,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlinePlayAgain => 'Ещё раз';
 
   @override
-  String get shopPurchaseQueued =>
-      'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
 
   @override
   String shopPurchaseApplied(String title) {
@@ -114,8 +107,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFriendsOnlyTitle => '친구 메시지만 받기';
 
   @override
-  String get settingsFriendsOnlySubtitle =>
-      '친구가 아닌 사용자는 이모지만 보낼 수 있습니다. 스팸이 문제라면 일시적으로 차단하세요.';
+  String get settingsFriendsOnlySubtitle => '친구가 아닌 사용자는 이모지만 보낼 수 있습니다. 스팸이 문제라면 일시적으로 차단하세요.';
 
   @override
   String get settingsNotifications => '알림';
@@ -517,8 +509,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbyLinkCopied => '링크가 복사되었습니다';
 
   @override
-  String get lobbyNoFriendsOnline =>
-      '온라인인 친구가 없습니다. 위 게임 링크를 공유하거나 친구가 접속할 때까지 기다리세요.';
+  String get lobbyNoFriendsOnline => '온라인인 친구가 없습니다. 위 게임 링크를 공유하거나 친구가 접속할 때까지 기다리세요.';
 
   @override
   String get gameBot => 'Bot';
@@ -557,8 +548,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameSurrenderTitle => 'Сдаться?';
 
   @override
-  String get gameSurrenderConfirm =>
-      'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
 
   @override
   String get gameOfferDraw => 'Предложить ничью';
@@ -1192,8 +1182,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns =>
-      'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
 
   @override
   String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
@@ -1608,15 +1597,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset password';
 
   @override
-  String get forgotPasswordSubtitle =>
-      'Enter your email — we’ll send a code for a new password';
+  String get forgotPasswordSubtitle => 'Enter your email — we’ll send a code for a new password';
 
   @override
   String get forgotPasswordSubmit => 'Send code';
 
   @override
-  String get forgotPasswordSent =>
-      'If the account exists, a code was sent to your email';
+  String get forgotPasswordSent => 'If the account exists, a code was sent to your email';
 
   @override
   String get resetPasswordTitle => 'New password';
@@ -1663,4 +1650,84 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => '통계';
+
+  @override
+  String get statsLoadFailed => '통계를 불러오지 못했습니다';
+
+  @override
+  String get statsAllGames => '모든 게임';
+
+  @override
+  String get statsEmptyTitle => '아직 플레이한 경기가 없습니다';
+
+  @override
+  String get statsEmptyHint => '여기에 통계를 보려면 첫 게임을 플레이하세요.';
+
+  @override
+  String get statsWins => '승리';
+
+  @override
+  String get statsDraws => '무승부';
+
+  @override
+  String get statsLosses => '패배';
+
+  @override
+  String get statsWinRate => '승률';
+
+  @override
+  String get statsTopWon => '가장 많이 이긴 상대';
+
+  @override
+  String get statsTopDrawn => '가장 많이 비긴 상대';
+
+  @override
+  String get statsTopLost => '가장 많이 진 상대';
+
+  @override
+  String get statsTimePlayed => '플레이 시간';
+
+  @override
+  String get statsYourScore => '상대 전적';
+
+  @override
+  String get profileShowStats => '통계 표시';
+
+  @override
+  String get statsDurationZeroMinutes => '0분';
+
+  @override
+  String get gameYouWonOpponentForfeit => '상대가 기권했습니다. 당신이 이겼습니다!';
+
+  @override
+  String get lobbyLeaveTitle => '로비를 나가시겠습니까?';
+
+  @override
+  String get lobbyLeaveConfirm => '나가면 로비가 삭제됩니다. 초대된 친구는 거절 알림을 받습니다.';
+
+  @override
+  String get lobbyLeave => '나가기';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours시간';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours시간 $minutes분';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes분';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return '기권했습니다. $name 님이 이겼습니다';
+  }
 }

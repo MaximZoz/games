@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statistika",
+  "statsLoadFailed": "Statistikani yuklab bo‘lmadi",
+  "statsAllGames": "Barcha o‘yinlar",
+  "statsEmptyTitle": "Hali o‘ynalgan partiyalar yo‘q",
+  "statsEmptyHint": "Statistika paydo bo‘lishi uchun birinchi o‘yinni o‘ynang.",
+  "statsWins": "G‘alabalar",
+  "statsDraws": "Durranglar",
+  "statsLosses": "Mag‘lubiyatlar",
+  "statsWinRate": "G‘alaba foizi",
+  "statsTopWon": "Eng ko‘p g‘alaba qilgan raqiblar",
+  "statsTopDrawn": "Eng ko‘p durranglar",
+  "statsTopLost": "Eng ko‘p mag‘lub bo‘lgan raqiblar",
+  "statsTimePlayed": "O‘yin vaqti",
+  "statsYourScore": "Hisobingiz",
+  "profileShowStats": "Statistikani ko‘rsatish",
+  "statsDurationZeroMinutes": "0 daq",
+  "gameYouWonOpponentForfeit": "Raqib taslim bo‘ldi. Siz yutdingiz!",
+  "lobbyLeaveTitle": "Lobbidan chiqilsinmi?",
+  "lobbyLeaveConfirm": "Chiqgandan keyin lobbi o‘chiriladi. Taklif qilingan do‘stlar rad javobini oladi.",
+  "lobbyLeave": "Chiqish",
+  "statsDurationHours": "{hours} soat",
+  "statsDurationHoursMinutes": "{hours} soat {minutes} daq",
+  "statsDurationMinutes": "{minutes} daq",
+  "gameYouForfeitOpponentWon": "Siz taslim bo‘ldingiz. {name} yutdi"
 }

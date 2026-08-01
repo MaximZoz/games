@@ -1632,10 +1632,10 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
             ),
           ),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Показывать статистику',
-              style: TextStyle(
+              context.l10n.profileShowStats,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,

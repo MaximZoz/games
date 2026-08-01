@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statistieken",
+  "statsLoadFailed": "Statistieken laden mislukt",
+  "statsAllGames": "Alle spellen",
+  "statsEmptyTitle": "Nog geen wedstrijden gespeeld",
+  "statsEmptyHint": "Speel je eerste wedstrijd om hier statistieken te zien.",
+  "statsWins": "Overwinningen",
+  "statsDraws": "Gelijkspel",
+  "statsLosses": "Nederlagen",
+  "statsWinRate": "Winstpercentage",
+  "statsTopWon": "Meeste overwinningen tegen",
+  "statsTopDrawn": "Meeste gelijkspelen met",
+  "statsTopLost": "Meeste nederlagen tegen",
+  "statsTimePlayed": "Speeltijd",
+  "statsYourScore": "Jouw stand",
+  "profileShowStats": "Statistieken tonen",
+  "statsDurationZeroMinutes": "0 min",
+  "gameYouWonOpponentForfeit": "Tegenstander gaf op. Je hebt gewonnen!",
+  "lobbyLeaveTitle": "Lobby verlaten?",
+  "lobbyLeaveConfirm": "De lobby wordt verwijderd nadat je weggaat. Uitgenodigde vrienden krijgen een afwijzing.",
+  "lobbyLeave": "Verlaten",
+  "statsDurationHours": "{hours} u",
+  "statsDurationHoursMinutes": "{hours} u {minutes} min",
+  "statsDurationMinutes": "{minutes} min",
+  "gameYouForfeitOpponentWon": "Je gaf op. {name} won"
 }

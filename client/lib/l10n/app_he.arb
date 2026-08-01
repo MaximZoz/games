@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "סטטיסטיקה",
+  "statsLoadFailed": "טעינת הסטטיסטיקה נכשלה",
+  "statsAllGames": "כל המשחקים",
+  "statsEmptyTitle": "עדיין אין משחקים",
+  "statsEmptyHint": "שחקו משחק ראשון כדי לראות כאן סטטיסטיקה.",
+  "statsWins": "ניצחונות",
+  "statsDraws": "תיקו",
+  "statsLosses": "הפסדים",
+  "statsWinRate": "אחוז ניצחונות",
+  "statsTopWon": "הכי הרבה ניצחונות מול",
+  "statsTopDrawn": "הכי הרבה תיקו עם",
+  "statsTopLost": "הכי הרבה הפסדים מול",
+  "statsTimePlayed": "זמן משחק",
+  "statsYourScore": "התוצאה שלך",
+  "profileShowStats": "הצג סטטיסטיקה",
+  "statsDurationZeroMinutes": "0 דק׳",
+  "gameYouWonOpponentForfeit": "היריב נכנע. ניצחת!",
+  "lobbyLeaveTitle": "לעזוב את הלובי?",
+  "lobbyLeaveConfirm": "הלובי יימחק לאחר היציאה. חברים שהוזמנו יקבלו דחייה.",
+  "lobbyLeave": "עזוב",
+  "statsDurationHours": "{hours} שע׳",
+  "statsDurationHoursMinutes": "{hours} שע׳ {minutes} דק׳",
+  "statsDurationMinutes": "{minutes} דק׳",
+  "gameYouForfeitOpponentWon": "נכנעת. {name} ניצח"
 }

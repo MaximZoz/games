@@ -383,11 +383,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
   /// Заголовок «Своя игра» (иконка правил — в AppBar, на уровне крестика).
   Widget _buildInviteHeaderRow(BuildContext context) {
-    return const Align(
+    return Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        'Своя игра',
-        style: TextStyle(
+        context.l10n.lobbyPrivateGame,
+        style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
@@ -753,10 +753,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Покинуть лобби?'),
-        content: const Text(
-          'Лобби будет удалено после выхода. Приглашённые друзья получат отказ.',
-        ),
+        title: Text(l10n.lobbyLeaveTitle),
+        content: Text(l10n.lobbyLeaveConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -767,7 +765,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accentStart,
             ),
-            child: const Text('Покинуть'),
+            child: Text(l10n.lobbyLeave),
           ),
         ],
       ),

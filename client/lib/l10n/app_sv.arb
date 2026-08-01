@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statistik",
+  "statsLoadFailed": "Kunde inte läsa in statistik",
+  "statsAllGames": "Alla spel",
+  "statsEmptyTitle": "Inga spel spelade ännu",
+  "statsEmptyHint": "Spela ditt första spel för att se statistik här.",
+  "statsWins": "Vinster",
+  "statsDraws": "Oavgjorda",
+  "statsLosses": "Förluster",
+  "statsWinRate": "Vinstprocent",
+  "statsTopWon": "Flest vinster mot",
+  "statsTopDrawn": "Flest oavgjorda med",
+  "statsTopLost": "Flest förluster mot",
+  "statsTimePlayed": "Speltid",
+  "statsYourScore": "Din ställning",
+  "profileShowStats": "Visa statistik",
+  "statsDurationZeroMinutes": "0 min",
+  "gameYouWonOpponentForfeit": "Motståndaren gav upp. Du vann!",
+  "lobbyLeaveTitle": "Lämna lobby?",
+  "lobbyLeaveConfirm": "Lobbyn raderas när du lämnar. Inbjudna vänner får ett avslag.",
+  "lobbyLeave": "Lämna",
+  "statsDurationHours": "{hours} h",
+  "statsDurationHoursMinutes": "{hours} h {minutes} min",
+  "statsDurationMinutes": "{minutes} min",
+  "gameYouForfeitOpponentWon": "Du gav upp. {name} vann"
 }

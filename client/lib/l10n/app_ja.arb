@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "統計",
+  "statsLoadFailed": "統計を読み込めませんでした",
+  "statsAllGames": "すべてのゲーム",
+  "statsEmptyTitle": "まだ対局がありません",
+  "statsEmptyHint": "ここに統計を表示するには、最初のゲームをプレイしてください。",
+  "statsWins": "勝利",
+  "statsDraws": "引き分け",
+  "statsLosses": "敗北",
+  "statsWinRate": "勝率",
+  "statsTopWon": "最も多く勝った相手",
+  "statsTopDrawn": "最も引き分けが多い相手",
+  "statsTopLost": "最も多く負けた相手",
+  "statsTimePlayed": "プレイ時間",
+  "statsYourScore": "対戦成績",
+  "profileShowStats": "統計を表示",
+  "statsDurationZeroMinutes": "0分",
+  "gameYouWonOpponentForfeit": "相手が降参しました。あなたの勝ちです！",
+  "lobbyLeaveTitle": "ロビーを退出しますか？",
+  "lobbyLeaveConfirm": "退出後にロビーは削除されます。招待した友達には拒否が届きます。",
+  "lobbyLeave": "退出",
+  "statsDurationHours": "{hours}時間",
+  "statsDurationHoursMinutes": "{hours}時間{minutes}分",
+  "statsDurationMinutes": "{minutes}分",
+  "gameYouForfeitOpponentWon": "降参しました。{name}の勝ちです"
 }

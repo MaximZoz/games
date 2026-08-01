@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Στατιστικά",
+  "statsLoadFailed": "Αποτυχία φόρτωσης στατιστικών",
+  "statsAllGames": "Όλα τα παιχνίδια",
+  "statsEmptyTitle": "Δεν υπάρχουν παιχνίδια ακόμα",
+  "statsEmptyHint": "Παίξτε το πρώτο σας παιχνίδι για να δείτε στατιστικά εδώ.",
+  "statsWins": "Νίκες",
+  "statsDraws": "Ισοπαλίες",
+  "statsLosses": "Ήττες",
+  "statsWinRate": "Ποσοστό νικών",
+  "statsTopWon": "Περισσότερες νίκες εναντίον",
+  "statsTopDrawn": "Περισσότερες ισοπαλίες με",
+  "statsTopLost": "Περισσότερες ήττες από",
+  "statsTimePlayed": "Χρόνος παιχνιδιού",
+  "statsYourScore": "Το σκορ σας",
+  "profileShowStats": "Εμφάνιση στατιστικών",
+  "statsDurationZeroMinutes": "0 λεπ",
+  "gameYouWonOpponentForfeit": "Ο αντίπαλος παραδόθηκε. Κερδίσατε!",
+  "lobbyLeaveTitle": "Αποχώρηση από το λόμπι;",
+  "lobbyLeaveConfirm": "Το λόμπι θα διαγραφεί μετά την αποχώρηση. Οι προσκεκλημένοι φίλοι θα λάβουν απόρριψη.",
+  "lobbyLeave": "Αποχώρηση",
+  "statsDurationHours": "{hours} ώ",
+  "statsDurationHoursMinutes": "{hours} ώ {minutes} λεπ",
+  "statsDurationMinutes": "{minutes} λεπ",
+  "gameYouForfeitOpponentWon": "Παραδοθήκατε. Ο/Η {name} κέρδισε"
 }

@@ -953,5 +953,29 @@
       }
     }
   },
-  "resetPasswordBackToLogin": "Back to sign in"
+  "resetPasswordBackToLogin": "Back to sign in",
+  "statsTitle": "Statystyki",
+  "statsLoadFailed": "Nie udało się wczytać statystyk",
+  "statsAllGames": "Wszystkie gry",
+  "statsEmptyTitle": "Brak rozegranych partii",
+  "statsEmptyHint": "Zagraj pierwszą grę, aby zobaczyć tu statystyki.",
+  "statsWins": "Zwycięstwa",
+  "statsDraws": "Remisy",
+  "statsLosses": "Porażki",
+  "statsWinRate": "Procent zwycięstw",
+  "statsTopWon": "Najwięcej wygranych z",
+  "statsTopDrawn": "Najwięcej remisów z",
+  "statsTopLost": "Najwięcej przegranych z",
+  "statsTimePlayed": "Czas w grze",
+  "statsYourScore": "Twój wynik",
+  "profileShowStats": "Pokaż statystyki",
+  "statsDurationZeroMinutes": "0 min",
+  "gameYouWonOpponentForfeit": "Przeciwnik się poddał. Wygrałeś!",
+  "lobbyLeaveTitle": "Opuścić lobby?",
+  "lobbyLeaveConfirm": "Lobby zostanie usunięte po wyjściu. Zaproszeni znajomi dostaną odmowę.",
+  "lobbyLeave": "Opuść",
+  "statsDurationHours": "{hours} godz.",
+  "statsDurationHoursMinutes": "{hours} godz. {minutes} min",
+  "statsDurationMinutes": "{minutes} min",
+  "gameYouForfeitOpponentWon": "Poddałeś się. {name} wygrał"
 }
