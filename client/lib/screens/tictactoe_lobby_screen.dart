@@ -538,30 +538,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    OutlinedButton.icon(
+                    OutlinedButton(
                       onPressed: isInviting || isInvited
                           ? null
                           : () => _inviteFriend(context, friendId),
-                      icon: isInviting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.accentStart,
-                              ),
-                            )
-                          : Icon(
-                              isInvited
-                                  ? Icons.check_rounded
-                                  : Icons.person_add_alt_rounded,
-                              size: 18,
-                            ),
-                      label: Text(
-                        isInvited
-                            ? context.l10n.lobbyInviteSentShort
-                            : context.l10n.lobbyInvite,
-                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.accentStart,
                         side: BorderSide(
@@ -571,10 +551,24 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
+                          horizontal: 14,
                           vertical: 8,
                         ),
                       ),
+                      child: isInviting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accentStart,
+                              ),
+                            )
+                          : Text(
+                              isInvited
+                                  ? context.l10n.lobbyInviteSentShort
+                                  : context.l10n.lobbyInvite,
+                            ),
                     ),
                   ],
                 ),
