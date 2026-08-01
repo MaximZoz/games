@@ -2818,6 +2818,11 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	byGame, err := store.GetGameStatsByType(ctx, h.Pool, targetID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
 	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 5)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -2828,6 +2833,9 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	if byGame == nil {
+		byGame = []store.GameTypeScore{}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"wins":               stats.Wins,
 		"draws":              stats.Draws,
@@ -2835,6 +2843,7 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		"total_played":       stats.TotalPlayed,
 		"win_rate":           stats.WinRate(),
 		"total_duration_sec": stats.TotalDurationSec,
+		"games":              byGame,
 		"top_won":            topWon,
 		"top_lost":           topLost,
 	})

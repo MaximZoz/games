@@ -664,11 +664,9 @@ class _ProfileContent extends StatelessWidget {
                   ),
           ),
         ),
-        // Счёт, коллекции и «Редактировать» — за рамкой блока с инфо о пользователе.
+        // Статистика, коллекции и edit — за рамкой карточки с инфо о пользователе.
         if (!isEditing)
-          _ProfileBelowFrame(
-            onEdit: onStartEdit,
-          ),
+          _ProfileBelowFrame(onEdit: onStartEdit),
       ],
     );
   }
@@ -826,7 +824,7 @@ class _ProfileView extends ConsumerWidget {
   }
 }
 
-/// Счёт, коллекции и кнопка редактирования — снаружи рамки инфо-блока.
+/// Статистика → коллекции → «Редактировать» — снаружи карточки профиля.
 class _ProfileBelowFrame extends ConsumerWidget {
   const _ProfileBelowFrame({required this.onEdit});
 
@@ -867,9 +865,7 @@ class _ProfileBelowFrame extends ConsumerWidget {
             icon: const Icon(Icons.edit_outlined, size: 18),
             label: Text(
               context.l10n.profileEdit,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.accentStart,
@@ -1532,7 +1528,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 ),
                 const SizedBox(height: 16),
                 _buildCompactNameAgeRow(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                _buildShowStatsCheckbox(),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -1563,8 +1561,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 12),
-                _buildShowStatsCheckbox(),
-                const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed:
                       (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1594,39 +1590,35 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Widget _buildShowStatsCheckbox() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => setState(() => _showStatsToOthers = !_showStatsToOthers),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Checkbox(
-                value: _showStatsToOthers,
-                onChanged: (v) =>
-                    setState(() => _showStatsToOthers = v ?? false),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
+    // Кликается только сам чекбокс — подпись не переключает значение.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Checkbox(
+              value: _showStatsToOthers,
+              onChanged: (v) => setState(() => _showStatsToOthers = v ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Показывать статистику другим игрокам',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+                height: 1.3,
               ),
             ),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Text(
-                'Показывать статистику другим игрокам',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                  height: 1.3,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1698,6 +1690,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                _buildShowStatsCheckbox(),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _aboutController,
                   inputFormatters: _aboutFormatters,
@@ -1712,8 +1706,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   maxLines: 3,
                   maxLength: 100,
                 ),
-                const SizedBox(height: 12),
-                _buildShowStatsCheckbox(),
                 const SizedBox(height: 20),
                 Text(
                   context.l10n.profileAvatar,
@@ -2016,18 +2008,19 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
   }
 }
 
-/// Счёт и иконка статистики (общая по всем играм).
+/// Статистика за рамкой карточки: все игры + разбивка по каждой игре.
 class _OwnScoreSection extends ConsumerWidget {
   const _OwnScoreSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(gameStatsProvider(null)).valueOrNull;
+    final games = stats?.games ?? const [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Ваш счёт',
+          'Статистика',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
@@ -2035,18 +2028,50 @@ class _OwnScoreSection extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Flexible(
-              child: ScoreTripletCard(
-                won: stats?.wins ?? 0,
-                lost: stats?.losses ?? 0,
-                drawn: stats?.draws ?? 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ScoreTripletCard(
+                    won: stats?.wins ?? 0,
+                    lost: stats?.losses ?? 0,
+                    drawn: stats?.draws ?? 0,
+                  ),
+                  if (games.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 12,
+                        children: [
+                          for (final g in games)
+                            GameTypeScoreChip(
+                              gameType: g.gameType,
+                              won: g.won,
+                              lost: g.lost,
+                              drawn: g.drawn,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(width: 8),
-            StatsIconButton(
-              onTap: () => showGameStatsDialog(context),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: StatsIconButton(
+                onTap: () => showGameStatsDialog(context),
+              ),
             ),
           ],
         ),

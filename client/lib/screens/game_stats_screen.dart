@@ -172,7 +172,26 @@ class GameStatsBody extends ConsumerWidget {
               padding: contentPadding,
               shrinkWrap: true,
               children: [
-                _SummarySection(stats: stats, narrow: narrow),
+                _SummarySection(
+                  title: 'Все игры',
+                  wins: stats.wins,
+                  draws: stats.draws,
+                  losses: stats.losses,
+                  winRate: stats.winRate,
+                  narrow: narrow,
+                ),
+                for (final g in stats.games) ...[
+                  const SizedBox(height: 12),
+                  _SummarySection(
+                    title: _gameTypeTitle(g.gameType),
+                    wins: g.won,
+                    draws: g.drawn,
+                    losses: g.lost,
+                    winRate: _winRate(g.won, g.drawn, g.lost),
+                    narrow: narrow,
+                    showWinRate: true,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 _TimeSection(totalDurationSec: stats.totalDurationSec),
                 const SizedBox(height: 16),
@@ -197,6 +216,21 @@ class GameStatsBody extends ConsumerWidget {
             ),
     );
   }
+}
+
+String _gameTypeTitle(String gameType) {
+  switch (gameType) {
+    case 'tictactoe':
+      return 'Крестики-нолики';
+    default:
+      return gameType;
+  }
+}
+
+double _winRate(int wins, int draws, int losses) {
+  final total = wins + draws + losses;
+  if (total <= 0) return 0;
+  return wins / total;
 }
 
 class _EmptyStats extends StatelessWidget {
@@ -248,10 +282,23 @@ class _EmptyStats extends StatelessWidget {
 
 /// Итоговый блок: W/D/L пилюли + win-rate прогресс-бар.
 class _SummarySection extends StatelessWidget {
-  const _SummarySection({required this.stats, required this.narrow});
+  const _SummarySection({
+    required this.title,
+    required this.wins,
+    required this.draws,
+    required this.losses,
+    required this.winRate,
+    required this.narrow,
+    this.showWinRate = true,
+  });
 
-  final GameStats stats;
+  final String title;
+  final int wins;
+  final int draws;
+  final int losses;
+  final double winRate;
   final bool narrow;
+  final bool showWinRate;
 
   @override
   Widget build(BuildContext context) {
@@ -261,9 +308,9 @@ class _SummarySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Все игры',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -275,7 +322,7 @@ class _SummarySection extends StatelessWidget {
               Expanded(
                 child: _StatPill(
                   label: 'Победы',
-                  value: stats.wins,
+                  value: wins,
                   color: _StatColor.win,
                 ),
               ),
@@ -283,7 +330,7 @@ class _SummarySection extends StatelessWidget {
               Expanded(
                 child: _StatPill(
                   label: 'Ничьи',
-                  value: stats.draws,
+                  value: draws,
                   color: _StatColor.draw,
                 ),
               ),
@@ -291,45 +338,46 @@ class _SummarySection extends StatelessWidget {
               Expanded(
                 child: _StatPill(
                   label: 'Поражения',
-                  value: stats.losses,
+                  value: losses,
                   color: _StatColor.loss,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          // Win-rate.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Процент побед',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
+          if (showWinRate) ...[
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Процент побед',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              Text(
-                '${(stats.winRate * 100).round()}%',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.accentStart,
+                Text(
+                  '${(winRate * 100).round()}%',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accentStart,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: stats.winRate.clamp(0.0, 1.0),
-              minHeight: 6,
-              backgroundColor: AppColors.accentSoft,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.accentStart),
+              ],
             ),
-          ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: winRate.clamp(0.0, 1.0),
+                minHeight: 6,
+                backgroundColor: AppColors.accentSoft,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.accentStart),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -270,11 +270,12 @@ class ScoreTripletCard extends StatelessWidget {
           const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _TallScoreIcon(icon: Icons.check_rounded, color: _win),
+              // Кубок — победа, большой палец вниз — поражение, рукопожатие — ничья.
+              _TallScoreIcon(icon: Icons.emoji_events_rounded, color: _win),
               SizedBox(height: 6),
-              _TallScoreIcon(icon: Icons.close_rounded, color: _loss),
+              _TallScoreIcon(icon: Icons.thumb_down_alt_rounded, color: _loss),
               SizedBox(height: 6),
-              _TallScoreIcon(icon: Icons.remove_rounded, color: _draw),
+              _TallScoreIcon(icon: Icons.handshake_rounded, color: _draw),
             ],
           ),
           const SizedBox(width: 14),

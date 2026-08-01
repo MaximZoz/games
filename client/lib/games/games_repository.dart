@@ -597,6 +597,7 @@ class GameStats {
     required this.totalDurationSec,
     required this.topWon,
     required this.topLost,
+    this.games = const [],
   });
 
   final int wins;
@@ -607,10 +608,20 @@ class GameStats {
   final int totalDurationSec;
   final List<OpponentStat> topWon;
   final List<OpponentStat> topLost;
+  /// Разбивка по типам игр.
+  final List<GameTypeScore> games;
 
   bool get isEmpty => totalPlayed == 0;
 
   factory GameStats.fromJson(Map<String, dynamic> json) {
+    final gamesRaw = json['games'];
+    final games = gamesRaw is List
+        ? gamesRaw
+            .whereType<Map>()
+            .map((e) => GameTypeScore.fromJson(Map<String, dynamic>.from(e)))
+            .where((g) => !g.isEmpty)
+            .toList(growable: false)
+        : const <GameTypeScore>[];
     return GameStats(
       wins: (json['wins'] as num?)?.toInt() ?? 0,
       draws: (json['draws'] as num?)?.toInt() ?? 0,
@@ -620,6 +631,7 @@ class GameStats {
       totalDurationSec: (json['total_duration_sec'] as num?)?.toInt() ?? 0,
       topWon: _opponentList(json['top_won']),
       topLost: _opponentList(json['top_lost']),
+      games: games,
     );
   }
 

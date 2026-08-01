@@ -111,6 +111,40 @@ func GetGameStats(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (Ga
 	return s, nil
 }
 
+// GetGameStatsByType — статистика игрока с разбивкой по типу игры.
+func GetGameStatsByType(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]GameTypeScore, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT
+			COALESCE(NULLIF(game_type, ''), 'tictactoe') AS game_type,
+			COUNT(*) FILTER (WHERE winner_user_id = $1)::int                          AS wins,
+			COUNT(*) FILTER (WHERE winner_user_id IS NULL)::int                       AS draws,
+			COUNT(*) FILTER (WHERE winner_user_id IS NOT NULL AND winner_user_id <> $1)::int AS losses
+		FROM game_results
+		WHERE (x_user_id = $1 OR o_user_id = $1)
+		  AND x_user_id IS NOT NULL
+		  AND o_user_id IS NOT NULL
+		GROUP BY 1
+		ORDER BY 1
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make([]GameTypeScore, 0)
+	for rows.Next() {
+		var g GameTypeScore
+		if err := rows.Scan(&g.GameType, &g.Won, &g.Drawn, &g.Lost); err != nil {
+			return nil, err
+		}
+		if g.Won == 0 && g.Drawn == 0 && g.Lost == 0 {
+			continue
+		}
+		out = append(out, g)
+	}
+	return out, rows.Err()
+}
+
 // GetHeadToHead возвращает счёт between userID и opponentID (только живые PvP, без ботов),
 // с разбивкой по типу игры.
 func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID uuid.UUID) (HeadToHead, error) {
