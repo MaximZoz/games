@@ -128,14 +128,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       },
       child: SwipeBackScope(
         enabled: !_isLeaving,
-        onBack: () => _leaveLobby(context),
+        onBack: () => _confirmLeaveLobby(context),
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             leading: IconButton(
               tooltip: context.l10n.commonBack,
-              onPressed: _isLeaving ? null : () => _leaveLobby(context),
+              onPressed: _isLeaving ? null : () => _confirmLeaveLobby(context),
               icon: const Icon(Icons.arrow_back_rounded),
             ),
             title: Text(
@@ -194,10 +194,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                         .watch(presenceMapProvider)
                                         .valueOrNull ??
                                     const {};
-                                final inviteableFriends = friends
-                                    .where((f) => !_invitedFriendIds
-                                        .contains(f.user.id))
-                                    .toList()
+                                // Список друзей НЕ фильтруем по «уже приглашён»:
+                                // приглашённые остаются с пометкой, а не исчезают.
+                                final visibleFriends = List.of(friends)
                                   ..sort((a, b) {
                                     final aOnline =
                                         presence[a.user.id]?.online ?? false;
@@ -206,11 +205,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     if (aOnline == bOnline) return 0;
                                     return aOnline ? -1 : 1;
                                   });
-                                if (inviteableFriends.isEmpty) {
+                                if (visibleFriends.isEmpty) {
                                   return Text(
-                                    friends.isEmpty
-                                        ? context.l10n.friendsEmpty
-                                        : context.l10n.lobbyInvitesSentWaiting,
+                                    context.l10n.friendsEmpty,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 14,
@@ -221,7 +218,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    ...inviteableFriends.map((f) {
+                                    ...visibleFriends.map((f) {
                                       final friendId = f.user.id;
                                       final isInvited =
                                           _invitedFriendIds.contains(friendId);
@@ -264,21 +261,55 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            FilledButton(
+                                            // Кнопка «пригласить» — стиль как
+                                            // «Найти игру»: OutlinedButton.icon,
+                                            // accentStart, рамка, спиннер.
+                                            OutlinedButton.icon(
                                               onPressed: isInviting || isInvited
                                                   ? null
                                                   : () => _inviteFriend(
                                                       context, friendId),
-                                              style: FilledButton.styleFrom(
-                                                backgroundColor:
-                                                    AppColors.accentStart,
-                                                foregroundColor: Colors.white,
-                                              ),
-                                              child: Text(
+                                              icon: isInviting
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: AppColors
+                                                            .accentStart,
+                                                      ),
+                                                    )
+                                                  : Icon(
+                                                      isInvited
+                                                          ? Icons
+                                                              .check_rounded
+                                                          : Icons
+                                                              .person_add_alt_rounded,
+                                                      size: 18,
+                                                    ),
+                                              label: Text(
                                                 isInvited
-                                                    ? context
-                                                        .l10n.lobbyInviteSentShort
+                                                    ? context.l10n
+                                                        .lobbyInviteSentShort
                                                     : context.l10n.lobbyInvite,
+                                              ),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor:
+                                                    AppColors.accentStart,
+                                                side: BorderSide(
+                                                  color: AppColors.accentStart
+                                                      .withValues(alpha: 0.6),
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 8,
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -616,6 +647,36 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       if (mounted) {
         setState(() => _invitingFriendIds.remove(friendUserId));
       }
+    }
+  }
+
+  Future<void> _confirmLeaveLobby(BuildContext context) async {
+    if (_isLeaving) return;
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Покинуть лобби?'),
+        content: const Text(
+          'Лобби будет удалено после выхода. Приглашённые друзья получат отказ.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: const Text('Покинуть'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      _leaveLobby(context);
     }
   }
 
