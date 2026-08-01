@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Eenmalige aankoop",
-  "shopSellRefund": "Verkopen geeft een deel van de prijs terug",
+  "shopSellRefund": "Verkopen geeft 80% van de prijs terug",
   "shopCollectionAdded": "{title} toegevoegd aan profiel",
   "@shopCollectionAdded": {
     "placeholders": {

@@ -137,6 +137,16 @@ class DailyRewardStatus {
       milestonesBronze: milestones,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'available': available,
+        'streak': streak,
+        'next_streak': nextStreak,
+        'next_reward_bronze': nextRewardBronze,
+        'milestones_bronze': {
+          for (final e in milestonesBronze.entries) '${e.key}': e.value,
+        },
+      };
 }
 
 class DailyRewardClaimResult {

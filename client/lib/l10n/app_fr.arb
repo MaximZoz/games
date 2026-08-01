@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Achat unique",
-  "shopSellRefund": "La vente rembourse une partie du prix",
+  "shopSellRefund": "La vente rembourse 80% du prix",
   "shopCollectionAdded": "{title} ajouté au profil",
   "@shopCollectionAdded": {
     "placeholders": {

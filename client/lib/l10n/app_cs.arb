@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Jednorázový nákup",
-  "shopSellRefund": "Prodej vrátí část ceny",
+  "shopSellRefund": "Prodej vrátí 80% ceny",
   "shopCollectionAdded": "{title} přidáno do profilu",
   "@shopCollectionAdded": {
     "placeholders": {

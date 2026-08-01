@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "شراء لمرة واحدة",
-  "shopSellRefund": "البيع يعيد جزءًا من التكلفة",
+  "shopSellRefund": "البيع يعيد 80% من التكلفة",
   "shopCollectionAdded": "أُضيف {title} إلى الملف الشخصي",
   "@shopCollectionAdded": {
     "placeholders": {

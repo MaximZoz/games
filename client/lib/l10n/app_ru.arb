@@ -12,6 +12,42 @@
   "settingsLanguageSystem": "Как в системе",
   "settingsAddBotsTitle": "Добавлять ботов через 30 с",
   "settingsAddBotsSubtitle": "В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)",
+  "settingsOfflineModeTitle": "Режим сети",
+  "settingsOfflineModeSubtitle": "Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.",
+  "settingsModeOnline": "Онлайн",
+  "settingsModeOffline": "Офлайн",
+  "gamesAlternateStartsHint": "По очереди кто начинает партию",
+  "rulesAlternateStarts": "Кто ходит первым чередуется от партии к партии.",
+  "offlineBadgeTooltip": "Офлайн режим",
+  "offlineModePopupTitle": "Офлайн режим",
+  "offlineModePopupBody": "Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.",
+  "offlineModePopupSettings": "Настройки",
+  "gamesPlay": "Играть",
+  "offlineGameTitle": "Игра с ботом",
+  "offlineGameHint": "Без ставок и наград · только офлайн",
+  "offlineBotWon": "Бот победил",
+  "offlineBotThinking": "Ход бота…",
+  "offlinePlayAgain": "Ещё раз",
+  "shopPurchaseQueued": "Покупка сохранена — применится в режиме онлайн",
+  "shopPurchaseApplied": "{title} — покупка применена",
+  "@shopPurchaseApplied": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopPurchaseRejected": "{title} — покупка не применена: {reason}",
+  "@shopPurchaseRejected": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Сообщения только от друзей",
   "settingsFriendsOnlySubtitle": "Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.",
   "settingsNotifications": "Уведомления",
@@ -544,7 +580,7 @@
     }
   },
   "shopBuyOnce": "Покупка один раз",
-  "shopSellRefund": "Продажа вернёт часть стоимости",
+  "shopSellRefund": "Продажа вернет 80% стоимости",
   "shopCollectionAdded": "{title} добавлен в профиль",
   "@shopCollectionAdded": {
     "placeholders": {

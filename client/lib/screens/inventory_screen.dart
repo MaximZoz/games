@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/friends/gift_friend_picker.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -17,9 +21,6 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
-import 'package:multigames_client/core/locale_provider.dart';
-import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 Map<String, String> get _groupTitles {
@@ -284,12 +285,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       }
     }
 
+    final isOffline = ref.watch(isOfflineProvider);
     final items = async.valueOrNull ?? const <InventoryItem>[];
     final catalog = ref.watch(shopCatalogProvider).valueOrNull ?? const <ShopItem>[];
     final emojis =
         items.where((e) => e.kind == 'emoji' && e.quantity > 0).toList();
     final frames = items.where((e) => e.kind == 'frame').toList();
-    final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
+    final stakes = isOffline
+        ? const <InventoryItem>[]
+        : items.where((e) => e.kind == 'stake_unlock').toList();
     final collections = items.where((e) => e.kind == 'collection').toList();
     final income = incomeAsync.valueOrNull;
     final incomeAvailable = income?.available == true;
@@ -568,30 +572,33 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        _Section(
-                          title: context.l10n.shopStakes,
-                          empty: context.l10n.inventoryNoStakes,
-                          children: [
-                            for (final it in stakes)
-                              _InvTile(
-                                leading: CoinIcon(
-                                  coinType: it.stakeGold != null
-                                      ? CoinType.gold
-                                      : CoinType.silver,
-                                  size: 26,
+                        if (!isOffline) ...[
+                          const SizedBox(height: 16),
+                          _Section(
+                            title: context.l10n.shopStakes,
+                            empty: context.l10n.inventoryNoStakes,
+                            children: [
+                              for (final it in stakes)
+                                _InvTile(
+                                  leading: CoinIcon(
+                                    coinType: it.stakeGold != null
+                                        ? CoinType.gold
+                                        : CoinType.silver,
+                                    size: 26,
+                                  ),
+                                  title: catalogTitle(it.code,
+                                      fallback: it.title, l10n: context.l10n),
+                                  subtitle: it.stakeGold != null
+                                      ? context.l10n.inventoryStakeGold(
+                                          '${it.stakeGold}',
+                                        )
+                                      : context.l10n.inventoryStakeSilver(
+                                          '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
+                                        ),
                                 ),
-                                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
-                                subtitle: it.stakeGold != null
-                                    ? context.l10n.inventoryStakeGold(
-                                        '${it.stakeGold}',
-                                      )
-                                    : context.l10n.inventoryStakeSilver(
-                                        '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
-                                      ),
-                              ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
         ),

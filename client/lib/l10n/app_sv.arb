@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Engångsköp",
-  "shopSellRefund": "Försäljning återbetalar en del av kostnaden",
+  "shopSellRefund": "Försäljning återbetalar 80% av kostnaden",
   "shopCollectionAdded": "{title} tillagd i profilen",
   "@shopCollectionAdded": {
     "placeholders": {

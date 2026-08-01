@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "一度きりの購入",
-  "shopSellRefund": "売却すると費用の一部が戻ります",
+  "shopSellRefund": "売却すると費用の80%が戻ります",
   "shopCollectionAdded": "{title} をプロフィールに追加しました",
   "@shopCollectionAdded": {
     "placeholders": {

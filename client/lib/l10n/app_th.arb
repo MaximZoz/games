@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "ซื้อครั้งเดียว",
-  "shopSellRefund": "การขายคืนส่วนหนึ่งของราคา",
+  "shopSellRefund": "การขายคืน 80% ของราคา",
   "shopCollectionAdded": "เพิ่ม {title} ในโปรไฟล์แล้ว",
   "@shopCollectionAdded": {
     "placeholders": {

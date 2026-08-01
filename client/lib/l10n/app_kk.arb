@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Бір рет сатып алу",
-  "shopSellRefund": "Сату құнының бір бөлігін қайтарады",
+  "shopSellRefund": "Сату құнының 80%-ін қайтарады",
   "shopCollectionAdded": "{title} профильге қосылды",
   "@shopCollectionAdded": {
     "placeholders": {

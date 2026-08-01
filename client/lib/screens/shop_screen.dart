@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
@@ -13,6 +14,7 @@ class ShopScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final isOffline = ref.watch(isOfflineProvider);
     void goBack() => context.pop();
 
     return SwipeBackScope(
@@ -57,13 +59,15 @@ class ShopScreen extends ConsumerWidget {
                       subtitle: l10n.shopCollectionsSubtitle,
                       onTap: () => context.push('/shop/collections'),
                     ),
-                    const SizedBox(height: 12),
-                    HomeActionCard(
-                      icon: Icons.casino_outlined,
-                      title: l10n.shopStakes,
-                      subtitle: l10n.shopStakesSubtitle,
-                      onTap: () => context.push('/shop/stakes'),
-                    ),
+                    if (!isOffline) ...[
+                      const SizedBox(height: 12),
+                      HomeActionCard(
+                        icon: Icons.casino_outlined,
+                        title: l10n.shopStakes,
+                        subtitle: l10n.shopStakesSubtitle,
+                        onTap: () => context.push('/shop/stakes'),
+                      ),
+                    ],
                   ],
                 ),
               ),

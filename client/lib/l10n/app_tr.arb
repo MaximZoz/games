@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Tek seferlik satın alma",
-  "shopSellRefund": "Satış maliyetin bir kısmını iade eder",
+  "shopSellRefund": "Satış maliyetin %80'ini iade eder",
   "shopCollectionAdded": "{title} profile eklendi",
   "@shopCollectionAdded": {
     "placeholders": {

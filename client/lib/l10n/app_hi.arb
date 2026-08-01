@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "एक बार की खरीद",
-  "shopSellRefund": "बेचने पर लागत का कुछ हिस्सा वापस मिलता है",
+  "shopSellRefund": "बेचने पर लागत का 80% वापस मिलता है",
   "shopCollectionAdded": "{title} प्रोफ़ाइल में जोड़ा गया",
   "@shopCollectionAdded": {
     "placeholders": {

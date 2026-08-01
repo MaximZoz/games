@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Zakup jednorazowy",
-  "shopSellRefund": "Sprzedaż zwraca część kosztów",
+  "shopSellRefund": "Sprzedaż zwraca 80% kosztów",
   "shopCollectionAdded": "{title} dodano do profilu",
   "@shopCollectionAdded": {
     "placeholders": {

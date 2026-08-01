@@ -43,6 +43,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)';
 
   @override
+  String get settingsOfflineModeTitle => 'Network mode';
+
+  @override
+  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and applied in online mode. Online is on when there is internet or by the user setting.';
+
+  @override
+  String get settingsModeOnline => 'Online';
+
+  @override
+  String get settingsModeOffline => 'Offline';
+
+  @override
+  String get gamesAlternateStartsHint => 'Take turns starting each game';
+
+  @override
+  String get rulesAlternateStarts => 'Who goes first alternates from game to game.';
+
+  @override
+  String get offlineBadgeTooltip => 'Offline mode';
+
+  @override
+  String get offlineModePopupTitle => 'Offline mode';
+
+  @override
+  String get offlineModePopupBody => 'Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply in online mode.';
+
+  @override
+  String get offlineModePopupSettings => 'Settings';
+
+  @override
+  String get gamesPlay => 'Play';
+
+  @override
+  String get offlineGameTitle => 'Bot game';
+
+  @override
+  String get offlineGameHint => 'No stakes or rewards · offline only';
+
+  @override
+  String get offlineBotWon => 'Bot won';
+
+  @override
+  String get offlineBotThinking => 'Bot is thinking…';
+
+  @override
+  String get offlinePlayAgain => 'Play again';
+
+  @override
+  String get shopPurchaseQueued => 'Purchase saved — will apply in online mode';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — purchase applied';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — purchase not applied: $reason';
+  }
+
+  @override
   String get settingsFriendsOnlyTitle => 'Messages from friends only';
 
   @override
@@ -1071,7 +1132,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopBuyOnce => 'One-time purchase';
 
   @override
-  String get shopSellRefund => 'Selling returns part of the cost';
+  String get shopSellRefund => 'Selling returns 80% of the cost';
 
   @override
   String shopCollectionAdded(String title) {

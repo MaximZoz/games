@@ -15,6 +15,8 @@ import 'package:multigames_client/screens/coins_screen.dart';
 import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/screens/games_screen.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/screens/offline_tictactoe_screen.dart';
 import 'package:multigames_client/screens/tictactoe_game_screen.dart';
 import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
@@ -65,6 +67,8 @@ class _AuthRefreshListenable extends ChangeNotifier {
 
   late final StreamSubscription<dynamic> _subscription;
 
+  void bump() => notifyListeners();
+
   @override
   void dispose() {
     _subscription.cancel();
@@ -102,6 +106,7 @@ bool _preserveStartupPath(String path) {
   }
   if (path == '/oauth/callback') return true;
   if (path.startsWith('/games/tictactoe/')) return true;
+  if (path == '/games/tictactoe/offline') return true;
   // Комната чата /invite из пуша или ссылки.
   if (path.startsWith('/chats/') && path.length > '/chats/'.length) {
     return true;
@@ -115,6 +120,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
   final startupGate = ref.read(_startupGamesGateProvider);
+  ref.listen<OfflineModeState>(offlineModeProvider, (_, __) {
+    refreshListenable.bump();
+  });
   ref.onDispose(refreshListenable.dispose);
   return GoRouter(
     initialLocation: '/games',
@@ -160,6 +168,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return appendRedirectQuery('/login', afterLogin);
       }
       if (isAdminRoute && user != null && !user.isAdmin) return '/games';
+
+      // Офлайн: чаты/друзья/лобби/ставки недоступны.
+      if (user != null && ref.read(isOfflineProvider)) {
+        if (path == '/friends' ||
+            path == '/chats' ||
+            path.startsWith('/chats/')) {
+          return '/games';
+        }
+        if (path.startsWith('/games/tictactoe/lobby/')) {
+          return '/games';
+        }
+        if (path == '/shop/stakes' || path.endsWith('/shop/stakes')) {
+          return '/shop';
+        }
+      }
 
       // Перезагрузка / обновление PWA: всегда вкладка «Игры» (не чаты/друзья/…).
       if (user != null && !startupGate.done) {
@@ -387,6 +410,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     gameId: state.pathParameters['gameId'] ?? '',
                   ),
                 ),
+              ),
+              GoRoute(
+                path: '/games/tictactoe/offline',
+                pageBuilder: (_, state) {
+                  final q = state.uri.queryParameters;
+                  final grid = int.tryParse(q['grid'] ?? '') ?? 3;
+                  return _noTransitionPage(
+                    state,
+                    OfflineTicTacToeScreen(
+                      gridSize: grid,
+                      swapRule: q['swap'] == '1',
+                      firstMoveRestriction: q['nocenter'] == '1',
+                    ),
+                  );
+                },
               ),
               GoRoute(
                 path: '/tournaments',

@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "일회성 구매",
-  "shopSellRefund": "판매 시 비용의 일부가 반환됩니다",
+  "shopSellRefund": "판매 시 비용의 80%가 반환됩니다",
   "shopCollectionAdded": "{title}이(가) 프로필에 추가됨",
   "@shopCollectionAdded": {
     "placeholders": {

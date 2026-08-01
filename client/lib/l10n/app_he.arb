@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "רכישה חד-פעמית",
-  "shopSellRefund": "מכירה מחזירה חלק מהעלות",
+  "shopSellRefund": "מכירה מחזירה 80% מהעלות",
   "shopCollectionAdded": "{title} נוסף לפרופיל",
   "@shopCollectionAdded": {
     "placeholders": {

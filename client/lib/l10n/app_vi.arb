@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Mua một lần",
-  "shopSellRefund": "Bán sẽ hoàn lại một phần chi phí",
+  "shopSellRefund": "Bán sẽ hoàn lại 80% chi phí",
   "shopCollectionAdded": "Đã thêm {title} vào hồ sơ",
   "@shopCollectionAdded": {
     "placeholders": {

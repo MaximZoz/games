@@ -9,8 +9,8 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -38,7 +38,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   _GamesTab _selectedTab = _GamesTab.games;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
   int _selectedGridSize = 3; // 3, 4, 5
-  bool _selectedSwapRule = false;
+  // В офлайне чип ⇄ = «по очереди кто начинает»; по умолчанию включён.
+  bool _selectedSwapRule = true;
   bool _selectedFirstMoveRestriction = false;
   int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
   bool _settingsHydrated = false;
@@ -61,10 +62,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final saved = ref.read(userGameSettingsProvider).valueOrNull;
     if (saved == null) return;
     _settingsHydrated = true;
+    final offline = ref.read(isOfflineProvider);
     setState(() {
       _selectedTurnTimeSec = saved.turnTimeSec;
       _selectedGridSize = saved.gridSize;
-      _selectedSwapRule = saved.swapRule;
+      // В офлайне ⇄ = чередование первого хода (по умолчанию вкл.),
+      // а не онлайн-правило «смены сторон» из сохранённых настроек.
+      _selectedSwapRule = offline ? true : saved.swapRule;
       _selectedFirstMoveRestriction = saved.firstMoveRestriction;
       _selectedStakeBronze = saved.stakeBronze;
     });
@@ -125,10 +129,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
+      final offline = ref.read(isOfflineProvider);
       setState(() {
         _selectedTurnTimeSec = saved.turnTimeSec;
         _selectedGridSize = saved.gridSize;
-        _selectedSwapRule = saved.swapRule;
+        _selectedSwapRule = offline ? true : saved.swapRule;
         _selectedFirstMoveRestriction = saved.firstMoveRestriction;
         _selectedStakeBronze = saved.stakeBronze;
       });
@@ -148,6 +153,41 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
     final contentPadding = isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0);
+    final isOffline = ref.watch(isOfflineProvider);
+    // При входе в офлайн включаем ⇄ (чередование первого хода с ботом).
+    // Локально — без persist в онлайн-настройки pie-rule.
+    ref.listen<bool>(isOfflineProvider, (prev, next) {
+      if (next && prev != true && mounted && !_selectedSwapRule) {
+        setState(() => _selectedSwapRule = true);
+      }
+    });
+    if (isOffline && !_selectedSwapRule) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !ref.read(isOfflineProvider)) return;
+        if (_selectedSwapRule) return;
+        setState(() => _selectedSwapRule = true);
+      });
+    }
+    if (isOffline && _selectedTab != _GamesTab.games) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _selectedTab = _GamesTab.games);
+      });
+    }
+
+    void playOffline() {
+      final qs = <String, String>{
+        'grid': '$_selectedGridSize',
+        // В офлайне всегда чередуем, кто начинает (даже если чип ещё не
+        // успел включиться после перехода из онлайна).
+        'swap': '1',
+        if (_selectedFirstMoveRestriction) 'nocenter': '1',
+      };
+      final uri = Uri(
+        path: '/games/tictactoe/offline',
+        queryParameters: qs,
+      );
+      context.go(uri.toString());
+    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -155,31 +195,35 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: EdgeInsets.all(contentPadding),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: _GamesTabSwitcher(
-                    selectedTab: _selectedTab,
-                    onTabChanged: _onTabChanged,
+            if (!isOffline)
+              Padding(
+                padding: EdgeInsets.all(contentPadding),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    child: _GamesTabSwitcher(
+                      selectedTab: _selectedTab,
+                      onTabChanged: _onTabChanged,
+                    ),
                   ),
                 ),
               ),
-            ),
             SizedBox(height: isDesktop ? 8 : 20),
             Expanded(
               // IndexedStack вместо PageView: ветка /games в StatefulShell
               // indexedStack остаётся живой при /login|/register (PWA),
               // а PageController с viewport=0 после возврата ломает смену табов.
               child: IndexedStack(
-                index: _selectedTab == _GamesTab.games ? 0 : 1,
+                index: isOffline
+                    ? 0
+                    : (_selectedTab == _GamesTab.games ? 0 : 1),
                 sizing: StackFit.expand,
                 children: [
                   _GamesPageContent(
                     isDesktop: isDesktop,
                     isCreating: _isCreating,
                     isFinding: _isFinding,
+                    isOffline: isOffline,
                     turnTimeSec: _selectedTurnTimeSec,
                     onTurnTimeChanged: (v) {
                       setState(() => _selectedTurnTimeSec = v);
@@ -200,7 +244,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       setState(() => _selectedFirstMoveRestriction = v);
                       _persistSettings();
                     },
-                    stakeBronze: _selectedStakeBronze,
+                    stakeBronze: isOffline ? 0 : _selectedStakeBronze,
                     stakeOptionsList: availableStakes,
                     onStakeChanged: (v) {
                       setState(() => _selectedStakeBronze = v);
@@ -208,7 +252,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     },
                     onCreateGame: () => _createGame(context, 'invite'),
                     onFindGame: () => _createGame(context, 'matchmake'),
-                    invites: invites,
+                    onPlayOffline: playOffline,
+                    invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,
                     onAcceptInvite: _acceptInvite,
                     onDeclineInvite: _declineInvite,
@@ -243,7 +288,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     });
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      final addBotsAfter30s = ref.read(addBotsAfter30sProvider);
       final result = await repo.createLobby(
         mode: mode,
         turnTimeSec: _selectedTurnTimeSec,
@@ -251,7 +295,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         swapRule: _selectedSwapRule,
         firstMoveRestriction: _selectedFirstMoveRestriction,
         stakeBronze: _selectedStakeBronze,
-        addBotsAfter30s: mode == 'matchmake' ? addBotsAfter30s : false,
+        addBotsAfter30s: false,
       );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
@@ -601,6 +645,7 @@ class _GamesPageContent extends StatelessWidget {
     required this.isDesktop,
     required this.isCreating,
     required this.isFinding,
+    required this.isOffline,
     required this.turnTimeSec,
     required this.onTurnTimeChanged,
     required this.gridSize,
@@ -614,6 +659,7 @@ class _GamesPageContent extends StatelessWidget {
     required this.onStakeChanged,
     required this.onCreateGame,
     required this.onFindGame,
+    required this.onPlayOffline,
     required this.invites,
     required this.activeAsync,
     required this.onAcceptInvite,
@@ -626,6 +672,7 @@ class _GamesPageContent extends StatelessWidget {
   final bool isDesktop;
   final bool isCreating;
   final bool isFinding;
+  final bool isOffline;
   final int turnTimeSec;
   final void Function(int) onTurnTimeChanged;
   final int gridSize;
@@ -639,6 +686,7 @@ class _GamesPageContent extends StatelessWidget {
   final void Function(int) onStakeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
+  final VoidCallback onPlayOffline;
   final List<GameInvite> invites;
   final AsyncValue<ActiveGameItem?> activeAsync;
   final void Function(BuildContext, String) onAcceptInvite;
@@ -698,6 +746,7 @@ class _GamesPageContent extends StatelessWidget {
                               child: _TictactoeGameCard(
                                 isCreating: isCreating,
                                 isFinding: isFinding,
+                                isOffline: isOffline,
                                 turnTimeSec: turnTimeSec,
                                 onTurnTimeChanged: onTurnTimeChanged,
                                 gridSize: gridSize,
@@ -712,6 +761,7 @@ class _GamesPageContent extends StatelessWidget {
                                 onStakeChanged: onStakeChanged,
                                 onCreateGame: onCreateGame,
                                 onFindGame: onFindGame,
+                                onPlayOffline: onPlayOffline,
                               ),
                             ),
                           ),
@@ -720,6 +770,7 @@ class _GamesPageContent extends StatelessWidget {
                       return _TictactoeGameCard(
                         isCreating: isCreating,
                         isFinding: isFinding,
+                        isOffline: isOffline,
                         turnTimeSec: turnTimeSec,
                         onTurnTimeChanged: onTurnTimeChanged,
                         gridSize: gridSize,
@@ -734,6 +785,7 @@ class _GamesPageContent extends StatelessWidget {
                         onStakeChanged: onStakeChanged,
                         onCreateGame: onCreateGame,
                         onFindGame: onFindGame,
+                        onPlayOffline: onPlayOffline,
                       );
                     },
                   ),
@@ -1150,6 +1202,7 @@ class _TictactoeGameCard extends StatelessWidget {
   const _TictactoeGameCard({
     required this.isCreating,
     required this.isFinding,
+    required this.isOffline,
     required this.turnTimeSec,
     required this.onTurnTimeChanged,
     required this.gridSize,
@@ -1163,10 +1216,12 @@ class _TictactoeGameCard extends StatelessWidget {
     required this.onStakeChanged,
     required this.onCreateGame,
     required this.onFindGame,
+    required this.onPlayOffline,
   });
 
   final bool isCreating;
   final bool isFinding;
+  final bool isOffline;
   final int turnTimeSec;
   final void Function(int) onTurnTimeChanged;
   final int gridSize;
@@ -1180,6 +1235,7 @@ class _TictactoeGameCard extends StatelessWidget {
   final void Function(int) onStakeChanged;
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
+  final VoidCallback onPlayOffline;
 
   void _cycleTurnTime() {
     final idx = turnTimeOptions.indexOf(turnTimeSec);
@@ -1207,6 +1263,8 @@ class _TictactoeGameCard extends StatelessWidget {
         swapRule: swapRule,
         firstMoveRestriction: firstMoveRestriction,
         stakeBronze: stakeBronze,
+        includeTurnTime: !isOffline,
+        offlineBot: isOffline,
       );
 
   List<Widget> _buildChipList({
@@ -1255,49 +1313,50 @@ class _TictactoeGameCard extends StatelessWidget {
           ],
         ),
       ),
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isCreating || isFinding ? null : _cycleTurnTime,
-          borderRadius: BorderRadius.circular(10),
-          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-          child: Tooltip(
-            message: context.l10n.gamesTapChangeTurnTime,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-              decoration: BoxDecoration(
-                color: AppColors.accentSoft.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.3),
-                  width: 1,
+      if (!isOffline)
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isCreating || isFinding ? null : _cycleTurnTime,
+            borderRadius: BorderRadius.circular(10),
+            splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+            highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+            child: Tooltip(
+              message: context.l10n.gamesTapChangeTurnTime,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.accentStart.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    size: iconSz,
-                    color: AppColors.accentStart,
-                  ),
-                  SizedBox(width: compact ? 4 : 6),
-                  Text(
-                    formatTurnTime(turnTimeSec),
-                    style: theme?.bodyMedium?.copyWith(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.timer_outlined,
+                      size: iconSz,
                       color: AppColors.accentStart,
-                      fontWeight: FontWeight.w600,
-                      fontSize: fontSz,
-                      height: 1.35,
                     ),
-                  ),
-                ],
+                    SizedBox(width: compact ? 4 : 6),
+                    Text(
+                      formatTurnTime(turnTimeSec),
+                      style: theme?.bodyMedium?.copyWith(
+                        color: AppColors.accentStart,
+                        fontWeight: FontWeight.w600,
+                        fontSize: fontSz,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
       Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1351,7 +1410,9 @@ class _TictactoeGameCard extends StatelessWidget {
           splashColor: AppColors.accentStart.withValues(alpha: 0.2),
           highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
           child: Tooltip(
-            message: context.l10n.gamesSwapSidesHint,
+            message: isOffline
+                ? context.l10n.gamesAlternateStartsHint
+                : context.l10n.gamesSwapSidesHint,
             child: Container(
               padding: EdgeInsets.all(compact ? 4 : 6),
               decoration: BoxDecoration(
@@ -1489,7 +1550,7 @@ class _TictactoeGameCard extends StatelessWidget {
                         maxLines: 1,
                       ),
                     ),
-                    if (stakeBronze > 0) ...[
+                    if (!isOffline && stakeBronze > 0) ...[
                       SizedBox(width: isDesktop ? 24 : 12),
                       Material(
                         color: Colors.transparent,
@@ -1563,67 +1624,90 @@ class _TictactoeGameCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: isCreating || isFinding ? null : onCreateGame,
-                  icon: isCreating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.add_rounded, size: 20),
-                  label: Text(isCreating ? context.l10n.commonCreating : context.l10n.gamesCreate),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+          if (isOffline)
+            FilledButton.icon(
+              onPressed: onPlayOffline,
+              icon: const Icon(Icons.play_arrow_rounded, size: 22),
+              label: Text(context.l10n.gamesPlay),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentStart,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+                ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: isCreating || isFinding ? null : onCreateGame,
+                    icon: isCreating
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.add_rounded, size: 20),
+                    label: Text(isCreating
+                        ? context.l10n.commonCreating
+                        : context.l10n.gamesCreate),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentStart,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(width: isMedium ? 10 : 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isCreating || isFinding ? null : onFindGame,
-                  icon: isFinding
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accentStart,
-                          ),
-                        )
-                      : const Icon(Icons.search_rounded, size: 20),
-                  label: Text(isFinding ? context.l10n.commonSearching : context.l10n.gamesFindMatch),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accentStart,
-                    side: BorderSide(
-                      color: AppColors.accentStart.withValues(alpha: 0.6),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+                SizedBox(width: isMedium ? 10 : 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: isCreating || isFinding ? null : onFindGame,
+                    icon: isFinding
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accentStart,
+                            ),
+                          )
+                        : const Icon(Icons.search_rounded, size: 20),
+                    label: Text(isFinding
+                        ? context.l10n.commonSearching
+                        : context.l10n.gamesFindMatch),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.accentStart,
+                      side: BorderSide(
+                        color: AppColors.accentStart.withValues(alpha: 0.6),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

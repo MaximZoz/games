@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Engangskøb",
-  "shopSellRefund": "Salg returnerer en del af prisen",
+  "shopSellRefund": "Salg returnerer 80% af prisen",
   "shopCollectionAdded": "{title} tilføjet til profilen",
   "@shopCollectionAdded": {
     "placeholders": {

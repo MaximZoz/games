@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Пакупка адзін раз",
-  "shopSellRefund": "Продаж верне частку кошту",
+  "shopSellRefund": "Продаж верне 80% кошту",
   "shopCollectionAdded": "{title} дададзены ў профіль",
   "@shopCollectionAdded": {
     "placeholders": {

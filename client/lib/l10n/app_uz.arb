@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Bir martalik xarid",
-  "shopSellRefund": "Sotish narxning bir qismini qaytaradi",
+  "shopSellRefund": "Sotish narxning 80%ini qaytaradi",
   "shopCollectionAdded": "{title} profilga qo‘shildi",
   "@shopCollectionAdded": {
     "placeholders": {
