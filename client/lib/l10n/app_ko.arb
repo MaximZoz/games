@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "하루 {amount}",
+  "balancePerDay": "{amount}/일",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "일회성 구매",
-  "shopSellRefund": "판매 시 비용의 일부가 반환됩니다",
+  "shopSellRefund": "판매 시 비용의 80%가 반환됩니다",
   "shopCollectionAdded": "{title}이(가) 프로필에 추가됨",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "나이는 1에서 111 사이로 입력하세요",
   "profileSaveFailed": "프로필을 저장하지 못했습니다",
   "profileNameHint": "라틴 문자, 숫자, _ 최대 10자",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1에서 111",
   "profileAboutHint": "최대 100자 (선택)",
   "profileProcessingPhoto": "사진 처리 중…",

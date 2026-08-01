@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
 
 import 'test_locale.dart';
 
@@ -32,6 +33,19 @@ void main() {
     expect(
       msg(hasImage: true).copyWith(imageCount: 3).previewText,
       'Фото (3)',
+    );
+  });
+
+  test('previewText для ссылки-приглашения в лобби', () {
+    final body =
+        'https://multigameszozu.fly.dev/games/tictactoe/lobby/f84e367b-674a-4290-900c-a5133fa23204?mode=invite';
+    expect(
+      msg(body: body).previewText,
+      'Приглашение в игру: Крестики-нолики',
+    );
+    expect(
+      formatChatMessagePreview(body),
+      'Приглашение в игру: Крестики-нолики',
     );
   });
 }

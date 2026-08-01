@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:multigames_client/auth/session_storage_stub.dart'
+    if (dart.library.html) 'package:multigames_client/auth/session_storage_web.dart'
+    as session_storage;
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -134,6 +137,16 @@ class DailyRewardStatus {
       milestonesBronze: milestones,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'available': available,
+        'streak': streak,
+        'next_streak': nextStreak,
+        'next_reward_bronze': nextRewardBronze,
+        'milestones_bronze': {
+          for (final e in milestonesBronze.entries) '${e.key}': e.value,
+        },
+      };
 }
 
 class DailyRewardClaimResult {
@@ -152,7 +165,6 @@ class AuthRepository {
   AuthRepository({SharedPreferences? prefs}) : _prefs = prefs;
 
   SharedPreferences? _prefs;
-  bool _prefsUnavailable = false;
   String? _memoryAccessToken;
   String? _memoryRefreshToken;
   AuthUser? _memoryUser;
@@ -167,11 +179,11 @@ class AuthRepository {
   }
 
   Future<void> init() async {
-    if (_prefs != null || _prefsUnavailable) return;
+    if (_prefs != null) return;
+    // Ранее prefs могли упасть один раз (Safari) — пробуем снова.
     try {
       _prefs = await SharedPreferences.getInstance();
     } catch (_) {
-      _prefsUnavailable = true;
       _prefs = null;
     }
   }
@@ -541,9 +553,22 @@ class AuthRepository {
       await init();
       if (_prefs != null) {
         try {
+          // Safari: подтянуть актуальные значения из localStorage.
+          await _prefs!.reload();
           token = _prefs!.getString(_keyAccessToken);
         } catch (_) {
           token = null;
+        }
+      }
+      if (token == null || token.isEmpty) {
+        await _restoreFromBackupIfNeeded();
+        token = _memoryAccessToken;
+        if (token == null || token.isEmpty) {
+          try {
+            token = _prefs?.getString(_keyAccessToken);
+          } catch (_) {
+            token = null;
+          }
         }
       }
       if (token != null && token.isNotEmpty) {
@@ -556,7 +581,10 @@ class AuthRepository {
     }
 
     if (_isJwtExpired(token)) {
-      return _refreshAccessToken();
+      final refreshed = await _refreshAccessToken();
+      if (refreshed != null && refreshed.isNotEmpty) return refreshed;
+      // Временный сбой refresh — не разлогиниваем, отдаём текущий токен.
+      return token;
     }
 
     return token;
@@ -600,22 +628,26 @@ class AuthRepository {
     if (_memoryUser != null) return _memoryUser;
 
     await init();
-    if (_prefs == null) return null;
+    if (_prefs != null) {
+      String? jsonStr;
+      try {
+        jsonStr = _prefs!.getString(_keyUser);
+      } catch (_) {
+        jsonStr = null;
+      }
+      if (jsonStr != null) {
+        try {
+          final user = AuthUser.fromJson(
+            Map<String, dynamic>.from(jsonDecode(jsonStr) as Map),
+          );
+          _memoryUser = user;
+          return user;
+        } catch (_) {}
+      }
+    }
 
-    String? jsonStr;
-    try {
-      jsonStr = _prefs!.getString(_keyUser);
-    } catch (_) {
-      jsonStr = null;
-    }
-    if (jsonStr == null) return null;
-    try {
-      final user = AuthUser.fromJson(Map<String, dynamic>.from(jsonDecode(jsonStr) as Map));
-      _memoryUser = user;
-      return user;
-    } catch (_) {
-      return null;
-    }
+    await _restoreFromBackupIfNeeded();
+    return _memoryUser;
   }
 
   Future<void> logout() async {
@@ -623,6 +655,7 @@ class AuthRepository {
     _memoryRefreshToken = null;
     _memoryUser = null;
     _refreshInFlight = null;
+    session_storage.clearSessionBackup();
 
     await init();
     if (_prefs == null) return;
@@ -803,15 +836,83 @@ class AuthRepository {
     required String refreshToken,
     required AuthUser user,
   }) async {
-    await init();
-    if (_prefs == null) return;
-    try {
-      await _prefs!.setString(_keyAccessToken, accessToken);
-      await _prefs!.setString(_keyRefreshToken, refreshToken);
-      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
-    } catch (_) {
-      // На Web в private mode может быть QuotaExceededError.
-      // Сессию оставляем в памяти, чтобы вход работал в текущей вкладке.
+    final userJson = jsonEncode(user.toJson());
+    // Всегда дублируем в localStorage — переживает закрытие вкладки в Safari PWA.
+    session_storage.writeSessionBackup(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userJson: userJson,
+    );
+
+    for (var attempt = 0; attempt < 3; attempt++) {
+      await init();
+      if (_prefs == null) {
+        await Future<void>.delayed(Duration(milliseconds: 40 * (attempt + 1)));
+        continue;
+      }
+      try {
+        await _prefs!.setString(_keyAccessToken, accessToken);
+        await _prefs!.setString(_keyRefreshToken, refreshToken);
+        await _prefs!.setString(_keyUser, userJson);
+        await _prefs!.reload();
+        final okAccess = _prefs!.getString(_keyAccessToken) == accessToken;
+        final okRefresh = refreshToken.isEmpty ||
+            _prefs!.getString(_keyRefreshToken) == refreshToken;
+        if (okAccess && okRefresh) return;
+      } catch (_) {
+        // QuotaExceeded / private mode — пробуем ещё раз.
+        _prefs = null;
+      }
+      await Future<void>.delayed(Duration(milliseconds: 40 * (attempt + 1)));
+    }
+    // Даже если SharedPreferences не подтвердил запись, backup в localStorage
+    // уже записан — сессия должна пережить закрытие вкладки.
+  }
+
+  /// Если prefs пусты, но backup в localStorage есть — восстанавливаем.
+  Future<void> _restoreFromBackupIfNeeded() async {
+    final backup = session_storage.readSessionBackup();
+    if (backup == null) return;
+    final access = backup.accessToken;
+    final refresh = backup.refreshToken;
+    if ((access == null || access.isEmpty) &&
+        (refresh == null || refresh.isEmpty)) {
+      return;
+    }
+
+    AuthUser? user;
+    final userJson = backup.userJson;
+    if (userJson != null && userJson.isNotEmpty) {
+      try {
+        user = AuthUser.fromJson(
+          Map<String, dynamic>.from(jsonDecode(userJson) as Map),
+        );
+      } catch (_) {}
+    }
+
+    if (access != null && access.isNotEmpty) {
+      _memoryAccessToken = access;
+    }
+    if (refresh != null && refresh.isNotEmpty) {
+      _memoryRefreshToken = refresh;
+    }
+    if (user != null) {
+      _memoryUser = user;
+    }
+
+    // Вернуть в SharedPreferences для остального кода.
+    if (access != null &&
+        access.isNotEmpty &&
+        refresh != null &&
+        refresh.isNotEmpty &&
+        user != null) {
+      await init();
+      if (_prefs == null) return;
+      try {
+        await _prefs!.setString(_keyAccessToken, access);
+        await _prefs!.setString(_keyRefreshToken, refresh);
+        await _prefs!.setString(_keyUser, userJson!);
+      } catch (_) {}
     }
   }
 
@@ -835,14 +936,25 @@ class AuthRepository {
       return null;
     }
 
-    final response = await ApiClient.post(
-      Uri.parse('$apiBaseUrl/api/auth/refresh'),
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({'refresh_token': refreshToken}),
-      operation: 'AuthRepository.refresh',
-    );
-    if (response.statusCode != 200) {
+    final http.Response response;
+    try {
+      response = await ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/auth/refresh'),
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': refreshToken}),
+        operation: 'AuthRepository.refresh',
+      );
+    } catch (_) {
+      // Сеть недоступна — сессию не трогаем.
+      return null;
+    }
+
+    // Только явный отказ в авторизации сбрасывает сессию.
+    if (response.statusCode == 401 || response.statusCode == 403) {
       await logout();
+      return null;
+    }
+    if (response.statusCode != 200) {
       return null;
     }
 
@@ -850,7 +962,7 @@ class AuthRepository {
       final result = await _handleAuthResponse(response);
       return result.accessToken;
     } catch (_) {
-      await logout();
+      // Битый ответ — не стираем refresh, попробуем позже.
       return null;
     }
   }
@@ -863,12 +975,18 @@ class AuthRepository {
     await init();
     if (_prefs != null) {
       try {
+        await _prefs!.reload();
         final stored = _prefs!.getString(_keyRefreshToken);
         if (stored != null && stored.isNotEmpty) {
           _memoryRefreshToken = stored;
           return stored;
         }
       } catch (_) {}
+    }
+
+    await _restoreFromBackupIfNeeded();
+    if (_memoryRefreshToken != null && _memoryRefreshToken!.isNotEmpty) {
+      return _memoryRefreshToken;
     }
     return null;
   }

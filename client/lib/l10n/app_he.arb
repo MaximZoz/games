@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} ביום",
+  "balancePerDay": "{amount}/יום",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "רכישה חד-פעמית",
-  "shopSellRefund": "מכירה מחזירה חלק מהעלות",
+  "shopSellRefund": "מכירה מחזירה 80% מהעלות",
   "shopCollectionAdded": "{title} נוסף לפרופיל",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "הזינו גיל בין 1 ל־111",
   "profileSaveFailed": "לא ניתן לשמור את הפרופיל",
   "profileNameHint": "אותיות לטיניות, ספרות, _ עד 10 תווים",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "מ־1 עד 111",
   "profileAboutHint": "עד 100 תווים (אופציונלי)",
   "profileProcessingPhoto": "מעבד תמונה…",

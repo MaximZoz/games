@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -37,6 +38,127 @@ var (
 func IsRestrictedChatMessageAllowed(body string) bool {
 	text := strings.TrimSpace(body)
 	return animatedEmojiTokenRe.MatchString(text) || giftCollectionTokenRe.MatchString(text)
+}
+
+// InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру».
+func InviteLobbyIDFromBody(body string) (string, bool) {
+	text := strings.TrimSpace(body)
+	if text == "" {
+		return "", false
+	}
+	var u *url.URL
+	var err error
+	if strings.HasPrefix(text, "http://") || strings.HasPrefix(text, "https://") {
+		u, err = url.Parse(text)
+	} else if strings.HasPrefix(text, "/games/") {
+		u, err = url.Parse("https://local.app" + text)
+	} else {
+		return "", false
+	}
+	if err != nil || u == nil {
+		return "", false
+	}
+	parts := make([]string, 0, 4)
+	for _, p := range strings.Split(strings.Trim(u.Path, "/"), "/") {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	if len(parts) < 4 {
+		return "", false
+	}
+	if parts[0] != "games" || parts[1] != "tictactoe" || parts[2] != "lobby" {
+		return "", false
+	}
+	id := strings.TrimSpace(parts[3])
+	if id == "" || strings.Contains(id, "/") || strings.Contains(id, " ") {
+		return "", false
+	}
+	return id, true
+}
+
+// IsInviteLobbyShareBody — тело сообщения целиком является ссылкой на «Свою игру».
+func IsInviteLobbyShareBody(body string) bool {
+	_, ok := InviteLobbyIDFromBody(body)
+	return ok
+}
+
+// DeletedInviteChatMessage — удалённое invite-сообщение и участники чата.
+type DeletedInviteChatMessage struct {
+	MessageID  uuid.UUID
+	ChatID     uuid.UUID
+	LowUserID  uuid.UUID
+	HighUserID uuid.UUID
+}
+
+// DeleteInviteLobbyShareMessages удаляет все сообщения-ссылки на данное лобби
+// (у всех, кому отправили «Войти в игру»), когда лобби закрыто или игра началась.
+func DeleteInviteLobbyShareMessages(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	lobbyID string,
+) ([]DeletedInviteChatMessage, error) {
+	lobbyID = strings.TrimSpace(lobbyID)
+	if lobbyID == "" || pool == nil {
+		return nil, nil
+	}
+	needle := "/games/tictactoe/lobby/" + lobbyID
+	rows, err := pool.Query(ctx, `
+		SELECT id, chat_id, body
+		FROM chat_messages
+		WHERE position($1 in body) > 0
+	`, needle)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	type candidate struct {
+		id     uuid.UUID
+		chatID uuid.UUID
+		body   string
+	}
+	var toDelete []candidate
+	for rows.Next() {
+		var c candidate
+		if err := rows.Scan(&c.id, &c.chatID, &c.body); err != nil {
+			return nil, err
+		}
+		gotID, ok := InviteLobbyIDFromBody(c.body)
+		if !ok || gotID != lobbyID {
+			continue
+		}
+		toDelete = append(toDelete, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(toDelete) == 0 {
+		return nil, nil
+	}
+
+	out := make([]DeletedInviteChatMessage, 0, len(toDelete))
+	for _, c := range toDelete {
+		ct, err := pool.Exec(ctx, `DELETE FROM chat_messages WHERE id = $1`, c.id)
+		if err != nil {
+			return out, err
+		}
+		if ct.RowsAffected() == 0 {
+			continue
+		}
+		lowID, highID, err := ChatParticipantIDs(ctx, pool, c.chatID)
+		if err != nil {
+			// Сообщение уже удалено; участников нет — пропускаем realtime.
+			continue
+		}
+		out = append(out, DeletedInviteChatMessage{
+			MessageID:  c.id,
+			ChatID:     c.chatID,
+			LowUserID:  lowID,
+			HighUserID: highID,
+		})
+	}
+	return out, nil
 }
 
 type ChatMessage struct {

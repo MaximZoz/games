@@ -43,6 +43,67 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAddBotsSubtitle => '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
 
   @override
+  String get settingsOfflineModeTitle => 'Режим сети';
+
+  @override
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+
+  @override
+  String get settingsModeOnline => 'Онлайн';
+
+  @override
+  String get settingsModeOffline => 'Офлайн';
+
+  @override
+  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+
+  @override
+  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+
+  @override
+  String get offlineBadgeTooltip => 'Офлайн режим';
+
+  @override
+  String get offlineModePopupTitle => 'Офлайн режим';
+
+  @override
+  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+
+  @override
+  String get offlineModePopupSettings => 'Настройки';
+
+  @override
+  String get gamesPlay => 'Играть';
+
+  @override
+  String get offlineGameTitle => 'Игра с ботом';
+
+  @override
+  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+
+  @override
+  String get offlineBotWon => 'Бот победил';
+
+  @override
+  String get offlineBotThinking => 'Ход бота…';
+
+  @override
+  String get offlinePlayAgain => 'Ещё раз';
+
+  @override
+  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — покупка применена';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — покупка не применена: $reason';
+  }
+
+  @override
   String get settingsFriendsOnlyTitle => '친구 메시지만 받기';
 
   @override
@@ -433,6 +494,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbyEnterGame => '게임 입장';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => '초대';
 
   @override
@@ -476,6 +540,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gameLeave => '나가기';
+
+  @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
 
   @override
   String get gameConnecting => '게임에 연결 중…';
@@ -545,6 +636,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chatMessageHint => '메시지';
+
+  @override
+  String get chatPaste => 'Вставить';
 
   @override
   String get chatEmoji => '이모지';
@@ -802,7 +896,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '하루 $amount';
+    return '$amount/일';
   }
 
   @override
@@ -1038,7 +1132,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopBuyOnce => '일회성 구매';
 
   @override
-  String get shopSellRefund => '판매 시 비용의 일부가 반환됩니다';
+  String get shopSellRefund => '판매 시 비용의 80%가 반환됩니다';
 
   @override
   String shopCollectionAdded(String title) {
@@ -1088,6 +1182,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+
+  @override
+  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+
+  @override
+  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+
+  @override
   String get inventoryLoadFailed => '아이템을 불러오지 못했습니다';
 
   @override
@@ -1116,6 +1219,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return '내일 수익: $amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1272,6 +1381,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileNameHint => '라틴 문자, 숫자, _ 최대 10자';
+
+  @override
+  String get profileNameLatinOnly => 'Latin characters only';
 
   @override
   String get profileAgeHint => '1에서 111';

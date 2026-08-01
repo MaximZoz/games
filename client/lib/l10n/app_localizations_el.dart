@@ -43,6 +43,67 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Στο matchmaking: αν δεν βρεθεί αντίπαλος σε 30 δευτερόλεπτα, το παιχνίδι ξεκινά με bot (το ποντάρισμα επαναφέρεται σε 1 μπρούντζο)';
 
   @override
+  String get settingsOfflineModeTitle => 'Режим сети';
+
+  @override
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+
+  @override
+  String get settingsModeOnline => 'Онлайн';
+
+  @override
+  String get settingsModeOffline => 'Офлайн';
+
+  @override
+  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+
+  @override
+  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+
+  @override
+  String get offlineBadgeTooltip => 'Офлайн режим';
+
+  @override
+  String get offlineModePopupTitle => 'Офлайн режим';
+
+  @override
+  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+
+  @override
+  String get offlineModePopupSettings => 'Настройки';
+
+  @override
+  String get gamesPlay => 'Играть';
+
+  @override
+  String get offlineGameTitle => 'Игра с ботом';
+
+  @override
+  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+
+  @override
+  String get offlineBotWon => 'Бот победил';
+
+  @override
+  String get offlineBotThinking => 'Ход бота…';
+
+  @override
+  String get offlinePlayAgain => 'Ещё раз';
+
+  @override
+  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — покупка применена';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — покупка не применена: $reason';
+  }
+
+  @override
   String get settingsFriendsOnlyTitle => 'Μηνύματα μόνο από φίλους';
 
   @override
@@ -433,6 +494,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbyEnterGame => 'Είσοδος στο παιχνίδι';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => 'Πρόσκληση';
 
   @override
@@ -476,6 +540,33 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get gameLeave => 'Αποχώρηση';
+
+  @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
 
   @override
   String get gameConnecting => 'Σύνδεση στο παιχνίδι…';
@@ -545,6 +636,9 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get chatMessageHint => 'Μήνυμα';
+
+  @override
+  String get chatPaste => 'Вставить';
 
   @override
   String get chatEmoji => 'Emoji';
@@ -802,7 +896,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount την ημέρα';
+    return '$amount/ημέρα';
   }
 
   @override
@@ -1038,7 +1132,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopBuyOnce => 'Εφάπαξ αγορά';
 
   @override
-  String get shopSellRefund => 'Η πώληση επιστρέφει μέρος του κόστους';
+  String get shopSellRefund => 'Η πώληση επιστρέφει το 80% του κόστους';
 
   @override
   String shopCollectionAdded(String title) {
@@ -1088,6 +1182,15 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+
+  @override
+  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+
+  @override
+  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+
+  @override
   String get inventoryLoadFailed => 'Αποτυχία φόρτωσης αντικειμένων';
 
   @override
@@ -1116,6 +1219,12 @@ class AppLocalizationsEl extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return 'Έσοδο αύριο: $amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1272,6 +1381,9 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get profileNameHint => 'Λατινικά γράμματα, ψηφία, _ έως 10 χαρακτήρες';
+
+  @override
+  String get profileNameLatinOnly => 'Latin characters only';
 
   @override
   String get profileAgeHint => 'Από 1 έως 111';

@@ -158,20 +158,28 @@ String buildTictactoeRulesText({
   required bool swapRule,
   required bool firstMoveRestriction,
   int stakeBronze = 1,
+  bool includeTurnTime = true,
+  bool offlineBot = false,
 }) {
   final l10n = LocaleService.l10n;
-  final stake = stakeBronze < 1 ? 1 : stakeBronze;
   final winN = gridSize >= 6 ? 5 : gridSize;
   final parts = <String>[
     l10n.rulesIntro(formatGridSize(gridSize)),
     l10n.rulesWin(winN),
-    turnTimeSec == 0
-        ? l10n.rulesNoTimeLimit
-        : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    l10n.rulesStake(formatBalance(stake)),
   ];
+  if (includeTurnTime) {
+    parts.add(
+      turnTimeSec == 0
+          ? l10n.rulesNoTimeLimit
+          : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
+    );
+  }
+  // 0 — офлайн / без ставок: строку про ставку не показываем.
+  if (stakeBronze > 0) {
+    parts.add(l10n.rulesStake(formatBalance(stakeBronze)));
+  }
   if (swapRule) {
-    parts.add(l10n.rulesSwap);
+    parts.add(offlineBot ? l10n.rulesAlternateStarts : l10n.rulesSwap);
   }
   if (firstMoveRestriction) {
     parts.add(l10n.rulesNoCenter);
@@ -276,6 +284,8 @@ class GameStateItem {
   final String? oFrameColor;
   final String? oFrameCode;
   final List<int>? winningCells;
+  /// User id того, кто предложил ничью; null — предложения нет.
+  final String? drawOfferBy;
 
   GameStateItem({
     required this.id,
@@ -305,6 +315,7 @@ class GameStateItem {
     this.oFrameColor,
     this.oFrameCode,
     this.winningCells,
+    this.drawOfferBy,
   });
 
   bool isTurnOf(String? userId) {
@@ -371,6 +382,11 @@ class GameStateItem {
       oFrameColor: json['o_frame_color'] as String?,
       oFrameCode: json['o_frame_code'] as String?,
       winningCells: _parseWinningCells(json['winning_cells']),
+      drawOfferBy: () {
+        final raw = json['draw_offer_by'] as String?;
+        if (raw == null || raw.trim().isEmpty) return null;
+        return raw.trim();
+      }(),
     );
   }
 
@@ -825,6 +841,40 @@ class GamesRepository {
         },
         body: '{}',
         operation: 'GamesRepository.forfeitGame',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<void> offerDraw(String gameId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/draw-offer'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+        operation: 'GamesRepository.offerDraw',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  Future<void> acceptDraw(String gameId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/draw-accept'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+        operation: 'GamesRepository.acceptDraw',
       ),
     );
     if (response.statusCode != 200) {

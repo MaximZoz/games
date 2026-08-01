@@ -41,5 +41,22 @@ void main() {
     test('does not default to Лобби without mode or status', () {
       expect(tictactoeLobbyAppBarTitle(), isEmpty);
     });
+
+    test('invite link guest does not see Своя игра', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          initialMode: 'invite',
+          fromInviteLink: true,
+        ),
+        'Войти в игру',
+      );
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          fromInviteLink: true,
+        ),
+        'Войти в игру',
+      );
+    });
   });
 }

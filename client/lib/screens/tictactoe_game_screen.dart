@@ -11,7 +11,6 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -20,6 +19,8 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
@@ -89,6 +90,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   String? _prevGameStatus;
   bool _providerBindingsInitialized = false;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
+  final GlobalKey _winRewardKey = GlobalKey();
+  bool _balanceGainPlayed = false;
 
   @override
   void didChangeDependencies() {
@@ -112,6 +115,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (oldWidget.gameId != widget.gameId) {
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
+      _balanceGainPlayed = false;
       ref.invalidate(gameStateProvider(widget.gameId));
       setState(() {
         _rematchLobbyId = null;
@@ -302,6 +306,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       }
     });
     void goBack() => _handleClose(effectiveGameAsync.valueOrNull);
+    final gameForBar = effectiveGameAsync.valueOrNull;
+    final gameActive = gameForBar != null && gameForBar.status == 'active';
+    final showDrawButton =
+        gameForBar != null && gameForBar.status == 'active' && gameForBar.isActivePvp;
+    final meId = currentUser?.id;
+    final drawOfferBy = gameForBar?.drawOfferBy?.trim();
+    final iOfferedDraw =
+        drawOfferBy != null && meId != null && drawOfferBy == meId;
+    final opponentOfferedDraw = drawOfferBy != null &&
+        meId != null &&
+        drawOfferBy.isNotEmpty &&
+        drawOfferBy != meId;
+    // Крестик + сдаться (+ ничья) слева; правила справа на одной линии с крестиком.
+    final barHeight = showDrawButton
+        ? 132.0
+        : (gameActive ? 96.0 : kToolbarHeight);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -309,16 +329,88 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          leading: IconButton(
-            onPressed: goBack,
-            icon: const Icon(Icons.close_rounded),
+          toolbarHeight: barHeight,
+          leadingWidth: 48,
+          leading: Align(
+            alignment: Alignment.topCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  onPressed: goBack,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+                if (gameActive) ...[
+                  const SizedBox(height: 8),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 36,
+                    ),
+                    iconSize: 22,
+                    icon: const Icon(Icons.flag_outlined),
+                    tooltip: context.l10n.gameSurrender,
+                    onPressed: () => _confirmSurrender(context),
+                  ),
+                  if (showDrawButton) ...[
+                    const SizedBox(height: 8),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 36,
+                      ),
+                      iconSize: 22,
+                      icon: Icon(
+                        opponentOfferedDraw
+                            ? Icons.handshake_rounded
+                            : Icons.handshake_outlined,
+                        color: opponentOfferedDraw
+                            ? AppColors.accentStart
+                            : (iOfferedDraw
+                                ? AppColors.accentStart.withValues(alpha: 0.45)
+                                : null),
+                      ),
+                      tooltip: opponentOfferedDraw
+                          ? context.l10n.gameAcceptDrawTitle
+                          : (iOfferedDraw
+                              ? context.l10n.gameDrawOffered
+                              : context.l10n.gameOfferDraw),
+                      onPressed: iOfferedDraw
+                          ? null
+                          : () => opponentOfferedDraw
+                              ? _confirmAcceptDraw(context)
+                              : _confirmOfferDraw(context),
+                    ),
+                  ],
+                ],
+              ],
+            ),
           ),
           title: Text(context.l10n.gamesTicTacToe),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.rule_rounded),
-              tooltip: context.l10n.gamesRulesTitle,
-              onPressed: () => _showGameRules(context),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 4, top: 0),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  iconSize: 22,
+                  icon: const Icon(Icons.rule_rounded),
+                  tooltip: context.l10n.gamesRulesTitle,
+                  onPressed: () => _showGameRules(context),
+                ),
+              ),
             ),
           ],
         ),
@@ -327,6 +419,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final isOver = game.status != 'active';
           final opponentId =
               game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
+          final iWonEarly = isOver &&
+              ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
+                  (game.status == 'o_won' && game.oUserId == currentUser?.id));
+          final isDraw = isOver && game.status == 'draw';
           if (isOver &&
               (_prevGameStatus == 'active' || _prevGameStatus == null)) {
             _rematchPollTimer?.cancel();
@@ -336,17 +432,26 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   .read(gameInvitesProvider.notifier)
                   .removeByCreatorId(opponentId);
             }
-            unawaited(ref.read(authStateProvider.notifier).refresh());
+            // Не трогаем провайдеры баланса из build — только после кадра.
+            final settledCredit = iWonEarly
+                ? game.stakeBronze * 2
+                : isDraw
+                    ? game.stakeBronze
+                    : 0;
+            final settledReward = iWonEarly ? game.stakeBronze : 0;
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                setState(() {
-                  _rematchLobbyId = null;
-                  _rematchDeclined = false;
-                  _iDeclinedRematch = false;
-                  _isRematching = false;
-                  _isFindingGame = false;
-                });
-              }
+              if (!mounted) return;
+              setState(() {
+                _rematchLobbyId = null;
+                _rematchDeclined = false;
+                _iDeclinedRematch = false;
+                _isRematching = false;
+                _isFindingGame = false;
+              });
+              unawaited(_onGameSettled(
+                creditBronze: settledCredit,
+                displayRewardBronze: settledReward,
+              ));
             });
           } else {
             _prevGameStatus = game.status;
@@ -408,9 +513,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               !_isSwapping &&
               !_isMakingMove;
 
-          final iWon = isOver &&
-              ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
-                  (game.status == 'o_won' && game.oUserId == currentUser?.id));
+          final iWon = iWonEarly;
+          final showRewardChip = isOver && iWon && game.stakeBronze > 0;
+          final rewardBronze = game.stakeBronze;
           final isDesktop = isWide(context);
           final narrow = isNarrow(context);
           final contentPadding = narrow ? 12.0 : 24.0;
@@ -453,16 +558,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                   requestId: requestId),
                             ),
                             SizedBox(height: verticalSpacing),
-                            Text(
-                              statusText,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                    fontSize: narrow ? 15 : null,
-                                  ),
+                            _StatusWithReward(
+                              statusText: statusText,
+                              showReward: showRewardChip,
+                              rewardBronze: rewardBronze,
+                              rewardKey: _winRewardKey,
+                              fontSize: narrow ? 15 : null,
                             ),
                             if (showSwapButton)
                               Padding(
@@ -563,16 +664,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                           requestId: requestId),
                                     ),
                                     SizedBox(height: verticalSpacing),
-                                    Text(
-                                      statusText,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                            fontSize: narrow ? 15 : null,
-                                          ),
+                                    _StatusWithReward(
+                                      statusText: statusText,
+                                      showReward: showRewardChip,
+                                      rewardBronze: rewardBronze,
+                                      rewardKey: _winRewardKey,
+                                      fontSize: narrow ? 15 : null,
                                     ),
                                     if (showSwapButton)
                                       Padding(
@@ -668,6 +765,178 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     );
   }
 
+  Future<void> _onGameSettled({
+    required int creditBronze,
+    required int displayRewardBronze,
+  }) async {
+    if (_balanceGainPlayed || creditBronze <= 0) {
+      unawaited(ref.read(authStateProvider.notifier).refresh());
+      return;
+    }
+    _balanceGainPlayed = true;
+    final fromBalance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final estimatedTo = fromBalance + creditBronze;
+    // Держим тулбар на старом значении до конца анимации.
+    lockBalanceDisplay(
+      ref: ref,
+      fromBronze: fromBalance,
+      toBronze: estimatedTo,
+      rewardBronze:
+          displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
+    );
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+      if (!mounted) return;
+      final toBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? fromBalance;
+      if (toBalance <= fromBalance) return;
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      if (!mounted) return;
+      await playBalanceGain(
+        ref: ref,
+        context: context,
+        newBalanceBronze: toBalance,
+        fromBronze: fromBalance,
+        rewardBronze:
+            displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
+        sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
+        skipApply: true,
+      );
+    } finally {
+      // Если анимация не сняла лок — всё равно показать актуальный баланс.
+      if (ref.read(balanceGainProvider).active) {
+        ref.read(balanceGainProvider.notifier).end();
+      }
+    }
+  }
+
+  void _confirmSurrender(BuildContext context) {
+    final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.status != 'active') return;
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.gameSurrenderTitle),
+        content: Text(context.l10n.gameSurrenderConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(context.l10n.gameStay),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: Text(context.l10n.gameSurrender),
+          ),
+        ],
+      ),
+    ).then((ok) {
+      if (ok != true || !mounted || !context.mounted) return;
+      final gameId = widget.gameId;
+      ref.read(activeGameProvider.notifier).clearLocal();
+      context.go('/games');
+      unawaited(() async {
+        try {
+          await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
+        } catch (_) {}
+      }());
+    });
+  }
+
+  void _confirmOfferDraw(BuildContext context) {
+    final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.status != 'active' || !game.isActivePvp) return;
+    final l10n = context.l10n;
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.gameOfferDrawTitle),
+        content: Text(l10n.gameOfferDrawConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: Text(l10n.gameOfferDraw),
+          ),
+        ],
+      ),
+    ).then((ok) async {
+      if (ok != true || !mounted) return;
+      try {
+        await ref.read(gamesRepositoryProvider).offerDraw(widget.gameId);
+        if (mounted) ref.invalidate(gameStateProvider(widget.gameId));
+      } catch (_) {
+        if (!mounted) return;
+        showAppSnackBar(
+          this.context,
+          message: l10n.commonGenericError,
+          kind: AppSnackKind.error,
+        );
+      }
+    });
+  }
+
+  void _confirmAcceptDraw(BuildContext context) {
+    final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.status != 'active') return;
+    final meId = ref.read(authStateProvider).valueOrNull?.id;
+    final offerBy = game.drawOfferBy?.trim();
+    if (meId == null ||
+        offerBy == null ||
+        offerBy.isEmpty ||
+        offerBy == meId) {
+      return;
+    }
+    final l10n = context.l10n;
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.gameAcceptDrawTitle),
+        content: Text(l10n.gameAcceptDrawConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: Text(l10n.gameDraw),
+          ),
+        ],
+      ),
+    ).then((ok) async {
+      if (ok != true || !mounted) return;
+      try {
+        await ref.read(gamesRepositoryProvider).acceptDraw(widget.gameId);
+        if (mounted) {
+          ref.invalidate(gameStateProvider(widget.gameId));
+          ref.invalidate(activeGameProvider);
+        }
+      } catch (_) {
+        if (!mounted) return;
+        showAppSnackBar(
+          this.context,
+          message: l10n.commonGenericError,
+          kind: AppSnackKind.error,
+        );
+      }
+    });
+  }
+
   Future<void> _rematch(BuildContext context) async {
     setState(() => _isRematching = true);
     try {
@@ -680,10 +949,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           result.gameId!.isNotEmpty) {
         setState(() => _isRematching = false);
         final gameId = result.gameId!;
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'game', gameId: gameId),
+            );
         ref.invalidate(gameStateProvider(gameId));
         if (!context.mounted) return;
         context.go('/games/tictactoe/game/$gameId');
       } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
+            );
         setState(() {
           _rematchLobbyId = result.lobbyId;
           _rematchDeclined = false;
@@ -759,16 +1034,25 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isFindingGame = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      final addBotsAfter30s = ref.read(addBotsAfter30sProvider);
       final result = await repo.createLobby(
         mode: 'matchmake',
-        addBotsAfter30s: addBotsAfter30s,
+        addBotsAfter30s: false,
       );
       if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
       if (result.matched && result.gameId != null) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: result.gameId,
+                lobbyId: result.lobbyId,
+              ),
+            );
         context.go('/games/tictactoe/game/${result.gameId}');
       } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
+            );
         context.go(
           '/games/tictactoe/lobby/${result.lobbyId}?mode=matchmake',
         );
@@ -2058,6 +2342,95 @@ class _WinningLinePainter extends CustomPainter {
       old.progress != progress ||
       old.winningCells != winningCells ||
       old.gridSize != gridSize;
+}
+
+/// Статус партии и награда в одной строке.
+class _StatusWithReward extends StatelessWidget {
+  const _StatusWithReward({
+    required this.statusText,
+    required this.showReward,
+    required this.rewardBronze,
+    required this.rewardKey,
+    this.fontSize,
+  });
+
+  final String statusText;
+  final bool showReward;
+  final int rewardBronze;
+  final GlobalKey rewardKey;
+  final double? fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+          fontSize: fontSize,
+        );
+    if (!showReward) {
+      return Text(statusText, textAlign: TextAlign.center, style: style);
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: Text(
+            statusText,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        const SizedBox(width: 8),
+        _GameRewardChip(
+          key: rewardKey,
+          rewardBronze: rewardBronze,
+        ),
+      ],
+    );
+  }
+}
+
+/// Чип чистого выигрыша (= ставка) — источник полёта монеты в баланс.
+class _GameRewardChip extends StatelessWidget {
+  const _GameRewardChip({
+    super.key,
+    required this.rewardBronze,
+  });
+
+  final int rewardBronze;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.accentSoft.withValues(alpha: 0.9),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '+${formatStakeAmount(rewardBronze)}',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 5),
+          CoinIcon(
+            coinType: stakeCoinType(rewardBronze),
+            size: 20,
+            showBorder: true,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ConfettiOverlay extends StatefulWidget {

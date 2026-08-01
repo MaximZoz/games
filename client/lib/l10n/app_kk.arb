@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "күніне {amount}",
+  "balancePerDay": "{amount}/күн",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Бір рет сатып алу",
-  "shopSellRefund": "Сату құнының бір бөлігін қайтарады",
+  "shopSellRefund": "Сату құнының 80%-ін қайтарады",
   "shopCollectionAdded": "{title} профильге қосылды",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "1-ден 111-ге дейін жасты енгізіңіз",
   "profileSaveFailed": "Профильді сақтау мүмкін болмады",
   "profileNameHint": "Латын әріптері, цифрлар, _ 10 таңбаға дейін",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1-ден 111-ге дейін",
   "profileAboutHint": "100 таңбаға дейін (қалауы бойынша)",
   "profileProcessingPhoto": "Фото өңделуде…",

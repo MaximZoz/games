@@ -45,6 +45,17 @@ class AchievementItem {
       status: json['status'] as String? ?? 'locked',
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'title': title,
+        'description': description,
+        'reward_bronze': rewardBronze,
+        'reward_item_code': rewardItemCode,
+        'progress': progress,
+        'target': target,
+        'status': status,
+      };
 }
 
 class AchievementClaimResult {

@@ -32,6 +32,8 @@ final lobbyGameRecoveryProvider =
   }
 
   final activeGameId = active?.gameId?.trim();
+  // Только игра этого лобби — иначе битая invite-ссылка уводила
+  // в чужую активную партию / «Свою игру».
   if (active?.type == 'game' &&
       active?.lobbyId == lobbyId &&
       activeGameId != null &&
@@ -84,12 +86,22 @@ class _LobbyGameNavigationWatcherState
       },
       fireImmediately: true,
     );
+    // Сразу проверить active/lobby — не ждать первый тик таймера.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _poll();
+    });
     _pollTimer = Timer.periodic(widget.pollInterval, (_) => _poll());
   }
 
   void _handleRealtimeEvent(Map<String, dynamic> event) {
     if (!mounted) return;
     widget.onRealtimeEvent?.call(event);
+    final type = event['type']?.toString();
+    final eventLobbyId = event['lobby_id']?.toString().trim();
+    if ((type == 'game_started' || type == 'lobby_updated') &&
+        eventLobbyId == widget.lobbyId) {
+      ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+    }
     final router = GoRouter.of(context);
     final currentPath = router.routerDelegate.currentConfiguration.uri.path;
     final gameId = realtimeGameIdForNavigation(
@@ -97,7 +109,17 @@ class _LobbyGameNavigationWatcherState
       currentPath: currentPath,
       expectedLobbyId: widget.lobbyId,
     );
-    _navigate(gameId);
+    if (gameId != null && gameId.isNotEmpty) {
+      _navigate(gameId);
+      return;
+    }
+    // Если lobby_id в событии другой, но у нас уже есть active game — уйти сразу.
+    if (type == 'game_started' || type == 'lobby_updated') {
+      final raw = event['game_id']?.toString().trim();
+      if (raw != null && raw.isNotEmpty) {
+        unawaited(_poll());
+      }
+    }
   }
 
   Future<void> _poll() async {

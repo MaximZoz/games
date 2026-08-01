@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "每天 {amount}",
+  "balancePerDay": "{amount}/天",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "一次性购买",
-  "shopSellRefund": "出售可返还部分费用",
+  "shopSellRefund": "出售可返还 80% 费用",
   "shopCollectionAdded": "{title} 已添加到个人资料",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "请输入 1 到 111 之间的年龄",
   "profileSaveFailed": "无法保存个人资料",
   "profileNameHint": "拉丁字母、数字、_，最多 10 个字符",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1 到 111",
   "profileAboutHint": "最多 100 个字符（可选）",
   "profileProcessingPhoto": "正在处理照片…",

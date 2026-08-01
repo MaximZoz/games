@@ -8,7 +8,6 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
@@ -19,6 +18,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -30,10 +30,14 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
     super.key,
     required this.lobbyId,
     this.initialMode,
+    this.fromMessageId,
   });
 
   final String lobbyId;
   final String? initialMode;
+
+  /// Если открыли «Свою игру» из сообщения в чате — удалить его после входа.
+  final String? fromMessageId;
 
   @override
   ConsumerState<TicTacToeLobbyScreen> createState() =>
@@ -44,13 +48,18 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
 ///
 /// Пока деталь лобби не загружена, опираемся на [initialMode] из query
 /// (`?mode=invite|matchmake`), чтобы не показывать «Лобби» для своей игры.
+/// Ссылки из чата ([fromInviteLink]) — не «Своя игра»: это вход гостя.
 String tictactoeLobbyAppBarTitle({
   String? status,
   String? initialMode,
+  bool fromInviteLink = false,
 }) {
   final l10n = LocaleService.l10n;
   if (status == 'waiting_matchmake') return l10n.lobbyMatchmake;
-  if (status == 'waiting_invite') return l10n.lobbyPrivateGame;
+  if (status == 'waiting_invite') {
+    return fromInviteLink ? l10n.lobbyEnterGame : l10n.lobbyPrivateGame;
+  }
+  if (fromInviteLink) return l10n.lobbyEnterGame;
   if (initialMode == 'matchmake') return l10n.lobbyMatchmake;
   if (initialMode == 'invite') return l10n.lobbyPrivateGame;
   return '';
@@ -74,6 +83,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   bool _isLeaving = false;
   bool _isJoining = false;
   bool _linkCopied = false;
+  bool _missingLobbyHandled = false;
   Timer? _chatsRefreshTimer;
   Timer? _linkCopiedTimer;
 
@@ -131,6 +141,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               tictactoeLobbyAppBarTitle(
                 status: lobbyAsync.valueOrNull?.status,
                 initialMode: widget.initialMode,
+                fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
+                        true ||
+                    (lobbyAsync.valueOrNull != null &&
+                        currentUser != null &&
+                        lobbyAsync.valueOrNull!.creatorId != currentUser.id),
               ),
             ),
           ),
@@ -162,6 +177,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (lobby.stakeBronze > 0) ...[
+                          _LobbyStakeChip(stakeBronze: lobby.stakeBronze),
+                          const SizedBox(height: 16),
+                        ],
                         if (isInviteMode && isCreator) ...[
                           _buildShareInviteLinkCard(context),
                           const SizedBox(height: 16),
@@ -174,28 +193,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                         .watch(presenceMapProvider)
                                         .valueOrNull ??
                                     const {};
-                                final onlineFriends = friends
-                                    .where((f) {
-                                      final entry = presence[f.user.id];
-                                      return entry != null && entry.online;
-                                    })
+                                final inviteableFriends = friends
                                     .where((f) => !_invitedFriendIds
                                         .contains(f.user.id))
-                                    .toList();
-                                if (onlineFriends.isEmpty) {
-                                  final onlineInvitedCount = friends
-                                      .where((f) =>
-                                          (presence[f.user.id]?.online ??
-                                              false) &&
-                                          _invitedFriendIds
-                                              .contains(f.user.id))
-                                      .length;
+                                    .toList()
+                                  ..sort((a, b) {
+                                    final aOnline =
+                                        presence[a.user.id]?.online ?? false;
+                                    final bOnline =
+                                        presence[b.user.id]?.online ?? false;
+                                    if (aOnline == bOnline) return 0;
+                                    return aOnline ? -1 : 1;
+                                  });
+                                if (inviteableFriends.isEmpty) {
                                   return Text(
                                     friends.isEmpty
-                                        ? context.l10n.lobbyNoFriendsOnline
-                                        : onlineInvitedCount > 0
-                                            ? context.l10n.lobbyInvitesSentWaiting
-                                            : context.l10n.lobbyNoFriendsOnline,
+                                        ? context.l10n.friendsEmpty
+                                        : context.l10n.lobbyInvitesSentWaiting,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 14,
@@ -206,7 +220,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    ...onlineFriends.map((f) {
+                                    ...inviteableFriends.map((f) {
                                       final friendId = f.user.id;
                                       final isInvited =
                                           _invitedFriendIds.contains(friendId);
@@ -398,16 +412,56 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               color: AppColors.accentStart,
             ),
           ),
-          error: (_, __) => const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
-            ),
-          ),
+          error: (error, _) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _handleLobbyMissing(error);
+            });
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
+              ),
+            );
+          },
         ),
         ),
       ),
     );
+  }
+
+  /// Ссылка на лобби устарела / лобби закрыто — уведомление, без «Своя игра».
+  void _handleLobbyMissing(Object error) {
+    if (!mounted || _missingLobbyHandled || _isLeaving) return;
+    _missingLobbyHandled = true;
+    final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
+    final isGone = error is GamesException &&
+        (error.statusCode == 404 ||
+            error.statusCode == 409 ||
+            error.statusCode == 400);
+    final message = isGone
+        ? context.l10n.lobbyGone
+        : formatUserError(error, fallback: context.l10n.lobbyGone);
+    showAppSnackBar(
+      context,
+      message: message,
+      kind: AppSnackKind.error,
+    );
+    if (isGone) {
+      unawaited(_deleteGoneInviteMessage());
+    }
+    // Не clearLocal/leaveLobby: у пользователя может быть своё другое лобби.
+    context.go(fromChat ? '/chats' : '/games');
+  }
+
+  /// Убрать карточку «Войти в игру», если сервер сказал, что лобби уже нет.
+  Future<void> _deleteGoneInviteMessage() async {
+    final messageId = widget.fromMessageId?.trim();
+    if (messageId != null && messageId.isNotEmpty) {
+      try {
+        await ref.read(chatsRepositoryProvider).deleteMessage(messageId);
+      } catch (_) {}
+    }
+    await refreshChatsList(ref, force: true).catchError((_) {});
   }
 
   Widget _buildShareInviteLinkCard(BuildContext context) {
@@ -481,6 +535,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       baseUri: Uri.base,
     );
     await Clipboard.setData(ClipboardData(text: url));
+    // Чтобы в чате сразу показать «Вставить» без чтения буфера (Safari).
+    ref.read(pendingInvitePasteProvider.notifier).state = url;
     if (!mounted) return;
     setState(() => _linkCopied = true);
     _linkCopiedTimer?.cancel();
@@ -497,20 +553,40 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       if (!context.mounted) return;
       if (result.joined && result.gameId != null) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
-        navigateToGame(
-          GoRouter.of(context),
-          ref.read(gameNavigationCoordinatorProvider),
-          result.gameId,
-          expectedLobbyId: widget.lobbyId,
-        );
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+        ref.invalidate(activeGameProvider);
+
+        final messageId = widget.fromMessageId?.trim();
+        if (messageId != null && messageId.isNotEmpty) {
+          try {
+            await ref.read(chatsRepositoryProvider).deleteMessage(messageId);
+            await refreshChatsList(ref, force: true);
+          } catch (_) {
+            // Вход в игру важнее удаления сообщения.
+          }
+        }
+
+        if (!context.mounted) return;
+        // Закрыть «Свою игру» и сразу открыть матч (go затирает лобби в истории).
+        context.go('/games/tictactoe/game/${result.gameId}');
+        return;
       }
     } catch (e) {
-      if (context.mounted) {
-        showAppSnackBar(
-          context,
-          message: formatUserError(e),
-          kind: AppSnackKind.error,
-        );
+      if (!context.mounted) return;
+      final gone = e is GamesException &&
+          (e.statusCode == 404 || e.statusCode == 409 || e.statusCode == 400);
+      showAppSnackBar(
+        context,
+        message: gone
+            ? context.l10n.lobbyGone
+            : formatUserError(e, fallback: context.l10n.lobbyGone),
+        kind: AppSnackKind.error,
+      );
+      if (gone) {
+        await _deleteGoneInviteMessage();
+        if (!context.mounted) return;
+        final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
+        context.go(fromChat ? '/chats' : '/games');
       }
     } finally {
       if (mounted) setState(() => _isJoining = false);
@@ -548,16 +624,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
     final lobbyId = widget.lobbyId;
     final repo = ref.read(gamesRepositoryProvider);
+    final fromChat = widget.fromMessageId?.trim().isNotEmpty == true;
 
-    // Сразу на список игр — не ждём сеть и не трогаем lobbyDetail
+    // Сразу уходим с экрана — не ждём сеть и не трогаем lobbyDetail
     // (invalidate после leave давал AsyncError → спиннер → мигание карточек).
     ref.read(activeGameProvider.notifier).clearLocal();
     ref.invalidate(openLobbiesProvider);
-    context.go('/games');
+    // Из сообщения чата — обратно к списку чатов, иначе к играм.
+    context.go(fromChat ? '/chats' : '/games');
 
-    unawaited(
-      repo.leaveLobby(lobbyId).catchError((_) {}),
-    );
+    unawaited(() async {
+      try {
+        await repo.leaveLobby(lobbyId);
+      } catch (_) {
+        // Лобби могли уже закрыть — сервер всё равно чистит invite-сообщения.
+      }
+      await refreshChatsList(ref, force: true).catchError((_) {});
+    }());
   }
 
   Widget _buildFriendAvatar(FriendUserItem user, double radius) {
@@ -785,6 +868,57 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               text ?? '',
               style: TextStyle(fontSize: 13, color: fg),
             ),
+    );
+  }
+}
+
+/// Ставка лобби: сумма + иконка монеты (как на карточке игры).
+class _LobbyStakeChip extends StatelessWidget {
+  const _LobbyStakeChip({required this.stakeBronze});
+
+  final int stakeBronze;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: AppColors.accentSoft.withValues(alpha: 0.9),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.shopStakes,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              formatStakeAmount(stakeBronze),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            CoinIcon(
+              coinType: stakeCoinType(stakeBronze),
+              size: 22,
+              showBorder: true,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

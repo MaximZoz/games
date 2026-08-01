@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -42,7 +45,16 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() => _items = items);
     } catch (_) {}
@@ -55,12 +67,12 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     // сразу подхватить owned, а не держать устаревший _items.
     ref.listen<AsyncValue<List<ShopItem>>>(shopCatalogProvider, (prev, next) {
       final data = next.asData?.value;
-      if (data != null && mounted) {
+      if (data != null && data.isNotEmpty && mounted) {
         setState(() => _items = data);
       }
     });
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
-    final items = cached ?? _items;
+    final items = (cached != null && cached.isNotEmpty) ? cached : _items;
     final collections = items.where((e) => e.kind == 'collection').toList();
 
     final bySet = <String, List<ShopItem>>{};
@@ -69,34 +81,20 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       bySet.putIfAbsent(s.isEmpty ? 'other' : s, () => []).add(e);
     }
     for (final list in bySet.values) {
-      list.sort((a, b) {
-        final byPrice = a.priceBronze.compareTo(b.priceBronze);
-        if (byPrice != 0) return byPrice;
-        return a.sortOrder.compareTo(b.sortOrder);
-      });
+      list.sort((a, b) => compareCollectionItemsByDaily(
+            a.dailyBronze,
+            b.dailyBronze,
+            a.sortOrder,
+            b.sortOrder,
+          ));
     }
 
     final orderedSets = bySet.keys.toList()
-      ..sort((a, b) {
-        final aItems = bySet[a]!;
-        final bItems = bySet[b]!;
-        final aDaily = aItems.fold<int>(0, (s, e) => s + e.dailyBronze);
-        final bDaily = bItems.fold<int>(0, (s, e) => s + e.dailyBronze);
-        final aPrice = aItems.fold<int>(0, (s, e) => s + e.priceBronze);
-        final bPrice = bItems.fold<int>(0, (s, e) => s + e.priceBronze);
-        // Цена за 1 бронзу дохода в день (меньше = выгоднее).
-        final aRatio = aDaily <= 0
-            ? double.infinity
-            : aPrice / aDaily;
-        final bRatio = bDaily <= 0
-            ? double.infinity
-            : bPrice / bDaily;
-        final byRatio = aRatio.compareTo(bRatio);
-        if (byRatio != 0) return byRatio;
-        final ai = collectionSetOrder.indexOf(a);
-        final bi = collectionSetOrder.indexOf(b);
-        return (ai < 0 ? 999 : ai).compareTo(bi < 0 ? 999 : bi);
-      });
+      ..sort((a, b) => compareCollectionSetsByDaily(
+            a,
+            b,
+            (set) => bySet[set]!.fold<int>(0, (s, e) => s + e.dailyBronze),
+          ));
 
     return SwipeBackScope(
       onBack: goBack,
@@ -179,13 +177,46 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      '${context.l10n.shopSetProgress(ownedCount, groupItems.length)} · '
-                                      '+${formatRewardBronzePerDay(setDaily)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          context.l10n.shopSetProgress(
+                                            ownedCount,
+                                            groupItems.length,
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        if (setDaily > 0) ...[
+                                          Text(
+                                            ' · ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textSecondary
+                                                  .withValues(alpha: 0.8),
+                                            ),
+                                          ),
+                                          BalanceDisplay(
+                                            bronze: setDaily,
+                                            prefix: ownedCount >=
+                                                    groupItems.length
+                                                ? '+'
+                                                : null,
+                                            perDay: true,
+                                            coinSize: 14,
+                                            fontSize: 12,
+                                            spacing: 4,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textSecondary,
+                                            opacity: ownedCount >=
+                                                    groupItems.length
+                                                ? 1
+                                                : 0.35,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -238,7 +269,16 @@ class _ShopCollectionGroupScreenState
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(shopRepositoryProvider).listShop();
+      final List<ShopItem> items;
+      if (ref.read(isOfflineProvider)) {
+        items = await ref.read(shopCatalogProvider.future);
+      } else {
+        items = await ref.read(shopRepositoryProvider).listShop();
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null && items.isNotEmpty) {
+          await OfflineDiskCache.saveShop(user.id, items);
+        }
+      }
       if (!mounted) return;
       setState(() => _items = items);
     } catch (_) {}
@@ -280,20 +320,25 @@ class _ShopCollectionGroupScreenState
       ];
     });
     try {
-      final result = await ref.read(shopRepositoryProvider).buy(item.code);
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
-      ref.invalidate(inventoryListProvider);
-      ref.invalidate(shopCatalogProvider);
-      ref.invalidate(collectionIncomeProvider);
-      // Дождаться свежего каталога, чтобы хаб групп сразу увидел счётчик.
-      try {
-        final fresh = await ref.read(shopCatalogProvider.future);
-        if (mounted) setState(() => _items = fresh);
-      } catch (_) {}
+      final wasOffline = ref.read(isOfflineProvider);
+      await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
+      if (!wasOffline) {
+        ref.invalidate(inventoryListProvider);
+        ref.invalidate(shopCatalogProvider);
+        ref.invalidate(collectionIncomeProvider);
+        try {
+          final fresh = await ref.read(shopCatalogProvider.future);
+          if (mounted) setState(() => _items = fresh);
+        } catch (_) {}
+      }
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: context.l10n.shopCollectionAdded(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
+        message: wasOffline
+            ? context.l10n.shopPurchaseQueued
+            : context.l10n.shopCollectionAdded(
+                catalogTitle(item.code,
+                    fallback: item.title, l10n: context.l10n)),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -324,11 +369,12 @@ class _ShopCollectionGroupScreenState
         .where((e) =>
             e.kind == 'collection' && (e.collectionSet ?? 'other') == widget.set)
         .toList()
-      ..sort((a, b) {
-        final byPrice = a.priceBronze.compareTo(b.priceBronze);
-        if (byPrice != 0) return byPrice;
-        return a.sortOrder.compareTo(b.sortOrder);
-      });
+      ..sort((a, b) => compareCollectionItemsByDaily(
+            a.dailyBronze,
+            b.dailyBronze,
+            a.sortOrder,
+            b.sortOrder,
+          ));
 
     final setDaily =
         groupItems.fold<int>(0, (sum, e) => sum + e.dailyBronze);
@@ -371,16 +417,37 @@ class _ShopCollectionGroupScreenState
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       final l10n = context.l10n;
-                      final bonus =
-                          '+${formatRewardBronzePerDay(setDaily)}';
-                      return Text(
-                        complete
-                            ? '${l10n.shopSetComplete} · $bonus'
-                            : '${l10n.shopSetProgress(ownedCount, groupItems.length)} · $bonus',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                      return Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              complete
+                                  ? l10n.shopSetComplete
+                                  : l10n.shopSetProgress(
+                                      ownedCount,
+                                      groupItems.length,
+                                    ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (setDaily > 0) ...[
+                            const SizedBox(width: 8),
+                            BalanceDisplay(
+                              bronze: setDaily,
+                              prefix: complete ? '+' : null,
+                              perDay: true,
+                              coinSize: 14,
+                              fontSize: 12,
+                              spacing: 4,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              opacity: complete ? 1 : 0.32,
+                            ),
+                          ],
+                        ],
                       );
                     }
                     final item = groupItems[index - 1];

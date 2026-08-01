@@ -107,6 +107,8 @@ type GameStateItem struct {
 	FirstMoveRestriction bool     `json:"first_move_restriction,omitempty"`
 	CanSwap              bool     `json:"can_swap,omitempty"` // O может сменить стороны
 	StakeBronze          int      `json:"stake_bronze,omitempty"`
+	// Кто предложил ничью (user id); пусто — предложения нет.
+	DrawOfferBy          string   `json:"draw_offer_by,omitempty"`
 	XDisplayName         *string  `json:"x_display_name,omitempty"`
 	ODisplayName         *string  `json:"o_display_name,omitempty"`
 	XAvatarKind          string   `json:"x_avatar_kind,omitempty"`
@@ -263,6 +265,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.SwapSides(w, r, gameID)
 		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
 			h.ForfeitGame(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+			h.OfferDraw(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+			h.AcceptDraw(w, r, gameID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
@@ -340,10 +346,18 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 			}
 			otherUUID, err := uuid.Parse(otherUserID)
 			if err == nil && otherUUID != userID {
+				// Переиспользуем лобби ожидающего: он сидит на /lobby/{id},
+				// и клиент принимает game_started только с тем же lobby_id.
+				reuseLobbyID := ""
 				if otherLobbyID != "" {
-					h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+					lm, lerr := h.Rdb.HGetAll(ctx, "lobby:"+otherLobbyID).Result()
+					if lerr == nil && len(lm) > 0 && lm["status"] == lobbyStatusWaitingMatchmake {
+						reuseLobbyID = otherLobbyID
+					} else {
+						h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+					}
 				}
-				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
+				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, reuseLobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
 				if err != nil {
 					if err == store.ErrStakeNotAllowed {
 						WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
@@ -572,7 +586,10 @@ func emptyBoardJSON(gridSize int) string {
 	return string(raw)
 }
 
-func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
+// createGameFromMatch создаёт игру после матчмейкинга.
+// Если existingLobbyID не пуст — обновляет лобби ожидающего (чтобы WS
+// game_started совпал с URL /lobby/{id} и сразу увёл его в игру).
+func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
 	for _, uid := range []uuid.UUID{user1, user2} {
 		ok, e := store.UserMayStake(ctx, h.Pool, uid, stakeBronze)
 		if e != nil {
@@ -586,7 +603,11 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 		return "", "", err
 	}
 	gameID = uuid.New().String()
-	lobbyID = uuid.New().String()
+	reuseLobby := strings.TrimSpace(existingLobbyID)
+	lobbyID = reuseLobby
+	if lobbyID == "" {
+		lobbyID = uuid.New().String()
+	}
 
 	xUserID := user1.String()
 	oUserID := user2.String()
@@ -620,19 +641,30 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 	pipe.HSet(ctx, key, gameFields...)
 	pipe.Expire(ctx, key, 24*time.Hour)
 
-	pipe.HSet(ctx, lobbyKey,
-		"game_type", "tictactoe",
-		"creator_id", user1.String(),
-		"opponent_id", user2.String(),
-		"status", lobbyStatusInGame,
-		"game_id", gameID,
-		"created_at", time.Now().UTC().Format(time.RFC3339Nano),
-		"mode", "matchmake",
-		"turn_time_sec", strconv.Itoa(turnTimeSec),
-		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
-	)
+	if reuseLobby != "" {
+		// Лобби ожидающего уже содержит настройки — только статус/соперник/игра.
+		// creator_id остаётся за ожидающим; opponent — тот, кто только что нашёл пару.
+		pipe.HSet(ctx, lobbyKey,
+			"opponent_id", user1.String(),
+			"status", lobbyStatusInGame,
+			"game_id", gameID,
+		)
+	} else {
+		pipe.HSet(ctx, lobbyKey,
+			"game_type", "tictactoe",
+			"creator_id", user1.String(),
+			"opponent_id", user2.String(),
+			"status", lobbyStatusInGame,
+			"game_id", gameID,
+			"created_at", time.Now().UTC().Format(time.RFC3339Nano),
+			"mode", "matchmake",
+			"turn_time_sec", strconv.Itoa(turnTimeSec),
+			"grid_size", strconv.Itoa(gridSize),
+			"swap_rule", strconv.FormatBool(swapRule),
+			"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+			"stake_bronze", strconv.Itoa(stakeBronze),
+		)
+	}
 	pipe.Expire(ctx, lobbyKey, 24*time.Hour)
 
 	_, err = pipe.Exec(ctx)
@@ -1094,6 +1126,8 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		// TTL/уже закрыто — убрать устаревшие ссылки из чатов.
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1273,6 +1307,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1281,6 +1316,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	status := m["status"]
 
 	if status == lobbyStatusInGame {
+		// Подчистить устаревшие invite-ссылки в чатах, если игра уже идёт.
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusConflict, "game already started with another opponent")
 		return
 	}
@@ -1422,6 +1459,9 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			h.Rdb.Del(ctx, k)
 			h.Rdb.Del(ctx, k+":invited")
 			staleLobbyID := strings.TrimPrefix(k, "lobby:")
+			if staleLobbyID != "" {
+				h.cleanupInviteLobbyChatMessages(ctx, staleLobbyID)
+			}
 			if isDupFromCreator && staleLobbyID != "" {
 				h.broadcast([]uuid.UUID{userID}, map[string]any{
 					"type":     "lobby_updated",
@@ -1433,12 +1473,18 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		h.Rdb.Del(ctx, key+":invited")
 	}
 
+	// У всех, кому отправили ссылку «Войти в игру», убрать сообщение —
+	// лобби уже занято, карточка больше не актуальна.
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+
 	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
 		"type":        "lobby_updated",
 		"lobby_id":    lobbyID,
 		"game_id":     gameID,
 		"opponent_id": userID.String(),
 	})
+	// Дублируем game_started — ожидающий в лобби и AppShell сразу уводят обоих в игру.
+	h.publishGameStarted([]uuid.UUID{creatorUUID, userID}, gameID, lobbyID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -1446,6 +1492,36 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		"game_id": gameID,
 		"status":  lobbyStatusInGame,
 	})
+}
+
+// cleanupInviteLobbyChatMessages удаляет chat-сообщения со ссылкой на лобби
+// (старт игры, закрытие лобби, отклонение инвайта) и шлёт realtime участникам.
+func (h *GamesHandler) cleanupInviteLobbyChatMessages(ctx context.Context, lobbyID string) {
+	if h == nil || h.Pool == nil {
+		return
+	}
+	deleted, err := store.DeleteInviteLobbyShareMessages(ctx, h.Pool, lobbyID)
+	if err != nil || len(deleted) == 0 {
+		return
+	}
+	listChanged := make(map[uuid.UUID]struct{}, len(deleted)*2)
+	for _, item := range deleted {
+		h.broadcast([]uuid.UUID{item.LowUserID, item.HighUserID}, map[string]any{
+			"type":       "chat_message_deleted",
+			"chat_id":    item.ChatID.String(),
+			"message_id": item.MessageID.String(),
+		})
+		listChanged[item.LowUserID] = struct{}{}
+		listChanged[item.HighUserID] = struct{}{}
+	}
+	if len(listChanged) == 0 {
+		return
+	}
+	ids := make([]uuid.UUID, 0, len(listChanged))
+	for id := range listChanged {
+		ids = append(ids, id)
+	}
+	h.broadcast(ids, map[string]any{"type": "chat_list_changed"})
 }
 
 func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
@@ -1459,6 +1535,8 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		// Лобби уже нет — всё равно убрать устаревшие invite-ссылки из чатов.
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1498,6 +1576,7 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 
 	clearUserActiveLobby(ctx, h.Rdb, userID)
 	h.Rdb.Del(ctx, key)
+	h.Rdb.Del(ctx, key+":invited")
 	if status == lobbyStatusWaitingMatchmake {
 		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 		gridSize, _ := strconv.Atoi(m["grid_size"])
@@ -1509,6 +1588,8 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		h.Rdb.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze), 0, userID.String()+":"+lobbyID)
 	}
+	// Ссылка «Войти в игру» в чатах больше не актуальна.
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"left": true})
@@ -1541,7 +1622,9 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
 	h.Rdb.Del(ctx, key)
+	h.Rdb.Del(ctx, key+":invited")
 	clearUserActiveLobby(ctx, h.Rdb, userID)
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
 	h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
 		"type":     "invite_declined",
@@ -1669,6 +1752,7 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		StakeBronze:          stakeBronze,
 		Forfeit:              m["forfeit"] == "1",
 		Timeout:              m["timeout"] == "1",
+		DrawOfferBy:          m["draw_offer_by"],
 	}
 	if w := m["winner"]; w != "" {
 		item.Winner = &w
@@ -2097,6 +2181,125 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 	})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"status": status, "forfeit": true})
+}
+
+// OfferDraw предлагает ничью сопернику (только PvP).
+func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	if xUserID != userID.String() && oUserID != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
+		return
+	}
+	if isBot(xUserID) || isBot(oUserID) {
+		WriteErr(w, r, http.StatusBadRequest, "draw not available vs bot")
+		return
+	}
+	existing := strings.TrimSpace(m["draw_offer_by"])
+	if existing == userID.String() {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"offered":       true,
+			"draw_offer_by": existing,
+		})
+		return
+	}
+	if existing != "" {
+		WriteErr(w, r, http.StatusConflict, "opponent already offered draw")
+		return
+	}
+	if err := h.Rdb.HSet(ctx, key, "draw_offer_by", userID.String()).Err(); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+		"type":          "game_state",
+		"game_id":       gameID,
+		"status":        gameStatusActive,
+		"draw_offer_by": userID.String(),
+	})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"offered":       true,
+		"draw_offer_by": userID.String(),
+	})
+}
+
+// AcceptDraw принимает предложение ничьей от соперника.
+func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	if xUserID != userID.String() && oUserID != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
+		return
+	}
+	offerBy := strings.TrimSpace(m["draw_offer_by"])
+	if offerBy == "" {
+		WriteErr(w, r, http.StatusBadRequest, "no draw offer")
+		return
+	}
+	if offerBy == userID.String() {
+		WriteErr(w, r, http.StatusBadRequest, "cannot accept own draw offer")
+		return
+	}
+	gridSize := 3
+	if gs := m["grid_size"]; gs != "" {
+		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
+			gridSize = n
+		}
+	}
+	board := parseBoard(m["board"], gridSize)
+	pipe := h.Rdb.Pipeline()
+	pipe.HSet(ctx, key, "status", gameStatusDraw)
+	pipe.HDel(ctx, key, "draw_offer_by")
+	pipe.Expire(ctx, key, 24*time.Hour)
+	if _, err := pipe.Exec(ctx); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, gameStatusDraw)
+	for _, u := range humanUserIDs(xUserID, oUserID) {
+		clearUserActiveGame(ctx, h.Rdb, u)
+	}
+	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+		"type":    "game_state",
+		"game_id": gameID,
+		"board":   board,
+		"turn":    m["turn"],
+		"status":  gameStatusDraw,
+	})
+	writeJSON(w, http.StatusOK, map[string]any{"status": gameStatusDraw, "draw": true})
 }
 
 func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {

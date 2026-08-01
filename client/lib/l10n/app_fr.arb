@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} par jour",
+  "balancePerDay": "{amount}/jour",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Achat unique",
-  "shopSellRefund": "La vente rembourse une partie du prix",
+  "shopSellRefund": "La vente rembourse 80% du prix",
   "shopCollectionAdded": "{title} ajouté au profil",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Entrez un âge de 1 à 111",
   "profileSaveFailed": "Impossible d’enregistrer le profil",
   "profileNameHint": "Lettres latines, chiffres, _ jusqu’à 10 caractères",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "De 1 à 111",
   "profileAboutHint": "Jusqu’à 100 caractères (facultatif)",
   "profileProcessingPhoto": "Traitement de la photo…",

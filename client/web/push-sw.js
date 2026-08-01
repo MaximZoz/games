@@ -1,13 +1,52 @@
 /* Web Push service worker for Zozu Games PWA.
- * v7: clear_all_notifications при logout (снять баннеры + pending).
- * v6: при клике / открытии из пуша снимаем уведомление из шторки (iOS).
- * v5: системный пуш только когда PWA не в фокусе (свёрнуто).
- * В открытом приложении — без пушей на телефон (бейджи/realtime в UI).
+ * v10: viewer в Cache (SW убивается между push — память пустая);
+ *      visible client = приложение открыто (Safari focused часто false).
+ * v9: в foreground глушим ВСЕ пуши.
+ * v8: глушим пуш, если открыт тот же чат/матч.
+ * v7: clear_all_notifications при logout.
+ * v6: при клике снимаем уведомление из шторки (iOS).
+ * v5: системный пуш только когда PWA не в фокусе.
  */
 /* eslint-disable no-undef */
 
 const PENDING_CACHE = 'zozu-push-pending-v1';
 const PENDING_KEY = '/__pending_nav';
+const VIEWER_CACHE = 'zozu-push-viewer-v1';
+const VIEWER_KEY = '/__viewer';
+/** Пока Flutter шлёт heartbeat — считаем экран «смотрит» приложение. */
+const VIEWER_TTL_MS = 45000;
+
+/** Состояние экрана из Flutter (надёжнее client.focused на iOS). */
+let viewer = {
+  path: '',
+  foreground: false,
+  at: 0,
+};
+
+async function saveViewerState(state) {
+  try {
+    const cache = await caches.open(VIEWER_CACHE);
+    await cache.put(
+      VIEWER_KEY,
+      new Response(JSON.stringify(state), {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+  } catch (err) {
+    console.warn('[push-sw] saveViewerState failed', err);
+  }
+}
+
+async function loadViewerState() {
+  try {
+    const cache = await caches.open(VIEWER_CACHE);
+    const res = await cache.match(VIEWER_KEY);
+    if (!res) return null;
+    return await res.json();
+  } catch (_) {
+    return null;
+  }
+}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -30,6 +69,16 @@ function appPathFromUrl(url) {
   return path;
 }
 
+function stripQueryHash(path) {
+  const p = String(path || '');
+  const q = p.indexOf('?');
+  const h = p.indexOf('#');
+  let end = p.length;
+  if (q >= 0) end = Math.min(end, q);
+  if (h >= 0) end = Math.min(end, h);
+  return p.slice(0, end) || '/';
+}
+
 /** Fallback, когда iOS отдаёт пустой notification.data при клике. */
 function pathFromTag(tag) {
   const t = (tag && String(tag)) || '';
@@ -37,7 +86,7 @@ function pathFromTag(tag) {
     const id = t.slice('chat_'.length);
     return id ? `/chats/${id}` : '/chats';
   }
-  if (t === 'friend_request') return '/friends';
+  if (t === 'friend_request') return '/friends?tab=incoming';
   if (t.startsWith('game_invite_')) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
@@ -157,19 +206,16 @@ async function closeShownNotifications({ tag, path } = {}) {
  * На iOS при сворачивании visibility часто остаётся visible, а focused=false —
  * поэтому для подавления пуша требуем focused === true.
  */
-function clientIsFocusedForeground(client) {
+function clientLooksOpen(client) {
   if (!client) return false;
-  if (client.visibilityState && client.visibilityState !== 'visible') {
-    return false;
-  }
-  if ('focused' in client) {
-    return client.focused === true;
-  }
-  // Старые движки без focused: ориентируемся только на visibility.
-  return client.visibilityState === 'visible';
+  // Safari PWA: при открытом приложении focused часто false, а
+  // visibilityState === 'visible' — надёжный сигнал «пользователь внутри».
+  if (client.visibilityState === 'visible') return true;
+  if ('focused' in client && client.focused === true) return true;
+  return false;
 }
 
-async function isPwaFocusedForeground() {
+async function isPwaWindowOpen() {
   const clientsList = await self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
@@ -182,8 +228,29 @@ async function isPwaFocusedForeground() {
       continue;
     }
     if (!sameOrigin) continue;
-    if (clientIsFocusedForeground(client)) return true;
+    if (clientLooksOpen(client)) return true;
   }
+  return false;
+}
+
+function viewerStateIsFreshForeground(state) {
+  if (!state || state.foreground !== true) return false;
+  const at = typeof state.at === 'number' ? state.at : 0;
+  return Date.now() - at < VIEWER_TTL_MS;
+}
+
+async function isViewerReportedlyForeground() {
+  if (viewerStateIsFreshForeground(viewer)) return true;
+  // SW часто убивают между heartbeat и push — читаем Cache.
+  const saved = await loadViewerState();
+  return viewerStateIsFreshForeground(saved);
+}
+
+async function shouldSuppressPush(_notifPath) {
+  // 1) Есть видимое окно PWA — пользователь в приложении.
+  if (await isPwaWindowOpen()) return true;
+  // 2) Flutter недавно подтвердил foreground (Cache + память).
+  if (await isViewerReportedlyForeground()) return true;
   return false;
 }
 
@@ -223,12 +290,10 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     (async () => {
-      // Любые системные пуши только когда приложение свёрнуто / не в фокусе.
-      // В открытом PWA (чаты, игры, другой таб) — без баннера на iPhone.
-      if (await isPwaFocusedForeground()) {
+      const path = appPathFromUrl(resolveTargetUrl(url));
+      if (await shouldSuppressPush(path)) {
         return;
       }
-      const path = appPathFromUrl(resolveTargetUrl(url));
       // Заранее кладём deep-link: на iOS data при клике часто пустой.
       if (path && path !== '/') {
         await setPendingPath(path);
@@ -312,6 +377,23 @@ async function closeAllShownNotifications() {
 self.addEventListener('message', (event) => {
   const data = event.data || {};
   if (!data || !data.type) return;
+
+  if (data.type === 'active_route') {
+    const path = data.path != null ? String(data.path) : '';
+    // jsify/structured clone: true | 'true' | 1
+    const foreground =
+      data.foreground === true ||
+      data.foreground === 'true' ||
+      data.foreground === 1;
+    viewer = {
+      path: path,
+      foreground: foreground,
+      at: Date.now(),
+    };
+    event.waitUntil(saveViewerState(viewer));
+    return;
+  }
+
   if (data.type === 'clear_all_notifications') {
     event.waitUntil(
       (async () => {

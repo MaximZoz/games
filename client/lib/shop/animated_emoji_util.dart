@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:lottie/lottie.dart';
 import 'package:multigames_client/shop/emoji_asset_catalog.dart';
+import 'package:multigames_client/shop/flag_asset_cache.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
@@ -103,6 +105,10 @@ String formatChatMessagePreview(String body) {
         : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');
     return '🎁 $emoji $title';
   }
+  if (isInviteLobbyMessage(body)) {
+    final l10n = LocaleService.l10n;
+    return '${l10n.lobbyInviteTitle}: ${l10n.gamesTicTacToe}';
+  }
   return replaceAnimatedEmojiTokens(body);
 }
 
@@ -197,8 +203,8 @@ class _NeutralGroupBadge extends StatelessWidget {
   }
 }
 
-/// PNG-флаг из бандла приложения с лоадером на время декодирования.
-class CountryFlagImage extends StatelessWidget {
+/// PNG-флаг из бандла / memory-кэша с unicode fallback.
+class CountryFlagImage extends StatefulWidget {
   const CountryFlagImage({
     super.key,
     required this.iso,
@@ -211,35 +217,95 @@ class CountryFlagImage extends StatelessWidget {
   final String? fallbackUnicode;
 
   @override
+  State<CountryFlagImage> createState() => _CountryFlagImageState();
+}
+
+class _CountryFlagImageState extends State<CountryFlagImage> {
+  MemoryImage? _cached;
+  bool _loading = false;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cached = FlagAssetCache.imageForIso(widget.iso);
+    if (_cached == null) {
+      _loading = true;
+      unawaited(_ensureCached());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CountryFlagImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.iso != widget.iso) {
+      _cached = FlagAssetCache.imageForIso(widget.iso);
+      _failed = false;
+      if (_cached == null) {
+        _loading = true;
+        unawaited(_ensureCached());
+      } else {
+        _loading = false;
+      }
+    }
+  }
+
+  Future<void> _ensureCached() async {
+    final image = await FlagAssetCache.loadIso(widget.iso);
+    if (!mounted) return;
+    setState(() {
+      _cached = image;
+      _loading = false;
+      _failed = image == null;
+    });
+  }
+
+  Widget _fallback() {
+    final fb = (widget.fallbackUnicode ?? '').trim();
+    if (fb.isNotEmpty) {
+      return Center(
+        child: Text(fb, style: TextStyle(fontSize: widget.size * 0.72)),
+      );
+    }
+    return Icon(
+      Icons.flag_outlined,
+      size: widget.size * 0.7,
+      color: AppColors.textSecondary,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final cached = _cached ?? FlagAssetCache.imageForIso(widget.iso);
     return SizedBox(
-      width: size,
-      height: size,
-      child: Image.asset(
-        countryFlagAssetPath(iso),
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
-        gaplessPlayback: true,
-        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-          if (wasSynchronouslyLoaded || frame != null) {
-            return child;
-          }
-          return EmojiIconPlaceholder(size: size);
-        },
-        errorBuilder: (context, error, stackTrace) {
-          final fb = (fallbackUnicode ?? '').trim();
-          if (fb.isNotEmpty) {
-            return Center(
-              child: Text(fb, style: TextStyle(fontSize: size * 0.72)),
-            );
-          }
-          return Icon(
-            Icons.flag_outlined,
-            size: size * 0.7,
-            color: AppColors.textSecondary,
-          );
-        },
-      ),
+      width: widget.size,
+      height: widget.size,
+      child: cached != null
+          ? Image(
+              image: cached,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.medium,
+              gaplessPlayback: true,
+              errorBuilder: (context, error, stackTrace) => _fallback(),
+            )
+          : (_failed
+              ? _fallback()
+              : (_loading
+                  ? EmojiIconPlaceholder(size: widget.size)
+                  : Image.asset(
+                      countryFlagAssetPath(widget.iso),
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium,
+                      gaplessPlayback: true,
+                      frameBuilder:
+                          (context, child, frame, wasSynchronouslyLoaded) {
+                        if (wasSynchronouslyLoaded || frame != null) {
+                          return child;
+                        }
+                        return EmojiIconPlaceholder(size: widget.size);
+                      },
+                      errorBuilder: (context, error, stackTrace) => _fallback(),
+                    ))),
     );
   }
 }

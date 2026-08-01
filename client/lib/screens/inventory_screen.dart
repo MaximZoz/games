@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/friends/gift_friend_picker.dart';
+import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -13,12 +17,11 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
-import 'package:multigames_client/core/locale_provider.dart';
-import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/utils/user_error.dart';
 
 Map<String, String> get _groupTitles {
   final l10n = LocaleService.l10n;
@@ -46,6 +49,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   /// Копии непрочитанных подарков на момент открытия экрана (для бейджа на плитке).
   Set<String> _highlightGifts = const {};
   bool _clearedUnread = false;
+  final GlobalKey _claimIncomeKey = GlobalKey();
+  final Map<String, GlobalKey> _sellKeys = {};
+
+  GlobalKey _sellKeyFor(String code) =>
+      _sellKeys.putIfAbsent(code, GlobalKey.new);
 
   @override
   void initState() {
@@ -63,9 +71,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     if (_claimBusy) return;
     setState(() => _claimBusy = true);
     try {
+      final fromBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
       final result =
           await ref.read(shopRepositoryProvider).claimCollectionIncome();
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      if (!mounted) return;
+      if (result.quantity > 0) {
+        await playBalanceGain(
+          ref: ref,
+          context: context,
+          newBalanceBronze: result.balanceBronze,
+          fromBronze: fromBalance,
+          rewardBronze: result.quantity,
+          sourceKey: _claimIncomeKey,
+        );
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .applyBalance(result.balanceBronze);
+      }
       if (!mounted) return;
       showAppSnackBar(
         context,
@@ -112,9 +136,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
     if (ok != true || !mounted) return;
     try {
+      final fromBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
       final result =
           await ref.read(shopRepositoryProvider).sellCollection(item.code);
-      await ref.read(authStateProvider.notifier).applyBalance(result.balanceBronze);
+      if (!mounted) return;
+      if (result.quantity > 0) {
+        await playBalanceGain(
+          ref: ref,
+          context: context,
+          newBalanceBronze: result.balanceBronze,
+          fromBronze: fromBalance,
+          rewardBronze: result.quantity,
+          sourceKey: _sellKeyFor(item.code),
+        );
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .applyBalance(result.balanceBronze);
+      }
       ref.invalidate(inventoryListProvider);
       ref.invalidate(shopCatalogProvider);
       ref.invalidate(collectionIncomeProvider);
@@ -215,7 +255,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
+        message: formatUserError(
+          e,
+          fallback: context.l10n.commonGenericError,
+        ),
         kind: AppSnackKind.error,
       );
     }
@@ -242,12 +285,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       }
     }
 
+    final isOffline = ref.watch(isOfflineProvider);
     final items = async.valueOrNull ?? const <InventoryItem>[];
     final catalog = ref.watch(shopCatalogProvider).valueOrNull ?? const <ShopItem>[];
     final emojis =
         items.where((e) => e.kind == 'emoji' && e.quantity > 0).toList();
     final frames = items.where((e) => e.kind == 'frame').toList();
-    final stakes = items.where((e) => e.kind == 'stake_unlock').toList();
+    final stakes = isOffline
+        ? const <InventoryItem>[]
+        : items.where((e) => e.kind == 'stake_unlock').toList();
     final collections = items.where((e) => e.kind == 'collection').toList();
     final income = incomeAsync.valueOrNull;
     final incomeAvailable = income?.available == true;
@@ -255,20 +301,35 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final headerBadge = (incomeAvailable ? 1 : 0) + unreadGiftCount;
 
     final catalogBySet = <String, int>{};
+    final catalogDailyBySet = <String, int>{};
     for (final e in catalog.where((e) => e.kind == 'collection')) {
       final s = (e.collectionSet ?? 'other').trim();
       if (s.isEmpty) continue;
       catalogBySet[s] = (catalogBySet[s] ?? 0) + 1;
+      catalogDailyBySet[s] = (catalogDailyBySet[s] ?? 0) + e.dailyBronze;
     }
     final collectionsBySet = <String, List<InventoryItem>>{};
     for (final it in collections) {
       final s = (it.collectionSet ?? 'other').trim();
       collectionsBySet.putIfAbsent(s.isEmpty ? 'other' : s, () => []).add(it);
     }
-    final collectionSetKeys = [
-      ...collectionSetOrder.where(collectionsBySet.containsKey),
-      ...collectionsBySet.keys.where((k) => !collectionSetOrder.contains(k)),
-    ];
+    for (final list in collectionsBySet.values) {
+      list.sort((a, b) => compareCollectionItemsByDaily(
+            a.dailyBronze,
+            b.dailyBronze,
+            0,
+            0,
+          ));
+    }
+    final collectionSetKeys = collectionsBySet.keys.toList()
+      ..sort((a, b) => compareCollectionSetsByDaily(
+            a,
+            b,
+            (set) =>
+                catalogDailyBySet[set] ??
+                (collectionsBySet[set] ?? const [])
+                    .fold<int>(0, (s, e) => s + e.dailyBronze),
+          ));
 
     final grouped = <String, List<InventoryItem>>{};
     for (final e in emojis) {
@@ -362,22 +423,37 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        income.available
-                                            ? context.l10n.inventoryIncomeReady(
-                                                formatRewardBronzePerDay(
-                                                  income.amountBronze,
-                                                ),
-                                              )
-                                            : context.l10n
-                                                .inventoryIncomeTomorrow(
-                                                formatRewardBronzePerDay(
-                                                  income.amountBronze,
-                                                ),
+                                      child: KeyedSubtree(
+                                        key: _claimIncomeKey,
+                                        child: Wrap(
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: [
+                                            Text(
+                                              income.available
+                                                  ? context.l10n
+                                                      .inventoryIncomeReadyLabel
+                                                  : context.l10n
+                                                      .inventoryIncomeTomorrowLabel,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: AppColors.textSecondary,
                                               ),
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.textSecondary,
+                                            ),
+                                            BalanceDisplay(
+                                              bronze: income.amountBronze,
+                                              prefix:
+                                                  income.available ? '+' : null,
+                                              perDay: true,
+                                              coinSize: 16,
+                                              fontSize: 13,
+                                              spacing: 5,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -385,8 +461,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       FilledButton(
                                         onPressed:
                                             _claimBusy ? null : _claimIncome,
-                                        child: Text(
-                                            _claimBusy ? '…' : context.l10n.inventoryClaim),
+                                        child: Text(_claimBusy
+                                            ? '…'
+                                            : context.l10n.inventoryClaim),
                                       ),
                                   ],
                                 ),
@@ -395,37 +472,57 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               const SizedBox.shrink()
                             else
                               for (final set in collectionSetKeys) ...[
-                                _CollectionSetFrame(
-                                  title: collectionSetTitle(set),
-                                  owned: collectionsBySet[set]?.length ?? 0,
-                                  total: catalogBySet[set] ??
-                                      (collectionsBySet[set]?.length ?? 0),
-                                  onOpenShop: set == 'other'
-                                      ? null
-                                      : () => context.push(
-                                            '/shop/collections/$set',
+                                Builder(
+                                  builder: (context) {
+                                    final ownedCount =
+                                        collectionsBySet[set]?.length ?? 0;
+                                    final totalCount = catalogBySet[set] ??
+                                        ownedCount;
+                                    final setBonus = catalogDailyBySet[set] ??
+                                        (collectionsBySet[set] ?? const [])
+                                            .fold<int>(
+                                          0,
+                                          (s, e) => s + e.dailyBronze,
+                                        );
+                                    return _CollectionSetFrame(
+                                      title: collectionSetTitle(set),
+                                      owned: ownedCount,
+                                      total: totalCount,
+                                      setBonusBronze: setBonus,
+                                      onOpenShop: set == 'other'
+                                          ? null
+                                          : () => context.push(
+                                                '/shop/collections/$set',
+                                              ),
+                                      children: [
+                                        for (final it
+                                            in collectionsBySet[set] ??
+                                                const <InventoryItem>[])
+                                          _CollectionInvTile(
+                                            item: it,
+                                            sellSourceKey:
+                                                _sellKeyFor(it.code),
+                                            highlightGift: _highlightGifts
+                                                .contains(it.code),
+                                            onOpen: () =>
+                                                showCollectionFullscreen(
+                                              context,
+                                              title: catalogTitle(
+                                                it.code,
+                                                fallback: it.title,
+                                                l10n: context.l10n,
+                                              ),
+                                              animatedName: it.animatedName ??
+                                                  'sparkles',
+                                              fallback: it.emoji,
+                                              subtitle: null,
+                                            ),
+                                            onGift: () => _gift(it),
+                                            onSell: () => _sell(it),
                                           ),
-                                  children: [
-                                    for (final it
-                                        in collectionsBySet[set] ??
-                                            const <InventoryItem>[])
-                                      _CollectionInvTile(
-                                        item: it,
-                                        highlightGift:
-                                            _highlightGifts.contains(it.code),
-                                        onOpen: () => showCollectionFullscreen(
-                                          context,
-                                          title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
-                                          animatedName:
-                                              it.animatedName ?? 'sparkles',
-                                          fallback: it.emoji,
-                                          subtitle:
-                                              '+${formatRewardBronzePerDay(it.dailyBronze)}',
-                                        ),
-                                        onGift: () => _gift(it),
-                                        onSell: () => _sell(it),
-                                      ),
-                                  ],
+                                      ],
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 10),
                               ],
@@ -475,30 +572,33 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        _Section(
-                          title: context.l10n.shopStakes,
-                          empty: context.l10n.inventoryNoStakes,
-                          children: [
-                            for (final it in stakes)
-                              _InvTile(
-                                leading: CoinIcon(
-                                  coinType: it.stakeGold != null
-                                      ? CoinType.gold
-                                      : CoinType.silver,
-                                  size: 26,
+                        if (!isOffline) ...[
+                          const SizedBox(height: 16),
+                          _Section(
+                            title: context.l10n.shopStakes,
+                            empty: context.l10n.inventoryNoStakes,
+                            children: [
+                              for (final it in stakes)
+                                _InvTile(
+                                  leading: CoinIcon(
+                                    coinType: it.stakeGold != null
+                                        ? CoinType.gold
+                                        : CoinType.silver,
+                                    size: 26,
+                                  ),
+                                  title: catalogTitle(it.code,
+                                      fallback: it.title, l10n: context.l10n),
+                                  subtitle: it.stakeGold != null
+                                      ? context.l10n.inventoryStakeGold(
+                                          '${it.stakeGold}',
+                                        )
+                                      : context.l10n.inventoryStakeSilver(
+                                          '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
+                                        ),
                                 ),
-                                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
-                                subtitle: it.stakeGold != null
-                                    ? context.l10n.inventoryStakeGold(
-                                        '${it.stakeGold}',
-                                      )
-                                    : context.l10n.inventoryStakeSilver(
-                                        '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
-                                      ),
-                              ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
         ),
@@ -513,32 +613,57 @@ class _CollectionSetFrame extends StatelessWidget {
     required this.owned,
     required this.total,
     required this.children,
+    this.setBonusBronze = 0,
     this.onOpenShop,
   });
 
   final String title;
   final int owned;
   final int total;
+  final int setBonusBronze;
   final List<Widget> children;
   final VoidCallback? onOpenShop;
 
   @override
   Widget build(BuildContext context) {
     final countLabel = total > 0 ? '$owned/$total' : '$owned';
+    final complete = total > 0 && owned >= total;
     final header = Row(
       children: [
         Expanded(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: onOpenShop != null
-                  ? AppColors.accentStart
-                  : AppColors.textPrimary,
-            ),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: onOpenShop != null
+                        ? AppColors.accentStart
+                        : AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (setBonusBronze > 0) ...[
+                const SizedBox(width: 8),
+                BalanceDisplay(
+                  bronze: setBonusBronze,
+                  prefix: complete ? '+' : null,
+                  perDay: true,
+                  coinSize: 15,
+                  fontSize: 12,
+                  spacing: 4,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  opacity: complete ? 1 : 0.32,
+                ),
+              ],
+            ],
           ),
         ),
+        const SizedBox(width: 10),
         Text(
           countLabel,
           style: const TextStyle(
@@ -548,7 +673,7 @@ class _CollectionSetFrame extends StatelessWidget {
           ),
         ),
         if (onOpenShop != null) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: 2),
           Icon(
             Icons.chevron_right_rounded,
             size: 22,
@@ -602,6 +727,7 @@ class _CollectionInvTile extends StatelessWidget {
     required this.onOpen,
     required this.onGift,
     required this.onSell,
+    required this.sellSourceKey,
     this.highlightGift = false,
   });
 
@@ -609,6 +735,7 @@ class _CollectionInvTile extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onGift;
   final VoidCallback onSell;
+  final GlobalKey sellSourceKey;
   final bool highlightGift;
 
   @override
@@ -696,12 +823,15 @@ class _CollectionInvTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    '+${formatRewardBronzePerDay(item.dailyBronze)}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
+                  BalanceDisplay(
+                    bronze: item.dailyBronze,
+                    prefix: '+',
+                    perDay: true,
+                    coinSize: 14,
+                    fontSize: 12,
+                    spacing: 4,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
                 ],
               ),
@@ -712,10 +842,13 @@ class _CollectionInvTile extends StatelessWidget {
             onPressed: onGift,
             icon: const Icon(Icons.card_giftcard_outlined),
           ),
-          IconButton(
-            tooltip: context.l10n.inventorySell,
-            onPressed: onSell,
-            icon: const Icon(Icons.sell_outlined),
+          KeyedSubtree(
+            key: sellSourceKey,
+            child: IconButton(
+              tooltip: context.l10n.inventorySell,
+              onPressed: onSell,
+              icon: const Icon(Icons.sell_outlined),
+            ),
           ),
         ],
       ),

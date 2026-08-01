@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} per dag",
+  "balancePerDay": "{amount}/dag",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Engangskjøp",
-  "shopSellRefund": "Salg returnerer deler av kostnaden",
+  "shopSellRefund": "Salg returnerer 80% av kostnaden",
   "shopCollectionAdded": "{title} lagt til i profilen",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Skriv inn alder fra 1 til 111",
   "profileSaveFailed": "Kunne ikke lagre profilen",
   "profileNameHint": "Latinske bokstaver, sifre, _ opptil 10 tegn",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Fra 1 til 111",
   "profileAboutHint": "Opptil 100 tegn (valgfritt)",
   "profileProcessingPhoto": "Behandler bilde…",

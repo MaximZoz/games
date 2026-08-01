@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -12,7 +13,10 @@ const _pendingKey = '/__pending_nav';
 
 JSFunction? _messageListener;
 JSFunction? _visibilityListener;
+JSFunction? _pageHideListener;
 PushNotificationNavHandler? _onNavigate;
+Timer? _heartbeatTimer;
+String _lastReportedPath = '';
 
 String _normalizeAppPath(String raw) {
   final trimmed = raw.trim();
@@ -49,23 +53,66 @@ String? _tagFromPath(String path) {
   return null;
 }
 
+void _postToPushSw(Map<String, Object?> payload) {
+  try {
+    // Шлём именно в push-sw.js — не в чужой flutter_service_worker.
+    web.window.navigator.serviceWorker.getRegistrations().toDart.then((regs) {
+      for (final reg in regs.toDart) {
+        final worker = reg.active;
+        if (worker == null) continue;
+        final url = worker.scriptURL;
+        if (!url.contains('push-sw.js')) continue;
+        worker.postMessage(payload.jsify());
+        return;
+      }
+      web.window.navigator.serviceWorker.ready.toDart.then((reg) {
+        reg.active?.postMessage(payload.jsify());
+      });
+    });
+  } catch (_) {}
+}
+
 void _askServiceWorkerClearNotifications({
   String? tag,
   required String path,
 }) {
+  _postToPushSw({
+    'type': 'clear_notifications',
+    'path': path,
+    if (tag != null && tag.isNotEmpty) 'tag': tag,
+  });
+}
+
+bool _documentIsVisible() {
   try {
-    final ready = web.window.navigator.serviceWorker.ready;
-    ready.toDart.then((reg) {
-      final worker = reg.active;
-      if (worker == null) return;
-      final payload = <String, Object?>{
-        'type': 'clear_notifications',
-        'path': path,
-        if (tag != null && tag.isNotEmpty) 'tag': tag,
-      };
-      worker.postMessage(payload.jsify());
-    });
-  } catch (_) {}
+    return web.document.visibilityState == 'visible';
+  } catch (_) {
+    return true;
+  }
+}
+
+/// Сообщает SW текущий маршрут и foreground — чтобы не показывать пуш
+/// про уже открытый чат/матч (на iOS client.focused часто врёт).
+void reportPushSwActiveRoute(String path) {
+  if (!kIsWeb) return;
+  final normalized = _normalizeAppPath(path);
+  final foreground = _documentIsVisible();
+  _lastReportedPath = normalized;
+  _postToPushSw({
+    'type': 'active_route',
+    'path': normalized,
+    'foreground': foreground,
+  });
+}
+
+void _startHeartbeat() {
+  _heartbeatTimer?.cancel();
+  // Чаще пингуем SW: между push Safari поднимает «чистый» worker.
+  _heartbeatTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+    reportPushSwActiveRoute(
+      _lastReportedPath.isEmpty ? '/' : _lastReportedPath,
+    );
+  });
 }
 
 void _go(String raw, {String? tag}) {
@@ -121,24 +168,50 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
   }
 
   void handleVisibility(web.Event _) {
-    if (web.document.visibilityState == 'visible') {
-      _consumePendingIfAny();
+    final visible = _documentIsVisible();
+    if (_lastReportedPath.isNotEmpty) {
+      reportPushSwActiveRoute(_lastReportedPath);
     }
+    if (visible) {
+      _consumePendingIfAny();
+    } else {
+      // Явно сбрасываем foreground, чтобы пуши снова шли в фоне.
+      _postToPushSw({
+        'type': 'active_route',
+        'path': _lastReportedPath,
+        'foreground': false,
+      });
+    }
+  }
+
+  void handlePageHide(web.Event _) {
+    _postToPushSw({
+      'type': 'active_route',
+      'path': _lastReportedPath,
+      'foreground': false,
+    });
   }
 
   _messageListener = handleMessage.toJS;
   _visibilityListener = handleVisibility.toJS;
+  _pageHideListener = handlePageHide.toJS;
   web.window.navigator.serviceWorker
       .addEventListener('message', _messageListener!);
   web.document.addEventListener('visibilitychange', _visibilityListener!);
   web.window.addEventListener('focus', _visibilityListener!);
+  web.window.addEventListener('pageshow', _visibilityListener!);
+  web.window.addEventListener('pagehide', _pageHideListener!);
 
-  // Подтянуть новый push-sw (tag/cache deep-link) без переустановки PWA.
+  // Подтянуть новый push-sw без переустановки PWA.
   try {
     web.window.navigator.serviceWorker.getRegistration().toDart.then((reg) {
       reg?.update();
     });
   } catch (_) {}
+
+  _startHeartbeat();
+  // Сразу пометить PWA как foreground — до первого кадра AppShell.
+  reportPushSwActiveRoute('/');
 
   // Холодный старт / уже открытое приложение после клика по пушу.
   _consumePendingIfAny();
@@ -146,6 +219,8 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
 
 void uninstallPushNotificationNavigation() {
   if (!kIsWeb) return;
+  _heartbeatTimer?.cancel();
+  _heartbeatTimer = null;
   try {
     if (_messageListener != null) {
       web.window.navigator.serviceWorker
@@ -157,9 +232,16 @@ void uninstallPushNotificationNavigation() {
       web.document
           .removeEventListener('visibilitychange', _visibilityListener!);
       web.window.removeEventListener('focus', _visibilityListener!);
+      web.window.removeEventListener('pageshow', _visibilityListener!);
+    }
+  } catch (_) {}
+  try {
+    if (_pageHideListener != null) {
+      web.window.removeEventListener('pagehide', _pageHideListener!);
     }
   } catch (_) {}
   _messageListener = null;
   _visibilityListener = null;
+  _pageHideListener = null;
   _onNavigate = null;
 }

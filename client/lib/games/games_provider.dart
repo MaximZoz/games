@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -9,6 +11,9 @@ import 'package:multigames_client/l10n/display_names.dart';
 final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
   return GamesRepository(authRepository: ref.watch(authRepositoryProvider));
 });
+
+/// Invite-ссылка, скопированная из лобби — для всплывашки «Вставить» в чате.
+final pendingInvitePasteProvider = StateProvider<String?>((ref) => null);
 
 class GameInvite {
   GameInvite({
@@ -188,6 +193,11 @@ final activeGameProvider =
         ActiveGameNotifier.new);
 
 class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
+  /// Растёт при [clearLocal] — чтобы фоновый resume после тапа «Игры»
+  /// не вернул в лобби сразу после выхода.
+  int _epoch = 0;
+  int get epoch => _epoch;
+
   @override
   Future<ActiveGameItem?> build() async {
     ref.listen(
@@ -216,7 +226,13 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
 
   /// Мгновенно сбросить локально (выход из лобби без ожидания сети).
   void clearLocal() {
+    _epoch++;
     state = const AsyncValue.data(null);
+  }
+
+  /// Сразу после createLobby — чтобы таб «Игры» открывал «Своя игра».
+  void setLocal(ActiveGameItem item) {
+    state = AsyncValue.data(item);
   }
 }
 
@@ -256,10 +272,19 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     });
     final user = ref.watch(authStateProvider).valueOrNull;
     if (user == null) return UserGameSettings.defaults;
+    final offline = ref.watch(isOfflineProvider);
+    if (offline) {
+      return await OfflineDiskCache.loadGameSettings(user.id) ??
+          UserGameSettings.defaults;
+    }
     try {
-      return await ref.read(gamesRepositoryProvider).getGameSettings();
+      final settings =
+          await ref.read(gamesRepositoryProvider).getGameSettings();
+      await OfflineDiskCache.saveGameSettings(user.id, settings);
+      return settings;
     } catch (_) {
-      return UserGameSettings.defaults;
+      return await OfflineDiskCache.loadGameSettings(user.id) ??
+          UserGameSettings.defaults;
     }
   }
 
@@ -268,6 +293,10 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     state = AsyncData(next);
     _pending = next;
     _repo = ref.read(gamesRepositoryProvider);
+    final user = ref.read(authStateProvider).valueOrNull;
+    if (user != null) {
+      unawaited(OfflineDiskCache.saveGameSettings(user.id, next));
+    }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 450), () {
       final toSave = _pending;

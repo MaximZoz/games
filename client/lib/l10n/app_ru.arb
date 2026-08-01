@@ -12,6 +12,42 @@
   "settingsLanguageSystem": "Как в системе",
   "settingsAddBotsTitle": "Добавлять ботов через 30 с",
   "settingsAddBotsSubtitle": "В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)",
+  "settingsOfflineModeTitle": "Режим сети",
+  "settingsOfflineModeSubtitle": "Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.",
+  "settingsModeOnline": "Онлайн",
+  "settingsModeOffline": "Офлайн",
+  "gamesAlternateStartsHint": "По очереди кто начинает партию",
+  "rulesAlternateStarts": "Кто ходит первым чередуется от партии к партии.",
+  "offlineBadgeTooltip": "Офлайн режим",
+  "offlineModePopupTitle": "Офлайн режим",
+  "offlineModePopupBody": "Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.",
+  "offlineModePopupSettings": "Настройки",
+  "gamesPlay": "Играть",
+  "offlineGameTitle": "Игра с ботом",
+  "offlineGameHint": "Без ставок и наград · только офлайн",
+  "offlineBotWon": "Бот победил",
+  "offlineBotThinking": "Ход бота…",
+  "offlinePlayAgain": "Ещё раз",
+  "shopPurchaseQueued": "Покупка сохранена — применится в режиме онлайн",
+  "shopPurchaseApplied": "{title} — покупка применена",
+  "@shopPurchaseApplied": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopPurchaseRejected": "{title} — покупка не применена: {reason}",
+  "@shopPurchaseRejected": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Сообщения только от друзей",
   "settingsFriendsOnlySubtitle": "Кто не в друзьях, сможет отправлять только смайлики. Если мешает спам — временно заблокируйте пользователя.",
   "settingsNotifications": "Уведомления",
@@ -180,6 +216,7 @@
   "lobbyInviteTitle": "Приглашение в игру",
   "lobbyInvitedToPlay": "Вас пригласили сыграть",
   "lobbyEnterGame": "Войти в игру",
+  "lobbyGone": "Этой игры уже нет",
   "lobbyInvite": "Пригласить",
   "lobbyInviteSent": "Приглашение отправлено",
   "lobbyCopyLink": "Отправить ссылку на игру",
@@ -195,6 +232,15 @@
   "gameExitConfirm": "Если вы выйдете, то вы проиграете. Выйти?",
   "gameStay": "Остаться",
   "gameLeave": "Выйти",
+  "gameSurrender": "Сдаться",
+  "gameSurrenderTitle": "Сдаться?",
+  "gameSurrenderConfirm": "Если вы сдадитесь, вы проиграете. Сдаться?",
+  "gameOfferDraw": "Предложить ничью",
+  "gameOfferDrawTitle": "Предложить ничью?",
+  "gameOfferDrawConfirm": "Отправить сопернику предложение ничьей?",
+  "gameAcceptDrawTitle": "Принять ничью?",
+  "gameAcceptDrawConfirm": "Соперник предлагает ничью. Принять?",
+  "gameDrawOffered": "Ожидание ответа",
   "gameConnecting": "Подключение к игре…",
   "gameWaitingOpponent": "Ожидание соперника",
   "gameRematchOffer": "Соперник предлагает реванш",
@@ -218,6 +264,7 @@
   "chatDialog": "Диалог",
   "chatEmpty": "Сообщений пока нет.\nНапишите первое сообщение.",
   "chatMessageHint": "Сообщение",
+  "chatPaste": "Вставить",
   "chatEmoji": "Смайлики",
   "chatBuyEmojiHint": "Купите смайлики в магазине на главной",
   "chatEditing": "Редактирование",
@@ -328,7 +375,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} в день",
+  "balancePerDay": "{amount}/день",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +580,7 @@
     }
   },
   "shopBuyOnce": "Покупка один раз",
-  "shopSellRefund": "Продажа вернёт часть стоимости",
+  "shopSellRefund": "Продажа вернет 80% стоимости",
   "shopCollectionAdded": "{title} добавлен в профиль",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -600,6 +647,9 @@
       }
     }
   },
+  "inventoryGiftAlreadyOwns": "У этого пользователя уже есть эта коллекция",
+  "inventoryGiftSelf": "Нельзя подарить коллекцию самому себе",
+  "inventoryGiftNotOwned": "У вас нет этого предмета",
   "inventoryLoadFailed": "Не удалось загрузить предметы",
   "inventoryNoCollections": "Нет коллекций — купите в магазине",
   "inventoryNoEmojis": "Нет смайликов — купите в магазине",
@@ -629,6 +679,8 @@
       }
     }
   },
+  "inventoryIncomeReadyLabel": "Доход:",
+  "inventoryIncomeTomorrowLabel": "Доход завтра:",
   "inventoryStakeGold": "Можно ставить {amount} золота",
   "@inventoryStakeGold": {
     "placeholders": {
@@ -738,6 +790,7 @@
   "profileAgeInvalid": "Введите возраст от 1 до 111",
   "profileSaveFailed": "Не удалось сохранить профиль",
   "profileNameHint": "Латиница, цифры, _ до 10 символов",
+  "profileNameLatinOnly": "Только латинские символы",
   "profileAgeHint": "От 1 до 111",
   "profileAboutHint": "До 100 символов (по желанию)",
   "profileProcessingPhoto": "Обработка фото…",

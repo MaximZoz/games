@@ -17,6 +17,26 @@ const collectionSetOrder = [
   'adventure',
 ];
 
+/// Группы коллекций: доход/день по возрастанию, затем фиксированный порядок.
+int compareCollectionSetsByDaily(
+  String a,
+  String b,
+  int Function(String set) dailyOf,
+) {
+  final byDaily = dailyOf(a).compareTo(dailyOf(b));
+  if (byDaily != 0) return byDaily;
+  final ai = collectionSetOrder.indexOf(a);
+  final bi = collectionSetOrder.indexOf(b);
+  return (ai < 0 ? 999 : ai).compareTo(bi < 0 ? 999 : bi);
+}
+
+/// Предметы коллекции: доход/день по возрастанию.
+int compareCollectionItemsByDaily(int aDaily, int bDaily, int aOrder, int bOrder) {
+  final byDaily = aDaily.compareTo(bDaily);
+  if (byDaily != 0) return byDaily;
+  return aOrder.compareTo(bOrder);
+}
+
 String collectionSetTitle(String set) {
   final l10n = LocaleService.l10n;
   switch (set) {

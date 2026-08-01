@@ -221,6 +221,120 @@ abstract class AppLocalizations {
   /// **'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)'**
   String get settingsAddBotsSubtitle;
 
+  /// No description provided for @settingsOfflineModeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим сети'**
+  String get settingsOfflineModeTitle;
+
+  /// No description provided for @settingsOfflineModeSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.'**
+  String get settingsOfflineModeSubtitle;
+
+  /// No description provided for @settingsModeOnline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Онлайн'**
+  String get settingsModeOnline;
+
+  /// No description provided for @settingsModeOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн'**
+  String get settingsModeOffline;
+
+  /// No description provided for @gamesAlternateStartsHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'По очереди кто начинает партию'**
+  String get gamesAlternateStartsHint;
+
+  /// No description provided for @rulesAlternateStarts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кто ходит первым чередуется от партии к партии.'**
+  String get rulesAlternateStarts;
+
+  /// No description provided for @offlineBadgeTooltip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн режим'**
+  String get offlineBadgeTooltip;
+
+  /// No description provided for @offlineModePopupTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн режим'**
+  String get offlineModePopupTitle;
+
+  /// No description provided for @offlineModePopupBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.'**
+  String get offlineModePopupBody;
+
+  /// No description provided for @offlineModePopupSettings.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настройки'**
+  String get offlineModePopupSettings;
+
+  /// No description provided for @gamesPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Играть'**
+  String get gamesPlay;
+
+  /// No description provided for @offlineGameTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра с ботом'**
+  String get offlineGameTitle;
+
+  /// No description provided for @offlineGameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без ставок и наград · только офлайн'**
+  String get offlineGameHint;
+
+  /// No description provided for @offlineBotWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бот победил'**
+  String get offlineBotWon;
+
+  /// No description provided for @offlineBotThinking.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход бота…'**
+  String get offlineBotThinking;
+
+  /// No description provided for @offlinePlayAgain.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз'**
+  String get offlinePlayAgain;
+
+  /// No description provided for @shopPurchaseQueued.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покупка сохранена — применится в режиме онлайн'**
+  String get shopPurchaseQueued;
+
+  /// No description provided for @shopPurchaseApplied.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} — покупка применена'**
+  String shopPurchaseApplied(String title);
+
+  /// No description provided for @shopPurchaseRejected.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} — покупка не применена: {reason}'**
+  String shopPurchaseRejected(String title, String reason);
+
   /// No description provided for @settingsFriendsOnlyTitle.
   ///
   /// In ru, this message translates to:
@@ -977,6 +1091,12 @@ abstract class AppLocalizations {
   /// **'Войти в игру'**
   String get lobbyEnterGame;
 
+  /// No description provided for @lobbyGone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этой игры уже нет'**
+  String get lobbyGone;
+
   /// No description provided for @lobbyInvite.
   ///
   /// In ru, this message translates to:
@@ -1066,6 +1186,60 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Выйти'**
   String get gameLeave;
+
+  /// No description provided for @gameSurrender.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдаться'**
+  String get gameSurrender;
+
+  /// No description provided for @gameSurrenderTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдаться?'**
+  String get gameSurrenderTitle;
+
+  /// No description provided for @gameSurrenderConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если вы сдадитесь, вы проиграете. Сдаться?'**
+  String get gameSurrenderConfirm;
+
+  /// No description provided for @gameOfferDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложить ничью'**
+  String get gameOfferDraw;
+
+  /// No description provided for @gameOfferDrawTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложить ничью?'**
+  String get gameOfferDrawTitle;
+
+  /// No description provided for @gameOfferDrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить сопернику предложение ничьей?'**
+  String get gameOfferDrawConfirm;
+
+  /// No description provided for @gameAcceptDrawTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять ничью?'**
+  String get gameAcceptDrawTitle;
+
+  /// No description provided for @gameAcceptDrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник предлагает ничью. Принять?'**
+  String get gameAcceptDrawConfirm;
+
+  /// No description provided for @gameDrawOffered.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ожидание ответа'**
+  String get gameDrawOffered;
 
   /// No description provided for @gameConnecting.
   ///
@@ -1204,6 +1378,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сообщение'**
   String get chatMessageHint;
+
+  /// No description provided for @chatPaste.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставить'**
+  String get chatPaste;
 
   /// No description provided for @chatEmoji.
   ///
@@ -1700,7 +1880,7 @@ abstract class AppLocalizations {
   /// No description provided for @balancePerDay.
   ///
   /// In ru, this message translates to:
-  /// **'{amount} в день'**
+  /// **'{amount}/день'**
   String balancePerDay(String amount);
 
   /// No description provided for @balanceAbbrBronze.
@@ -2102,7 +2282,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopSellRefund.
   ///
   /// In ru, this message translates to:
-  /// **'Продажа вернёт часть стоимости'**
+  /// **'Продажа вернет 80% стоимости'**
   String get shopSellRefund;
 
   /// No description provided for @shopCollectionAdded.
@@ -2171,6 +2351,24 @@ abstract class AppLocalizations {
   /// **'Подарено: {title}'**
   String inventoryGifted(String title);
 
+  /// No description provided for @inventoryGiftAlreadyOwns.
+  ///
+  /// In ru, this message translates to:
+  /// **'У этого пользователя уже есть эта коллекция'**
+  String get inventoryGiftAlreadyOwns;
+
+  /// No description provided for @inventoryGiftSelf.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя подарить коллекцию самому себе'**
+  String get inventoryGiftSelf;
+
+  /// No description provided for @inventoryGiftNotOwned.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас нет этого предмета'**
+  String get inventoryGiftNotOwned;
+
   /// No description provided for @inventoryLoadFailed.
   ///
   /// In ru, this message translates to:
@@ -2218,6 +2416,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Доход завтра: {amount}'**
   String inventoryIncomeTomorrow(String amount);
+
+  /// No description provided for @inventoryIncomeReadyLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход:'**
+  String get inventoryIncomeReadyLabel;
+
+  /// No description provided for @inventoryIncomeTomorrowLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход завтра:'**
+  String get inventoryIncomeTomorrowLabel;
 
   /// No description provided for @inventoryStakeGold.
   ///
@@ -2494,6 +2704,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Латиница, цифры, _ до 10 символов'**
   String get profileNameHint;
+
+  /// No description provided for @profileNameLatinOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только латинские символы'**
+  String get profileNameLatinOnly;
 
   /// No description provided for @profileAgeHint.
   ///

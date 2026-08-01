@@ -43,6 +43,67 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAddBotsSubtitle => '匹配中：若 30 秒内未找到对手，将与机器人开始对局（赌注重置为 1 青铜）';
 
   @override
+  String get settingsOfflineModeTitle => 'Режим сети';
+
+  @override
+  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+
+  @override
+  String get settingsModeOnline => 'Онлайн';
+
+  @override
+  String get settingsModeOffline => 'Офлайн';
+
+  @override
+  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+
+  @override
+  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+
+  @override
+  String get offlineBadgeTooltip => 'Офлайн режим';
+
+  @override
+  String get offlineModePopupTitle => 'Офлайн режим';
+
+  @override
+  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+
+  @override
+  String get offlineModePopupSettings => 'Настройки';
+
+  @override
+  String get gamesPlay => 'Играть';
+
+  @override
+  String get offlineGameTitle => 'Игра с ботом';
+
+  @override
+  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+
+  @override
+  String get offlineBotWon => 'Бот победил';
+
+  @override
+  String get offlineBotThinking => 'Ход бота…';
+
+  @override
+  String get offlinePlayAgain => 'Ещё раз';
+
+  @override
+  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — покупка применена';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — покупка не применена: $reason';
+  }
+
+  @override
   String get settingsFriendsOnlyTitle => '仅接收好友消息';
 
   @override
@@ -433,6 +494,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbyEnterGame => '进入对局';
 
   @override
+  String get lobbyGone => 'Этой игры уже нет';
+
+  @override
   String get lobbyInvite => '邀请';
 
   @override
@@ -476,6 +540,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gameLeave => '离开';
+
+  @override
+  String get gameSurrender => 'Сдаться';
+
+  @override
+  String get gameSurrenderTitle => 'Сдаться?';
+
+  @override
+  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+
+  @override
+  String get gameOfferDraw => 'Предложить ничью';
+
+  @override
+  String get gameOfferDrawTitle => 'Предложить ничью?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Принять ничью?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+
+  @override
+  String get gameDrawOffered => 'Ожидание ответа';
 
   @override
   String get gameConnecting => '正在连接对局…';
@@ -545,6 +636,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatMessageHint => '消息';
+
+  @override
+  String get chatPaste => 'Вставить';
 
   @override
   String get chatEmoji => '表情';
@@ -802,7 +896,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '每天 $amount';
+    return '$amount/天';
   }
 
   @override
@@ -1038,7 +1132,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopBuyOnce => '一次性购买';
 
   @override
-  String get shopSellRefund => '出售可返还部分费用';
+  String get shopSellRefund => '出售可返还 80% 费用';
 
   @override
   String shopCollectionAdded(String title) {
@@ -1088,6 +1182,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+
+  @override
+  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+
+  @override
+  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+
+  @override
   String get inventoryLoadFailed => '无法加载物品';
 
   @override
@@ -1116,6 +1219,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return '明日收益：$amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Доход:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1272,6 +1381,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileNameHint => '拉丁字母、数字、_，最多 10 个字符';
+
+  @override
+  String get profileNameLatinOnly => 'Latin characters only';
 
   @override
   String get profileAgeHint => '1 到 111';

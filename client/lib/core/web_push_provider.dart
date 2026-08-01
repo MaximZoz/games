@@ -76,6 +76,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
   final Ref _ref;
   bool _ensuring = false;
   bool _boundThisSession = false;
+  DateTime? _lastEnsureAttempt;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -139,15 +140,35 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
   Future<void> ensureActiveSubscription() async {
     if (_ensuring || !state || _boundThisSession) return;
     if (!browser_push.browserPushSupported()) return;
-    if (browser_push.browserNotificationPermission() != 'granted') return;
     if (_ref.read(authStateProvider).valueOrNull == null) return;
 
+    final now = DateTime.now();
+    if (_lastEnsureAttempt != null &&
+        now.difference(_lastEnsureAttempt!) < const Duration(seconds: 5)) {
+      return;
+    }
+    _lastEnsureAttempt = now;
+
+    var permission = browser_push.browserNotificationPermission();
+    // После logout endpoint снят, а prefs остаётся ON — нужно снова
+    // получить permission (если default) и зарегистрировать подписку.
+    if (permission == 'default') {
+      // В установленной PWA пробуем сразу; без жеста Safari может отказать.
+      if (!browser_push.browserPushStandalone()) return;
+      permission = await browser_push.requestBrowserNotificationPermission();
+    }
+    if (permission != 'granted') return;
+
     _ensuring = true;
-    _boundThisSession = true;
     try {
-      await _subscribeAndSave(forceRefresh: false);
+      // forceRefresh: после detachOnLogout старой подписки нет, а на сервере
+      // нужен свежий endpoint — как при ручном выкл/вкл.
+      final err = await _subscribeAndSave(forceRefresh: true);
+      if (err != null) return;
+      _boundThisSession = true;
       await _ref.read(webPushCategoriesProvider.notifier).refresh();
     } catch (_) {
+      // Не помечаем bound — повторим на следующем кадре shell / через 5 с.
     } finally {
       _ensuring = false;
     }

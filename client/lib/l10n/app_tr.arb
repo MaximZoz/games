@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "günde {amount}",
+  "balancePerDay": "{amount}/gün",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Tek seferlik satın alma",
-  "shopSellRefund": "Satış maliyetin bir kısmını iade eder",
+  "shopSellRefund": "Satış maliyetin %80'ini iade eder",
   "shopCollectionAdded": "{title} profile eklendi",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "1 ile 111 arasında bir yaş girin",
   "profileSaveFailed": "Profil kaydedilemedi",
   "profileNameHint": "Latin harfler, rakamlar, _ en fazla 10 karakter",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "1 ile 111 arası",
   "profileAboutHint": "En fazla 100 karakter (isteğe bağlı)",
   "profileProcessingPhoto": "Fotoğraf işleniyor…",

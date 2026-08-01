@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
@@ -16,6 +18,8 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -103,12 +107,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   List<ChatMessageItem> _messages = const [];
   ChatMessageItem? _replyTo;
   ChatMessageItem? _editingMessage;
-  final List<PickedChatImage> _pendingImages = [];
+  final List<_PendingImageEntry> _pendingImages = [];
   static const int _maxPendingImages = 3;
+  int _pendingImageSeq = 0;
   static const Color _composerIconPurple = Color(0xFF8B5CF6);
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
   String? _highlightedMessageID;
   bool _jumpingToMessage = false;
+
+  /// Всплывашка «Вставить» для скопированной invite-ссылки.
+  String? _pasteInviteUrl;
+  bool _pasteSuggestionVisible = false;
+  bool _applyingPaste = false;
 
   /// Статусы, пришедшие по WS раньше, чем сообщение попало в ленту.
   final Set<String> _pendingDeliveredIDs = <String>{};
@@ -129,6 +139,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       markChatReadInChatsCache(ref, widget.chatID);
+      unawaited(_maybeShowPasteSuggestion());
     });
   }
 
@@ -144,10 +155,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _emojiOnly = false;
       _composerAlert = null;
       _highlightedMessageID = null;
+      _pasteInviteUrl = null;
+      _pasteSuggestionVisible = false;
       _messageKeys.clear();
       _messageIDs.clear();
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_maybeShowPasteSuggestion());
+      });
     }
   }
 
@@ -175,8 +191,61 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _onComposerTextChanged() {
-    if (_composerAlert == null) return;
-    setState(() => _composerAlert = null);
+    if (_applyingPaste) return;
+    if (!_pasteSuggestionVisible && _composerAlert == null) return;
+    setState(() {
+      _pasteSuggestionVisible = false;
+      _composerAlert = null;
+    });
+  }
+
+  Future<void> _maybeShowPasteSuggestion() async {
+    if (!mounted || _textController.text.trim().isNotEmpty) return;
+
+    String? url = ref.read(pendingInvitePasteProvider)?.trim();
+    if (url == null || url.isEmpty || parseInviteLobbyShareUrl(url) == null) {
+      url = null;
+      try {
+        final data = await Clipboard.getData(Clipboard.kTextPlain);
+        final text = data?.text?.trim();
+        if (text != null &&
+            text.isNotEmpty &&
+            parseInviteLobbyShareUrl(text) != null) {
+          url = text;
+        }
+      } catch (_) {
+        // Safari/PWA часто блокирует чтение буфера без жеста.
+      }
+    }
+    if (!mounted || url == null) return;
+    if (_textController.text.trim().isNotEmpty) return;
+    setState(() {
+      _pasteInviteUrl = url;
+      _pasteSuggestionVisible = true;
+    });
+  }
+
+  void _dismissPasteSuggestion() {
+    if (!_pasteSuggestionVisible && _pasteInviteUrl == null) return;
+    setState(() {
+      _pasteSuggestionVisible = false;
+    });
+  }
+
+  void _applyPasteSuggestion() {
+    final url = _pasteInviteUrl?.trim();
+    if (url == null || url.isEmpty) return;
+    _applyingPaste = true;
+    _textController.text = url;
+    _textController.selection = TextSelection.collapsed(offset: url.length);
+    ref.read(pendingInvitePasteProvider.notifier).state = null;
+    setState(() {
+      _pasteSuggestionVisible = false;
+      _pasteInviteUrl = null;
+      _composerAlert = null;
+    });
+    _applyingPaste = false;
+    _composerFocusNode.requestFocus();
   }
 
   /// Диалог видим в shell (не фоновая вкладка и не уходим назад).
@@ -483,6 +552,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
     if (_sending) return;
+    _dismissPasteSuggestion();
     if (_editingMessage != null) {
       if (text.isEmpty && !_editingMessage!.hasImage) return;
       setState(() {
@@ -522,14 +592,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       return;
     }
 
-    if (text.isEmpty && _pendingImages.isEmpty) return;
+    if (_pendingImages.any((e) => e.isLoading)) return;
+    final readyImages = [
+      for (final e in _pendingImages)
+        if (e.image != null) e.image!,
+    ];
+    if (text.isEmpty && readyImages.isEmpty) return;
 
     setState(() {
       _sending = true;
       _composerAlert = null;
     });
     try {
-      final images = List<PickedChatImage>.of(_pendingImages);
+      final images = readyImages;
       final replyID = _replyTo?.id;
       if (images.isEmpty) {
         final sent = await ref.read(chatsRepositoryProvider).sendMessage(
@@ -591,21 +666,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _replyTo = message;
       _editingMessage = null;
       _composerAlert = null;
+      _pasteSuggestionVisible = false;
     });
     _composerFocusNode.requestFocus();
   }
 
   void _startEdit(ChatMessageItem message) {
+    _applyingPaste = true;
     setState(() {
       _editingMessage = message;
       _replyTo = null;
       _pendingImages.clear();
       _composerAlert = null;
+      _pasteSuggestionVisible = false;
       _textController.text = message.body;
       _textController.selection = TextSelection.collapsed(
         offset: _textController.text.length,
       );
     });
+    _applyingPaste = false;
     _composerFocusNode.requestFocus();
   }
 
@@ -614,6 +693,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     setState(() {
       _replyTo = null;
       _editingMessage = null;
+      _pasteSuggestionVisible = false;
       if (wasEditing) {
         _textController.clear();
       }
@@ -627,15 +707,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _pendingImages.length >= _maxPendingImages) {
       return;
     }
-    // Сразу галерея/фото, без нижней панели и без «файл».
-    final picked = await pickAndCompressChatImage(ImageSource.gallery);
-    if (!mounted) return;
-    if (picked == null) return;
+    _dismissPasteSuggestion();
+    // Сначала выбор файла; превью с лоадером — сразу после выбора, до сжатия.
+    final raw = await pickChatImageRawBytes(ImageSource.gallery);
+    if (!mounted || raw == null) return;
+    if (_pendingImages.length >= _maxPendingImages) return;
+
+    final entryId = 'pending_${_pendingImageSeq++}';
     setState(() {
-      if (_pendingImages.length < _maxPendingImages) {
-        _pendingImages.add(picked);
-      }
+      _pendingImages.add(_PendingImageEntry.loading(entryId));
       _composerAlert = null;
+    });
+    // Дать кадру отрисовать плейсхолдер с лоадером до тяжёлого сжатия.
+    await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 16));
+    if (!mounted) return;
+
+    PickedChatImage? picked;
+    try {
+      picked = await compressRawChatImageAsync(raw);
+    } catch (_) {
+      picked = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      final index = _pendingImages.indexWhere((e) => e.id == entryId);
+      if (index < 0) return;
+      if (picked == null) {
+        _pendingImages.removeAt(index);
+        _composerAlert = LocaleService.l10n.commonGenericError;
+      } else {
+        _pendingImages[index] = _PendingImageEntry.ready(entryId, picked);
+      }
     });
   }
 
@@ -654,45 +757,105 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final canEdit = mine &&
         (message.body.trim().isNotEmpty || message.hasImage) &&
         !isAnimatedEmojiMessage(message.body) &&
-        !isGiftCollectionMessage(message.body);
+        !isGiftCollectionMessage(message.body) &&
+        !isInviteLobbyMessage(message.body);
 
-    final action = await showDialog<String>(
+    final media = MediaQuery.of(context);
+    final screen = media.size;
+    final pad = media.padding;
+    const menuWidth = 180.0;
+    const menuMaxHeight = 168.0;
+    const gap = 6.0;
+
+    double? left;
+    double? right;
+    var top = screen.height * 0.35;
+
+    final box =
+        _keyForMessage(message.id).currentContext?.findRenderObject() as RenderBox?;
+    if (box != null && box.hasSize && box.attached) {
+      final origin = box.localToGlobal(Offset.zero);
+      final bubble = box.size;
+      final spaceBelow = screen.height - pad.bottom - (origin.dy + bubble.height);
+      if (spaceBelow >= menuMaxHeight + gap) {
+        top = origin.dy + bubble.height + gap;
+      } else {
+        top = (origin.dy - menuMaxHeight - gap)
+            .clamp(pad.top + 8.0, screen.height - pad.bottom - menuMaxHeight);
+      }
+      if (mine) {
+        right = (screen.width - origin.dx - bubble.width)
+            .clamp(8.0, screen.width - menuWidth - 8.0);
+      } else {
+        left = origin.dx.clamp(8.0, screen.width - menuWidth - 8.0);
+      }
+    } else if (mine) {
+      right = 16;
+    } else {
+      left = 16;
+    }
+
+    final action = await showGeneralDialog<String>(
       context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.black26,
-      builder: (ctx) => Center(
-        child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          elevation: 8,
-          clipBehavior: Clip.antiAlias,
-          child: IntrinsicWidth(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _messageActionTile(
-                  ctx,
-                  value: 'reply',
-                  label: context.l10n.commonReply,
+      transitionDuration: const Duration(milliseconds: 120),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            Positioned(
+              left: left,
+              right: right,
+              top: top,
+              child: FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOut,
                 ),
-                if (canEdit)
-                  _messageActionTile(
-                    ctx,
-                    value: 'edit',
-                    label: context.l10n.commonEdit,
+                child: Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                  elevation: 8,
+                  clipBehavior: Clip.antiAlias,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 148,
+                      maxWidth: menuWidth,
+                    ),
+                    child: IntrinsicWidth(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _messageActionTile(
+                            ctx,
+                            value: 'reply',
+                            label: context.l10n.commonReply,
+                          ),
+                          if (canEdit)
+                            _messageActionTile(
+                              ctx,
+                              value: 'edit',
+                              label: context.l10n.commonEdit,
+                            ),
+                          if (mine)
+                            _messageActionTile(
+                              ctx,
+                              value: 'delete',
+                              label: context.l10n.commonDelete,
+                              danger: true,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                if (mine)
-                  _messageActionTile(
-                    ctx,
-                    value: 'delete',
-                    label: context.l10n.commonDelete,
-                    danger: true,
-                  ),
-              ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
+          ],
+        );
+      },
     );
     if (!mounted || action == null) return;
     switch (action) {
@@ -1700,6 +1863,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return entries;
   }
 
+  /// Сумма бейджей нижнего меню, пока открыт этот чат:
+  /// другие диалоги + игры (инвайты/ход) + друзья + главная.
+  int _shellNotificationCount() {
+    final chats =
+        ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    final localRead = ref.watch(locallyReadChatIdsProvider);
+    var otherChats = 0;
+    for (final item in chats) {
+      if (item.chatID == widget.chatID) continue;
+      if (localRead.contains(item.chatID)) continue;
+      otherChats += item.unreadCount;
+    }
+    final incomingFriends = ref.watch(friendsIncomingCountProvider);
+    final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
+    final gameInvites = ref.watch(gameInvitesCountProvider);
+    final dailyReward =
+        ref.watch(dailyRewardAvailableProvider).valueOrNull == true ? 1 : 0;
+    final achievements =
+        ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final collectionIncome =
+        ref.watch(collectionIncomeAvailableProvider) ? 1 : 0;
+    final gifted = ref.watch(unreadGiftedCollectionsCountProvider);
+    return otherChats +
+        incomingFriends +
+        gamesMyTurn +
+        gameInvites +
+        dailyReward +
+        achievements +
+        collectionIncome +
+        gifted;
+  }
+
   Widget _buildChatToolbar({
     required ChatUserItem? peerUser,
     required String title,
@@ -1709,6 +1904,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final statusText = presence == null
         ? null
         : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
+    final notifyCount = _shellNotificationCount();
+    final notifyLabel = notifyCount > 99 ? '99+' : '$notifyCount';
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Row(
@@ -1717,10 +1914,50 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           if (widget.inSplitView && !widget.fromFriends && !widget.fromGames)
             const SizedBox(width: 8)
           else
-            IconButton(
-              onPressed: _leavingToChats ? null : _goBackToChats,
-              icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: widget.fromGames ? context.l10n.chatBackToGame : context.l10n.chatBackToChats,
+            Tooltip(
+              message: widget.fromGames
+                  ? context.l10n.chatBackToGame
+                  : context.l10n.chatBackToChats,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _leavingToChats ? null : _goBackToChats,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      8,
+                      10,
+                      notifyCount > 0 ? 6 : 8,
+                      10,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_rounded,
+                          color: _leavingToChats
+                              ? AppColors.textSecondary.withValues(alpha: 0.4)
+                              : null,
+                        ),
+                        if (notifyCount > 0) ...[
+                          const SizedBox(width: 2),
+                          Text(
+                            '($notifyLabel)',
+                            style: TextStyle(
+                              color: _leavingToChats
+                                  ? AppColors.accentStart.withValues(alpha: 0.4)
+                                  : AppColors.accentStart,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           Tooltip(
             message: context.l10n.userInfoTitle,
@@ -1997,6 +2234,46 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   final mine = message.senderUserID == meID;
                   final isEmoji = isAnimatedEmojiMessage(message.body);
                   final isGift = isGiftCollectionMessage(message.body);
+                  final inviteLink = parseInviteLobbyShareUrl(message.body);
+                  if (inviteLink != null) {
+                    return _wrapSwipeReply(
+                      message: message,
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 14, top: 6),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ChatInviteCard(
+                              link: inviteLink,
+                              messageId: message.id,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatBubbleDateTime(message.createdAt),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                if (mine) ...[
+                                  const SizedBox(width: 4),
+                                  MessageStatusTicks(
+                                    deliveredAt: message.deliveredAt,
+                                    readAt: message.readAt,
+                                    size: 14,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   if (isGift) {
                     return _wrapSwipeReply(
                       message: message,
@@ -2311,6 +2588,57 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
+              if (_pasteSuggestionVisible && _pasteInviteUrl != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(48, 0, 12, 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _applyPasteSuggestion,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.borderCycle.first,
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.content_paste_rounded,
+                                size: 18,
+                                color: AppColors.accentStart,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                context.l10n.chatPaste,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (_pendingImages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
@@ -2331,16 +2659,39 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
-                                      onTap: () => _previewPendingImage(
-                                        _pendingImages[i],
-                                      ),
+                                      onTap: _pendingImages[i].image == null
+                                          ? null
+                                          : () => _previewPendingImage(
+                                                _pendingImages[i].image!,
+                                              ),
                                       borderRadius: BorderRadius.circular(10),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
-                                        child: Image.memory(
-                                          _pendingImages[i].bytes,
-                                          fit: BoxFit.cover,
-                                        ),
+                                        child: _pendingImages[i].image == null
+                                            ? ColoredBox(
+                                                color: const Color(0xFFE9E4F8),
+                                                child: Center(
+                                                  child: SizedBox(
+                                                    width: 28,
+                                                    height: 28,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 3,
+                                                      color:
+                                                          _composerIconPurple,
+                                                      backgroundColor: Colors
+                                                          .white
+                                                          .withValues(
+                                                        alpha: 0.85,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : Image.memory(
+                                                _pendingImages[i].image!.bytes,
+                                                fit: BoxFit.cover,
+                                              ),
                                       ),
                                     ),
                                   ),
@@ -2520,7 +2871,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       ),
                     ),
                     IconButton(
-                      onPressed: _sending ? null : _sendMessage,
+                      onPressed: (_sending ||
+                              _pendingImages.any((e) => e.isLoading))
+                          ? null
+                          : _sendMessage,
                       tooltip: _editingMessage != null
                           ? context.l10n.commonSave
                           : context.l10n.commonSend,
@@ -2561,6 +2915,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _openEmojiPicker() async {
+    _dismissPasteSuggestion();
     _composerFocusNode.unfocus();
     // Не invalidate: иначе на мобиле valueOrNull=null и панель «пустая».
     final cached = ref.read(inventoryListProvider).valueOrNull;
@@ -2837,6 +3192,133 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   }
 }
 
+class _ChatInviteCard extends StatelessWidget {
+  const _ChatInviteCard({
+    required this.link,
+    required this.messageId,
+  });
+
+  final InviteLobbyLink link;
+  final String messageId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          // go, не push: иначе «Своя игра» остаётся в истории и снова
+          // всплывает при возврате в Чаты.
+          onTap: () => context.go(link.appPathFromMessage(messageId)),
+          child: Ink(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35),
+                width: 1.5,
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.surfaceCard,
+                  AppColors.accentSoft.withValues(alpha: 0.55),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.accentStart, AppColors.accentEnd],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.grid_3x3_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.lobbyInviteTitle,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.gamesTicTacToe,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentStart.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 20,
+                        color: AppColors.accentStart,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.lobbyEnterGame,
+                        style: const TextStyle(
+                          color: AppColors.accentStart,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ChatGiftCard extends StatelessWidget {
   const _ChatGiftCard({required this.body});
 
@@ -3048,4 +3530,15 @@ class _ChatTimelineEntry {
 
   final String? headerLabel;
   final ChatMessageItem? message;
+}
+
+/// Слот превью вложения: сначала лоадер, затем готовое фото.
+class _PendingImageEntry {
+  const _PendingImageEntry.loading(this.id) : image = null;
+  const _PendingImageEntry.ready(this.id, this.image);
+
+  final String id;
+  final PickedChatImage? image;
+
+  bool get isLoading => image == null;
 }

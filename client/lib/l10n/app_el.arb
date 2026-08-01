@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} την ημέρα",
+  "balancePerDay": "{amount}/ημέρα",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Εφάπαξ αγορά",
-  "shopSellRefund": "Η πώληση επιστρέφει μέρος του κόστους",
+  "shopSellRefund": "Η πώληση επιστρέφει το 80% του κόστους",
   "shopCollectionAdded": "Το {title} προστέθηκε στο προφίλ",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Εισαγάγετε ηλικία από 1 έως 111",
   "profileSaveFailed": "Αποτυχία αποθήκευσης προφίλ",
   "profileNameHint": "Λατινικά γράμματα, ψηφία, _ έως 10 χαρακτήρες",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Από 1 έως 111",
   "profileAboutHint": "Έως 100 χαρακτήρες (προαιρετικά)",
   "profileProcessingPhoto": "Επεξεργασία φωτογραφίας…",

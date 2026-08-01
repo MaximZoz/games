@@ -12,6 +12,42 @@
   "settingsLanguageSystem": "System default",
   "settingsAddBotsTitle": "Add bots after 30s",
   "settingsAddBotsSubtitle": "In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)",
+  "settingsOfflineModeTitle": "Network mode",
+  "settingsOfflineModeSubtitle": "Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and applied in online mode. Online is on when there is internet or by the user setting.",
+  "settingsModeOnline": "Online",
+  "settingsModeOffline": "Offline",
+  "gamesAlternateStartsHint": "Take turns starting each game",
+  "rulesAlternateStarts": "Who goes first alternates from game to game.",
+  "offlineBadgeTooltip": "Offline mode",
+  "offlineModePopupTitle": "Offline mode",
+  "offlineModePopupBody": "Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply in online mode.",
+  "offlineModePopupSettings": "Settings",
+  "gamesPlay": "Play",
+  "offlineGameTitle": "Bot game",
+  "offlineGameHint": "No stakes or rewards · offline only",
+  "offlineBotWon": "Bot won",
+  "offlineBotThinking": "Bot is thinking…",
+  "offlinePlayAgain": "Play again",
+  "shopPurchaseQueued": "Purchase saved — will apply in online mode",
+  "shopPurchaseApplied": "{title} — purchase applied",
+  "@shopPurchaseApplied": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shopPurchaseRejected": "{title} — purchase not applied: {reason}",
+  "@shopPurchaseRejected": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Messages from friends only",
   "settingsFriendsOnlySubtitle": "Non-friends can only send emojis. If spam is a problem, temporarily block the user.",
   "settingsNotifications": "Notifications",
@@ -180,6 +216,7 @@
   "lobbyInviteTitle": "Game invite",
   "lobbyInvitedToPlay": "You were invited to play",
   "lobbyEnterGame": "Enter game",
+  "lobbyGone": "This game is no longer available",
   "lobbyInvite": "Invite",
   "lobbyInviteSent": "Invite sent",
   "lobbyCopyLink": "Share game link",
@@ -195,6 +232,15 @@
   "gameExitConfirm": "If you leave, you will lose. Leave anyway?",
   "gameStay": "Stay",
   "gameLeave": "Leave",
+  "gameSurrender": "Surrender",
+  "gameSurrenderTitle": "Surrender?",
+  "gameSurrenderConfirm": "If you surrender, you will lose. Surrender?",
+  "gameOfferDraw": "Offer draw",
+  "gameOfferDrawTitle": "Offer a draw?",
+  "gameOfferDrawConfirm": "Send a draw offer to your opponent?",
+  "gameAcceptDrawTitle": "Accept draw?",
+  "gameAcceptDrawConfirm": "Your opponent offers a draw. Accept?",
+  "gameDrawOffered": "Waiting for reply",
   "gameConnecting": "Connecting to game…",
   "gameWaitingOpponent": "Waiting for opponent",
   "gameRematchOffer": "Opponent offers a rematch",
@@ -218,6 +264,7 @@
   "chatDialog": "Chat",
   "chatEmpty": "No messages yet.\nSend the first one.",
   "chatMessageHint": "Message",
+  "chatPaste": "Paste",
   "chatEmoji": "Emojis",
   "chatBuyEmojiHint": "Buy emojis in the shop on the home screen",
   "chatEditing": "Editing",
@@ -328,7 +375,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} per day",
+  "balancePerDay": "{amount}/day",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +580,7 @@
     }
   },
   "shopBuyOnce": "One-time purchase",
-  "shopSellRefund": "Selling returns part of the cost",
+  "shopSellRefund": "Selling returns 80% of the cost",
   "shopCollectionAdded": "{title} added to profile",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -600,6 +647,9 @@
       }
     }
   },
+  "inventoryGiftAlreadyOwns": "This user already has this collection",
+  "inventoryGiftSelf": "You can't gift a collection to yourself",
+  "inventoryGiftNotOwned": "You don't own this item",
   "inventoryLoadFailed": "Could not load items",
   "inventoryNoCollections": "No collections — buy them in the shop",
   "inventoryNoEmojis": "No emojis — buy them in the shop",
@@ -629,6 +679,8 @@
       }
     }
   },
+  "inventoryIncomeReadyLabel": "Income:",
+  "inventoryIncomeTomorrowLabel": "Income tomorrow:",
   "inventoryStakeGold": "You can bet {amount} gold",
   "@inventoryStakeGold": {
     "placeholders": {
@@ -738,6 +790,7 @@
   "profileAgeInvalid": "Enter an age from 1 to 111",
   "profileSaveFailed": "Could not save profile",
   "profileNameHint": "Latin letters, digits, _ up to 10 characters",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "From 1 to 111",
   "profileAboutHint": "Up to 100 characters (optional)",
   "profileProcessingPhoto": "Processing photo…",

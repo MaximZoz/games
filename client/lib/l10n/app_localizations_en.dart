@@ -43,6 +43,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)';
 
   @override
+  String get settingsOfflineModeTitle => 'Network mode';
+
+  @override
+  String get settingsOfflineModeSubtitle => 'Offline: play a bot immediately, no stakes or rewards, no chats or friends. Purchases are saved and applied in online mode. Online is on when there is internet or by the user setting.';
+
+  @override
+  String get settingsModeOnline => 'Online';
+
+  @override
+  String get settingsModeOffline => 'Offline';
+
+  @override
+  String get gamesAlternateStartsHint => 'Take turns starting each game';
+
+  @override
+  String get rulesAlternateStarts => 'Who goes first alternates from game to game.';
+
+  @override
+  String get offlineBadgeTooltip => 'Offline mode';
+
+  @override
+  String get offlineModePopupTitle => 'Offline mode';
+
+  @override
+  String get offlineModePopupBody => 'Offline mode is on. Play a bot with no stakes or rewards. Chats, friends and lobby are hidden. Purchases apply in online mode.';
+
+  @override
+  String get offlineModePopupSettings => 'Settings';
+
+  @override
+  String get gamesPlay => 'Play';
+
+  @override
+  String get offlineGameTitle => 'Bot game';
+
+  @override
+  String get offlineGameHint => 'No stakes or rewards · offline only';
+
+  @override
+  String get offlineBotWon => 'Bot won';
+
+  @override
+  String get offlineBotThinking => 'Bot is thinking…';
+
+  @override
+  String get offlinePlayAgain => 'Play again';
+
+  @override
+  String get shopPurchaseQueued => 'Purchase saved — will apply in online mode';
+
+  @override
+  String shopPurchaseApplied(String title) {
+    return '$title — purchase applied';
+  }
+
+  @override
+  String shopPurchaseRejected(String title, String reason) {
+    return '$title — purchase not applied: $reason';
+  }
+
+  @override
   String get settingsFriendsOnlyTitle => 'Messages from friends only';
 
   @override
@@ -433,6 +494,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lobbyEnterGame => 'Enter game';
 
   @override
+  String get lobbyGone => 'This game is no longer available';
+
+  @override
   String get lobbyInvite => 'Invite';
 
   @override
@@ -476,6 +540,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameLeave => 'Leave';
+
+  @override
+  String get gameSurrender => 'Surrender';
+
+  @override
+  String get gameSurrenderTitle => 'Surrender?';
+
+  @override
+  String get gameSurrenderConfirm => 'If you surrender, you will lose. Surrender?';
+
+  @override
+  String get gameOfferDraw => 'Offer draw';
+
+  @override
+  String get gameOfferDrawTitle => 'Offer a draw?';
+
+  @override
+  String get gameOfferDrawConfirm => 'Send a draw offer to your opponent?';
+
+  @override
+  String get gameAcceptDrawTitle => 'Accept draw?';
+
+  @override
+  String get gameAcceptDrawConfirm => 'Your opponent offers a draw. Accept?';
+
+  @override
+  String get gameDrawOffered => 'Waiting for reply';
 
   @override
   String get gameConnecting => 'Connecting to game…';
@@ -545,6 +636,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatMessageHint => 'Message';
+
+  @override
+  String get chatPaste => 'Paste';
 
   @override
   String get chatEmoji => 'Emojis';
@@ -802,7 +896,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String balancePerDay(String amount) {
-    return '$amount per day';
+    return '$amount/day';
   }
 
   @override
@@ -1038,7 +1132,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopBuyOnce => 'One-time purchase';
 
   @override
-  String get shopSellRefund => 'Selling returns part of the cost';
+  String get shopSellRefund => 'Selling returns 80% of the cost';
 
   @override
   String shopCollectionAdded(String title) {
@@ -1088,6 +1182,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get inventoryGiftAlreadyOwns => 'This user already has this collection';
+
+  @override
+  String get inventoryGiftSelf => 'You can\'t gift a collection to yourself';
+
+  @override
+  String get inventoryGiftNotOwned => 'You don\'t own this item';
+
+  @override
   String get inventoryLoadFailed => 'Could not load items';
 
   @override
@@ -1116,6 +1219,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String inventoryIncomeTomorrow(String amount) {
     return 'Income tomorrow: $amount';
   }
+
+  @override
+  String get inventoryIncomeReadyLabel => 'Income:';
+
+  @override
+  String get inventoryIncomeTomorrowLabel => 'Income tomorrow:';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1272,6 +1381,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileNameHint => 'Latin letters, digits, _ up to 10 characters';
+
+  @override
+  String get profileNameLatinOnly => 'Latin characters only';
 
   @override
   String get profileAgeHint => 'From 1 to 111';

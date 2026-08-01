@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 
 class ShopItem {
   const ShopItem({
@@ -109,6 +110,18 @@ class ShopItem {
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'kind': kind,
+        'title': title,
+        'description': description,
+        'price_bronze': priceBronze,
+        'owned': owned,
+        'stock_remaining': stockRemaining,
+        'payload': payload,
+        'sort_order': sortOrder,
+      };
 }
 
 class InventoryItem {
@@ -187,6 +200,16 @@ class InventoryItem {
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'kind': kind,
+        'title': title,
+        'description': description,
+        'payload': payload,
+        'acquired_at': acquiredAt,
+        'quantity': quantity,
+      };
 }
 
 class InventoryCapabilities {
@@ -217,6 +240,12 @@ class InventoryCapabilities {
       frameCode: json['frame_code'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'allowed_stake_bronze': allowedStakeBronze,
+        'frame_color': frameColor,
+        'frame_code': frameCode,
+      };
 }
 
 class ShopBuyResult {
@@ -247,6 +276,7 @@ class ShopRepository {
             (body['message'] ?? body['error'] ?? message).toString().trim();
       }
     } catch (_) {}
+    message = _localizeShopError(message, l10n);
     if (response.statusCode == 402) {
       throw AuthException(
         402,
@@ -257,6 +287,22 @@ class ShopRepository {
       response.statusCode,
       message.isEmpty ? (fallback ?? l10n.commonServerErrorShort) : message,
     );
+  }
+
+  /// Маппинг канонических EN-ключей API (и сырого текста) на локаль клиента.
+  static String _localizeShopError(String message, AppLocalizations l10n) {
+    final key = message.trim().toLowerCase();
+    if (key == 'target already owns item' ||
+        key.contains('target already owns')) {
+      return l10n.inventoryGiftAlreadyOwns;
+    }
+    if (key == 'cannot gift to self' || key.contains('cannot gift to self')) {
+      return l10n.inventoryGiftSelf;
+    }
+    if (key == 'emoji not owned' || key == 'not a collection item') {
+      return l10n.inventoryGiftNotOwned;
+    }
+    return message;
   }
 
   Future<List<ShopItem>> listShop() async {
@@ -492,4 +538,14 @@ class CollectionIncomeInfo {
       nextClaimAt: json['next_claim_at'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'available': available,
+        'amount_bronze': amountBronze,
+        'owned_count': ownedCount,
+        'items_bronze': itemsBronze,
+        'set_bonus_bronze': setBonusBronze,
+        'completed_sets': completedSets,
+        'next_claim_at': nextClaimAt,
+      };
 }

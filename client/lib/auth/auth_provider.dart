@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/auth/session_cache.dart';
+import 'package:multigames_client/core/offline_disk_cache.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -30,17 +32,31 @@ final dailyRewardStatusProvider =
   if (user == null) {
     return DailyRewardStatus.empty;
   }
-  final repo = ref.watch(authRepositoryProvider);
-  final status = await repo.getDailyRewardStatus();
-  final fromWs = ref.watch(dailyRewardFromRealtimeProvider);
-  if (fromWs == null) return status;
-  return DailyRewardStatus(
-    available: fromWs,
-    streak: status.streak,
-    nextStreak: status.nextStreak,
-    nextRewardBronze: status.nextRewardBronze,
-    milestonesBronze: status.milestonesBronze,
-  );
+  final offline = ref.watch(isOfflineProvider);
+  if (offline) {
+    return await OfflineDiskCache.loadDailyReward(user.id) ??
+        DailyRewardStatus.empty;
+  }
+  try {
+    final repo = ref.watch(authRepositoryProvider);
+    final status = await repo.getDailyRewardStatus();
+    final fromWs = ref.watch(dailyRewardFromRealtimeProvider);
+    final merged = fromWs == null
+        ? status
+        : DailyRewardStatus(
+            available: fromWs,
+            streak: status.streak,
+            nextStreak: status.nextStreak,
+            nextRewardBronze: status.nextRewardBronze,
+            milestonesBronze: status.milestonesBronze,
+          );
+    await OfflineDiskCache.saveDailyReward(user.id, merged);
+    return merged;
+  } catch (_) {
+    final cached = await OfflineDiskCache.loadDailyReward(user.id);
+    if (cached != null) return cached;
+    rethrow;
+  }
 });
 
 /// Доступна ли ежедневная награда (из статуса / WebSocket).

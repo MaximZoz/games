@@ -328,7 +328,7 @@
       }
     }
   },
-  "balancePerDay": "{amount} у дзень",
+  "balancePerDay": "{amount}/дзень",
   "@balancePerDay": {
     "placeholders": {
       "amount": {
@@ -533,7 +533,7 @@
     }
   },
   "shopBuyOnce": "Пакупка адзін раз",
-  "shopSellRefund": "Продаж верне частку кошту",
+  "shopSellRefund": "Продаж верне 80% кошту",
   "shopCollectionAdded": "{title} дададзены ў профіль",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -738,6 +738,7 @@
   "profileAgeInvalid": "Увядзіце ўзрост ад 1 да 111",
   "profileSaveFailed": "Не ўдалося захаваць профіль",
   "profileNameHint": "Лацініца, лічбы, _ да 10 сімвалаў",
+  "profileNameLatinOnly": "Latin characters only",
   "profileAgeHint": "Ад 1 да 111",
   "profileAboutHint": "Да 100 сімвалаў (па жаданні)",
   "profileProcessingPhoto": "Апрацоўка фота…",
