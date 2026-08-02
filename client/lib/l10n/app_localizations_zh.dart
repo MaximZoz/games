@@ -482,6 +482,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbySearchingOpponent => '正在寻找对手…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return '正在寻找此对局：$count';
+  }
+
+  @override
   String get lobbyWaitingJoin => '等待他人点击“寻找对局”或“加入”';
 
   @override

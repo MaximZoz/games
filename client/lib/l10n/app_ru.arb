@@ -212,6 +212,14 @@
   "lobbyMatchmake": "Лобби",
   "lobbyPrivateGame": "Своя игра",
   "lobbySearchingOpponent": "Поиск соперника…",
+  "lobbyPlayersSearching": "Ищут эту игру: {count}",
+  "@lobbyPlayersSearching": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "lobbyWaitingJoin": "Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»",
   "lobbyInviteTitle": "Приглашение в игру",
   "lobbyInvitedToPlay": "Вас пригласили сыграть",

@@ -176,6 +176,7 @@
   "lobbyMatchmake": "الردهة",
   "lobbyPrivateGame": "لعبة خاصة",
   "lobbySearchingOpponent": "جارٍ البحث عن منافس…",
+  "lobbyPlayersSearching": "يبحثون عن هذه اللعبة: {count}",
   "lobbyWaitingJoin": "بانتظار أن يضغط أحد «ابحث عن لعبة» أو «انضمام»",
   "lobbyInviteTitle": "دعوة للعبة",
   "lobbyInvitedToPlay": "تمت دعوتك للعب",

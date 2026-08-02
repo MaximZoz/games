@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Лобі",
   "lobbyPrivateGame": "Прыватная гульня",
   "lobbySearchingOpponent": "Пошук суперніка…",
+  "lobbyPlayersSearching": "Шукаюць гэту гульню: {count}",
   "lobbyWaitingJoin": "Чакаем, пакуль хтосьці націсне «Знайсці гульню» або «Далучыцца»",
   "lobbyInviteTitle": "Запрашэнне ў гульню",
   "lobbyInvitedToPlay": "Вас запрасілі згуляць",

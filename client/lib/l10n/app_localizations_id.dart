@@ -482,6 +482,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get lobbySearchingOpponent => 'Mencari lawan…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Mencari permainan ini: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Menunggu seseorang mengetuk “Cari game” atau “Gabung”';
 
   @override

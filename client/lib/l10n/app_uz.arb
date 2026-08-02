@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobi",
   "lobbyPrivateGame": "Shaxsiy o‘yin",
   "lobbySearchingOpponent": "Raqib qidirilmoqda…",
+  "lobbyPlayersSearching": "Bu o‘yinni qidiryapti: {count}",
   "lobbyWaitingJoin": "Kimdir «O‘yin topish» yoki «Qo‘shilish»ni bosishini kutmoqdamiz",
   "lobbyInviteTitle": "O‘yinga taklif",
   "lobbyInvitedToPlay": "Sizni o‘ynashga taklif qilishdi",

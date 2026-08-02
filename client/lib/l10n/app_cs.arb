@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Soukromá hra",
   "lobbySearchingOpponent": "Hledání soupeře…",
+  "lobbyPlayersSearching": "Hledají tuto hru: {count}",
   "lobbyWaitingJoin": "Čekáme, až někdo stiskne „Najít hru“ nebo „Připojit se“",
   "lobbyInviteTitle": "Pozvánka do hry",
   "lobbyInvitedToPlay": "Byli jste pozváni ke hře",

@@ -482,6 +482,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lobbySearchingOpponent => 'Поиск соперника…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Ищут эту игру: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Ждём, пока кто-то нажмёт «Найти игру» или «Присоединиться»';
 
   @override

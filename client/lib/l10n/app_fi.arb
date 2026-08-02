@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Aula",
   "lobbyPrivateGame": "Yksityispeli",
   "lobbySearchingOpponent": "Etsitään vastustajaa…",
+  "lobbyPlayersSearching": "Etsivät tätä peliä: {count}",
   "lobbyWaitingJoin": "Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”",
   "lobbyInviteTitle": "Pelikutsu",
   "lobbyInvitedToPlay": "Sinut kutsuttiin pelaamaan",

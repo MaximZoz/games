@@ -176,6 +176,7 @@
   "lobbyMatchmake": "大厅",
   "lobbyPrivateGame": "私人对局",
   "lobbySearchingOpponent": "正在寻找对手…",
+  "lobbyPlayersSearching": "正在寻找此对局：{count}",
   "lobbyWaitingJoin": "等待他人点击“寻找对局”或“加入”",
   "lobbyInviteTitle": "对局邀请",
   "lobbyInvitedToPlay": "你被邀请参加对局",

@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobi",
   "lobbyPrivateGame": "Özel oyun",
   "lobbySearchingOpponent": "Rakip aranıyor…",
+  "lobbyPlayersSearching": "Bu oyunu arıyor: {count}",
   "lobbyWaitingJoin": "Birinin «Oyun bul» veya «Katıl»a basması bekleniyor",
   "lobbyInviteTitle": "Oyun daveti",
   "lobbyInvitedToPlay": "Oynamaya davet edildiniz",

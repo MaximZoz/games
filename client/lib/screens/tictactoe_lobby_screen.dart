@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,6 +65,15 @@ String tictactoeLobbyAppBarTitle({
   if (initialMode == 'matchmake') return l10n.lobbyMatchmake;
   if (initialMode == 'invite') return l10n.lobbyPrivateGame;
   return '';
+}
+
+/// Иконка крестиков-ноликов в AppBar лобби / своей игры.
+const IconData tictactoeLobbyAppBarIcon = Icons.grid_3x3_rounded;
+
+/// Оценка высоты карточки друзей (паддинг + строки ~56px).
+double _estimateFriendsCardHeight(int friendCount) {
+  if (friendCount <= 0) return 88;
+  return 24 + friendCount * 56.0;
 }
 
 const List<IconData> _presetAvatarIcons = [
@@ -138,16 +148,37 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               onPressed: _isLeaving ? null : () => _confirmLeaveLobby(context),
               icon: const Icon(Icons.arrow_back_rounded),
             ),
-            title: Text(
-              tictactoeLobbyAppBarTitle(
-                status: lobbyAsync.valueOrNull?.status,
-                initialMode: widget.initialMode,
-                fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
-                        true ||
-                    (lobbyAsync.valueOrNull != null &&
-                        currentUser != null &&
-                        lobbyAsync.valueOrNull!.creatorId != currentUser.id),
-              ),
+            title: Builder(
+              builder: (context) {
+                final title = tictactoeLobbyAppBarTitle(
+                  status: lobbyAsync.valueOrNull?.status,
+                  initialMode: widget.initialMode,
+                  fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
+                          true ||
+                      (lobbyAsync.valueOrNull != null &&
+                          currentUser != null &&
+                          lobbyAsync.valueOrNull!.creatorId !=
+                              currentUser.id),
+                );
+                if (title.isEmpty) return const SizedBox.shrink();
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      tictactoeLobbyAppBarIcon,
+                      size: 22,
+                      color: AppColors.accentStart,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             // Иконка правил — в AppBar, на одной высоте со стрелкой «Назад».
             actions: [
@@ -199,8 +230,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                   child: shortViewport && isInviteMode && isCreator
                       ? LayoutBuilder(
                           builder: (context, constraints) {
-                            final friendsH = (constraints.maxHeight * 0.55)
+                            final friendCount = friendsAsync.valueOrNull
+                                    ?.friends.length ??
+                                0;
+                            final estimated =
+                                _estimateFriendsCardHeight(friendCount);
+                            final maxFriendsH = (constraints.maxHeight * 0.55)
                                 .clamp(180.0, 360.0);
+                            final expandFriends = estimated > maxFriendsH;
                             return SingleChildScrollView(
                               padding: EdgeInsets.all(pad),
                               physics: const AlwaysScrollableScrollPhysics(
@@ -217,13 +254,21 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   ],
                                   _buildShareInviteLinkCard(context),
                                   const SizedBox(height: 12),
-                                  SizedBox(
-                                    height: friendsH,
-                                    child: _buildFriendsCard(
+                                  if (expandFriends)
+                                    SizedBox(
+                                      height: maxFriendsH,
+                                      child: _buildFriendsCard(
+                                        context,
+                                        friendsAsync,
+                                        expand: true,
+                                      ),
+                                    )
+                                  else
+                                    _buildFriendsCard(
                                       context,
                                       friendsAsync,
+                                      expand: false,
                                     ),
-                                  ),
                                 ],
                               ),
                             );
@@ -242,13 +287,32 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           // Ссылка — максимально высоко (заголовок уже в AppBar).
                           _buildShareInviteLinkCard(context),
                           const SizedBox(height: 12),
-                          // Друзья — растягиваются на оставшееся место.
+                          // Мало друзей — карточка по контенту; много — растягиваем.
                           Expanded(
-                            child: _buildFriendsCard(context, friendsAsync),
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final friendCount = friendsAsync
+                                        .valueOrNull?.friends.length ??
+                                    0;
+                                final estimated =
+                                    _estimateFriendsCardHeight(friendCount);
+                                final expand =
+                                    estimated >= constraints.maxHeight;
+                                final card = _buildFriendsCard(
+                                  context,
+                                  friendsAsync,
+                                  expand: expand,
+                                );
+                                if (expand) return card;
+                                return Align(
+                                  alignment: Alignment.topCenter,
+                                  child: card,
+                                );
+                              },
+                            ),
                           ),
                         ] else if (isMatchmakeMode) ...[
-                          // Поиск соперника: карточка по размеру контента
-                          // на всех раскладках (mobile / tablet / desktop).
+                          // Поиск + правила / кто ищет — заполняем низ экрана.
                           GradientCard(
                             padding: const EdgeInsets.all(24),
                             child: Column(
@@ -276,6 +340,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                 ),
                               ],
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: _buildMatchmakeInfoCard(context, lobby),
                           ),
                         ] else if (isInviteMode && !isCreator) ...[
                           Expanded(
@@ -483,12 +551,15 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  /// Карточка друзей: список листается ВНУТРИ неё (Expanded в родителе),
-  /// сама карточка занимает всё оставшееся место.
+  /// Карточка друзей.
+  ///
+  /// [expand]=true — занимает родителя и скроллит список внутри.
+  /// [expand]=false — высота по контенту (мало друзей).
   Widget _buildFriendsCard(
     BuildContext context,
-    AsyncValue<FriendsSnapshot> friendsAsync,
-  ) {
+    AsyncValue<FriendsSnapshot> friendsAsync, {
+    bool expand = true,
+  }) {
     return GradientCard(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: friendsAsync.when(
@@ -504,23 +575,27 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               return aOnline ? -1 : 1;
             });
           if (visibleFriends.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  context.l10n.friendsEmpty,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
+            final empty = Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                context.l10n.friendsEmpty,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
                 ),
+                textAlign: TextAlign.center,
               ),
             );
+            return expand ? Center(child: empty) : empty;
           }
-          return ListView.builder(
+          final list = ListView.builder(
             padding: const EdgeInsets.only(bottom: 8),
-            shrinkWrap: true,
+            shrinkWrap: !expand,
+            physics: expand
+                ? const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  )
+                : const NeverScrollableScrollPhysics(),
             itemCount: visibleFriends.length,
             itemBuilder: (context, i) {
               final f = visibleFriends[i];
@@ -592,22 +667,116 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               );
             },
           );
+          return list;
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accentStart,
+        loading: () {
+          const spinner = Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
+            ),
+          );
+          return expand
+              ? spinner
+              : const SizedBox(height: 72, child: spinner);
+        },
+        error: (e, _) => Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            '${context.l10n.friendsLoadFailed}. ${formatUserError(e, fallback: context.l10n.commonTryLater)}',
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
           ),
         ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              '${context.l10n.friendsLoadFailed}. ${formatUserError(e, fallback: context.l10n.commonTryLater)}',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  /// Блок под «Поиск соперника»: название игры, счётчик очереди, правила.
+  Widget _buildMatchmakeInfoCard(BuildContext context, LobbyItem lobby) {
+    final openLobbies = ref.watch(openLobbiesProvider).valueOrNull ?? const [];
+    final sameRules = openLobbies.where((l) {
+      return l.gridSize == lobby.gridSize &&
+          l.turnTimeSec == lobby.turnTimeSec &&
+          l.swapRule == lobby.swapRule &&
+          l.firstMoveRestriction == lobby.firstMoveRestriction &&
+          l.stakeBronze == lobby.stakeBronze;
+    }).length;
+    // listLobbies не включает своё лобби — +1.
+    final searchingCount = math.max(1, sameRules + 1);
+    final rulesText = buildTictactoeRulesText(
+      gridSize: lobby.gridSize,
+      turnTimeSec: lobby.turnTimeSec,
+      swapRule: lobby.swapRule,
+      firstMoveRestriction: lobby.firstMoveRestriction,
+      stakeBronze: lobby.stakeBronze,
+    );
+
+    return GradientCard(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    tictactoeLobbyAppBarIcon,
+                    color: AppColors.accentStart,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    context.l10n.gamesTicTacToe,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              context.l10n.lobbyPlayersSearching(searchingCount),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentStart,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.gamesRulesTitle,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              rulesText,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -176,6 +176,7 @@
   "lobbyMatchmake": "ロビー",
   "lobbyPrivateGame": "プライベート対戦",
   "lobbySearchingOpponent": "対戦相手を探しています…",
+  "lobbyPlayersSearching": "この対局を探しています: {count}",
   "lobbyWaitingJoin": "誰かが「対戦を探す」または「参加」をタップするまで待機中",
   "lobbyInviteTitle": "ゲーム招待",
   "lobbyInvitedToPlay": "対戦に招待されました",

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 
@@ -57,6 +58,10 @@ void main() {
         ),
         'Войти в игру',
       );
+    });
+
+    test('lobby app bar uses tictactoe grid icon', () {
+      expect(tictactoeLobbyAppBarIcon, Icons.grid_3x3_rounded);
     });
   });
 }

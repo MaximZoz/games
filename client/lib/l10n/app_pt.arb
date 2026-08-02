@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Jogo privado",
   "lobbySearchingOpponent": "Procurando adversário…",
+  "lobbyPlayersSearching": "Procurando este jogo: {count}",
   "lobbyWaitingJoin": "Aguardando alguém tocar em “Encontrar jogo” ou “Entrar”",
   "lobbyInviteTitle": "Convite para jogar",
   "lobbyInvitedToPlay": "Você foi convidado a jogar",

@@ -482,6 +482,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lobbySearchingOpponent => 'Пошук суперника…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Шукають цю гру: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Чекаємо, поки хтось натисне «Знайти гру» або «Приєднатися»';
 
   @override

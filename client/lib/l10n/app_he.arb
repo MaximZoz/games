@@ -176,6 +176,7 @@
   "lobbyMatchmake": "לובי",
   "lobbyPrivateGame": "משחק פרטי",
   "lobbySearchingOpponent": "מחפש יריב…",
+  "lobbyPlayersSearching": "מחפשים את המשחק: {count}",
   "lobbyWaitingJoin": "ממתין שמישהו ילחץ על ״חיפוש משחק״ או ״הצטרפות״",
   "lobbyInviteTitle": "הזמנה למשחק",
   "lobbyInvitedToPlay": "הוזמנתם לשחק",
