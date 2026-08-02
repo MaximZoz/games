@@ -7,6 +7,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -220,8 +221,7 @@ String buildTictactoeRulesText({
   final resolvedGridSize = cfg.gridSize;
   final parts = <String>[
     'Режим: ${variantLabel(cfg.variant)}',
-    l10n.rulesIntro(formatGridSize(resolvedGridSize)),
-    l10n.rulesWin(cfg.winLength),
+    ..._variantRulesBody(cfg, l10n, resolvedGridSize),
   ];
   if (includeTurnTime) {
     parts.add(
@@ -246,6 +246,49 @@ String buildTictactoeRulesText({
     parts.add(l10n.rulesNoCenter);
   }
   return parts.join('\n\n');
+}
+
+/// Текст правил по режиму (после строки «Режим: …»).
+List<String> _variantRulesBody(
+  GameConfig cfg,
+  AppLocalizations l10n,
+  int resolvedGridSize,
+) {
+  switch (cfg.variant) {
+    case variantUltimate:
+      return const [
+        'Девять малых полей 3×3 объединены в одно большое. Ходят по очереди, X начинает.',
+        'Ход в клетку малого поля указывает, в какое малое поле обязан ходить соперник '
+            '(по той же позиции клетки: центр → центр, угол → угол и т.д.). '
+            'Если это поле уже выиграно или заполнено — соперник может выбрать любое открытое.',
+        'Малое поле выигрывает тот, кто собрал в нём 3 в ряд; при заполнении без победителя поле закрывается ничьей.',
+        'Победа в партии: выиграть три малых поля в ряд на большом поле '
+            '(горизонталь, вертикаль или диагональ).',
+      ];
+    case variantGomoku:
+      return [
+        l10n.rulesIntro(formatGridSize(resolvedGridSize)),
+        l10n.rulesWin(cfg.winLength),
+      ];
+    case variantMulti3:
+      return [
+        'Трое игроков на поле ${formatGridSize(resolvedGridSize)}. '
+            'Знаки: крестик (X), нолик (O) и треугольник. Ходят по кругу, X начинает.',
+        l10n.rulesWin(cfg.winLength),
+      ];
+    case variantMulti4:
+      return [
+        'Четверо игроков на поле ${formatGridSize(resolvedGridSize)}. '
+            'Знаки: крестик (X), нолик (O), треугольник и квадрат. Ходят по кругу, X начинает.',
+        l10n.rulesWin(cfg.winLength),
+      ];
+    case variantClassic:
+    default:
+      return [
+        l10n.rulesIntro(formatGridSize(resolvedGridSize)),
+        l10n.rulesWin(cfg.winLength),
+      ];
+  }
 }
 
 /// Правила с иконкой монеты в строке ставки.

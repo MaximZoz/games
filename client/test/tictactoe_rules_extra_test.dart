@@ -44,6 +44,22 @@ void main() {
       expect(text, isNot(contains('1 с')));
     });
 
+    test('ultimate explains sub-boards and forced next board', () {
+      final text = buildTictactoeRulesText(
+        variant: 'ultimate',
+        gridSize: 9,
+        turnTimeSec: 0,
+        swapRule: false,
+        firstMoveRestriction: false,
+        stakeBronze: 1,
+      );
+      expect(text, contains('Ультимейт'));
+      expect(text, contains('Девять малых полей'));
+      expect(text, contains('обязан ходить соперник'));
+      expect(text, contains('три малых поля в ряд'));
+      expect(text, isNot(contains('на поле 9x9')));
+    });
+
     test('stake 0 omits stake line (offline)', () {
       final text = buildTictactoeRulesText(
         gridSize: 3,
