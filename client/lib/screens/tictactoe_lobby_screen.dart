@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -279,10 +278,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (lobby.stakeBronze > 0 && !isInviteMode) ...[
-                          _LobbyStakeChip(stakeBronze: lobby.stakeBronze),
-                          const SizedBox(height: 16),
-                        ],
                         if (isInviteMode && isCreator) ...[
                           // Ссылка — максимально высоко (заголовок уже в AppBar).
                           _buildShareInviteLinkCard(context),
@@ -374,15 +369,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  Text(
-                                    buildTictactoeRulesText(
-                                      gridSize: lobby.gridSize,
-                                      turnTimeSec: lobby.turnTimeSec,
-                                      swapRule: lobby.swapRule,
-                                      firstMoveRestriction:
-                                          lobby.firstMoveRestriction,
-                                      stakeBronze: lobby.stakeBronze,
-                                    ),
+                                  buildTictactoeRulesTextWidget(
+                                    gridSize: lobby.gridSize,
+                                    turnTimeSec: lobby.turnTimeSec,
+                                    swapRule: lobby.swapRule,
+                                    firstMoveRestriction:
+                                        lobby.firstMoveRestriction,
+                                    stakeBronze: lobby.stakeBronze,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
@@ -483,14 +476,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
   /// Общая всплывашка с правилами (как в экране игры).
   void _showRules(BuildContext context, LobbyItem lobby) {
-    final rulesText = buildTictactoeRulesText(
-      gridSize: lobby.gridSize,
-      turnTimeSec: lobby.turnTimeSec,
-      swapRule: lobby.swapRule,
-      firstMoveRestriction: lobby.firstMoveRestriction,
-      // В «Своя игра» ставок нет — не показываем строку ставки в правилах.
-      stakeBronze: 0,
-    );
     final isDesktop = MediaQuery.sizeOf(context).width >= 700;
     showDialog<void>(
       context: context,
@@ -533,8 +518,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                 const SizedBox(height: 8),
                 Flexible(
                   child: SingleChildScrollView(
-                    child: Text(
-                      rulesText,
+                    child: buildTictactoeRulesTextWidget(
+                      gridSize: lobby.gridSize,
+                      turnTimeSec: lobby.turnTimeSec,
+                      swapRule: lobby.swapRule,
+                      firstMoveRestriction: lobby.firstMoveRestriction,
+                      // В «Своя игра» ставок нет — не показываем строку ставки.
+                      stakeBronze: 0,
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
@@ -692,26 +682,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  /// Блок под «Поиск соперника»: название игры, счётчик очереди, правила.
+  /// Блок под «Поиск соперника»: только правила партии.
   Widget _buildMatchmakeInfoCard(BuildContext context, LobbyItem lobby) {
-    final openLobbies = ref.watch(openLobbiesProvider).valueOrNull ?? const [];
-    final sameRules = openLobbies.where((l) {
-      return l.gridSize == lobby.gridSize &&
-          l.turnTimeSec == lobby.turnTimeSec &&
-          l.swapRule == lobby.swapRule &&
-          l.firstMoveRestriction == lobby.firstMoveRestriction &&
-          l.stakeBronze == lobby.stakeBronze;
-    }).length;
-    // listLobbies не включает своё лобби — +1.
-    final searchingCount = math.max(1, sameRules + 1);
-    final rulesText = buildTictactoeRulesText(
-      gridSize: lobby.gridSize,
-      turnTimeSec: lobby.turnTimeSec,
-      swapRule: lobby.swapRule,
-      firstMoveRestriction: lobby.firstMoveRestriction,
-      stakeBronze: lobby.stakeBronze,
-    );
-
     return GradientCard(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       child: SingleChildScrollView(
@@ -721,44 +693,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    tictactoeLobbyAppBarIcon,
-                    color: AppColors.accentStart,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    context.l10n.gamesTicTacToe,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              context.l10n.lobbyPlayersSearching(searchingCount),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.accentStart,
-              ),
-            ),
-            const SizedBox(height: 16),
             Text(
               context.l10n.gamesRulesTitle,
               style: const TextStyle(
@@ -768,13 +702,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              rulesText,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.4,
-                color: AppColors.textSecondary,
-              ),
+            buildTictactoeRulesTextWidget(
+              gridSize: lobby.gridSize,
+              turnTimeSec: lobby.turnTimeSec,
+              swapRule: lobby.swapRule,
+              firstMoveRestriction: lobby.firstMoveRestriction,
+              stakeBronze: lobby.stakeBronze,
             ),
           ],
         ),

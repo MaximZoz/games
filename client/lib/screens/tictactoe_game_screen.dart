@@ -1273,13 +1273,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   void _showGameRules(BuildContext context) {
     final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
     if (game == null) return;
-    final rulesText = buildTictactoeRulesText(
-      gridSize: game.gridSize,
-      turnTimeSec: game.turnTimeSec,
-      swapRule: game.swapRule,
-      firstMoveRestriction: game.firstMoveRestriction,
-      stakeBronze: game.stakeBronze,
-    );
     final isDesktop = MediaQuery.sizeOf(context).width >= 700;
     showDialog<void>(
       context: context,
@@ -1322,8 +1315,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
-                  child: Text(
-                    rulesText,
+                  child: buildTictactoeRulesTextWidget(
+                    gridSize: game.gridSize,
+                    turnTimeSec: game.turnTimeSec,
+                    swapRule: game.swapRule,
+                    firstMoveRestriction: game.firstMoveRestriction,
+                    stakeBronze: game.stakeBronze,
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,

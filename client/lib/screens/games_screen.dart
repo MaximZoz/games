@@ -372,13 +372,18 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
-  String _inviteRulesText(GameInvite inv) {
-    return buildTictactoeRulesText(
+  Widget _inviteRulesWidget(GameInvite inv) {
+    return buildTictactoeRulesTextWidget(
       gridSize: inv.gridSize,
       turnTimeSec: inv.turnTimeSec,
       swapRule: inv.swapRule,
       firstMoveRestriction: inv.firstMoveRestriction,
       stakeBronze: inv.stakeBronze,
+      style: const TextStyle(
+        color: AppColors.textSecondary,
+        fontSize: 13,
+        height: 1.35,
+      ),
     );
   }
 
@@ -563,14 +568,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                   ),
                   const SizedBox(height: 8),
                   SingleChildScrollView(
-                    child: Text(
-                      _inviteRulesText(inv),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
+                    child: _inviteRulesWidget(inv),
                   ),
                 ],
               ),
@@ -612,13 +610,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _showLobbyRulesInfo(BuildContext context, LobbyItem lobby) {
-    final rulesText = buildTictactoeRulesText(
-      gridSize: lobby.gridSize,
-      turnTimeSec: lobby.turnTimeSec,
-      swapRule: lobby.swapRule,
-      firstMoveRestriction: lobby.firstMoveRestriction,
-      stakeBronze: lobby.stakeBronze,
-    );
     showDialog<void>(
       context: context,
       builder: (ctx) {
@@ -633,7 +624,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             constraints:
                 BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
             child: SingleChildScrollView(
-              child: Text(rulesText),
+              child: buildTictactoeRulesTextWidget(
+                gridSize: lobby.gridSize,
+                turnTimeSec: lobby.turnTimeSec,
+                swapRule: lobby.swapRule,
+                firstMoveRestriction: lobby.firstMoveRestriction,
+                stakeBronze: lobby.stakeBronze,
+              ),
             ),
           ),
           actions: [
@@ -1275,7 +1272,7 @@ class _TictactoeGameCard extends StatelessWidget {
     onStakeChanged(options[next]);
   }
 
-  String _buildRulesText() => buildTictactoeRulesText(
+  Widget _buildRulesWidget() => buildTictactoeRulesTextWidget(
         gridSize: gridSize,
         turnTimeSec: turnTimeSec,
         swapRule: swapRule,
@@ -1500,7 +1497,7 @@ class _TictactoeGameCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.gamesRulesTitle),
         content: SingleChildScrollView(
-          child: Text(_buildRulesText()),
+          child: _buildRulesWidget(),
         ),
         actions: [
           TextButton(
