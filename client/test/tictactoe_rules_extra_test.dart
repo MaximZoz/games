@@ -24,15 +24,17 @@ void main() {
       expect(text, isNot(contains('Запрет центра')));
     });
 
-    test('large grid uses 5 in a row', () {
+    test('gomoku uses 15x15 and 5 in a row', () {
       final text = buildTictactoeRulesText(
-        gridSize: 7,
+        variant: 'gomoku',
+        gridSize: 15,
         turnTimeSec: 60,
         swapRule: true,
         firstMoveRestriction: true,
         stakeBronze: 100,
       );
-      expect(text, contains('7x7'));
+      expect(text, contains('Гомоку'));
+      expect(text, contains('15x15'));
       expect(text, contains('5 в ряд'));
       expect(text, contains('1 мин'));
       expect(text, contains('Смена сторон'));

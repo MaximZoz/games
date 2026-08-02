@@ -156,8 +156,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           true ||
                       (lobbyAsync.valueOrNull != null &&
                           currentUser != null &&
-                          lobbyAsync.valueOrNull!.creatorId !=
-                              currentUser.id),
+                          lobbyAsync.valueOrNull!.creatorId != currentUser.id),
                 );
                 if (title.isEmpty) return const SizedBox.shrink();
                 return Row(
@@ -182,11 +181,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             // Иконка правил — в AppBar, на одной высоте со стрелкой «Назад».
             actions: [
               if (() {
-                    final lobby = lobbyAsync.valueOrNull;
-                    return lobby != null &&
-                        lobby.status == 'waiting_invite' &&
-                        currentUser?.id == lobby.creatorId;
-                  }())
+                final lobby = lobbyAsync.valueOrNull;
+                return lobby != null &&
+                    lobby.status == 'waiting_invite' &&
+                    currentUser?.id == lobby.creatorId;
+              }())
                 IconButton(
                   tooltip: context.l10n.gamesRulesTitle,
                   icon: const Icon(Icons.rule_rounded),
@@ -198,240 +197,248 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             ],
           ),
           body: lobbyAsync.when(
-          skipLoadingOnReload: true,
-          skipLoadingOnRefresh: true,
-          data: (lobby) {
-            final isCreator = currentUser?.id == lobby.creatorId;
-            final isInviteMode = lobby.status == 'waiting_invite';
-            final isMatchmakeMode = lobby.status == 'waiting_matchmake';
-            if (lobby.gameId != null) {
+            skipLoadingOnReload: true,
+            skipLoadingOnRefresh: true,
+            data: (lobby) {
+              final isCreator = currentUser?.id == lobby.creatorId;
+              final isInviteMode = lobby.status == 'waiting_invite';
+              final isMatchmakeMode = lobby.status == 'waiting_matchmake';
+              if (lobby.gameId != null) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.accentStart,
+                  ),
+                );
+              }
+
+              final isDesktop = isWide(context);
+              final pad = isDesktop ? 32.0 : 24.0;
+              // Планшет / phone landscape / низкий экран: страница скроллится,
+              // иначе карточка приглашения обрезается.
+              final shortViewport = isPhoneLandscape(context) ||
+                  isTablet(context) ||
+                  MediaQuery.sizeOf(context).height < 640;
+              return SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: isDesktop ? 480 : double.infinity,
+                    ),
+                    child: shortViewport && isInviteMode && isCreator
+                        ? LayoutBuilder(
+                            builder: (context, constraints) {
+                              final friendCount =
+                                  friendsAsync.valueOrNull?.friends.length ?? 0;
+                              final estimated =
+                                  _estimateFriendsCardHeight(friendCount);
+                              final maxFriendsH = (constraints.maxHeight * 0.55)
+                                  .clamp(180.0, 360.0);
+                              final expandFriends = estimated > maxFriendsH;
+                              return SingleChildScrollView(
+                                padding: EdgeInsets.all(pad),
+                                physics: const AlwaysScrollableScrollPhysics(
+                                  parent: ClampingScrollPhysics(),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (lobby.stakeBronze > 0) ...[
+                                      _LobbyStakeChip(
+                                        stakeBronze: lobby.stakeBronze,
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                    _buildShareInviteLinkCard(context),
+                                    const SizedBox(height: 12),
+                                    if (expandFriends)
+                                      SizedBox(
+                                        height: maxFriendsH,
+                                        child: _buildFriendsCard(
+                                          context,
+                                          friendsAsync,
+                                          expand: true,
+                                        ),
+                                      )
+                                    else
+                                      _buildFriendsCard(
+                                        context,
+                                        friendsAsync,
+                                        expand: false,
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                        : Padding(
+                            padding: EdgeInsets.all(pad),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (isInviteMode && isCreator) ...[
+                                  // Ссылка — максимально высоко (заголовок уже в AppBar).
+                                  _buildShareInviteLinkCard(context),
+                                  const SizedBox(height: 12),
+                                  // Мало друзей — карточка по контенту; много — растягиваем.
+                                  Expanded(
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final friendCount = friendsAsync
+                                                .valueOrNull?.friends.length ??
+                                            0;
+                                        final estimated =
+                                            _estimateFriendsCardHeight(
+                                                friendCount);
+                                        final expand =
+                                            estimated >= constraints.maxHeight;
+                                        final card = _buildFriendsCard(
+                                          context,
+                                          friendsAsync,
+                                          expand: expand,
+                                        );
+                                        if (expand) return card;
+                                        return Align(
+                                          alignment: Alignment.topCenter,
+                                          child: card,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ] else if (isMatchmakeMode) ...[
+                                  // Поиск + правила по высоте контента (без растягивания).
+                                  GradientCard(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          width: 48,
+                                          height: 48,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.accentStart,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          context.l10n.lobbySearchingOpponent,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildMatchmakeInfoCard(context, lobby),
+                                ] else if (isInviteMode && !isCreator) ...[
+                                  Expanded(
+                                    child: GradientCard(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            context.l10n.lobbyInviteTitle,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            lobby.creatorName.trim().isNotEmpty
+                                                ? context.l10n
+                                                    .lobbyCreatorInvites(
+                                                        lobby.creatorName)
+                                                : context
+                                                    .l10n.lobbyInvitedToPlay,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          buildTictactoeRulesTextWidget(
+                                            variant: lobby.variant,
+                                            gridSize: lobby.gridSize,
+                                            turnTimeSec: lobby.turnTimeSec,
+                                            swapRule: lobby.swapRule,
+                                            firstMoveRestriction:
+                                                lobby.firstMoveRestriction,
+                                            stakeBronze: lobby.stakeBronze,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 13,
+                                              height: 1.35,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          FilledButton(
+                                            onPressed: _isJoining
+                                                ? null
+                                                : () => _joinViaLink(context),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor:
+                                                  AppColors.accentStart,
+                                              foregroundColor: Colors.white,
+                                              minimumSize:
+                                                  const Size.fromHeight(48),
+                                            ),
+                                            child: _isJoining
+                                                ? const SizedBox(
+                                                    width: 22,
+                                                    height: 22,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
+                                                  )
+                                                : Text(context
+                                                    .l10n.lobbyEnterGame),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                  ),
+                ),
+              );
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
+              ),
+            ),
+            error: (error, _) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _handleLobbyMissing(error);
+              });
               return const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: AppColors.accentStart,
                 ),
               );
-            }
-
-            final isDesktop = isWide(context);
-            final pad = isDesktop ? 32.0 : 24.0;
-            // Планшет / phone landscape / низкий экран: страница скроллится,
-            // иначе карточка приглашения обрезается.
-            final shortViewport = isPhoneLandscape(context) ||
-                isTablet(context) ||
-                MediaQuery.sizeOf(context).height < 640;
-            return SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: isDesktop ? 480 : double.infinity,
-                  ),
-                  child: shortViewport && isInviteMode && isCreator
-                      ? LayoutBuilder(
-                          builder: (context, constraints) {
-                            final friendCount = friendsAsync.valueOrNull
-                                    ?.friends.length ??
-                                0;
-                            final estimated =
-                                _estimateFriendsCardHeight(friendCount);
-                            final maxFriendsH = (constraints.maxHeight * 0.55)
-                                .clamp(180.0, 360.0);
-                            final expandFriends = estimated > maxFriendsH;
-                            return SingleChildScrollView(
-                              padding: EdgeInsets.all(pad),
-                              physics: const AlwaysScrollableScrollPhysics(
-                                parent: ClampingScrollPhysics(),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (lobby.stakeBronze > 0) ...[
-                                    _LobbyStakeChip(
-                                      stakeBronze: lobby.stakeBronze,
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                  _buildShareInviteLinkCard(context),
-                                  const SizedBox(height: 12),
-                                  if (expandFriends)
-                                    SizedBox(
-                                      height: maxFriendsH,
-                                      child: _buildFriendsCard(
-                                        context,
-                                        friendsAsync,
-                                        expand: true,
-                                      ),
-                                    )
-                                  else
-                                    _buildFriendsCard(
-                                      context,
-                                      friendsAsync,
-                                      expand: false,
-                                    ),
-                                ],
-                              ),
-                            );
-                          },
-                        )
-                      : Padding(
-                    padding: EdgeInsets.all(pad),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (isInviteMode && isCreator) ...[
-                          // Ссылка — максимально высоко (заголовок уже в AppBar).
-                          _buildShareInviteLinkCard(context),
-                          const SizedBox(height: 12),
-                          // Мало друзей — карточка по контенту; много — растягиваем.
-                          Expanded(
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final friendCount = friendsAsync
-                                        .valueOrNull?.friends.length ??
-                                    0;
-                                final estimated =
-                                    _estimateFriendsCardHeight(friendCount);
-                                final expand =
-                                    estimated >= constraints.maxHeight;
-                                final card = _buildFriendsCard(
-                                  context,
-                                  friendsAsync,
-                                  expand: expand,
-                                );
-                                if (expand) return card;
-                                return Align(
-                                  alignment: Alignment.topCenter,
-                                  child: card,
-                                );
-                              },
-                            ),
-                          ),
-                        ] else if (isMatchmakeMode) ...[
-                          // Поиск + правила по высоте контента (без растягивания).
-                          GradientCard(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.accentStart,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  context.l10n.lobbySearchingOpponent,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildMatchmakeInfoCard(context, lobby),
-                        ] else if (isInviteMode && !isCreator) ...[
-                          Expanded(
-                            child: GradientCard(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    context.l10n.lobbyInviteTitle,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    lobby.creatorName.trim().isNotEmpty
-                                        ? context.l10n
-                                            .lobbyCreatorInvites(lobby.creatorName)
-                                        : context.l10n.lobbyInvitedToPlay,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  buildTictactoeRulesTextWidget(
-                                    gridSize: lobby.gridSize,
-                                    turnTimeSec: lobby.turnTimeSec,
-                                    swapRule: lobby.swapRule,
-                                    firstMoveRestriction:
-                                        lobby.firstMoveRestriction,
-                                    stakeBronze: lobby.stakeBronze,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  FilledButton(
-                                    onPressed: _isJoining
-                                        ? null
-                                        : () => _joinViaLink(context),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.accentStart,
-                                      foregroundColor: Colors.white,
-                                      minimumSize: const Size.fromHeight(48),
-                                    ),
-                                    child: _isJoining
-                                        ? const SizedBox(
-                                            width: 22,
-                                            height: 22,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        : Text(context.l10n.lobbyEnterGame),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-          loading: () => const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
-            ),
+            },
           ),
-          error: (error, _) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _handleLobbyMissing(error);
-            });
-            return const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accentStart,
-              ),
-            );
-          },
-        ),
         ),
       ),
     );
@@ -500,10 +507,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     Expanded(
                       child: Text(
                         context.l10n.gamesRulesTitle,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
                       ),
                     ),
                     IconButton(
@@ -517,6 +525,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                 Flexible(
                   child: SingleChildScrollView(
                     child: buildTictactoeRulesTextWidget(
+                      variant: lobby.variant,
                       gridSize: lobby.gridSize,
                       turnTimeSec: lobby.turnTimeSec,
                       swapRule: lobby.swapRule,
@@ -664,9 +673,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               color: AppColors.accentStart,
             ),
           );
-          return expand
-              ? spinner
-              : const SizedBox(height: 72, child: spinner);
+          return expand ? spinner : const SizedBox(height: 72, child: spinner);
         },
         error: (e, _) => Padding(
           padding: const EdgeInsets.all(16),
@@ -698,6 +705,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           ),
           const SizedBox(height: 8),
           buildTictactoeRulesTextWidget(
+            variant: lobby.variant,
             gridSize: lobby.gridSize,
             turnTimeSec: lobby.turnTimeSec,
             swapRule: lobby.swapRule,

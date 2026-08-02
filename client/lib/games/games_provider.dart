@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -22,7 +23,9 @@ class GameInvite {
     required this.creatorName,
     required this.gameType,
     this.turnTimeSec = 0,
+    this.variant = variantClassic,
     this.gridSize = 3,
+    this.maxPlayers = 2,
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.creatorAvatarKind = 'letter',
@@ -34,7 +37,9 @@ class GameInvite {
   final String creatorName;
   final String gameType;
   final int turnTimeSec;
+  final String variant;
   final int gridSize;
+  final int maxPlayers;
   final bool swapRule;
   final bool firstMoveRestriction;
   final String creatorAvatarKind;
@@ -60,10 +65,16 @@ final gameInvitesProvider =
         );
         final gameType = data['game_type']?.toString() ?? 'tictactoe';
         final turnTimeSec = (data['turn_time_sec'] as num?)?.toInt() ?? 0;
-        final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;
+        final legacyGrid = (data['grid_size'] as num?)?.toInt() ?? 3;
+        final rawVariant = data['variant']?.toString();
+        final variant = rawVariant == null || rawVariant.isEmpty
+            ? variantFromLegacyGrid(legacyGrid)
+            : parseVariant(rawVariant);
+        final cfg = configForVariant(variant);
         final swapRule = data['swap_rule'] == true;
         final firstMoveRestriction = data['first_move_restriction'] == true;
-        final creatorAvatarKind = data['creator_avatar_kind']?.toString() ?? 'letter';
+        final creatorAvatarKind =
+            data['creator_avatar_kind']?.toString() ?? 'letter';
         final creatorAvatarValue = data['creator_avatar_value']?.toString();
         final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
         if (lobbyId != null && creatorId != null) {
@@ -73,7 +84,10 @@ final gameInvitesProvider =
             creatorName: creatorName,
             gameType: gameType,
             turnTimeSec: turnTimeSec,
-            gridSize: gridSize,
+            variant: variant,
+            gridSize: cfg.gridSize,
+            maxPlayers:
+                (data['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
             swapRule: swapRule,
             firstMoveRestriction: firstMoveRestriction,
             creatorAvatarKind: creatorAvatarKind,
@@ -90,8 +104,8 @@ final gameInvitesProvider =
         if (lobbyId == null || lobbyId.isEmpty) return;
         final left = data['left'] == true;
         final gameId = data['game_id']?.toString();
-        final gameStarted = type == 'game_started' ||
-            (gameId != null && gameId.isNotEmpty);
+        final gameStarted =
+            type == 'game_started' || (gameId != null && gameId.isNotEmpty);
         if (left || gameStarted) {
           notifier.remove(lobbyId);
         }
@@ -164,7 +178,8 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
   }
 }
 
-final lobbyDetailProvider = FutureProvider.autoDispose.family<LobbyItem, String>(
+final lobbyDetailProvider =
+    FutureProvider.autoDispose.family<LobbyItem, String>(
   (ref, lobbyId) async {
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getLobby(lobbyId);
@@ -181,8 +196,8 @@ final gameStateProvider =
 
 /// Временное состояние после makeMove для немедленного отображения победы/ничьей
 /// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
-final gameStateOverrideProvider =
-    StateProvider.autoDispose.family<GameStateItem?, String>((ref, gameId) => null);
+final gameStateOverrideProvider = StateProvider.autoDispose
+    .family<GameStateItem?, String>((ref, gameId) => null);
 
 /// Блокирует invalidate по game_state (чтобы не перезапрашивать до хода бота).
 final gameStateInvalidateBlockedProvider =
@@ -206,7 +221,8 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         final data = next.valueOrNull;
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
-        if (type == 'game_state' || type == 'game_started' ||
+        if (type == 'game_state' ||
+            type == 'game_started' ||
             type == 'lobby_updated') {
           ref.invalidate(activeGameProvider);
           final gameId = data['game_id']?.toString();
@@ -332,8 +348,8 @@ final gameStatsProvider =
 });
 
 /// Счёт head-to-head между текущим игроком и указанным соперником.
-final headToHeadProvider =
-    FutureProvider.autoDispose.family<HeadToHead, String>((ref, opponentId) async {
+final headToHeadProvider = FutureProvider.autoDispose
+    .family<HeadToHead, String>((ref, opponentId) async {
   final repo = ref.watch(gamesRepositoryProvider);
   return repo.getHeadToHead(opponentId);
 });

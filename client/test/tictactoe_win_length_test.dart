@@ -3,13 +3,12 @@ import 'package:multigames_client/games/games_repository.dart';
 
 void main() {
   group('GameStateItem.winLength', () {
-    test('3–5 use N, 6–8 use 5', () {
+    test('uses variant engine lengths', () {
       expect(GameStateItem.winLength(3), 3);
-      expect(GameStateItem.winLength(4), 4);
-      expect(GameStateItem.winLength(5), 5);
-      expect(GameStateItem.winLength(6), 5);
-      expect(GameStateItem.winLength(7), 5);
-      expect(GameStateItem.winLength(8), 5);
+      expect(GameStateItem.winLength(15, variant: 'gomoku'), 5);
+      expect(GameStateItem.winLength(8, variant: 'multi3'), 4);
+      expect(GameStateItem.winLength(10, variant: 'multi4'), 4);
+      expect(GameStateItem.winLength(9, variant: 'ultimate'), 3);
     });
   });
 
@@ -24,6 +23,7 @@ void main() {
       return GameStateItem(
         id: 'g1',
         board: board,
+        variant: gridSize == 15 ? 'gomoku' : 'classic',
         turn: 'x',
         status: status,
         winner: winner,
@@ -65,19 +65,19 @@ void main() {
       expect(g.effectiveWinningCells, isNull);
     });
 
-    test('4x4 needs four in a row', () {
-      final board = List.filled(16, '');
-      board[0] = board[1] = board[2] = 'x';
+    test('gomoku needs five in a row', () {
+      final board = List.filled(225, '');
+      board[0] = board[1] = board[2] = board[3] = 'x';
       var g = game(
         board: board,
         status: 'x_won',
         winner: 'x',
-        gridSize: 4,
+        gridSize: 15,
       );
       expect(g.effectiveWinningCells, isNull);
-      board[3] = 'x';
-      g = game(board: board, status: 'x_won', winner: 'x', gridSize: 4);
-      expect(g.effectiveWinningCells, [0, 1, 2, 3]);
+      board[4] = 'x';
+      g = game(board: board, status: 'x_won', winner: 'x', gridSize: 15);
+      expect(g.effectiveWinningCells, [0, 1, 2, 3, 4]);
     });
   });
 
@@ -88,6 +88,7 @@ void main() {
         'board': ['x'],
         'turn': 'o',
         'status': 'active',
+        'variant': 'classic',
         'grid_size': 3,
         'x_user_id': 'x1',
         'o_user_id': 'o1',
@@ -101,6 +102,7 @@ void main() {
       expect(g.stakeBronze, 100);
       expect(g.xFrameCode, 'frame_gold');
       expect(g.xFrameColor, '#FFD700');
+      expect(g.variant, 'classic');
       // too short winning_cells → null
       expect(g.winningCells, isNull);
     });
@@ -111,6 +113,7 @@ void main() {
         'board': List.filled(9, ''),
         'status': 'x_won',
         'winner': 'x',
+        'variant': 'classic',
         'x_user_id': 'x1',
         'o_user_id': 'o1',
         'winning_cells': [0, 1, 2],
@@ -128,13 +131,17 @@ void main() {
         'status': 'waiting_invite',
         'created_at': '2026-01-01T00:00:00Z',
         'turn_time_sec': 30,
-        'grid_size': 5,
+        'variant': 'multi3',
+        'grid_size': 8,
+        'max_players': 3,
         'swap_rule': true,
         'first_move_restriction': true,
         'stake_bronze': 50,
       });
       expect(lobby.turnTimeSec, 30);
-      expect(lobby.gridSize, 5);
+      expect(lobby.variant, 'multi3');
+      expect(lobby.gridSize, 8);
+      expect(lobby.maxPlayers, 3);
       expect(lobby.swapRule, isTrue);
       expect(lobby.firstMoveRestriction, isTrue);
       expect(lobby.stakeBronze, 50);

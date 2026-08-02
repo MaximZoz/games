@@ -14,6 +14,7 @@ import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -26,26 +27,6 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
 import 'package:multigames_client/l10n/l10n.dart';
-
-/// Индексы центральных клеток (запрещены для первого хода при first_move_restriction).
-List<int> _centerCellIndices(int gridSize) {
-  switch (gridSize) {
-    case 3:
-      return [4];
-    case 4:
-      return [5, 6, 9, 10];
-    case 5:
-      return [12];
-    case 6:
-      return [14, 15, 20, 21];
-    case 7:
-      return [24];
-    case 8:
-      return [27, 28, 35, 36];
-    default:
-      return [];
-  }
-}
 
 const List<IconData> _presetAvatarIcons = [
   Icons.face_rounded,
@@ -75,7 +56,6 @@ class TicTacToeGameScreen extends ConsumerStatefulWidget {
 class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   bool _isMakingMove = false;
-  bool _isSwapping = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   String? _rematchLobbyId;
@@ -309,8 +289,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     void goBack() => _handleClose(effectiveGameAsync.valueOrNull);
     final gameForBar = effectiveGameAsync.valueOrNull;
     final gameActive = gameForBar != null && gameForBar.status == 'active';
-    final showDrawButton =
-        gameForBar != null && gameForBar.status == 'active' && gameForBar.isActivePvp;
+    final showDrawButton = gameForBar != null &&
+        gameForBar.status == 'active' &&
+        gameForBar.isActivePvp;
     final meId = currentUser?.id;
     final drawOfferBy = gameForBar?.drawOfferBy?.trim();
     final iOfferedDraw =
@@ -363,320 +344,290 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ],
         ),
         body: effectiveGameAsync.when(
-        data: (game) {
-          final isOver = game.status != 'active';
-          final opponentId =
-              game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
-          final iWonEarly = isOver &&
-              ((game.status == 'x_won' && game.xUserId == currentUser?.id) ||
-                  (game.status == 'o_won' && game.oUserId == currentUser?.id));
-          final isDraw = isOver && game.status == 'draw';
-          if (isOver &&
-              (_prevGameStatus == 'active' || _prevGameStatus == null)) {
-            _rematchPollTimer?.cancel();
-            _prevGameStatus = game.status;
-            if (currentUser != null) {
-              ref
-                  .read(gameInvitesProvider.notifier)
-                  .removeByCreatorId(opponentId);
-            }
-            // Не трогаем провайдеры баланса из build — только после кадра.
-            final settledCredit = iWonEarly
-                ? game.stakeBronze * 2
-                : isDraw
-                    ? game.stakeBronze
-                    : 0;
-            final settledReward = iWonEarly ? game.stakeBronze : 0;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              setState(() {
-                _rematchLobbyId = null;
-                _rematchDeclined = false;
-                _iDeclinedRematch = false;
-                _isRematching = false;
-                _isFindingGame = false;
+          data: (game) {
+            final isOver = game.status != 'active';
+            final opponentId =
+                game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
+            final myMark = game.markForUser(currentUser?.id);
+            final iWonEarly = isOver &&
+                game.status.endsWith('_won') &&
+                myMark != null &&
+                game.winner == myMark;
+            final isDraw = isOver && game.status == 'draw';
+            if (isOver &&
+                (_prevGameStatus == 'active' || _prevGameStatus == null)) {
+              _rematchPollTimer?.cancel();
+              _prevGameStatus = game.status;
+              if (currentUser != null) {
+                ref
+                    .read(gameInvitesProvider.notifier)
+                    .removeByCreatorId(opponentId);
+              }
+              // Не трогаем провайдеры баланса из build — только после кадра.
+              final settledCredit = iWonEarly
+                  ? game.stakeBronze * 2
+                  : isDraw
+                      ? game.stakeBronze
+                      : 0;
+              final settledReward = iWonEarly ? game.stakeBronze : 0;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                setState(() {
+                  _rematchLobbyId = null;
+                  _rematchDeclined = false;
+                  _iDeclinedRematch = false;
+                  _isRematching = false;
+                  _isFindingGame = false;
+                });
+                unawaited(_onGameSettled(
+                  creditBronze: settledCredit,
+                  displayRewardBronze: settledReward,
+                ));
               });
-              unawaited(_onGameSettled(
-                creditBronze: settledCredit,
-                displayRewardBronze: settledReward,
-              ));
-            });
-          } else {
-            _prevGameStatus = game.status;
-          }
-          // Полное состояние игры — источник истины для текущего хода.
-          final isMyTurn = game.isTurnOf(currentUser?.id);
-          final opponentName = opponentId.startsWith('bot:')
-              ? context.l10n.gameBot
-              : (game.xUserId == currentUser?.id
-                  ? (game.oDisplayName ?? context.l10n.gameOpponent)
-                  : (game.xDisplayName ?? context.l10n.gameOpponent));
-          final opponentAvatarKind = game.xUserId == currentUser?.id
-              ? game.oAvatarKind
-              : game.xAvatarKind;
-          final opponentAvatarValue = game.xUserId == currentUser?.id
-              ? game.oAvatarValue
-              : game.xAvatarValue;
-          final opponentFrameCode = game.xUserId == currentUser?.id
-              ? game.oFrameCode
-              : game.xFrameCode;
-          final opponentFrameColor = game.xUserId == currentUser?.id
-              ? game.oFrameColor
-              : game.xFrameColor;
-
-          String statusText = '';
-          if (isOver) {
-            if (game.status == 'x_won') {
-              final iWon = game.xUserId == currentUser?.id;
-              statusText = iWon
-                  ? (game.forfeit
-                      ? context.l10n.gameYouWonOpponentForfeit
-                      : game.timeout
-                          ? context.l10n.gameYouWonOpponentTimeout
-                          : context.l10n.gameYouWon)
-                  : (game.forfeit
-                      ? context.l10n.gameYouForfeitOpponentWon(opponentName)
-                      : game.timeout
-                          ? context.l10n.gameOpponentWonTimeout(opponentName)
-                          : context.l10n.gameOpponentWon(opponentName));
-            } else if (game.status == 'o_won') {
-              final iWon = game.oUserId == currentUser?.id;
-              statusText = iWon
-                  ? (game.forfeit
-                      ? context.l10n.gameYouWonOpponentForfeit
-                      : game.timeout
-                          ? context.l10n.gameYouWonOpponentTimeout
-                          : context.l10n.gameYouWon)
-                  : (game.forfeit
-                      ? context.l10n.gameYouForfeitOpponentWon(opponentName)
-                      : game.timeout
-                          ? context.l10n.gameOpponentWonTimeout(opponentName)
-                          : context.l10n.gameOpponentWon(opponentName));
-            } else if (game.status == 'draw') {
-              statusText = context.l10n.gameDraw;
+            } else {
+              _prevGameStatus = game.status;
             }
-          } else {
-            statusText = isMyTurn ? context.l10n.gamesMyTurn : context.l10n.gamesOpponentTurn;
-          }
+            // Полное состояние игры — источник истины для текущего хода.
+            final isMyTurn = game.isTurnOf(currentUser?.id);
+            final opponentName = opponentId.startsWith('bot:')
+                ? context.l10n.gameBot
+                : (game.xUserId == currentUser?.id
+                    ? (game.oDisplayName ?? context.l10n.gameOpponent)
+                    : (game.xDisplayName ?? context.l10n.gameOpponent));
+            final opponentAvatarKind = game.xUserId == currentUser?.id
+                ? game.oAvatarKind
+                : game.xAvatarKind;
+            final opponentAvatarValue = game.xUserId == currentUser?.id
+                ? game.oAvatarValue
+                : game.xAvatarValue;
+            final opponentFrameCode = game.xUserId == currentUser?.id
+                ? game.oFrameCode
+                : game.xFrameCode;
+            final opponentFrameColor = game.xUserId == currentUser?.id
+                ? game.oFrameColor
+                : game.xFrameColor;
 
-          final showSwapButton = !isOver &&
-              game.canSwap &&
-              isMyTurn &&
-              !_isSwapping &&
-              !_isMakingMove;
+            String statusText = '';
+            if (isOver) {
+              if (game.status.endsWith('_won')) {
+                final iWon = iWonEarly;
+                statusText = iWon
+                    ? (game.forfeit
+                        ? context.l10n.gameYouWonOpponentForfeit
+                        : game.timeout
+                            ? context.l10n.gameYouWonOpponentTimeout
+                            : context.l10n.gameYouWon)
+                    : (game.forfeit
+                        ? context.l10n.gameYouForfeitOpponentWon(opponentName)
+                        : game.timeout
+                            ? context.l10n.gameOpponentWonTimeout(opponentName)
+                            : context.l10n.gameOpponentWon(opponentName));
+              } else if (game.status == 'draw') {
+                statusText = context.l10n.gameDraw;
+              }
+            } else {
+              statusText = isMyTurn
+                  ? context.l10n.gamesMyTurn
+                  : context.l10n.gamesOpponentTurn;
+            }
 
-          final iWon = iWonEarly;
-          final showRewardChip = isOver && iWon && game.stakeBronze > 0;
-          final rewardBronze = game.stakeBronze;
-          final isDesktop = isWide(context);
-          final narrow = isNarrow(context);
-          final phoneLandscape = isPhoneLandscape(context);
-          // Планшет landscape: доска слева (как телефон), иначе низ обрезается.
-          final landscapeSideBySide = phoneLandscape ||
-              (isTablet(context) &&
-                  MediaQuery.sizeOf(context).width >
-                      MediaQuery.sizeOf(context).height);
-          final contentPadding =
-              landscapeSideBySide ? 8.0 : (narrow ? 12.0 : 24.0);
-          final verticalSpacing =
-              landscapeSideBySide ? 6.0 : (narrow ? 10.0 : 20.0);
+            final iWon = iWonEarly;
+            final showRewardChip = isOver && iWon && game.stakeBronze > 0;
+            final rewardBronze = game.stakeBronze;
+            final isDesktop = isWide(context);
+            final narrow = isNarrow(context);
+            final phoneLandscape = isPhoneLandscape(context);
+            // Планшет landscape: доска слева (как телефон), иначе низ обрезается.
+            final landscapeSideBySide = phoneLandscape ||
+                (isTablet(context) &&
+                    MediaQuery.sizeOf(context).width >
+                        MediaQuery.sizeOf(context).height);
+            final contentPadding =
+                landscapeSideBySide ? 8.0 : (narrow ? 12.0 : 24.0);
+            final verticalSpacing =
+                landscapeSideBySide ? 6.0 : (narrow ? 10.0 : 20.0);
 
-          Widget opponentCard() => _OpponentCard(
-                opponentId: opponentId,
-                displayName: opponentName,
-                avatarKind: opponentAvatarKind,
-                avatarValue: opponentAvatarValue,
-                frameCode: opponentFrameCode,
-                frameColor: opponentFrameColor,
-                isBot: opponentId.startsWith('bot:'),
-                friendsSnapshot:
-                    ref.watch(friendsSnapshotProvider).valueOrNull,
-                chatsList:
-                    ref.watch(chatsListProvider).valueOrNull ?? const [],
-                onInfoTap: () => _showOpponentInfo(
-                  context,
+            Widget opponentCard() => _OpponentCard(
                   opponentId: opponentId,
                   displayName: opponentName,
                   avatarKind: opponentAvatarKind,
                   avatarValue: opponentAvatarValue,
-                ),
-                onMessageTap: () =>
-                    _openChat(context, opponentId, opponentName),
-                onAddFriendTap: (requestId) => _addFriend(
-                    context, opponentId, opponentName,
-                    requestId: requestId),
-              );
-
-          Widget statusBlock() => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _StatusWithReward(
-                    statusText: statusText,
-                    showReward: showRewardChip,
-                    rewardBronze: rewardBronze,
-                    rewardKey: _winRewardKey,
-                    fontSize: narrow ? 15 : null,
+                  frameCode: opponentFrameCode,
+                  frameColor: opponentFrameColor,
+                  isBot: opponentId.startsWith('bot:'),
+                  friendsSnapshot:
+                      ref.watch(friendsSnapshotProvider).valueOrNull,
+                  chatsList:
+                      ref.watch(chatsListProvider).valueOrNull ?? const [],
+                  onInfoTap: () => _showOpponentInfo(
+                    context,
+                    opponentId: opponentId,
+                    displayName: opponentName,
+                    avatarKind: opponentAvatarKind,
+                    avatarValue: opponentAvatarValue,
                   ),
-                  if (showSwapButton)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: OutlinedButton.icon(
-                        onPressed: () => _swapSides(),
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        label: Text(context.l10n.gameSwapSidesAction),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.accentStart,
-                          side: BorderSide(
-                              color:
-                                  AppColors.accentStart.withValues(alpha: 0.6)),
+                  onMessageTap: () =>
+                      _openChat(context, opponentId, opponentName),
+                  onAddFriendTap: (requestId) => _addFriend(
+                      context, opponentId, opponentName,
+                      requestId: requestId),
+                );
+
+            Widget statusBlock() => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _StatusWithReward(
+                      statusText: statusText,
+                      showReward: showRewardChip,
+                      rewardBronze: rewardBronze,
+                      rewardKey: _winRewardKey,
+                      fontSize: narrow ? 15 : null,
+                    ),
+                    if (!isOver &&
+                        game.turnTimeSec > 0 &&
+                        game.turnDeadline != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: _TurnCountdown(
+                          turnDeadline: game.turnDeadline!,
+                          isMyTurn: isMyTurn,
+                          onExpired: _onTurnTimeExpired,
                         ),
                       ),
-                    ),
-                  if (!isOver &&
-                      game.turnTimeSec > 0 &&
-                      game.turnDeadline != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: _TurnCountdown(
-                        turnDeadline: game.turnDeadline!,
-                        isMyTurn: isMyTurn,
-                        onExpired: _onTurnTimeExpired,
+                    if (isOver) ...[
+                      SizedBox(height: verticalSpacing * 0.8),
+                      _RematchSection(
+                        rematchLobbyId: _rematchLobbyId,
+                        rematchDeclined: _rematchDeclined,
+                        iDeclinedRematch: _iDeclinedRematch,
+                        isRematching: _isRematching,
+                        isAcceptingRematch: _isAcceptingRematch,
+                        isFindingGame: _isFindingGame,
+                        opponentId: opponentId,
+                        invites: ref.watch(gameInvitesProvider),
+                        onRematch: () => _rematch(context),
+                        onAccept: _acceptRematch,
+                        onDecline: _declineRematch,
+                        onCancelWait: _cancelRematchWait,
+                        onFindGame: () => _findGame(context),
+                        compact: true,
+                      ),
+                    ],
+                  ],
+                );
+
+            Widget board() => Center(
+                  child: _GameBoard(
+                    game: game,
+                    isMyTurn: isMyTurn,
+                    isOver: isOver,
+                    isMakingMove: _isMakingMove,
+                    onMove: _makeMove,
+                    pulseController: _pulseController,
+                    compact: narrow,
+                  ),
+                );
+
+            // Телефон/планшет landscape: доска слева, статус справа —
+            // «Повторить» / «Другой соперник» не обрезаются снизу.
+            final Widget bodyLayout;
+            if (landscapeSideBySide) {
+              bodyLayout = Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(flex: 5, child: board()),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 4,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          opponentCard(),
+                          SizedBox(height: verticalSpacing),
+                          statusBlock(),
+                        ],
                       ),
                     ),
-                  if (isOver) ...[
-                    SizedBox(height: verticalSpacing * 0.8),
-                    _RematchSection(
-                      rematchLobbyId: _rematchLobbyId,
-                      rematchDeclined: _rematchDeclined,
-                      iDeclinedRematch: _iDeclinedRematch,
-                      isRematching: _isRematching,
-                      isAcceptingRematch: _isAcceptingRematch,
-                      isFindingGame: _isFindingGame,
-                      opponentId: opponentId,
-                      invites: ref.watch(gameInvitesProvider),
-                      onRematch: () => _rematch(context),
-                      onAccept: _acceptRematch,
-                      onDecline: _declineRematch,
-                      onCancelWait: _cancelRematchWait,
-                      onFindGame: () => _findGame(context),
-                      compact: true,
-                    ),
-                  ],
+                  ),
                 ],
               );
-
-          Widget board() => Center(
-                child: _GameBoard(
-                  game: game,
-                  isMyTurn: isMyTurn,
-                  isOver: isOver,
-                  isMakingMove: _isMakingMove,
-                  onMove: _makeMove,
-                  pulseController: _pulseController,
-                  compact: narrow,
-                ),
+            } else if (isDesktop) {
+              bodyLayout = Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  opponentCard(),
+                  SizedBox(height: verticalSpacing),
+                  statusBlock(),
+                  SizedBox(height: verticalSpacing),
+                  Expanded(child: board()),
+                ],
               );
-
-          // Телефон/планшет landscape: доска слева, статус справа —
-          // «Повторить» / «Другой соперник» не обрезаются снизу.
-          final Widget bodyLayout;
-          if (landscapeSideBySide) {
-            bodyLayout = Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(flex: 5, child: board()),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 4,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        opponentCard(),
-                        SizedBox(height: verticalSpacing),
-                        statusBlock(),
-                      ],
+            } else {
+              bodyLayout = Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          opponentCard(),
+                          SizedBox(height: verticalSpacing),
+                          statusBlock(),
+                          SizedBox(height: verticalSpacing),
+                        ],
+                      ),
                     ),
                   ),
+                  Expanded(child: board()),
+                ],
+              );
+            }
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.all(contentPadding),
+                    child: bodyLayout,
+                  ),
                 ),
-              ],
-            );
-          } else if (isDesktop) {
-            bodyLayout = Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                opponentCard(),
-                SizedBox(height: verticalSpacing),
-                statusBlock(),
-                SizedBox(height: verticalSpacing),
-                Expanded(child: board()),
-              ],
-            );
-          } else {
-            bodyLayout = Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        opponentCard(),
-                        SizedBox(height: verticalSpacing),
-                        statusBlock(),
-                        SizedBox(height: verticalSpacing),
-                      ],
+                if (iWon)
+                  Positioned.fill(
+                    child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
+                  ),
+                // «Сдаться» и «ничья» — справа сверху, в одну линию с «правилами».
+                if (gameActive)
+                  Positioned(
+                    right: 4,
+                    top: topPad + 4,
+                    child: _GameActionsOverlay(
+                      canDraw: showDrawButton,
+                      iOfferedDraw: iOfferedDraw,
+                      opponentOfferedDraw: opponentOfferedDraw,
+                      onSurrender: () => _confirmSurrender(context),
+                      onDraw: () => opponentOfferedDraw
+                          ? _confirmAcceptDraw(context)
+                          : _confirmOfferDraw(context),
                     ),
                   ),
-                ),
-                Expanded(child: board()),
               ],
             );
-          }
-
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.all(contentPadding),
-                  child: bodyLayout,
-                ),
-              ),
-              if (iWon)
-                Positioned.fill(
-                  child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
-                ),
-              // «Сдаться» и «ничья» — справа сверху, в одну линию с «правилами».
-              if (gameActive)
-                Positioned(
-                  right: 4,
-                  top: topPad + 4,
-                  child: _GameActionsOverlay(
-                    canDraw: showDrawButton,
-                    iOfferedDraw: iOfferedDraw,
-                    opponentOfferedDraw: opponentOfferedDraw,
-                    onSurrender: () => _confirmSurrender(context),
-                    onDraw: () => opponentOfferedDraw
-                        ? _confirmAcceptDraw(context)
-                        : _confirmOfferDraw(context),
-                  ),
-                ),
-            ],
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accentStart,
+          },
+          loading: () => const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
+            ),
           ),
-        ),
-        error: (_, __) => const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accentStart,
+          error: (_, __) => const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
+            ),
           ),
-        ),
         ),
       ),
     );
@@ -811,10 +762,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (game == null || game.status != 'active') return;
     final meId = ref.read(authStateProvider).valueOrNull?.id;
     final offerBy = game.drawOfferBy?.trim();
-    if (meId == null ||
-        offerBy == null ||
-        offerBy.isEmpty ||
-        offerBy == meId) {
+    if (meId == null || offerBy == null || offerBy.isEmpty || offerBy == meId) {
       return;
     }
     final l10n = context.l10n;
@@ -1178,8 +1126,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         children: [
                           if (friendUser?.age != null && friendUser!.age! > 0)
                             _buildInfoPill(
-                              text: context.l10n
-                                  .profileAgeYears(friendUser.age!),
+                              text:
+                                  context.l10n.profileAgeYears(friendUser.age!),
                               minWidth: 72,
                             ),
                           if (genderIcon != null)
@@ -1316,10 +1264,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   child: buildTictactoeRulesTextWidget(
+                    variant: game.variant,
                     gridSize: game.gridSize,
                     turnTimeSec: game.turnTimeSec,
-                    swapRule: game.swapRule,
-                    firstMoveRestriction: game.firstMoveRestriction,
+                    swapRule: false,
+                    firstMoveRestriction: false,
                     stakeBronze: game.stakeBronze,
                     style: const TextStyle(
                       color: AppColors.textSecondary,
@@ -1469,8 +1418,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       final repo = ref.read(gamesRepositoryProvider);
       final response = await repo.makeMove(widget.gameId, cell);
       if (!mounted) return;
-      final isBotGame = response.xUserId.startsWith('bot:') ||
-          response.oUserId.startsWith('bot:');
+      final isBotGame =
+          response.playerUserIds.any((id) => id.startsWith('bot:'));
       // Для бота: сразу блокируем invalidate, чтобы realtime/другие события не сбросили ход
       if (isBotGame) {
         _waitingForBotMove = true;
@@ -1504,24 +1453,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isMakingMove = false);
-    }
-  }
-
-  Future<void> _swapSides() async {
-    setState(() => _isSwapping = true);
-    try {
-      final repo = ref.read(gamesRepositoryProvider);
-      final response = await repo.swapSides(widget.gameId);
-      if (mounted) {
-        ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
-            response;
-        ref.invalidate(gameStateProvider(widget.gameId));
-        ref.invalidate(activeGameProvider);
-      }
-    } catch (e) {
-      if (mounted) _redirectToGamesOnError();
-    } finally {
-      if (mounted) setState(() => _isSwapping = false);
     }
   }
 }
@@ -1781,7 +1712,9 @@ class _RematchSection extends StatelessWidget {
                   ),
                 )
               : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
-          label: Text(isRematching ? context.l10n.commonCreating : context.l10n.gameRematch),
+          label: Text(isRematching
+              ? context.l10n.commonCreating
+              : context.l10n.gameRematch),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentStart,
             foregroundColor: Colors.white,
@@ -1797,7 +1730,9 @@ class _RematchSection extends StatelessWidget {
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 )
               : Icon(Icons.search_rounded, size: compact ? 18 : 20),
-          label: Text(isFindingGame ? context.l10n.commonSearching : context.l10n.gameOtherOpponent),
+          label: Text(isFindingGame
+              ? context.l10n.commonSearching
+              : context.l10n.gameOtherOpponent),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.accentStart,
             side: BorderSide(color: AppColors.accentStart),
@@ -2034,7 +1969,23 @@ class _GameBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gridSize = game.gridSize;
-    final n = gridSize * gridSize;
+    final isUltimate = game.variant == variantUltimate;
+    final n = game.board.length;
+    final engine = newEngine(game.variant);
+    final legalCells = isMyTurn && !isOver && !isMakingMove
+        ? engine
+            .legalCells(
+              GameEngineState(
+                board: game.board,
+                turn: game.turn,
+                status: game.status,
+                winner: game.winner ?? '',
+                nextBoard: game.nextBoard ?? -1,
+                metaBoard: game.metaBoard,
+              ),
+            )
+            .toSet()
+        : const <int>{};
     return LayoutBuilder(
       builder: (context, constraints) {
         var maxW = constraints.maxWidth;
@@ -2044,14 +1995,14 @@ class _GameBoard extends StatelessWidget {
         final minBoard = compact ? 140.0 : 200.0;
         final maxBoard = compact ? 380.0 : 420.0;
         final maxSide = (maxW > maxH ? maxH : maxW).clamp(minBoard, maxBoard);
-        final boardSize = maxSide;
-        final boardMargin = compact ? 8.0 : 12.0;
-        return Center(
-          child: Container(
-            margin: EdgeInsets.symmetric(
-              horizontal: compact ? 8 : 16,
-              vertical: boardMargin,
-            ),
+        final viewportSize = maxSide.toDouble();
+        final boardSize = gridSize >= 15
+            ? 620.0
+            : gridSize >= 8
+                ? 520.0
+                : viewportSize;
+        Widget boardContent() {
+          return Container(
             width: boardSize,
             height: boardSize,
             decoration: BoxDecoration(
@@ -2072,47 +2023,64 @@ class _GameBoard extends StatelessWidget {
                     winningCells: game.effectiveWinningCells,
                     gridSize: gridSize,
                     child: CustomPaint(
-                      painter: _GridPainter(gridSize: gridSize),
+                      painter: _GridPainter(
+                        gridSize: gridSize,
+                        ultimate: isUltimate,
+                      ),
                       child: LayoutBuilder(
                         builder: (context, innerConstraints) {
                           final cellW = innerConstraints.maxWidth / gridSize;
                           final cellH = innerConstraints.maxHeight / gridSize;
-                          final gap = boardSize > 280 ? 4.0 : 2.0;
-                          final isFirstMoveX = game.turn == 'x' &&
-                              game.board.every((c) => c.isEmpty);
-                          final forbiddenCenters =
-                              game.firstMoveRestriction && isFirstMoveX
-                                  ? _centerCellIndices(gridSize)
-                                  : <int>[];
+                          final gap = boardSize > 280
+                              ? (gridSize >= 8 ? 1.5 : 4.0)
+                              : 2.0;
+                          final cells = List.generate(n, (visualIndex) {
+                            final cellIndex = isUltimate
+                                ? _ultimateCellFromVisualIndex(visualIndex)
+                                : visualIndex;
+                            final row = visualIndex ~/ gridSize;
+                            final col = visualIndex % gridSize;
+                            final cell = cellIndex < game.board.length
+                                ? game.board[cellIndex]
+                                : '';
+                            final sub = isUltimate ? cellIndex ~/ 9 : -1;
+                            final meta = isUltimate && sub >= 0
+                                ? (sub < game.metaBoard.length
+                                    ? game.metaBoard[sub]
+                                    : '')
+                                : '';
+                            final cellCanTap =
+                                cell.isEmpty && legalCells.contains(cellIndex);
+                            return Positioned(
+                              left: col * cellW + gap,
+                              top: row * cellH + gap,
+                              width: cellW - gap * 2,
+                              height: cellH - gap * 2,
+                              child: _AnimatedGameCell(
+                                symbol: cell,
+                                isMyTurn: isMyTurn && !isOver && !isMakingMove,
+                                canTap: cellCanTap,
+                                isForbidden: cell.isEmpty &&
+                                    isMyTurn &&
+                                    !isOver &&
+                                    !isMakingMove &&
+                                    !cellCanTap,
+                                isActiveBoard: isUltimate &&
+                                    game.nextBoard != null &&
+                                    game.nextBoard == sub,
+                                isClosedBoard: meta.isNotEmpty,
+                                onTap:
+                                    cellCanTap ? () => onMove(cellIndex) : null,
+                                pulse: cellCanTap ? pulseController : null,
+                              ),
+                            );
+                          });
                           return Stack(
-                            children: List.generate(n, (i) {
-                              final row = i ~/ gridSize;
-                              final col = i % gridSize;
-                              final cell =
-                                  i < game.board.length ? game.board[i] : '';
-                              final isForbiddenCenter =
-                                  cell.isEmpty && forbiddenCenters.contains(i);
-                              final cellCanTap = cell.isEmpty &&
-                                  !isForbiddenCenter &&
-                                  isMyTurn &&
-                                  !isOver &&
-                                  !isMakingMove;
-                              return Positioned(
-                                left: col * cellW + gap,
-                                top: row * cellH + gap,
-                                width: cellW - gap * 2,
-                                height: cellH - gap * 2,
-                                child: _AnimatedGameCell(
-                                  symbol: cell,
-                                  isMyTurn:
-                                      isMyTurn && !isOver && !isMakingMove,
-                                  canTap: cellCanTap,
-                                  isForbidden: isForbiddenCenter,
-                                  onTap: cellCanTap ? () => onMove(i) : null,
-                                  pulse: cellCanTap ? pulseController : null,
-                                ),
-                              );
-                            }),
+                            children: [
+                              ...cells,
+                              if (isUltimate)
+                                _UltimateMetaOverlay(metaBoard: game.metaBoard),
+                            ],
                           );
                         },
                       ),
@@ -2121,9 +2089,103 @@ class _GameBoard extends StatelessWidget {
                 ),
               ),
             ),
+          );
+        }
+
+        return Center(
+          child: SizedBox.square(
+            dimension: viewportSize,
+            child: boardSize > viewportSize + 1
+                ? InteractiveViewer(
+                    constrained: false,
+                    minScale: viewportSize / boardSize,
+                    maxScale: 3,
+                    boundaryMargin: const EdgeInsets.all(80),
+                    child: SizedBox.square(
+                      dimension: boardSize,
+                      child: boardContent(),
+                    ),
+                  )
+                : boardContent(),
           ),
         );
       },
+    );
+  }
+}
+
+int _ultimateCellFromVisualIndex(int visualIndex) {
+  final visualRow = visualIndex ~/ 9;
+  final visualCol = visualIndex % 9;
+  final subRow = visualRow ~/ 3;
+  final subCol = visualCol ~/ 3;
+  final localRow = visualRow % 3;
+  final localCol = visualCol % 3;
+  return (subRow * 3 + subCol) * 9 + localRow * 3 + localCol;
+}
+
+class _UltimateMetaOverlay extends StatelessWidget {
+  const _UltimateMetaOverlay({required this.metaBoard});
+
+  final List<String> metaBoard;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final subW = constraints.maxWidth / 3;
+          final subH = constraints.maxHeight / 3;
+          return Stack(
+            children: List.generate(9, (sub) {
+              final mark = sub < metaBoard.length ? metaBoard[sub] : '';
+              if (mark.isEmpty) return const SizedBox.shrink();
+              final row = sub ~/ 3;
+              final col = sub % 3;
+              return Positioned(
+                left: col * subW,
+                top: row * subH,
+                width: subW,
+                height: subH,
+                child: Container(
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: mark == 'd'
+                        ? Colors.black.withValues(alpha: 0.06)
+                        : AppColors.accentSoft.withValues(alpha: 0.24),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: mark == 'd'
+                      ? const Center(
+                          child: Text(
+                            '=',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 44,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Opacity(
+                            opacity: 0.38,
+                            child: SizedBox.square(
+                              dimension: math.min(subW, subH) * 0.48,
+                              child: CustomPaint(
+                                painter: _SymbolPainter(
+                                  symbol: mark,
+                                  color: _symbolColor(mark),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              );
+            }),
+          );
+        },
+      ),
     );
   }
 }
@@ -2461,9 +2523,7 @@ class _GameActionsOverlayState extends State<_GameActionsOverlay>
                   : (widget.iOfferedDraw
                       ? context.l10n.gameDrawOffered
                       : context.l10n.gameOfferDraw),
-              onPressed: widget.iOfferedDraw
-                  ? null
-                  : widget.onDraw,
+              onPressed: widget.iOfferedDraw ? null : widget.onDraw,
             ),
           ),
         ],
@@ -2638,14 +2698,19 @@ class _ConfettiPainter extends CustomPainter {
 }
 
 class _GridPainter extends CustomPainter {
-  _GridPainter({required this.gridSize});
+  _GridPainter({required this.gridSize, this.ultimate = false});
   final int gridSize;
+  final bool ultimate;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = AppColors.accentSoft.withValues(alpha: 0.8)
       ..strokeWidth = gridSize <= 3 ? 3 : (gridSize == 4 ? 2.5 : 2)
+      ..style = PaintingStyle.stroke;
+    final thickPaint = Paint()
+      ..color = AppColors.accentStart.withValues(alpha: 0.45)
+      ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
     final w = size.width;
@@ -2657,18 +2722,19 @@ class _GridPainter extends CustomPainter {
       canvas.drawLine(
         Offset(cellW * i, 0),
         Offset(cellW * i, h),
-        paint,
+        ultimate && i % 3 == 0 ? thickPaint : paint,
       );
       canvas.drawLine(
         Offset(0, cellH * i),
         Offset(w, cellH * i),
-        paint,
+        ultimate && i % 3 == 0 ? thickPaint : paint,
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _GridPainter old) => old.gridSize != gridSize;
+  bool shouldRepaint(covariant _GridPainter old) =>
+      old.gridSize != gridSize || old.ultimate != ultimate;
 }
 
 class _TurnCountdown extends StatefulWidget {
@@ -2745,6 +2811,8 @@ class _AnimatedGameCell extends StatelessWidget {
     required this.isMyTurn,
     required this.canTap,
     this.isForbidden = false,
+    this.isActiveBoard = false,
+    this.isClosedBoard = false,
     this.onTap,
     this.pulse,
   });
@@ -2753,6 +2821,8 @@ class _AnimatedGameCell extends StatelessWidget {
   final bool isMyTurn;
   final bool canTap;
   final bool isForbidden;
+  final bool isActiveBoard;
+  final bool isClosedBoard;
   final VoidCallback? onTap;
   final AnimationController? pulse;
 
@@ -2775,9 +2845,13 @@ class _AnimatedGameCell extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   color: isForbidden
                       ? Colors.grey.withValues(alpha: 0.15)
-                      : canTap && isMyTurn
-                          ? AppColors.accentSoft.withValues(alpha: 0.25)
-                          : Colors.transparent,
+                      : isClosedBoard
+                          ? AppColors.textSecondary.withValues(alpha: 0.06)
+                          : isActiveBoard
+                              ? AppColors.accentStart.withValues(alpha: 0.14)
+                              : canTap && isMyTurn
+                                  ? AppColors.accentSoft.withValues(alpha: 0.25)
+                                  : Colors.transparent,
                 ),
                 child: pulse != null && canTap && isMyTurn
                     ? AnimatedBuilder(
@@ -2817,8 +2891,7 @@ class _SymbolWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (symbol.isEmpty) return const SizedBox.shrink();
-    final isX = symbol == 'x';
-    final color = isX ? AppColors.accentStart : AppColors.accentEnd;
+    final color = _symbolColor(symbol);
     return FittedBox(
       fit: BoxFit.contain,
       child: AnimatedSwitcher(
@@ -2826,18 +2899,33 @@ class _SymbolWidget extends StatelessWidget {
         child: CustomPaint(
           key: ValueKey(symbol),
           size: const Size.square(42),
-          painter: _SymbolPainter(isX: isX, color: color),
+          painter: _SymbolPainter(symbol: symbol, color: color),
         ),
       ),
     );
   }
 }
 
-/// Рисует X и O через Canvas — без шрифтов, чтобы не было placeholder при загрузке.
-class _SymbolPainter extends CustomPainter {
-  _SymbolPainter({required this.isX, required this.color});
+Color _symbolColor(String symbol) {
+  switch (symbol) {
+    case 'x':
+      return AppColors.accentStart;
+    case 'o':
+      return AppColors.accentEnd;
+    case 't':
+      return Colors.orange;
+    case 's':
+      return Colors.teal;
+    default:
+      return AppColors.textSecondary;
+  }
+}
 
-  final bool isX;
+/// Рисует X/O/T/S через Canvas — без шрифтов, чтобы не было placeholder.
+class _SymbolPainter extends CustomPainter {
+  _SymbolPainter({required this.symbol, required this.color});
+
+  final String symbol;
   final Color color;
 
   @override
@@ -2849,7 +2937,7 @@ class _SymbolPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    if (isX) {
+    if (symbol == 'x') {
       final padding = size.width * 0.15;
       canvas.drawLine(
         Offset(padding, padding),
@@ -2861,10 +2949,32 @@ class _SymbolPainter extends CustomPainter {
         Offset(padding, size.height - padding),
         paint,
       );
-    } else {
+    } else if (symbol == 'o') {
       canvas.drawCircle(
         Offset(size.width / 2, size.height / 2),
         (size.width - strokeWidth) / 2,
+        paint,
+      );
+    } else if (symbol == 't') {
+      final padding = size.width * 0.14;
+      final path = Path()
+        ..moveTo(size.width / 2, padding)
+        ..lineTo(size.width - padding, size.height - padding)
+        ..lineTo(padding, size.height - padding)
+        ..close();
+      canvas.drawPath(path, paint);
+    } else if (symbol == 's') {
+      final padding = size.width * 0.18;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(
+            padding,
+            padding,
+            size.width - padding * 2,
+            size.height - padding * 2,
+          ),
+          Radius.circular(size.width * 0.08),
+        ),
         paint,
       );
     }
@@ -2872,5 +2982,5 @@ class _SymbolPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SymbolPainter old) =>
-      old.isX != isX || old.color != color;
+      old.symbol != symbol || old.color != color;
 }
