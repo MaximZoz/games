@@ -334,10 +334,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _exitEditingImmediate();
     });
 
+    final phoneLandscape = isPhoneLandscape(context);
+    // Landscape на телефоне — шире; portrait/десктоп без изменений.
+    final profileMaxWidth = phoneLandscape ? 640.0 : 400.0;
+
     Widget scrollableBody(Widget child) {
       final framed = Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
+          constraints: BoxConstraints(maxWidth: profileMaxWidth),
           child: child,
         ),
       );
@@ -346,7 +350,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: EdgeInsets.fromLTRB(
+                phoneLandscape ? 10 : 16,
+                8,
+                phoneLandscape ? 10 : 16,
+                24,
+              ),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics(),
               ),
@@ -405,23 +414,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Widget buildProfile(ProfileExtra extra) {
                   if (mobile && _isEditing) {
                     // translucent edge: чекбокс у левого края остаётся кликабельным.
+                    final editForm = _ProfileEditForm(
+                      key: const ValueKey('mobile_edit_form'),
+                      user: user,
+                      profileExtra: extra,
+                      displayNameController: _displayNameController,
+                      focusNode: _displayNameFocus,
+                      onCancel: _cancelEditing,
+                      onSave: _saveProfile,
+                      compact: true,
+                    );
+                    // Landscape на телефоне — форма прокручивается (иначе обрезается).
+                    if (phoneLandscape) {
+                      return SwipeBackScope(
+                        onBack: _cancelEditing,
+                        opaqueEdge: false,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return SingleChildScrollView(
+                              padding:
+                                  const EdgeInsets.fromLTRB(12, 4, 12, 10),
+                              physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics(),
+                              ),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight - 14,
+                                  maxWidth: profileMaxWidth,
+                                ),
+                                child: editForm,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }
                     return SwipeBackScope(
                       onBack: _cancelEditing,
                       opaqueEdge: false,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-                        child: SizedBox.expand(
-                          child: _ProfileEditForm(
-                            key: const ValueKey('mobile_edit_form'),
-                            user: user,
-                            profileExtra: extra,
-                            displayNameController: _displayNameController,
-                            focusNode: _displayNameFocus,
-                            onCancel: _cancelEditing,
-                            onSave: _saveProfile,
-                            compact: true,
-                          ),
-                        ),
+                        child: SizedBox.expand(child: editForm),
                       ),
                     );
                   }
@@ -636,16 +669,18 @@ class _ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final phoneLandscape = isPhoneLandscape(context);
+    final cardMaxWidth = phoneLandscape ? 640.0 : 460.0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
+            constraints: BoxConstraints(maxWidth: cardMaxWidth),
             child: AnimatedBorderBox(
               key: cardKey,
               padding: EdgeInsets.symmetric(
-                horizontal: 18,
+                horizontal: phoneLandscape ? 16 : 18,
                 vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
               ),
               child: AnimatedSwitcher(

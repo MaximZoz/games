@@ -151,9 +151,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
 
     final isDesktop = isWide(context);
+    final phoneLandscape = isPhoneLandscape(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
-    final contentPadding = isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0);
+    final contentPadding = phoneLandscape
+        ? 12.0
+        : (isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0));
     final isOffline = ref.watch(isOfflineProvider);
     // При входе в офлайн включаем ⇄ (чередование первого хода с ботом).
     // Локально — без persist в онлайн-настройки pie-rule.
@@ -731,19 +734,22 @@ class _GamesPageContent extends StatelessWidget {
                 children: [
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      if (isDesktop) {
+                      final phoneLandscape = isPhoneLandscape(context);
+                      if (isDesktop || phoneLandscape) {
                         const gap = 16.0;
-                        const minCardWidth = 360.0;
-                        const maxCardWidth = 480.0;
+                        final minCardWidth = phoneLandscape ? 280.0 : 360.0;
+                        final maxCardWidth = phoneLandscape ? 340.0 : 480.0;
                         final availableWidth = constraints.maxWidth;
-                        final crossAxisCount =
-                            (availableWidth / (minCardWidth + gap))
+                        final crossAxisCount = phoneLandscape
+                            ? 1
+                            : (availableWidth / (minCardWidth + gap))
                                 .floor()
                                 .clamp(1, 4);
                         final rawWidth =
                             (availableWidth - (crossAxisCount - 1) * gap) /
                                 crossAxisCount;
-                        final cardWidth = rawWidth.clamp(minCardWidth, maxCardWidth);
+                        final cardWidth =
+                            rawWidth.clamp(minCardWidth, maxCardWidth);
                         return SizedBox(
                           width: availableWidth,
                           child: Align(

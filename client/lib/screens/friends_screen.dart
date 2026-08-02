@@ -1044,7 +1044,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final hasMore = visibleCount < items.length;
     final totalCount = visibleCount + (hasMore ? 1 : 0);
 
-    final useGrid = isWide(context);
+    // Плитки на десктопе и на телефоне в landscape (portrait — список).
+    final useGrid = isWide(context) || isPhoneLandscape(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         if (useGrid) {

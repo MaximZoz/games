@@ -11,6 +11,7 @@ class HomeActionCard extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     this.badgeCount = 0,
+    this.dense = false,
   });
 
   final IconData icon;
@@ -18,31 +19,40 @@ class HomeActionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
   final int badgeCount;
+  /// Компактный вид (телефон landscape на главной).
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = dense ? 40.0 : 48.0;
+    final padH = dense ? 12.0 : 18.0;
+    final padV = dense ? 10.0 : 16.0;
     return AnimatedBorderBox(
       padding: EdgeInsets.zero,
-      borderRadius: 22,
+      borderRadius: dense ? 18 : 22,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(dense ? 16 : 20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: iconSize,
+                  height: iconSize,
                   decoration: BoxDecoration(
                     color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(dense ? 12 : 15),
                   ),
-                  child: Icon(icon, color: AppColors.accentStart, size: 26),
+                  child: Icon(
+                    icon,
+                    color: AppColors.accentStart,
+                    size: dense ? 22 : 26,
+                  ),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: dense ? 10 : 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,9 +62,9 @@ class HomeActionCard extends StatelessWidget {
                           Flexible(
                             child: Text(
                               title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textPrimary,
-                                fontSize: 17,
+                                fontSize: dense ? 15 : 17,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -82,20 +92,21 @@ class HomeActionCard extends StatelessWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: dense ? 2 : 3),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
-                          fontSize: 13,
+                          fontSize: dense ? 12 : 13,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.textSecondary,
+                  size: dense ? 20 : 24,
                 ),
               ],
             ),

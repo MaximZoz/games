@@ -470,227 +470,170 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final rewardBronze = game.stakeBronze;
           final isDesktop = isWide(context);
           final narrow = isNarrow(context);
-          final contentPadding = narrow ? 12.0 : 24.0;
-          final verticalSpacing = narrow ? 10.0 : 20.0;
+          final phoneLandscape = isPhoneLandscape(context);
+          final contentPadding = phoneLandscape ? 8.0 : (narrow ? 12.0 : 24.0);
+          final verticalSpacing = phoneLandscape ? 6.0 : (narrow ? 10.0 : 20.0);
+
+          Widget opponentCard() => _OpponentCard(
+                opponentId: opponentId,
+                displayName: opponentName,
+                avatarKind: opponentAvatarKind,
+                avatarValue: opponentAvatarValue,
+                frameCode: opponentFrameCode,
+                frameColor: opponentFrameColor,
+                isBot: opponentId.startsWith('bot:'),
+                friendsSnapshot:
+                    ref.watch(friendsSnapshotProvider).valueOrNull,
+                chatsList:
+                    ref.watch(chatsListProvider).valueOrNull ?? const [],
+                onInfoTap: () => _showOpponentInfo(
+                  context,
+                  opponentId: opponentId,
+                  displayName: opponentName,
+                  avatarKind: opponentAvatarKind,
+                  avatarValue: opponentAvatarValue,
+                ),
+                onMessageTap: () =>
+                    _openChat(context, opponentId, opponentName),
+                onAddFriendTap: (requestId) => _addFriend(
+                    context, opponentId, opponentName,
+                    requestId: requestId),
+              );
+
+          Widget statusBlock() => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _StatusWithReward(
+                    statusText: statusText,
+                    showReward: showRewardChip,
+                    rewardBronze: rewardBronze,
+                    rewardKey: _winRewardKey,
+                    fontSize: narrow ? 15 : null,
+                  ),
+                  if (showSwapButton)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: OutlinedButton.icon(
+                        onPressed: () => _swapSides(),
+                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                        label: Text(context.l10n.gameSwapSidesAction),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.accentStart,
+                          side: BorderSide(
+                              color:
+                                  AppColors.accentStart.withValues(alpha: 0.6)),
+                        ),
+                      ),
+                    ),
+                  if (!isOver &&
+                      game.turnTimeSec > 0 &&
+                      game.turnDeadline != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: _TurnCountdown(
+                        turnDeadline: game.turnDeadline!,
+                        isMyTurn: isMyTurn,
+                        onExpired: _onTurnTimeExpired,
+                      ),
+                    ),
+                  if (isOver) ...[
+                    SizedBox(height: verticalSpacing * 0.8),
+                    _RematchSection(
+                      rematchLobbyId: _rematchLobbyId,
+                      rematchDeclined: _rematchDeclined,
+                      iDeclinedRematch: _iDeclinedRematch,
+                      isRematching: _isRematching,
+                      isAcceptingRematch: _isAcceptingRematch,
+                      isFindingGame: _isFindingGame,
+                      opponentId: opponentId,
+                      invites: ref.watch(gameInvitesProvider),
+                      onRematch: () => _rematch(context),
+                      onAccept: _acceptRematch,
+                      onDecline: _declineRematch,
+                      onCancelWait: _cancelRematchWait,
+                      onFindGame: () => _findGame(context),
+                      compact: true,
+                    ),
+                  ],
+                ],
+              );
+
+          Widget board() => Center(
+                child: _GameBoard(
+                  game: game,
+                  isMyTurn: isMyTurn,
+                  isOver: isOver,
+                  isMakingMove: _isMakingMove,
+                  onMove: _makeMove,
+                  pulseController: _pulseController,
+                  compact: narrow,
+                ),
+              );
+
+          // Телефон landscape: доска слева, статус и кнопки справа —
+          // «Повторить» / «Другой соперник» не обрезаются снизу.
+          final Widget bodyLayout;
+          if (phoneLandscape) {
+            bodyLayout = Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(flex: 5, child: board()),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 4,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        opponentCard(),
+                        SizedBox(height: verticalSpacing),
+                        statusBlock(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else if (isDesktop) {
+            bodyLayout = Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                opponentCard(),
+                SizedBox(height: verticalSpacing),
+                statusBlock(),
+                SizedBox(height: verticalSpacing),
+                Expanded(child: board()),
+              ],
+            );
+          } else {
+            bodyLayout = Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        opponentCard(),
+                        SizedBox(height: verticalSpacing),
+                        statusBlock(),
+                        SizedBox(height: verticalSpacing),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(child: board()),
+              ],
+            );
+          }
+
           return Stack(
             fit: StackFit.expand,
             children: [
               SafeArea(
                 child: Padding(
                   padding: EdgeInsets.all(contentPadding),
-                  child: (isDesktop
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _OpponentCard(
-                              opponentId: opponentId,
-                              displayName: opponentName,
-                              avatarKind: opponentAvatarKind,
-                              avatarValue: opponentAvatarValue,
-                              frameCode: opponentFrameCode,
-                              frameColor: opponentFrameColor,
-                              isBot: opponentId.startsWith('bot:'),
-                              friendsSnapshot: ref
-                                  .watch(friendsSnapshotProvider)
-                                  .valueOrNull,
-                              chatsList:
-                                  ref.watch(chatsListProvider).valueOrNull ??
-                                      const [],
-                              onInfoTap: () => _showOpponentInfo(
-                                context,
-                                opponentId: opponentId,
-                                displayName: opponentName,
-                                avatarKind: opponentAvatarKind,
-                                avatarValue: opponentAvatarValue,
-                              ),
-                              onMessageTap: () =>
-                                  _openChat(context, opponentId, opponentName),
-                              onAddFriendTap: (requestId) => _addFriend(
-                                  context, opponentId, opponentName,
-                                  requestId: requestId),
-                            ),
-                            SizedBox(height: verticalSpacing),
-                            _StatusWithReward(
-                              statusText: statusText,
-                              showReward: showRewardChip,
-                              rewardBronze: rewardBronze,
-                              rewardKey: _winRewardKey,
-                              fontSize: narrow ? 15 : null,
-                            ),
-                            if (showSwapButton)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _swapSides(),
-                                  icon: const Icon(Icons.swap_horiz_rounded,
-                                      size: 18),
-                                  label: Text(context.l10n.gameSwapSidesAction),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.accentStart,
-                                    side: BorderSide(
-                                        color: AppColors.accentStart
-                                            .withValues(alpha: 0.6)),
-                                  ),
-                                ),
-                              ),
-                            if (!isOver &&
-                                game.turnTimeSec > 0 &&
-                                game.turnDeadline != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: _TurnCountdown(
-                                  turnDeadline: game.turnDeadline!,
-                                  isMyTurn: isMyTurn,
-                                  onExpired: _onTurnTimeExpired,
-                                ),
-                              ),
-                            if (isOver) ...[
-                              SizedBox(height: verticalSpacing * 0.8),
-                              _RematchSection(
-                                rematchLobbyId: _rematchLobbyId,
-                                rematchDeclined: _rematchDeclined,
-                                iDeclinedRematch: _iDeclinedRematch,
-                                isRematching: _isRematching,
-                                isAcceptingRematch: _isAcceptingRematch,
-                                isFindingGame: _isFindingGame,
-                                opponentId: opponentId,
-                                invites: ref.watch(gameInvitesProvider),
-                                onRematch: () => _rematch(context),
-                                onAccept: _acceptRematch,
-                                onDecline: _declineRematch,
-                                onCancelWait: _cancelRematchWait,
-                                onFindGame: () => _findGame(context),
-                                compact: narrow,
-                              ),
-                            ],
-                            SizedBox(height: verticalSpacing),
-                            Expanded(
-                              child: Center(
-                                child: _GameBoard(
-                                  game: game,
-                                  isMyTurn: isMyTurn,
-                                  isOver: isOver,
-                                  isMakingMove: _isMakingMove,
-                                  onMove: _makeMove,
-                                  pulseController: _pulseController,
-                                  compact: narrow,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Flexible(
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _OpponentCard(
-                                      opponentId: opponentId,
-                                      displayName: opponentName,
-                                      avatarKind: opponentAvatarKind,
-                                      avatarValue: opponentAvatarValue,
-                                      frameCode: opponentFrameCode,
-                                      frameColor: opponentFrameColor,
-                                      isBot: opponentId.startsWith('bot:'),
-                                      friendsSnapshot: ref
-                                          .watch(friendsSnapshotProvider)
-                                          .valueOrNull,
-                                      chatsList: ref
-                                              .watch(chatsListProvider)
-                                              .valueOrNull ??
-                                          const [],
-                                      onInfoTap: () => _showOpponentInfo(
-                                        context,
-                                        opponentId: opponentId,
-                                        displayName: opponentName,
-                                        avatarKind: opponentAvatarKind,
-                                        avatarValue: opponentAvatarValue,
-                                      ),
-                                      onMessageTap: () => _openChat(
-                                          context, opponentId, opponentName),
-                                      onAddFriendTap: (requestId) => _addFriend(
-                                          context, opponentId, opponentName,
-                                          requestId: requestId),
-                                    ),
-                                    SizedBox(height: verticalSpacing),
-                                    _StatusWithReward(
-                                      statusText: statusText,
-                                      showReward: showRewardChip,
-                                      rewardBronze: rewardBronze,
-                                      rewardKey: _winRewardKey,
-                                      fontSize: narrow ? 15 : null,
-                                    ),
-                                    if (showSwapButton)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 12),
-                                        child: OutlinedButton.icon(
-                                          onPressed: () => _swapSides(),
-                                          icon: const Icon(
-                                              Icons.swap_horiz_rounded,
-                                              size: 18),
-                                          label: Text(context.l10n.gameSwapSidesAction),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor:
-                                                AppColors.accentStart,
-                                            side: BorderSide(
-                                                color: AppColors.accentStart
-                                                    .withValues(alpha: 0.6)),
-                                          ),
-                                        ),
-                                      ),
-                                    if (!isOver &&
-                                        game.turnTimeSec > 0 &&
-                                        game.turnDeadline != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        child: _TurnCountdown(
-                                          turnDeadline: game.turnDeadline!,
-                                          isMyTurn: isMyTurn,
-                                          onExpired: _onTurnTimeExpired,
-                                        ),
-                                      ),
-                                    if (isOver) ...[
-                                      SizedBox(height: verticalSpacing * 0.8),
-                                      _RematchSection(
-                                        rematchLobbyId: _rematchLobbyId,
-                                        rematchDeclined: _rematchDeclined,
-                                        iDeclinedRematch: _iDeclinedRematch,
-                                        isRematching: _isRematching,
-                                        isAcceptingRematch: _isAcceptingRematch,
-                                        isFindingGame: _isFindingGame,
-                                        opponentId: opponentId,
-                                        invites: ref.watch(gameInvitesProvider),
-                                        onRematch: () => _rematch(context),
-                                        onAccept: _acceptRematch,
-                                        onDecline: _declineRematch,
-                                        onCancelWait: _cancelRematchWait,
-                                        onFindGame: () => _findGame(context),
-                                        compact: narrow,
-                                      ),
-                                    ],
-                                    SizedBox(height: verticalSpacing),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Center(
-                                child: _GameBoard(
-                                  game: game,
-                                  isMyTurn: isMyTurn,
-                                  isOver: isOver,
-                                  isMakingMove: _isMakingMove,
-                                  onMove: _makeMove,
-                                  pulseController: _pulseController,
-                                  compact: narrow,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )),
+                  child: bodyLayout,
                 ),
               ),
               if (iWon)

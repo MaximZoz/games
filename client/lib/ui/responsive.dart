@@ -17,3 +17,9 @@ bool isNarrow(BuildContext context) {
 bool isWide(BuildContext context) {
   return !isNarrow(context);
 }
+
+/// Телефон в горизонтальной ориентации (не планшет/десктоп).
+bool isPhoneLandscape(BuildContext context) {
+  final size = MediaQuery.sizeOf(context);
+  return isNarrow(context) && size.width > size.height;
+}
