@@ -678,6 +678,7 @@
   "chatBackToGame": "Takaisin peliin",
   "chatBackToChats": "Takaisin chatteihin",
   "chatActions": "Chatin toiminnot",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Keskustelun loppuun",
   "chatReplyingTo": "Vastaus käyttäjälle {name}",
   "@chatReplyingTo": {

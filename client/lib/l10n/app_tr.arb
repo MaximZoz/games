@@ -678,6 +678,7 @@
   "chatBackToGame": "Oyuna dön",
   "chatBackToChats": "Sohbetlere dön",
   "chatActions": "Sohbet işlemleri",
+  "chatAutoTranslate": "Otomatik çeviri",
   "chatScrollToEnd": "Konuşmanın sonuna git",
   "chatReplyingTo": "{name} yanıtlanıyor",
   "@chatReplyingTo": {

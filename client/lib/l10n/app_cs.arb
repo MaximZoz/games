@@ -678,6 +678,7 @@
   "chatBackToGame": "Zpět do hry",
   "chatBackToChats": "Zpět k chatům",
   "chatActions": "Akce chatu",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Na konec konverzace",
   "chatReplyingTo": "Odpověď pro {name}",
   "@chatReplyingTo": {

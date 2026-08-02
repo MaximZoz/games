@@ -1298,6 +1298,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get chatActions => 'Chathandlinger';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Til slutningen af samtalen';
 
   @override

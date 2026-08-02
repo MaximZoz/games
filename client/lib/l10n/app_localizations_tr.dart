@@ -1298,6 +1298,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatActions => 'Sohbet işlemleri';
 
   @override
+  String get chatAutoTranslate => 'Otomatik çeviri';
+
+  @override
   String get chatScrollToEnd => 'Konuşmanın sonuna git';
 
   @override

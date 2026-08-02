@@ -678,6 +678,7 @@
   "chatBackToGame": "게임으로 돌아가기",
   "chatBackToChats": "채팅으로 돌아가기",
   "chatActions": "채팅 작업",
+  "chatAutoTranslate": "자동 번역",
   "chatScrollToEnd": "대화 끝으로",
   "chatReplyingTo": "{name}님에게 답장",
   "@chatReplyingTo": {

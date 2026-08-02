@@ -678,6 +678,7 @@
   "chatBackToGame": "Назад у гульню",
   "chatBackToChats": "Назад да чатаў",
   "chatActions": "Дзеянні з чатам",
+  "chatAutoTranslate": "Аўтапераклад",
   "chatScrollToEnd": "У канец перапіскі",
   "chatReplyingTo": "У адказ {name}",
   "@chatReplyingTo": {

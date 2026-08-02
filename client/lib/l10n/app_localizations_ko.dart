@@ -1298,6 +1298,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chatActions => '채팅 작업';
 
   @override
+  String get chatAutoTranslate => '자동 번역';
+
+  @override
   String get chatScrollToEnd => '대화 끝으로';
 
   @override

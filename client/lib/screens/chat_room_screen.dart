@@ -42,6 +42,7 @@ import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
   const ChatRoomScreen({
@@ -132,6 +133,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final Map<String, String> _pendingDeliveredAtByID = <String, String>{};
   final Map<String, String> _pendingReadAtByID = <String, String>{};
 
+  /// Автоперевод входящих сообщений (локальный переключатель на чат).
+  bool _autoTranslate = false;
+  final Map<String, String> _translations = <String, String>{};
+  bool _translateInFlight = false;
+  String? _peerLanguageHint;
+
+  String get _autoTranslatePrefsKey => 'chat_auto_translate_${widget.chatID}';
+
   @override
   void initState() {
     super.initState();
@@ -139,6 +148,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _textController.addListener(_onComposerTextChanged);
     _scrollController.addListener(_onMessagesScroll);
+    unawaited(_restoreAutoTranslatePref());
     _loadMessages(initial: true);
     unawaited(_loadCapabilities());
     // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
@@ -165,11 +175,83 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _pasteSuggestionVisible = false;
       _messageKeys.clear();
       _messageIDs.clear();
+      _translations.clear();
+      _autoTranslate = false;
+      _peerLanguageHint = null;
+      unawaited(_restoreAutoTranslatePref());
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_maybeShowPasteSuggestion());
       });
+    }
+  }
+
+  Future<void> _restoreAutoTranslatePref() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool(_autoTranslatePrefsKey) ?? false;
+    if (!mounted) return;
+    setState(() => _autoTranslate = enabled);
+    if (enabled) unawaited(_ensureTranslations());
+  }
+
+  Future<void> _setAutoTranslate(bool enabled) async {
+    setState(() {
+      _autoTranslate = enabled;
+      if (!enabled) _translations.clear();
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoTranslatePrefsKey, enabled);
+    if (enabled) unawaited(_ensureTranslations());
+  }
+
+  bool _isTranslatableBody(String body) {
+    final t = body.trim();
+    if (t.isEmpty) return false;
+    if (isAnimatedEmojiMessage(t) ||
+        isGiftCollectionMessage(t) ||
+        isCoinsCreditMessage(t) ||
+        isInviteLobbyMessage(t)) {
+      return false;
+    }
+    return true;
+  }
+
+  String _displayBodyFor(ChatMessageItem message, {required bool mine}) {
+    if (!_autoTranslate || mine) return message.body;
+    return _translations[message.id] ?? message.body;
+  }
+
+  Future<void> _ensureTranslations({String? onlyMessageID}) async {
+    if (!_autoTranslate || _translateInFlight || !mounted) return;
+    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    if (meID == null || meID.isEmpty) return;
+    final targetLang =
+        effectiveAppLocale(ref.read(appLocaleProvider)).languageCode;
+    final items = <({String id, String text})>[];
+    for (final m in _messages) {
+      if (m.senderUserID == meID) continue;
+      if (onlyMessageID != null && m.id != onlyMessageID) continue;
+      if (_translations.containsKey(m.id)) continue;
+      if (!_isTranslatableBody(m.body)) continue;
+      items.add((id: m.id, text: m.body));
+    }
+    if (items.isEmpty) return;
+    _translateInFlight = true;
+    try {
+      final mapped = await ref.read(chatsRepositoryProvider).translateMessages(
+            items: items,
+            targetLang: targetLang,
+            sourceLang: _peerLanguageHint,
+            chatID: widget.chatID,
+          );
+      if (!mounted || !_autoTranslate) return;
+      if (mapped.isEmpty) return;
+      setState(() => _translations.addAll(mapped));
+    } catch (_) {
+      // оставляем оригинал
+    } finally {
+      _translateInFlight = false;
     }
   }
 
@@ -1120,6 +1202,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           }
         }());
       }
+      if (_autoTranslate) {
+        unawaited(_ensureTranslations());
+      }
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -1199,6 +1284,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _loadingOlder = false;
         _hasMoreOlder = older.length >= _messagesPageSize;
       });
+      if (_autoTranslate && deduplicated.isNotEmpty) {
+        unawaited(_ensureTranslations());
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingOlder = false);
@@ -1400,7 +1488,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       setState(() {
         _messages = updated;
         _messageIDs.add(withPending.id);
+        // Текст мог измениться — сбросить кэш перевода.
+        if (existing.body != merged.body) {
+          _translations.remove(merged.id);
+        }
       });
+      if (_autoTranslate) {
+        unawaited(_ensureTranslations(onlyMessageID: merged.id));
+      }
       return;
     }
 
@@ -1408,6 +1503,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _messages = [..._messages, withPending];
       _messageIDs.add(withPending.id);
     });
+    if (_autoTranslate) {
+      unawaited(_ensureTranslations(onlyMessageID: withPending.id));
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -2121,9 +2219,44 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             },
             icon: const Icon(Icons.more_vert_rounded),
           ),
+          if (_shouldShowAutoTranslate(peerUser))
+            Tooltip(
+              message: context.l10n.chatAutoTranslate,
+              child: IconButton(
+                onPressed: () => unawaited(_setAutoTranslate(!_autoTranslate)),
+                icon: Icon(
+                  Icons.translate_rounded,
+                  color: _autoTranslate
+                      ? AppColors.accentStart
+                      : AppColors.textPrimary,
+                  shadows: _autoTranslate
+                      ? const [
+                          Shadow(
+                            color: Color(0x996366F1),
+                            blurRadius: 10,
+                          ),
+                          Shadow(
+                            color: Color(0x668B5CF6),
+                            blurRadius: 16,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  bool _shouldShowAutoTranslate(ChatUserItem? peerUser) {
+    final peerLang = (peerUser?.preferredLanguage ?? _peerLanguageHint ?? '')
+        .trim()
+        .toLowerCase();
+    if (peerLang.isEmpty) return false;
+    final myLang =
+        effectiveAppLocale(ref.read(appLocaleProvider)).languageCode;
+    return peerLang != myLang;
   }
 
   @override
@@ -2158,6 +2291,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     // Нужен watch: пункты меню «заявка» / «убрать из друзей» зависят от снимка.
     ref.watch(friendsSnapshotProvider);
+    ref.watch(appLocaleProvider);
     final media = MediaQuery.of(context);
     final narrowLandscape =
         isNarrow(context) && media.size.width > media.size.height;
@@ -2170,6 +2304,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         peerUser = item.user;
         break;
       }
+    }
+    final peerLang = (peerUser?.preferredLanguage ?? '').trim();
+    if (peerLang.isNotEmpty && peerLang != _peerLanguageHint) {
+      _peerLanguageHint = peerLang;
     }
     final title = peerUser == null ? routeTitle : _peerTitle(peerUser);
     final peerPresence = peerUser != null ? presence[peerUser.id] : null;
@@ -2527,7 +2665,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 const SizedBox(height: 6),
                             ],
                             if (message.body.trim().isNotEmpty)
-                              _ChatMessageBody(body: message.body),
+                              _ChatMessageBody(
+                                body: _displayBodyFor(message, mine: mine),
+                              ),
                             const SizedBox(height: 4),
                             Align(
                               alignment: Alignment.centerRight,

@@ -730,6 +730,7 @@
   "chatBackToGame": "Back to game",
   "chatBackToChats": "Back to chats",
   "chatActions": "Chat actions",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Scroll to end",
   "chatReplyingTo": "Replying to {name}",
   "@chatReplyingTo": {

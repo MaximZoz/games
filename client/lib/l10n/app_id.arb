@@ -678,6 +678,7 @@
   "chatBackToGame": "Kembali ke permainan",
   "chatBackToChats": "Kembali ke obrolan",
   "chatActions": "Tindakan obrolan",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Ke akhir percakapan",
   "chatReplyingTo": "Membalas {name}",
   "@chatReplyingTo": {

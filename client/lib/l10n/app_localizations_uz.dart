@@ -1298,6 +1298,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get chatActions => 'Chat amallari';
 
   @override
+  String get chatAutoTranslate => 'Avtomatik tarjima';
+
+  @override
   String get chatScrollToEnd => 'Suhbat oxiriga';
 
   @override

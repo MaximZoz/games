@@ -678,6 +678,7 @@
   "chatBackToGame": "O‘yinga qaytish",
   "chatBackToChats": "Chatlarga qaytish",
   "chatActions": "Chat amallari",
+  "chatAutoTranslate": "Avtomatik tarjima",
   "chatScrollToEnd": "Suhbat oxiriga",
   "chatReplyingTo": "{name} ga javob",
   "@chatReplyingTo": {

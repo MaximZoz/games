@@ -1298,6 +1298,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get chatActions => 'Chatin toiminnot';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Keskustelun loppuun';
 
   @override

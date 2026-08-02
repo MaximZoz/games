@@ -21,6 +21,8 @@ class ChatUserItem {
   final bool? isOnline;
   final String? lastSeenAt;
   final bool isSupport;
+  /// Язык интерфейса собеседника (из настроек на сервере).
+  final String? preferredLanguage;
 
   ChatUserItem({
     required this.id,
@@ -35,6 +37,7 @@ class ChatUserItem {
     this.isOnline,
     this.lastSeenAt,
     this.isSupport = false,
+    this.preferredLanguage,
   });
 
   ChatUserItem copyWith({
@@ -50,6 +53,7 @@ class ChatUserItem {
     bool? isOnline,
     String? lastSeenAt,
     bool? isSupport,
+    String? preferredLanguage,
   }) {
     return ChatUserItem(
       id: id ?? this.id,
@@ -64,6 +68,7 @@ class ChatUserItem {
       isOnline: isOnline ?? this.isOnline,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       isSupport: isSupport ?? this.isSupport,
+      preferredLanguage: preferredLanguage ?? this.preferredLanguage,
     );
   }
 
@@ -79,6 +84,7 @@ class ChatUserItem {
       frameColor: json['frame_color'] as String?,
       frameCode: json['frame_code'] as String?,
       isSupport: json['is_support'] as bool? ?? false,
+      preferredLanguage: (json['preferred_language'] as String?)?.trim(),
     );
   }
 }
@@ -570,6 +576,51 @@ class ChatsRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return body['updated'] as int? ?? 0;
+  }
+
+  /// Перевод тел сообщений на [targetLang] (sourceLang — подсказка языка автора).
+  Future<Map<String, String>> translateMessages({
+    required List<({String id, String text})> items,
+    required String targetLang,
+    String? sourceLang,
+    String? chatID,
+  }) async {
+    if (items.isEmpty) return const {};
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/chats/translate'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'items': [
+            for (final it in items) {'id': it.id, 'text': it.text},
+          ],
+          'target_lang': targetLang,
+          if (sourceLang != null && sourceLang.isNotEmpty)
+            'source_lang': sourceLang,
+          if (chatID != null && chatID.isNotEmpty) 'chat_id': chatID,
+        }),
+        operation: 'ChatsRepository.translateMessages',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final rawItems = body['items'];
+    final out = <String, String>{};
+    if (rawItems is List) {
+      for (final e in rawItems) {
+        if (e is! Map) continue;
+        final id = e['id']?.toString() ?? '';
+        final text = e['text']?.toString() ?? '';
+        if (id.isEmpty) continue;
+        out[id] = text;
+      }
+    }
+    return out;
   }
 
   /// Возможности отправки в чат (учитывает «сообщения только от друзей» у собеседника).

@@ -1298,6 +1298,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatActions => 'إجراءات المحادثة';
 
   @override
+  String get chatAutoTranslate => 'ترجمة تلقائية';
+
+  @override
   String get chatScrollToEnd => 'إلى نهاية المحادثة';
 
   @override

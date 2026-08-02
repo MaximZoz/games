@@ -1298,6 +1298,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatActions => 'Chattåtgärder';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Till slutet av konversationen';
 
   @override

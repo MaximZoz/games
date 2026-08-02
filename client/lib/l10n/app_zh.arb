@@ -678,6 +678,7 @@
   "chatBackToGame": "返回游戏",
   "chatBackToChats": "返回聊天",
   "chatActions": "聊天操作",
+  "chatAutoTranslate": "自动翻译",
   "chatScrollToEnd": "转到对话末尾",
   "chatReplyingTo": "回复 {name}",
   "@chatReplyingTo": {
