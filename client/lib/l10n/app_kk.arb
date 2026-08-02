@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Қолдау қолжетімсіз",
   "supportOpenFailed": "Қолдау чатын ашу мүмкін болмады",
   "coinsGrantedTitle": "Сізге {amount} тиын есептелді",
-  "coinsDeductedTitle": "{amount} тиын шегерілді"
+  "coinsDeductedTitle": "{amount} тиын шегерілді",
+  "coinsCreditCardTitle": "Сізге тиындар есептелді",
+  "coinsClaim": "Алу"
 }

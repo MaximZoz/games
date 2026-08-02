@@ -1749,4 +1749,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount सिक्के काटे गए';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'आपको सिक्के जमा किए गए';
+
+  @override
+  String get coinsClaim => 'प्राप्त करें';
 }

@@ -1749,4 +1749,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount kolikkoa vähennetty';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Sinulle on hyvitetty kolikoita';
+
+  @override
+  String get coinsClaim => 'Nouda';
 }

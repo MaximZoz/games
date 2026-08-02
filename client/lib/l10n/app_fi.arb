@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Tuki ei ole käytettävissä",
   "supportOpenFailed": "Tukichatin avaaminen epäonnistui",
   "coinsGrantedTitle": "Sinulle on hyvitetty {amount} kolikkoa",
-  "coinsDeductedTitle": "{amount} kolikkoa vähennetty"
+  "coinsDeductedTitle": "{amount} kolikkoa vähennetty",
+  "coinsCreditCardTitle": "Sinulle on hyvitetty kolikoita",
+  "coinsClaim": "Nouda"
 }

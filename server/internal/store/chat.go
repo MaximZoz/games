@@ -34,10 +34,12 @@ var (
 	)
 )
 
-// IsRestrictedChatMessageAllowed — смайлик или подарок коллекции (не свободный текст).
+// IsRestrictedChatMessageAllowed — смайлик, подарок или карточка начисления (не свободный текст).
 func IsRestrictedChatMessageAllowed(body string) bool {
 	text := strings.TrimSpace(body)
-	return animatedEmojiTokenRe.MatchString(text) || giftCollectionTokenRe.MatchString(text)
+	return animatedEmojiTokenRe.MatchString(text) ||
+		giftCollectionTokenRe.MatchString(text) ||
+		IsCoinsCreditMessage(text)
 }
 
 // InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру».

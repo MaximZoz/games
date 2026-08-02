@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Podpora není dostupná",
   "supportOpenFailed": "Nepodařilo se otevřít chat s podporou",
   "coinsGrantedTitle": "Bylo vám připsáno {amount} mincí",
-  "coinsDeductedTitle": "Bylo odečteno {amount} mincí"
+  "coinsDeductedTitle": "Bylo odečteno {amount} mincí",
+  "coinsCreditCardTitle": "Byly vám připsány mince",
+  "coinsClaim": "Vyzvednout"
 }

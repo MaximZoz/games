@@ -3340,6 +3340,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Списано {amount} монет'**
   String coinsDeductedTitle(int amount);
+
+  /// No description provided for @coinsCreditCardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вам начислены монеты'**
+  String get coinsCreditCardTitle;
+
+  /// No description provided for @coinsClaim.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забрать'**
+  String get coinsClaim;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

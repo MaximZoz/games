@@ -2,14 +2,23 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // ErrInsufficientFunds returned when user doesn't have enough balance.
 var ErrInsufficientFunds = fmt.Errorf("insufficient funds")
+
+// Ошибки админского начисления с «Забрать».
+var (
+	ErrAdminGrantNotFound = errors.New("admin coin grant not found")
+	ErrAdminGrantClaimed  = errors.New("admin coin grant already claimed")
+	ErrAdminGrantInvalid  = errors.New("admin coin grant invalid")
+)
 
 // GetBalance returns user's balance in bronze coins.
 func GetBalance(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (int, error) {
@@ -73,12 +82,119 @@ func AddCoinsSigned(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, a
 }
 
 // RecordAdminCoinGrant фиксирует операцию начисления/списания монет админом (аудит).
-func RecordAdminCoinGrant(ctx context.Context, pool *pgxpool.Pool, userID, adminID uuid.UUID, amountBronze int, reason string) error {
+// Для мгновенного списания (amount < 0) сразу ставит claimed_at = now().
+func RecordAdminCoinGrant(ctx context.Context, pool *pgxpool.Pool, userID, adminID uuid.UUID, amountBronze int, reason string) (uuid.UUID, error) {
+	var id uuid.UUID
+	err := pool.QueryRow(ctx, `
+		INSERT INTO admin_coin_grants (user_id, admin_id, amount_bronze, reason, claimed_at)
+		VALUES (
+			$1, $2, $3, $4,
+			CASE WHEN $3 < 0 THEN now() ELSE NULL END
+		)
+		RETURNING id
+	`, userID, adminID, amountBronze, reason).Scan(&id)
+	return id, err
+}
+
+// AttachAdminCoinGrantMessage привязывает сообщение чата к отложенному начислению.
+func AttachAdminCoinGrantMessage(ctx context.Context, pool *pgxpool.Pool, grantID, messageID uuid.UUID) error {
 	_, err := pool.Exec(ctx, `
-		INSERT INTO admin_coin_grants (user_id, admin_id, amount_bronze, reason)
-		VALUES ($1, $2, $3, $4)
-	`, userID, adminID, amountBronze, reason)
+		UPDATE admin_coin_grants
+		SET chat_message_id = $2
+		WHERE id = $1
+	`, grantID, messageID)
 	return err
+}
+
+// ClaimAdminCoinGrantResult — итог «Забрать» по карточке поддержки.
+type ClaimAdminCoinGrantResult struct {
+	AmountBronze  int
+	BalanceBronze int
+	MessageID     *uuid.UUID
+	MessageBody   string
+	ChatID        *uuid.UUID
+}
+
+// ClaimAdminCoinGrant зачисляет отложенные монеты и помечает карточку claimed.
+func ClaimAdminCoinGrant(ctx context.Context, pool *pgxpool.Pool, userID, grantID uuid.UUID) (ClaimAdminCoinGrantResult, error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return ClaimAdminCoinGrantResult{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var amount int
+	var reason string
+	var claimedAt *string
+	var messageID *uuid.UUID
+	err = tx.QueryRow(ctx, `
+		SELECT amount_bronze, reason, claimed_at::text, chat_message_id
+		FROM admin_coin_grants
+		WHERE id = $1 AND user_id = $2
+		FOR UPDATE
+	`, grantID, userID).Scan(&amount, &reason, &claimedAt, &messageID)
+	if err == pgx.ErrNoRows {
+		return ClaimAdminCoinGrantResult{}, ErrAdminGrantNotFound
+	}
+	if err != nil {
+		return ClaimAdminCoinGrantResult{}, err
+	}
+	if amount <= 0 {
+		return ClaimAdminCoinGrantResult{}, ErrAdminGrantInvalid
+	}
+	if claimedAt != nil && *claimedAt != "" {
+		return ClaimAdminCoinGrantResult{}, ErrAdminGrantClaimed
+	}
+
+	if _, err := tx.Exec(ctx, `
+		UPDATE users
+		SET balance_bronze = balance_bronze + $2, updated_at = now()
+		WHERE id = $1
+	`, userID, amount); err != nil {
+		return ClaimAdminCoinGrantResult{}, err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE admin_coin_grants
+		SET claimed_at = now()
+		WHERE id = $1
+	`, grantID); err != nil {
+		return ClaimAdminCoinGrantResult{}, err
+	}
+
+	newBody := EncodeCoinsCreditMessageClaimed(grantID, amount, reason)
+	var chatID *uuid.UUID
+	if messageID != nil {
+		if _, err := tx.Exec(ctx, `
+			UPDATE chat_messages
+			SET body = $2, edited_at = now()
+			WHERE id = $1
+		`, *messageID, newBody); err != nil {
+			return ClaimAdminCoinGrantResult{}, err
+		}
+		var cid uuid.UUID
+		if err := tx.QueryRow(ctx, `
+			SELECT chat_id FROM chat_messages WHERE id = $1
+		`, *messageID).Scan(&cid); err == nil {
+			chatID = &cid
+		}
+	}
+
+	var balance int
+	if err := tx.QueryRow(ctx, `
+		SELECT balance_bronze FROM users WHERE id = $1
+	`, userID).Scan(&balance); err != nil {
+		return ClaimAdminCoinGrantResult{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return ClaimAdminCoinGrantResult{}, err
+	}
+	return ClaimAdminCoinGrantResult{
+		AmountBronze:  amount,
+		BalanceBronze: balance,
+		MessageID:     messageID,
+		MessageBody:   newBody,
+		ChatID:        chatID,
+	}, nil
 }
 
 // DeductCoinsTwo deducts from both users in one transaction. Returns on first failure.

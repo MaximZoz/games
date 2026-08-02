@@ -1017,5 +1017,7 @@
   "supportUnavailable": "고객지원을 사용할 수 없습니다",
   "supportOpenFailed": "고객지원 채팅을 열 수 없습니다",
   "coinsGrantedTitle": "{amount}코인이 지급되었습니다",
-  "coinsDeductedTitle": "{amount}코인이 차감되었습니다"
+  "coinsDeductedTitle": "{amount}코인이 차감되었습니다",
+  "coinsCreditCardTitle": "코인이 지급되었습니다",
+  "coinsClaim": "받기"
 }

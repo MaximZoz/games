@@ -1749,4 +1749,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'تم خصم $amount عملة';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'تم إضافة عملات إلى رصيدك';
+
+  @override
+  String get coinsClaim => 'استلام';
 }

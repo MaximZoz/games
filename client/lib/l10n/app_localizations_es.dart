@@ -1749,4 +1749,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'Se dedujeron $amount monedas';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Se te han acreditado monedas';
+
+  @override
+  String get coinsClaim => 'Reclamar';
 }

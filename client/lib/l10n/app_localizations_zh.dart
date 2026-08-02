@@ -1749,4 +1749,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '已扣除 $amount 枚金币';
   }
+
+  @override
+  String get coinsCreditCardTitle => '已为您发放金币';
+
+  @override
+  String get coinsClaim => '领取';
 }

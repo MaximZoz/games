@@ -1749,4 +1749,10 @@ class AppLocalizationsId extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount koin dipotong';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Anda menerima koin';
+
+  @override
+  String get coinsClaim => 'Ambil';
 }

@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Il supporto non è disponibile",
   "supportOpenFailed": "Impossibile aprire la chat di supporto",
   "coinsGrantedTitle": "Ti sono stati accreditati {amount} monete",
-  "coinsDeductedTitle": "Sono state detratte {amount} monete"
+  "coinsDeductedTitle": "Sono state detratte {amount} monete",
+  "coinsCreditCardTitle": "Ti sono state accreditate monete",
+  "coinsClaim": "Riscuoti"
 }

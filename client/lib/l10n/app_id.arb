@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Dukungan tidak tersedia",
   "supportOpenFailed": "Tidak dapat membuka chat dukungan",
   "coinsGrantedTitle": "Anda menerima {amount} koin",
-  "coinsDeductedTitle": "{amount} koin dipotong"
+  "coinsDeductedTitle": "{amount} koin dipotong",
+  "coinsCreditCardTitle": "Anda menerima koin",
+  "coinsClaim": "Ambil"
 }

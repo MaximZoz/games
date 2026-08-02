@@ -1017,5 +1017,7 @@
   "supportUnavailable": "客服暂不可用",
   "supportOpenFailed": "无法打开客服聊天",
   "coinsGrantedTitle": "已为您发放 {amount} 枚金币",
-  "coinsDeductedTitle": "已扣除 {amount} 枚金币"
+  "coinsDeductedTitle": "已扣除 {amount} 枚金币",
+  "coinsCreditCardTitle": "已为您发放金币",
+  "coinsClaim": "领取"
 }

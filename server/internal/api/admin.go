@@ -480,7 +480,7 @@ type GrantCoinsRequest struct {
 	Reason       string `json:"reason"`
 }
 
-// GrantCoins начисляет (amount>0) или списывает (amount<0) монеты пользователю.
+// GrantCoins начисляет (amount>0 → карточка в чате поддержки) или списывает (amount<0 сразу).
 func (h *AdminHandler) GrantCoins(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
@@ -502,41 +502,84 @@ func (h *AdminHandler) GrantCoins(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	adminID, _ := GetUserID(ctx)
-	if err := store.AddCoinsSigned(ctx, h.Pool, id, req.AmountBronze); err != nil {
+	reason := strings.TrimSpace(req.Reason)
+
+	// Списание — сразу на баланс (без карточки).
+	if req.AmountBronze < 0 {
+		if err := store.AddCoinsSigned(ctx, h.Pool, id, req.AmountBronze); err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if _, err := store.RecordAdminCoinGrant(ctx, h.Pool, id, adminID, req.AmountBronze, reason); err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		balance, _ := store.GetBalance(ctx, h.Pool, id)
+		if h.Hub != nil {
+			h.Hub.PublishToUsers([]uuid.UUID{id}, map[string]any{
+				"type": "coins_granted", "amount": req.AmountBronze, "balance": balance, "reason": reason,
+			})
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"balance_bronze": balance, "deferred": false})
+		return
+	}
+
+	// Начисление — отложенное: сообщение от поддержки с кнопкой «Забрать».
+	suID, ok := h.supportUserID(ctx)
+	if !ok {
+		WriteErr(w, r, http.StatusInternalServerError, "support user not found")
+		return
+	}
+	grantID, err := store.RecordAdminCoinGrant(ctx, h.Pool, id, adminID, req.AmountBronze, reason)
+	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	reason := strings.TrimSpace(req.Reason)
-	_ = store.RecordAdminCoinGrant(ctx, h.Pool, id, adminID, req.AmountBronze, reason)
-	balance, _ := store.GetBalance(ctx, h.Pool, id)
-	// WS-уведомление пользователю для мгновенного обновления баланса + UI-тост.
+	chatID, err := store.EnsureDirectChat(ctx, h.Pool, suID, id)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	body := store.EncodeCoinsCreditMessage(grantID, req.AmountBronze, reason)
+	msg, err := store.SendChatMessageOpts(ctx, h.Pool, chatID, suID, store.SendChatOptions{Body: body})
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	_ = store.AttachAdminCoinGrantMessage(ctx, h.Pool, grantID, msg.ID)
+
+	item := chatMessageToItem(msg)
 	if h.Hub != nil {
-		h.Hub.PublishToUsers([]uuid.UUID{id}, map[string]any{
-			"type":    "coins_granted",
-			"amount":  req.AmountBronze,
-			"balance": balance,
-			"reason":  reason,
+		h.Hub.PublishToUsers([]uuid.UUID{id, suID}, map[string]any{
+			"type": "chat_message", "chat_id": chatID.String(), "message": item,
+		})
+		h.Hub.PublishToUsers([]uuid.UUID{id, suID}, map[string]any{
+			"type": "chat_list_changed",
+		})
+		h.broadcastToAdmins(ctx, map[string]any{
+			"type": "support_message", "user_id": id.String(), "chat_id": chatID.String(),
 		})
 	}
-	// Web Push: заголовок с суммой, описание — причина от админа.
-	// Язык пользователя в подписке не храним — как у остальных push, дефолт RU.
-	if h.Push != nil && req.AmountBronze > 0 {
+	if h.Push != nil {
 		lang := i18n.LangRU
-		amountStr := strconv.Itoa(req.AmountBronze)
-		title := i18n.Contentf(lang, "push.coins_granted_title", map[string]string{"amount": amountStr})
-		body := reason
-		if body == "" {
-			body = i18n.Content(lang, "push.coins_granted_body")
+		pushBody := reason
+		if pushBody == "" {
+			pushBody = i18n.Content(lang, "push.coins_granted_body")
 		}
-		h.Push.NotifyUsers([]uuid.UUID{id}, store.WebPushCategoryRewards, PushPayload{
-			Title: title,
-			Body:  body,
-			URL:   "/",
-			Tag:   "coins_granted",
-			Kind:  "rewards",
+		h.Push.NotifyUsers([]uuid.UUID{id}, store.WebPushCategoryChat, PushPayload{
+			Title: i18n.Content(lang, "label.support"),
+			Body:  pushBody,
+			URL:   "/chats/" + chatID.String(),
+			Tag:   "chat_" + chatID.String(),
 		})
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"balance_bronze": balance})
+	balance, _ := store.GetBalance(ctx, h.Pool, id)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"balance_bronze": balance,
+		"deferred":       true,
+		"grant_id":       grantID.String(),
+		"chat_id":        chatID.String(),
+	})
 }
 
 // supportUserID возвращает ID системного аккаунта поддержки.

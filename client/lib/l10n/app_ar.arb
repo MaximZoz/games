@@ -1017,5 +1017,7 @@
   "supportUnavailable": "الدعم غير متاح",
   "supportOpenFailed": "تعذر فتح محادثة الدعم",
   "coinsGrantedTitle": "تم إضافة {amount} عملة إلى رصيدك",
-  "coinsDeductedTitle": "تم خصم {amount} عملة"
+  "coinsDeductedTitle": "تم خصم {amount} عملة",
+  "coinsCreditCardTitle": "تم إضافة عملات إلى رصيدك",
+  "coinsClaim": "استلام"
 }

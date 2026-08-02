@@ -1749,4 +1749,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'Списано $amount монет';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Вам начислены монеты';
+
+  @override
+  String get coinsClaim => 'Забрать';
 }

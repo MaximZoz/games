@@ -1017,5 +1017,7 @@
   "supportUnavailable": "サポートは利用できません",
   "supportOpenFailed": "サポートチャットを開けませんでした",
   "coinsGrantedTitle": "{amount} コインが付与されました",
-  "coinsDeductedTitle": "{amount} コインが差し引かれました"
+  "coinsDeductedTitle": "{amount} コインが差し引かれました",
+  "coinsCreditCardTitle": "コインが付与されました",
+  "coinsClaim": "受け取る"
 }

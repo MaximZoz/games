@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Yordam mavjud emas",
   "supportOpenFailed": "Yordam chatini ochib bo‘lmadi",
   "coinsGrantedTitle": "Sizga {amount} tanga hisoblandi",
-  "coinsDeductedTitle": "{amount} tanga yechildi"
+  "coinsDeductedTitle": "{amount} tanga yechildi",
+  "coinsCreditCardTitle": "Sizga tangalar hisoblandi",
+  "coinsClaim": "Olish"
 }

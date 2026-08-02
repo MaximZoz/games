@@ -1749,4 +1749,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount코인이 차감되었습니다';
   }
+
+  @override
+  String get coinsCreditCardTitle => '코인이 지급되었습니다';
+
+  @override
+  String get coinsClaim => '받기';
 }

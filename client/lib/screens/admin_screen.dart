@@ -684,7 +684,7 @@ class _UserCard extends ConsumerWidget {
                 () => repo.grantCoins(user.id, amount,
                     reason: reasonCtrl.text.trim()),
                 success: amount > 0
-                    ? 'Начислено $amount бронзовых'
+                    ? 'Карточка отправлена в чат поддержки'
                     : 'Списано ${amount.abs()} бронзовых',
               );
             },

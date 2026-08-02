@@ -1749,4 +1749,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'נוכו $amount מטבעות';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'זוכו לכם מטבעות';
+
+  @override
+  String get coinsClaim => 'לקבל';
 }

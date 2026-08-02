@@ -1749,4 +1749,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount тиын шегерілді';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Сізге тиындар есептелді';
+
+  @override
+  String get coinsClaim => 'Алу';
 }

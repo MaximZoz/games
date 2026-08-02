@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Destek kullanılamıyor",
   "supportOpenFailed": "Destek sohbeti açılamadı",
   "coinsGrantedTitle": "Hesabınıza {amount} jeton eklendi",
-  "coinsDeductedTitle": "{amount} jeton düşüldü"
+  "coinsDeductedTitle": "{amount} jeton düşüldü",
+  "coinsCreditCardTitle": "Hesabınıza jeton eklendi",
+  "coinsClaim": "Al"
 }

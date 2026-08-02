@@ -1749,4 +1749,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'Bylo odečteno $amount mincí';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Byly vám připsány mince';
+
+  @override
+  String get coinsClaim => 'Vyzvednout';
 }

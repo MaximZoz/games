@@ -1749,4 +1749,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount jeton düşüldü';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Hesabınıza jeton eklendi';
+
+  @override
+  String get coinsClaim => 'Al';
 }

@@ -1034,5 +1034,7 @@
   "supportUnavailable": "Support is unavailable",
   "supportOpenFailed": "Could not open support chat",
   "coinsGrantedTitle": "You've been credited {amount} coins",
-  "coinsDeductedTitle": "{amount} coins were deducted"
+  "coinsDeductedTitle": "{amount} coins were deducted",
+  "coinsCreditCardTitle": "You've been credited coins",
+  "coinsClaim": "Claim"
 }

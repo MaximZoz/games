@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Support är inte tillgängligt",
   "supportOpenFailed": "Kunde inte öppna supportchatten",
   "coinsGrantedTitle": "Du har fått {amount} mynt",
-  "coinsDeductedTitle": "{amount} mynt drogs av"
+  "coinsDeductedTitle": "{amount} mynt drogs av",
+  "coinsCreditCardTitle": "Du har fått mynt",
+  "coinsClaim": "Hämta"
 }

@@ -1017,5 +1017,7 @@
   "supportUnavailable": "ฝ่ายสนับสนุนไม่พร้อมใช้งาน",
   "supportOpenFailed": "ไม่สามารถเปิดแชทฝ่ายสนับสนุนได้",
   "coinsGrantedTitle": "คุณได้รับ {amount} เหรียญ",
-  "coinsDeductedTitle": "หัก {amount} เหรียญแล้ว"
+  "coinsDeductedTitle": "หัก {amount} เหรียญแล้ว",
+  "coinsCreditCardTitle": "คุณได้รับเหรียญ",
+  "coinsClaim": "รับ"
 }

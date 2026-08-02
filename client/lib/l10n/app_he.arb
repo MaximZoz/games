@@ -1017,5 +1017,7 @@
   "supportUnavailable": "התמיכה אינה זמינה",
   "supportOpenFailed": "לא ניתן לפתוח את צ'אט התמיכה",
   "coinsGrantedTitle": "זוכו לכם {amount} מטבעות",
-  "coinsDeductedTitle": "נוכו {amount} מטבעות"
+  "coinsDeductedTitle": "נוכו {amount} מטבעות",
+  "coinsCreditCardTitle": "זוכו לכם מטבעות",
+  "coinsClaim": "לקבל"
 }

@@ -1079,5 +1079,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "coinsCreditCardTitle": "Вам начислены монеты",
+  "coinsClaim": "Забрать"
 }

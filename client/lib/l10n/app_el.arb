@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Η υποστήριξη δεν είναι διαθέσιμη",
   "supportOpenFailed": "Αποτυχία ανοίγματος συνομιλίας υποστήριξης",
   "coinsGrantedTitle": "Σας πιστώθηκαν {amount} νομίσματα",
-  "coinsDeductedTitle": "Αφαιρέθηκαν {amount} νομίσματα"
+  "coinsDeductedTitle": "Αφαιρέθηκαν {amount} νομίσματα",
+  "coinsCreditCardTitle": "Σας πιστώθηκαν νομίσματα",
+  "coinsClaim": "Παραλαβή"
 }

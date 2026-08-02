@@ -230,37 +230,13 @@ class AppShell extends ConsumerWidget {
             ref.invalidate(supportChatsProvider);
           }
           if (type == 'coins_granted') {
-            final amount = (event['amount'] as num?)?.toInt() ?? 0;
+            // Анимация «Забрать» идёт из карточки в чате; здесь только
+            // синхронизация баланса на других вкладках / после списания.
             final balance = (event['balance'] as num?)?.toInt();
-            final reason = (event['reason'] as String?)?.trim() ?? '';
-            final l10n = context.l10n;
-            final title = amount >= 0
-                ? l10n.coinsGrantedTitle(amount)
-                : l10n.coinsDeductedTitle(amount.abs());
-            final message =
-                reason.isEmpty ? title : '$title\n$reason';
-            if (context.mounted) {
-              showAppSnackBar(
-                context,
-                message: message,
-                kind: amount >= 0 ? AppSnackKind.success : AppSnackKind.info,
-                duration: Duration(seconds: reason.isEmpty ? 4 : 6),
-                icon: Icons.monetization_on_rounded,
+            if (balance != null) {
+              unawaited(
+                ref.read(authStateProvider.notifier).applyBalance(balance),
               );
-            }
-            if (balance != null && context.mounted) {
-              if (amount > 0) {
-                unawaited(playBalanceGain(
-                  ref: ref,
-                  context: context,
-                  newBalanceBronze: balance,
-                  rewardBronze: amount,
-                ));
-              } else {
-                unawaited(
-                  ref.read(authStateProvider.notifier).applyBalance(balance),
-                );
-              }
             }
           }
         });

@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Support er utilgængelig",
   "supportOpenFailed": "Kunne ikke åbne supportchat",
   "coinsGrantedTitle": "Du har fået {amount} mønter",
-  "coinsDeductedTitle": "{amount} mønter er trukket"
+  "coinsDeductedTitle": "{amount} mønter er trukket",
+  "coinsCreditCardTitle": "Du har fået mønter",
+  "coinsClaim": "Hent"
 }

@@ -1749,4 +1749,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return '$amount mynt drogs av';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Du har fått mynt';
+
+  @override
+  String get coinsClaim => 'Hämta';
 }

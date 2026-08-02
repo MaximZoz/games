@@ -1749,4 +1749,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'Đã trừ $amount xu';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Bạn đã được cộng xu';
+
+  @override
+  String get coinsClaim => 'Nhận';
 }

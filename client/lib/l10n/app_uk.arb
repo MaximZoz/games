@@ -1017,5 +1017,7 @@
   "supportUnavailable": "Підтримка недоступна",
   "supportOpenFailed": "Не вдалося відкрити чат із підтримкою",
   "coinsGrantedTitle": "Вам нараховано {amount} монет",
-  "coinsDeductedTitle": "Списано {amount} монет"
+  "coinsDeductedTitle": "Списано {amount} монет",
+  "coinsCreditCardTitle": "Вам нараховано монети",
+  "coinsClaim": "Забрати"
 }

@@ -1749,4 +1749,10 @@ class AppLocalizationsEl extends AppLocalizations {
   String coinsDeductedTitle(int amount) {
     return 'Αφαιρέθηκαν $amount νομίσματα';
   }
+
+  @override
+  String get coinsCreditCardTitle => 'Σας πιστώθηκαν νομίσματα';
+
+  @override
+  String get coinsClaim => 'Παραλαβή';
 }
