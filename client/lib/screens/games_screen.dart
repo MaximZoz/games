@@ -734,24 +734,18 @@ class _GamesPageContent extends StatelessWidget {
                       final phoneLandscape = isPhoneLandscape(context);
                       final tablet = isTablet(context);
                       if (isDesktop || phoneLandscape) {
-                        const gap = 16.0;
+                        // Одна карточка игры — по центру, достаточно широкая,
+                        // чтобы «Крестики-нолики» не обрезалось на планшете.
                         final minCardWidth = phoneLandscape
-                            ? 280.0
-                            : (tablet ? 320.0 : 360.0);
+                            ? 300.0
+                            : (tablet ? 440.0 : 400.0);
                         final maxCardWidth = phoneLandscape
-                            ? 340.0
-                            : (tablet ? 420.0 : 480.0);
+                            ? 420.0
+                            : (tablet ? 560.0 : 520.0);
                         final availableWidth = constraints.maxWidth;
-                        final crossAxisCount = phoneLandscape
-                            ? 1
-                            : (availableWidth / (minCardWidth + gap))
-                                .floor()
-                                .clamp(1, 4);
-                        final rawWidth =
-                            (availableWidth - (crossAxisCount - 1) * gap) /
-                                crossAxisCount;
-                        final cardWidth =
-                            rawWidth.clamp(minCardWidth, maxCardWidth);
+                        final cardWidth = availableWidth
+                            .clamp(minCardWidth, maxCardWidth)
+                            .toDouble();
                         return SizedBox(
                           width: availableWidth,
                           child: Align(
@@ -1558,15 +1552,20 @@ class _TictactoeGameCard extends StatelessWidget {
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
-                          fontSize: isDesktop ? 20 : 18,
+                          // На планшете чуть компактнее — полное имя влезает.
+                          fontSize: isMedium
+                              ? 18
+                              : (isDesktop ? 20 : 18),
                           letterSpacing: -0.3,
+                          height: 1.15,
                         ),
+                        softWrap: true,
                         overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                        maxLines: isMedium || isTablet(context) ? 2 : 1,
                       ),
                     ),
                     if (!isOffline && stakeBronze > 0) ...[
-                      SizedBox(width: isDesktop ? 24 : 12),
+                      SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -1575,7 +1574,7 @@ class _TictactoeGameCard extends StatelessWidget {
                           child: Tooltip(
                             message: context.l10n.gamesTapChangeStake,
                             child: Padding(
-                              padding: const EdgeInsets.only(right: 4),
+                              padding: const EdgeInsets.only(right: 2),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1612,8 +1611,9 @@ class _TictactoeGameCard extends StatelessWidget {
                       tooltip: context.l10n.gamesRulesTitle,
                       style: IconButton.styleFrom(
                         visualDensity: VisualDensity.compact,
-                        minimumSize: const Size(36, 36),
-                        padding: const EdgeInsets.all(6),
+                        minimumSize: const Size(32, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.all(4),
                       ),
                     ),
                   ],
