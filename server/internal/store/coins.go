@@ -199,7 +199,12 @@ func ClaimAdminCoinGrant(ctx context.Context, pool *pgxpool.Pool, userID, grantI
 
 // DeductCoinsTwo deducts from both users in one transaction. Returns on first failure.
 func DeductCoinsTwo(ctx context.Context, pool *pgxpool.Pool, user1, user2 uuid.UUID, amountBronze int) error {
-	if amountBronze <= 0 {
+	return DeductCoinsMany(ctx, pool, []uuid.UUID{user1, user2}, amountBronze)
+}
+
+// DeductCoinsMany атомарно списывает ставку у N игроков.
+func DeductCoinsMany(ctx context.Context, pool *pgxpool.Pool, userIDs []uuid.UUID, amountBronze int) error {
+	if amountBronze <= 0 || len(userIDs) == 0 {
 		return nil
 	}
 	tx, err := pool.Begin(ctx)
@@ -208,7 +213,7 @@ func DeductCoinsTwo(ctx context.Context, pool *pgxpool.Pool, user1, user2 uuid.U
 	}
 	defer tx.Rollback(ctx)
 
-	for _, uid := range []uuid.UUID{user1, user2} {
+	for _, uid := range userIDs {
 		r, e := tx.Exec(ctx,
 			`UPDATE users SET balance_bronze = balance_bronze - $2, updated_at = now()
 			 WHERE id = $1 AND balance_bronze >= $2`,

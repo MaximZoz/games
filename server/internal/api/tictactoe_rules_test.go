@@ -3,6 +3,8 @@ package api
 import (
 	"reflect"
 	"testing"
+
+	"multigames/server/internal/gameengine"
 )
 
 func board3(cells ...string) []string {
@@ -169,16 +171,16 @@ func TestValidMovesSkipsOccupied(t *testing.T) {
 }
 
 func TestMatchmakeKey(t *testing.T) {
-	k1 := matchmakeKey(30, 3, true, false, 100)
-	k2 := matchmakeKey(30, 3, true, false, 100)
-	k3 := matchmakeKey(30, 3, false, false, 100)
+	k1 := matchmakeKeyVariant(30, gameengine.VariantClassic, 100)
+	k2 := matchmakeKeyVariant(30, gameengine.VariantClassic, 100)
+	k3 := matchmakeKeyVariant(30, gameengine.VariantGomoku, 100)
 	if k1 != k2 {
 		t.Fatal("same params must match")
 	}
 	if k1 == k3 {
-		t.Fatal("swap_rule must change key")
+		t.Fatal("variant must change key")
 	}
-	want := "tictactoe:matchmake:30:3:1:0:100"
+	want := "tictactoe:matchmake:30:classic:100"
 	if k1 != want {
 		t.Fatalf("got %q want %q", k1, want)
 	}

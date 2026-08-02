@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/gameengine"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
@@ -24,6 +25,8 @@ const (
 	gameStatusActive            = "active"
 	gameStatusXWon              = "x_won"
 	gameStatusOWon              = "o_won"
+	gameStatusTWon              = "t_won"
+	gameStatusSWon              = "s_won"
 	gameStatusDraw              = "draw"
 	lobbyTTL                    = 10 * time.Minute
 	botUserID                   = "bot:ttt"
@@ -33,19 +36,14 @@ const (
 // turn_time_sec: 0=unlimited, 10, 30, 60, 600
 var validTurnTimeSec = map[int]bool{0: true, 10: true, 30: true, 60: true, 600: true}
 
-// grid_size: 3, 4, 5, 6, 7, 8
-var validGridSize = map[int]bool{3: true, 4: true, 5: true, 6: true, 7: true, 8: true}
+// legacy grid sizes (старые клиенты); новые режимы задаются variant.
+var validGridSize = map[int]bool{3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 15: true}
 
 func matchmakeKey(turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) string {
-	sr := "0"
-	if swapRule {
-		sr = "1"
-	}
-	fmr := "0"
-	if firstMoveRestriction {
-		fmr = "1"
-	}
-	return "tictactoe:matchmake:" + strconv.Itoa(turnTimeSec) + ":" + strconv.Itoa(gridSize) + ":" + sr + ":" + fmr + ":" + strconv.Itoa(stakeBronze)
+	// Устарело: оставляем для LeaveLobby cleanup старых ключей.
+	_ = swapRule
+	_ = firstMoveRestriction
+	return "tictactoe:matchmake:" + strconv.Itoa(turnTimeSec) + ":" + strconv.Itoa(gridSize) + ":0:0:" + strconv.Itoa(stakeBronze)
 }
 
 type GamesHandler struct {
@@ -59,9 +57,10 @@ type GamesHandler struct {
 type CreateLobbyBody struct {
 	Mode                 string `json:"mode"`                   // "invite" | "matchmake"
 	TurnTimeSec          int    `json:"turn_time_sec"`          // 0=unlimited, 10, 30, 60, 600
-	GridSize             int    `json:"grid_size"`              // 3, 4, 5
-	SwapRule             bool   `json:"swap_rule"`              // смена сторон после 1-го хода
-	FirstMoveRestriction bool   `json:"first_move_restriction"` // первый ход не в центр
+	Variant              string `json:"variant"`                // classic|gomoku|ultimate|multi3|multi4
+	GridSize             int    `json:"grid_size"`              // legacy; перекрывается variant
+	SwapRule             bool   `json:"swap_rule"`              // deprecated, игнорируется
+	FirstMoveRestriction bool   `json:"first_move_restriction"` // deprecated, игнорируется
 	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 1)
 	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`     // в matchmake: через 30 с добавить бота
 }
@@ -83,17 +82,20 @@ type LobbyItem struct {
 	GameID               *string `json:"game_id,omitempty"`
 	CreatedAt            string  `json:"created_at"`
 	TurnTimeSec          int     `json:"turn_time_sec,omitempty"`
+	Variant              string  `json:"variant,omitempty"`
 	GridSize             int     `json:"grid_size,omitempty"`
-	SwapRule             bool    `json:"swap_rule,omitempty"`
-	FirstMoveRestriction bool    `json:"first_move_restriction,omitempty"`
+	MaxPlayers           int     `json:"max_players,omitempty"`
+	SwapRule             bool    `json:"swap_rule,omitempty"`              // deprecated
+	FirstMoveRestriction bool    `json:"first_move_restriction,omitempty"` // deprecated
 	StakeBronze          int     `json:"stake_bronze,omitempty"`
 }
 
 type GameStateItem struct {
 	ID                   string   `json:"id"`
-	Board                []string `json:"board"` // N*N cells: "", "x", "o"
+	Board                []string `json:"board"` // клетки: "", "x", "o", "t", "s"
+	Variant              string   `json:"variant,omitempty"`
 	GridSize             int      `json:"grid_size,omitempty"`
-	Turn                 string   `json:"turn"` // "x" | "o"
+	Turn                 string   `json:"turn"` // mark
 	Winner               *string  `json:"winner,omitempty"`
 	Status               string   `json:"status"`
 	Forfeit              bool     `json:"forfeit,omitempty"`
@@ -103,9 +105,14 @@ type GameStateItem struct {
 	WinningCells         []int    `json:"winning_cells,omitempty"`
 	XUserID              string   `json:"x_user_id"`
 	OUserID              string   `json:"o_user_id"`
+	TUserID              string   `json:"t_user_id,omitempty"`
+	SUserID              string   `json:"s_user_id,omitempty"`
+	NextBoard            *int     `json:"next_board,omitempty"` // ultimate: -1|0..8
+	MetaBoard            []string `json:"meta_board,omitempty"`
+	MaxPlayers           int      `json:"max_players,omitempty"`
 	SwapRule             bool     `json:"swap_rule,omitempty"`
 	FirstMoveRestriction bool     `json:"first_move_restriction,omitempty"`
-	CanSwap              bool     `json:"can_swap,omitempty"` // O может сменить стороны
+	CanSwap              bool     `json:"can_swap,omitempty"` // всегда false
 	StakeBronze          int      `json:"stake_bronze,omitempty"`
 	// Кто предложил ничью (user id); пусто — предложения нет.
 	DrawOfferBy          string   `json:"draw_offer_by,omitempty"`
@@ -336,16 +343,19 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusBadRequest, "turn_time_sec must be 0, 10, 30, 60 or 600")
 		return
 	}
-	gridSize := body.GridSize
-	if !validGridSize[gridSize] {
-		gridSize = 3
-	}
-	swapRule := body.SwapRule
-	firstMoveRestriction := body.FirstMoveRestriction
+	cfg, variant := resolveVariantConfig(body.Variant, body.GridSize)
+	gridSize := cfg.GridSize
+	// Смена сторон / запрет центра удалены.
+	swapRule := false
+	firstMoveRestriction := false
 	addBotsAfter30s := body.AddBotsAfter30s
+	// multi3/multi4 — пока только invite (очередь на N игроков отдельно).
+	if (variant == gameengine.VariantMulti3 || variant == gameengine.VariantMulti4) && mode == "matchmake" {
+		mode = "invite"
+	}
 
 	if mode == "matchmake" {
-		otherEntry, err := h.rdbRPOPMatchmake(ctx, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
+		otherEntry, err := h.Rdb.RPop(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze)).Result()
 		if err == nil && otherEntry != "" {
 			parts := strings.SplitN(otherEntry, ":", 2)
 			otherUserID := parts[0]
@@ -366,7 +376,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 						h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
 					}
 				}
-				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, reuseLobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
+				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, reuseLobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze, string(variant))
 				if err != nil {
 					if err == store.ErrStakeNotAllowed {
 						WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
@@ -406,15 +416,18 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		"created_at", now,
 		"mode", mode,
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"variant", string(variant),
 		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+		"player_ids", userID.String(),
+		"swap_rule", "false",
+		"first_move_restriction", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
 		"add_bots_after_30s", strconv.FormatBool(addBotsAfter30s),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	if mode == "matchmake" {
-		mmKey := matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
+		mmKey := matchmakeKeyVariant(turnTimeSec, variant, stakeBronze)
 		pipe.LPush(ctx, mmKey, userID.String()+":"+lobbyID)
 		pipe.Expire(ctx, mmKey, 5*time.Minute)
 	}
@@ -494,17 +507,18 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	invitedKey := key + ":invited"
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	turnTimeSec := 0
-	gridSize := 3
-	swapRule := m["swap_rule"] == "true"
-	firstMoveRestriction := m["first_move_restriction"] == "true"
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		if gs := m["grid_size"]; gs != "" {
+			if n, e := strconv.Atoi(gs); e == nil {
+				return n
+			}
+		}
+		return 3
+	}())
+	gridSize := cfg.GridSize
 	if tt := m["turn_time_sec"]; tt != "" {
 		if n, e := strconv.Atoi(tt); e == nil && validTurnTimeSec[n] {
 			turnTimeSec = n
-		}
-	}
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
 		}
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
@@ -520,9 +534,12 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		"created_at", now,
 		"mode", "invite",
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"variant", string(variant),
 		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+		"player_ids", userID.String(),
+		"swap_rule", "false",
+		"first_move_restriction", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
@@ -551,16 +568,16 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	broadcastData := map[string]any{
-		"type":                   "game_invite",
-		"lobby_id":               lobbyID,
-		"creator_id":             userID.String(),
-		"creator_name":           creatorName,
-		"game_type":              "tictactoe",
-		"turn_time_sec":          turnTimeSec,
-		"grid_size":              gridSize,
-		"swap_rule":              swapRule,
-		"first_move_restriction": firstMoveRestriction,
-		"stake_bronze":           stakeBronze,
+		"type":          "game_invite",
+		"lobby_id":      lobbyID,
+		"creator_id":    userID.String(),
+		"creator_name":  creatorName,
+		"game_type":     "tictactoe",
+		"turn_time_sec": turnTimeSec,
+		"variant":       string(variant),
+		"grid_size":     gridSize,
+		"max_players":   cfg.MaxPlayers,
+		"stake_bronze":  stakeBronze,
 	}
 	if creatorAvatarKind != "" {
 		broadcastData["creator_avatar_kind"] = creatorAvatarKind
@@ -584,7 +601,11 @@ func (h *GamesHandler) rdbRPOPMatchmake(ctx context.Context, turnTimeSec, gridSi
 
 func emptyBoardJSON(gridSize int) string {
 	n := gridSize * gridSize
-	if n <= 0 || n > 64 {
+	// ultimate: grid_size=9 → 81 клетка; gomoku 15 → 225.
+	if gridSize == 9 {
+		n = 81
+	}
+	if n <= 0 || n > 225 {
 		n = 9
 	}
 	b := make([]string, n)
@@ -598,7 +619,11 @@ func emptyBoardJSON(gridSize int) string {
 // createGameFromMatch создаёт игру после матчмейкинга.
 // Если existingLobbyID не пуст — обновляет лобби ожидающего (чтобы WS
 // game_started совпал с URL /lobby/{id} и сразу увёл его в игру).
-func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID, lobbyID string, err error) {
+func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int, variantStr string) (gameID, lobbyID string, err error) {
+	_ = swapRule
+	_ = firstMoveRestriction
+	cfg, variant := resolveVariantConfig(variantStr, gridSize)
+	gridSize = cfg.GridSize
 	for _, uid := range []uuid.UUID{user1, user2} {
 		ok, e := store.UserMayStake(ctx, h.Pool, uid, stakeBronze)
 		if e != nil {
@@ -636,13 +661,20 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 		"lobby_id", lobbyID,
 		"x_user_id", xUserID,
 		"o_user_id", oUserID,
+		"mark_x", xUserID,
+		"mark_o", oUserID,
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"variant", string(variant),
 		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+		"swap_rule", "false",
+		"first_move_restriction", "false",
 		"swapped", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
 		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	if variant == gameengine.VariantUltimate {
+		gameFields = append(gameFields, "next_board", "-1", "meta_board", formatMetaBoard(make([]string, 9)))
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -652,12 +684,11 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 	pipe.Expire(ctx, key, 24*time.Hour)
 
 	if reuseLobby != "" {
-		// Лобби ожидающего уже содержит настройки — только статус/соперник/игра.
-		// creator_id остаётся за ожидающим; opponent — тот, кто только что нашёл пару.
 		pipe.HSet(ctx, lobbyKey,
 			"opponent_id", user1.String(),
 			"status", lobbyStatusInGame,
 			"game_id", gameID,
+			"variant", string(variant),
 		)
 	} else {
 		pipe.HSet(ctx, lobbyKey,
@@ -669,9 +700,11 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 			"created_at", time.Now().UTC().Format(time.RFC3339Nano),
 			"mode", "matchmake",
 			"turn_time_sec", strconv.Itoa(turnTimeSec),
+			"variant", string(variant),
 			"grid_size", strconv.Itoa(gridSize),
-			"swap_rule", strconv.FormatBool(swapRule),
-			"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+			"max_players", strconv.Itoa(cfg.MaxPlayers),
+			"swap_rule", "false",
+			"first_move_restriction", "false",
 			"stake_bronze", strconv.Itoa(stakeBronze),
 		)
 	}
@@ -683,6 +716,8 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 
 // createGameWithBot создаёт игру пользователь vs бот и обновляет существующее лобби.
 func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID string, err error) {
+	_ = swapRule
+	_ = firstMoveRestriction
 	ok, e := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
 	if e != nil {
 		return "", e
@@ -693,6 +728,21 @@ func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, 
 	if err := store.DeductCoins(ctx, h.Pool, userID, stakeBronze); err != nil {
 		return "", err
 	}
+	variantStr := ""
+	if existingLobbyID != "" {
+		if lm, lerr := h.Rdb.HGetAll(ctx, "lobby:"+existingLobbyID).Result(); lerr == nil {
+			variantStr = lm["variant"]
+			if gs, e := strconv.Atoi(lm["grid_size"]); e == nil && gs > 0 {
+				gridSize = gs
+			}
+		}
+	}
+	cfg, variant := resolveVariantConfig(variantStr, gridSize)
+	// Бот только для 2-игровых режимов.
+	if cfg.MaxPlayers != 2 {
+		cfg, variant = resolveVariantConfig(string(gameengine.VariantClassic), 3)
+	}
+	gridSize = cfg.GridSize
 	gameID = uuid.New().String()
 
 	xUserID := userID.String()
@@ -713,13 +763,20 @@ func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, 
 		"lobby_id", existingLobbyID,
 		"x_user_id", xUserID,
 		"o_user_id", oUserID,
+		"mark_x", xUserID,
+		"mark_o", oUserID,
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"variant", string(variant),
 		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"max_players", "2",
+		"swap_rule", "false",
+		"first_move_restriction", "false",
 		"swapped", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
 		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	if variant == gameengine.VariantUltimate {
+		gameFields = append(gameFields, "next_board", "-1", "meta_board", formatMetaBoard(make([]string, 9)))
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -732,6 +789,7 @@ func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, 
 		"opponent_id", botUserID,
 		"status", lobbyStatusInGame,
 		"game_id", gameID,
+		"variant", string(variant),
 	)
 	pipe.Expire(ctx, lobbyKey, 24*time.Hour)
 
@@ -912,45 +970,46 @@ func minimaxMin(board []string, opponent string, botMark string, firstMoveRestri
 
 func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[string]string) bool {
 	time.Sleep(1 * time.Second) // Задержка хода бота для естественности
-	gridSize := 3
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
-		}
-	}
-	turn := m["turn"]
-	firstMoveRestriction := m["first_move_restriction"] == "true"
-	board := parseBoard(m["board"], gridSize)
-	cell := botPickCellSmart(board, gridSize, turn, firstMoveRestriction)
-	if cell < 0 {
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	eng, err := gameengine.New(variant)
+	if err != nil {
 		return false
 	}
-	board[cell] = turn
-	nextTurn := "o"
-	if turn == "o" {
-		nextTurn = "x"
+	st := engineStateFromRedis(m, cfg)
+	legal := eng.LegalCells(st)
+	if len(legal) == 0 {
+		return false
 	}
-	newBoard := formatBoard(board)
-	status := gameStatusActive
-	winner := turn
-	winningCells := checkWinLine(board, turn, gridSize)
-	if len(winningCells) == winLength(gridSize) {
-		status = gameStatusXWon
-		if turn == "o" {
-			status = gameStatusOWon
-		}
-	} else if isDraw(board, gridSize) {
-		status = gameStatusDraw
-		winner = ""
-	} else {
-		winner = ""
+	cell := -1
+	// Для классики — умный ход; иначе случайный легальный.
+	if variant == gameengine.VariantClassic {
+		cell = botPickCellSmart(st.Board, cfg.GridSize, st.Turn, false)
 	}
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
+	if cell < 0 {
+		cell = legal[rand.Intn(len(legal))]
+	}
+	res, err := eng.ApplyMove(st, cell)
+	if err != nil {
+		return false
+	}
+	status, winner := statusFromEngineResult(res)
 	pipe := h.Rdb.Pipeline()
-	setFields := []any{"board", newBoard, "turn", nextTurn, "status", status}
+	setFields := []any{
+		"board", formatBoard(res.State.Board),
+		"turn", res.State.Turn,
+		"status", status,
+	}
 	if winner != "" {
-		setFields = append(setFields, "winner", turn)
+		setFields = append(setFields, "winner", winner)
+	}
+	if variant == gameengine.VariantUltimate {
+		setFields = append(setFields,
+			"next_board", strconv.Itoa(res.State.NextBoard),
+			"meta_board", formatMetaBoard(res.State.MetaBoard),
+		)
 	}
 	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 	if turnTimeSec > 0 && status == gameStatusActive {
@@ -964,30 +1023,40 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 	if _, err := pipe.Exec(ctx); err != nil {
 		return false
 	}
+	humans := humanUserIDsFromGame(m)
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		gridSize, _ := strconv.Atoi(m["grid_size"])
-		h.onGameFinished(ctx, strings.TrimPrefix(key, "game:"), xUserID, oUserID, gridSize, stakeBronze, status, "normal", m["started_at"])
-		for _, u := range humanUserIDs(xUserID, oUserID) {
+		h.onGameFinishedWithMap(ctx, strings.TrimPrefix(key, "game:"), m, cfg.GridSize, stakeBronze, status, "normal", m["started_at"])
+		for _, u := range humans {
 			clearUserActiveGame(ctx, h.Rdb, u)
 		}
-		h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+		payload := map[string]any{
 			"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
-			"board": board, "turn": nextTurn, "winner": winner, "status": status,
-		})
+			"board": res.State.Board, "turn": res.State.Turn, "winner": winner, "status": status,
+			"variant": string(variant),
+		}
+		if len(res.WinningCells) > 0 {
+			payload["winning_cells"] = res.WinningCells
+		}
+		h.broadcast(humans, payload)
 	} else {
 		gameID := strings.TrimPrefix(key, "game:")
 		payload := map[string]any{
 			"type": "game_state", "game_id": gameID,
-			"board": board, "turn": nextTurn, "status": status,
+			"board": res.State.Board, "turn": res.State.Turn, "status": status,
+			"variant": string(variant),
+		}
+		if variant == gameengine.VariantUltimate {
+			payload["next_board"] = res.State.NextBoard
+			payload["meta_board"] = res.State.MetaBoard
 		}
 		if turnTimeSec > 0 {
 			deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
 			payload["turn_deadline"] = deadline
 			payload["turn_time_sec"] = turnTimeSec
 		}
-		h.broadcast(humanUserIDs(xUserID, oUserID), payload)
-		h.notifyYourTurn(gameID, nextTurn, xUserID, oUserID)
+		h.broadcast(humans, payload)
+		h.notifyYourTurn(gameID, res.State.Turn, m)
 	}
 	return true
 }
@@ -1151,7 +1220,16 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 
 	// Участники всегда видят лобби. Для открытого поиска и invite-по-ссылке
 	// любой авторизованный пользователь может просмотреть waiting-лобби.
-	if creatorID != userID.String() && opponentID != userID.String() {
+	inLobby := creatorID == userID.String() || opponentID == userID.String()
+	if !inLobby {
+		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
+			if p == userID.String() {
+				inLobby = true
+				break
+			}
+		}
+	}
+	if !inLobby {
 		if status != lobbyStatusWaitingMatchmake && status != lobbyStatusWaitingInvite {
 			WriteErr(w, r, http.StatusForbidden, "forbidden")
 			return
@@ -1166,24 +1244,23 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	}
 
 	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-	gridSize, _ := strconv.Atoi(m["grid_size"])
-	if !validGridSize[gridSize] {
-		gridSize = 3
-	}
-	swapRule := m["swap_rule"] == "true"
-	firstMoveRestriction := m["first_move_restriction"] == "true"
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	gridSize := cfg.GridSize
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	item := LobbyItem{
-		ID:                   lobbyID,
-		CreatorID:            creatorID,
-		CreatorName:          creatorName,
-		Status:               status,
-		CreatedAt:            m["created_at"],
-		TurnTimeSec:          turnTimeSec,
-		GridSize:             gridSize,
-		SwapRule:             swapRule,
-		FirstMoveRestriction: firstMoveRestriction,
-		StakeBronze:          stakeBronze,
+		ID:          lobbyID,
+		CreatorID:   creatorID,
+		CreatorName: creatorName,
+		Status:      status,
+		CreatedAt:   m["created_at"],
+		TurnTimeSec: turnTimeSec,
+		Variant:     string(variant),
+		GridSize:    gridSize,
+		MaxPlayers:  cfg.MaxPlayers,
+		StakeBronze: stakeBronze,
 	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
@@ -1328,7 +1405,6 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	status := m["status"]
 
 	if status == lobbyStatusInGame {
-		// Подчистить устаревшие invite-ссылки в чатах, если игра уже идёт.
 		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusConflict, "game already started with another opponent")
 		return
@@ -1339,8 +1415,6 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		return
 	}
 
-	// waiting_invite: вход по прямой ссылке или по приглашению друга (UUID лобби — секрет).
-	// waiting_matchmake: любой соперник из очереди/списка открытых лобби.
 	if status != lobbyStatusWaitingInvite && status != lobbyStatusWaitingMatchmake {
 		WriteErr(w, r, http.StatusBadRequest, "lobby not joinable")
 		return
@@ -1348,7 +1422,6 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 
 	creatorUUID, _ := uuid.Parse(creatorID)
 
-	// При одновременном реванше оба нажимают «Принять» — блокировка, чтобы создать только одну игру.
 	if status == lobbyStatusWaitingInvite {
 		lockKey := "rematch_lock:" + minUUID(creatorUUID, userID) + ":" + maxUUID(creatorUUID, userID)
 		ok, _ := h.Rdb.SetNX(ctx, lockKey, "1", 15*time.Second).Result()
@@ -1369,16 +1442,31 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-	gridSize, _ := strconv.Atoi(m["grid_size"])
-	if !validGridSize[gridSize] {
-		gridSize = 3
-	}
-	swapRule := m["swap_rule"] == "true"
-	firstMoveRestriction := m["first_move_restriction"] == "true"
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	gridSize := cfg.GridSize
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	if stakeBronze < 1 {
 		stakeBronze = 1
 	}
+
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{creatorID}
+	}
+	for _, p := range players {
+		if p == userID.String() {
+			WriteErr(w, r, http.StatusBadRequest, "already in lobby")
+			return
+		}
+	}
+	if len(players) >= cfg.MaxPlayers {
+		WriteErr(w, r, http.StatusConflict, "lobby is full")
+		return
+	}
+
 	bal, err := store.GetBalance(ctx, h.Pool, userID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -1388,51 +1476,108 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
 		return
 	}
-	creatorBal, err := store.GetBalance(ctx, h.Pool, creatorUUID)
-	if err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
+
+	players = append(players, userID.String())
+	if len(players) < cfg.MaxPlayers {
+		// Ещё ждём игроков (multi3/multi4).
+		pipe := h.Rdb.Pipeline()
+		pipe.HSet(ctx, key,
+			"player_ids", formatPlayerIDsCSV(players),
+			"opponent_id", userID.String(),
+			"variant", string(variant),
+			"max_players", strconv.Itoa(cfg.MaxPlayers),
+		)
+		pipe.Expire(ctx, key, 24*time.Hour)
+		if _, err := pipe.Exec(ctx); err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		notify := make([]uuid.UUID, 0, len(players))
+		for _, p := range players {
+			if u, e := uuid.Parse(p); e == nil {
+				notify = append(notify, u)
+			}
+		}
+		h.broadcast(notify, map[string]any{
+			"type":         "lobby_updated",
+			"lobby_id":     lobbyID,
+			"player_ids":   players,
+			"players_count": len(players),
+			"max_players":  cfg.MaxPlayers,
+		})
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"joined":         true,
+			"status":         status,
+			"players_count":  len(players),
+			"max_players":    cfg.MaxPlayers,
+			"waiting_more":   true,
+		})
 		return
 	}
-	if creatorBal < stakeBronze {
-		WriteErr(w, r, http.StatusConflict, "creator has insufficient balance")
-		return
+
+	// Полный состав — стартуем игру.
+	uuids := make([]uuid.UUID, 0, len(players))
+	for _, p := range players {
+		u, e := uuid.Parse(p)
+		if e != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		uuids = append(uuids, u)
+		pb, e := store.GetBalance(ctx, h.Pool, u)
+		if e != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if pb < stakeBronze {
+			WriteErr(w, r, http.StatusConflict, "a player has insufficient balance")
+			return
+		}
 	}
 
 	gameID := uuid.New().String()
 	gameKey := "game:" + gameID
-	xUserID := creatorID
-	oUserID := userID.String()
-	if rand.Intn(2) == 1 {
-		xUserID, oUserID = oUserID, xUserID
-	}
+	assignment := assignMarksRandom(cfg.Marks, players, rand.Shuffle)
 	board := emptyBoardJSON(gridSize)
 
 	pipe := h.Rdb.Pipeline()
-	pipe.HSet(ctx, key, "opponent_id", userID.String(), "status", lobbyStatusInGame, "game_id", gameID)
+	pipe.HSet(ctx, key,
+		"opponent_id", userID.String(),
+		"status", lobbyStatusInGame,
+		"game_id", gameID,
+		"variant", string(variant),
+		"player_ids", formatPlayerIDsCSV(players),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+	)
 	pipe.Expire(ctx, key, 24*time.Hour)
 	if status == lobbyStatusWaitingMatchmake {
-		pipe.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze), 0, creatorID+":"+lobbyID)
+		pipe.LRem(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze), 0, creatorID+":"+lobbyID)
 	}
 
-	if err := store.DeductCoinsTwo(ctx, h.Pool, creatorUUID, userID, stakeBronze); err != nil {
+	if err := store.DeductCoinsMany(ctx, h.Pool, uuids, stakeBronze); err != nil {
 		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
 		return
 	}
 
 	gameFields := []any{
 		"board", board,
-		"turn", "x",
+		"turn", cfg.Marks[0],
 		"status", gameStatusActive,
 		"lobby_id", lobbyID,
-		"x_user_id", xUserID,
-		"o_user_id", oUserID,
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"variant", string(variant),
 		"grid_size", strconv.Itoa(gridSize),
-		"swap_rule", strconv.FormatBool(swapRule),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+		"swap_rule", "false",
+		"first_move_restriction", "false",
 		"swapped", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
 		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	gameFields = append(gameFields, markFieldsForRedis(assignment)...)
+	if variant == gameengine.VariantUltimate {
+		gameFields = append(gameFields, "next_board", "-1", "meta_board", formatMetaBoard(make([]string, 9)))
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -1446,14 +1591,11 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		return
 	}
 
-	clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
-	clearUserActiveLobby(ctx, h.Rdb, userID)
-	setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
-	setUserActiveGame(ctx, h.Rdb, userID, gameID)
+	for _, u := range uuids {
+		clearUserActiveLobby(ctx, h.Rdb, u)
+		setUserActiveGame(ctx, h.Rdb, u, gameID)
+	}
 
-	// Удалить связанные waiting_invite лобби между этими двумя игроками:
-	// 1) «обратное» (joiner пригласил creator) — иначе второй Join получит конфликт;
-	// 2) дубликаты приглашений от того же creator к joiner (повторный реванш).
 	if status == lobbyStatusWaitingInvite {
 		keys, _ := h.Rdb.Keys(ctx, "lobby:*").Result()
 		for _, k := range keys {
@@ -1486,18 +1628,15 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		h.Rdb.Del(ctx, key+":invited")
 	}
 
-	// У всех, кому отправили ссылку «Войти в игру», убрать сообщение —
-	// лобби уже занято, карточка больше не актуальна.
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
-	h.broadcast([]uuid.UUID{creatorUUID, userID}, map[string]any{
+	h.broadcast(uuids, map[string]any{
 		"type":        "lobby_updated",
 		"lobby_id":    lobbyID,
 		"game_id":     gameID,
 		"opponent_id": userID.String(),
 	})
-	// Дублируем game_started — ожидающий в лобби и AppShell сразу уводят обоих в игру.
-	h.publishGameStarted([]uuid.UUID{creatorUUID, userID}, gameID, lobbyID)
+	h.publishGameStarted(uuids, gameID, lobbyID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -1592,14 +1731,12 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	h.Rdb.Del(ctx, key+":invited")
 	if status == lobbyStatusWaitingMatchmake {
 		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-		gridSize, _ := strconv.Atoi(m["grid_size"])
-		if !validGridSize[gridSize] {
-			gridSize = 3
-		}
-		swapRule := m["swap_rule"] == "true"
-		firstMoveRestriction := m["first_move_restriction"] == "true"
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.Rdb.LRem(ctx, matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze), 0, userID.String()+":"+lobbyID)
+		_, variant := resolveVariantConfig(m["variant"], func() int {
+			gs, _ := strconv.Atoi(m["grid_size"])
+			return gs
+		}())
+		h.Rdb.LRem(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze), 0, userID.String()+":"+lobbyID)
 	}
 	// Ссылка «Войти в игру» в чатах больше не актуальна.
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
@@ -1711,65 +1848,79 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		m, _ = h.Rdb.HGetAll(ctx, key).Result()
 	}
 
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
-	if xUserID != userID.String() && oUserID != userID.String() {
+	allowed := false
+	for _, id := range gamePlayerUserIDs(m) {
+		if id == userID.String() {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
 		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 
-	// Если сейчас ход бота — выполняем ход перед возвратом состояния
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
 	turn := m["turn"]
-	botTurn := (turn == "x" && isBot(xUserID)) || (turn == "o" && isBot(oUserID))
+	botTurn := isBot(markOwnerUserID(m, turn))
 	if botTurn && m["status"] == gameStatusActive {
 		if h.applyBotMove(ctx, key, m) {
 			m, _ = h.Rdb.HGetAll(ctx, key).Result()
 		}
 	}
 
-	gridSize := 3
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
-		}
-	}
+	gridSize := cfg.GridSize
 	board := parseBoard(m["board"], gridSize)
-	swapRule := m["swap_rule"] == "true"
-	firstMoveRestriction := m["first_move_restriction"] == "true"
-	swapped := m["swapped"] == "true"
-	canSwap := false
-	if swapRule && !swapped && m["turn"] == "o" {
-		cnt := 0
-		for _, c := range board {
-			if c != "" {
-				cnt++
-			}
-		}
-		canSwap = cnt == 1
-	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	if stakeBronze < 1 {
 		stakeBronze = 1
 	}
+	maxPlayers, _ := strconv.Atoi(m["max_players"])
+	if maxPlayers < 1 {
+		maxPlayers = cfg.MaxPlayers
+	}
 	item := GameStateItem{
-		ID:                   gameID,
-		Board:                board,
-		Turn:                 m["turn"],
-		Status:               m["status"],
-		GridSize:             gridSize,
-		XUserID:              xUserID,
-		OUserID:              oUserID,
-		SwapRule:             swapRule,
-		FirstMoveRestriction: firstMoveRestriction,
-		CanSwap:              canSwap,
-		StakeBronze:          stakeBronze,
-		Forfeit:              m["forfeit"] == "1",
-		Timeout:              m["timeout"] == "1",
-		DrawOfferBy:          m["draw_offer_by"],
+		ID:          gameID,
+		Board:       board,
+		Turn:        m["turn"],
+		Status:      m["status"],
+		Variant:     string(variant),
+		GridSize:    gridSize,
+		MaxPlayers:  maxPlayers,
+		XUserID:     m["x_user_id"],
+		OUserID:     m["o_user_id"],
+		TUserID:     m["t_user_id"],
+		SUserID:     m["s_user_id"],
+		CanSwap:     false,
+		StakeBronze: stakeBronze,
+		Forfeit:     m["forfeit"] == "1",
+		Timeout:     m["timeout"] == "1",
+		DrawOfferBy: m["draw_offer_by"],
+	}
+	if variant == gameengine.VariantUltimate {
+		nb := -1
+		if v, e := strconv.Atoi(m["next_board"]); e == nil {
+			nb = v
+		}
+		item.NextBoard = &nb
+		item.MetaBoard = parseMetaBoard(m["meta_board"])
 	}
 	if w := m["winner"]; w != "" {
 		item.Winner = &w
-		if line := checkWinLine(board, w, gridSize); len(line) == winLength(gridSize) {
+		eng, e := gameengine.New(variant)
+		if e == nil {
+			st := engineStateFromRedis(m, cfg)
+			st.Status = "won"
+			st.Winner = w
+			// Подсветка: пересчёт по доске.
+			if line := checkWinLine(board, w, gridSize); len(line) > 0 {
+				item.WinningCells = line
+			}
+			_ = eng
+		} else if line := checkWinLine(board, w, gridSize); len(line) > 0 {
 			item.WinningCells = line
 		}
 	}
@@ -1786,6 +1937,7 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	frameIDs := make([]uuid.UUID, 0, 2)
 	var xUUID, oUUID uuid.UUID
 	var xParsed, oParsed bool
+	xUserID, oUserID := m["x_user_id"], m["o_user_id"]
 	if isBot(xUserID) {
 		item.XDisplayName = &botName
 	} else if id, err := uuid.Parse(xUserID); err == nil {
@@ -1850,31 +2002,24 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
-	gridSize := 3
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
-		}
-	}
-	maxCell := gridSize*gridSize - 1
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	gridSize := cfg.GridSize
+	maxCell := cfg.CellCount - 1
 	if body.Cell < 0 || body.Cell > maxCell {
 		WriteErr(w, r, http.StatusBadRequest, "cell must be 0-"+strconv.Itoa(maxCell))
 		return
 	}
 	if h.applyGameTimeout(ctx, key, m) {
 		m, _ = h.Rdb.HGetAll(ctx, key).Result()
-		gridSize := 3
-		if gs := m["grid_size"]; gs != "" {
-			if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-				gridSize = n
-			}
-		}
 		board := parseBoard(m["board"], gridSize)
 		w.Header().Set("Content-Type", "application/json")
 		resp := map[string]any{
 			"game_id": gameID, "board": board,
 			"turn": m["turn"], "winner": m["winner"], "status": m["status"],
-			"timeout": true, "grid_size": gridSize,
+			"timeout": true, "grid_size": gridSize, "variant": string(variant),
 			"x_user_id": m["x_user_id"], "o_user_id": m["o_user_id"],
 		}
 		h.addGamePlayerMetadata(ctx, resp, m["x_user_id"], m["o_user_id"])
@@ -1888,64 +2033,40 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 
 	turn := m["turn"]
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
-	if (turn == "x" && xUserID != userID.String()) || (turn == "o" && oUserID != userID.String()) {
+	if markOwnerUserID(m, turn) != userID.String() {
 		WriteErr(w, r, http.StatusBadRequest, "not your turn")
 		return
 	}
 
-	firstMoveRestriction := m["first_move_restriction"] == "true"
-	if firstMoveRestriction && turn == "x" {
-		board := parseBoard(m["board"], gridSize)
-		moveCount := 0
-		for _, c := range board {
-			if c != "" {
-				moveCount++
-			}
-		}
-		if moveCount == 0 {
-			for _, c := range centerCellIndices(gridSize) {
-				if c == body.Cell {
-					WriteErr(w, r, http.StatusBadRequest, "first move cannot be in center")
-					return
-				}
-			}
-		}
-	}
-
-	board := parseBoard(m["board"], gridSize)
-	if board[body.Cell] != "" {
-		WriteErr(w, r, http.StatusBadRequest, "cell already taken")
+	eng, err := gameengine.New(variant)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-
-	board[body.Cell] = turn
-	nextTurn := "o"
-	if turn == "o" {
-		nextTurn = "x"
+	st := engineStateFromRedis(m, cfg)
+	res, err := eng.ApplyMove(st, body.Cell)
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "illegal move")
+		return
 	}
-	newBoard := formatBoard(board)
-	status := gameStatusActive
-	winner := turn
-
-	winningCells := checkWinLine(board, turn, gridSize)
-	if len(winningCells) == winLength(gridSize) {
-		status = gameStatusXWon
-		if turn == "o" {
-			status = gameStatusOWon
-		}
-	} else if isDraw(board, gridSize) {
-		status = gameStatusDraw
-		winner = ""
-	} else {
-		winner = ""
-	}
+	status, winner := statusFromEngineResult(res)
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
 
 	pipe := h.Rdb.Pipeline()
-	setFields := []any{"board", newBoard, "turn", nextTurn, "status", status}
+	setFields := []any{
+		"board", formatBoard(res.State.Board),
+		"turn", res.State.Turn,
+		"status", status,
+	}
 	if winner != "" {
-		setFields = append(setFields, "winner", turn)
+		setFields = append(setFields, "winner", winner)
+	}
+	if variant == gameengine.VariantUltimate {
+		setFields = append(setFields,
+			"next_board", strconv.Itoa(res.State.NextBoard),
+			"meta_board", formatMetaBoard(res.State.MetaBoard),
+		)
 	}
 	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 	if turnTimeSec > 0 && status == gameStatusActive {
@@ -1956,7 +2077,6 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 	pipe.HSet(ctx, key, setFields...)
 	pipe.Expire(ctx, key, 24*time.Hour)
-	// Любой ход снимает предложение ничьей (если было) — у обоих игроков.
 	hadDrawOffer := strings.TrimSpace(m["draw_offer_by"]) != ""
 	if hadDrawOffer {
 		pipe.HDel(ctx, key, "draw_offer_by")
@@ -1967,42 +2087,26 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		return
 	}
 
+	humans := humanUserIDsFromGame(m)
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, "normal", m["started_at"])
-		for _, uid := range []string{xUserID, oUserID} {
-			if !isBot(uid) {
-				if u, e := uuid.Parse(uid); e == nil {
-					clearUserActiveGame(ctx, h.Rdb, u)
-				}
-			}
+		h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "normal", m["started_at"])
+		for _, u := range humans {
+			clearUserActiveGame(ctx, h.Rdb, u)
 		}
 	}
 
-	winnerVal := winner
-	if winner != "" {
-		winnerVal = turn
-	}
-	swapRule := m["swap_rule"] == "true"
-	firstMoveRestriction = m["first_move_restriction"] == "true"
-	swapped := m["swapped"] == "true"
-	canSwap := false
-	if swapRule && !swapped && nextTurn == "o" && status == gameStatusActive {
-		cnt := 0
-		for _, c := range board {
-			if c != "" {
-				cnt++
-			}
-		}
-		canSwap = cnt == 1
-	}
 	broadcastPayload := map[string]any{
 		"type": "game_state", "game_id": gameID,
-		"board": board, "turn": nextTurn, "winner": winnerVal, "status": status,
-		"swap_rule": swapRule, "first_move_restriction": firstMoveRestriction, "can_swap": canSwap,
+		"board": res.State.Board, "turn": res.State.Turn, "winner": winner, "status": status,
+		"variant": string(variant), "grid_size": gridSize, "can_swap": false,
 	}
-	if len(winningCells) == winLength(gridSize) {
-		broadcastPayload["winning_cells"] = winningCells
+	if len(res.WinningCells) > 0 {
+		broadcastPayload["winning_cells"] = res.WinningCells
+	}
+	if variant == gameengine.VariantUltimate {
+		broadcastPayload["next_board"] = res.State.NextBoard
+		broadcastPayload["meta_board"] = res.State.MetaBoard
 	}
 	if hadDrawOffer {
 		broadcastPayload["draw_offer_by"] = ""
@@ -2012,24 +2116,42 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		broadcastPayload["turn_deadline"] = deadline
 		broadcastPayload["turn_time_sec"] = turnTimeSec
 	}
-	h.broadcast(humanUserIDs(xUserID, oUserID), broadcastPayload)
+	h.broadcast(humans, broadcastPayload)
 	if status == gameStatusActive {
-		h.notifyYourTurn(gameID, nextTurn, xUserID, oUserID)
+		// Обновляем turn в копии m для push.
+		m2 := map[string]string{}
+		for k, v := range m {
+			m2[k] = v
+		}
+		m2["turn"] = res.State.Turn
+		h.notifyYourTurn(gameID, res.State.Turn, m2)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
 		"game_id":   gameID,
-		"board":     board,
-		"turn":      nextTurn,
+		"board":     res.State.Board,
+		"turn":      res.State.Turn,
 		"winner":    winner,
 		"status":    status,
 		"grid_size": gridSize,
+		"variant":   string(variant),
 		"x_user_id": xUserID,
 		"o_user_id": oUserID,
+		"can_swap":  false,
 	}
-	if len(winningCells) == winLength(gridSize) {
-		resp["winning_cells"] = winningCells
+	if m["t_user_id"] != "" {
+		resp["t_user_id"] = m["t_user_id"]
+	}
+	if m["s_user_id"] != "" {
+		resp["s_user_id"] = m["s_user_id"]
+	}
+	if len(res.WinningCells) > 0 {
+		resp["winning_cells"] = res.WinningCells
+	}
+	if variant == gameengine.VariantUltimate {
+		resp["next_board"] = res.State.NextBoard
+		resp["meta_board"] = res.State.MetaBoard
 	}
 	if turnTimeSec > 0 && status == gameStatusActive {
 		resp["turn_time_sec"] = turnTimeSec
@@ -2040,104 +2162,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 }
 
 func (h *GamesHandler) SwapSides(w http.ResponseWriter, r *http.Request, gameID string) {
-	userID, ok := currentUserIDFromGames(r)
-	if !ok {
-		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
-		return
-	}
-
-	ctx := r.Context()
-	key := "game:" + gameID
-	m, err := h.Rdb.HGetAll(ctx, key).Result()
-	if err != nil || len(m) == 0 {
-		WriteErr(w, r, http.StatusNotFound, "game not found")
-		return
-	}
-	if m["status"] != gameStatusActive {
-		WriteErr(w, r, http.StatusBadRequest, "game is over")
-		return
-	}
-
-	swapRule := m["swap_rule"] == "true"
-	if !swapRule {
-		WriteErr(w, r, http.StatusBadRequest, "swap not allowed in this game")
-		return
-	}
-
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
-	if oUserID != userID.String() {
-		WriteErr(w, r, http.StatusBadRequest, "only O can swap")
-		return
-	}
-	if m["turn"] != "o" {
-		WriteErr(w, r, http.StatusBadRequest, "can only swap on your turn after X's first move")
-		return
-	}
-
-	gridSize := 3
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
-		}
-	}
-	board := parseBoard(m["board"], gridSize)
-	moveCount := 0
-	for _, c := range board {
-		if c != "" {
-			moveCount++
-		}
-	}
-	if moveCount != 1 {
-		WriteErr(w, r, http.StatusBadRequest, "can only swap after X's first move")
-		return
-	}
-
-	newXUserID := oUserID
-	newOUserID := xUserID
-	pipe := h.Rdb.Pipeline()
-	pipe.HSet(ctx, key, "x_user_id", newXUserID, "o_user_id", newOUserID, "turn", "o", "swapped", "true")
-	pipe.Expire(ctx, key, 24*time.Hour)
-	if _, err := pipe.Exec(ctx); err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
-		return
-	}
-
-	xUUID, _ := uuid.Parse(newXUserID)
-	oUUID, _ := uuid.Parse(newOUserID)
-	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-	broadcastPayload := map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"board":     board,
-		"turn":      "o",
-		"status":    gameStatusActive,
-		"x_user_id": newXUserID,
-		"o_user_id": newOUserID,
-		"swap_rule": true,
-		"can_swap":  false,
-		"swapped":   true,
-	}
-	if turnTimeSec > 0 {
-		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
-		broadcastPayload["turn_deadline"] = deadline
-		broadcastPayload["turn_time_sec"] = turnTimeSec
-	}
-	h.broadcast([]uuid.UUID{xUUID, oUUID}, broadcastPayload)
-	h.notifyYourTurn(gameID, "o", newXUserID, newOUserID)
-
-	w.Header().Set("Content-Type", "application/json")
-	resp := map[string]any{
-		"game_id":   gameID,
-		"board":     board,
-		"turn":      "o",
-		"status":    gameStatusActive,
-		"x_user_id": newXUserID,
-		"o_user_id": newOUserID,
-		"swapped":   true,
-	}
-	h.addGamePlayerMetadata(ctx, resp, newXUserID, newOUserID)
-	_ = json.NewEncoder(w).Encode(resp)
+	WriteErr(w, r, http.StatusGone, "swap sides removed")
 }
 
 func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameID string) {
@@ -2335,14 +2360,11 @@ func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID s
 
 // notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).
 // Показ на клиенте подавляется SW, если пользователь уже смотрит этот матч.
-func (h *GamesHandler) notifyYourTurn(gameID, nextTurn, xUserID, oUserID string) {
+func (h *GamesHandler) notifyYourTurn(gameID, nextTurn string, m map[string]string) {
 	if h.Push == nil || strings.TrimSpace(gameID) == "" {
 		return
 	}
-	nextID := xUserID
-	if nextTurn == "o" {
-		nextID = oUserID
-	}
+	nextID := markOwnerUserID(m, nextTurn)
 	if nextID == "" || isBot(nextID) {
 		return
 	}
@@ -2405,10 +2427,98 @@ func (h *GamesHandler) onGameFinished(
 	status, finishReason string,
 	startedAtRaw string,
 ) {
-	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
-	h.recordGameFinished(ctx, xUserID, oUserID)
-	h.recordGameWin(ctx, xUserID, oUserID, stakeBronze, status)
+	h.onGameFinishedWithMap(ctx, gameID, map[string]string{
+		"x_user_id": xUserID,
+		"o_user_id": oUserID,
+	}, gridSize, stakeBronze, status, finishReason, startedAtRaw)
+}
+
+func (h *GamesHandler) onGameFinishedWithMap(
+	ctx context.Context,
+	gameID string,
+	m map[string]string,
+	gridSize, stakeBronze int,
+	status, finishReason string,
+	startedAtRaw string,
+) {
+	xUserID := m["x_user_id"]
+	oUserID := m["o_user_id"]
+	h.settleGameCoinsMulti(ctx, m, stakeBronze, status)
+	for _, uid := range gamePlayerUserIDs(m) {
+		if uid == "" || isBot(uid) {
+			continue
+		}
+		if u, err := uuid.Parse(uid); err == nil {
+			_ = store.IncrementGamesFinished(ctx, h.Pool, u)
+			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
+			notifyAchievementUnlocks(h.Push, u, unlocked)
+		}
+	}
+	winnerMark := ""
+	switch status {
+	case gameStatusXWon:
+		winnerMark = "x"
+	case gameStatusOWon:
+		winnerMark = "o"
+	case gameStatusTWon:
+		winnerMark = "t"
+	case gameStatusSWon:
+		winnerMark = "s"
+	}
+	if winnerMark != "" {
+		if wid := markOwnerUserID(m, winnerMark); wid != "" && !isBot(wid) {
+			if u, err := uuid.Parse(wid); err == nil {
+				_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
+				unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
+				notifyAchievementUnlocks(h.Push, u, unlocked)
+			}
+		}
+	}
 	h.recordGameResult(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, finishReason, startedAtRaw)
+}
+
+func (h *GamesHandler) settleGameCoinsMulti(ctx context.Context, m map[string]string, stakeBronze int, status string) {
+	if stakeBronze <= 0 {
+		return
+	}
+	players := gamePlayerUserIDs(m)
+	if len(players) == 0 {
+		return
+	}
+	winnerMark := ""
+	switch status {
+	case gameStatusXWon:
+		winnerMark = "x"
+	case gameStatusOWon:
+		winnerMark = "o"
+	case gameStatusTWon:
+		winnerMark = "t"
+	case gameStatusSWon:
+		winnerMark = "s"
+	}
+	if len(players) == 2 {
+		h.settleGameCoins(ctx, m["x_user_id"], m["o_user_id"], stakeBronze, status)
+		return
+	}
+	// N игроков: банк stake*N победителю; при ничьей — возврат ставки каждому.
+	if winnerMark == "" {
+		for _, p := range players {
+			if isBot(p) {
+				continue
+			}
+			if u, e := uuid.Parse(p); e == nil {
+				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
+			}
+		}
+		return
+	}
+	winnerID := markOwnerUserID(m, winnerMark)
+	if winnerID == "" || isBot(winnerID) {
+		return
+	}
+	if u, e := uuid.Parse(winnerID); e == nil {
+		_ = store.AddCoins(ctx, h.Pool, u, stakeBronze*len(players))
+	}
 }
 
 // recordGameResult сохраняет результат партии в game_results (для статистики).
@@ -2428,6 +2538,9 @@ func (h *GamesHandler) recordGameResult(
 		winnerID = xUserID
 	case gameStatusOWon:
 		winnerID = oUserID
+	case gameStatusTWon, gameStatusSWon:
+		// Для multi победитель уже в Redis; здесь x/o-only запись — winner пустой.
+		winnerID = ""
 	}
 	againstBot := isBot(xUserID) || isBot(oUserID)
 
@@ -2484,6 +2597,8 @@ func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID strin
 		winnerID = xUserID
 	case gameStatusOWon:
 		winnerID = oUserID
+	case gameStatusTWon, gameStatusSWon:
+		return
 	default:
 		return
 	}
@@ -2662,13 +2777,22 @@ func parseBoard(s string, gridSize int) []string {
 	var b []string
 	_ = json.Unmarshal([]byte(s), &b)
 	n := gridSize * gridSize
-	if n <= 0 || n > 64 {
+	if gridSize == 9 {
+		n = 81 // ultimate
+	}
+	if n <= 0 || n > 225 {
 		n = 9
 	}
-	if len(b) != n {
+	if len(b) == n {
+		return b
+	}
+	// Доверяем только известным размерам вариантов (gomoku/ultimate/multi).
+	switch len(b) {
+	case 9, 64, 81, 100, 225:
+		return b
+	default:
 		return make([]string, n)
 	}
-	return b
 }
 
 // winLength: для 3–5 — N в ряд, для 6–8 — 5 в ряд (гомоку).
