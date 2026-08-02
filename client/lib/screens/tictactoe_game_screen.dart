@@ -325,22 +325,34 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
           title: Text(context.l10n.gamesTicTacToe),
           actions: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 4, top: 0),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
-                  ),
-                  iconSize: 22,
-                  icon: const Icon(Icons.rule_rounded),
-                  tooltip: context.l10n.gamesRulesTitle,
-                  onPressed: () => _showGameRules(context),
+            // Multi: «сдаться» в AppBar, чтобы не налезала на блок чата/игроков.
+            if (gameForBar != null &&
+                gameForBar.status == 'active' &&
+                gameForBar.maxPlayers > 2 &&
+                !(meId != null &&
+                    gameForBar.markForUser(meId) != null &&
+                    gameForBar.isEliminated(gameForBar.markForUser(meId)!)))
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
                 ),
+                iconSize: 22,
+                icon: const Icon(Icons.flag_outlined),
+                tooltip: context.l10n.gameSurrender,
+                onPressed: () => _confirmSurrender(context),
               ),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
+              ),
+              iconSize: 22,
+              icon: const Icon(Icons.rule_rounded),
+              tooltip: context.l10n.gamesRulesTitle,
+              onPressed: () => _showGameRules(context),
             ),
           ],
         ),
@@ -441,9 +453,19 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               }
             } else if (myMark != null && game.isEliminated(myMark)) {
               statusText = 'Вы выбыли';
+            } else if (isMyTurn) {
+              statusText = context.l10n.gamesMyTurn;
             } else {
-              statusText = isMyTurn
-                  ? context.l10n.gamesMyTurn
+              // «Ход {логин}» — чей сейчас ход (не себя).
+              final turnMeta = game.playerMeta(game.turn);
+              final turnName = _resolvePlayerLogin(
+                turnMeta,
+                chatsList:
+                    ref.watch(chatsListProvider).valueOrNull ?? const [],
+                chatId: game.chatId,
+              );
+              statusText = turnName.isNotEmpty
+                  ? 'Ход $turnName'
                   : context.l10n.gamesOpponentTurn;
             }
 
@@ -467,6 +489,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               if (isMultiGame) {
                 return _MultiOpponentsCard(
                   game: game,
+                  // Только чужие; без me — пусто (не мелькает «я» / «Соперник»).
                   opponents: game.opponentsOf(currentUser?.id),
                   chatsList:
                       ref.watch(chatsListProvider).valueOrNull ?? const [],
@@ -620,9 +643,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   Positioned.fill(
                     child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
                   ),
-                // «Сдаться» и «ничья» — справа сверху, в одну линию с «правилами».
-                // Выбывший в multi больше не сдаётся / не ходит.
+                // 1v1: «сдаться»/«ничья» overlay справа сверху.
+                // Multi: флаг в AppBar — иначе на мобиле налезает на чат игроков.
                 if (gameActive &&
+                    !isMultiGame &&
                     !(meId != null &&
                         game.markForUser(meId) != null &&
                         game.isEliminated(game.markForUser(meId)!)))
@@ -1788,6 +1812,43 @@ class _RematchSection extends StatelessWidget {
   }
 }
 
+/// Логин игрока: мета игры → участники группового чата → direct-чат.
+/// Пустая строка, если имени нет (не подставляем «Соперник» в список).
+String _resolvePlayerLogin(
+  GamePlayerMeta? player, {
+  required List<ChatPreviewItem> chatsList,
+  String? chatId,
+}) {
+  if (player == null) return '';
+  final fromMeta = player.displayName?.trim() ?? '';
+  if (fromMeta.isNotEmpty) return fromMeta;
+  final userId = player.userId.trim();
+  if (userId.isEmpty) return '';
+  final groupId = chatId?.trim() ?? '';
+  if (groupId.isNotEmpty) {
+    for (final chat in chatsList) {
+      if (chat.chatID != groupId) continue;
+      for (final member in chat.members) {
+        if (member.id != userId) continue;
+        final name = member.displayName?.trim() ?? '';
+        if (name.isNotEmpty) return name;
+      }
+    }
+  }
+  for (final chat in chatsList) {
+    if (chat.user.id == userId) {
+      final name = chat.user.displayName?.trim() ?? '';
+      if (name.isNotEmpty) return name;
+    }
+    for (final member in chat.members) {
+      if (member.id != userId) continue;
+      final name = member.displayName?.trim() ?? '';
+      if (name.isNotEmpty) return name;
+    }
+  }
+  return '';
+}
+
 class _MultiOpponentsCard extends StatelessWidget {
   const _MultiOpponentsCard({
     required this.game,
@@ -1808,35 +1869,56 @@ class _MultiOpponentsCard extends StatelessWidget {
         .map((c) => c.unreadCount)
         .fold<int>(0, (a, b) => a + b);
     final narrow = isNarrow(context);
+    final chips = <Widget>[];
+    for (final player in opponents) {
+      final login = _resolvePlayerLogin(
+        player,
+        chatsList: chatsList,
+        chatId: game.chatId,
+      );
+      // Без логина не рисуем «Соперник» — пропускаем слот.
+      if (login.isEmpty) continue;
+      if (chips.isNotEmpty) {
+        chips.add(SizedBox(width: narrow ? 8 : 10));
+      }
+      chips.add(
+        _MultiOpponentChip(
+          displayName: login,
+          player: player,
+          eliminated: game.isEliminated(player.mark),
+          compact: true,
+        ),
+      );
+    }
+    if (chips.isEmpty && onGroupChatTap == null) {
+      return const SizedBox.shrink();
+    }
     final card = GradientCard(
       padding: EdgeInsets.symmetric(
-        horizontal: narrow ? 12 : 16,
-        vertical: narrow ? 8 : 12,
+        horizontal: narrow ? 8 : 12,
+        vertical: narrow ? 4 : 6,
       ),
       margin: EdgeInsets.zero,
       animate: false,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Wrap(
-              spacing: narrow ? 8 : 12,
-              runSpacing: 8,
-              children: [
-                for (final player in opponents)
-                  _MultiOpponentChip(
-                    player: player,
-                    eliminated: game.isEliminated(player.mark),
-                    compact: narrow,
-                  ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: chips,
+              ),
             ),
           ),
-          _IconWithBadge(
-            icon: Icons.forum_rounded,
-            badge: groupBadge,
-            tooltip: 'Чат группы',
-            onPressed: onGroupChatTap,
-          ),
+          if (onGroupChatTap != null)
+            _IconWithBadge(
+              icon: Icons.forum_rounded,
+              badge: groupBadge,
+              tooltip: 'Чат группы',
+              onPressed: onGroupChatTap,
+            ),
         ],
       ),
     );
@@ -1854,41 +1936,41 @@ class _MultiOpponentsCard extends StatelessWidget {
 
 class _MultiOpponentChip extends StatelessWidget {
   const _MultiOpponentChip({
+    required this.displayName,
     required this.player,
     required this.eliminated,
     this.compact = false,
   });
 
+  final String displayName;
   final GamePlayerMeta player;
   final bool eliminated;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final name = player.displayName?.trim().isNotEmpty == true
-        ? player.displayName!.trim()
-        : context.l10n.gameOpponent;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _OpponentAvatar(
-          displayName: name,
+          displayName: displayName,
           avatarKind: player.avatarKind,
           avatarValue: player.avatarValue,
           frameCode: player.frameCode,
           frameColor: player.frameColor,
           compact: compact,
         ),
-        SizedBox(width: compact ? 6 : 8),
+        SizedBox(width: compact ? 5 : 8),
         ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: compact ? 92 : 120),
+          constraints: BoxConstraints(maxWidth: compact ? 78 : 120),
           child: Text(
-            name,
+            displayName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
+              fontSize: compact ? 13 : 15,
               decoration: eliminated ? TextDecoration.lineThrough : null,
             ),
           ),

@@ -675,9 +675,12 @@ class GameStateItem {
           ),
       ].where((p) => p.userId.isNotEmpty).toList(growable: false);
 
+  /// Чужие участники партии. Без [userId] — пусто (не показываем «себя» по ошибке).
   List<GamePlayerMeta> opponentsOf(String? userId) {
+    final me = userId?.trim() ?? '';
+    if (me.isEmpty) return const [];
     return playerMetas
-        .where((p) => userId == null || p.userId != userId)
+        .where((p) => p.userId.trim() != me)
         .toList(growable: false);
   }
 
