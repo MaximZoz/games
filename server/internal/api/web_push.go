@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"multigames/server/internal/i18n"
@@ -105,41 +106,51 @@ func (s *WebPushSender) send(userIDs []uuid.UUID, category string, payload PushP
 		ttl = 86400
 	}
 
+	// Параллельная отправка с лимитом — иначе десятки Apple RTT блокируют
+	// goroutine на секунды и под нагрузкой (multi) душат CPU/сеть.
+	const maxParallel = 8
+	sem := make(chan struct{}, maxParallel)
+	var wg sync.WaitGroup
 	for _, sub := range subs {
-		subscription := &webpush.Subscription{
-			Endpoint: sub.Endpoint,
-			Keys: webpush.Keys{
-				P256dh: sub.P256dh,
-				Auth:   sub.Auth,
-			},
-		}
-		resp, err := webpush.SendNotification(body, subscription, &webpush.Options{
-			Subscriber:      subject,
-			VAPIDPublicKey:  s.PublicKey,
-			VAPIDPrivateKey: s.PrivateKey,
-			TTL:             ttl,
-			Urgency:         webpush.UrgencyHigh,
-		})
-		if err != nil {
-			log.Printf("web push: send: %v", err)
-			continue
-		}
-		status := resp.StatusCode
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		_ = resp.Body.Close()
-		apple := strings.Contains(sub.Endpoint, "web.push.apple.com")
-		// Протухшая подписка — удаляем.
-		if status == http.StatusGone || status == http.StatusNotFound {
-			log.Printf("web push: drop stale subscription %s status=%d apple=%v body=%q",
-				sub.ID, status, apple, string(respBody))
-			_ = store.DeleteWebPushSubscriptionByID(ctx, s.Pool, sub.ID)
-		} else if status < 200 || status >= 300 {
-			log.Printf("web push: unexpected status %d for %s apple=%v body=%q",
-				status, sub.ID, apple, string(respBody))
-		} else if apple {
-			log.Printf("web push: apple ok status=%d sub=%s", status, sub.ID)
-		}
+		sub := sub
+		wg.Add(1)
+		sem <- struct{}{}
+		go func() {
+			defer wg.Done()
+			defer func() { <-sem }()
+			subscription := &webpush.Subscription{
+				Endpoint: sub.Endpoint,
+				Keys: webpush.Keys{
+					P256dh: sub.P256dh,
+					Auth:   sub.Auth,
+				},
+			}
+			resp, err := webpush.SendNotification(body, subscription, &webpush.Options{
+				Subscriber:      subject,
+				VAPIDPublicKey:  s.PublicKey,
+				VAPIDPrivateKey: s.PrivateKey,
+				TTL:             ttl,
+				Urgency:         webpush.UrgencyHigh,
+			})
+			if err != nil {
+				log.Printf("web push: send: %v", err)
+				return
+			}
+			status := resp.StatusCode
+			respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+			_ = resp.Body.Close()
+			apple := strings.Contains(sub.Endpoint, "web.push.apple.com")
+			if status == http.StatusGone || status == http.StatusNotFound {
+				log.Printf("web push: drop stale subscription %s status=%d apple=%v body=%q",
+					sub.ID, status, apple, string(respBody))
+				_ = store.DeleteWebPushSubscriptionByID(ctx, s.Pool, sub.ID)
+			} else if status < 200 || status >= 300 {
+				log.Printf("web push: unexpected status %d for %s apple=%v body=%q",
+					status, sub.ID, apple, string(respBody))
+			}
+		}()
 	}
+	wg.Wait()
 }
 
 // WebPushHandler — HTTP API подписок.

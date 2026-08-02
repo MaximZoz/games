@@ -43,6 +43,13 @@ func RequestLogger(secret []byte, writer *applog.FileWriter, pool *pgxpool.Pool,
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Health-check Fly не логируем — иначе InsertAppLog держит слот
+		// concurrency и валит servicecheck при нагрузке (multi/poll).
+		if r.URL.Path == "/api/start" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		started := time.Now().UTC()
 		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
 
@@ -85,24 +92,31 @@ func RequestLogger(secret []byte, writer *applog.FileWriter, pool *pgxpool.Pool,
 			}
 		}
 		if pool != nil && directDB {
+			// Асинхронно: иначе каждый HTTP-запрос ждёт Postgres и упирается
+			// в Fly hard_limit concurrency (прокси перестаёт роутить на :8080).
 			msg := r.Method + " " + r.URL.Path
 			if r.URL.RawQuery != "" {
 				msg += "?" + r.URL.RawQuery
 			}
 			path := r.URL.Path
-			_ = store.InsertAppLog(r.Context(), pool, store.InsertAppLogParams{
-				EventTime:  started,
-				Source:     "backend",
-				MethodName: "http.request",
-				UserID:     uid,
-				Level:      "info",
-				Message:    msg,
-				Metadata:   metadata,
-				HTTPMethod: &r.Method,
-				Path:       &path,
-				StatusCode: &status,
-				DurationMS: &duration,
-			})
+			method := r.Method
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				defer cancel()
+				_ = store.InsertAppLog(ctx, pool, store.InsertAppLogParams{
+					EventTime:  started,
+					Source:     "backend",
+					MethodName: "http.request",
+					UserID:     uid,
+					Level:      "info",
+					Message:    msg,
+					Metadata:   metadata,
+					HTTPMethod: &method,
+					Path:       &path,
+					StatusCode: &status,
+					DurationMS: &duration,
+				})
+			}()
 		}
 	})
 }

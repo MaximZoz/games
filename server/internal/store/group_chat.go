@@ -177,31 +177,33 @@ func GetGroupChatMeta(ctx context.Context, pool *pgxpool.Pool, chatID uuid.UUID)
 	if err != nil {
 		return nil, err
 	}
-	ids, err := ListChatMemberIDs(ctx, pool, chatID)
+	rows, err := pool.Query(ctx, `
+		SELECT
+			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value,
+			u.age, u.gender, u.about, COALESCE(u.is_support, false),
+			COALESCE(us.preferred_language, '')
+		FROM chat_members cm
+		JOIN users u ON u.id = cm.user_id
+		LEFT JOIN user_settings us ON us.user_id = u.id
+		WHERE cm.chat_id = $1
+		ORDER BY cm.joined_at
+	`, chatID)
 	if err != nil {
 		return nil, err
 	}
-	for _, id := range ids {
-		u, err := GetUserByID(ctx, pool, id)
-		if err != nil || u == nil {
-			continue
+	defer rows.Close()
+	for rows.Next() {
+		var cu ChatUser
+		if err := rows.Scan(
+			&cu.ID, &cu.Email, &cu.DisplayName, &cu.AvatarKind, &cu.AvatarValue,
+			&cu.Age, &cu.Gender, &cu.About, &cu.IsSupport, &cu.PreferredLanguage,
+		); err != nil {
+			return nil, err
 		}
-		lang := ""
-		if s, serr := GetUserSettings(ctx, pool, id); serr == nil {
-			lang = s.PreferredLanguage
-		}
-		m.Members = append(m.Members, ChatUser{
-			ID:                u.ID,
-			Email:             u.Email,
-			DisplayName:       u.DisplayName,
-			AvatarKind:        u.AvatarKind,
-			AvatarValue:       u.AvatarValue,
-			Age:               u.Age,
-			Gender:            u.Gender,
-			About:             u.About,
-			IsSupport:         u.IsSupport,
-			PreferredLanguage: lang,
-		})
+		m.Members = append(m.Members, cu)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return &m, nil
 }

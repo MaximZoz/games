@@ -16,19 +16,21 @@ primary_region = 'ams'
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = 'stop'
+  # Не глушить единственную машину: cold start + multi-poll валят health.
+  auto_stop_machines = 'off'
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
 
   [http_service.concurrency]
     type = 'requests'
-    hard_limit = 100
-    soft_limit = 80
+    # Раньше 80/100: при multi + логах + ретраях упирались в hard_limit → PR01.
+    hard_limit = 400
+    soft_limit = 300
 
   [[http_service.checks]]
     interval = '15s'
-    timeout = '5s'
-    grace_period = '10s'
+    timeout = '10s'
+    grace_period = '30s'
     method = 'GET'
     path = '/api/start'
 

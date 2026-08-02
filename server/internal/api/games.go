@@ -1174,7 +1174,7 @@ func StartBotTimeoutTicker(ctx context.Context, h *GamesHandler) {
 }
 
 func (h *GamesHandler) tickBotTimeout(ctx context.Context) {
-	keys, err := h.Rdb.Keys(ctx, "lobby:*").Result()
+	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
 	if err != nil || len(keys) == 0 {
 		return
 	}
@@ -1230,7 +1230,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	keys, err := h.Rdb.Keys(ctx, "lobby:*").Result()
+	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -1238,6 +1238,9 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 
 	var lobbies []LobbyItem
 	for _, key := range keys {
+		if strings.HasSuffix(key, ":invited") {
+			continue
+		}
 		m, err := h.Rdb.HGetAll(ctx, key).Result()
 		if err != nil || m["status"] != lobbyStatusWaitingMatchmake {
 			continue
@@ -1290,8 +1293,9 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		// TTL/уже закрыто — убрать устаревшие ссылки из чатов.
+		// TTL/уже закрыто — убрать устаревшие ссылки и групповой чат лобби.
 		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1751,7 +1755,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	if status == lobbyStatusWaitingInvite {
-		keys, _ := h.Rdb.Keys(ctx, "lobby:*").Result()
+		keys, _ := scanRedisKeys(ctx, h.Rdb, "lobby:*")
 		for _, k := range keys {
 			if k == key || strings.HasSuffix(k, ":invited") {
 				continue
