@@ -103,10 +103,11 @@ final gameInvitesProvider =
         final lobbyId = data['lobby_id']?.toString();
         if (lobbyId == null || lobbyId.isEmpty) return;
         final left = data['left'] == true;
+        final closed = data['closed'] == true;
         final gameId = data['game_id']?.toString();
         final gameStarted =
             type == 'game_started' || (gameId != null && gameId.isNotEmpty);
-        if (left || gameStarted) {
+        if (left || closed || gameStarted) {
           notifier.remove(lobbyId);
         }
       }

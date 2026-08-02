@@ -403,10 +403,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
+      ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
       if (result.joined && result.waitingMore) {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
@@ -423,6 +423,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         _navigateToJoinedGame(result.gameId!);
       }
     } catch (e) {
+      // Лобби уже нет — убрать «висящее» приглашение.
+      ref.read(gameInvitesProvider.notifier).remove(lobbyId);
       _showInviteError(e);
     }
   }

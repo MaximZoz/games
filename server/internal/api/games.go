@@ -1910,6 +1910,42 @@ func (h *GamesHandler) cleanupInviteLobbyChatMessages(ctx context.Context, lobby
 	h.broadcast(ids, map[string]any{"type": "chat_list_changed"})
 }
 
+// lobbyAudienceUUIDs — участники лобби + все, кому уже ушло приглашение
+// (ещё не вступили в player_ids). Нужно, чтобы при роспуске снять карточки «Вас пригласили».
+func (h *GamesHandler) lobbyAudienceUUIDs(ctx context.Context, key string, m map[string]string, playerIDs []string) []uuid.UUID {
+	seen := make(map[string]struct{}, len(playerIDs)+4)
+	out := make([]uuid.UUID, 0, len(playerIDs)+4)
+	add := func(raw string) {
+		s := strings.TrimSpace(raw)
+		if s == "" {
+			return
+		}
+		if _, ok := seen[s]; ok {
+			return
+		}
+		u, err := uuid.Parse(s)
+		if err != nil {
+			return
+		}
+		seen[s] = struct{}{}
+		out = append(out, u)
+	}
+	for _, p := range playerIDs {
+		add(p)
+	}
+	add(m["creator_id"])
+	add(m["opponent_id"])
+	add(m["invite_target_id"])
+	if h.Rdb != nil {
+		if members, err := h.Rdb.SMembers(ctx, key+":invited").Result(); err == nil {
+			for _, id := range members {
+				add(id)
+			}
+		}
+	}
+	return out
+}
+
 func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
@@ -1966,14 +2002,9 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		dissolve = true
 	}
 
-	notifyIDs := make([]uuid.UUID, 0, len(players))
-	for _, p := range players {
-		if u, e := uuid.Parse(p); e == nil {
-			notifyIDs = append(notifyIDs, u)
-		}
-	}
-
 	if dissolve {
+		// Сначала собираем аудиторию (включая :invited), потом удаляем ключи.
+		notifyIDs := h.lobbyAudienceUUIDs(ctx, key, m, players)
 		h.Rdb.Del(ctx, key)
 		h.Rdb.Del(ctx, key+":invited")
 		if status == lobbyStatusWaitingMatchmake {
