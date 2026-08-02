@@ -1940,7 +1940,7 @@ class _OpponentAvatar extends StatelessWidget {
   }
 }
 
-class _GameBoard extends StatelessWidget {
+class _GameBoard extends StatefulWidget {
   const _GameBoard({
     required this.game,
     required this.isMyTurn,
@@ -1960,7 +1960,110 @@ class _GameBoard extends StatelessWidget {
   final bool compact;
 
   @override
+  State<_GameBoard> createState() => _GameBoardState();
+}
+
+class _GameBoardState extends State<_GameBoard>
+    with SingleTickerProviderStateMixin {
+  final TransformationController _transform = TransformationController();
+  AnimationController? _resetController;
+  Animation<Matrix4>? _resetAnimation;
+
+  bool get _zoomableVariant {
+    final v = widget.game.variant;
+    return v == variantGomoku || v == variantUltimate;
+  }
+
+  bool get _interactionEnabled =>
+      _zoomableVariant &&
+      widget.isMyTurn &&
+      !widget.isOver &&
+      !widget.isMakingMove;
+
+  @override
+  void didUpdateWidget(covariant _GameBoard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Чужой ход / конец партии — только «во весь экран», без зума.
+    if ((oldWidget.isMyTurn && !widget.isMyTurn) ||
+        (!oldWidget.isOver && widget.isOver) ||
+        (oldWidget.isMakingMove && !widget.isMakingMove && !widget.isMyTurn)) {
+      _snapToFit(animate: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _resetController?.dispose();
+    _transform.dispose();
+    super.dispose();
+  }
+
+  void _snapToFit({bool animate = true}) {
+    final current = _transform.value.clone();
+    if (_isNearIdentity(current)) {
+      _transform.value = Matrix4.identity();
+      return;
+    }
+    if (!animate || !mounted) {
+      _transform.value = Matrix4.identity();
+      return;
+    }
+    _resetController?.dispose();
+    _resetController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    );
+    _resetAnimation = Matrix4Tween(
+      begin: current,
+      end: Matrix4.identity(),
+    ).animate(CurvedAnimation(
+      parent: _resetController!,
+      curve: Curves.easeOutCubic,
+    ));
+    void tick() {
+      if (!mounted || _resetAnimation == null) return;
+      _transform.value = _resetAnimation!.value;
+    }
+
+    _resetController!
+      ..addListener(tick)
+      ..forward().whenCompleteOrCancel(() {
+        if (!mounted) return;
+        _transform.value = Matrix4.identity();
+        _resetController?.removeListener(tick);
+      });
+  }
+
+  bool _isNearIdentity(Matrix4 m) {
+    final scale = m.getMaxScaleOnAxis();
+    final t = m.getTranslation();
+    return scale <= 1.02 && t.x.abs() < 1.5 && t.y.abs() < 1.5;
+  }
+
+  void _onInteractionEnd(ScaleEndDetails _) {
+    if (!_zoomableVariant) return;
+    final scale = _transform.value.getMaxScaleOnAxis();
+    // Максимальное отдаление = ровно «во весь экран».
+    if (scale <= 1.05) {
+      _snapToFit(animate: true);
+    }
+  }
+
+  void _handleMove(int cell) {
+    // После хода сразу возвращаем доску в кадр.
+    _snapToFit(animate: true);
+    widget.onMove(cell);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final game = widget.game;
+    final isMyTurn = widget.isMyTurn;
+    final isOver = widget.isOver;
+    final isMakingMove = widget.isMakingMove;
+    final pulseController = widget.pulseController;
+    final compact = widget.compact;
+
     final gridSize = game.gridSize;
     final isUltimate = game.variant == variantUltimate;
     final n = game.board.length;
@@ -1986,119 +2089,120 @@ class _GameBoard extends StatelessWidget {
         if (!maxW.isFinite || maxW <= 0) maxW = 400;
         if (!maxH.isFinite || maxH <= 0) maxH = 400;
         final minBoard = compact ? 140.0 : 180.0;
-        // Растягиваем на всё свободное место (раньше был жёсткий потолок 420).
         final viewportSize =
             (maxW < maxH ? maxW : maxH).clamp(minBoard, 2000.0).toDouble();
-        // Крупные сетки по умолчанию целиком влезают в viewport;
-        // pinch/zoom — для точного хода на гомоку/multi.
-        final allowZoom = gridSize >= 8;
         final boardSize = viewportSize;
-        Widget boardContent() {
-          return Container(
-            width: boardSize,
-            height: boardSize,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+        final board = Container(
+          width: boardSize,
+          height: boardSize,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(
+                  compact
+                      ? (gridSize >= 10 ? 4.0 : 6.0)
+                      : (gridSize >= 10
+                          ? 6.0
+                          : (boardSize > 280 ? 12.0 : 8.0)),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    compact
-                        ? (gridSize >= 10 ? 4.0 : 6.0)
-                        : (gridSize >= 10
-                            ? 6.0
-                            : (boardSize > 280 ? 12.0 : 8.0)),
-                  ),
-                  child: _WinningLineOverlay(
-                    winningCells: game.effectiveWinningCells,
-                    gridSize: gridSize,
-                    child: CustomPaint(
-                      painter: _GridPainter(
-                        gridSize: gridSize,
-                        ultimate: isUltimate,
-                      ),
-                      child: LayoutBuilder(
-                        builder: (context, innerConstraints) {
-                          final cellW = innerConstraints.maxWidth / gridSize;
-                          final cellH = innerConstraints.maxHeight / gridSize;
-                          final gap = gridSize >= 10
-                              ? 1.0
-                              : (boardSize > 280
-                                  ? (gridSize >= 8 ? 1.5 : 4.0)
-                                  : 2.0);
-                          final cells = List.generate(n, (visualIndex) {
-                            final cellIndex = isUltimate
-                                ? _ultimateCellFromVisualIndex(visualIndex)
-                                : visualIndex;
-                            final row = visualIndex ~/ gridSize;
-                            final col = visualIndex % gridSize;
-                            final cell = cellIndex < game.board.length
-                                ? game.board[cellIndex]
-                                : '';
-                            final sub = isUltimate ? cellIndex ~/ 9 : -1;
-                            final meta = isUltimate && sub >= 0
-                                ? (sub < game.metaBoard.length
-                                    ? game.metaBoard[sub]
-                                    : '')
-                                : '';
-                            final cellCanTap =
-                                cell.isEmpty && legalCells.contains(cellIndex);
-                            return Positioned(
-                              left: col * cellW + gap,
-                              top: row * cellH + gap,
-                              width: cellW - gap * 2,
-                              height: cellH - gap * 2,
-                              child: _AnimatedGameCell(
-                                symbol: cell,
-                                isMyTurn: isMyTurn && !isOver && !isMakingMove,
-                                canTap: cellCanTap,
-                                isForbidden: cell.isEmpty &&
-                                    isMyTurn &&
-                                    !isOver &&
-                                    !isMakingMove &&
-                                    !cellCanTap,
-                                isActiveBoard: isUltimate &&
-                                    game.nextBoard != null &&
-                                    game.nextBoard == sub,
-                                isClosedBoard: meta.isNotEmpty,
-                                onTap:
-                                    cellCanTap ? () => onMove(cellIndex) : null,
-                                pulse: cellCanTap ? pulseController : null,
-                              ),
-                            );
-                          });
-                          return Stack(
-                            children: [
-                              ...cells,
-                              if (isUltimate)
-                                _UltimateMetaOverlay(metaBoard: game.metaBoard),
-                            ],
+                child: _WinningLineOverlay(
+                  winningCells: game.effectiveWinningCells,
+                  gridSize: gridSize,
+                  child: CustomPaint(
+                    painter: _GridPainter(
+                      gridSize: gridSize,
+                      ultimate: isUltimate,
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, innerConstraints) {
+                        final cellW = innerConstraints.maxWidth / gridSize;
+                        final cellH = innerConstraints.maxHeight / gridSize;
+                        final gap = gridSize >= 10
+                            ? 1.0
+                            : (boardSize > 280
+                                ? (gridSize >= 8 ? 1.5 : 4.0)
+                                : 2.0);
+                        final cells = List.generate(n, (visualIndex) {
+                          final cellIndex = isUltimate
+                              ? _ultimateCellFromVisualIndex(visualIndex)
+                              : visualIndex;
+                          final row = visualIndex ~/ gridSize;
+                          final col = visualIndex % gridSize;
+                          final cell = cellIndex < game.board.length
+                              ? game.board[cellIndex]
+                              : '';
+                          final sub = isUltimate ? cellIndex ~/ 9 : -1;
+                          final meta = isUltimate && sub >= 0
+                              ? (sub < game.metaBoard.length
+                                  ? game.metaBoard[sub]
+                                  : '')
+                              : '';
+                          final cellCanTap =
+                              cell.isEmpty && legalCells.contains(cellIndex);
+                          return Positioned(
+                            left: col * cellW + gap,
+                            top: row * cellH + gap,
+                            width: cellW - gap * 2,
+                            height: cellH - gap * 2,
+                            child: _AnimatedGameCell(
+                              symbol: cell,
+                              isMyTurn: isMyTurn && !isOver && !isMakingMove,
+                              canTap: cellCanTap,
+                              isForbidden: cell.isEmpty &&
+                                  isMyTurn &&
+                                  !isOver &&
+                                  !isMakingMove &&
+                                  !cellCanTap,
+                              isActiveBoard: isUltimate &&
+                                  game.nextBoard != null &&
+                                  game.nextBoard == sub,
+                              isClosedBoard: meta.isNotEmpty,
+                              onTap:
+                                  cellCanTap ? () => _handleMove(cellIndex) : null,
+                              pulse: cellCanTap ? pulseController : null,
+                            ),
                           );
-                        },
-                      ),
+                        });
+                        return Stack(
+                          children: [
+                            ...cells,
+                            if (isUltimate)
+                              _UltimateMetaOverlay(metaBoard: game.metaBoard),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
               ),
             ),
-          );
-        }
+          ),
+        );
 
-        final board = boardContent();
         return Center(
           child: SizedBox.square(
             dimension: viewportSize,
-            child: allowZoom
+            child: _zoomableVariant
                 ? InteractiveViewer(
+                    transformationController: _transform,
+                    // scale=1: доска = viewport → с boundaryMargin=0 пан
+                    // невозможен; при зуме край доски не уезжает за кадр.
+                    boundaryMargin: EdgeInsets.zero,
                     minScale: 1,
                     maxScale: 3.5,
-                    boundaryMargin: const EdgeInsets.all(48),
+                    // Зум/пан только на своём ходе.
+                    scaleEnabled: _interactionEnabled,
+                    panEnabled: _interactionEnabled,
+                    clipBehavior: Clip.hardEdge,
+                    onInteractionEnd: _onInteractionEnd,
                     child: board,
                   )
                 : board,
