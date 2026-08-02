@@ -93,6 +93,10 @@ class _OfflineTicTacToeScreenState
 
     return SwipeBackScope(
       onBack: goBack,
+      // Левые клетки доски не должны перехватываться свайпом «назад».
+      opaqueEdge: false,
+      edgeWidth: 16,
+      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
