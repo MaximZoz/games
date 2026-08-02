@@ -246,104 +246,103 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           Expanded(
                             child: _buildFriendsCard(context, friendsAsync),
                           ),
-                        ] else ...[
-                          // Не invite-режим creator'а: матчмейкинг или гость.
+                        ] else if (isMatchmakeMode) ...[
+                          // Поиск соперника: карточка по размеру контента
+                          // на всех раскладках (mobile / tablet / desktop).
+                          GradientCard(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.accentStart,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  context.l10n.lobbySearchingOpponent,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (isInviteMode && !isCreator) ...[
                           Expanded(
                             child: GradientCard(
                               padding: const EdgeInsets.all(24),
                               child: Column(
                                 children: [
-                                  if (isMatchmakeMode) ...[
-                                    const SizedBox(
-                                      width: 48,
-                                      height: 48,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppColors.accentStart,
-                                      ),
+                                  Text(
+                                    context.l10n.lobbyInviteTitle,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    lobby.creatorName.trim().isNotEmpty
+                                        ? context.l10n
+                                            .lobbyCreatorInvites(lobby.creatorName)
+                                        : context.l10n.lobbyInvitedToPlay,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
                                     ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      context.l10n.lobbySearchingOpponent,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    buildTictactoeRulesText(
+                                      gridSize: lobby.gridSize,
+                                      turnTimeSec: lobby.turnTimeSec,
+                                      swapRule: lobby.swapRule,
+                                      firstMoveRestriction:
+                                          lobby.firstMoveRestriction,
+                                      stakeBronze: lobby.stakeBronze,
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      context.l10n.lobbyWaitingJoin,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 14,
-                                      ),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13,
+                                      height: 1.35,
                                     ),
-                                  ] else if (isInviteMode && !isCreator) ...[
-                                    Text(
-                                      context.l10n.lobbyInviteTitle,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                  ),
+                                  const Spacer(),
+                                  FilledButton(
+                                    onPressed: _isJoining
+                                        ? null
+                                        : () => _joinViaLink(context),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.accentStart,
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size.fromHeight(48),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      lobby.creatorName.trim().isNotEmpty
-                                          ? context.l10n
-                                              .lobbyCreatorInvites(lobby.creatorName)
-                                          : context.l10n.lobbyInvitedToPlay,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      buildTictactoeRulesText(
-                                        gridSize: lobby.gridSize,
-                                        turnTimeSec: lobby.turnTimeSec,
-                                        swapRule: lobby.swapRule,
-                                        firstMoveRestriction:
-                                            lobby.firstMoveRestriction,
-                                        stakeBronze: lobby.stakeBronze,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13,
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    FilledButton(
-                                      onPressed: _isJoining
-                                          ? null
-                                          : () => _joinViaLink(context),
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppColors.accentStart,
-                                        foregroundColor: Colors.white,
-                                        minimumSize: const Size.fromHeight(48),
-                                      ),
-                                      child: _isJoining
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Text(context.l10n.lobbyEnterGame),
-                                    ),
-                                  ],
+                                    child: _isJoining
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(context.l10n.lobbyEnterGame),
+                                  ),
                                 ],
                               ),
                             ),
