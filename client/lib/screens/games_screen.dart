@@ -174,6 +174,23 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
+    // После «Присоединиться» не оставляем список с карточкой лобби —
+    // сразу экран «Войти в игру».
+    ref.listen<AsyncValue<ActiveGameItem?>>(activeGameProvider, (prev, next) {
+      final active = next.valueOrNull;
+      if (active == null ||
+          active.type != 'lobby' ||
+          active.lobbyId == null ||
+          active.lobbyId!.isEmpty) {
+        return;
+      }
+      final path =
+          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+      if (path != '/games') return;
+      context.go(
+        '/games/tictactoe/lobby/${active.lobbyId}?mode=invite',
+      );
+    });
     // Подхватываем конфиг из БД, когда он лениво догрузится.
     ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider,
         (prev, next) {
@@ -209,6 +226,26 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     if (isOffline && _selectedTab != _GamesTab.games) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _selectedTab = _GamesTab.games);
+      });
+    }
+    // Уже есть активное лобби при открытии списка — уйти в «Войти в игру».
+    final activeLobby = activeAsync.valueOrNull;
+    if (!isOffline &&
+        activeLobby != null &&
+        activeLobby.type == 'lobby' &&
+        activeLobby.lobbyId != null &&
+        activeLobby.lobbyId!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final path = GoRouter.of(context)
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .path;
+        if (path != '/games') return;
+        context.go(
+          '/games/tictactoe/lobby/${activeLobby.lobbyId}?mode=invite',
+        );
       });
     }
 
@@ -908,6 +945,11 @@ class _GamesPageContent extends StatelessWidget {
                   activeAsync.when(
                     data: (active) {
                       if (active == null) return const SizedBox.shrink();
+                      // Активное лобби («Войти в игру» / поиск) — без карточки
+                      // на списке: уводим в лобби (см. listen выше).
+                      if (active.type == 'lobby') {
+                        return const SizedBox.shrink();
+                      }
                       if (active.type == 'game' && active.gameId != null) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 20),
@@ -948,59 +990,6 @@ class _GamesPageContent extends StatelessWidget {
                                   ),
                                   const Icon(Icons.arrow_forward_ios_rounded,
                                       size: 16),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      if (active.type == 'lobby' &&
-                          active.lobbyId != null &&
-                          active.lobbyId!.isNotEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: GradientCard(
-                            padding: const EdgeInsets.all(16),
-                            child: InkWell(
-                              onTap: () => context.go(
-                                '/games/tictactoe/lobby/${active.lobbyId}?mode=invite',
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.hourglass_top_rounded,
-                                    size: 40,
-                                    color: AppColors.accentStart,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          context.l10n.lobbySearchingOpponent,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        Text(
-                                          context.l10n.lobbyEnterGame,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    size: 16,
-                                  ),
                                 ],
                               ),
                             ),
