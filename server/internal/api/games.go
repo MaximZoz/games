@@ -646,6 +646,24 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
+	chatIDStr := ""
+	if cfg.MaxPlayers > 2 {
+		title := "Крестики-нолики"
+		switch variant {
+		case gameengine.VariantMulti3:
+			title = "На троих"
+		case gameengine.VariantMulti4:
+			title = "На четверых"
+		}
+		if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{userID}, title, "tictactoe"); cerr == nil {
+			chatIDStr = cid.String()
+			h.Rdb.HSet(ctx, key, "chat_id", chatIDStr)
+			h.broadcast([]uuid.UUID{userID}, map[string]any{
+				"type": "chat_list_changed",
+			})
+		}
+	}
+
 	creator, _ := store.GetUserByID(ctx, h.Pool, userID)
 	creatorName := "Игрок"
 	creatorAvatarKind := ""
@@ -683,13 +701,17 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	h.broadcast(invitees, broadcastData)
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"lobby_id":       lobbyID,
-		"status":         lobbyStatusWaitingInvite,
-		"matched":        false,
-		"invited_count":  len(invitees),
-		"max_players":    cfg.MaxPlayers,
-	})
+	resp := map[string]any{
+		"lobby_id":      lobbyID,
+		"status":        lobbyStatusWaitingInvite,
+		"matched":       false,
+		"invited_count": len(invitees),
+		"max_players":   cfg.MaxPlayers,
+	}
+	if chatIDStr != "" {
+		resp["chat_id"] = chatIDStr
+	}
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func (h *GamesHandler) rdbRPOPMatchmake(ctx context.Context, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (string, error) {
@@ -1355,6 +1377,31 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	if len(playerIDs) == 0 {
 		playerIDs = []string{creatorID}
 	}
+	chatIDStr := strings.TrimSpace(m["chat_id"])
+	// Multi: синхронизируем групповой чат с текущим составом (реванш/старые лобби
+	// могли остаться без chat_id или без записи в chat_members).
+	if cfg.MaxPlayers > 2 &&
+		(status == lobbyStatusWaitingInvite || status == lobbyStatusWaitingMatchmake || status == lobbyStatusInGame) {
+		memberUUIDs := make([]uuid.UUID, 0, len(playerIDs))
+		for _, p := range playerIDs {
+			if u, e := uuid.Parse(p); e == nil {
+				memberUUIDs = append(memberUUIDs, u)
+			}
+		}
+		title := "Крестики-нолики"
+		switch variant {
+		case gameengine.VariantMulti3:
+			title = "На троих"
+		case gameengine.VariantMulti4:
+			title = "На четверых"
+		}
+		if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, memberUUIDs, title, "tictactoe"); cerr == nil {
+			chatIDStr = cid.String()
+			if m["chat_id"] != chatIDStr {
+				h.Rdb.HSet(ctx, key, "chat_id", chatIDStr)
+			}
+		}
+	}
 	item := LobbyItem{
 		ID:           lobbyID,
 		CreatorID:    creatorID,
@@ -1368,7 +1415,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		PlayersCount: len(playerIDs),
 		PlayerIDs:    playerIDs,
 		Players:      h.loadLobbyPlayers(ctx, playerIDs),
-		ChatID:       m["chat_id"],
+		ChatID:       chatIDStr,
 		StakeBronze:  stakeBronze,
 	}
 	if opponentID != "" {

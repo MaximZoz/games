@@ -204,10 +204,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             skipLoadingOnReload: true,
             skipLoadingOnRefresh: true,
             data: (lobby) {
-              final isCreator = currentUser?.id == lobby.creatorId;
+              final uid = currentUser?.id;
+              final isCreator = uid != null && uid == lobby.creatorId;
+              final isLobbyMember = uid != null &&
+                  (isCreator ||
+                      lobby.playerIds.contains(uid) ||
+                      lobby.players.any((p) => p.id == uid));
               final isInviteMode = lobby.status == 'waiting_invite';
               final isMatchmakeMode = lobby.status == 'waiting_matchmake';
               final showMultiLobby = lobby.maxPlayers > 2;
+              // Уже вступили (реванш / повторный заход) — не показываем «Войти в игру».
+              final showInviteAccept = isInviteMode && !isLobbyMember;
+              final showInviteWaiting = isInviteMode && isLobbyMember;
               if (lobby.gameId != null) {
                 return const Center(
                   child: CircularProgressIndicator(
@@ -230,7 +238,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     constraints: BoxConstraints(
                       maxWidth: isDesktop ? 480 : double.infinity,
                     ),
-                    child: shortViewport && isInviteMode && isCreator
+                    child: shortViewport && showInviteWaiting && isCreator
                         ? LayoutBuilder(
                             builder: (context, constraints) {
                               final friendCount =
@@ -290,7 +298,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (isInviteMode && isCreator) ...[
+                                if (showInviteWaiting && isCreator) ...[
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
                                       context,
@@ -325,6 +333,60 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                           child: card,
                                         );
                                       },
+                                    ),
+                                  ),
+                                ] else if (showInviteWaiting && !isCreator) ...[
+                                  if (showMultiLobby) ...[
+                                    _buildMultiLobbyCard(
+                                      context,
+                                      lobby,
+                                      currentUser?.id,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  Expanded(
+                                    child: GradientCard(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(
+                                            width: 48,
+                                            height: 48,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: AppColors.accentStart,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            context.l10n.lobbyWaitingJoin,
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          buildTictactoeRulesTextWidget(
+                                            variant: lobby.variant,
+                                            gridSize: lobby.gridSize,
+                                            turnTimeSec: lobby.turnTimeSec,
+                                            swapRule: lobby.swapRule,
+                                            firstMoveRestriction:
+                                                lobby.firstMoveRestriction,
+                                            stakeBronze: lobby.stakeBronze,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 13,
+                                              height: 1.35,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ] else if (isMatchmakeMode) ...[
@@ -367,7 +429,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   _buildMatchmakeInfoCard(context, lobby),
-                                ] else if (isInviteMode && !isCreator) ...[
+                                ] else if (showInviteAccept) ...[
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
                                       context,
@@ -875,7 +937,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           const SizedBox(width: 8),
           IconButton(
             tooltip: 'Чат группы',
-            onPressed: (lobby.chatId ?? '').trim().isEmpty
+            // Чат только для уже вступивших — иначе «Доступ запрещён».
+            onPressed: (lobby.chatId ?? '').trim().isEmpty ||
+                    currentUserId == null ||
+                    !players.any((p) => p.id == currentUserId)
                 ? null
                 : () => _openGroupChat(context, lobby),
             icon: const Icon(Icons.forum_rounded),
@@ -898,10 +963,26 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  void _openGroupChat(BuildContext context, LobbyItem lobby) {
-    final chatId = (lobby.chatId ?? '').trim();
-    if (chatId.isEmpty) return;
+  Future<void> _openGroupChat(BuildContext context, LobbyItem lobby) async {
+    // GetLobby синхронизирует chat_members — иначе после реванша бывает «Доступ запрещён».
+    ref.invalidate(lobbyDetailProvider(lobby.id));
+    LobbyItem fresh = lobby;
+    try {
+      fresh = await ref.read(lobbyDetailProvider(lobby.id).future);
+    } catch (_) {}
+    final chatId = (fresh.chatId ?? lobby.chatId ?? '').trim();
+    if (chatId.isEmpty) {
+      if (context.mounted) {
+        showAppSnackBar(
+          context,
+          message: 'Чат лобби ещё не создан',
+          kind: AppSnackKind.error,
+        );
+      }
+      return;
+    }
     unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+    if (!context.mounted) return;
     final returnPath = Uri(
       path: '/games/tictactoe/lobby/${lobby.id}',
       queryParameters: widget.initialMode == null
@@ -913,7 +994,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       queryParameters: {
         'from': 'games',
         'game': returnPath,
-        'name': 'Лобби ${variantLabel(lobby.variant)}',
+        'name': 'Лобби ${variantLabel(fresh.variant)}',
       },
     ).toString();
     context.push(route);

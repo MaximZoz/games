@@ -965,6 +965,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     try {
       final result = await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
       if (!context.mounted) return;
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        if (!context.mounted) return;
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
       if (result.joined && result.gameId != null) {
         final gameId = result.gameId!;
         ref.invalidate(gameStateProvider(gameId));
