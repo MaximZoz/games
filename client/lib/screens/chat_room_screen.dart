@@ -27,6 +27,7 @@ import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
@@ -3087,8 +3088,18 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final preferredFlagIso =
+        preferredFlagIsoForLocale(LocaleService.locale);
+    final emojis = List<InventoryItem>.from(widget.emojis);
+    preferFlagIsoFirstInMixedList<InventoryItem>(
+      emojis,
+      preferredIso: preferredFlagIso,
+      isFlag: (e) => (e.group ?? '') == 'flags',
+      codeOf: (e) => e.code,
+      animatedNameOf: (e) => e.animatedName,
+    );
     final grouped = <String, List<InventoryItem>>{};
-    for (final e in widget.emojis) {
+    for (final e in emojis) {
       grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
     }
     const known = [
@@ -3176,13 +3187,13 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          itemCount: widget.emojis.length,
+                          itemCount: emojis.length,
                           separatorBuilder: (_, __) => const SizedBox(width: 2),
                           itemBuilder: (context, index) {
                             return SizedBox(
                               width: 58,
                               child: _emojiTile(
-                                widget.emojis[index],
+                                emojis[index],
                                 emojiSize: 42,
                                 qtySize: 11,
                               ),

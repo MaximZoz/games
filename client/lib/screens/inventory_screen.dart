@@ -12,6 +12,7 @@ import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
@@ -335,6 +336,18 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     for (final e in emojis) {
       final g = e.group ?? 'other';
       grouped.putIfAbsent(g, () => []).add(e);
+    }
+    final preferredFlagIso = preferredFlagIsoForLocale(
+      effectiveAppLocale(ref.watch(appLocaleProvider)),
+    );
+    final flagGroup = grouped['flags'];
+    if (flagGroup != null) {
+      preferFlagIsoFirst<InventoryItem>(
+        flagGroup,
+        preferredIso: preferredFlagIso,
+        codeOf: (e) => e.code,
+        animatedNameOf: (e) => e.animatedName,
+      );
     }
     final groupOrder = [
       'emotions',

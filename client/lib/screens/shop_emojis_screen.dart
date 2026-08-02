@@ -9,6 +9,7 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -108,8 +109,19 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
       if (g.isEmpty) continue;
       byGroup.putIfAbsent(g, () => []).add(e);
     }
-    for (final list in byGroup.values) {
-      list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final preferredFlagIso = preferredFlagIsoForLocale(
+      effectiveAppLocale(ref.watch(appLocaleProvider)),
+    );
+    for (final entry in byGroup.entries) {
+      entry.value.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      if (entry.key == 'flags') {
+        preferFlagIsoFirst<ShopItem>(
+          entry.value,
+          preferredIso: preferredFlagIso,
+          codeOf: (e) => e.code,
+          animatedNameOf: (e) => e.animatedName,
+        );
+      }
     }
     final groupKeys = [
       ...shopEmojiGroupOrder.where(byGroup.containsKey),
@@ -395,6 +407,16 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         .where((e) => e.kind == 'emoji' && (e.group ?? 'other') == widget.group)
         .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    if (widget.group == 'flags') {
+      preferFlagIsoFirst<ShopItem>(
+        emojis,
+        preferredIso: preferredFlagIsoForLocale(
+          effectiveAppLocale(ref.watch(appLocaleProvider)),
+        ),
+        codeOf: (e) => e.code,
+        animatedNameOf: (e) => e.animatedName,
+      );
+    }
 
     final pageCount =
         emojis.isEmpty ? 0 : ((emojis.length + _pageSize - 1) / _pageSize).floor();

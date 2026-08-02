@@ -3,6 +3,9 @@
 // PNG лежат в client/assets/flags/ (бандл приложения). Unicode — запасной
 // fallback, если ассет не найден.
 
+import 'package:flutter/material.dart';
+import 'package:multigames_client/core/app_languages.dart';
+
 class CountryFlagInfo {
   const CountryFlagInfo({
     required this.iso,
@@ -76,4 +79,72 @@ String? countryFlagIsoFromName(String name) => countryFlagsByName[name]?.iso;
 
 String countryFlagAssetPath(String iso) =>
     'assets/flags/${iso.toLowerCase()}.png';
+
+/// ISO флага, соответствующий языку приложения (настройки / локаль).
+String? preferredFlagIsoForLocale(Locale locale) {
+  final lang = appLanguageByCode(resolveLocale(locale).languageCode);
+  return lang?.flagIso.toLowerCase();
+}
+
+/// ISO из `emoji_flag_xx` / `flagXx` / сырого `xx`.
+String? flagIsoFromShopCodeOrName(String? code, String? animatedName) {
+  final fromName = animatedName == null || animatedName.isEmpty
+      ? null
+      : countryFlagIsoFromName(animatedName);
+  if (fromName != null && fromName.isNotEmpty) {
+    return fromName.toLowerCase();
+  }
+  final c = (code ?? '').trim().toLowerCase();
+  if (c.startsWith('emoji_flag_') && c.length > 'emoji_flag_'.length) {
+    return c.substring('emoji_flag_'.length);
+  }
+  if (c.length == 2) return c;
+  return null;
+}
+
+/// Ставит флаг [preferredIso] первым, остальной порядок сохраняет.
+void preferFlagIsoFirst<T>(
+  List<T> items, {
+  required String? preferredIso,
+  required String? Function(T item) codeOf,
+  required String? Function(T item) animatedNameOf,
+}) {
+  preferFlagIsoFirstInMixedList<T>(
+    items,
+    preferredIso: preferredIso,
+    isFlag: (_) => true,
+    codeOf: codeOf,
+    animatedNameOf: animatedNameOf,
+  );
+}
+
+/// В смешанном списке (эмоции + флаги) ставит нужный флаг на место первого флага.
+void preferFlagIsoFirstInMixedList<T>(
+  List<T> items, {
+  required String? preferredIso,
+  required bool Function(T item) isFlag,
+  required String? Function(T item) codeOf,
+  required String? Function(T item) animatedNameOf,
+}) {
+  final pref = preferredIso?.trim().toLowerCase();
+  if (pref == null || pref.isEmpty || items.length < 2) return;
+  int? firstFlagIdx;
+  int? preferredIdx;
+  for (var i = 0; i < items.length; i++) {
+    if (!isFlag(items[i])) continue;
+    firstFlagIdx ??= i;
+    final iso = flagIsoFromShopCodeOrName(codeOf(items[i]), animatedNameOf(items[i]));
+    if (iso == pref) {
+      preferredIdx = i;
+      break;
+    }
+  }
+  if (firstFlagIdx == null ||
+      preferredIdx == null ||
+      preferredIdx == firstFlagIdx) {
+    return;
+  }
+  final item = items.removeAt(preferredIdx);
+  items.insert(firstFlagIdx, item);
+}
 
