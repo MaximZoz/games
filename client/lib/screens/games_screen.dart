@@ -34,12 +34,21 @@ class GamesScreen extends ConsumerStatefulWidget {
 
 enum _GamesTab { games, lobbies }
 
+/// Режимы для второй кнопки: Классика → Гомоку → Ультимейт.
+const _modeCycleVariants = <String>[
+  variantClassic,
+  variantGomoku,
+  variantUltimate,
+];
+
 class _GamesScreenState extends ConsumerState<GamesScreen> {
   bool _isCreating = false;
   bool _isFinding = false;
   _GamesTab _selectedTab = _GamesTab.games;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
   String _selectedVariant = variantClassic;
+  /// true — активна кнопка игроков (2/3/4); false — кнопка режима.
+  bool _playersControlActive = false;
   int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
   bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
@@ -64,6 +73,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     setState(() {
       _selectedTurnTimeSec = saved.turnTimeSec;
       _selectedVariant = saved.variant;
+      _playersControlActive =
+          saved.variant == variantMulti3 || saved.variant == variantMulti4;
       _selectedStakeBronze = saved.stakeBronze;
     });
   }
@@ -78,6 +89,51 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             stakeBronze: _selectedStakeBronze,
           ),
         );
+  }
+
+  void _onPlayersChipTap() {
+    final offline = ref.read(isOfflineProvider);
+    if (offline) return;
+    setState(() {
+      if (!_playersControlActive) {
+        // Переключились с режимов → игроки фиолетовые, режим «Классика» тёмный.
+        _playersControlActive = true;
+        _selectedVariant = variantClassic; // 2 игрока
+      } else {
+        // 2 → 3 → 4 → 2
+        final n = configForVariant(_selectedVariant).maxPlayers;
+        if (n <= 2) {
+          _selectedVariant = variantMulti3;
+        } else if (n == 3) {
+          _selectedVariant = variantMulti4;
+        } else {
+          _selectedVariant = variantClassic;
+        }
+      }
+    });
+    _persistSettings();
+  }
+
+  void _onModeChipTap() {
+    final offline = ref.read(isOfflineProvider);
+    setState(() {
+      if (_playersControlActive ||
+          _selectedVariant == variantMulti3 ||
+          _selectedVariant == variantMulti4) {
+        // С игроков → режимы: 2 тёмные, Классика фиолетовая.
+        _playersControlActive = false;
+        _selectedVariant = variantClassic;
+      } else {
+        final cycle = offline
+            ? const [variantClassic, variantGomoku]
+            : _modeCycleVariants;
+        final current = parseVariant(_selectedVariant);
+        final idx = cycle.indexOf(current);
+        final next = (idx < 0 ? 0 : idx + 1) % cycle.length;
+        _selectedVariant = cycle[next];
+      }
+    });
+    _persistSettings();
   }
 
   @override
@@ -126,6 +182,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       setState(() {
         _selectedTurnTimeSec = saved.turnTimeSec;
         _selectedVariant = saved.variant;
+        _playersControlActive =
+            saved.variant == variantMulti3 || saved.variant == variantMulti4;
         _selectedStakeBronze = saved.stakeBronze;
       });
     });
@@ -211,10 +269,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       _persistSettings();
                     },
                     variant: _selectedVariant,
-                    onVariantChanged: (v) {
-                      setState(() => _selectedVariant = v);
-                      _persistSettings();
-                    },
+                    playersControlActive: _playersControlActive,
+                    onPlayersChipTap: _onPlayersChipTap,
+                    onModeChipTap: _onModeChipTap,
                     stakeBronze: isOffline ? 0 : _selectedStakeBronze,
                     stakeOptionsList: availableStakes,
                     onStakeChanged: (v) {
@@ -631,7 +688,9 @@ class _GamesPageContent extends StatelessWidget {
     required this.turnTimeSec,
     required this.onTurnTimeChanged,
     required this.variant,
-    required this.onVariantChanged,
+    required this.playersControlActive,
+    required this.onPlayersChipTap,
+    required this.onModeChipTap,
     required this.stakeBronze,
     required this.stakeOptionsList,
     required this.onStakeChanged,
@@ -654,7 +713,9 @@ class _GamesPageContent extends StatelessWidget {
   final int turnTimeSec;
   final void Function(int) onTurnTimeChanged;
   final String variant;
-  final void Function(String) onVariantChanged;
+  final bool playersControlActive;
+  final VoidCallback onPlayersChipTap;
+  final VoidCallback onModeChipTap;
   final int stakeBronze;
   final List<int> stakeOptionsList;
   final void Function(int) onStakeChanged;
@@ -726,7 +787,9 @@ class _GamesPageContent extends StatelessWidget {
                                 turnTimeSec: turnTimeSec,
                                 onTurnTimeChanged: onTurnTimeChanged,
                                 variant: variant,
-                                onVariantChanged: onVariantChanged,
+                                playersControlActive: playersControlActive,
+                                onPlayersChipTap: onPlayersChipTap,
+                                onModeChipTap: onModeChipTap,
                                 stakeBronze: stakeBronze,
                                 stakeOptionsList: stakeOptionsList,
                                 onStakeChanged: onStakeChanged,
@@ -745,7 +808,9 @@ class _GamesPageContent extends StatelessWidget {
                         turnTimeSec: turnTimeSec,
                         onTurnTimeChanged: onTurnTimeChanged,
                         variant: variant,
-                        onVariantChanged: onVariantChanged,
+                        playersControlActive: playersControlActive,
+                        onPlayersChipTap: onPlayersChipTap,
+                        onModeChipTap: onModeChipTap,
                         stakeBronze: stakeBronze,
                         stakeOptionsList: stakeOptionsList,
                         onStakeChanged: onStakeChanged,
@@ -1174,7 +1239,9 @@ class _TictactoeGameCard extends StatelessWidget {
     required this.turnTimeSec,
     required this.onTurnTimeChanged,
     required this.variant,
-    required this.onVariantChanged,
+    required this.playersControlActive,
+    required this.onPlayersChipTap,
+    required this.onModeChipTap,
     required this.stakeBronze,
     required this.stakeOptionsList,
     required this.onStakeChanged,
@@ -1189,7 +1256,9 @@ class _TictactoeGameCard extends StatelessWidget {
   final int turnTimeSec;
   final void Function(int) onTurnTimeChanged;
   final String variant;
-  final void Function(String) onVariantChanged;
+  final bool playersControlActive;
+  final VoidCallback onPlayersChipTap;
+  final VoidCallback onModeChipTap;
   final int stakeBronze;
   final List<int> stakeOptionsList;
   final void Function(int) onStakeChanged;
@@ -1222,6 +1291,61 @@ class _TictactoeGameCard extends StatelessWidget {
         offlineBot: isOffline,
       );
 
+  Widget _selectableChip({
+    required bool selected,
+    required VoidCallback? onTap,
+    required IconData icon,
+    required String label,
+    required TextTheme? theme,
+    required double padV,
+    required double padH,
+    required double iconSz,
+    required double fontSz,
+    required bool compact,
+  }) {
+    final color = selected ? AppColors.accentStart : AppColors.textSecondary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+        highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.accentSoft.withValues(alpha: 0.6)
+                : AppColors.textSecondary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? AppColors.accentStart.withValues(alpha: 0.3)
+                  : AppColors.textSecondary.withValues(alpha: 0.25),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: iconSz, color: color),
+              SizedBox(width: compact ? 4 : 6),
+              Text(
+                label,
+                style: theme?.bodyMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: fontSz,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   List<Widget> _buildChipList({
     required BuildContext context,
     required TextTheme? theme,
@@ -1236,43 +1360,41 @@ class _TictactoeGameCard extends StatelessWidget {
     final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
     final fontSz =
         compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+    final busy = isCreating || isFinding;
+    // Кнопка игроков: активна → 2/3/4 фиолетовая; иначе тёмная «2».
+    final playersSelected = !isOffline && playersControlActive;
+    final playersLabel = playersSelected
+        ? '${configForVariant(variant).maxPlayers}'
+        : '2';
+    // Кнопка режима: активна → Классика/Гомоку/Ультимейт; иначе тёмная «Классика».
+    final modeSelected = isOffline || !playersControlActive;
+    final modeVariant = modeSelected
+        ? parseVariant(variant)
+        : variantClassic;
+    final modeIcon = modeVariant == variantGomoku
+        ? Icons.grid_on_rounded
+        : modeVariant == variantUltimate
+            ? Icons.dashboard_customize_rounded
+            : Icons.close_rounded;
     return [
-      Container(
-        padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-        decoration: BoxDecoration(
-          color: AppColors.textSecondary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: AppColors.textSecondary.withValues(alpha: 0.25),
-            width: 1,
-          ),
+      if (!isOffline)
+        _selectableChip(
+          selected: playersSelected,
+          onTap: busy ? null : onPlayersChipTap,
+          icon: Icons.groups_rounded,
+          label: playersLabel,
+          theme: theme,
+          padV: padV,
+          padH: padH,
+          iconSz: iconSz,
+          fontSz: fontSz,
+          compact: compact,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.person_outline_rounded,
-              size: iconSz,
-              color: AppColors.textSecondary,
-            ),
-            SizedBox(width: compact ? 3 : 4),
-            Text(
-              '${configForVariant(variant).maxPlayers}',
-              style: theme?.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-                fontSize: fontSz,
-                height: 1.35,
-              ),
-            ),
-          ],
-        ),
-      ),
       if (!isOffline)
         Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: isCreating || isFinding ? null : _cycleTurnTime,
+            onTap: busy ? null : _cycleTurnTime,
             borderRadius: BorderRadius.circular(10),
             splashColor: AppColors.accentStart.withValues(alpha: 0.2),
             highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
@@ -1312,63 +1434,18 @@ class _TictactoeGameCard extends StatelessWidget {
             ),
           ),
         ),
-      ...variantOptions.map((v) {
-        final selected = parseVariant(variant) == v;
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: isCreating || isFinding ? null : () => onVariantChanged(v),
-            borderRadius: BorderRadius.circular(10),
-            splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-            highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppColors.accentSoft.withValues(alpha: 0.6)
-                    : AppColors.textSecondary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: selected
-                      ? AppColors.accentStart.withValues(alpha: 0.3)
-                      : AppColors.textSecondary.withValues(alpha: 0.25),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    v == variantGomoku
-                        ? Icons.grid_on_rounded
-                        : v == variantUltimate
-                            ? Icons.dashboard_customize_rounded
-                            : v == variantMulti3 || v == variantMulti4
-                                ? Icons.groups_rounded
-                                : Icons.close_rounded,
-                    size: iconSz,
-                    color: selected
-                        ? AppColors.accentStart
-                        : AppColors.textSecondary,
-                  ),
-                  SizedBox(width: compact ? 4 : 6),
-                  Text(
-                    variantLabel(v),
-                    style: theme?.bodyMedium?.copyWith(
-                      color: selected
-                          ? AppColors.accentStart
-                          : AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: fontSz,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }),
+      _selectableChip(
+        selected: modeSelected,
+        onTap: busy ? null : onModeChipTap,
+        icon: modeIcon,
+        label: variantLabel(modeVariant),
+        theme: theme,
+        padV: padV,
+        padH: padH,
+        iconSz: iconSz,
+        fontSz: fontSz,
+        compact: compact,
+      ),
     ];
   }
 
