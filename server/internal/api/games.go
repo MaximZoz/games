@@ -3356,8 +3356,9 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 
 	lobbyID, err := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result()
 	if err == nil && lobbyID != "" {
-		_, err := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
-		if err == nil {
+		m, err := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
+		// HGetAll для отсутствующего ключа возвращает пустую map и err=nil.
+		if err == nil && len(m) > 0 {
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type":     "lobby",

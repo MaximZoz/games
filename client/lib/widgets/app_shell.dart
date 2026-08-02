@@ -52,7 +52,7 @@ void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? activ
       active.gameId!.isNotEmpty &&
       !active.isEliminated) {
     final dest = '/games/tictactoe/game/${active.gameId}';
-    if (currentPath == dest) return;
+    if (currentPath == dest || currentPath.startsWith('$dest/')) return;
     context.go(dest);
     return;
   }
@@ -61,8 +61,13 @@ void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? activ
       active.lobbyId != null &&
       active.lobbyId!.isNotEmpty) {
     final dest = '/games/tictactoe/lobby/${active.lobbyId}';
-    if (currentPath == dest) return;
-    context.go(dest);
+    // Уже в этом лобби (с ?mode=… или без) — не уходим на список игр.
+    if (currentPath == dest || currentPath.startsWith(dest)) return;
+    context.go('$dest?mode=invite');
+    return;
+  }
+  // Пока active подгружается после lobby_updated — не сбрасывать экран лобби.
+  if (active == null && currentPath.startsWith('/games/tictactoe/lobby/')) {
     return;
   }
   if (currentPath != '/games') {

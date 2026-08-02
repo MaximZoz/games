@@ -221,11 +221,24 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         final data = next.valueOrNull;
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
-        if (type == 'game_state' ||
-            type == 'game_started' ||
-            type == 'lobby_updated') {
+        if (type == 'game_state' || type == 'game_started') {
           ref.invalidate(activeGameProvider);
           final gameId = data['game_id']?.toString();
+          if (gameId != null && gameId.isNotEmpty) {
+            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
+              ref.invalidate(gameStateProvider(gameId));
+            }
+          }
+          return;
+        }
+        // lobby_updated при ожидании игроков не трогаем active — иначе таб
+        // «Игры» на мгновение видит null и уводит со экрана лобби.
+        if (type == 'lobby_updated') {
+          final left = data['left'] == true;
+          final gameId = data['game_id']?.toString();
+          if (left || (gameId != null && gameId.isNotEmpty)) {
+            ref.invalidate(activeGameProvider);
+          }
           if (gameId != null && gameId.isNotEmpty) {
             if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
               ref.invalidate(gameStateProvider(gameId));

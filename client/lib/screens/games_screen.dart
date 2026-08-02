@@ -954,6 +954,59 @@ class _GamesPageContent extends StatelessWidget {
                           ),
                         );
                       }
+                      if (active.type == 'lobby' &&
+                          active.lobbyId != null &&
+                          active.lobbyId!.isNotEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: GradientCard(
+                            padding: const EdgeInsets.all(16),
+                            child: InkWell(
+                              onTap: () => context.go(
+                                '/games/tictactoe/lobby/${active.lobbyId}?mode=invite',
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.hourglass_top_rounded,
+                                    size: 40,
+                                    color: AppColors.accentStart,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          context.l10n.lobbySearchingOpponent,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          context.l10n.lobbyEnterGame,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
                       return const SizedBox.shrink();
                     },
                     loading: () => const SizedBox.shrink(),

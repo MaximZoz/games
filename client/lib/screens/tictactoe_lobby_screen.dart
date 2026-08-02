@@ -344,51 +344,38 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                   ],
-                                  Expanded(
-                                    child: GradientCard(
-                                      padding: const EdgeInsets.all(24),
-                                      child: Column(
-                                        children: [
-                                          const SizedBox(
-                                            width: 48,
-                                            height: 48,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: AppColors.accentStart,
-                                            ),
+                                  _buildShareInviteLinkCard(context),
+                                  const SizedBox(height: 12),
+                                  GradientCard(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          width: 48,
+                                          height: 48,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.accentStart,
                                           ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            context.l10n.lobbyWaitingJoin,
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColors.textPrimary,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          buildTictactoeRulesTextWidget(
-                                            variant: lobby.variant,
-                                            gridSize: lobby.gridSize,
-                                            turnTimeSec: lobby.turnTimeSec,
-                                            swapRule: lobby.swapRule,
-                                            firstMoveRestriction:
-                                                lobby.firstMoveRestriction,
-                                            stakeBronze: lobby.stakeBronze,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 13,
-                                              height: 1.35,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          context.l10n.lobbySearchingOpponent,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                        ),
+                                      ],
                                     ),
                                   ),
+                                  const SizedBox(height: 16),
+                                  _buildMatchmakeInfoCard(context, lobby),
                                 ] else if (isMatchmakeMode) ...[
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
@@ -968,17 +955,37 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               );
             },
           ),
-          IconButton(
-            tooltip: context.l10n.friendsAdd,
-            onPressed: players.any((p) => p.id != currentUserId)
-                ? () => _showLobbyPlayersFriendSheet(
-                      context,
-                      lobby,
-                      currentUserId,
-                    )
-                : null,
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            color: AppColors.accentStart,
+          Builder(
+            builder: (context) {
+              final snapshot =
+                  ref.watch(friendsSnapshotProvider).valueOrNull;
+              final alreadyFriendIds = <String>{
+                for (final f in snapshot?.friends ?? const [])
+                  if (f.user.id.isNotEmpty) f.user.id,
+              };
+              final outgoingIds = <String>{
+                for (final r in snapshot?.outgoing ?? const [])
+                  if (r.user.id.isNotEmpty) r.user.id,
+              };
+              final canAdd = players.any(
+                (p) =>
+                    p.id.isNotEmpty &&
+                    p.id != currentUserId &&
+                    !alreadyFriendIds.contains(p.id) &&
+                    !outgoingIds.contains(p.id),
+              );
+              if (!canAdd) return const SizedBox.shrink();
+              return IconButton(
+                tooltip: context.l10n.friendsAdd,
+                onPressed: () => _showLobbyPlayersFriendSheet(
+                  context,
+                  lobby,
+                  currentUserId,
+                ),
+                icon: const Icon(Icons.person_add_alt_1_rounded),
+                color: AppColors.accentStart,
+              );
+            },
           ),
         ],
       ),
@@ -1027,10 +1034,35 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     LobbyItem lobby,
     String? currentUserId,
   ) async {
+    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+    final alreadyFriendIds = <String>{
+      for (final f in snapshot?.friends ?? const [])
+        if (f.user.id.isNotEmpty) f.user.id,
+    };
+    final outgoingIds = <String>{
+      for (final r in snapshot?.outgoing ?? const [])
+        if (r.user.id.isNotEmpty) r.user.id,
+    };
+    // Уже в друзьях / исходящая заявка — не показываем в «Добавить в друзья».
     final players = lobby.players
-        .where((p) => p.id.isNotEmpty && p.id != currentUserId)
+        .where(
+          (p) =>
+              p.id.isNotEmpty &&
+              p.id != currentUserId &&
+              !alreadyFriendIds.contains(p.id) &&
+              !outgoingIds.contains(p.id),
+        )
         .toList(growable: false);
-    if (players.isEmpty) return;
+    if (players.isEmpty) {
+      if (context.mounted) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.friendsAlreadyFriends,
+          kind: AppSnackKind.info,
+        );
+      }
+      return;
+    }
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1179,6 +1211,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       }
     } catch (e) {
       if (!context.mounted) return;
+      // Уже в составе лобби — остаёмся в ожидании, не уходим на список игр.
+      final alreadyIn = e is GamesException &&
+          e.statusCode == 400 &&
+          e.message.toLowerCase().contains('already in lobby');
+      if (alreadyIn) {
+        ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: widget.lobbyId),
+            );
+        return;
+      }
       final gone = e is GamesException &&
           (e.statusCode == 404 || e.statusCode == 409 || e.statusCode == 400);
       showAppSnackBar(
