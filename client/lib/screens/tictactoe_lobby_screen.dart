@@ -185,15 +185,51 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
             final isDesktop = isWide(context);
             final pad = isDesktop ? 32.0 : 24.0;
+            // Планшет / phone landscape / низкий экран: страница скроллится,
+            // иначе карточка приглашения обрезается.
+            final shortViewport = isPhoneLandscape(context) ||
+                isTablet(context) ||
+                MediaQuery.sizeOf(context).height < 640;
             return SafeArea(
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: isDesktop ? 480 : double.infinity,
                   ),
-                  // Весь экран НЕ листается: помещается в размер экрана.
-                  // Скроллится только список друзей внутри карточки (Expanded).
-                  child: Padding(
+                  child: shortViewport && isInviteMode && isCreator
+                      ? LayoutBuilder(
+                          builder: (context, constraints) {
+                            final friendsH = (constraints.maxHeight * 0.55)
+                                .clamp(180.0, 360.0);
+                            return SingleChildScrollView(
+                              padding: EdgeInsets.all(pad),
+                              physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics(),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (lobby.stakeBronze > 0) ...[
+                                    _LobbyStakeChip(
+                                      stakeBronze: lobby.stakeBronze,
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                  _buildShareInviteLinkCard(context),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    height: friendsH,
+                                    child: _buildFriendsCard(
+                                      context,
+                                      friendsAsync,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : Padding(
                     padding: EdgeInsets.all(pad),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

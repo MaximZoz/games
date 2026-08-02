@@ -490,27 +490,43 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                             padding: const EdgeInsets.fromLTRB(10, 8, 2, 10),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                const cols = 3;
-                                const rows = 3;
+                                final landscape =
+                                    MediaQuery.sizeOf(context).width >
+                                        MediaQuery.sizeOf(context).height;
+                                // Landscape / планшет: больше колонок, страница
+                                // скроллится — иначе низ обрезается.
+                                final cols = isPhoneLandscape(context)
+                                    ? 4
+                                    : (isTablet(context) && landscape)
+                                        ? 4
+                                        : 3;
                                 const gap = 8.0;
+                                final rows = (pageItems.length / cols)
+                                    .ceil()
+                                    .clamp(1, 3);
                                 final cellW = (constraints.maxWidth -
                                         gap * (cols - 1)) /
                                     cols;
                                 final cellH = (constraints.maxHeight -
                                         gap * (rows - 1)) /
                                     rows;
+                                final shortHeight =
+                                    constraints.maxHeight < 420 || landscape;
                                 final ratio = cellH <= 0
                                     ? 0.78
                                     : (cellW / cellH).clamp(0.55, 1.15);
                                 return GridView.builder(
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
+                                  physics: shortHeight
+                                      ? const BouncingScrollPhysics()
+                                      : const NeverScrollableScrollPhysics(),
                                   gridDelegate:
                                       SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: cols,
                                     mainAxisSpacing: gap,
                                     crossAxisSpacing: gap,
-                                    childAspectRatio: ratio,
+                                    childAspectRatio: shortHeight
+                                        ? 0.78
+                                        : ratio,
                                   ),
                                   itemCount: pageItems.length,
                                   itemBuilder: (context, index) {

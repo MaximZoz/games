@@ -23,3 +23,15 @@ bool isPhoneLandscape(BuildContext context) {
   final size = MediaQuery.sizeOf(context);
   return isNarrow(context) && size.width > size.height;
 }
+
+/// Планшет (wide, но не большой десктоп).
+bool isTablet(BuildContext context) {
+  if (!isWide(context)) return false;
+  final size = MediaQuery.sizeOf(context);
+  return size.shortestSide < 1100;
+}
+
+/// Нужна «плитка» (десктоп / планшет / телефон landscape).
+bool useDesktopTiles(BuildContext context) {
+  return isWide(context) || isPhoneLandscape(context);
+}

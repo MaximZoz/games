@@ -113,8 +113,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = context.l10n;
     final media = MediaQuery.of(context);
     final formMaxWidth = isNarrow(context) ? media.size.width : 420.0;
-    // Как «О себе»: при фокусе (клавиатура) прижимаем форму вверх.
-    final liftToTop = _inputFocused;
+    // Планшет: форма сверху (иначе «уезжает» вниз). Телефон portrait —
+    // по центру; при фокусе/клавиатуре — вверх.
+    final liftToTop = _inputFocused || isTablet(context);
     final loginCardKey = ref.watch(bootLoginCardKeyProvider);
     final loginBorderOpacity = ref.watch(bootLoginCardBorderOpacityProvider);
 

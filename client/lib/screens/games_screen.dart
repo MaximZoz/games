@@ -709,7 +709,7 @@ class _GamesPageContent extends StatelessWidget {
       builder: (context, constraints) {
         return SingleChildScrollView(
           primary: false,
-          physics: isDesktop
+          physics: (isDesktop || isPhoneLandscape(context) || isTablet(context))
               ? const ClampingScrollPhysics()
               : const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
@@ -735,10 +735,15 @@ class _GamesPageContent extends StatelessWidget {
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final phoneLandscape = isPhoneLandscape(context);
+                      final tablet = isTablet(context);
                       if (isDesktop || phoneLandscape) {
                         const gap = 16.0;
-                        final minCardWidth = phoneLandscape ? 280.0 : 360.0;
-                        final maxCardWidth = phoneLandscape ? 340.0 : 480.0;
+                        final minCardWidth = phoneLandscape
+                            ? 280.0
+                            : (tablet ? 320.0 : 360.0);
+                        final maxCardWidth = phoneLandscape
+                            ? 340.0
+                            : (tablet ? 420.0 : 480.0);
                         final availableWidth = constraints.maxWidth;
                         final crossAxisCount = phoneLandscape
                             ? 1

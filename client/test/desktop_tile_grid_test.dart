@@ -38,4 +38,26 @@ void main() {
     expect(find.text('tile-0'), findsOneWidget);
     expect(find.text('tile-1'), findsOneWidget);
   });
+
+  testWidgets('DesktopContentFrame forces width on wide screens', (tester) async {
+    late double childWidth;
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DesktopContentFrame(
+            maxWidth: 960,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                childWidth = constraints.maxWidth;
+                return const SizedBox(height: 10);
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(childWidth, 960);
+  });
 }

@@ -173,7 +173,9 @@ class _LoginRewardsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final canClaim = status.available;
-    final wide = isWide(context);
+    // Плитка: планшет/десктоп и телефон landscape; portrait телефона — как было.
+    final useTiles = useDesktopTiles(context);
+    final alignTop = isTablet(context) || isPhoneLandscape(context);
 
     Widget card(int days) => _CompactMilestoneCard(
           targetDays: days,
@@ -182,11 +184,11 @@ class _LoginRewardsBody extends StatelessWidget {
           nextStreak: status.nextStreak,
           availableToday: status.available,
           rewardKey: status.nextStreak == days ? claimSourceKey : null,
-          compactTile: wide,
+          compactTile: useTiles,
         );
 
     final claimButton = SizedBox(
-      width: wide ? 320 : double.infinity,
+      width: useTiles ? 320 : double.infinity,
       child: FilledButton.icon(
         onPressed: canClaim ? onClaim : null,
         icon: const Icon(Icons.card_giftcard, size: 18),
@@ -204,31 +206,41 @@ class _LoginRewardsBody extends StatelessWidget {
       ),
     );
 
-    if (wide) {
+    if (useTiles) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        padding: EdgeInsets.fromLTRB(20, alignTop ? 8 : 16, 20, 20),
         child: Column(
           children: [
             Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 2.2,
-                    children: [
-                      for (final days in _milestones) card(days),
-                    ],
+              child: Align(
+                alignment:
+                    alignTop ? Alignment.topCenter : Alignment.center,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio:
+                              isPhoneLandscape(context) ? 2.4 : 2.2,
+                          children: [
+                            for (final days in _milestones) card(days),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        claimButton,
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            claimButton,
           ],
         ),
       );

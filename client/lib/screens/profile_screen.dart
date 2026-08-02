@@ -1514,12 +1514,43 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   Widget _buildCompactEditor(BuildContext context) {
     // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
     final aboutTypingMode = _aboutTypingActive && _aboutFocus.hasFocus;
+    // В phone landscape родитель уже SingleChildScrollView — Expanded там
+    // ломает скролл и кнопка «Сохранить» уезжает «в бесконечность».
+    final phoneLand = isPhoneLandscape(context);
+
+    final Widget aboutField;
+    if (phoneLand) {
+      aboutField = SizedBox(
+        height: aboutTypingMode ? 120 : 72,
+        width: double.infinity,
+        child: _buildCompactAboutField(expands: true),
+      );
+    } else {
+      aboutField = Expanded(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final height = aboutTypingMode
+                ? math.min(168.0, constraints.maxHeight)
+                : constraints.maxHeight;
+            return Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: height,
+                child: _buildCompactAboutField(expands: true),
+              ),
+            );
+          },
+        ),
+      );
+    }
 
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
     // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
     // SwipeBackScope — снаружи (ProfileScreen), здесь только форма.
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: phoneLand ? MainAxisSize.min : MainAxisSize.max,
         children: [
           _buildCompactHeader(context),
           SizedBox(height: aboutTypingMode ? 10 : 16),
@@ -1533,11 +1564,11 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  height: 82,
+                  height: phoneLand ? 64 : 82,
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 76,
+                        width: phoneLand ? 56 : 76,
                         child: Center(child: _buildCurrentAvatar()),
                       ),
                       const SizedBox(width: 10),
@@ -1558,10 +1589,11 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                               }),
                               child: AnimatedContainer(
                                 duration: AppDurations.short,
-                                width: 48,
-                                height: 48,
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 15),
+                                width: phoneLand ? 40 : 48,
+                                height: phoneLand ? 40 : 48,
+                                margin: EdgeInsets.symmetric(
+                                  vertical: phoneLand ? 12 : 15,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.accentSoft,
                                   shape: BoxShape.circle,
@@ -1575,7 +1607,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                                 child: Icon(
                                   _presetAvatarIcons[index],
                                   color: AppColors.accentStart,
-                                  size: 25,
+                                  size: phoneLand ? 22 : 25,
                                 ),
                               ),
                             );
@@ -1585,31 +1617,15 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: phoneLand ? 10 : 16),
                 _buildCompactNameAgeRow(),
-                const SizedBox(height: 12),
+                SizedBox(height: phoneLand ? 8 : 12),
                 _buildShowStatsCheckbox(),
-                const SizedBox(height: 12),
+                SizedBox(height: phoneLand ? 8 : 12),
               ],
             ),
           ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final height = aboutTypingMode
-                    ? math.min(168.0, constraints.maxHeight)
-                    : constraints.maxHeight;
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: constraints.maxWidth,
-                    height: height,
-                    child: _buildCompactAboutField(expands: true),
-                  ),
-                );
-              },
-            ),
-          ),
+          aboutField,
           Visibility(
             visible: !aboutTypingMode,
             maintainState: true,
@@ -1619,7 +1635,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 12),
+                SizedBox(height: phoneLand ? 8 : 12),
                 OutlinedButton.icon(
                   onPressed:
                       (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1639,7 +1655,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     type: BannerType.error,
                   ),
                 ],
-                const SizedBox(height: 16),
+                SizedBox(height: phoneLand ? 10 : 16),
                 _buildCompactSaveButton(),
               ],
             ),

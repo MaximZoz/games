@@ -7,6 +7,8 @@ void main() {
     late bool phoneLandscape;
     late bool narrow;
     late bool wide;
+    late bool tablet;
+    late bool tiles;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -17,6 +19,8 @@ void main() {
               phoneLandscape = isPhoneLandscape(context);
               narrow = isNarrow(context);
               wide = isWide(context);
+              tablet = isTablet(context);
+              tiles = useDesktopTiles(context);
               return const SizedBox();
             },
           ),
@@ -27,6 +31,8 @@ void main() {
     expect(narrow, isTrue);
     expect(wide, isFalse);
     expect(phoneLandscape, isTrue);
+    expect(tablet, isFalse);
+    expect(tiles, isTrue);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -35,6 +41,7 @@ void main() {
           child: Builder(
             builder: (context) {
               phoneLandscape = isPhoneLandscape(context);
+              tiles = useDesktopTiles(context);
               return const SizedBox();
             },
           ),
@@ -42,6 +49,7 @@ void main() {
       ),
     );
     expect(phoneLandscape, isFalse);
+    expect(tiles, isFalse);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -51,6 +59,8 @@ void main() {
             builder: (context) {
               phoneLandscape = isPhoneLandscape(context);
               wide = isWide(context);
+              tablet = isTablet(context);
+              tiles = useDesktopTiles(context);
               return const SizedBox();
             },
           ),
@@ -59,5 +69,7 @@ void main() {
     );
     expect(wide, isTrue);
     expect(phoneLandscape, isFalse);
+    expect(tablet, isTrue);
+    expect(tiles, isTrue);
   });
 }

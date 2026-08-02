@@ -471,8 +471,15 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           final isDesktop = isWide(context);
           final narrow = isNarrow(context);
           final phoneLandscape = isPhoneLandscape(context);
-          final contentPadding = phoneLandscape ? 8.0 : (narrow ? 12.0 : 24.0);
-          final verticalSpacing = phoneLandscape ? 6.0 : (narrow ? 10.0 : 20.0);
+          // Планшет landscape: доска слева (как телефон), иначе низ обрезается.
+          final landscapeSideBySide = phoneLandscape ||
+              (isTablet(context) &&
+                  MediaQuery.sizeOf(context).width >
+                      MediaQuery.sizeOf(context).height);
+          final contentPadding =
+              landscapeSideBySide ? 8.0 : (narrow ? 12.0 : 24.0);
+          final verticalSpacing =
+              landscapeSideBySide ? 6.0 : (narrow ? 10.0 : 20.0);
 
           Widget opponentCard() => _OpponentCard(
                 opponentId: opponentId,
@@ -570,10 +577,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ),
               );
 
-          // Телефон landscape: доска слева, статус и кнопки справа —
+          // Телефон/планшет landscape: доска слева, статус справа —
           // «Повторить» / «Другой соперник» не обрезаются снизу.
           final Widget bodyLayout;
-          if (phoneLandscape) {
+          if (landscapeSideBySide) {
             bodyLayout = Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

@@ -1045,12 +1045,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final totalCount = visibleCount + (hasMore ? 1 : 0);
 
     // Плитки на десктопе и на телефоне в landscape (portrait — список).
-    final useGrid = isWide(context) || isPhoneLandscape(context);
+    final useGrid = useDesktopTiles(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         if (useGrid) {
           const gap = 12.0;
-          const maxCellWidth = 300.0;
+          // Уже плитки: телефон landscape / планшет — 3 в ряд, десктоп шире.
+          final maxCellWidth = isPhoneLandscape(context)
+              ? 220.0
+              : (isTablet(context) ? 260.0 : 300.0);
           const maxContentWidth = 960.0;
           final availableWidth =
               (constraints.maxWidth - 32).clamp(0.0, maxContentWidth);

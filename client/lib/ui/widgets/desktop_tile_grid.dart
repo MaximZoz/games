@@ -87,16 +87,25 @@ class DesktopContentFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isWide(context)) return child;
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Padding(
-        padding: padding,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: child,
-        ),
-      ),
+    if (!useDesktopTiles(context)) return child;
+    // Задаём ширину явно: иначе Align+maxWidth сжимает ListView/Wrap
+    // до intrinsic-ширины и группы карточек «плывут» вбок.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth.clamp(0.0, maxWidth).toDouble()
+            : maxWidth;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: padding,
+            child: SizedBox(
+              width: width,
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 }
