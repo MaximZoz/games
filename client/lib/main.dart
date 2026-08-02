@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,8 +82,18 @@ final _pushNotificationNavProvider = Provider<void>((ref) {
 });
 
 /// Без Material-ползунка поверх списков (чат, друзья, поиск и т.д.).
+/// Мышь/трекпад — как touch: можно тащить горизонтальные полосы (коллекции).
 class _NoScrollbarBehavior extends MaterialScrollBehavior {
   const _NoScrollbarBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => const {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.unknown,
+      };
 
   @override
   Widget buildScrollbar(
