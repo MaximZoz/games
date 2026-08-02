@@ -237,13 +237,19 @@ class SupportMessageItem {
 class SupportContact {
   final String id;
   final String displayName;
+  final bool isSupport;
 
-  const SupportContact({required this.id, required this.displayName});
+  const SupportContact({
+    required this.id,
+    required this.displayName,
+    this.isSupport = true,
+  });
 
   factory SupportContact.fromJson(Map<String, dynamic> json) {
     return SupportContact(
       id: json['id'] as String? ?? '',
-      displayName: json['display_name'] as String? ?? 'Поддержка',
+      displayName: json['display_name'] as String? ?? '',
+      isSupport: json['is_support'] as bool? ?? true,
     );
   }
 }

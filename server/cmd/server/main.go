@@ -368,6 +368,7 @@ func main() {
 		InitSecret:  adminInitSecret,
 		LogImporter: logImporter,
 		Hub:         realtimeHub,
+		Push:        pushSender,
 	}
 	frontendLogHandler := &api.FrontendLogHandler{
 		Writer:    logWriter,

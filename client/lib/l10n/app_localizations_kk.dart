@@ -1730,4 +1730,23 @@ class AppLocalizationsKk extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Сіз берілдіңіз. $name жеңді';
   }
+
+  @override
+  String get supportTitle => 'Қолдау';
+
+  @override
+  String get supportUnavailable => 'Қолдау қолжетімсіз';
+
+  @override
+  String get supportOpenFailed => 'Қолдау чатын ашу мүмкін болмады';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Сізге $amount тиын есептелді';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount тиын шегерілді';
+  }
 }

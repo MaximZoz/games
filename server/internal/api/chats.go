@@ -34,6 +34,7 @@ type ChatUserItem struct {
 	About       *string `json:"about,omitempty"`
 	FrameColor  string  `json:"frame_color,omitempty"`
 	FrameCode   string  `json:"frame_code,omitempty"`
+	IsSupport   bool    `json:"is_support,omitempty"`
 }
 
 type ChatPreviewItem struct {
@@ -174,6 +175,7 @@ func chatUserToItem(u store.ChatUser) ChatUserItem {
 		Age:         u.Age,
 		Gender:      u.Gender,
 		About:       u.About,
+		IsSupport:   u.IsSupport,
 	}
 }
 

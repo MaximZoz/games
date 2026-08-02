@@ -10,6 +10,7 @@ import (
 
 	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
+	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -23,6 +24,7 @@ type AdminHandler struct {
 	InitSecret  string // секрет для однократного создания первого админа
 	LogImporter *applog.Importer
 	Hub         *RealtimeHub // для WS-уведомлений админу/пользователю
+	Push        *WebPushSender
 }
 
 type AdminInitRequest struct {
@@ -504,14 +506,34 @@ func (h *AdminHandler) GrantCoins(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	_ = store.RecordAdminCoinGrant(ctx, h.Pool, id, adminID, req.AmountBronze, strings.TrimSpace(req.Reason))
+	reason := strings.TrimSpace(req.Reason)
+	_ = store.RecordAdminCoinGrant(ctx, h.Pool, id, adminID, req.AmountBronze, reason)
 	balance, _ := store.GetBalance(ctx, h.Pool, id)
-	// WS-уведомление пользователю для мгновенного обновления баланса.
+	// WS-уведомление пользователю для мгновенного обновления баланса + UI-тост.
 	if h.Hub != nil {
 		h.Hub.PublishToUsers([]uuid.UUID{id}, map[string]any{
 			"type":    "coins_granted",
 			"amount":  req.AmountBronze,
 			"balance": balance,
+			"reason":  reason,
+		})
+	}
+	// Web Push: заголовок с суммой, описание — причина от админа.
+	// Язык пользователя в подписке не храним — как у остальных push, дефолт RU.
+	if h.Push != nil && req.AmountBronze > 0 {
+		lang := i18n.LangRU
+		amountStr := strconv.Itoa(req.AmountBronze)
+		title := i18n.Contentf(lang, "push.coins_granted_title", map[string]string{"amount": amountStr})
+		body := reason
+		if body == "" {
+			body = i18n.Content(lang, "push.coins_granted_body")
+		}
+		h.Push.NotifyUsers([]uuid.UUID{id}, store.WebPushCategoryRewards, PushPayload{
+			Title: title,
+			Body:  body,
+			URL:   "/",
+			Tag:   "coins_granted",
+			Kind:  "rewards",
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"balance_bronze": balance})
@@ -673,9 +695,11 @@ func (h *AdminHandler) SupportUserInfo(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{})
 		return
 	}
+	lang := i18n.LangFromRequest(r)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"id":           su.ID.String(),
-		"display_name": "Поддержка",
+		"display_name": i18n.Content(lang, "label.support"),
 		"email":        su.Email,
+		"is_support":   true,
 	})
 }

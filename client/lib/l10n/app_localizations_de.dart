@@ -1730,4 +1730,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Du hast aufgegeben. $name hat gewonnen';
   }
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportUnavailable => 'Support ist nicht verfügbar';
+
+  @override
+  String get supportOpenFailed => 'Support-Chat konnte nicht geöffnet werden';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Ihnen wurden $amount Münzen gutgeschrieben';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount Münzen wurden abgezogen';
+  }
 }

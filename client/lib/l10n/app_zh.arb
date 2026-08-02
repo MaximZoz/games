@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "网络模式",
   "shopPurchaseApplied": "{title} — 购买已生效",
   "shopPurchaseQueued": "购买已保存 — 将在在线模式下生效",
-  "shopPurchaseRejected": "{title} — 购买未生效：{reason}"
+  "shopPurchaseRejected": "{title} — 购买未生效：{reason}",
+  "supportTitle": "客服支持",
+  "supportUnavailable": "客服暂不可用",
+  "supportOpenFailed": "无法打开客服聊天",
+  "coinsGrantedTitle": "已为您发放 {amount} 枚金币",
+  "coinsDeductedTitle": "已扣除 {amount} 枚金币"
 }

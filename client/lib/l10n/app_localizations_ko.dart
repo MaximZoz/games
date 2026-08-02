@@ -1730,4 +1730,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return '기권했습니다. $name 님이 이겼습니다';
   }
+
+  @override
+  String get supportTitle => '고객지원';
+
+  @override
+  String get supportUnavailable => '고객지원을 사용할 수 없습니다';
+
+  @override
+  String get supportOpenFailed => '고객지원 채팅을 열 수 없습니다';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return '$amount코인이 지급되었습니다';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount코인이 차감되었습니다';
+  }
 }

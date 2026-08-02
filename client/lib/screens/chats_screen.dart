@@ -744,16 +744,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       final support = await repo.getSupportUser();
       if (!mounted) return;
       if (support == null) {
-        setState(() => _error = 'Поддержка недоступна');
+        setState(() => _error = context.l10n.supportUnavailable);
         return;
       }
       final chatID = await ref.read(chatsRepositoryProvider).startChat(support.id);
       if (!mounted || chatID.isEmpty) return;
       unawaited(_loadChats());
-      _openChatRoute(chatID: chatID, peerName: support.displayName);
+      _openChatRoute(chatID: chatID, peerName: context.l10n.supportTitle);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Не удалось открыть чат с поддержкой');
+      setState(() => _error = context.l10n.supportOpenFailed);
     } finally {
       if (mounted) setState(() => _isStartingChat = false);
     }
@@ -1338,7 +1338,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               ),
             ),
             IconButton(
-              tooltip: 'Поддержка',
+              tooltip: context.l10n.supportTitle,
               onPressed: () {
                 Navigator.of(modalContext).maybePop();
                 _openSupport();
@@ -1395,6 +1395,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   String _peerTitle(ChatUserItem user) {
     final value = user.displayName?.trim();
+    // is_support с API; «Поддержка» — имя в БД до/без флага.
+    if (user.isSupport || value == 'Поддержка') {
+      return context.l10n.supportTitle;
+    }
     if (value == null || value.isEmpty) return context.l10n.commonUser;
     return value;
   }

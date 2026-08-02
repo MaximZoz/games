@@ -229,6 +229,40 @@ class AppShell extends ConsumerWidget {
           if (type == 'support_message') {
             ref.invalidate(supportChatsProvider);
           }
+          if (type == 'coins_granted') {
+            final amount = (event['amount'] as num?)?.toInt() ?? 0;
+            final balance = (event['balance'] as num?)?.toInt();
+            final reason = (event['reason'] as String?)?.trim() ?? '';
+            final l10n = context.l10n;
+            final title = amount >= 0
+                ? l10n.coinsGrantedTitle(amount)
+                : l10n.coinsDeductedTitle(amount.abs());
+            final message =
+                reason.isEmpty ? title : '$title\n$reason';
+            if (context.mounted) {
+              showAppSnackBar(
+                context,
+                message: message,
+                kind: amount >= 0 ? AppSnackKind.success : AppSnackKind.info,
+                duration: Duration(seconds: reason.isEmpty ? 4 : 6),
+                icon: Icons.monetization_on_rounded,
+              );
+            }
+            if (balance != null && context.mounted) {
+              if (amount > 0) {
+                unawaited(playBalanceGain(
+                  ref: ref,
+                  context: context,
+                  newBalanceBronze: balance,
+                  rewardBronze: amount,
+                ));
+              } else {
+                unawaited(
+                  ref.read(authStateProvider.notifier).applyBalance(balance),
+                );
+              }
+            }
+          }
         });
       });
       // Держим подписку на обновления inbox поддержки для админ-бейджа.

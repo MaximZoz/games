@@ -1029,5 +1029,10 @@
   "statsDurationHours": "{hours} h",
   "statsDurationHoursMinutes": "{hours} h {minutes} min",
   "statsDurationMinutes": "{minutes} min",
-  "gameYouForfeitOpponentWon": "You surrendered. {name} won"
+  "gameYouForfeitOpponentWon": "You surrendered. {name} won",
+  "supportTitle": "Support",
+  "supportUnavailable": "Support is unavailable",
+  "supportOpenFailed": "Could not open support chat",
+  "coinsGrantedTitle": "You've been credited {amount} coins",
+  "coinsDeductedTitle": "{amount} coins were deducted"
 }

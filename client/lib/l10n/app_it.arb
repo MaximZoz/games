@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Modalità di rete",
   "shopPurchaseApplied": "{title} — acquisto applicato",
   "shopPurchaseQueued": "Acquisto salvato — verrà applicato in modalità online",
-  "shopPurchaseRejected": "{title} — acquisto non applicato: {reason}"
+  "shopPurchaseRejected": "{title} — acquisto non applicato: {reason}",
+  "supportTitle": "Supporto",
+  "supportUnavailable": "Il supporto non è disponibile",
+  "supportOpenFailed": "Impossibile aprire la chat di supporto",
+  "coinsGrantedTitle": "Ti sono stati accreditati {amount} monete",
+  "coinsDeductedTitle": "Sono state detratte {amount} monete"
 }

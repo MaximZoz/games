@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Chế độ mạng",
   "shopPurchaseApplied": "{title} — đã áp dụng giao dịch",
   "shopPurchaseQueued": "Đã lưu giao dịch — sẽ áp dụng ở chế độ trực tuyến",
-  "shopPurchaseRejected": "{title} — không áp dụng giao dịch: {reason}"
+  "shopPurchaseRejected": "{title} — không áp dụng giao dịch: {reason}",
+  "supportTitle": "Hỗ trợ",
+  "supportUnavailable": "Hỗ trợ không khả dụng",
+  "supportOpenFailed": "Không thể mở chat hỗ trợ",
+  "coinsGrantedTitle": "Bạn đã được cộng {amount} xu",
+  "coinsDeductedTitle": "Đã trừ {amount} xu"
 }

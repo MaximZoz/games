@@ -1730,4 +1730,23 @@ class AppLocalizationsCs extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Vzdali jste se. $name vyhrál';
   }
+
+  @override
+  String get supportTitle => 'Podpora';
+
+  @override
+  String get supportUnavailable => 'Podpora není dostupná';
+
+  @override
+  String get supportOpenFailed => 'Nepodařilo se otevřít chat s podporou';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Bylo vám připsáno $amount mincí';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return 'Bylo odečteno $amount mincí';
+  }
 }

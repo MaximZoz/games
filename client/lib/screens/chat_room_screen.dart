@@ -1560,6 +1560,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   String _peerTitle(ChatUserItem user) {
     final value = user.displayName?.trim();
+    if (user.isSupport || value == 'Поддержка') {
+      return context.l10n.supportTitle;
+    }
     if (value == null || value.isEmpty) return context.l10n.commonUser;
     return value;
   }

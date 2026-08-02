@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Λειτουργία δικτύου",
   "shopPurchaseApplied": "{title} — η αγορά εφαρμόστηκε",
   "shopPurchaseQueued": "Η αγορά αποθηκεύτηκε — θα εφαρμοστεί σε online λειτουργία",
-  "shopPurchaseRejected": "{title} — η αγορά δεν εφαρμόστηκε: {reason}"
+  "shopPurchaseRejected": "{title} — η αγορά δεν εφαρμόστηκε: {reason}",
+  "supportTitle": "Υποστήριξη",
+  "supportUnavailable": "Η υποστήριξη δεν είναι διαθέσιμη",
+  "supportOpenFailed": "Αποτυχία ανοίγματος συνομιλίας υποστήριξης",
+  "coinsGrantedTitle": "Σας πιστώθηκαν {amount} νομίσματα",
+  "coinsDeductedTitle": "Αφαιρέθηκαν {amount} νομίσματα"
 }

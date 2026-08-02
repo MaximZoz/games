@@ -1730,4 +1730,23 @@ class AppLocalizationsFi extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Luovutit. $name voitti';
   }
+
+  @override
+  String get supportTitle => 'Tuki';
+
+  @override
+  String get supportUnavailable => 'Tuki ei ole käytettävissä';
+
+  @override
+  String get supportOpenFailed => 'Tukichatin avaaminen epäonnistui';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Sinulle on hyvitetty $amount kolikkoa';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount kolikkoa vähennetty';
+  }
 }

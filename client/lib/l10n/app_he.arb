@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "מצב רשת",
   "shopPurchaseApplied": "{title} — הרכישה הוחלה",
   "shopPurchaseQueued": "הרכישה נשמרה — תוחל במצב אונליין",
-  "shopPurchaseRejected": "{title} — הרכישה לא הוחלה: {reason}"
+  "shopPurchaseRejected": "{title} — הרכישה לא הוחלה: {reason}",
+  "supportTitle": "תמיכה",
+  "supportUnavailable": "התמיכה אינה זמינה",
+  "supportOpenFailed": "לא ניתן לפתוח את צ'אט התמיכה",
+  "coinsGrantedTitle": "זוכו לכם {amount} מטבעות",
+  "coinsDeductedTitle": "נוכו {amount} מטבעות"
 }

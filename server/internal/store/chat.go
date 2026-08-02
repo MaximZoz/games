@@ -188,6 +188,7 @@ type ChatUser struct {
 	Age         *int
 	Gender      *string
 	About       *string
+	IsSupport   bool
 }
 
 type ChatPreview struct {
@@ -317,6 +318,7 @@ func ListChatsForUser(
 			mc.id,
 			mc.created_at,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
+			COALESCE(u.is_support, false),
 			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at, lm.has_image, lm.image_count,
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
@@ -357,6 +359,7 @@ func ListChatsForUser(
 			&item.Peer.Age,
 			&item.Peer.Gender,
 			&item.Peer.About,
+			&item.Peer.IsSupport,
 			&lastMessageIDRaw,
 			&lastSenderIDRaw,
 			&lastBody,
@@ -693,6 +696,7 @@ func ListBlockedUsers(
 	rows, err := pool.Query(ctx, `
 		SELECT
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
+			COALESCE(u.is_support, false),
 			ub.created_at
 		FROM user_blocks ub
 		JOIN users u ON u.id = ub.blocked_user_id
@@ -718,6 +722,7 @@ func ListBlockedUsers(
 			&item.User.Age,
 			&item.User.Gender,
 			&item.User.About,
+			&item.User.IsSupport,
 			&item.BlockedAt,
 		); err != nil {
 			return nil, err

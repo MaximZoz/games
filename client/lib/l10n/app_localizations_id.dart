@@ -1730,4 +1730,23 @@ class AppLocalizationsId extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Anda menyerah. $name menang';
   }
+
+  @override
+  String get supportTitle => 'Dukungan';
+
+  @override
+  String get supportUnavailable => 'Dukungan tidak tersedia';
+
+  @override
+  String get supportOpenFailed => 'Tidak dapat membuka chat dukungan';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Anda menerima $amount koin';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount koin dipotong';
+  }
 }

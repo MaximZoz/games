@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Режим мережі",
   "shopPurchaseApplied": "{title} — покупку застосовано",
   "shopPurchaseQueued": "Покупку збережено — застосується в режимі онлайн",
-  "shopPurchaseRejected": "{title} — покупку не застосовано: {reason}"
+  "shopPurchaseRejected": "{title} — покупку не застосовано: {reason}",
+  "supportTitle": "Підтримка",
+  "supportUnavailable": "Підтримка недоступна",
+  "supportOpenFailed": "Не вдалося відкрити чат із підтримкою",
+  "coinsGrantedTitle": "Вам нараховано {amount} монет",
+  "coinsDeductedTitle": "Списано {amount} монет"
 }

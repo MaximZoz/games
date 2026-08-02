@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Verkkotila",
   "shopPurchaseApplied": "{title} — ostos otettu käyttöön",
   "shopPurchaseQueued": "Ostos tallennettu — otetaan käyttöön online-tilassa",
-  "shopPurchaseRejected": "{title} — ostosta ei otettu käyttöön: {reason}"
+  "shopPurchaseRejected": "{title} — ostosta ei otettu käyttöön: {reason}",
+  "supportTitle": "Tuki",
+  "supportUnavailable": "Tuki ei ole käytettävissä",
+  "supportOpenFailed": "Tukichatin avaaminen epäonnistui",
+  "coinsGrantedTitle": "Sinulle on hyvitetty {amount} kolikkoa",
+  "coinsDeductedTitle": "{amount} kolikkoa vähennetty"
 }

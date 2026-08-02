@@ -1730,4 +1730,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Teslim oldunuz. $name kazandı';
   }
+
+  @override
+  String get supportTitle => 'Destek';
+
+  @override
+  String get supportUnavailable => 'Destek kullanılamıyor';
+
+  @override
+  String get supportOpenFailed => 'Destek sohbeti açılamadı';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Hesabınıza $amount jeton eklendi';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount jeton düşüldü';
+  }
 }

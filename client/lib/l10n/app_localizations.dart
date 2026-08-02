@@ -3310,6 +3310,36 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вы сдались. {name} победил'**
   String gameYouForfeitOpponentWon(String name);
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка'**
+  String get supportTitle;
+
+  /// No description provided for @supportUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка недоступна'**
+  String get supportUnavailable;
+
+  /// No description provided for @supportOpenFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось открыть чат с поддержкой'**
+  String get supportOpenFailed;
+
+  /// No description provided for @coinsGrantedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вам начислено {amount} монет'**
+  String coinsGrantedTitle(int amount);
+
+  /// No description provided for @coinsDeductedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Списано {amount} монет'**
+  String coinsDeductedTitle(int amount);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

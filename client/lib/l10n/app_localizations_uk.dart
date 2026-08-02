@@ -1730,4 +1730,23 @@ class AppLocalizationsUk extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Ви здалися. $name переміг';
   }
+
+  @override
+  String get supportTitle => 'Підтримка';
+
+  @override
+  String get supportUnavailable => 'Підтримка недоступна';
+
+  @override
+  String get supportOpenFailed => 'Не вдалося відкрити чат із підтримкою';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Вам нараховано $amount монет';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return 'Списано $amount монет';
+  }
 }

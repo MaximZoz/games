@@ -1730,4 +1730,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return '你认输了。$name 获胜';
   }
+
+  @override
+  String get supportTitle => '客服支持';
+
+  @override
+  String get supportUnavailable => '客服暂不可用';
+
+  @override
+  String get supportOpenFailed => '无法打开客服聊天';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return '已为您发放 $amount 枚金币';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '已扣除 $amount 枚金币';
+  }
 }

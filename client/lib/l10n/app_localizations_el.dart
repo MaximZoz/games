@@ -1730,4 +1730,23 @@ class AppLocalizationsEl extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Παραδοθήκατε. Ο/Η $name κέρδισε';
   }
+
+  @override
+  String get supportTitle => 'Υποστήριξη';
+
+  @override
+  String get supportUnavailable => 'Η υποστήριξη δεν είναι διαθέσιμη';
+
+  @override
+  String get supportOpenFailed => 'Αποτυχία ανοίγματος συνομιλίας υποστήριξης';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Σας πιστώθηκαν $amount νομίσματα';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return 'Αφαιρέθηκαν $amount νομίσματα';
+  }
 }

@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Nätverksläge",
   "shopPurchaseApplied": "{title} — köp tillämpat",
   "shopPurchaseQueued": "Köp sparat — tillämpas i online-läge",
-  "shopPurchaseRejected": "{title} — köp inte tillämpat: {reason}"
+  "shopPurchaseRejected": "{title} — köp inte tillämpat: {reason}",
+  "supportTitle": "Support",
+  "supportUnavailable": "Support är inte tillgängligt",
+  "supportOpenFailed": "Kunde inte öppna supportchatten",
+  "coinsGrantedTitle": "Du har fått {amount} mynt",
+  "coinsDeductedTitle": "{amount} mynt drogs av"
 }

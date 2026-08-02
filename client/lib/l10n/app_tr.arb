@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Ağ modu",
   "shopPurchaseApplied": "{title} — satın alma uygulandı",
   "shopPurchaseQueued": "Satın alma kaydedildi — çevrimiçi modda uygulanacak",
-  "shopPurchaseRejected": "{title} — satın alma uygulanmadı: {reason}"
+  "shopPurchaseRejected": "{title} — satın alma uygulanmadı: {reason}",
+  "supportTitle": "Destek",
+  "supportUnavailable": "Destek kullanılamıyor",
+  "supportOpenFailed": "Destek sohbeti açılamadı",
+  "coinsGrantedTitle": "Hesabınıza {amount} jeton eklendi",
+  "coinsDeductedTitle": "{amount} jeton düşüldü"
 }

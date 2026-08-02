@@ -1012,5 +1012,10 @@
   "settingsOfflineModeTitle": "Režim sítě",
   "shopPurchaseApplied": "{title} — nákup uplatněn",
   "shopPurchaseQueued": "Nákup uložen — uplatní se v online režimu",
-  "shopPurchaseRejected": "{title} — nákup neuplatněn: {reason}"
+  "shopPurchaseRejected": "{title} — nákup neuplatněn: {reason}",
+  "supportTitle": "Podpora",
+  "supportUnavailable": "Podpora není dostupná",
+  "supportOpenFailed": "Nepodařilo se otevřít chat s podporou",
+  "coinsGrantedTitle": "Bylo vám připsáno {amount} mincí",
+  "coinsDeductedTitle": "Bylo odečteno {amount} mincí"
 }
