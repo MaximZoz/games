@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/chats/coins_credit_message.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -104,6 +105,9 @@ String formatChatMessagePreview(String body) {
         ? gift.emoji
         : (unicodeEmojiFromAnimatedName(gift.animatedName) ?? '🎁');
     return '🎁 $emoji $title';
+  }
+  if (isCoinsCreditMessage(body)) {
+    return LocaleService.l10n.coinsCreditCardTitle;
   }
   if (isInviteLobbyMessage(body)) {
     final l10n = LocaleService.l10n;

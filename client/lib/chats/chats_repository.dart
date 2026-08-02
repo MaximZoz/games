@@ -20,6 +20,7 @@ class ChatUserItem {
   final String? frameCode;
   final bool? isOnline;
   final String? lastSeenAt;
+  final bool isSupport;
 
   ChatUserItem({
     required this.id,
@@ -33,6 +34,7 @@ class ChatUserItem {
     this.frameCode,
     this.isOnline,
     this.lastSeenAt,
+    this.isSupport = false,
   });
 
   ChatUserItem copyWith({
@@ -47,6 +49,7 @@ class ChatUserItem {
     String? frameCode,
     bool? isOnline,
     String? lastSeenAt,
+    bool? isSupport,
   }) {
     return ChatUserItem(
       id: id ?? this.id,
@@ -60,6 +63,7 @@ class ChatUserItem {
       frameCode: frameCode ?? this.frameCode,
       isOnline: isOnline ?? this.isOnline,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+      isSupport: isSupport ?? this.isSupport,
     );
   }
 
@@ -74,6 +78,7 @@ class ChatUserItem {
       about: json['about'] as String?,
       frameColor: json['frame_color'] as String?,
       frameCode: json['frame_code'] as String?,
+      isSupport: json['is_support'] as bool? ?? false,
     );
   }
 }

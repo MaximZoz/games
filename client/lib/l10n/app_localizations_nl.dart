@@ -43,64 +43,64 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Bij matchmaking: als er binnen 30 seconden geen tegenstander is, start het spel met een bot (inzet terug naar 1 brons)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'Netwerkmodus';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Offline: speel meteen tegen een bot, zonder inzetten of beloningen, zonder chats of vrienden. Aankopen worden opgeslagen en toegepast in onlinemodus. Online — als er internet is of via de gebruikersinstelling.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'Online';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'Offline';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'Om de beurt wie de partij start';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Wie eerst zet wisselt van partij tot partij.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'Offlinemodus';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'Offlinemodus';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Offlinemodus is aan. Speel tegen een bot zonder inzetten of beloningen. Chats, vrienden en lobby zijn verborgen. Aankopen worden in onlinemodus toegepast.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'Instellingen';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'Spelen';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'Spel tegen bot';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'Zonder inzetten of beloningen · alleen offline';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'Bot heeft gewonnen';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'Bot denkt na…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'Opnieuw';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Aankoop opgeslagen — wordt toegepast in onlinemodus';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — aankoop toegepast';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — aankoop niet toegepast: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get lobbyEnterGame => 'Spel betreden';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'Lobby niet meer beschikbaar';
 
   @override
   String get lobbyInvite => 'Uitnodigen';
@@ -542,31 +542,31 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gameLeave => 'Verlaten';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'Opgeven';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'Opgeven?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Je verliest de partij en de inzetmunten.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'Remise aanbieden';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'Remise aanbieden?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'Je tegenstander kan de remise accepteren of weigeren.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'Remise accepteren?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'De partij eindigt in remise.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'Tegenstander biedt remise aan';
 
   @override
   String get gameConnecting => 'Verbinden met spel…';
@@ -638,7 +638,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chatMessageHint => 'Bericht';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'Plakken';
 
   @override
   String get chatEmoji => 'Emoji’s';
@@ -797,7 +797,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopStakes => 'Inzetten';
 
   @override
-  String get shopStakesSubtitle => 'Zilveren inzetten ontgrendelen';
+  String get shopStakesSubtitle => 'Hogere inzetten ontgrendelen';
 
   @override
   String get inventoryTitle => 'Items';
@@ -1182,13 +1182,13 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'De speler heeft dit item al';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'Je kunt jezelf niets cadeau doen';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'Dit item zit niet in je inventaris';
 
   @override
   String get inventoryLoadFailed => 'Items konden niet worden geladen';
@@ -1221,10 +1221,10 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'Klaar';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'Morgen';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,109 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'Statistieken';
+
+  @override
+  String get statsLoadFailed => 'Statistieken laden mislukt';
+
+  @override
+  String get statsAllGames => 'Alle spellen';
+
+  @override
+  String get statsEmptyTitle => 'Nog geen wedstrijden gespeeld';
+
+  @override
+  String get statsEmptyHint => 'Speel je eerste wedstrijd om hier statistieken te zien.';
+
+  @override
+  String get statsWins => 'Overwinningen';
+
+  @override
+  String get statsDraws => 'Gelijkspel';
+
+  @override
+  String get statsLosses => 'Nederlagen';
+
+  @override
+  String get statsWinRate => 'Winstpercentage';
+
+  @override
+  String get statsTopWon => 'Meeste overwinningen tegen';
+
+  @override
+  String get statsTopDrawn => 'Meeste gelijkspelen met';
+
+  @override
+  String get statsTopLost => 'Meeste nederlagen tegen';
+
+  @override
+  String get statsTimePlayed => 'Speeltijd';
+
+  @override
+  String get statsYourScore => 'Jouw stand';
+
+  @override
+  String get profileShowStats => 'Statistieken tonen';
+
+  @override
+  String get statsDurationZeroMinutes => '0 min';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Tegenstander gaf op. Je hebt gewonnen!';
+
+  @override
+  String get lobbyLeaveTitle => 'Lobby verlaten?';
+
+  @override
+  String get lobbyLeaveConfirm => 'De lobby wordt verwijderd nadat je weggaat. Uitgenodigde vrienden krijgen een afwijzing.';
+
+  @override
+  String get lobbyLeave => 'Verlaten';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours u';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours u $minutes min';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Je gaf op. $name won';
+  }
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportUnavailable => 'Support is niet beschikbaar';
+
+  @override
+  String get supportOpenFailed => 'Supportchat kon niet worden geopend';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Je hebt $amount munten ontvangen';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount munten zijn afgetrokken';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Je hebt munten ontvangen';
+
+  @override
+  String get coinsClaim => 'Ophalen';
 }

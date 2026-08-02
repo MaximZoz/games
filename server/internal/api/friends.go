@@ -107,6 +107,8 @@ func writeFriendError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, store.ErrCannotFriendYourself):
 		WriteErr(w, r, http.StatusBadRequest, "cannot friend yourself")
+	case errors.Is(err, store.ErrCannotFriendSupport):
+		WriteErr(w, r, http.StatusBadRequest, "cannot friend support")
 	case errors.Is(err, store.ErrAlreadyFriends):
 		WriteErr(w, r, http.StatusConflict, "already friends")
 	case errors.Is(err, store.ErrFriendRequestAlreadySent):

@@ -23,6 +23,7 @@ var (
 	ErrChatFriendsOnlyText    = errors.New("only friends can send text messages")
 	ErrUserBlocked            = errors.New("user is blocked")
 	ErrCannotBlockYourself    = errors.New("cannot block yourself")
+	ErrCannotBlockSupport     = errors.New("cannot block support")
 	ErrUserNotFound           = errors.New("user not found")
 )
 
@@ -34,10 +35,12 @@ var (
 	)
 )
 
-// IsRestrictedChatMessageAllowed — смайлик или подарок коллекции (не свободный текст).
+// IsRestrictedChatMessageAllowed — смайлик, подарок или карточка начисления (не свободный текст).
 func IsRestrictedChatMessageAllowed(body string) bool {
 	text := strings.TrimSpace(body)
-	return animatedEmojiTokenRe.MatchString(text) || giftCollectionTokenRe.MatchString(text)
+	return animatedEmojiTokenRe.MatchString(text) ||
+		giftCollectionTokenRe.MatchString(text) ||
+		IsCoinsCreditMessage(text)
 }
 
 // InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру».
@@ -188,6 +191,7 @@ type ChatUser struct {
 	Age         *int
 	Gender      *string
 	About       *string
+	IsSupport   bool
 }
 
 type ChatPreview struct {
@@ -317,6 +321,7 @@ func ListChatsForUser(
 			mc.id,
 			mc.created_at,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
+			COALESCE(u.is_support, false),
 			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at, lm.has_image, lm.image_count,
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
@@ -357,6 +362,7 @@ func ListChatsForUser(
 			&item.Peer.Age,
 			&item.Peer.Gender,
 			&item.Peer.About,
+			&item.Peer.IsSupport,
 			&lastMessageIDRaw,
 			&lastSenderIDRaw,
 			&lastBody,
@@ -605,24 +611,19 @@ func BlockUser(
 		return false, ErrCannotBlockYourself
 	}
 
+	target, err := GetUserByID(ctx, pool, blockedUserID)
+	if err != nil || target == nil {
+		return false, ErrUserNotFound
+	}
+	if target.IsSupport {
+		return false, ErrCannotBlockSupport
+	}
+
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return false, err
 	}
 	defer tx.Rollback(ctx)
-
-	var exists int
-	err = tx.QueryRow(ctx, `
-		SELECT 1
-		FROM users
-		WHERE id = $1
-	`, blockedUserID).Scan(&exists)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return false, ErrUserNotFound
-		}
-		return false, err
-	}
 
 	insertTag, err := tx.Exec(ctx, `
 		INSERT INTO user_blocks (blocker_user_id, blocked_user_id)
@@ -693,6 +694,7 @@ func ListBlockedUsers(
 	rows, err := pool.Query(ctx, `
 		SELECT
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
+			COALESCE(u.is_support, false),
 			ub.created_at
 		FROM user_blocks ub
 		JOIN users u ON u.id = ub.blocked_user_id
@@ -718,6 +720,7 @@ func ListBlockedUsers(
 			&item.User.Age,
 			&item.User.Gender,
 			&item.User.About,
+			&item.User.IsSupport,
 			&item.BlockedAt,
 		); err != nil {
 			return nil, err

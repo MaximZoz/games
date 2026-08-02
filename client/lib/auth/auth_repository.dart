@@ -24,6 +24,7 @@ class AuthUser {
   final String avatarKind;
   final String? avatarValue;
   final int balanceBronze;
+  final bool showStatsToOthers;
   final bool emailVerified;
 
   AuthUser({
@@ -37,6 +38,7 @@ class AuthUser {
     this.avatarKind = 'letter',
     this.avatarValue,
     this.balanceBronze = 0,
+    this.showStatsToOthers = false,
     this.emailVerified = true,
   });
 
@@ -52,6 +54,7 @@ class AuthUser {
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
       balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
+      showStatsToOthers: json['show_stats_to_others'] as bool? ?? false,
       emailVerified: json['email_verified'] as bool? ?? true,
     );
   }
@@ -67,6 +70,7 @@ class AuthUser {
         'avatar_kind': avatarKind,
         'avatar_value': avatarValue,
         'balance_bronze': balanceBronze,
+        'show_stats_to_others': showStatsToOthers,
         'email_verified': emailVerified,
       };
 }
@@ -159,6 +163,18 @@ class DailyRewardClaimResult {
   final int balanceBronze;
   final int rewardBronze;
   final int streak;
+}
+
+class AdminGrantClaimResult {
+  const AdminGrantClaimResult({
+    required this.balanceBronze,
+    required this.rewardBronze,
+    required this.messageBody,
+  });
+
+  final int balanceBronze;
+  final int rewardBronze;
+  final String messageBody;
 }
 
 class AuthRepository {
@@ -732,6 +748,36 @@ class AuthRepository {
     }
   }
 
+  /// POST /api/coins/claim-admin-grant — «Забрать» из карточки поддержки.
+  Future<AdminGrantClaimResult> claimAdminGrant(String grantId) async {
+    final response = await sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/coins/claim-admin-grant'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'grant_id': grantId}),
+        operation: 'AuthRepository.claimAdminGrant',
+      ),
+    );
+    if (response.statusCode != 200) {
+      String message = LocaleService.l10n.commonGenericError;
+      try {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final err = body['error']?.toString();
+        if (err != null && err.isNotEmpty) message = err;
+      } catch (_) {}
+      throw AuthException(response.statusCode, message);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return AdminGrantClaimResult(
+      balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
+      rewardBronze: (body['reward_bronze'] as num?)?.toInt() ?? 0,
+      messageBody: body['message_body'] as String? ?? '',
+    );
+  }
+
   Future<http.Response> sendAuthorized(
     Future<http.Response> Function(String accessToken) request,
   ) async {
@@ -765,6 +811,7 @@ class AuthRepository {
     String? about,
     String? avatarKind,
     String? avatarValue,
+    bool? showStatsToOthers,
   }) async {
     await init();
     final current = await getStoredUser();
@@ -789,6 +836,7 @@ class AuthRepository {
           'about': about,
           'avatar_kind': avatarKind,
           'avatar_value': avatarValue,
+          'show_stats_to_others': showStatsToOthers,
         }),
         operation: 'AuthRepository.updateProfile',
       ),
@@ -811,6 +859,8 @@ class AuthRepository {
             about: about,
             avatarKind: avatarKind ?? 'letter',
             avatarValue: avatarValue,
+            showStatsToOthers:
+                showStatsToOthers ?? current.showStatsToOthers,
             emailVerified: current.emailVerified,
           );
     await _saveUser(user);

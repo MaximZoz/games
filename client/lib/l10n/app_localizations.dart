@@ -1700,7 +1700,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopStakesSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Разблокировка серебряных ставок'**
+  /// **'Разблокировка повышенных ставок'**
   String get shopStakesSubtitle;
 
   /// No description provided for @inventoryTitle.
@@ -3166,6 +3166,192 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вернуться ко входу'**
   String get resetPasswordBackToLogin;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Статистика'**
+  String get statsTitle;
+
+  /// No description provided for @statsLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить статистику'**
+  String get statsLoadFailed;
+
+  /// No description provided for @statsAllGames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все игры'**
+  String get statsAllGames;
+
+  /// No description provided for @statsEmptyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет сыгранных партий'**
+  String get statsEmptyTitle;
+
+  /// No description provided for @statsEmptyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сыграйте первую игру, чтобы здесь появилась статистика.'**
+  String get statsEmptyHint;
+
+  /// No description provided for @statsWins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победы'**
+  String get statsWins;
+
+  /// No description provided for @statsDraws.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничьи'**
+  String get statsDraws;
+
+  /// No description provided for @statsLosses.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поражения'**
+  String get statsLosses;
+
+  /// No description provided for @statsWinRate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Процент побед'**
+  String get statsWinRate;
+
+  /// No description provided for @statsTopWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше всего выиграл у'**
+  String get statsTopWon;
+
+  /// No description provided for @statsTopDrawn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше всего ничьих с'**
+  String get statsTopDrawn;
+
+  /// No description provided for @statsTopLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше всего проиграл'**
+  String get statsTopLost;
+
+  /// No description provided for @statsTimePlayed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время в игре'**
+  String get statsTimePlayed;
+
+  /// No description provided for @statsYourScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш счёт'**
+  String get statsYourScore;
+
+  /// No description provided for @profileShowStats.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показывать статистику'**
+  String get profileShowStats;
+
+  /// No description provided for @statsDurationZeroMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'0 мин'**
+  String get statsDurationZeroMinutes;
+
+  /// No description provided for @gameYouWonOpponentForfeit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник сдался. Вы победили!'**
+  String get gameYouWonOpponentForfeit;
+
+  /// No description provided for @lobbyLeaveTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покинуть лобби?'**
+  String get lobbyLeaveTitle;
+
+  /// No description provided for @lobbyLeaveConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лобби будет удалено после выхода. Приглашённые друзья получат отказ.'**
+  String get lobbyLeaveConfirm;
+
+  /// No description provided for @lobbyLeave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покинуть'**
+  String get lobbyLeave;
+
+  /// No description provided for @statsDurationHours.
+  ///
+  /// In ru, this message translates to:
+  /// **'{hours} ч'**
+  String statsDurationHours(int hours);
+
+  /// No description provided for @statsDurationHoursMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{hours} ч {minutes} мин'**
+  String statsDurationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @statsDurationMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes} мин'**
+  String statsDurationMinutes(int minutes);
+
+  /// No description provided for @gameYouForfeitOpponentWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы сдались. {name} победил'**
+  String gameYouForfeitOpponentWon(String name);
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка'**
+  String get supportTitle;
+
+  /// No description provided for @supportUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка недоступна'**
+  String get supportUnavailable;
+
+  /// No description provided for @supportOpenFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось открыть чат с поддержкой'**
+  String get supportOpenFailed;
+
+  /// No description provided for @coinsGrantedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вам начислено {amount} монет'**
+  String coinsGrantedTitle(int amount);
+
+  /// No description provided for @coinsDeductedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Списано {amount} монет'**
+  String coinsDeductedTitle(int amount);
+
+  /// No description provided for @coinsCreditCardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вам начислены монеты'**
+  String get coinsCreditCardTitle;
+
+  /// No description provided for @coinsClaim.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забрать'**
+  String get coinsClaim;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

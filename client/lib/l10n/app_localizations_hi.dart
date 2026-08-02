@@ -43,64 +43,64 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'मैचमेकिंग में: यदि 30 सेकंड में कोई प्रतिद्वंद्वी नहीं मिलता, तो गेम बॉट के साथ शुरू होता है (दाँव 1 ब्रॉन्ज़ पर रीसेट)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'नेटवर्क मोड';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'ऑफ़लाइन: तुरंत बॉट से खेलें, बिना दांव और पुरस्कार, बिना चैट और मित्र। खरीदारी सहेजी जाती है और ऑनलाइन मोड में लागू होती है। ऑनलाइन — जब इंटरनेट हो या उपयोगकर्ता सेटिंग के अनुसार।';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'ऑनलाइन';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'ऑफ़लाइन';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'बारी-बारी से कौन पार्टी शुरू करता है';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'कौन पहले चलता है, वह पार्टी दर पार्टी बदलता है।';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'ऑफ़लाइन मोड';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'ऑफ़लाइन मोड';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'ऑफ़लाइन मोड चालू है। बिना दांव और पुरस्कार के बॉट से खेलें। चैट, मित्र और लॉबी छिपे हैं। खरीदारी ऑनलाइन मोड में लागू होगी।';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'सेटिंग्स';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'खेलें';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'बॉट के साथ खेल';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'बिना दांव और पुरस्कार · केवल ऑफ़लाइन';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'बॉट जीत गया';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'बॉट सोच रहा है…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'फिर से';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'खरीदारी सहेजी गई — ऑनलाइन मोड में लागू होगी';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — खरीदारी लागू';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — खरीदारी लागू नहीं: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get lobbyEnterGame => 'गेम में प्रवेश करें';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'लॉबी अब उपलब्ध नहीं';
 
   @override
   String get lobbyInvite => 'आमंत्रित करें';
@@ -542,31 +542,31 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gameLeave => 'छोड़ें';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'हार मानें';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'हार मानें?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'आप पार्टी और दांव के सिक्के हार जाएंगे।';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'ड्रॉ का प्रस्ताव';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'ड्रॉ का प्रस्ताव दें?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'आपका प्रतिद्वंद्वी ड्रॉ स्वीकार या अस्वीकार कर सकता है।';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'ड्रॉ स्वीकार करें?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'पार्टी ड्रॉ पर समाप्त होगी।';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'प्रतिद्वंद्वी ड्रॉ का प्रस्ताव दे रहा है';
 
   @override
   String get gameConnecting => 'गेम से कनेक्ट हो रहा है…';
@@ -638,7 +638,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatMessageHint => 'संदेश';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'चिपकाएँ';
 
   @override
   String get chatEmoji => 'इमोजी';
@@ -797,7 +797,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopStakes => 'दाँव';
 
   @override
-  String get shopStakesSubtitle => 'सिल्वर दाँव अनलॉक करें';
+  String get shopStakesSubtitle => 'उच्च दाँव अनलॉक करें';
 
   @override
   String get inventoryTitle => 'आइटम';
@@ -1182,13 +1182,13 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'खिलाड़ी के पास पहले से यह वस्तु है';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'आप खुद को उपहार नहीं दे सकते';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'यह वस्तु आपके इन्वेंटरी में नहीं है';
 
   @override
   String get inventoryLoadFailed => 'वस्तुएँ लोड नहीं हो सकीं';
@@ -1221,10 +1221,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'तैयार';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'कल';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,109 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'आँकड़े';
+
+  @override
+  String get statsLoadFailed => 'आँकड़े लोड नहीं हो सके';
+
+  @override
+  String get statsAllGames => 'सभी खेल';
+
+  @override
+  String get statsEmptyTitle => 'अभी कोई मैच नहीं खेला गया';
+
+  @override
+  String get statsEmptyHint => 'यहाँ आँकड़े देखने के लिए अपना पहला गेम खेलें।';
+
+  @override
+  String get statsWins => 'जीत';
+
+  @override
+  String get statsDraws => 'ड्रॉ';
+
+  @override
+  String get statsLosses => 'हार';
+
+  @override
+  String get statsWinRate => 'जीत दर';
+
+  @override
+  String get statsTopWon => 'सबसे अधिक जीत के विरुद्ध';
+
+  @override
+  String get statsTopDrawn => 'सबसे अधिक ड्रॉ के साथ';
+
+  @override
+  String get statsTopLost => 'सबसे अधिक हार के विरुद्ध';
+
+  @override
+  String get statsTimePlayed => 'खेल का समय';
+
+  @override
+  String get statsYourScore => 'आपका स्कोर';
+
+  @override
+  String get profileShowStats => 'आँकड़े दिखाएँ';
+
+  @override
+  String get statsDurationZeroMinutes => '0 मि';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'प्रतिद्वंद्वी हार मान गया। आप जीत गए!';
+
+  @override
+  String get lobbyLeaveTitle => 'लॉबी छोड़ें?';
+
+  @override
+  String get lobbyLeaveConfirm => 'बाहर निकलने के बाद लॉबी हटा दी जाएगी। आमंत्रित मित्रों को अस्वीकृति मिलेगी।';
+
+  @override
+  String get lobbyLeave => 'छोड़ें';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours घं';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours घं $minutes मि';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes मि';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'आपने हार मान ली। $name जीत गया';
+  }
+
+  @override
+  String get supportTitle => 'सहायता';
+
+  @override
+  String get supportUnavailable => 'सहायता उपलब्ध नहीं है';
+
+  @override
+  String get supportOpenFailed => 'सहायता चैट नहीं खुल सकी';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'आपको $amount सिक्के जमा किए गए';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount सिक्के काटे गए';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'आपको सिक्के जमा किए गए';
+
+  @override
+  String get coinsClaim => 'प्राप्त करें';
 }

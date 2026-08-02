@@ -57,32 +57,34 @@ type TokenResponse struct {
 }
 
 type UserResponse struct {
-	ID            string  `json:"id"`
-	Email         string  `json:"email"`
-	DisplayName   *string `json:"display_name,omitempty"`
-	IsAdmin       bool    `json:"is_admin,omitempty"`
-	Age           *int    `json:"age,omitempty"`
-	Gender        *string `json:"gender,omitempty"`
-	About         *string `json:"about,omitempty"`
-	AvatarKind    string  `json:"avatar_kind,omitempty"`
-	AvatarValue   *string `json:"avatar_value,omitempty"`
-	BalanceBronze int     `json:"balance_bronze"`
-	EmailVerified bool    `json:"email_verified"`
+	ID                string  `json:"id"`
+	Email             string  `json:"email"`
+	DisplayName       *string `json:"display_name,omitempty"`
+	IsAdmin           bool    `json:"is_admin,omitempty"`
+	Age               *int    `json:"age,omitempty"`
+	Gender            *string `json:"gender,omitempty"`
+	About             *string `json:"about,omitempty"`
+	AvatarKind        string  `json:"avatar_kind,omitempty"`
+	AvatarValue       *string `json:"avatar_value,omitempty"`
+	BalanceBronze     int     `json:"balance_bronze"`
+	ShowStatsToOthers bool    `json:"show_stats_to_others"`
+	EmailVerified     bool    `json:"email_verified"`
 }
 
 func userToResponse(u *store.User) UserResponse {
 	return UserResponse{
-		ID:            u.ID.String(),
-		Email:         u.Email,
-		DisplayName:   u.DisplayName,
-		IsAdmin:       u.IsAdmin,
-		Age:           u.Age,
-		Gender:        u.Gender,
-		About:         u.About,
-		AvatarKind:    u.AvatarKind,
-		AvatarValue:   u.AvatarValue,
-		BalanceBronze: u.BalanceBronze,
-		EmailVerified: u.EmailVerified(),
+		ID:                u.ID.String(),
+		Email:             u.Email,
+		DisplayName:       u.DisplayName,
+		IsAdmin:           u.IsAdmin,
+		Age:               u.Age,
+		Gender:            u.Gender,
+		About:             u.About,
+		AvatarKind:        u.AvatarKind,
+		AvatarValue:       u.AvatarValue,
+		BalanceBronze:     u.BalanceBronze,
+		ShowStatsToOthers: u.ShowStatsToOthers,
+		EmailVerified:     u.EmailVerified(),
 	}
 }
 
@@ -217,6 +219,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if u.PasswordHash == "" || !auth.CheckPassword(req.Password, u.PasswordHash) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
+		return
+	}
+	if u.IsFrozen() {
+		WriteErr(w, r, http.StatusForbidden, "account frozen")
 		return
 	}
 

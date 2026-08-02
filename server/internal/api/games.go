@@ -210,6 +210,15 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.GameSettings(w, r)
 		return
 	}
+	// Статистика и head-to-head тоже в Postgres — работают без Redis.
+	if r.URL.Path == "/api/games/stats" && r.Method == http.MethodGet {
+		h.GetStats(w, r)
+		return
+	}
+	if r.URL.Path == "/api/games/head-to-head" && r.Method == http.MethodGet {
+		h.GetHeadToHead(w, r)
+		return
+	}
 	if !h.requireRedis(w, r) {
 		return
 	}
@@ -633,6 +642,7 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"swapped", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
+		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -709,6 +719,7 @@ func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, 
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"swapped", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
+		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -955,7 +966,8 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 	}
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
+		gridSize, _ := strconv.Atoi(m["grid_size"])
+		h.onGameFinished(ctx, strings.TrimPrefix(key, "game:"), xUserID, oUserID, gridSize, stakeBronze, status, "normal", m["started_at"])
 		for _, u := range humanUserIDs(xUserID, oUserID) {
 			clearUserActiveGame(ctx, h.Rdb, u)
 		}
@@ -1420,6 +1432,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"swapped", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
+		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
 	}
 	if turnTimeSec > 0 {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -1662,15 +1675,15 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	h.Rdb.HSet(ctx, key, "status", status, "winner", winner, "timeout", "1")
 	h.Rdb.Expire(ctx, key, 24*time.Hour)
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
-	for _, u := range humanUserIDs(xUserID, oUserID) {
-		clearUserActiveGame(ctx, h.Rdb, u)
-	}
 	gridSize := 3
 	if gs := m["grid_size"]; gs != "" {
 		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
 			gridSize = n
 		}
+	}
+	h.onGameFinished(ctx, strings.TrimPrefix(key, "game:"), xUserID, oUserID, gridSize, stakeBronze, status, "timeout", m["started_at"])
+	for _, u := range humanUserIDs(xUserID, oUserID) {
+		clearUserActiveGame(ctx, h.Rdb, u)
 	}
 	board := parseBoard(m["board"], gridSize)
 	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
@@ -1943,6 +1956,11 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 	pipe.HSet(ctx, key, setFields...)
 	pipe.Expire(ctx, key, 24*time.Hour)
+	// Любой ход снимает предложение ничьей (если было) — у обоих игроков.
+	hadDrawOffer := strings.TrimSpace(m["draw_offer_by"]) != ""
+	if hadDrawOffer {
+		pipe.HDel(ctx, key, "draw_offer_by")
+	}
 
 	if _, err := pipe.Exec(ctx); err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -1951,7 +1969,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
+		h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, "normal", m["started_at"])
 		for _, uid := range []string{xUserID, oUserID} {
 			if !isBot(uid) {
 				if u, e := uuid.Parse(uid); e == nil {
@@ -1985,6 +2003,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 	if len(winningCells) == winLength(gridSize) {
 		broadcastPayload["winning_cells"] = winningCells
+	}
+	if hadDrawOffer {
+		broadcastPayload["draw_offer_by"] = ""
 	}
 	if turnTimeSec > 0 && status == gameStatusActive {
 		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
@@ -2162,7 +2183,7 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		return
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, status)
+	h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, "forfeit", m["started_at"])
 	for _, u := range humanUserIDs(xUserID, oUserID) {
 		clearUserActiveGame(ctx, h.Rdb, u)
 	}
@@ -2227,6 +2248,8 @@ func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID 
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	// Предложение ничьи держится, пока кто-то не сделает ход или не примет её.
+	// Сброс происходит в MakeMove (любой ход снимает draw_offer_by у обоих).
 	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
 		"type":          "game_state",
 		"game_id":       gameID,
@@ -2288,7 +2311,7 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 		return
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.onGameFinished(ctx, xUserID, oUserID, stakeBronze, gameStatusDraw)
+	h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, gameStatusDraw, "draw_agreement", m["started_at"])
 	for _, u := range humanUserIDs(xUserID, oUserID) {
 		clearUserActiveGame(ctx, h.Rdb, u)
 	}
@@ -2372,11 +2395,86 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
 func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.String() + ":active_lobby" }
 
-// onGameFinished — монеты + счётчик партий/достижения для людей (не ботов).
-func (h *GamesHandler) onGameFinished(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
+// onGameFinished — монеты + счётчик партий/достижения для людей (не ботов) +
+// запись результата в историю game_results (для статистики и head-to-head).
+func (h *GamesHandler) onGameFinished(
+	ctx context.Context,
+	gameID string,
+	xUserID, oUserID string,
+	gridSize, stakeBronze int,
+	status, finishReason string,
+	startedAtRaw string,
+) {
 	h.settleGameCoins(ctx, xUserID, oUserID, stakeBronze, status)
 	h.recordGameFinished(ctx, xUserID, oUserID)
 	h.recordGameWin(ctx, xUserID, oUserID, stakeBronze, status)
+	h.recordGameResult(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, finishReason, startedAtRaw)
+}
+
+// recordGameResult сохраняет результат партии в game_results (для статистики).
+func (h *GamesHandler) recordGameResult(
+	ctx context.Context,
+	gameID, xUserID, oUserID string,
+	gridSize, stakeBronze int,
+	status, finishReason, startedAtRaw string,
+) {
+	if gameID == "" || (xUserID == "" && oUserID == "") {
+		return
+	}
+	// Определяем победителя по статусу.
+	var winnerID string
+	switch status {
+	case gameStatusXWon:
+		winnerID = xUserID
+	case gameStatusOWon:
+		winnerID = oUserID
+	}
+	againstBot := isBot(xUserID) || isBot(oUserID)
+
+	gr := store.GameResult{
+		GameID:       gameID,
+		GameType:     "tictactoe",
+		Result:       status,
+		FinishReason: finishReason,
+		GridSize:     gridSize,
+		StakeBronze:  stakeBronze,
+		AgainstBot:   againstBot,
+	}
+	if xID, err := uuid.Parse(xUserID); err == nil {
+		gr.XUserID = xID
+	}
+	if oID, err := uuid.Parse(oUserID); err == nil {
+		gr.OUserID = oID
+	}
+	if winnerID != "" && !isBot(winnerID) {
+		if wID, err := uuid.Parse(winnerID); err == nil {
+			gr.WinnerUserID = &wID
+		}
+	}
+	if t, ok := parseGameStartedAt(startedAtRaw); ok {
+		gr.DurationSec = clampNonNegative(int(time.Since(t).Seconds()))
+	}
+	_ = store.RecordGameResult(ctx, h.Pool, gr)
+}
+
+// parseGameStartedAt разбирает RFC3339Nano-время старта партии из Redis.
+func parseGameStartedAt(raw string) (time.Time, bool) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return time.Time{}, false
+	}
+	t, err := time.Parse(time.RFC3339Nano, raw)
+	if err != nil {
+		return time.Time{}, false
+	}
+	return t, true
+}
+
+func clampNonNegative(v int) int {
+	if v < 0 {
+		return 0
+	}
+	return v
 }
 
 func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID string, stakeBronze int, status string) {
@@ -2694,4 +2792,143 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+// GetStats — GET /api/games/stats — агрегированная статистика текущего игрока
+// (победы/ничьи/поражения, всего партий, win-rate, суммарное время в игре)
+// и топ соперников (больше всего побед/поражений).
+func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	currentID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	// Опциональный user_id: если задан и не равен текущему — статистика
+	// другого игрока (для перехода из попапа профиля). Иначе — своя.
+	targetID := currentID
+	if raw := strings.TrimSpace(r.URL.Query().Get("user_id")); raw != "" {
+		if parsed, err := uuid.Parse(raw); err == nil {
+			targetID = parsed
+		}
+	}
+	ctx := r.Context()
+	if targetID != currentID {
+		target, err := store.GetUserByID(ctx, h.Pool, targetID)
+		if err != nil {
+			WriteErr(w, r, http.StatusNotFound, "user not found")
+			return
+		}
+		if !target.ShowStatsToOthers {
+			WriteErr(w, r, http.StatusForbidden, "stats are private")
+			return
+		}
+	}
+	stats, err := store.GetGameStats(ctx, h.Pool, targetID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	byGame, err := store.GetGameStatsByType(ctx, h.Pool, targetID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, "")
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	topDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, "")
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, "")
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	if byGame == nil {
+		byGame = []store.GameTypeStats{}
+	}
+	for i := range byGame {
+		gWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, byGame[i].GameType)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		gDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, byGame[i].GameType)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		gLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, byGame[i].GameType)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if gWon == nil {
+			gWon = []store.OpponentStat{}
+		}
+		if gDrawn == nil {
+			gDrawn = []store.OpponentStat{}
+		}
+		if gLost == nil {
+			gLost = []store.OpponentStat{}
+		}
+		byGame[i].TopWon = gWon
+		byGame[i].TopDrawn = gDrawn
+		byGame[i].TopLost = gLost
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"wins":               stats.Wins,
+		"draws":              stats.Draws,
+		"losses":             stats.Losses,
+		"total_played":       stats.TotalPlayed,
+		"win_rate":           stats.WinRate(),
+		"total_duration_sec": stats.TotalDurationSec,
+		"games":              byGame,
+		"top_won":            topWon,
+		"top_drawn":          topDrawn,
+		"top_lost":           topLost,
+	})
+}
+
+// GetHeadToHead — GET /api/games/head-to-head?user_id=<uuid> — счёт между
+// текущим игроком и указанным соперником (только живые PvP, без ботов).
+func (h *GamesHandler) GetHeadToHead(w http.ResponseWriter, r *http.Request) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	opponentIDStr := strings.TrimSpace(r.URL.Query().Get("user_id"))
+	opponentID, err := uuid.Parse(opponentIDStr)
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+	if opponentID == userID {
+		WriteErr(w, r, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+	ctx := r.Context()
+	h2h, err := store.GetHeadToHead(ctx, h.Pool, userID, opponentID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	showStats := false
+	if opponent, err := store.GetUserByID(ctx, h.Pool, opponentID); err == nil && opponent != nil {
+		showStats = opponent.ShowStatsToOthers
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"opponent_id":          h2h.OpponentID,
+		"display_name":         h2h.DisplayName,
+		"won":                  h2h.Won,
+		"drawn":                h2h.Drawn,
+		"lost":                 h2h.Lost,
+		"games":                h2h.Games,
+		"show_stats_to_others": showStats,
+	})
 }

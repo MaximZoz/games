@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"multigames/server/internal/store"
 
@@ -72,6 +74,82 @@ func (h *CoinsHandler) ClaimDaily(w http.ResponseWriter, r *http.Request) {
 			"reward":    result.RewardBronze,
 		})
 	}
+}
+
+// ClaimAdminGrantRequest — тело POST /api/coins/claim-admin-grant.
+type ClaimAdminGrantRequest struct {
+	GrantID string `json:"grant_id"`
+}
+
+// ClaimAdminGrant забирает отложенное начисление из карточки поддержки.
+func (h *CoinsHandler) ClaimAdminGrant(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var req ClaimAdminGrantRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	grantID, err := uuid.Parse(strings.TrimSpace(req.GrantID))
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid grant_id")
+		return
+	}
+	result, err := store.ClaimAdminCoinGrant(r.Context(), h.Pool, userID, grantID)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrAdminGrantNotFound):
+			WriteErr(w, r, http.StatusNotFound, "grant not found")
+		case errors.Is(err, store.ErrAdminGrantClaimed):
+			WriteErr(w, r, http.StatusConflict, "already claimed")
+		case errors.Is(err, store.ErrAdminGrantInvalid):
+			WriteErr(w, r, http.StatusBadRequest, "invalid grant")
+		default:
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+		}
+		return
+	}
+
+	if h.Hub != nil {
+		h.Hub.PublishToUsers([]uuid.UUID{userID}, map[string]any{
+			"type":    "coins_granted",
+			"amount":  result.AmountBronze,
+			"balance": result.BalanceBronze,
+		})
+		if result.MessageID != nil && result.ChatID != nil {
+			// Обновить карточку у всех открытых клиентов (claimed).
+			msg, mErr := store.GetChatMessageByID(
+				r.Context(), h.Pool, *result.ChatID, userID, *result.MessageID,
+			)
+			if mErr == nil {
+				item := chatMessageToItem(msg)
+				// Подменить body на claimed-версию на случай гонки чтения.
+				item.Body = result.MessageBody
+				if low, high, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, *result.ChatID); pairErr == nil {
+					h.Hub.PublishToUsers([]uuid.UUID{low, high}, map[string]any{
+						"type":    "chat_message_updated",
+						"chat_id": result.ChatID.String(),
+						"message": item,
+					})
+				}
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"balance_bronze": result.BalanceBronze,
+		"reward_bronze":  result.AmountBronze,
+		"grant_id":       grantID.String(),
+		"message_body":   result.MessageBody,
+	})
 }
 
 func dailyRewardInfoJSON(info store.DailyRewardInfo) map[string]any {

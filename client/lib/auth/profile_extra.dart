@@ -10,6 +10,7 @@ class ProfileExtra {
     this.about,
     this.avatarKind = AvatarKind.letter,
     this.avatarValue,
+    this.showStatsToOthers = false,
   });
 
   final int? age;
@@ -18,6 +19,7 @@ class ProfileExtra {
   final AvatarKind avatarKind;
   /// Для [AvatarKind.preset] — индекс 0..N, для [AvatarKind.file] — путь к файлу.
   final String? avatarValue;
+  final bool showStatsToOthers;
 
   ProfileExtra copyWith({
     int? age,
@@ -25,6 +27,7 @@ class ProfileExtra {
     String? about,
     AvatarKind? avatarKind,
     String? avatarValue,
+    bool? showStatsToOthers,
   }) {
     return ProfileExtra(
       age: age ?? this.age,
@@ -32,6 +35,7 @@ class ProfileExtra {
       about: about ?? this.about,
       avatarKind: avatarKind ?? this.avatarKind,
       avatarValue: avatarValue ?? this.avatarValue,
+      showStatsToOthers: showStatsToOthers ?? this.showStatsToOthers,
     );
   }
 
@@ -54,6 +58,7 @@ class ProfileExtra {
           orElse: () => AvatarKind.letter,
         ),
         avatarValue: map['avatar_value'] as String?,
+        showStatsToOthers: map['show_stats_to_others'] as bool? ?? false,
       );
     } catch (_) {
       return null;
@@ -68,6 +73,7 @@ class ProfileExtra {
       'about': extra.about,
       'avatar_kind': extra.avatarKind.name,
       'avatar_value': extra.avatarValue,
+      'show_stats_to_others': extra.showStatsToOthers,
     }));
   }
 }

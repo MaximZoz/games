@@ -16,6 +16,8 @@ func TestIsRestrictedChatMessageAllowed(t *testing.T) {
 		{"[gift_coll:c1|Title|🎁|sparkles]", true},
 		{"[gift_coll:a/b|Hi/there|x/y|name/z]", true},
 		{"gift_coll:c1|Title|🎁|sparkles", false},
+		{"[coins_credit:11111111-1111-1111-1111-111111111111|230|reason]", true},
+		{"[coins_credit:11111111-1111-1111-1111-111111111111|230|reason|claimed]", true},
 		{"", false},
 	}
 	for _, tc := range cases {

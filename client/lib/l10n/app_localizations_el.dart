@@ -43,64 +43,64 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Στο matchmaking: αν δεν βρεθεί αντίπαλος σε 30 δευτερόλεπτα, το παιχνίδι ξεκινά με bot (το ποντάρισμα επαναφέρεται σε 1 μπρούντζο)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'Λειτουργία δικτύου';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Εκτός σύνδεσης: παίξτε αμέσως με bot, χωρίς πονταρίσματα και ανταμοιβές, χωρίς συνομιλίες και φίλους. Οι αγορές αποθηκεύονται και εφαρμόζονται σε λειτουργία online. Online — όταν υπάρχει internet ή από τη ρύθμιση χρήστη.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'Σε σύνδεση';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'Εκτός σύνδεσης';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'Εναλλάξ ποιος ξεκινά την παρτίδα';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Ποιος παίζει πρώτος εναλλάσσεται από παρτίδα σε παρτίδα.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'Λειτουργία εκτός σύνδεσης';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'Λειτουργία εκτός σύνδεσης';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Η λειτουργία εκτός σύνδεσης είναι ενεργή. Παίξτε με bot χωρίς πονταρίσματα και ανταμοιβές. Συνομιλίες, φίλοι και λόμπι είναι κρυφά. Οι αγορές εφαρμόζονται σε online λειτουργία.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'Ρυθμίσεις';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'Παίξτε';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'Παιχνίδι με bot';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'Χωρίς πονταρίσματα και ανταμοιβές · μόνο εκτός σύνδεσης';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'Το bot κέρδισε';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'Το bot σκέφτεται…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'Ξανά';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Η αγορά αποθηκεύτηκε — θα εφαρμοστεί σε online λειτουργία';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — η αγορά εφαρμόστηκε';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — η αγορά δεν εφαρμόστηκε: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbyEnterGame => 'Είσοδος στο παιχνίδι';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'Το λόμπι δεν είναι πλέον διαθέσιμο';
 
   @override
   String get lobbyInvite => 'Πρόσκληση';
@@ -542,31 +542,31 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameLeave => 'Αποχώρηση';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'Παράδοση';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'Παράδοση;';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Χάνετε την παρτίδα και τα νομίσματα του πονταρίσματος.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'Προσφορά ισοπαλίας';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'Προσφορά ισοπαλίας;';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'Ο αντίπαλός σας μπορεί να αποδεχτεί ή να απορρίψει την ισοπαλία.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'Αποδοχή ισοπαλίας;';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'Η παρτίδα θα τελειώσει ισόπαλη.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'Ο αντίπαλος προσφέρει ισοπαλία';
 
   @override
   String get gameConnecting => 'Σύνδεση στο παιχνίδι…';
@@ -638,7 +638,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get chatMessageHint => 'Μήνυμα';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'Επικόλληση';
 
   @override
   String get chatEmoji => 'Emoji';
@@ -797,7 +797,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopStakes => 'Πονταρίσματα';
 
   @override
-  String get shopStakesSubtitle => 'Ξεκλείδωμα ασημένιων πονταρισμάτων';
+  String get shopStakesSubtitle => 'Ξεκλείδωμα υψηλότερων πονταρισμάτων';
 
   @override
   String get inventoryTitle => 'Αντικείμενα';
@@ -1182,13 +1182,13 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'Ο παίκτης έχει ήδη αυτό το αντικείμενο';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'Δεν μπορείτε να χαρίσετε στον εαυτό σας';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'Αυτό το αντικείμενο δεν είναι στο απόθεμά σας';
 
   @override
   String get inventoryLoadFailed => 'Αποτυχία φόρτωσης αντικειμένων';
@@ -1221,10 +1221,10 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'Έτοιμο';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'Αύριο';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,109 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'Στατιστικά';
+
+  @override
+  String get statsLoadFailed => 'Αποτυχία φόρτωσης στατιστικών';
+
+  @override
+  String get statsAllGames => 'Όλα τα παιχνίδια';
+
+  @override
+  String get statsEmptyTitle => 'Δεν υπάρχουν παιχνίδια ακόμα';
+
+  @override
+  String get statsEmptyHint => 'Παίξτε το πρώτο σας παιχνίδι για να δείτε στατιστικά εδώ.';
+
+  @override
+  String get statsWins => 'Νίκες';
+
+  @override
+  String get statsDraws => 'Ισοπαλίες';
+
+  @override
+  String get statsLosses => 'Ήττες';
+
+  @override
+  String get statsWinRate => 'Ποσοστό νικών';
+
+  @override
+  String get statsTopWon => 'Περισσότερες νίκες εναντίον';
+
+  @override
+  String get statsTopDrawn => 'Περισσότερες ισοπαλίες με';
+
+  @override
+  String get statsTopLost => 'Περισσότερες ήττες από';
+
+  @override
+  String get statsTimePlayed => 'Χρόνος παιχνιδιού';
+
+  @override
+  String get statsYourScore => 'Το σκορ σας';
+
+  @override
+  String get profileShowStats => 'Εμφάνιση στατιστικών';
+
+  @override
+  String get statsDurationZeroMinutes => '0 λεπ';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Ο αντίπαλος παραδόθηκε. Κερδίσατε!';
+
+  @override
+  String get lobbyLeaveTitle => 'Αποχώρηση από το λόμπι;';
+
+  @override
+  String get lobbyLeaveConfirm => 'Το λόμπι θα διαγραφεί μετά την αποχώρηση. Οι προσκεκλημένοι φίλοι θα λάβουν απόρριψη.';
+
+  @override
+  String get lobbyLeave => 'Αποχώρηση';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours ώ';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours ώ $minutes λεπ';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes λεπ';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Παραδοθήκατε. Ο/Η $name κέρδισε';
+  }
+
+  @override
+  String get supportTitle => 'Υποστήριξη';
+
+  @override
+  String get supportUnavailable => 'Η υποστήριξη δεν είναι διαθέσιμη';
+
+  @override
+  String get supportOpenFailed => 'Αποτυχία ανοίγματος συνομιλίας υποστήριξης';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Σας πιστώθηκαν $amount νομίσματα';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return 'Αφαιρέθηκαν $amount νομίσματα';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Σας πιστώθηκαν νομίσματα';
+
+  @override
+  String get coinsClaim => 'Παραλαβή';
 }

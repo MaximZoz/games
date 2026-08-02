@@ -43,64 +43,64 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Vid matchning: om ingen motståndare hittas inom 30 sekunder startar spelet med en bot (insatsen återställs till 1 brons)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'Nätverksläge';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Offline: spela genast mot en bot, utan insatser och belöningar, utan chattar och vänner. Köp sparas och tillämpas i online-läge. Online — när det finns internet eller enligt användarinställningen.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'Online';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'Offline';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'Turordning för vem som börjar partiet';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'Vem som börjar växlar från parti till parti.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'Offline-läge';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'Offline-läge';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Offline-läge är på. Spela mot en bot utan insatser och belöningar. Chattar, vänner och lobby är dolda. Köp tillämpas i online-läge.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'Inställningar';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'Spela';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'Spel mot bot';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'Utan insatser och belöningar · endast offline';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'Boten vann';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'Boten tänker…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'Igen';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Köp sparat — tillämpas i online-läge';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — köp tillämpat';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — köp inte tillämpat: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get lobbyEnterGame => 'Gå in i spelet';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'Lobbyn är inte längre tillgänglig';
 
   @override
   String get lobbyInvite => 'Bjud in';
@@ -542,31 +542,31 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gameLeave => 'Lämna';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'Ge upp';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'Ge upp?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Du förlorar partiet och insatsmynten.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'Erbjud remi';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'Erbjud remi?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'Din motståndare kan acceptera eller avvisa remi.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'Acceptera remi?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'Partiet slutar oavgjort.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'Motståndaren erbjuder remi';
 
   @override
   String get gameConnecting => 'Ansluter till spelet…';
@@ -638,7 +638,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatMessageHint => 'Meddelande';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'Klistra in';
 
   @override
   String get chatEmoji => 'Emojis';
@@ -797,7 +797,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get shopStakes => 'Insatser';
 
   @override
-  String get shopStakesSubtitle => 'Lås upp silverinsatser';
+  String get shopStakesSubtitle => 'Lås upp högre insatser';
 
   @override
   String get inventoryTitle => 'Föremål';
@@ -1182,13 +1182,13 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'Spelaren äger redan detta föremål';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'Du kan inte ge dig själv en present';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'Det här föremålet finns inte i din inventarie';
 
   @override
   String get inventoryLoadFailed => 'Kunde inte ladda föremål';
@@ -1221,10 +1221,10 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'Klar';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'Imorgon';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,109 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'Statistik';
+
+  @override
+  String get statsLoadFailed => 'Kunde inte läsa in statistik';
+
+  @override
+  String get statsAllGames => 'Alla spel';
+
+  @override
+  String get statsEmptyTitle => 'Inga spel spelade ännu';
+
+  @override
+  String get statsEmptyHint => 'Spela ditt första spel för att se statistik här.';
+
+  @override
+  String get statsWins => 'Vinster';
+
+  @override
+  String get statsDraws => 'Oavgjorda';
+
+  @override
+  String get statsLosses => 'Förluster';
+
+  @override
+  String get statsWinRate => 'Vinstprocent';
+
+  @override
+  String get statsTopWon => 'Flest vinster mot';
+
+  @override
+  String get statsTopDrawn => 'Flest oavgjorda med';
+
+  @override
+  String get statsTopLost => 'Flest förluster mot';
+
+  @override
+  String get statsTimePlayed => 'Speltid';
+
+  @override
+  String get statsYourScore => 'Din ställning';
+
+  @override
+  String get profileShowStats => 'Visa statistik';
+
+  @override
+  String get statsDurationZeroMinutes => '0 min';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Motståndaren gav upp. Du vann!';
+
+  @override
+  String get lobbyLeaveTitle => 'Lämna lobby?';
+
+  @override
+  String get lobbyLeaveConfirm => 'Lobbyn raderas när du lämnar. Inbjudna vänner får ett avslag.';
+
+  @override
+  String get lobbyLeave => 'Lämna';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Du gav upp. $name vann';
+  }
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportUnavailable => 'Support är inte tillgängligt';
+
+  @override
+  String get supportOpenFailed => 'Kunde inte öppna supportchatten';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Du har fått $amount mynt';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount mynt drogs av';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Du har fått mynt';
+
+  @override
+  String get coinsClaim => 'Hämta';
 }

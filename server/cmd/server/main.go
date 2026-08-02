@@ -17,6 +17,7 @@ import (
 	"multigames/server/internal/applog"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/mailer"
+	"multigames/server/internal/store"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -174,6 +175,13 @@ func main() {
 		log.Fatalf("Postgres ping: %v", err)
 	}
 	log.Println("Postgres: connected")
+
+	// Гарантировать наличие системного аккаунта поддержки (идемпотентно).
+	if err := store.EnsureSupportUser(ctx, pool); err != nil {
+		log.Printf("Support user: %v", err)
+	} else {
+		log.Println("Support user: ok")
+	}
 
 	redisURL := getEnv("REDIS_URL", "")
 	var rdb *redis.Client
@@ -359,6 +367,8 @@ func main() {
 		JWTSecret:   []byte(jwtSecret),
 		InitSecret:  adminInitSecret,
 		LogImporter: logImporter,
+		Hub:         realtimeHub,
+		Push:        pushSender,
 	}
 	frontendLogHandler := &api.FrontendLogHandler{
 		Writer:    logWriter,
@@ -401,6 +411,7 @@ func main() {
 	})
 	mux.HandleFunc("/api/logs/frontend", frontendLogHandler.Ingest)
 	mux.Handle("/api/ws", http.HandlerFunc(wsHandler.ServeHTTP))
+	mux.Handle("/api/support-user", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(adminHandler.SupportUserInfo)))
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(authHandler.UpdateProfile)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(friendsHandler.List)))
@@ -429,6 +440,7 @@ func main() {
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
 	mux.Handle("/api/coins/daily-available", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.DailyAvailable)))
 	mux.Handle("/api/coins/claim-daily", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.ClaimDaily)))
+	mux.Handle("/api/coins/claim-admin-grant", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.ClaimAdminGrant)))
 	mux.Handle("/api/achievements", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.List)))
 	mux.Handle("/api/achievements/unclaimed-count", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.UnclaimedCount)))
 	mux.Handle("/api/achievements/claim", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(achievementsHandler.Claim)))
@@ -454,7 +466,10 @@ func main() {
 	mux.Handle("/api/admin/logs/clear", adminAuth(http.HandlerFunc(adminHandler.ClearLogs)))
 	mux.Handle("/api/admin/users/set-admin", adminAuth(http.HandlerFunc(adminHandler.SetAdmin)))
 	mux.Handle("/api/admin/users/reset-password", adminAuth(http.HandlerFunc(adminHandler.ResetPassword)))
-	mux.Handle("/api/admin/users/delete", adminAuth(http.HandlerFunc(adminHandler.DeleteUser)))
+	mux.Handle("/api/admin/users/freeze", adminAuth(http.HandlerFunc(adminHandler.FreezeUser)))
+	mux.Handle("/api/admin/users/grant-coins", adminAuth(http.HandlerFunc(adminHandler.GrantCoins)))
+	mux.Handle("/api/admin/support/chats", adminAuth(http.HandlerFunc(adminHandler.SupportChats)))
+	mux.Handle("/api/admin/support/chats/", adminAuth(http.HandlerFunc(adminHandler.SupportMessages)))
 
 	directDB := appLogEnabled
 	corsHandler := api.CORS(api.RequestLogger([]byte(jwtSecret), logWriter, pool, directDB, mux))

@@ -43,64 +43,64 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'マッチング中：30秒以内に相手が見つからない場合、ボットと対戦を開始します（賭け金はブロンズ1にリセット）';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'ネットワークモード';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'オフライン：すぐにボットと対戦、賭け金や報酬なし、チャットや友達なし。購入は保存され、オンラインモードで適用されます。オンライン — インターネットがあるとき、またはユーザー設定による。';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'オンライン';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'オフライン';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => '交互に誰が対局を開始するか';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => '先手は対局ごとに交代します。';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'オフラインモード';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'オフラインモード';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'オフラインモードがオンです。賭け金や報酬なしでボットと対戦できます。チャット、友達、ロビーは非表示です。購入はオンラインモードで適用されます。';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => '設定';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'プレイ';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'ボット対戦';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => '賭け金・報酬なし · オフラインのみ';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'ボットの勝ち';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'ボットの手番…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'もう一度';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => '購入を保存しました — オンラインモードで適用されます';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — 購入を適用しました';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — 購入を適用できませんでした: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get lobbyEnterGame => 'ゲームに入る';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'ロビーは利用できません';
 
   @override
   String get lobbyInvite => '招待';
@@ -542,31 +542,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameLeave => '退出';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => '降参';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => '降参しますか？';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => '対局と賭け金を失います。';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => '引き分けを提案';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => '引き分けを提案しますか？';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => '相手は引き分けを承諾または拒否できます。';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => '引き分けを承諾しますか？';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => '対局は引き分けで終了します。';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => '相手が引き分けを提案しています';
 
   @override
   String get gameConnecting => 'ゲームに接続中…';
@@ -638,7 +638,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chatMessageHint => 'メッセージ';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => '貼り付け';
 
   @override
   String get chatEmoji => '絵文字';
@@ -797,7 +797,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopStakes => '賭け金';
 
   @override
-  String get shopStakesSubtitle => 'シルバー賭け金を解除';
+  String get shopStakesSubtitle => 'より高い賭け金を解除';
 
   @override
   String get inventoryTitle => 'アイテム';
@@ -1182,13 +1182,13 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'そのプレイヤーはすでにこのアイテムを持っています';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => '自分自身には送れません';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'このアイテムは所持していません';
 
   @override
   String get inventoryLoadFailed => 'アイテムを読み込めませんでした';
@@ -1221,10 +1221,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => '受取可能';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => '明日';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,109 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => '統計';
+
+  @override
+  String get statsLoadFailed => '統計を読み込めませんでした';
+
+  @override
+  String get statsAllGames => 'すべてのゲーム';
+
+  @override
+  String get statsEmptyTitle => 'まだ対局がありません';
+
+  @override
+  String get statsEmptyHint => 'ここに統計を表示するには、最初のゲームをプレイしてください。';
+
+  @override
+  String get statsWins => '勝利';
+
+  @override
+  String get statsDraws => '引き分け';
+
+  @override
+  String get statsLosses => '敗北';
+
+  @override
+  String get statsWinRate => '勝率';
+
+  @override
+  String get statsTopWon => '最も多く勝った相手';
+
+  @override
+  String get statsTopDrawn => '最も引き分けが多い相手';
+
+  @override
+  String get statsTopLost => '最も多く負けた相手';
+
+  @override
+  String get statsTimePlayed => 'プレイ時間';
+
+  @override
+  String get statsYourScore => '対戦成績';
+
+  @override
+  String get profileShowStats => '統計を表示';
+
+  @override
+  String get statsDurationZeroMinutes => '0分';
+
+  @override
+  String get gameYouWonOpponentForfeit => '相手が降参しました。あなたの勝ちです！';
+
+  @override
+  String get lobbyLeaveTitle => 'ロビーを退出しますか？';
+
+  @override
+  String get lobbyLeaveConfirm => '退出後にロビーは削除されます。招待した友達には拒否が届きます。';
+
+  @override
+  String get lobbyLeave => '退出';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours時間';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours時間$minutes分';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return '降参しました。$nameの勝ちです';
+  }
+
+  @override
+  String get supportTitle => 'サポート';
+
+  @override
+  String get supportUnavailable => 'サポートは利用できません';
+
+  @override
+  String get supportOpenFailed => 'サポートチャットを開けませんでした';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return '$amount コインが付与されました';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount コインが差し引かれました';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'コインが付与されました';
+
+  @override
+  String get coinsClaim => '受け取る';
 }

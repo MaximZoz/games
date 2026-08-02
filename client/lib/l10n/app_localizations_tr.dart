@@ -43,64 +43,64 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsAddBotsSubtitle => 'Eşleştirmede: 30 saniye içinde rakip bulunamazsa oyun botla başlar (bahis 1 bronza sıfırlanır)';
 
   @override
-  String get settingsOfflineModeTitle => 'Режим сети';
+  String get settingsOfflineModeTitle => 'Ağ modu';
 
   @override
-  String get settingsOfflineModeSubtitle => 'Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.';
+  String get settingsOfflineModeSubtitle => 'Çevrimdışı: hemen botla oyna, bahis ve ödül yok, sohbet ve arkadaş yok. Satın alımlar kaydedilir ve çevrimiçi modda uygulanır. Çevrimiçi — internet varken veya kullanıcı ayarına göre.';
 
   @override
-  String get settingsModeOnline => 'Онлайн';
+  String get settingsModeOnline => 'Çevrimiçi';
 
   @override
-  String get settingsModeOffline => 'Офлайн';
+  String get settingsModeOffline => 'Çevrimdışı';
 
   @override
-  String get gamesAlternateStartsHint => 'По очереди кто начинает партию';
+  String get gamesAlternateStartsHint => 'Sırayla kim partiyi başlatır';
 
   @override
-  String get rulesAlternateStarts => 'Кто ходит первым чередуется от партии к партии.';
+  String get rulesAlternateStarts => 'İlk hamleyi kim yapacağı partiden partiye değişir.';
 
   @override
-  String get offlineBadgeTooltip => 'Офлайн режим';
+  String get offlineBadgeTooltip => 'Çevrimdışı mod';
 
   @override
-  String get offlineModePopupTitle => 'Офлайн режим';
+  String get offlineModePopupTitle => 'Çevrimdışı mod';
 
   @override
-  String get offlineModePopupBody => 'Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.';
+  String get offlineModePopupBody => 'Çevrimdışı mod açık. Bahis ve ödül olmadan botla oynayın. Sohbetler, arkadaşlar ve lobi gizlidir. Satın alımlar çevrimiçi modda uygulanır.';
 
   @override
-  String get offlineModePopupSettings => 'Настройки';
+  String get offlineModePopupSettings => 'Ayarlar';
 
   @override
-  String get gamesPlay => 'Играть';
+  String get gamesPlay => 'Oyna';
 
   @override
-  String get offlineGameTitle => 'Игра с ботом';
+  String get offlineGameTitle => 'Bota karşı oyun';
 
   @override
-  String get offlineGameHint => 'Без ставок и наград · только офлайн';
+  String get offlineGameHint => 'Bahis ve ödül yok · yalnızca çevrimdışı';
 
   @override
-  String get offlineBotWon => 'Бот победил';
+  String get offlineBotWon => 'Bot kazandı';
 
   @override
-  String get offlineBotThinking => 'Ход бота…';
+  String get offlineBotThinking => 'Bot düşünüyor…';
 
   @override
-  String get offlinePlayAgain => 'Ещё раз';
+  String get offlinePlayAgain => 'Tekrar';
 
   @override
-  String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
+  String get shopPurchaseQueued => 'Satın alma kaydedildi — çevrimiçi modda uygulanacak';
 
   @override
   String shopPurchaseApplied(String title) {
-    return '$title — покупка применена';
+    return '$title — satın alma uygulandı';
   }
 
   @override
   String shopPurchaseRejected(String title, String reason) {
-    return '$title — покупка не применена: $reason';
+    return '$title — satın alma uygulanmadı: $reason';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lobbyEnterGame => 'Oyuna gir';
 
   @override
-  String get lobbyGone => 'Этой игры уже нет';
+  String get lobbyGone => 'Lobi artık mevcut değil';
 
   @override
   String get lobbyInvite => 'Davet et';
@@ -542,31 +542,31 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gameLeave => 'Çık';
 
   @override
-  String get gameSurrender => 'Сдаться';
+  String get gameSurrender => 'Teslim ol';
 
   @override
-  String get gameSurrenderTitle => 'Сдаться?';
+  String get gameSurrenderTitle => 'Teslim olunsun mu?';
 
   @override
-  String get gameSurrenderConfirm => 'Если вы сдадитесь, вы проиграете. Сдаться?';
+  String get gameSurrenderConfirm => 'Partiyi ve bahis jetonlarını kaybedersiniz.';
 
   @override
-  String get gameOfferDraw => 'Предложить ничью';
+  String get gameOfferDraw => 'Beraberlik teklif et';
 
   @override
-  String get gameOfferDrawTitle => 'Предложить ничью?';
+  String get gameOfferDrawTitle => 'Beraberlik teklif edilsin mi?';
 
   @override
-  String get gameOfferDrawConfirm => 'Отправить сопернику предложение ничьей?';
+  String get gameOfferDrawConfirm => 'Rakibiniz beraberliği kabul veya reddedebilir.';
 
   @override
-  String get gameAcceptDrawTitle => 'Принять ничью?';
+  String get gameAcceptDrawTitle => 'Beraberlik kabul edilsin mi?';
 
   @override
-  String get gameAcceptDrawConfirm => 'Соперник предлагает ничью. Принять?';
+  String get gameAcceptDrawConfirm => 'Parti beraberlikle biter.';
 
   @override
-  String get gameDrawOffered => 'Ожидание ответа';
+  String get gameDrawOffered => 'Rakip beraberlik teklif ediyor';
 
   @override
   String get gameConnecting => 'Oyuna bağlanılıyor…';
@@ -638,7 +638,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatMessageHint => 'Mesaj';
 
   @override
-  String get chatPaste => 'Вставить';
+  String get chatPaste => 'Yapıştır';
 
   @override
   String get chatEmoji => 'Emojiler';
@@ -797,7 +797,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopStakes => 'Bahisler';
 
   @override
-  String get shopStakesSubtitle => 'Gümüş bahisleri açın';
+  String get shopStakesSubtitle => 'Daha yüksek bahisleri açın';
 
   @override
   String get inventoryTitle => 'Eşyalar';
@@ -1182,13 +1182,13 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get inventoryGiftAlreadyOwns => 'У этого пользователя уже есть эта коллекция';
+  String get inventoryGiftAlreadyOwns => 'Oyuncu bu öğeye zaten sahip';
 
   @override
-  String get inventoryGiftSelf => 'Нельзя подарить коллекцию самому себе';
+  String get inventoryGiftSelf => 'Kendinize hediye veremezsiniz';
 
   @override
-  String get inventoryGiftNotOwned => 'У вас нет этого предмета';
+  String get inventoryGiftNotOwned => 'Bu öğe envanterinizde yok';
 
   @override
   String get inventoryLoadFailed => 'Öğeler yüklenemedi';
@@ -1221,10 +1221,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get inventoryIncomeReadyLabel => 'Доход:';
+  String get inventoryIncomeReadyLabel => 'Hazır';
 
   @override
-  String get inventoryIncomeTomorrowLabel => 'Доход завтра:';
+  String get inventoryIncomeTomorrowLabel => 'Yarın';
 
   @override
   String inventoryStakeGold(String amount) {
@@ -1650,4 +1650,109 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get resetPasswordBackToLogin => 'Back to sign in';
+
+  @override
+  String get statsTitle => 'İstatistikler';
+
+  @override
+  String get statsLoadFailed => 'İstatistikler yüklenemedi';
+
+  @override
+  String get statsAllGames => 'Tüm oyunlar';
+
+  @override
+  String get statsEmptyTitle => 'Henüz oynanan maç yok';
+
+  @override
+  String get statsEmptyHint => 'İstatistikleri burada görmek için ilk oyununuzu oynayın.';
+
+  @override
+  String get statsWins => 'Galibiyetler';
+
+  @override
+  String get statsDraws => 'Beraberlikler';
+
+  @override
+  String get statsLosses => 'Mağlubiyetler';
+
+  @override
+  String get statsWinRate => 'Galibiyet oranı';
+
+  @override
+  String get statsTopWon => 'En çok galibiyet alınan';
+
+  @override
+  String get statsTopDrawn => 'En çok beraberlik';
+
+  @override
+  String get statsTopLost => 'En çok mağlubiyet alınan';
+
+  @override
+  String get statsTimePlayed => 'Oyun süresi';
+
+  @override
+  String get statsYourScore => 'Skorunuz';
+
+  @override
+  String get profileShowStats => 'İstatistikleri göster';
+
+  @override
+  String get statsDurationZeroMinutes => '0 dk';
+
+  @override
+  String get gameYouWonOpponentForfeit => 'Rakip teslim oldu. Kazandınız!';
+
+  @override
+  String get lobbyLeaveTitle => 'Lobiden çıkılsın mı?';
+
+  @override
+  String get lobbyLeaveConfirm => 'Çıktıktan sonra lobi silinecek. Davet edilen arkadaşlar red alacak.';
+
+  @override
+  String get lobbyLeave => 'Ayrıl';
+
+  @override
+  String statsDurationHours(int hours) {
+    return '$hours sa';
+  }
+
+  @override
+  String statsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours sa $minutes dk';
+  }
+
+  @override
+  String statsDurationMinutes(int minutes) {
+    return '$minutes dk';
+  }
+
+  @override
+  String gameYouForfeitOpponentWon(String name) {
+    return 'Teslim oldunuz. $name kazandı';
+  }
+
+  @override
+  String get supportTitle => 'Destek';
+
+  @override
+  String get supportUnavailable => 'Destek kullanılamıyor';
+
+  @override
+  String get supportOpenFailed => 'Destek sohbeti açılamadı';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Hesabınıza $amount jeton eklendi';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount jeton düşüldü';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Hesabınıza jeton eklendi';
+
+  @override
+  String get coinsClaim => 'Al';
 }
