@@ -733,19 +733,21 @@ class _GamesPageContent extends StatelessWidget {
                     builder: (context, constraints) {
                       if (isDesktop) {
                         const gap = 16.0;
-                        const minCardWidth = 400.0;
+                        const minCardWidth = 360.0;
+                        const maxCardWidth = 480.0;
                         final availableWidth = constraints.maxWidth;
                         final crossAxisCount =
                             (availableWidth / (minCardWidth + gap))
                                 .floor()
                                 .clamp(1, 4);
-                        final cardWidth =
+                        final rawWidth =
                             (availableWidth - (crossAxisCount - 1) * gap) /
                                 crossAxisCount;
+                        final cardWidth = rawWidth.clamp(minCardWidth, maxCardWidth);
                         return SizedBox(
                           width: availableWidth,
                           child: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: Alignment.topCenter,
                             child: SizedBox(
                               width: cardWidth,
                               child: _TictactoeGameCard(

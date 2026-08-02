@@ -17,9 +17,11 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -421,7 +423,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
-                  : ListView(
+                  : DesktopContentFrame(
+                      maxWidth: 1080,
+                      child: ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       children: [
                         _Section(
@@ -614,6 +618,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         ],
                       ],
                     ),
+                    ),
         ),
       ),
     );
@@ -723,10 +728,31 @@ class _CollectionSetFrame extends StatelessWidget {
             header,
           if (children.isNotEmpty) ...[
             const SizedBox(height: 10),
-            for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              children[i],
-            ],
+            if (isWide(context))
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const gap = 10.0;
+                  const maxCell = 320.0;
+                  final cols = (constraints.maxWidth / (maxCell + gap))
+                      .floor()
+                      .clamp(1, 3);
+                  final itemWidth =
+                      (constraints.maxWidth - gap * (cols - 1)) / cols;
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      for (final child in children)
+                        SizedBox(width: itemWidth, child: child),
+                    ],
+                  );
+                },
+              )
+            else
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: 8),
+                children[i],
+              ],
           ],
         ],
       ),
@@ -898,6 +924,25 @@ class _Section extends StatelessWidget {
           Text(
             empty,
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          )
+        else if (isWide(context))
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 10.0;
+              const maxCell = 320.0;
+              final cols =
+                  (constraints.maxWidth / (maxCell + gap)).floor().clamp(1, 3);
+              final itemWidth =
+                  (constraints.maxWidth - gap * (cols - 1)) / cols;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final child in children)
+                    SizedBox(width: itemWidth, child: child),
+                ],
+              );
+            },
           )
         else
           ...[

@@ -1049,23 +1049,30 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       builder: (context, constraints) {
         if (useGrid) {
           const gap = 12.0;
-          const maxCellWidth = 320.0;
-          final availableWidth = constraints.maxWidth - 32;
+          const maxCellWidth = 300.0;
+          const maxContentWidth = 960.0;
+          final availableWidth =
+              (constraints.maxWidth - 32).clamp(0.0, maxContentWidth);
           final crossAxisCount =
-              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 4);
+              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 3);
           final itemWidth =
               (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
-            child: Column(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: availableWidth,
+                child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Wrap(
                   spacing: gap,
                   runSpacing: gap,
+                  alignment: WrapAlignment.center,
                   children: [
                     for (var i = 0; i < visibleCount; i++)
                       SizedBox(
@@ -1089,6 +1096,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ),
                   ),
               ],
+                ),
+              ),
             ),
           );
         }

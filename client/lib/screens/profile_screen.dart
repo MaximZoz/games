@@ -335,16 +335,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
 
     Widget scrollableBody(Widget child) {
+      final framed = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: child,
+        ),
+      );
+      // На телефоне — карточка по центру экрана (если помещается).
+      if (mobile) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 32,
+                ),
+                child: Center(child: framed),
+              ),
+            );
+          },
+        );
+      }
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: child,
-            ),
-          ),
-        ],
+        children: [framed],
       );
     }
 
