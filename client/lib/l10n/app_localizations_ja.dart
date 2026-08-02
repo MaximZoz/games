@@ -1298,6 +1298,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chatActions => 'チャット操作';
 
   @override
+  String get chatAutoTranslate => '自動翻訳';
+
+  @override
   String get chatScrollToEnd => '会話の末尾へ';
 
   @override

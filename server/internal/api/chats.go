@@ -25,16 +25,17 @@ type ChatsHandler struct {
 }
 
 type ChatUserItem struct {
-	ID          string  `json:"id"`
-	DisplayName *string `json:"display_name,omitempty"`
-	AvatarKind  string  `json:"avatar_kind,omitempty"`
-	AvatarValue *string `json:"avatar_value,omitempty"`
-	Age         *int    `json:"age,omitempty"`
-	Gender      *string `json:"gender,omitempty"`
-	About       *string `json:"about,omitempty"`
-	FrameColor  string  `json:"frame_color,omitempty"`
-	FrameCode   string  `json:"frame_code,omitempty"`
-	IsSupport   bool    `json:"is_support,omitempty"`
+	ID                string  `json:"id"`
+	DisplayName       *string `json:"display_name,omitempty"`
+	AvatarKind        string  `json:"avatar_kind,omitempty"`
+	AvatarValue       *string `json:"avatar_value,omitempty"`
+	Age               *int    `json:"age,omitempty"`
+	Gender            *string `json:"gender,omitempty"`
+	About             *string `json:"about,omitempty"`
+	FrameColor        string  `json:"frame_color,omitempty"`
+	FrameCode         string  `json:"frame_code,omitempty"`
+	IsSupport         bool    `json:"is_support,omitempty"`
+	PreferredLanguage string  `json:"preferred_language,omitempty"`
 }
 
 type ChatPreviewItem struct {
@@ -168,14 +169,15 @@ func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 
 func chatUserToItem(u store.ChatUser) ChatUserItem {
 	return ChatUserItem{
-		ID:          u.ID.String(),
-		DisplayName: u.DisplayName,
-		AvatarKind:  u.AvatarKind,
-		AvatarValue: u.AvatarValue,
-		Age:         u.Age,
-		Gender:      u.Gender,
-		About:       u.About,
-		IsSupport:   u.IsSupport,
+		ID:                u.ID.String(),
+		DisplayName:       u.DisplayName,
+		AvatarKind:        u.AvatarKind,
+		AvatarValue:       u.AvatarValue,
+		Age:               u.Age,
+		Gender:            u.Gender,
+		About:             u.About,
+		IsSupport:         u.IsSupport,
+		PreferredLanguage: u.PreferredLanguage,
 	}
 }
 

@@ -1298,6 +1298,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatActions => '聊天操作';
 
   @override
+  String get chatAutoTranslate => '自动翻译';
+
+  @override
   String get chatScrollToEnd => '转到对话末尾';
 
   @override

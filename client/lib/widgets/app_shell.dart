@@ -9,6 +9,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/push_notification_nav_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -190,8 +191,13 @@ class AppShell extends ConsumerWidget {
           unawaited(
             ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
           );
+          unawaited(syncPreferredLanguageToServer(ref));
         }
       });
+      // Язык интерфейса → сервер (для иконки автоперевода в чатах).
+      if (authState.valueOrNull != null) {
+        unawaited(syncPreferredLanguageToServer(ref));
+      }
       ref.listen<bool>(webPushEnabledProvider, (prev, next) {
         if (next == true && prev != true) {
           unawaited(

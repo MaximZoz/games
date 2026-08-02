@@ -183,15 +183,16 @@ type ChatMessage struct {
 }
 
 type ChatUser struct {
-	ID          uuid.UUID
-	Email       string
-	DisplayName *string
-	AvatarKind  string
-	AvatarValue *string
-	Age         *int
-	Gender      *string
-	About       *string
-	IsSupport   bool
+	ID                uuid.UUID
+	Email             string
+	DisplayName       *string
+	AvatarKind        string
+	AvatarValue       *string
+	Age               *int
+	Gender            *string
+	About             *string
+	IsSupport         bool
+	PreferredLanguage string
 }
 
 type ChatPreview struct {
@@ -322,11 +323,13 @@ func ListChatsForUser(
 			mc.created_at,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
 			COALESCE(u.is_support, false),
+			COALESCE(us.preferred_language, ''),
 			lm.id::text, lm.sender_user_id::text, lm.body, lm.created_at, lm.delivered_at, lm.read_at, lm.has_image, lm.image_count,
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
 		FROM my_chats mc
 		JOIN users u ON u.id = mc.peer_id
+		LEFT JOIN user_settings us ON us.user_id = u.id
 		LEFT JOIN last_msg lm ON lm.chat_id = mc.id
 		LEFT JOIN unread un ON un.chat_id = mc.id
 		ORDER BY
@@ -363,6 +366,7 @@ func ListChatsForUser(
 			&item.Peer.Gender,
 			&item.Peer.About,
 			&item.Peer.IsSupport,
+			&item.Peer.PreferredLanguage,
 			&lastMessageIDRaw,
 			&lastSenderIDRaw,
 			&lastBody,

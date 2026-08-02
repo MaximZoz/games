@@ -18,6 +18,7 @@ import (
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/mailer"
 	"multigames/server/internal/store"
+	"multigames/server/internal/translate"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -343,6 +344,9 @@ func main() {
 	}
 	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
 	settingsHandler := &api.SettingsHandler{Pool: pool}
+	languageSettingsHandler := &api.LanguageSettingsHandler{Pool: pool}
+	translateService := translate.NewService()
+	chatTranslateHandler := &api.ChatTranslateHandler{Pool: pool, Translate: translateService}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
@@ -435,7 +439,9 @@ func main() {
 	mux.Handle("/api/chats/block", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Block)))
 	mux.Handle("/api/chats/unblock", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Unblock)))
 	mux.Handle("/api/chats/blocked", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(chatsHandler.Blocked)))
+	mux.Handle("/api/chats/translate", api.RequireAuth([]byte(jwtSecret), chatTranslateHandler))
 	mux.Handle("/api/settings", api.RequireAuth([]byte(jwtSecret), settingsHandler))
+	mux.Handle("/api/settings/language", api.RequireAuth([]byte(jwtSecret), languageSettingsHandler))
 	mux.Handle("/api/games/", api.RequireAuth([]byte(jwtSecret), gamesHandler))
 	mux.Handle("/api/presence", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(presenceHandler.Get)))
 	mux.Handle("/api/coins/daily-available", api.RequireAuth([]byte(jwtSecret), http.HandlerFunc(coinsHandler.DailyAvailable)))

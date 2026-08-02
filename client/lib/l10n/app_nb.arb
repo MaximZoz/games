@@ -678,6 +678,7 @@
   "chatBackToGame": "Tilbake til spillet",
   "chatBackToChats": "Tilbake til chatter",
   "chatActions": "Chathandlinger",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Til slutten av samtalen",
   "chatReplyingTo": "Svar til {name}",
   "@chatReplyingTo": {

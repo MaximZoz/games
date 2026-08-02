@@ -1298,6 +1298,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatActions => 'Дії з чатом';
 
   @override
+  String get chatAutoTranslate => 'Автопереклад';
+
+  @override
   String get chatScrollToEnd => 'В кінець переписки';
 
   @override

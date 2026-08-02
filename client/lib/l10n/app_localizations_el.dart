@@ -1298,6 +1298,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get chatActions => 'Ενέργειες συνομιλίας';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Στο τέλος της συνομιλίας';
 
   @override

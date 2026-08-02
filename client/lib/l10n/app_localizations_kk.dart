@@ -1298,6 +1298,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get chatActions => 'Чат әрекеттері';
 
   @override
+  String get chatAutoTranslate => 'Автоаударма';
+
+  @override
   String get chatScrollToEnd => 'Сөйлесу соңына';
 
   @override

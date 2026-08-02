@@ -1298,6 +1298,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get chatActions => 'Chathandlinger';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Til slutten av samtalen';
 
   @override

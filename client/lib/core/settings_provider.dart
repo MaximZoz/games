@@ -2,10 +2,45 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Синхронизирует язык интерфейса на сервер (нужно для автоперевода в чате).
+Future<void> syncPreferredLanguageToServer(WidgetRef ref) async {
+  await syncPreferredLanguageWith(
+    ref.read(authRepositoryProvider),
+    user: ref.read(authStateProvider).valueOrNull,
+    languageCode: effectiveAppLocale(ref.read(appLocaleProvider)).languageCode,
+  );
+}
+
+Future<void> syncPreferredLanguageWith(
+  AuthRepository auth, {
+  required Object? user,
+  required String languageCode,
+}) async {
+  if (user == null) return;
+  final lang = languageCode.trim();
+  if (lang.isEmpty) return;
+  try {
+    await auth.sendAuthorized(
+      (token) => ApiClient.put(
+        Uri.parse('$apiBaseUrl/api/settings/language'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'preferred_language': lang}),
+        operation: 'syncPreferredLanguageToServer',
+      ),
+    );
+  } catch (_) {
+    // не блокируем UI
+  }
+}
 
 const _keyAddBotsAfter30s = 'add_bots_after_30s';
 const _keyMessagesFriendsOnlyPrefix = 'messages_friends_only';

@@ -678,6 +678,7 @@
   "chatBackToGame": "กลับไปเกม",
   "chatBackToChats": "กลับไปแชท",
   "chatActions": "การดำเนินการแชท",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "ไปท้ายบทสนทนา",
   "chatReplyingTo": "ตอบกลับ {name}",
   "@chatReplyingTo": {

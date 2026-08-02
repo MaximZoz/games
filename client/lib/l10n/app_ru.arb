@@ -730,6 +730,7 @@
   "chatBackToGame": "Назад в игру",
   "chatBackToChats": "Назад к чатам",
   "chatActions": "Действия с чатом",
+  "chatAutoTranslate": "Автоперевод",
   "chatScrollToEnd": "В конец переписки",
   "chatReplyingTo": "В ответ {name}",
   "@chatReplyingTo": {

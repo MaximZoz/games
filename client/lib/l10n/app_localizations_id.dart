@@ -1298,6 +1298,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatActions => 'Tindakan obrolan';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Ke akhir percakapan';
 
   @override

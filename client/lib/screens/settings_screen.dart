@@ -320,6 +320,7 @@ class SettingsScreen extends ConsumerWidget {
     } else if (chosen is String) {
       await ref.read(appLocaleProvider.notifier).setLocale(Locale(chosen));
     }
+    await syncPreferredLanguageToServer(ref);
   }
 }
 

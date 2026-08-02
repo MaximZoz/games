@@ -1298,6 +1298,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatActions => 'Действия с чатом';
 
   @override
+  String get chatAutoTranslate => 'Автоперевод';
+
+  @override
   String get chatScrollToEnd => 'В конец переписки';
 
   @override

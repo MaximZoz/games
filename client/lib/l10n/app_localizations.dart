@@ -2555,6 +2555,12 @@ abstract class AppLocalizations {
   /// **'Действия с чатом'**
   String get chatActions;
 
+  /// No description provided for @chatAutoTranslate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автоперевод'**
+  String get chatAutoTranslate;
+
   /// No description provided for @chatScrollToEnd.
   ///
   /// In ru, this message translates to:

@@ -678,6 +678,7 @@
   "chatBackToGame": "Ойынға оралу",
   "chatBackToChats": "Чаттарға оралу",
   "chatActions": "Чат әрекеттері",
+  "chatAutoTranslate": "Автоаударма",
   "chatScrollToEnd": "Сөйлесу соңына",
   "chatReplyingTo": "{name} жауабы",
   "@chatReplyingTo": {

@@ -678,6 +678,7 @@
   "chatBackToGame": "ゲームに戻る",
   "chatBackToChats": "チャットに戻る",
   "chatActions": "チャット操作",
+  "chatAutoTranslate": "自動翻訳",
   "chatScrollToEnd": "会話の末尾へ",
   "chatReplyingTo": "{name} への返信",
   "@chatReplyingTo": {

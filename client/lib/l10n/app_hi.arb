@@ -678,6 +678,7 @@
   "chatBackToGame": "खेल पर वापस",
   "chatBackToChats": "चैट पर वापस",
   "chatActions": "चैट क्रियाएँ",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "बातचीत के अंत तक",
   "chatReplyingTo": "{name} को उत्तर",
   "@chatReplyingTo": {

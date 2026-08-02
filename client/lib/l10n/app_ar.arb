@@ -678,6 +678,7 @@
   "chatBackToGame": "العودة إلى اللعبة",
   "chatBackToChats": "العودة إلى المحادثات",
   "chatActions": "إجراءات المحادثة",
+  "chatAutoTranslate": "ترجمة تلقائية",
   "chatScrollToEnd": "إلى نهاية المحادثة",
   "chatReplyingTo": "رد على {name}",
   "@chatReplyingTo": {

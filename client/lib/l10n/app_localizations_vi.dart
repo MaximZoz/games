@@ -1298,6 +1298,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatActions => 'Thao tác chat';
 
   @override
+  String get chatAutoTranslate => 'Auto-translate';
+
+  @override
   String get chatScrollToEnd => 'Đến cuối cuộc trò chuyện';
 
   @override
