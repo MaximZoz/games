@@ -154,6 +154,22 @@ func humanUserIDsFromGame(m map[string]string) []uuid.UUID {
 	return out
 }
 
+// rematchInviteeIDs — все живые (не боты) участники партии, кроме инициатора реванша.
+func rematchInviteeIDs(m map[string]string, requesterID string) []string {
+	requesterID = strings.TrimSpace(requesterID)
+	var out []string
+	seen := map[string]bool{}
+	for _, id := range gamePlayerUserIDs(m) {
+		id = strings.TrimSpace(id)
+		if id == "" || id == requesterID || isBot(id) || seen[id] {
+			continue
+		}
+		seen[id] = true
+		out = append(out, id)
+	}
+	return out
+}
+
 func parsePlayerIDsCSV(s string) []string {
 	if strings.TrimSpace(s) == "" {
 		return nil

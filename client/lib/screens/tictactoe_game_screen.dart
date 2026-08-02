@@ -169,7 +169,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         }
         if (type == 'invite_declined') {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
-          if (lobbyId == _rematchLobbyId && mounted) {
+          // Multi: отказ одного не закрывает лобби (closed=false) — ждём остальных.
+          final closed = next.valueOrNull?['closed'] != false;
+          if (lobbyId == _rematchLobbyId && mounted && closed) {
             _rematchPollTimer?.cancel();
             setState(() {
               _rematchLobbyId = null;
@@ -385,8 +387,15 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           data: (game) {
             final isOver = game.status != 'active';
             final isMultiGame = game.maxPlayers > 2;
-            final opponentId =
-                game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
+            final meIdForPeers = currentUser?.id;
+            final peerIds = game.playerUserIds
+                .where((id) => id.isNotEmpty && id != meIdForPeers)
+                .toList(growable: false);
+            final opponentId = peerIds.isNotEmpty
+                ? peerIds.first
+                : (game.xUserId == currentUser?.id
+                    ? game.oUserId
+                    : game.xUserId);
             final myMark = game.markForUser(currentUser?.id);
             final iWonEarly = isOver &&
                 game.status.endsWith('_won') &&
@@ -398,9 +407,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               _rematchPollTimer?.cancel();
               _prevGameStatus = game.status;
               if (currentUser != null) {
-                ref
-                    .read(gameInvitesProvider.notifier)
-                    .removeByCreatorId(opponentId);
+                for (final peerId in peerIds) {
+                  ref
+                      .read(gameInvitesProvider.notifier)
+                      .removeByCreatorId(peerId);
+                }
               }
               // Не трогаем провайдеры баланса из build — только после кадра.
               final settledCredit = iWonEarly
@@ -607,7 +618,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         isRematching: _isRematching,
                         isAcceptingRematch: _isAcceptingRematch,
                         isFindingGame: _isFindingGame,
-                        opponentId: opponentId,
+                        peerIds: peerIds,
                         invites: ref.watch(gameInvitesProvider),
                         onRematch: () => _rematch(context),
                         onAccept: _acceptRematch,
@@ -1649,7 +1660,7 @@ class _RematchSection extends StatelessWidget {
     required this.isRematching,
     required this.isAcceptingRematch,
     required this.isFindingGame,
-    required this.opponentId,
+    required this.peerIds,
     required this.invites,
     required this.onRematch,
     required this.onAccept,
@@ -1665,7 +1676,8 @@ class _RematchSection extends StatelessWidget {
   final bool isRematching;
   final bool isAcceptingRematch;
   final bool isFindingGame;
-  final String opponentId;
+  /// Все соперники прошлой партии (для multi — несколько).
+  final List<String> peerIds;
   final List<GameInvite> invites;
   final VoidCallback onRematch;
   final void Function(String lobbyId) onAccept;
@@ -1676,8 +1688,10 @@ class _RematchSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final peerSet = peerIds.toSet();
+    // Реванш от любого участника прошлой партии (не только «первого» x/o).
     final rematchOffer =
-        invites.where((i) => i.creatorId == opponentId).firstOrNull;
+        invites.where((i) => peerSet.contains(i.creatorId)).firstOrNull;
 
     // После нажатия «Принять» показываем часики до перехода в игру
     if (isAcceptingRematch) {

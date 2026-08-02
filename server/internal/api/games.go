@@ -559,9 +559,8 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
-	if xUserID != userID.String() && oUserID != userID.String() {
+	me := userID.String()
+	if markForUserID(m, me) == "" {
 		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
@@ -572,19 +571,28 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	opponentID := oUserID
-	if userID.String() == oUserID {
-		opponentID = xUserID
+	// Multi: приглашаем всех участников прошлой партии (включая вышедших с экрана).
+	// 1v1: одного соперника — как раньше.
+	inviteeIDs := rematchInviteeIDs(m, me)
+	if len(inviteeIDs) == 0 {
+		WriteErr(w, r, http.StatusBadRequest, "no opponents to rematch")
+		return
 	}
-	opponentUUID, err := uuid.Parse(opponentID)
-	if err != nil {
+	invitees := make([]uuid.UUID, 0, len(inviteeIDs))
+	for _, id := range inviteeIDs {
+		u, e := uuid.Parse(id)
+		if e != nil {
+			continue
+		}
+		invitees = append(invitees, u)
+	}
+	if len(invitees) == 0 {
 		WriteErr(w, r, http.StatusInternalServerError, "invalid opponent")
 		return
 	}
 
 	// Всегда создаём лобби и отправляем приглашение. Игра начнётся только после
-	// явного принятия соперником (JoinLobby). Нет автоприсоединения — согласие
-	// обнуляется после каждой игры, второй игрок должен подтвердить реванш.
+	// явного принятия (JoinLobby) всеми нужными игроками.
 	lobbyID := uuid.New().String()
 	key := "lobby:" + lobbyID
 	invitedKey := key + ":invited"
@@ -608,25 +616,28 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	if stakeBronze < 1 {
 		stakeBronze = 1
 	}
+	// Для совместимости DeclineInvite/старых клиентов: первый invitee в invite_target_id.
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, key,
 		"game_type", "tictactoe",
-		"creator_id", userID.String(),
+		"creator_id", me,
 		"status", lobbyStatusWaitingInvite,
-		"invite_target_id", opponentID,
+		"invite_target_id", inviteeIDs[0],
 		"created_at", now,
 		"mode", "invite",
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
 		"variant", string(variant),
 		"grid_size", strconv.Itoa(gridSize),
 		"max_players", strconv.Itoa(cfg.MaxPlayers),
-		"player_ids", userID.String(),
+		"player_ids", me,
 		"swap_rule", "false",
 		"first_move_restriction", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
-	pipe.SAdd(ctx, invitedKey, opponentID)
+	for _, id := range inviteeIDs {
+		pipe.SAdd(ctx, invitedKey, id)
+	}
 	pipe.Expire(ctx, invitedKey, lobbyTTL)
 	if _, err := pipe.Exec(ctx); err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -653,7 +664,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	broadcastData := map[string]any{
 		"type":          "game_invite",
 		"lobby_id":      lobbyID,
-		"creator_id":    userID.String(),
+		"creator_id":    me,
 		"creator_name":  creatorName,
 		"game_type":     "tictactoe",
 		"turn_time_sec": turnTimeSec,
@@ -668,13 +679,16 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	if creatorAvatarValue != "" {
 		broadcastData["creator_avatar_value"] = creatorAvatarValue
 	}
-	h.broadcast([]uuid.UUID{opponentUUID}, broadcastData)
+	// WS + push всем соперникам (в т.ч. кто уже ушёл с экрана игры).
+	h.broadcast(invitees, broadcastData)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"lobby_id": lobbyID,
-		"status":   lobbyStatusWaitingInvite,
-		"matched":  false,
+		"lobby_id":       lobbyID,
+		"status":         lobbyStatusWaitingInvite,
+		"matched":        false,
+		"invited_count":  len(invitees),
+		"max_players":    cfg.MaxPlayers,
 	})
 }
 
@@ -1995,25 +2009,56 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		WriteErr(w, r, http.StatusBadRequest, "lobby invite expired")
 		return
 	}
-	if m["invite_target_id"] != userID.String() {
+	invitedKey := key + ":invited"
+	isInvited, _ := h.Rdb.SIsMember(ctx, invitedKey, userID.String()).Result()
+	if !isInvited && m["invite_target_id"] != userID.String() {
 		WriteErr(w, r, http.StatusForbidden, "you are not invited")
 		return
 	}
 
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
+	maxPlayers, _ := strconv.Atoi(m["max_players"])
+	if maxPlayers < 1 {
+		maxPlayers = 2
+	}
+
+	// Multi: один отказ не убивает реванш — убираем отказавшегося из invited.
+	// Лобби закрываем, только если оставшихся приглашённых уже не хватает на состав.
+	if maxPlayers > 2 {
+		h.Rdb.SRem(ctx, invitedKey, userID.String())
+		remaining, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
+		players := parsePlayerIDsCSV(m["player_ids"])
+		if len(players) == 0 {
+			players = []string{creatorID}
+		}
+		canFill := len(players)+len(remaining) >= maxPlayers
+		if canFill {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"declined": true,
+				"closed":   false,
+			})
+			return
+		}
+	}
+
 	h.Rdb.Del(ctx, key)
-	h.Rdb.Del(ctx, key+":invited")
+	h.Rdb.Del(ctx, invitedKey)
 	clearUserActiveLobby(ctx, h.Rdb, userID)
+	clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+	_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 
 	h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
 		"type":     "invite_declined",
 		"lobby_id": lobbyID,
+		"closed":   true,
+		"user_id":  userID.String(),
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"declined": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{"declined": true, "closed": true})
 }
 
 // applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.
@@ -2077,8 +2122,10 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		next := nextAliveMark(cfg.Marks, turn, eliminated)
 		fields := []any{"eliminated_marks", elimCSV, "turn", next, "timeout", "1"}
 		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+		var newDeadline int64
 		if turnTimeSec > 0 {
-			fields = append(fields, "turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnTimeSec), 10))
+			newDeadline = time.Now().UTC().Unix() + int64(turnTimeSec)
+			fields = append(fields, "turn_deadline", strconv.FormatInt(newDeadline, 10))
 		}
 		h.Rdb.HSet(ctx, key, fields...)
 		h.Rdb.Expire(ctx, key, 24*time.Hour)
@@ -2086,13 +2133,20 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 			"type": "game_state", "game_id": gameID,
 			"board": board, "turn": next, "status": gameStatusActive,
 			"timeout": true, "eliminated_marks": strings.Split(elimCSV, ","),
-			"variant": string(variant),
+			"variant": string(variant), "max_players": cfg.MaxPlayers,
 		}
 		if turnTimeSec > 0 {
 			payload["turn_time_sec"] = turnTimeSec
-			payload["turn_deadline"] = time.Now().UTC().Unix() + int64(turnTimeSec)
+			payload["turn_deadline"] = newDeadline
 		}
 		h.broadcast(humans, payload)
+		m2 := map[string]string{}
+		for k, v := range m {
+			m2[k] = v
+		}
+		m2["turn"] = next
+		m2["eliminated_marks"] = elimCSV
+		h.notifyYourTurn(gameID, next, m2)
 		return true
 	}
 
