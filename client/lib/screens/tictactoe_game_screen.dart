@@ -564,22 +564,15 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ],
               );
             } else {
+              // Шапка по контенту — доска забирает всё оставшееся место
+              // (раньше Flexible+Expanded делили высоту пополам → пустоты у гомоку).
               bodyLayout = Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          opponentCard(),
-                          SizedBox(height: verticalSpacing),
-                          statusBlock(),
-                          SizedBox(height: verticalSpacing),
-                        ],
-                      ),
-                    ),
-                  ),
+                  opponentCard(),
+                  SizedBox(height: verticalSpacing * 0.6),
+                  statusBlock(),
+                  SizedBox(height: verticalSpacing * 0.6),
                   Expanded(child: board()),
                 ],
               );
@@ -1990,17 +1983,16 @@ class _GameBoard extends StatelessWidget {
       builder: (context, constraints) {
         var maxW = constraints.maxWidth;
         var maxH = constraints.maxHeight;
-        if (!maxW.isFinite) maxW = 400;
-        if (!maxH.isFinite) maxH = 400;
-        final minBoard = compact ? 140.0 : 200.0;
-        final maxBoard = compact ? 380.0 : 420.0;
-        final maxSide = (maxW > maxH ? maxH : maxW).clamp(minBoard, maxBoard);
-        final viewportSize = maxSide.toDouble();
-        final boardSize = gridSize >= 15
-            ? 620.0
-            : gridSize >= 8
-                ? 520.0
-                : viewportSize;
+        if (!maxW.isFinite || maxW <= 0) maxW = 400;
+        if (!maxH.isFinite || maxH <= 0) maxH = 400;
+        final minBoard = compact ? 140.0 : 180.0;
+        // Растягиваем на всё свободное место (раньше был жёсткий потолок 420).
+        final viewportSize =
+            (maxW < maxH ? maxW : maxH).clamp(minBoard, 2000.0).toDouble();
+        // Крупные сетки по умолчанию целиком влезают в viewport;
+        // pinch/zoom — для точного хода на гомоку/multi.
+        final allowZoom = gridSize >= 8;
+        final boardSize = viewportSize;
         Widget boardContent() {
           return Container(
             width: boardSize,
@@ -2017,7 +2009,11 @@ class _GameBoard extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(
-                    compact ? 6 : (boardSize > 280 ? 12 : 8),
+                    compact
+                        ? (gridSize >= 10 ? 4.0 : 6.0)
+                        : (gridSize >= 10
+                            ? 6.0
+                            : (boardSize > 280 ? 12.0 : 8.0)),
                   ),
                   child: _WinningLineOverlay(
                     winningCells: game.effectiveWinningCells,
@@ -2031,9 +2027,11 @@ class _GameBoard extends StatelessWidget {
                         builder: (context, innerConstraints) {
                           final cellW = innerConstraints.maxWidth / gridSize;
                           final cellH = innerConstraints.maxHeight / gridSize;
-                          final gap = boardSize > 280
-                              ? (gridSize >= 8 ? 1.5 : 4.0)
-                              : 2.0;
+                          final gap = gridSize >= 10
+                              ? 1.0
+                              : (boardSize > 280
+                                  ? (gridSize >= 8 ? 1.5 : 4.0)
+                                  : 2.0);
                           final cells = List.generate(n, (visualIndex) {
                             final cellIndex = isUltimate
                                 ? _ultimateCellFromVisualIndex(visualIndex)
@@ -2092,21 +2090,18 @@ class _GameBoard extends StatelessWidget {
           );
         }
 
+        final board = boardContent();
         return Center(
           child: SizedBox.square(
             dimension: viewportSize,
-            child: boardSize > viewportSize + 1
+            child: allowZoom
                 ? InteractiveViewer(
-                    constrained: false,
-                    minScale: viewportSize / boardSize,
-                    maxScale: 3,
-                    boundaryMargin: const EdgeInsets.all(80),
-                    child: SizedBox.square(
-                      dimension: boardSize,
-                      child: boardContent(),
-                    ),
+                    minScale: 1,
+                    maxScale: 3.5,
+                    boundaryMargin: const EdgeInsets.all(48),
+                    child: board,
                   )
-                : boardContent(),
+                : board,
           ),
         );
       },
