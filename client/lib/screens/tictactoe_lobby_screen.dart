@@ -334,6 +334,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     ),
                                   ),
                                 ] else if (showInviteWaiting && !isCreator) ...[
+                                  // Приглашённый: игроки + ссылка + правила.
+                                  // Карточки «Поиск соперника» здесь быть не должно.
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
                                       context,
@@ -343,35 +345,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     const SizedBox(height: 12),
                                   ],
                                   _buildShareInviteLinkCard(context),
-                                  const SizedBox(height: 12),
-                                  GradientCard(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(
-                                          width: 48,
-                                          height: 48,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: AppColors.accentStart,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          context.l10n.lobbySearchingOpponent,
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                   const SizedBox(height: 16),
                                   _buildMatchmakeInfoCard(context, lobby),
                                 ] else if (isMatchmakeMode) ...[

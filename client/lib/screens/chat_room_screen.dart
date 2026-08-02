@@ -1899,6 +1899,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
+    // В личке кнопка «написать» не нужна. В групповом — открыть личные сообщения.
+    var isGroup = false;
+    final chats =
+        ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    for (final c in chats) {
+      if (c.chatID == widget.chatID) {
+        isGroup = c.isGroup;
+        break;
+      }
+    }
     await showUserProfileDialog(
       context: context,
       ref: ref,
@@ -1913,8 +1923,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       about: user.about,
       messageFrom: widget.fromGames ? 'games' : 'chats',
       messageReturnPath: widget.fromGames ? widget.gameReturnPath : null,
-      // Уже в переписке — кнопка «написать» не нужна.
-      showMessageButton: false,
+      showMessageButton: isGroup,
     );
   }
 

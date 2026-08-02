@@ -1545,6 +1545,11 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	if stakeBronze < 1 {
 		stakeBronze = 1
 	}
+	cfg, variant := resolveVariantConfig(m["variant"], gridSize)
+	maxPlayers, _ := strconv.Atoi(m["max_players"])
+	if maxPlayers < 2 {
+		maxPlayers = cfg.MaxPlayers
+	}
 	inviteData := map[string]any{
 		"type":                   "game_invite",
 		"lobby_id":               lobbyID,
@@ -1552,7 +1557,9 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		"creator_name":           creatorName,
 		"game_type":              "tictactoe",
 		"turn_time_sec":          turnTimeSec,
-		"grid_size":              gridSize,
+		"variant":                string(variant),
+		"grid_size":              cfg.GridSize,
+		"max_players":            maxPlayers,
 		"swap_rule":              swapRule,
 		"first_move_restriction": firstMoveRestriction,
 		"stake_bronze":           stakeBronze,
