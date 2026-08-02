@@ -1685,6 +1685,24 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return value;
   }
 
+  String _chatTitle(ChatPreviewItem? item, String fallback) {
+    if (item?.isGroup == true) {
+      final title = item?.title?.trim();
+      if (title != null && title.isNotEmpty) return title;
+      return 'Групповой чат';
+    }
+    final user = item?.user;
+    return user == null ? fallback : _peerTitle(user);
+  }
+
+  ChatUserItem? _chatMember(ChatPreviewItem? item, String userId) {
+    if (item == null || userId.isEmpty) return null;
+    for (final member in item.members) {
+      if (member.id == userId) return member;
+    }
+    return null;
+  }
+
   IconData? _genderIcon(String? value) {
     final normalized = value?.trim().toLowerCase();
     if (normalized == null || normalized.isEmpty) return null;
@@ -1835,6 +1853,46 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       );
     }
     return avatar;
+  }
+
+  Widget _buildGroupAvatarStack(ChatPreviewItem? chat, {double radius = 18}) {
+    final members = chat?.members.take(3).toList(growable: false) ??
+        const <ChatUserItem>[];
+    final size = radius * 2;
+    return SizedBox(
+      width: size + 18,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CircleAvatar(
+            radius: radius,
+            backgroundColor: AppColors.accentSoft,
+            child: Icon(
+              Icons.grid_3x3_rounded,
+              color: AppColors.accentStart,
+              size: radius * 1.15,
+            ),
+          ),
+          for (var i = 0; i < members.length; i++)
+            Positioned(
+              left: radius * 0.9 + i * (radius * 0.48),
+              bottom: i.isEven ? -1 : radius * 0.28,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surfaceCard, width: 1),
+                ),
+                child: _buildPeerAvatar(
+                  user: members[i],
+                  fallbackTitle: members[i].displayName ?? '?',
+                  radius: radius * 0.38,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildLetterAvatar({required String raw, required double radius}) {
@@ -2034,11 +2092,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Widget _buildChatToolbar({
     required ChatUserItem? peerUser,
+    required ChatPreviewItem? chat,
     required String title,
     PresenceEntry? presence,
   }) {
     final infoUser = peerUser;
-    final statusText = presence == null
+    final isGroup = chat?.isGroup == true;
+    final statusText = isGroup || presence == null
         ? null
         : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
     final notifyCount = _shellNotificationCount();
@@ -2096,31 +2156,33 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               ),
             ),
-          Tooltip(
-            message: context.l10n.userInfoTitle,
-            child: MouseRegion(
-              cursor: infoUser == null
-                  ? SystemMouseCursors.basic
-                  : SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: infoUser == null
-                    ? null
-                    : () {
-                        final user = infoUser;
-                        unawaited(
-                          _showUserInfoDialog(user, presence: presence),
-                        );
-                      },
-                behavior: HitTestBehavior.opaque,
-                child: _buildPeerAvatar(
-                  user: peerUser,
-                  fallbackTitle: title,
-                  radius: 18,
-                  isOnline: presence?.online,
+          isGroup
+              ? _buildGroupAvatarStack(chat, radius: 18)
+              : Tooltip(
+                  message: context.l10n.userInfoTitle,
+                  child: MouseRegion(
+                    cursor: infoUser == null
+                        ? SystemMouseCursors.basic
+                        : SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: infoUser == null
+                          ? null
+                          : () {
+                              final user = infoUser;
+                              unawaited(
+                                _showUserInfoDialog(user, presence: presence),
+                              );
+                            },
+                      behavior: HitTestBehavior.opaque,
+                      child: _buildPeerAvatar(
+                        user: peerUser,
+                        fallbackTitle: title,
+                        radius: 18,
+                        isOnline: presence?.online,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -2153,6 +2215,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             enabled: !_roomActionInFlight,
             tooltip: context.l10n.chatActions,
             onSelected: (action) {
+              if (isGroup && action == _RoomAction.sendFriendRequest) {
+                unawaited(_showGroupMembersFriendSheet(chat));
+                return;
+              }
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final peerId = (peerUser?.id ?? '').trim();
               String? incomingRequestId;
@@ -2174,6 +2240,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               final peerId = (peerUser?.id ?? '').trim();
               final isSupport = peerUser?.isSupport == true ||
                   peerUser?.displayName?.trim() == 'Поддержка';
+              if (isGroup) {
+                return <PopupMenuEntry<_RoomAction>>[
+                  PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.sendFriendRequest,
+                    child: Text(context.l10n.friendsAdd),
+                  ),
+                  PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.clearChat,
+                    child: Text(context.l10n.chatsClearConfirm),
+                  ),
+                ];
+              }
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final isFriend = peerId.isNotEmpty &&
                   snapshot?.friends.any((f) => f.user.id == peerId) == true;
@@ -2259,6 +2337,95 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return peerLang != myLang;
   }
 
+  Future<void> _showGroupMembersFriendSheet(ChatPreviewItem? chat) async {
+    if (chat == null || !chat.isGroup) return;
+    final meId = ref.read(authStateProvider).valueOrNull?.id;
+    final members = chat.members
+        .where((m) => m.id.isNotEmpty && m.id != meId)
+        .toList(growable: false);
+    if (members.isEmpty) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: GradientCard(
+                  animate: false,
+                  margin: EdgeInsets.zero,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.friendsAdd,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      for (final member in members)
+                        Builder(
+                          builder: (context) {
+                            final isFriend = snapshot?.friends
+                                    .any((f) => f.user.id == member.id) ==
+                                true;
+                            final hasOutgoing = snapshot?.outgoing
+                                    .any((r) => r.user.id == member.id) ==
+                                true;
+                            final title = _peerTitle(member);
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: _buildPeerAvatar(
+                                  user: member,
+                                  fallbackTitle: title,
+                                  radius: 20,
+                                ),
+                                title: Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: Icon(
+                                  isFriend
+                                      ? Icons.check_rounded
+                                      : Icons.person_add_alt_1_rounded,
+                                  color: isFriend || hasOutgoing
+                                      ? AppColors.textSecondary
+                                      : AppColors.accentStart,
+                                ),
+                                onTap: isFriend || hasOutgoing
+                                    ? null
+                                    : () {
+                                        Navigator.of(sheetContext).pop();
+                                        unawaited(_runRoomAction(
+                                          _RoomAction.sendFriendRequest,
+                                          peerUserID: member.id,
+                                        ));
+                                      },
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<Map<String, dynamic>>>(
@@ -2298,9 +2465,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final routeTitle = (widget.peerName ?? '').trim().isEmpty ? context.l10n.chatDialog : widget.peerName!.trim();
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
+    ChatPreviewItem? currentChat;
     ChatUserItem? peerUser;
     for (final item in chats) {
       if (item.chatID == widget.chatID) {
+        currentChat = item;
         peerUser = item.user;
         break;
       }
@@ -2309,14 +2478,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (peerLang.isNotEmpty && peerLang != _peerLanguageHint) {
       _peerLanguageHint = peerLang;
     }
-    final title = peerUser == null ? routeTitle : _peerTitle(peerUser);
-    final peerPresence = peerUser != null ? presence[peerUser.id] : null;
+    final title = _chatTitle(currentChat, routeTitle);
+    final peerPresence =
+        currentChat?.isGroup == true || peerUser == null ? null : presence[peerUser.id];
 
     if (narrowLandscape) {
       Future.microtask(() {
         if (!mounted) return;
         ref.read(mobileToolbarLeadingProvider.notifier).state =
-            _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence);
+            _buildChatToolbar(
+          peerUser: peerUser,
+          chat: currentChat,
+          title: title,
+          presence: peerPresence,
+        );
       });
     }
 
@@ -2556,157 +2731,194 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       ),
                     );
                   }
+                  final showGroupSender =
+                      currentChat?.isGroup == true && !mine;
+                  final senderUser = showGroupSender
+                      ? _chatMember(currentChat, message.senderUserID)
+                      : null;
+                  final senderName =
+                      senderUser == null ? context.l10n.commonUser : _peerTitle(senderUser);
                   return _wrapSwipeReply(
                     message: message,
                     alignment:
                         mine ? Alignment.centerRight : Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 320),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: mine
-                              ? AppColors.accentSoft
-                              : AppColors.surfaceCard,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: mine
-                                ? AppColors.accentStart
-                                    .withValues(alpha: 0.35)
-                                : Colors.black.withValues(alpha: 0.08),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (showGroupSender) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _buildPeerAvatar(
+                              user: senderUser,
+                              fallbackTitle: senderName,
+                              radius: 14,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (message.replyToMessageID != null) ...[
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => unawaited(
-                                    _jumpToMessage(message.replyToMessageID!),
+                          const SizedBox(width: 6),
+                        ],
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: mine
+                                  ? AppColors.accentSoft
+                                  : AppColors.surfaceCard,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: mine
+                                    ? AppColors.accentStart
+                                        .withValues(alpha: 0.35)
+                                    : Colors.black.withValues(alpha: 0.08),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (showGroupSender) ...[
+                                  Text(
+                                    senderName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xFF2563EB),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    width: double.infinity,
-                                    margin: const EdgeInsets.only(bottom: 6),
-                                    padding: const EdgeInsets.fromLTRB(
-                                        8, 6, 8, 6),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.05),
+                                  const SizedBox(height: 4),
+                                ],
+                                if (message.replyToMessageID != null) ...[
+                                  Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => unawaited(
+                                        _jumpToMessage(message.replyToMessageID!),
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: const Border(
-                                        left: BorderSide(
-                                          color: AppColors.accentStart,
-                                          width: 3,
+                                      child: Container(
+                                        width: double.infinity,
+                                        margin: const EdgeInsets.only(bottom: 6),
+                                        padding: const EdgeInsets.fromLTRB(
+                                            8, 6, 8, 6),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              Colors.black.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: const Border(
+                                            left: BorderSide(
+                                              color: AppColors.accentStart,
+                                              width: 3,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          message.replyToHasImage
+                                              ? (message.replyToBody
+                                                          ?.trim()
+                                                          .isNotEmpty ==
+                                                      true
+                                                  ? context.l10n.photoWithText(
+                                                      formatChatMessagePreview(
+                                                        message.replyToBody!,
+                                                      ),
+                                                    )
+                                                  : context.l10n.photo)
+                                              : (message.replyToBody
+                                                          ?.trim()
+                                                          .isNotEmpty ==
+                                                      true
+                                                  ? formatChatMessagePreview(
+                                                      message.replyToBody!)
+                                                  : context.l10n.chatMessageHint),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    child: Text(
-                                      message.replyToHasImage
-                                          ? (message.replyToBody
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true
-                                              ? context.l10n.photoWithText(
-                                                  formatChatMessagePreview(
-                                                    message.replyToBody!,
-                                                  ),
-                                                )
-                                              : context.l10n.photo)
-                                          : (message.replyToBody
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true
-                                              ? formatChatMessagePreview(
-                                                  message.replyToBody!)
-                                              : context.l10n.chatMessageHint),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
                                   ),
-                                ),
-                              ),
-                            ],
-                            if (message.hasImage) ...[
-                              Builder(
-                                builder: (context) {
-                                  final count = message.imageCount > 0
-                                      ? message.imageCount.clamp(1, 3)
-                                      : 1;
-                                  final side = count == 1
-                                      ? 168.0
-                                      : (count == 2 ? 128.0 : 88.0);
-                                  return Row(
+                                ],
+                                if (message.hasImage) ...[
+                                  Builder(
+                                    builder: (context) {
+                                      final count = message.imageCount > 0
+                                          ? message.imageCount.clamp(1, 3)
+                                          : 1;
+                                      final side = count == 1
+                                          ? 168.0
+                                          : (count == 2 ? 128.0 : 88.0);
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          for (var i = 0; i < count; i++) ...[
+                                            if (i > 0) const SizedBox(width: 4),
+                                            ChatMessageImageThumb(
+                                              messageID: message.id,
+                                              imageIndex: i,
+                                              width: side,
+                                              height: side,
+                                              borderRadius: 10,
+                                            ),
+                                          ],
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                  if (message.body.trim().isNotEmpty)
+                                    const SizedBox(height: 6),
+                                ],
+                                if (message.body.trim().isNotEmpty)
+                                  _ChatMessageBody(
+                                    body: _displayBodyFor(message, mine: mine),
+                                  ),
+                                const SizedBox(height: 4),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      for (var i = 0; i < count; i++) ...[
-                                        if (i > 0) const SizedBox(width: 4),
-                                        ChatMessageImageThumb(
-                                          messageID: message.id,
-                                          imageIndex: i,
-                                          width: side,
-                                          height: side,
-                                          borderRadius: 10,
+                                      if (message.editedAt != null &&
+                                          message.editedAt!.isNotEmpty) ...[
+                                        Text(
+                                          context.l10n.messageEdited,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 10,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      Text(
+                                        _formatBubbleDateTime(message.createdAt),
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      if (mine) ...[
+                                        const SizedBox(width: 4),
+                                        MessageStatusTicks(
+                                          deliveredAt: message.deliveredAt,
+                                          readAt: message.readAt,
+                                          size: 14,
                                         ),
                                       ],
                                     ],
-                                  );
-                                },
-                              ),
-                              if (message.body.trim().isNotEmpty)
-                                const SizedBox(height: 6),
-                            ],
-                            if (message.body.trim().isNotEmpty)
-                              _ChatMessageBody(
-                                body: _displayBodyFor(message, mine: mine),
-                              ),
-                            const SizedBox(height: 4),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (message.editedAt != null &&
-                                      message.editedAt!.isNotEmpty) ...[
-                                    Text(
-                                      context.l10n.messageEdited,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 10,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ],
-                                  Text(
-                                    _formatBubbleDateTime(message.createdAt),
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11,
-                                    ),
                                   ),
-                                  if (mine) ...[
-                                    const SizedBox(width: 4),
-                                    MessageStatusTicks(
-                                      deliveredAt: message.deliveredAt,
-                                      readAt: message.readAt,
-                                      size: 14,
-                                    ),
-                                  ],
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   );
                 },
@@ -2736,6 +2948,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                   child: _buildChatToolbar(
                     peerUser: peerUser,
+                    chat: currentChat,
                     title: title,
                     presence: peerPresence,
                   ),

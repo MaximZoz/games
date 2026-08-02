@@ -8,7 +8,7 @@ import (
 
 func TestNormalizeGameSettingsDefaultsAndValid(t *testing.T) {
 	s, errMsg := normalizeGameSettings(gameSettingsBody{
-		TurnTimeSec:          30,
+		TurnTimeSec:          20,
 		Variant:              "gomoku",
 		SwapRule:             true,
 		FirstMoveRestriction: true,
@@ -20,7 +20,7 @@ func TestNormalizeGameSettingsDefaultsAndValid(t *testing.T) {
 	if s.GameType != store.GameTypeTicTacToe {
 		t.Fatalf("game_type=%s", s.GameType)
 	}
-	if s.TurnTimeSec != 30 || s.GridSize != 15 || s.Variant != "gomoku" || s.StakeBronze != 50 {
+	if s.TurnTimeSec != 20 || s.GridSize != 15 || s.Variant != "gomoku" || s.StakeBronze != 50 {
 		t.Fatalf("unexpected %+v", s)
 	}
 	if s.SwapRule || s.FirstMoveRestriction {
@@ -55,7 +55,7 @@ func TestNormalizeGameSettingsRejects(t *testing.T) {
 }
 
 func TestNormalizeGameSettingsVariants(t *testing.T) {
-	for _, tt := range []int{0, 10, 30, 60, 600} {
+	for _, tt := range []int{0, 20, 60, 600} {
 		for _, v := range []string{"classic", "gomoku", "ultimate", "multi3", "multi4"} {
 			s, errMsg := normalizeGameSettings(gameSettingsBody{
 				TurnTimeSec: tt,

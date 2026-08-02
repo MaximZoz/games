@@ -48,7 +48,7 @@ void main() {
 
     test('toJson roundtrip', () {
       const original = UserGameSettings(
-        turnTimeSec: 30,
+        turnTimeSec: 20,
         variant: 'multi3',
         swapRule: true,
         firstMoveRestriction: true,

@@ -20,6 +20,7 @@ import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -90,6 +91,7 @@ const List<IconData> _presetAvatarIcons = [
 class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   final Set<String> _invitedFriendIds = {};
   final Set<String> _invitingFriendIds = {};
+  final Set<String> _friendRequestInFlight = {};
   bool _isLeaving = false;
   bool _isJoining = false;
   bool _linkCopied = false;
@@ -131,7 +133,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       lobbyId: widget.lobbyId,
       onRealtimeEvent: (event) {
         final type = event['type']?.toString();
-        if (type == 'chat_message' || type == 'chat_list_changed') {
+        if (type == 'chat_message' ||
+            type == 'chat_list_changed' ||
+            type == 'lobby_updated') {
           refreshChatsList(ref, force: true).catchError((_) {});
         }
       },
@@ -203,6 +207,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final isCreator = currentUser?.id == lobby.creatorId;
               final isInviteMode = lobby.status == 'waiting_invite';
               final isMatchmakeMode = lobby.status == 'waiting_matchmake';
+              final showMultiLobby = lobby.maxPlayers > 2;
               if (lobby.gameId != null) {
                 return const Center(
                   child: CircularProgressIndicator(
@@ -250,6 +255,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       ),
                                       const SizedBox(height: 16),
                                     ],
+                                    if (showMultiLobby) ...[
+                                      _buildMultiLobbyCard(
+                                        context,
+                                        lobby,
+                                        currentUser?.id,
+                                      ),
+                                      const SizedBox(height: 12),
+                                    ],
                                     _buildShareInviteLinkCard(context),
                                     const SizedBox(height: 12),
                                     if (expandFriends)
@@ -278,6 +291,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (isInviteMode && isCreator) ...[
+                                  if (showMultiLobby) ...[
+                                    _buildMultiLobbyCard(
+                                      context,
+                                      lobby,
+                                      currentUser?.id,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                   // Ссылка — максимально высоко (заголовок уже в AppBar).
                                   _buildShareInviteLinkCard(context),
                                   const SizedBox(height: 12),
@@ -307,6 +328,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     ),
                                   ),
                                 ] else if (isMatchmakeMode) ...[
+                                  if (showMultiLobby) ...[
+                                    _buildMultiLobbyCard(
+                                      context,
+                                      lobby,
+                                      currentUser?.id,
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
                                   // Поиск + правила по высоте контента (без растягивания).
                                   GradientCard(
                                     padding: const EdgeInsets.all(24),
@@ -339,6 +368,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   const SizedBox(height: 16),
                                   _buildMatchmakeInfoCard(context, lobby),
                                 ] else if (isInviteMode && !isCreator) ...[
+                                  if (showMultiLobby) ...[
+                                    _buildMultiLobbyCard(
+                                      context,
+                                      lobby,
+                                      currentUser?.id,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                   Expanded(
                                     child: GradientCard(
                                       padding: const EdgeInsets.all(24),
@@ -782,6 +819,208 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
+  Widget _buildMultiLobbyCard(
+    BuildContext context,
+    LobbyItem lobby,
+    String? currentUserId,
+  ) {
+    final players = lobby.players;
+    return GradientCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Игроки ${lobby.playersCount}/${lobby.maxPlayers}',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 42,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (var i = 0; i < players.length; i++)
+                        Positioned(
+                          left: i * 30.0,
+                          child: Tooltip(
+                            message: players[i].displayName.trim().isNotEmpty
+                                ? players[i].displayName
+                                : context.l10n.commonUser,
+                            child: _LobbyPlayerAvatar(player: players[i]),
+                          ),
+                        ),
+                      for (var i = players.length;
+                          i < lobby.maxPlayers && i < 4;
+                          i++)
+                        Positioned(
+                          left: i * 30.0,
+                          child: const _LobbyEmptySeatAvatar(),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: 'Чат группы',
+            onPressed: (lobby.chatId ?? '').trim().isEmpty
+                ? null
+                : () => _openGroupChat(context, lobby),
+            icon: const Icon(Icons.forum_rounded),
+            color: AppColors.accentStart,
+          ),
+          IconButton(
+            tooltip: context.l10n.friendsAdd,
+            onPressed: players.any((p) => p.id != currentUserId)
+                ? () => _showLobbyPlayersFriendSheet(
+                      context,
+                      lobby,
+                      currentUserId,
+                    )
+                : null,
+            icon: const Icon(Icons.person_add_alt_1_rounded),
+            color: AppColors.accentStart,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openGroupChat(BuildContext context, LobbyItem lobby) {
+    final chatId = (lobby.chatId ?? '').trim();
+    if (chatId.isEmpty) return;
+    unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+    final returnPath = Uri(
+      path: '/games/tictactoe/lobby/${lobby.id}',
+      queryParameters: widget.initialMode == null
+          ? null
+          : {'mode': widget.initialMode!},
+    ).toString();
+    final route = Uri(
+      path: '/chats/$chatId',
+      queryParameters: {
+        'from': 'games',
+        'game': returnPath,
+        'name': 'Лобби ${variantLabel(lobby.variant)}',
+      },
+    ).toString();
+    context.push(route);
+  }
+
+  Future<void> _showLobbyPlayersFriendSheet(
+    BuildContext context,
+    LobbyItem lobby,
+    String? currentUserId,
+  ) async {
+    final players = lobby.players
+        .where((p) => p.id.isNotEmpty && p.id != currentUserId)
+        .toList(growable: false);
+    if (players.isEmpty) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.friendsAdd,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  for (final player in players)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: _LobbyPlayerAvatar(player: player),
+                        title: Text(
+                          player.displayName.trim().isNotEmpty
+                              ? player.displayName
+                              : context.l10n.commonUser,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing:
+                            _friendRequestInFlight.contains(player.id)
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.accentStart,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.person_add_alt_1_rounded,
+                                    color: AppColors.accentStart,
+                                  ),
+                        onTap: _friendRequestInFlight.contains(player.id)
+                            ? null
+                            : () => _sendLobbyFriendRequest(
+                                  sheetContext,
+                                  player.id,
+                                ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _sendLobbyFriendRequest(
+    BuildContext sheetContext,
+    String userId,
+  ) async {
+    setState(() => _friendRequestInFlight.add(userId));
+    try {
+      await ref.read(friendsRepositoryProvider).sendRequest(userId);
+      await refreshFriendsSnapshot(ref);
+      if (!mounted) return;
+      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+      showAppSnackBar(
+        context,
+        message: context.l10n.friendsRequestSent,
+        kind: AppSnackKind.success,
+      );
+    } on FriendsException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) setState(() => _friendRequestInFlight.remove(userId));
+    }
+  }
+
   Future<void> _copyInviteLink() async {
     final url = buildInviteLobbyShareUrl(
       lobbyId: widget.lobbyId,
@@ -804,6 +1043,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(widget.lobbyId);
       if (!context.mounted) return;
+      if (result.joined && result.waitingMore) {
+        ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+        ref.invalidate(openLobbiesProvider);
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: widget.lobbyId),
+            );
+        await refreshChatsList(ref, force: true).catchError((_) {});
+        return;
+      }
       if (result.joined && result.gameId != null) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
         ref.invalidate(lobbyDetailProvider(widget.lobbyId));
@@ -1150,6 +1399,90 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               text ?? '',
               style: TextStyle(fontSize: 13, color: fg),
             ),
+    );
+  }
+}
+
+class _LobbyPlayerAvatar extends StatelessWidget {
+  const _LobbyPlayerAvatar({required this.player});
+
+  final LobbyPlayer player;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 40.0;
+    const radius = size / 2;
+    Widget avatar;
+    if (player.avatarKind == 'file' &&
+        player.avatarValue != null &&
+        player.avatarValue!.trim().isNotEmpty) {
+      final img = AvatarMemoryCache.fromAvatarValue(player.avatarValue!);
+      avatar = img == null
+          ? _letterAvatar(radius)
+          : CircleAvatar(radius: radius, backgroundImage: img);
+    } else if (player.avatarKind == 'preset' && player.avatarValue != null) {
+      final idx = int.tryParse(player.avatarValue!);
+      avatar = idx != null && idx >= 0 && idx < _presetAvatarIcons.length
+          ? CircleAvatar(
+              radius: radius,
+              backgroundColor: AppColors.accentSoft,
+              child: Icon(
+                _presetAvatarIcons[idx],
+                color: AppColors.accentStart,
+                size: radius,
+              ),
+            )
+          : _letterAvatar(radius);
+    } else {
+      avatar = _letterAvatar(radius);
+    }
+    return FramedAvatar(
+      size: size,
+      borderWidth: 2.6,
+      frameCode: player.frameCode,
+      frameColor: player.frameColor,
+      child: avatar,
+    );
+  }
+
+  Widget _letterAvatar(double radius) {
+    final name = player.displayName.trim();
+    final letter = name.isEmpty ? '?' : name[0].toUpperCase();
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: AppColors.accentSoft,
+      child: Text(
+        letter,
+        style: const TextStyle(
+          color: AppColors.accentStart,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _LobbyEmptySeatAvatar extends StatelessWidget {
+  const _LobbyEmptySeatAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.surfaceCard,
+        border: Border.all(
+          color: AppColors.accentSoft.withValues(alpha: 0.9),
+          width: 2,
+        ),
+      ),
+      child: const Icon(
+        Icons.person_outline_rounded,
+        color: AppColors.textSecondary,
+        size: 20,
+      ),
     );
   }
 }

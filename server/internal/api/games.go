@@ -33,8 +33,8 @@ const (
 	botTimeoutSeconds           = 30
 )
 
-// turn_time_sec: 0=unlimited, 10, 30, 60, 600
-var validTurnTimeSec = map[int]bool{0: true, 10: true, 30: true, 60: true, 600: true}
+// turn_time_sec: 0=unlimited, 20, 60, 600
+var validTurnTimeSec = map[int]bool{0: true, 20: true, 60: true, 600: true}
 
 // legacy grid sizes (старые клиенты); новые режимы задаются variant.
 var validGridSize = map[int]bool{3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 15: true}
@@ -73,21 +73,32 @@ type MoveBody struct {
 	Cell int `json:"cell"` // 0 to N*N-1
 }
 
+type LobbyPlayerItem struct {
+	ID           string  `json:"id"`
+	DisplayName  string  `json:"display_name,omitempty"`
+	AvatarKind   string  `json:"avatar_kind,omitempty"`
+	AvatarValue  *string `json:"avatar_value,omitempty"`
+}
+
 type LobbyItem struct {
-	ID                   string  `json:"id"`
-	CreatorID            string  `json:"creator_id"`
-	CreatorName          string  `json:"creator_name,omitempty"`
-	OpponentID           *string `json:"opponent_id,omitempty"`
-	Status               string  `json:"status"`
-	GameID               *string `json:"game_id,omitempty"`
-	CreatedAt            string  `json:"created_at"`
-	TurnTimeSec          int     `json:"turn_time_sec,omitempty"`
-	Variant              string  `json:"variant,omitempty"`
-	GridSize             int     `json:"grid_size,omitempty"`
-	MaxPlayers           int     `json:"max_players,omitempty"`
-	SwapRule             bool    `json:"swap_rule,omitempty"`              // deprecated
-	FirstMoveRestriction bool    `json:"first_move_restriction,omitempty"` // deprecated
-	StakeBronze          int     `json:"stake_bronze,omitempty"`
+	ID                   string            `json:"id"`
+	CreatorID            string            `json:"creator_id"`
+	CreatorName          string            `json:"creator_name,omitempty"`
+	OpponentID           *string           `json:"opponent_id,omitempty"`
+	Status               string            `json:"status"`
+	GameID               *string           `json:"game_id,omitempty"`
+	CreatedAt            string            `json:"created_at"`
+	TurnTimeSec          int               `json:"turn_time_sec,omitempty"`
+	Variant              string            `json:"variant,omitempty"`
+	GridSize             int               `json:"grid_size,omitempty"`
+	MaxPlayers           int               `json:"max_players,omitempty"`
+	PlayersCount         int               `json:"players_count,omitempty"`
+	PlayerIDs            []string          `json:"player_ids,omitempty"`
+	Players              []LobbyPlayerItem `json:"players,omitempty"`
+	ChatID               string            `json:"chat_id,omitempty"`
+	SwapRule             bool              `json:"swap_rule,omitempty"`              // deprecated
+	FirstMoveRestriction bool              `json:"first_move_restriction,omitempty"` // deprecated
+	StakeBronze          int               `json:"stake_bronze,omitempty"`
 }
 
 type GameStateItem struct {
@@ -116,8 +127,12 @@ type GameStateItem struct {
 	StakeBronze          int      `json:"stake_bronze,omitempty"`
 	// Кто предложил ничью (user id); пусто — предложения нет.
 	DrawOfferBy          string   `json:"draw_offer_by,omitempty"`
+	ChatID               string   `json:"chat_id,omitempty"`
+	EliminatedMarks      []string `json:"eliminated_marks,omitempty"`
 	XDisplayName         *string  `json:"x_display_name,omitempty"`
 	ODisplayName         *string  `json:"o_display_name,omitempty"`
+	TDisplayName         *string  `json:"t_display_name,omitempty"`
+	SDisplayName         *string  `json:"s_display_name,omitempty"`
 	XAvatarKind          string   `json:"x_avatar_kind,omitempty"`
 	XAvatarValue         *string  `json:"x_avatar_value,omitempty"`
 	XFrameColor          string   `json:"x_frame_color,omitempty"`
@@ -126,23 +141,39 @@ type GameStateItem struct {
 	OAvatarValue         *string  `json:"o_avatar_value,omitempty"`
 	OFrameColor          string   `json:"o_frame_color,omitempty"`
 	OFrameCode           string   `json:"o_frame_code,omitempty"`
+	TAvatarKind          string   `json:"t_avatar_kind,omitempty"`
+	TAvatarValue         *string  `json:"t_avatar_value,omitempty"`
+	TFrameColor          string   `json:"t_frame_color,omitempty"`
+	TFrameCode           string   `json:"t_frame_code,omitempty"`
+	SAvatarKind          string   `json:"s_avatar_kind,omitempty"`
+	SAvatarValue         *string  `json:"s_avatar_value,omitempty"`
+	SFrameColor          string   `json:"s_frame_color,omitempty"`
+	SFrameCode           string   `json:"s_frame_code,omitempty"`
 }
 
 type gameUserLookup func(context.Context, uuid.UUID) (*store.User, error)
 
 func addGamePlayerMetadata(ctx context.Context, payload map[string]any, xUserID, oUserID string, lookup gameUserLookup) {
-	addPlayerMetadata := func(side, userID string) {
+	addGamePlayerMetadataSides(ctx, payload, map[string]string{"x": xUserID, "o": oUserID}, lookup)
+}
+
+func addGamePlayerMetadataSides(ctx context.Context, payload map[string]any, sides map[string]string, lookup gameUserLookup) {
+	for side, userID := range sides {
+		userID = strings.TrimSpace(userID)
+		if userID == "" {
+			continue
+		}
 		if isBot(userID) {
 			payload[side+"_display_name"] = "Бот"
-			return
+			continue
 		}
 		userUUID, err := uuid.Parse(userID)
 		if err != nil {
-			return
+			continue
 		}
 		user, err := lookup(ctx, userUUID)
 		if err != nil || user == nil {
-			return
+			continue
 		}
 		if user.DisplayName != nil && *user.DisplayName != "" {
 			payload[side+"_display_name"] = *user.DisplayName
@@ -154,16 +185,45 @@ func addGamePlayerMetadata(ctx context.Context, payload map[string]any, xUserID,
 			payload[side+"_avatar_value"] = *user.AvatarValue
 		}
 	}
-
-	addPlayerMetadata("x", xUserID)
-	addPlayerMetadata("o", oUserID)
 }
 
 func (h *GamesHandler) addGamePlayerMetadata(ctx context.Context, payload map[string]any, xUserID, oUserID string) {
-	addGamePlayerMetadata(ctx, payload, xUserID, oUserID, func(ctx context.Context, userID uuid.UUID) (*store.User, error) {
+	h.addGamePlayerMetadataFromMap(ctx, payload, map[string]string{
+		"x": xUserID,
+		"o": oUserID,
+	})
+}
+
+func (h *GamesHandler) addGamePlayerMetadataFromMap(ctx context.Context, payload map[string]any, sides map[string]string) {
+	addGamePlayerMetadataSides(ctx, payload, sides, func(ctx context.Context, userID uuid.UUID) (*store.User, error) {
 		return store.GetUserByID(ctx, h.Pool, userID)
 	})
-	h.addGamePlayerFrames(ctx, payload, xUserID, oUserID)
+	ids := make([]uuid.UUID, 0, len(sides))
+	for _, uid := range sides {
+		if isBot(uid) {
+			continue
+		}
+		if u, e := uuid.Parse(uid); e == nil {
+			ids = append(ids, u)
+		}
+	}
+	frames, err := store.EquippedFramesMap(ctx, h.Pool, ids)
+	if err != nil {
+		return
+	}
+	for side, uid := range sides {
+		if isBot(uid) {
+			continue
+		}
+		u, e := uuid.Parse(uid)
+		if e != nil {
+			continue
+		}
+		if f, ok := frames[u]; ok {
+			payload[side+"_frame_color"] = f.Color
+			payload[side+"_frame_code"] = f.Code
+		}
+	}
 }
 
 func (h *GamesHandler) addGamePlayerFrames(ctx context.Context, payload map[string]any, xUserID, oUserID string) {
@@ -340,7 +400,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 	turnTimeSec := body.TurnTimeSec
 	if !validTurnTimeSec[turnTimeSec] {
-		WriteErr(w, r, http.StatusBadRequest, "turn_time_sec must be 0, 10, 30, 60 or 600")
+		WriteErr(w, r, http.StatusBadRequest, "turn_time_sec must be 0, 20, 60 or 600")
 		return
 	}
 	cfg, variant := resolveVariantConfig(body.Variant, body.GridSize)
@@ -437,13 +497,36 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
+
+	chatIDStr := ""
+	if cfg.MaxPlayers > 2 {
+		title := "Крестики-нолики"
+		switch variant {
+		case gameengine.VariantMulti3:
+			title = "На троих"
+		case gameengine.VariantMulti4:
+			title = "На четверых"
+		}
+		if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{userID}, title, "tictactoe"); cerr == nil {
+			chatIDStr = cid.String()
+			h.Rdb.HSet(ctx, key, "chat_id", chatIDStr)
+			h.broadcast([]uuid.UUID{userID}, map[string]any{
+				"type": "chat_list_changed",
+			})
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
+	resp := map[string]any{
 		"lobby_id":   lobbyID,
 		"status":     status,
 		"created_at": now,
 		"creator_id": userID.String(),
-	})
+	}
+	if chatIDStr != "" {
+		resp["chat_id"] = chatIDStr
+	}
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 type RematchBody struct {
@@ -1250,17 +1333,25 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	}())
 	gridSize := cfg.GridSize
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	playerIDs := parsePlayerIDsCSV(m["player_ids"])
+	if len(playerIDs) == 0 {
+		playerIDs = []string{creatorID}
+	}
 	item := LobbyItem{
-		ID:          lobbyID,
-		CreatorID:   creatorID,
-		CreatorName: creatorName,
-		Status:      status,
-		CreatedAt:   m["created_at"],
-		TurnTimeSec: turnTimeSec,
-		Variant:     string(variant),
-		GridSize:    gridSize,
-		MaxPlayers:  cfg.MaxPlayers,
-		StakeBronze: stakeBronze,
+		ID:           lobbyID,
+		CreatorID:    creatorID,
+		CreatorName:  creatorName,
+		Status:       status,
+		CreatedAt:    m["created_at"],
+		TurnTimeSec:  turnTimeSec,
+		Variant:      string(variant),
+		GridSize:     gridSize,
+		MaxPlayers:   cfg.MaxPlayers,
+		PlayersCount: len(playerIDs),
+		PlayerIDs:    playerIDs,
+		Players:      h.loadLobbyPlayers(ctx, playerIDs),
+		ChatID:       m["chat_id"],
+		StakeBronze:  stakeBronze,
 	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
@@ -1271,6 +1362,28 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(item)
+}
+
+func (h *GamesHandler) loadLobbyPlayers(ctx context.Context, playerIDs []string) []LobbyPlayerItem {
+	out := make([]LobbyPlayerItem, 0, len(playerIDs))
+	for _, idStr := range playerIDs {
+		p := LobbyPlayerItem{ID: idStr, DisplayName: "Игрок"}
+		uid, err := uuid.Parse(idStr)
+		if err != nil {
+			out = append(out, p)
+			continue
+		}
+		u, err := store.GetUserByID(ctx, h.Pool, uid)
+		if err == nil && u != nil {
+			if u.DisplayName != nil && *u.DisplayName != "" {
+				p.DisplayName = *u.DisplayName
+			}
+			p.AvatarKind = u.AvatarKind
+			p.AvatarValue = u.AvatarValue
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lobbyID string) {
@@ -1493,26 +1606,50 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			return
 		}
 		notify := make([]uuid.UUID, 0, len(players))
+		memberUUIDs := make([]uuid.UUID, 0, len(players))
 		for _, p := range players {
 			if u, e := uuid.Parse(p); e == nil {
 				notify = append(notify, u)
+				memberUUIDs = append(memberUUIDs, u)
 			}
 		}
-		h.broadcast(notify, map[string]any{
-			"type":         "lobby_updated",
-			"lobby_id":     lobbyID,
-			"player_ids":   players,
+		chatIDStr := m["chat_id"]
+		if cfg.MaxPlayers > 2 {
+			title := "На троих"
+			if variant == gameengine.VariantMulti4 {
+				title = "На четверых"
+			}
+			if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, memberUUIDs, title, "tictactoe"); cerr == nil {
+				chatIDStr = cid.String()
+				h.Rdb.HSet(ctx, key, "chat_id", chatIDStr)
+			}
+		}
+		payload := map[string]any{
+			"type":          "lobby_updated",
+			"lobby_id":      lobbyID,
+			"player_ids":    players,
 			"players_count": len(players),
-			"max_players":  cfg.MaxPlayers,
-		})
+			"max_players":   cfg.MaxPlayers,
+			"players":       h.loadLobbyPlayers(ctx, players),
+		}
+		if chatIDStr != "" {
+			payload["chat_id"] = chatIDStr
+		}
+		h.broadcast(notify, payload)
+		h.broadcast(notify, map[string]any{"type": "chat_list_changed"})
+		setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"joined":         true,
-			"status":         status,
-			"players_count":  len(players),
-			"max_players":    cfg.MaxPlayers,
-			"waiting_more":   true,
-		})
+		resp := map[string]any{
+			"joined":        true,
+			"status":        status,
+			"players_count": len(players),
+			"max_players":   cfg.MaxPlayers,
+			"waiting_more":  true,
+		}
+		if chatIDStr != "" {
+			resp["chat_id"] = chatIDStr
+		}
+		_ = json.NewEncoder(w).Encode(resp)
 		return
 	}
 
@@ -1533,6 +1670,19 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		if pb < stakeBronze {
 			WriteErr(w, r, http.StatusConflict, "a player has insufficient balance")
 			return
+		}
+	}
+
+	chatIDStr := m["chat_id"]
+	if cfg.MaxPlayers > 2 {
+		title := "На троих"
+		if variant == gameengine.VariantMulti4 {
+			title = "На четверых"
+		}
+		if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, uuids, title, "tictactoe"); cerr == nil {
+			chatIDStr = cid.String()
+			h.Rdb.HSet(ctx, key, "chat_id", chatIDStr)
+			h.broadcast(uuids, map[string]any{"type": "chat_list_changed"})
 		}
 	}
 
@@ -1575,6 +1725,9 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		"stake_bronze", strconv.Itoa(stakeBronze),
 		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
 	}
+	if chatIDStr != "" {
+		gameFields = append(gameFields, "chat_id", chatIDStr)
+	}
 	gameFields = append(gameFields, markFieldsForRedis(assignment)...)
 	if variant == gameengine.VariantUltimate {
 		gameFields = append(gameFields, "next_board", "-1", "meta_board", formatMetaBoard(make([]string, 9)))
@@ -1616,6 +1769,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			staleLobbyID := strings.TrimPrefix(k, "lobby:")
 			if staleLobbyID != "" {
 				h.cleanupInviteLobbyChatMessages(ctx, staleLobbyID)
+				_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, staleLobbyID)
 			}
 			if isDupFromCreator && staleLobbyID != "" {
 				h.broadcast([]uuid.UUID{userID}, map[string]any{
@@ -1630,20 +1784,28 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
-	h.broadcast(uuids, map[string]any{
+	startPayload := map[string]any{
 		"type":        "lobby_updated",
 		"lobby_id":    lobbyID,
 		"game_id":     gameID,
 		"opponent_id": userID.String(),
-	})
+	}
+	if chatIDStr != "" {
+		startPayload["chat_id"] = chatIDStr
+	}
+	h.broadcast(uuids, startPayload)
 	h.publishGameStarted(uuids, gameID, lobbyID)
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
+	resp := map[string]any{
 		"joined":  true,
 		"game_id": gameID,
 		"status":  lobbyStatusInGame,
-	})
+	}
+	if chatIDStr != "" {
+		resp["chat_id"] = chatIDStr
+	}
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // cleanupInviteLobbyChatMessages удаляет chat-сообщения со ссылкой на лобби
@@ -1687,8 +1849,8 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
-		// Лобби уже нет — всё равно убрать устаревшие invite-ссылки из чатов.
 		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -1696,53 +1858,111 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	creatorID := m["creator_id"]
 	opponentID := m["opponent_id"]
 	status := m["status"]
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{creatorID}
+	}
 
 	if status == lobbyStatusInGame {
 		WriteErr(w, r, http.StatusBadRequest, "game already started")
 		return
 	}
 
-	if creatorID != userID.String() && opponentID != userID.String() {
+	inLobby := creatorID == userID.String() || opponentID == userID.String()
+	for _, p := range players {
+		if p == userID.String() {
+			inLobby = true
+			break
+		}
+	}
+	if !inLobby {
 		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 
-	otherUserID := creatorID
-	if creatorID == userID.String() {
-		otherUserID = opponentID
+	clearUserActiveLobby(ctx, h.Rdb, userID)
+
+	// Создатель ушёл или остался один — закрываем лобби и групповой чат.
+	dissolve := creatorID == userID.String()
+	remaining := make([]string, 0, len(players))
+	for _, p := range players {
+		if p != userID.String() {
+			remaining = append(remaining, p)
+		}
 	}
-	// Для invite-лобби opponent_id пуст, уведомляем invite_target
-	if otherUserID == "" && status == lobbyStatusWaitingInvite {
-		otherUserID = m["invite_target_id"]
+	if !dissolve && len(remaining) == 0 {
+		dissolve = true
 	}
-	if otherUserID != "" {
-		otherUUID, err := uuid.Parse(otherUserID)
-		if err == nil {
-			h.broadcast([]uuid.UUID{otherUUID}, map[string]any{
-				"type":     "lobby_updated",
-				"lobby_id": lobbyID,
-				"left":     true,
-			})
+
+	notifyIDs := make([]uuid.UUID, 0, len(players))
+	for _, p := range players {
+		if u, e := uuid.Parse(p); e == nil {
+			notifyIDs = append(notifyIDs, u)
 		}
 	}
 
-	clearUserActiveLobby(ctx, h.Rdb, userID)
-	h.Rdb.Del(ctx, key)
-	h.Rdb.Del(ctx, key+":invited")
-	if status == lobbyStatusWaitingMatchmake {
-		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		_, variant := resolveVariantConfig(m["variant"], func() int {
-			gs, _ := strconv.Atoi(m["grid_size"])
-			return gs
-		}())
-		h.Rdb.LRem(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze), 0, userID.String()+":"+lobbyID)
+	if dissolve {
+		h.Rdb.Del(ctx, key)
+		h.Rdb.Del(ctx, key+":invited")
+		if status == lobbyStatusWaitingMatchmake {
+			turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+			stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+			_, variant := resolveVariantConfig(m["variant"], func() int {
+				gs, _ := strconv.Atoi(m["grid_size"])
+				return gs
+			}())
+			h.Rdb.LRem(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze), 0, creatorID+":"+lobbyID)
+		}
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
+		h.broadcast(notifyIDs, map[string]any{
+			"type":     "lobby_updated",
+			"lobby_id": lobbyID,
+			"left":     true,
+			"closed":   true,
+		})
+		h.broadcast(notifyIDs, map[string]any{"type": "chat_list_changed"})
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": true})
+		return
 	}
-	// Ссылка «Войти в игру» в чатах больше не актуальна.
-	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+
+	// Обычный участник вышел — лобби ждёт дальше.
+	h.Rdb.HSet(ctx, key, "player_ids", formatPlayerIDsCSV(remaining))
+	if opponentID == userID.String() {
+		newOpp := ""
+		for _, p := range remaining {
+			if p != creatorID {
+				newOpp = p
+				break
+			}
+		}
+		h.Rdb.HSet(ctx, key, "opponent_id", newOpp)
+	}
+	if chatIDStr := strings.TrimSpace(m["chat_id"]); chatIDStr != "" {
+		if cid, e := uuid.Parse(chatIDStr); e == nil {
+			_ = store.RemoveChatMember(ctx, h.Pool, cid, userID)
+			h.broadcast([]uuid.UUID{userID}, map[string]any{"type": "chat_list_changed"})
+		}
+	}
+	rest := make([]uuid.UUID, 0, len(remaining))
+	for _, p := range remaining {
+		if u, e := uuid.Parse(p); e == nil {
+			rest = append(rest, u)
+		}
+	}
+	h.broadcast(rest, map[string]any{
+		"type":          "lobby_updated",
+		"lobby_id":      lobbyID,
+		"player_ids":    remaining,
+		"players_count": len(remaining),
+		"players":       h.loadLobbyPlayers(ctx, remaining),
+		"left_user_id":  userID.String(),
+	})
+	h.broadcast(rest, map[string]any{"type": "chat_list_changed"})
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"left": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": false})
 }
 
 func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {
@@ -1799,8 +2019,75 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		return false
 	}
 	turn := m["turn"]
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	gridSize := cfg.GridSize
+	gameID := strings.TrimPrefix(key, "game:")
+	board := parseBoard(m["board"], gridSize)
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	humans := humanUserIDsFromGame(m)
+
+	// Multi: таймаут = выбывание, как сдача.
+	if cfg.MaxPlayers > 2 {
+		eliminated := parseEliminatedMarks(m["eliminated_marks"])
+		if !eliminated[turn] {
+			eliminated[turn] = true
+		}
+		if uid := markOwnerUserID(m, turn); uid != "" {
+			if u, e := uuid.Parse(uid); e == nil {
+				clearUserActiveGame(ctx, h.Rdb, u)
+			}
+		}
+		alive := aliveMarks(cfg.Marks, eliminated)
+		elimCSV := formatEliminatedMarks(eliminated)
+		if len(alive) <= 1 {
+			winnerMark := ""
+			if len(alive) == 1 {
+				winnerMark = alive[0]
+			}
+			status := wonStatusForMark(winnerMark)
+			h.Rdb.HSet(ctx, key,
+				"status", status, "winner", winnerMark, "timeout", "1",
+				"eliminated_marks", elimCSV,
+			)
+			h.Rdb.Expire(ctx, key, 24*time.Hour)
+			h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "timeout", m["started_at"])
+			for _, u := range humans {
+				clearUserActiveGame(ctx, h.Rdb, u)
+			}
+			h.broadcast(humans, map[string]any{
+				"type": "game_state", "game_id": gameID,
+				"board": board, "turn": winnerMark, "winner": winnerMark,
+				"status": status, "timeout": true,
+				"eliminated_marks": strings.Split(elimCSV, ","),
+				"variant":         string(variant),
+			})
+			return true
+		}
+		next := nextAliveMark(cfg.Marks, turn, eliminated)
+		fields := []any{"eliminated_marks", elimCSV, "turn", next, "timeout", "1"}
+		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+		if turnTimeSec > 0 {
+			fields = append(fields, "turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnTimeSec), 10))
+		}
+		h.Rdb.HSet(ctx, key, fields...)
+		h.Rdb.Expire(ctx, key, 24*time.Hour)
+		payload := map[string]any{
+			"type": "game_state", "game_id": gameID,
+			"board": board, "turn": next, "status": gameStatusActive,
+			"timeout": true, "eliminated_marks": strings.Split(elimCSV, ","),
+			"variant": string(variant),
+		}
+		if turnTimeSec > 0 {
+			payload["turn_time_sec"] = turnTimeSec
+			payload["turn_deadline"] = time.Now().UTC().Unix() + int64(turnTimeSec)
+		}
+		h.broadcast(humans, payload)
+		return true
+	}
+
 	winner := "o"
 	if turn == "o" {
 		winner = "x"
@@ -1811,20 +2098,12 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	}
 	h.Rdb.HSet(ctx, key, "status", status, "winner", winner, "timeout", "1")
 	h.Rdb.Expire(ctx, key, 24*time.Hour)
-	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	gridSize := 3
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
-		}
-	}
-	h.onGameFinished(ctx, strings.TrimPrefix(key, "game:"), xUserID, oUserID, gridSize, stakeBronze, status, "timeout", m["started_at"])
-	for _, u := range humanUserIDs(xUserID, oUserID) {
+	h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "timeout", m["started_at"])
+	for _, u := range humans {
 		clearUserActiveGame(ctx, h.Rdb, u)
 	}
-	board := parseBoard(m["board"], gridSize)
-	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
-		"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
+	h.broadcast(humans, map[string]any{
+		"type": "game_state", "game_id": gameID,
 		"board": board, "turn": turn, "winner": winner, "status": status, "timeout": true,
 	})
 	return true
@@ -1882,23 +2161,26 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	if maxPlayers < 1 {
 		maxPlayers = cfg.MaxPlayers
 	}
+	elimMarks := parsePlayerIDsCSV(m["eliminated_marks"])
 	item := GameStateItem{
-		ID:          gameID,
-		Board:       board,
-		Turn:        m["turn"],
-		Status:      m["status"],
-		Variant:     string(variant),
-		GridSize:    gridSize,
-		MaxPlayers:  maxPlayers,
-		XUserID:     m["x_user_id"],
-		OUserID:     m["o_user_id"],
-		TUserID:     m["t_user_id"],
-		SUserID:     m["s_user_id"],
-		CanSwap:     false,
-		StakeBronze: stakeBronze,
-		Forfeit:     m["forfeit"] == "1",
-		Timeout:     m["timeout"] == "1",
-		DrawOfferBy: m["draw_offer_by"],
+		ID:              gameID,
+		Board:           board,
+		Turn:            m["turn"],
+		Status:          m["status"],
+		Variant:         string(variant),
+		GridSize:        gridSize,
+		MaxPlayers:      maxPlayers,
+		XUserID:         m["x_user_id"],
+		OUserID:         m["o_user_id"],
+		TUserID:         m["t_user_id"],
+		SUserID:         m["s_user_id"],
+		CanSwap:         false,
+		StakeBronze:     stakeBronze,
+		Forfeit:         m["forfeit"] == "1",
+		Timeout:         m["timeout"] == "1",
+		DrawOfferBy:     m["draw_offer_by"],
+		ChatID:          m["chat_id"],
+		EliminatedMarks: elimMarks,
 	}
 	if variant == gameengine.VariantUltimate {
 		nb := -1
@@ -1934,47 +2216,77 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	}
 
 	botName := "Бот"
-	frameIDs := make([]uuid.UUID, 0, 2)
-	var xUUID, oUUID uuid.UUID
-	var xParsed, oParsed bool
-	xUserID, oUserID := m["x_user_id"], m["o_user_id"]
-	if isBot(xUserID) {
-		item.XDisplayName = &botName
-	} else if id, err := uuid.Parse(xUserID); err == nil {
-		xUUID, xParsed = id, true
-		frameIDs = append(frameIDs, id)
-		if xu, err := store.GetUserByID(ctx, h.Pool, id); err == nil {
-			if xu.DisplayName != nil && *xu.DisplayName != "" {
-				item.XDisplayName = xu.DisplayName
-			}
-			item.XAvatarKind = xu.AvatarKind
-			item.XAvatarValue = xu.AvatarValue
-		}
+	type sideMeta struct {
+		uid   string
+		setDN func(*string)
+		setAK func(string)
+		setAV func(*string)
+		setFC func(string)
+		setFCode func(string)
 	}
-	if isBot(oUserID) {
-		item.ODisplayName = &botName
-	} else if id, err := uuid.Parse(oUserID); err == nil {
-		oUUID, oParsed = id, true
+	sides := []sideMeta{
+		{
+			uid: m["x_user_id"],
+			setDN: func(v *string) { item.XDisplayName = v },
+			setAK: func(v string) { item.XAvatarKind = v },
+			setAV: func(v *string) { item.XAvatarValue = v },
+			setFC: func(v string) { item.XFrameColor = v },
+			setFCode: func(v string) { item.XFrameCode = v },
+		},
+		{
+			uid: m["o_user_id"],
+			setDN: func(v *string) { item.ODisplayName = v },
+			setAK: func(v string) { item.OAvatarKind = v },
+			setAV: func(v *string) { item.OAvatarValue = v },
+			setFC: func(v string) { item.OFrameColor = v },
+			setFCode: func(v string) { item.OFrameCode = v },
+		},
+		{
+			uid: m["t_user_id"],
+			setDN: func(v *string) { item.TDisplayName = v },
+			setAK: func(v string) { item.TAvatarKind = v },
+			setAV: func(v *string) { item.TAvatarValue = v },
+			setFC: func(v string) { item.TFrameColor = v },
+			setFCode: func(v string) { item.TFrameCode = v },
+		},
+		{
+			uid: m["s_user_id"],
+			setDN: func(v *string) { item.SDisplayName = v },
+			setAK: func(v string) { item.SAvatarKind = v },
+			setAV: func(v *string) { item.SAvatarValue = v },
+			setFC: func(v string) { item.SFrameColor = v },
+			setFCode: func(v string) { item.SFrameCode = v },
+		},
+	}
+	frameIDs := make([]uuid.UUID, 0, 4)
+	parsed := make(map[uuid.UUID]sideMeta, 4)
+	for _, s := range sides {
+		if strings.TrimSpace(s.uid) == "" {
+			continue
+		}
+		if isBot(s.uid) {
+			s.setDN(&botName)
+			continue
+		}
+		id, err := uuid.Parse(s.uid)
+		if err != nil {
+			continue
+		}
 		frameIDs = append(frameIDs, id)
-		if ou, err := store.GetUserByID(ctx, h.Pool, id); err == nil {
-			if ou.DisplayName != nil && *ou.DisplayName != "" {
-				item.ODisplayName = ou.DisplayName
+		parsed[id] = s
+		if u, err := store.GetUserByID(ctx, h.Pool, id); err == nil && u != nil {
+			if u.DisplayName != nil && *u.DisplayName != "" {
+				s.setDN(u.DisplayName)
 			}
-			item.OAvatarKind = ou.AvatarKind
-			item.OAvatarValue = ou.AvatarValue
+			s.setAK(u.AvatarKind)
+			s.setAV(u.AvatarValue)
 		}
 	}
 	if frames, err := store.EquippedFramesMap(ctx, h.Pool, frameIDs); err == nil {
-		if xParsed {
-			if f, ok := frames[xUUID]; ok {
-				item.XFrameColor = f.Color
-				item.XFrameCode = f.Code
-			}
-		}
-		if oParsed {
-			if f, ok := frames[oUUID]; ok {
-				item.OFrameColor = f.Color
-				item.OFrameCode = f.Code
+		for id, s := range parsed {
+			if f, ok := frames[id]; ok {
+				s.setFC(f.Color)
+				s.setFCode(f.Code)
 			}
 		}
 	}
@@ -2033,6 +2345,15 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	}
 
 	turn := m["turn"]
+	myMark := markForUserID(m, userID.String())
+	if myMark == "" {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
+		WriteErr(w, r, http.StatusBadRequest, "you have forfeited")
+		return
+	}
 	if markOwnerUserID(m, turn) != userID.String() {
 		WriteErr(w, r, http.StatusBadRequest, "not your turn")
 		return
@@ -2052,11 +2373,21 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	status, winner := statusFromEngineResult(res)
 	xUserID := m["x_user_id"]
 	oUserID := m["o_user_id"]
+	nextTurn := res.State.Turn
+	if status == gameStatusActive {
+		elim := parseEliminatedMarks(m["eliminated_marks"])
+		nextTurn = skipToAliveTurn(cfg.Marks, nextTurn, elim)
+		if elim[nextTurn] {
+			// Все выбыли — не должно случиться; оставляем как есть.
+		} else if nextTurn != res.State.Turn {
+			res.State.Turn = nextTurn
+		}
+	}
 
 	pipe := h.Rdb.Pipeline()
 	setFields := []any{
 		"board", formatBoard(res.State.Board),
-		"turn", res.State.Turn,
+		"turn", nextTurn,
 		"status", status,
 	}
 	if winner != "" {
@@ -2098,8 +2429,11 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 
 	broadcastPayload := map[string]any{
 		"type": "game_state", "game_id": gameID,
-		"board": res.State.Board, "turn": res.State.Turn, "winner": winner, "status": status,
+		"board": res.State.Board, "turn": nextTurn, "winner": winner, "status": status,
 		"variant": string(variant), "grid_size": gridSize, "can_swap": false,
+	}
+	if elimCSV := strings.TrimSpace(m["eliminated_marks"]); elimCSV != "" {
+		broadcastPayload["eliminated_marks"] = strings.Split(elimCSV, ",")
 	}
 	if len(res.WinningCells) > 0 {
 		broadcastPayload["winning_cells"] = res.WinningCells
@@ -2123,15 +2457,15 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		for k, v := range m {
 			m2[k] = v
 		}
-		m2["turn"] = res.State.Turn
-		h.notifyYourTurn(gameID, res.State.Turn, m2)
+		m2["turn"] = nextTurn
+		h.notifyYourTurn(gameID, nextTurn, m2)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
 		"game_id":   gameID,
 		"board":     res.State.Board,
-		"turn":      res.State.Turn,
+		"turn":      nextTurn,
 		"winner":    winner,
 		"status":    status,
 		"grid_size": gridSize,
@@ -2178,58 +2512,151 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
-	if xUserID != userID.String() && oUserID != userID.String() {
-		WriteErr(w, r, http.StatusForbidden, "forbidden")
-		return
-	}
 	if m["status"] != gameStatusActive {
 		WriteErr(w, r, http.StatusBadRequest, "game is over")
 		return
 	}
-	// Сдавшийся проигрывает — побеждает соперник.
-	status := gameStatusOWon // X сдался → O победил
-	if userID.String() == oUserID {
-		status = gameStatusXWon // O сдался → X победил
+	mark := markForUserID(m, userID.String())
+	if mark == "" {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
 	}
-	gridSize := 3
-	if gs := m["grid_size"]; gs != "" {
-		if n, e := strconv.Atoi(gs); e == nil && validGridSize[n] {
-			gridSize = n
-		}
-	}
+	cfg, variant := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	gridSize := cfg.GridSize
 	board := parseBoard(m["board"], gridSize)
+	eliminated := parseEliminatedMarks(m["eliminated_marks"])
+	if eliminated[mark] {
+		WriteErr(w, r, http.StatusBadRequest, "already forfeited")
+		return
+	}
+
+	// 2 игрока: сдача сразу завершает партию.
+	if cfg.MaxPlayers <= 2 {
+		status := gameStatusOWon
+		winnerVal := "o"
+		if mark == "o" {
+			status = gameStatusXWon
+			winnerVal = "x"
+		}
+		pipe := h.Rdb.Pipeline()
+		pipe.HSet(ctx, key, "status", status, "forfeit", "1", "winner", winnerVal)
+		pipe.Expire(ctx, key, 24*time.Hour)
+		if _, err := pipe.Exec(ctx); err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+		h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "forfeit", m["started_at"])
+		for _, u := range humanUserIDsFromGame(m) {
+			clearUserActiveGame(ctx, h.Rdb, u)
+		}
+		h.broadcast(humanUserIDsFromGame(m), map[string]any{
+			"type": "game_state", "game_id": gameID,
+			"board": board, "turn": m["turn"], "winner": winnerVal,
+			"status": status, "forfeit": true, "variant": string(variant),
+		})
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": status, "forfeit": true})
+		return
+	}
+
+	// Multi: выбывание; играют оставшиеся, пока не останется один.
+	eliminated[mark] = true
+	clearUserActiveGame(ctx, h.Rdb, userID)
+	alive := aliveMarks(cfg.Marks, eliminated)
+	elimCSV := formatEliminatedMarks(eliminated)
+	humans := humanUserIDsFromGame(m)
+
+	if len(alive) <= 1 {
+		winnerMark := ""
+		if len(alive) == 1 {
+			winnerMark = alive[0]
+		}
+		status := wonStatusForMark(winnerMark)
+		pipe := h.Rdb.Pipeline()
+		pipe.HSet(ctx, key,
+			"status", status,
+			"winner", winnerMark,
+			"forfeit", "1",
+			"eliminated_marks", elimCSV,
+		)
+		pipe.Expire(ctx, key, 24*time.Hour)
+		if _, err := pipe.Exec(ctx); err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+		h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "forfeit", m["started_at"])
+		for _, u := range humans {
+			clearUserActiveGame(ctx, h.Rdb, u)
+		}
+		h.broadcast(humans, map[string]any{
+			"type": "game_state", "game_id": gameID,
+			"board": board, "turn": winnerMark, "winner": winnerMark,
+			"status": status, "forfeit": true,
+			"eliminated_marks": strings.Split(elimCSV, ","),
+			"variant":         string(variant),
+			"max_players":     cfg.MaxPlayers,
+		})
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status": status, "forfeit": true, "winner": winnerMark,
+			"eliminated_marks": strings.Split(elimCSV, ","),
+		})
+		return
+	}
+
+	turn := m["turn"]
+	if turn == mark || eliminated[turn] {
+		turn = nextAliveMark(cfg.Marks, mark, eliminated)
+	}
 	pipe := h.Rdb.Pipeline()
-	pipe.HSet(ctx, key, "status", status, "forfeit", "1")
+	fields := []any{"eliminated_marks", elimCSV, "turn", turn, "forfeit", "1"}
+	turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
+	if turnTimeSec > 0 {
+		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
+		fields = append(fields, "turn_deadline", strconv.FormatInt(deadline, 10))
+	}
+	pipe.HSet(ctx, key, fields...)
 	pipe.Expire(ctx, key, 24*time.Hour)
 	if _, err := pipe.Exec(ctx); err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, "forfeit", m["started_at"])
-	for _, u := range humanUserIDs(xUserID, oUserID) {
-		clearUserActiveGame(ctx, h.Rdb, u)
+	payload := map[string]any{
+		"type": "game_state", "game_id": gameID,
+		"board": board, "turn": turn, "status": gameStatusActive,
+		"forfeit": true, "eliminated_marks": strings.Split(elimCSV, ","),
+		"variant": string(variant), "max_players": cfg.MaxPlayers,
+		"left_user_id": userID.String(),
 	}
-	winnerVal := "o"
-	if status == gameStatusXWon {
-		winnerVal = "x"
+	if turnTimeSec > 0 {
+		payload["turn_time_sec"] = turnTimeSec
+		payload["turn_deadline"] = time.Now().UTC().Unix() + int64(turnTimeSec)
 	}
-	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
-		"type":    "game_state",
-		"game_id": gameID,
-		"board":   board,
-		"turn":    m["turn"],
-		"winner":  winnerVal,
-		"status":  status,
-		"forfeit": true,
-	})
+	h.broadcast(humans, payload)
+	m2 := map[string]string{}
+	for k, v := range m {
+		m2[k] = v
+	}
+	m2["turn"] = turn
+	m2["eliminated_marks"] = elimCSV
+	h.notifyYourTurn(gameID, turn, m2)
+
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"status": status, "forfeit": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"status":           gameStatusActive,
+		"forfeit":          true,
+		"eliminated":       true,
+		"turn":             turn,
+		"eliminated_marks": strings.Split(elimCSV, ","),
+	})
 }
 
-// OfferDraw предлагает ничью сопернику (только PvP).
+// OfferDraw предлагает ничью сопернику (только PvP 1v1).
 func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID string) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
@@ -2241,6 +2668,14 @@ func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID 
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
 		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	cfg, _ := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	if cfg.MaxPlayers > 2 {
+		WriteErr(w, r, http.StatusBadRequest, "draw not available in multiplayer")
 		return
 	}
 	xUserID := m["x_user_id"]
@@ -2299,6 +2734,14 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
 		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	cfg, _ := resolveVariantConfig(m["variant"], func() int {
+		gs, _ := strconv.Atoi(m["grid_size"])
+		return gs
+	}())
+	if cfg.MaxPlayers > 2 {
+		WriteErr(w, r, http.StatusBadRequest, "draw not available in multiplayer")
 		return
 	}
 	xUserID := m["x_user_id"]
@@ -2452,6 +2895,14 @@ func (h *GamesHandler) onGameFinishedWithMap(
 			_ = store.IncrementGamesFinished(ctx, h.Pool, u)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
 			notifyAchievementUnlocks(h.Push, u, unlocked)
+		}
+	}
+	// Групповой чат лобби удаляется вместе с завершением multi-партии.
+	if lobbyID := strings.TrimSpace(m["lobby_id"]); lobbyID != "" {
+		maxPlayers, _ := strconv.Atoi(m["max_players"])
+		if maxPlayers > 2 || m["t_user_id"] != "" || m["s_user_id"] != "" {
+			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
+			h.broadcast(humanUserIDsFromGame(m), map[string]any{"type": "chat_list_changed"})
 		}
 	}
 	winnerMark := ""

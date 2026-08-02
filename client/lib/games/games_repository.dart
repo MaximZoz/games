@@ -21,8 +21,8 @@ class GamesException implements Exception {
   String toString() => 'GamesException($statusCode): $message';
 }
 
-/// Допустимые значения времени на ход (сек): 0=без лимита, 10, 30, 60, 600
-const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
+/// Допустимые значения времени на ход (сек): 0=∞, 20, 60=1м, 600=10м
+const List<int> turnTimeOptions = [20, 60, 600, 0];
 
 /// Размеры сетки теперь выводятся из режима; список оставлен для API-совместимости.
 const List<int> gridSizeOptions = [3, 8, 9, 10, 15];
@@ -368,6 +368,35 @@ String formatBalance(int bronze) {
   return g > 0 || s > 0 || b > 0 ? '$diamond ◆ $g $gld $s $sil' : '$diamond ◆';
 }
 
+class LobbyPlayer {
+  final String id;
+  final String displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameColor;
+  final String? frameCode;
+
+  LobbyPlayer({
+    required this.id,
+    String? displayName,
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.frameColor,
+    this.frameCode,
+  }) : displayName = localizeDisplayName(displayName);
+
+  factory LobbyPlayer.fromJson(Map<String, dynamic> json) {
+    return LobbyPlayer(
+      id: json['id'] as String? ?? '',
+      displayName: json['display_name'] as String?,
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
+      frameColor: json['frame_color'] as String?,
+      frameCode: json['frame_code'] as String?,
+    );
+  }
+}
+
 class LobbyItem {
   final String id;
   final String creatorId;
@@ -380,6 +409,10 @@ class LobbyItem {
   final String variant;
   final int gridSize;
   final int maxPlayers;
+  final int playersCount;
+  final List<String> playerIds;
+  final List<LobbyPlayer> players;
+  final String? chatId;
   final bool swapRule;
   final bool firstMoveRestriction;
   final int stakeBronze;
@@ -396,11 +429,19 @@ class LobbyItem {
     this.variant = variantClassic,
     int? gridSize,
     int? maxPlayers,
+    int? playersCount,
+    List<String>? playerIds,
+    List<LobbyPlayer>? players,
+    this.chatId,
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 1,
   })  : gridSize = gridSize ?? gridSizeForVariant(variant),
         maxPlayers = maxPlayers ?? configForVariant(variant).maxPlayers,
+        players = players ?? const [],
+        playerIds = playerIds ?? const [],
+        playersCount =
+            playersCount ?? (players?.length ?? playerIds?.length ?? 1),
         creatorName = localizeDisplayName(creatorName);
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
@@ -410,6 +451,8 @@ class LobbyItem {
         ? variantFromLegacyGrid(legacyGrid)
         : parseVariant(rawVariant);
     final cfg = configForVariant(variant);
+    final players = _parseLobbyPlayers(json['players']);
+    final playerIds = _parseStringList(json['player_ids']);
     return LobbyItem(
       id: json['id'] as String? ?? '',
       creatorId: json['creator_id'] as String? ?? '',
@@ -422,11 +465,53 @@ class LobbyItem {
       variant: variant,
       gridSize: cfg.gridSize,
       maxPlayers: (json['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
+      playersCount: (json['players_count'] as num?)?.toInt() ??
+          (players.isNotEmpty ? players.length : playerIds.length),
+      playerIds: playerIds,
+      players: players,
+      chatId: json['chat_id'] as String?,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
     );
   }
+
+  static List<LobbyPlayer> _parseLobbyPlayers(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => LobbyPlayer.fromJson(Map<String, dynamic>.from(e)))
+        .where((p) => p.id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static List<String> _parseStringList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .map((e) => e?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+  }
+}
+
+class GamePlayerMeta {
+  const GamePlayerMeta({
+    required this.mark,
+    required this.userId,
+    this.displayName,
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.frameColor,
+    this.frameCode,
+  });
+
+  final String mark;
+  final String userId;
+  final String? displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameColor;
+  final String? frameCode;
 }
 
 class GameStateItem {
@@ -460,6 +545,18 @@ class GameStateItem {
   final String? oAvatarValue;
   final String? oFrameColor;
   final String? oFrameCode;
+  final String? tDisplayName;
+  final String? sDisplayName;
+  final String tAvatarKind;
+  final String? tAvatarValue;
+  final String? tFrameColor;
+  final String? tFrameCode;
+  final String sAvatarKind;
+  final String? sAvatarValue;
+  final String? sFrameColor;
+  final String? sFrameCode;
+  final String? chatId;
+  final List<String> eliminatedMarks;
   final List<int>? winningCells;
   final int? nextBoard;
   final List<String> metaBoard;
@@ -498,6 +595,18 @@ class GameStateItem {
     this.oAvatarValue,
     this.oFrameColor,
     this.oFrameCode,
+    this.tDisplayName,
+    this.sDisplayName,
+    this.tAvatarKind = 'letter',
+    this.tAvatarValue,
+    this.tFrameColor,
+    this.tFrameCode,
+    this.sAvatarKind = 'letter',
+    this.sAvatarValue,
+    this.sFrameColor,
+    this.sFrameCode,
+    this.chatId,
+    this.eliminatedMarks = const [],
     this.winningCells,
     this.nextBoard,
     this.metaBoard = const [],
@@ -524,6 +633,64 @@ class GameStateItem {
         if (tUserId.isNotEmpty) tUserId,
         if (sUserId.isNotEmpty) sUserId,
       ].where((id) => id.isNotEmpty).toList(growable: false);
+
+  List<GamePlayerMeta> get playerMetas => [
+        GamePlayerMeta(
+          mark: 'x',
+          userId: xUserId,
+          displayName: xDisplayName,
+          avatarKind: xAvatarKind,
+          avatarValue: xAvatarValue,
+          frameColor: xFrameColor,
+          frameCode: xFrameCode,
+        ),
+        GamePlayerMeta(
+          mark: 'o',
+          userId: oUserId,
+          displayName: oDisplayName,
+          avatarKind: oAvatarKind,
+          avatarValue: oAvatarValue,
+          frameColor: oFrameColor,
+          frameCode: oFrameCode,
+        ),
+        if (tUserId.isNotEmpty)
+          GamePlayerMeta(
+            mark: 't',
+            userId: tUserId,
+            displayName: tDisplayName,
+            avatarKind: tAvatarKind,
+            avatarValue: tAvatarValue,
+            frameColor: tFrameColor,
+            frameCode: tFrameCode,
+          ),
+        if (sUserId.isNotEmpty)
+          GamePlayerMeta(
+            mark: 's',
+            userId: sUserId,
+            displayName: sDisplayName,
+            avatarKind: sAvatarKind,
+            avatarValue: sAvatarValue,
+            frameColor: sFrameColor,
+            frameCode: sFrameCode,
+          ),
+      ].where((p) => p.userId.isNotEmpty).toList(growable: false);
+
+  List<GamePlayerMeta> opponentsOf(String? userId) {
+    return playerMetas
+        .where((p) => userId == null || p.userId != userId)
+        .toList(growable: false);
+  }
+
+  bool isEliminated(String mark) =>
+      eliminatedMarks.contains(mark.trim().toLowerCase());
+
+  GamePlayerMeta? playerMeta(String mark) {
+    final target = mark.trim().toLowerCase();
+    for (final p in playerMetas) {
+      if (p.mark == target) return p;
+    }
+    return null;
+  }
 
   bool get isActivePvp =>
       status == 'active' && playerUserIds.every((id) => !id.startsWith('bot:'));
@@ -590,6 +757,18 @@ class GameStateItem {
       oAvatarValue: json['o_avatar_value'] as String?,
       oFrameColor: json['o_frame_color'] as String?,
       oFrameCode: json['o_frame_code'] as String?,
+      tDisplayName: _localizedOptionalName(json['t_display_name']),
+      sDisplayName: _localizedOptionalName(json['s_display_name']),
+      tAvatarKind: json['t_avatar_kind'] as String? ?? 'letter',
+      tAvatarValue: json['t_avatar_value'] as String?,
+      tFrameColor: json['t_frame_color'] as String?,
+      tFrameCode: json['t_frame_code'] as String?,
+      sAvatarKind: json['s_avatar_kind'] as String? ?? 'letter',
+      sAvatarValue: json['s_avatar_value'] as String?,
+      sFrameColor: json['s_frame_color'] as String?,
+      sFrameCode: json['s_frame_code'] as String?,
+      chatId: json['chat_id'] as String?,
+      eliminatedMarks: _parseStringList(json['eliminated_marks']),
       winningCells: _parseWinningCells(json['winning_cells']),
       nextBoard: () {
         final raw = json['next_board'];
@@ -623,6 +802,20 @@ class GameStateItem {
       out[i] = raw[i]?.toString() ?? '';
     }
     return out;
+  }
+
+  static List<String> _parseStringList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .map((e) => e?.toString().trim().toLowerCase() ?? '')
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static String? _localizedOptionalName(dynamic rawValue) {
+    final raw = rawValue as String?;
+    if (raw == null || raw.trim().isEmpty) return null;
+    return localizeDisplayName(raw);
   }
 
   /// Победная линия: из winningCells или вычисленная по доске.
@@ -799,11 +992,19 @@ class JoinLobbyResult {
   final bool joined;
   final String? gameId;
   final String? status;
+  final bool waitingMore;
+  final String? chatId;
+  final int? playersCount;
+  final int? maxPlayers;
 
   JoinLobbyResult({
     required this.joined,
     this.gameId,
     this.status,
+    this.waitingMore = false,
+    this.chatId,
+    this.playersCount,
+    this.maxPlayers,
   });
 
   factory JoinLobbyResult.fromJson(Map<String, dynamic> json) {
@@ -811,6 +1012,10 @@ class JoinLobbyResult {
       joined: json['joined'] as bool? ?? false,
       gameId: json['game_id'] as String?,
       status: json['status'] as String?,
+      waitingMore: json['waiting_more'] as bool? ?? false,
+      chatId: json['chat_id'] as String?,
+      playersCount: (json['players_count'] as num?)?.toInt(),
+      maxPlayers: (json['max_players'] as num?)?.toInt(),
     );
   }
 }

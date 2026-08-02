@@ -291,7 +291,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final gameActive = gameForBar != null && gameForBar.status == 'active';
     final showDrawButton = gameForBar != null &&
         gameForBar.status == 'active' &&
-        gameForBar.isActivePvp;
+        gameForBar.isActivePvp &&
+        gameForBar.maxPlayers <= 2;
     final meId = currentUser?.id;
     final drawOfferBy = gameForBar?.drawOfferBy?.trim();
     final iOfferedDraw =
@@ -346,6 +347,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         body: effectiveGameAsync.when(
           data: (game) {
             final isOver = game.status != 'active';
+            final isMultiGame = game.maxPlayers > 2;
             final opponentId =
                 game.xUserId == currentUser?.id ? game.oUserId : game.xUserId;
             final myMark = game.markForUser(currentUser?.id);
@@ -411,17 +413,25 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             if (isOver) {
               if (game.status.endsWith('_won')) {
                 final iWon = iWonEarly;
-                statusText = iWon
-                    ? (game.forfeit
-                        ? context.l10n.gameYouWonOpponentForfeit
-                        : game.timeout
-                            ? context.l10n.gameYouWonOpponentTimeout
-                            : context.l10n.gameYouWon)
-                    : (game.forfeit
-                        ? context.l10n.gameYouForfeitOpponentWon(opponentName)
-                        : game.timeout
-                            ? context.l10n.gameOpponentWonTimeout(opponentName)
-                            : context.l10n.gameOpponentWon(opponentName));
+                if (isMultiGame) {
+                  final winnerName = game.playerMeta(game.winner ?? '')
+                          ?.displayName
+                          ?.trim() ??
+                      opponentName;
+                  statusText = iWon ? context.l10n.gameYouWon : 'Победил $winnerName';
+                } else {
+                  statusText = iWon
+                      ? (game.forfeit
+                          ? context.l10n.gameYouWonOpponentForfeit
+                          : game.timeout
+                              ? context.l10n.gameYouWonOpponentTimeout
+                              : context.l10n.gameYouWon)
+                      : (game.forfeit
+                          ? context.l10n.gameYouForfeitOpponentWon(opponentName)
+                          : game.timeout
+                              ? context.l10n.gameOpponentWonTimeout(opponentName)
+                              : context.l10n.gameOpponentWon(opponentName));
+                }
               } else if (game.status == 'draw') {
                 statusText = context.l10n.gameDraw;
               }
@@ -447,31 +457,44 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             final verticalSpacing =
                 landscapeSideBySide ? 6.0 : (narrow ? 10.0 : 20.0);
 
-            Widget opponentCard() => _OpponentCard(
+            Widget opponentCard() {
+              if (isMultiGame) {
+                return _MultiOpponentsCard(
+                  game: game,
+                  opponents: game.opponentsOf(currentUser?.id),
+                  chatsList:
+                      ref.watch(chatsListProvider).valueOrNull ?? const [],
+                  onGroupChatTap: (game.chatId ?? '').trim().isEmpty
+                      ? null
+                      : () => _openGroupChat(context, game),
+                );
+              }
+              return _OpponentCard(
+                opponentId: opponentId,
+                displayName: opponentName,
+                avatarKind: opponentAvatarKind,
+                avatarValue: opponentAvatarValue,
+                frameCode: opponentFrameCode,
+                frameColor: opponentFrameColor,
+                isBot: opponentId.startsWith('bot:'),
+                friendsSnapshot:
+                    ref.watch(friendsSnapshotProvider).valueOrNull,
+                chatsList:
+                    ref.watch(chatsListProvider).valueOrNull ?? const [],
+                onInfoTap: () => _showOpponentInfo(
+                  context,
                   opponentId: opponentId,
                   displayName: opponentName,
                   avatarKind: opponentAvatarKind,
                   avatarValue: opponentAvatarValue,
-                  frameCode: opponentFrameCode,
-                  frameColor: opponentFrameColor,
-                  isBot: opponentId.startsWith('bot:'),
-                  friendsSnapshot:
-                      ref.watch(friendsSnapshotProvider).valueOrNull,
-                  chatsList:
-                      ref.watch(chatsListProvider).valueOrNull ?? const [],
-                  onInfoTap: () => _showOpponentInfo(
-                    context,
-                    opponentId: opponentId,
-                    displayName: opponentName,
-                    avatarKind: opponentAvatarKind,
-                    avatarValue: opponentAvatarValue,
-                  ),
-                  onMessageTap: () =>
-                      _openChat(context, opponentId, opponentName),
-                  onAddFriendTap: (requestId) => _addFriend(
-                      context, opponentId, opponentName,
-                      requestId: requestId),
-                );
+                ),
+                onMessageTap: () =>
+                    _openChat(context, opponentId, opponentName),
+                onAddFriendTap: (requestId) => _addFriend(
+                    context, opponentId, opponentName,
+                    requestId: requestId),
+              );
+            }
 
             Widget statusBlock() => Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1304,6 +1327,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     }
   }
 
+  void _openGroupChat(BuildContext ctx, GameStateItem game) {
+    final chatId = (game.chatId ?? '').trim();
+    if (chatId.isEmpty) return;
+    unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+    final uri = Uri(
+      path: '/chats/$chatId',
+      queryParameters: {
+        'name': variantLabel(game.variant),
+        'from': 'games',
+        'game': '/games/tictactoe/game/${widget.gameId}',
+      },
+    );
+    ctx.push(uri.toString());
+  }
+
   IconData? _genderIcon(String? value) {
     final normalized = value?.trim().toLowerCase();
     if (normalized == null || normalized.isEmpty) return null;
@@ -1733,6 +1771,120 @@ class _RematchSection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _MultiOpponentsCard extends StatelessWidget {
+  const _MultiOpponentsCard({
+    required this.game,
+    required this.opponents,
+    required this.chatsList,
+    required this.onGroupChatTap,
+  });
+
+  final GameStateItem game;
+  final List<GamePlayerMeta> opponents;
+  final List<ChatPreviewItem> chatsList;
+  final VoidCallback? onGroupChatTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final groupBadge = chatsList
+        .where((c) => c.chatID == game.chatId)
+        .map((c) => c.unreadCount)
+        .fold<int>(0, (a, b) => a + b);
+    final narrow = isNarrow(context);
+    final card = GradientCard(
+      padding: EdgeInsets.symmetric(
+        horizontal: narrow ? 12 : 16,
+        vertical: narrow ? 8 : 12,
+      ),
+      margin: EdgeInsets.zero,
+      animate: false,
+      child: Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: narrow ? 8 : 12,
+              runSpacing: 8,
+              children: [
+                for (final player in opponents)
+                  _MultiOpponentChip(
+                    player: player,
+                    eliminated: game.isEliminated(player.mark),
+                    compact: narrow,
+                  ),
+              ],
+            ),
+          ),
+          _IconWithBadge(
+            icon: Icons.forum_rounded,
+            badge: groupBadge,
+            tooltip: 'Чат группы',
+            onPressed: onGroupChatTap,
+          ),
+        ],
+      ),
+    );
+    if (isWide(context)) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: card,
+        ),
+      );
+    }
+    return card;
+  }
+}
+
+class _MultiOpponentChip extends StatelessWidget {
+  const _MultiOpponentChip({
+    required this.player,
+    required this.eliminated,
+    this.compact = false,
+  });
+
+  final GamePlayerMeta player;
+  final bool eliminated;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = player.displayName?.trim().isNotEmpty == true
+        ? player.displayName!.trim()
+        : context.l10n.gameOpponent;
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _OpponentAvatar(
+          displayName: name,
+          avatarKind: player.avatarKind,
+          avatarValue: player.avatarValue,
+          frameCode: player.frameCode,
+          frameColor: player.frameColor,
+          compact: compact,
+        ),
+        SizedBox(width: compact ? 6 : 8),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: compact ? 92 : 120),
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+              decoration: eliminated ? TextDecoration.lineThrough : null,
+            ),
+          ),
+        ),
+      ],
+    );
+    return Opacity(
+      opacity: eliminated ? 0.45 : 1,
+      child: content,
     );
   }
 }

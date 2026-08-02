@@ -204,3 +204,88 @@ func markFieldsForRedis(assignment map[string]string) []any {
 	}
 	return fields
 }
+
+func parseEliminatedMarks(raw string) map[string]bool {
+	out := map[string]bool{}
+	for _, p := range strings.Split(raw, ",") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out[p] = true
+		}
+	}
+	return out
+}
+
+func formatEliminatedMarks(set map[string]bool) string {
+	order := []string{"x", "o", "t", "s"}
+	parts := make([]string, 0, len(set))
+	for _, m := range order {
+		if set[m] {
+			parts = append(parts, m)
+		}
+	}
+	return strings.Join(parts, ",")
+}
+
+func markForUserID(m map[string]string, userID string) string {
+	for _, mark := range []string{"x", "o", "t", "s"} {
+		if markOwnerUserID(m, mark) == userID {
+			return mark
+		}
+	}
+	return ""
+}
+
+func aliveMarks(marks []string, eliminated map[string]bool) []string {
+	out := make([]string, 0, len(marks))
+	for _, mark := range marks {
+		if !eliminated[mark] {
+			out = append(out, mark)
+		}
+	}
+	return out
+}
+
+// nextAliveMark — следующий живой знак после current (не включая current, если он уже жив
+// и skipCurrent=true). Если current выбыл — ищем следующего после него.
+func nextAliveMark(marks []string, current string, eliminated map[string]bool) string {
+	if len(marks) == 0 {
+		return current
+	}
+	idx := 0
+	for i, mark := range marks {
+		if mark == current {
+			idx = i
+			break
+		}
+	}
+	for i := 1; i <= len(marks); i++ {
+		cand := marks[(idx+i)%len(marks)]
+		if !eliminated[cand] {
+			return cand
+		}
+	}
+	return current
+}
+
+func wonStatusForMark(mark string) string {
+	switch mark {
+	case "x":
+		return gameStatusXWon
+	case "o":
+		return gameStatusOWon
+	case "t":
+		return gameStatusTWon
+	case "s":
+		return gameStatusSWon
+	default:
+		return gameStatusXWon
+	}
+}
+
+func skipToAliveTurn(marks []string, turn string, eliminated map[string]bool) string {
+	if !eliminated[turn] {
+		return turn
+	}
+	return nextAliveMark(marks, turn, eliminated)
+}

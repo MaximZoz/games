@@ -862,6 +862,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   Future<void> _blockChatUserFromList(ChatPreviewItem item) async {
+    if (item.isGroup) return;
     if (item.user.isSupport ||
         item.user.displayName?.trim() == 'Поддержка') {
       return;
@@ -1407,6 +1408,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return value;
   }
 
+  String _chatTitle(ChatPreviewItem item) {
+    if (item.isGroup) {
+      final title = item.title?.trim();
+      if (title != null && title.isNotEmpty) return title;
+      return 'Групповой чат';
+    }
+    return _peerTitle(item.user);
+  }
+
+  String _chatSubtitle(ChatPreviewItem item, String subtitle, PresenceEntry? presence) {
+    if (item.isGroup) {
+      final preview = formatChatMessagePreview(subtitle);
+      return preview.isEmpty ? context.l10n.chatsNoMessages : preview;
+    }
+    return _chatSubtitleWithPresence(subtitle, presence);
+  }
+
   String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
     final preview = formatChatMessagePreview(subtitle);
     if (presence == null) {
@@ -1850,17 +1868,24 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             ? null
                                             : () => _openChatRoute(
                                                   chatID: item.chatID,
-                                                  peerName: _peerTitle(item.user),
+                                                  peerName: _chatTitle(item),
                                                 ),
                                         borderRadius: BorderRadius.circular(24),
                                         child: Stack(
                                           clipBehavior: Clip.none,
                                           children: [
-                                            _AvatarDot(
-                                              user: item.user,
-                                              radius: 24,
-                                              isOnline: presence[item.user.id]?.online,
-                                            ),
+                                            item.isGroup
+                                                ? _GroupChatLeading(
+                                                    members: item.members,
+                                                    radius: 24,
+                                                  )
+                                                : _AvatarDot(
+                                                    user: item.user,
+                                                    radius: 24,
+                                                    isOnline:
+                                                        presence[item.user.id]
+                                                            ?.online,
+                                                  ),
                                             if (item.unreadCount > 0)
                                               Positioned(
                                                 right: -2,
@@ -2000,9 +2025,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   .contains('friend_$peerId');
                               final isSupportPeer = item.user.isSupport ||
                                   item.user.displayName?.trim() == 'Поддержка';
+                              final blockDisabled =
+                                  isSupportPeer || item.isGroup;
                               final showAddFriend = peerId.isNotEmpty &&
                                   !isFriend &&
-                                  !isSupportPeer;
+                                  !isSupportPeer &&
+                                  !item.isGroup;
                               return Padding(
                                 padding: EdgeInsets.only(
                                   top: index == 0 ? 0 : 10,
@@ -2013,7 +2041,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   enabled: !itemBusy,
                                   endActionPane: ActionPane(
                                     motion: const DrawerMotion(),
-                                    extentRatio: isSupportPeer ? 0.20 : 0.40,
+                                    extentRatio: blockDisabled ? 0.20 : 0.40,
                                     children: [
                                       CustomSlidableAction(
                                         onPressed: itemBusy
@@ -2039,7 +2067,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                           busy: clearBusy,
                                         ),
                                       ),
-                                      if (!isSupportPeer)
+                                      if (!blockDisabled)
                                         CustomSlidableAction(
                                           onPressed: itemBusy
                                               ? null
@@ -2076,41 +2104,48 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             ? null
                                             : () => _openChatRoute(
                                                   chatID: item.chatID,
-                                                  peerName: _peerTitle(item.user),
+                                                  peerName: _chatTitle(item),
                                                 ),
                                         borderRadius:
                                             BorderRadius.circular(AppRadius.card),
                                         child: Row(
                                           children: [
-                                            Tooltip(
-                                              message:
-                                                  context.l10n.userInfoTitle,
-                                              child: MouseRegion(
-                                                cursor:
-                                                    SystemMouseCursors.click,
-                                                child: GestureDetector(
-                                                  onTap: itemBusy
-                                                      ? null
-                                                      : () {
-                                                          unawaited(
-                                                            _showUserInfoDialog(
-                                                              item.user,
-                                                              presence: presence[
-                                                                  item.user.id],
-                                                            ),
-                                                          );
-                                                        },
-                                                  behavior:
-                                                      HitTestBehavior.opaque,
-                                                  child: _AvatarDot(
-                                                    user: item.user,
-                                                    isOnline: presence[
-                                                            item.user.id]
-                                                        ?.online,
+                                            item.isGroup
+                                                ? _GroupChatLeading(
+                                                    members: item.members,
+                                                  )
+                                                : Tooltip(
+                                                    message: context
+                                                        .l10n.userInfoTitle,
+                                                    child: MouseRegion(
+                                                      cursor:
+                                                          SystemMouseCursors
+                                                              .click,
+                                                      child: GestureDetector(
+                                                        onTap: itemBusy
+                                                            ? null
+                                                            : () {
+                                                                unawaited(
+                                                                  _showUserInfoDialog(
+                                                                    item.user,
+                                                                    presence: presence[
+                                                                        item.user
+                                                                            .id],
+                                                                  ),
+                                                                );
+                                                              },
+                                                        behavior:
+                                                            HitTestBehavior
+                                                                .opaque,
+                                                        child: _AvatarDot(
+                                                          user: item.user,
+                                                          isOnline: presence[
+                                                                  item.user.id]
+                                                              ?.online,
+                                                        ),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                            ),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
@@ -2128,8 +2163,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                       ),
                                                       children: [
                                                         TextSpan(
-                                                          text: _peerTitle(
-                                                              item.user),
+                                                          text:
+                                                              _chatTitle(item),
                                                         ),
                                                         if (showAddFriend)
                                                           WidgetSpan(
@@ -2212,7 +2247,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
-                                                    _chatSubtitleWithPresence(
+                                                    _chatSubtitle(
+                                                      item,
                                                       subtitle,
                                                       presence[item.user.id],
                                                     ),
@@ -2327,6 +2363,63 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GroupChatLeading extends StatelessWidget {
+  const _GroupChatLeading({
+    required this.members,
+    this.radius = 22,
+  });
+
+  final List<ChatUserItem> members;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = radius * 2;
+    final shown = members.take(3).toList(growable: false);
+    return SizedBox(
+      width: size + 18,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.accentStart, AppColors.accentEnd],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.grid_3x3_rounded,
+              color: Colors.white,
+              size: radius,
+            ),
+          ),
+          for (var i = 0; i < shown.length; i++)
+            Positioned(
+              left: radius * 0.95 + i * (radius * 0.48),
+              bottom: i.isEven ? -1 : radius * 0.32,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surfaceCard, width: 1.2),
+                ),
+                child: _AvatarDot(
+                  user: shown[i],
+                  radius: radius * 0.38,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

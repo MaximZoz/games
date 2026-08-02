@@ -11,6 +11,7 @@ import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -375,6 +376,18 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        ref.invalidate(openLobbiesProvider);
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        if (context.mounted) {
+          context.push('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        }
+        return;
+      }
       if (result.joined && result.gameId != null) {
         _navigateToJoinedGame(result.gameId!);
       }
@@ -628,6 +641,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (!context.mounted) return;
       ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
       ref.invalidate(openLobbiesProvider);
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        context.push('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
       if (result.joined && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
       }
