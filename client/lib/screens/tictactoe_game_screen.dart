@@ -152,9 +152,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (type == 'game_state' &&
             next.valueOrNull?['game_id'] == widget.gameId &&
             !_waitingForBotMove) {
-          // Сбрасываем optimistic override — иначе у одного «ход A», у другого «ход B».
-          ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
-              null;
+          // Не сбрасываем override сразу: иначе на время refetch снова
+          // показывается старый AsyncValue («Ваш ход» после своего хода).
+          // Listener gameStateProvider сбросит override, когда данные не хуже.
           ref.invalidate(gameStateProvider(widget.gameId));
           ref.invalidate(activeGameProvider);
         }
@@ -224,16 +224,19 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => doRefresh());
-    // Сервер применяет timeout на GetGame/GetActive — повторяем пару раз.
-    _timeoutRetryTimer = Timer.periodic(const Duration(milliseconds: 900), (t) {
+    // Сервер применяет timeout на GetGame/GetActive — дожимаем ~8 с.
+    _timeoutRetryTimer = Timer.periodic(const Duration(milliseconds: 800), (t) {
       attempt++;
       doRefresh();
-      if (attempt >= 3) {
+      if (attempt >= 10) {
         t.cancel();
         _timeoutRetryTimer = null;
       }
     });
   }
+
+  static int _filledCells(GameStateItem g) =>
+      g.board.where((c) => c.isNotEmpty).length;
 
   @override
   void dispose() {
@@ -257,14 +260,24 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
     ref.listen(gameStateProvider(widget.gameId), (_, next) {
       next.whenOrNull(
-        data: (_) {
+        data: (fresh) {
           if (!mounted) return;
           // Во время ожидания хода бота не сбрасываем override — иначе старый fetch может вернуть данные без нашего хода
           if (_waitingForBotMove) return;
           ref
               .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
               .state = false;
-          if (override != null) {
+          final ov = ref.read(gameStateOverrideProvider(widget.gameId));
+          if (ov != null) {
+            // Stale refetch после своего хода — не откатываем UI.
+            if (_filledCells(fresh) < _filledCells(ov)) return;
+            if (_filledCells(fresh) == _filledCells(ov) &&
+                fresh.turn != ov.turn &&
+                (fresh.turnDeadline ?? 0) < (ov.turnDeadline ?? 0)) {
+              return;
+            }
+          }
+          if (ov != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 ref
@@ -459,6 +472,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 : game.xFrameColor;
 
             String statusText = '';
+            String? statusMark;
             if (isOver) {
               if (game.status.endsWith('_won')) {
                 final iWon = iWonEarly;
@@ -467,7 +481,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           ?.displayName
                           ?.trim() ??
                       opponentName;
-                  statusText = iWon ? context.l10n.gameYouWon : 'Победил $winnerName';
+                  statusText =
+                      iWon ? context.l10n.gameYouWon : 'Победил $winnerName';
                 } else {
                   statusText = iWon
                       ? (game.forfeit
@@ -489,8 +504,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               }
             } else if (myMark != null && game.isEliminated(myMark)) {
               statusText = 'Вы выбыли';
+              statusMark = myMark;
             } else if (isMyTurn) {
               statusText = context.l10n.gamesMyTurn;
+              statusMark = myMark;
             } else {
               // «Ход {логин}» — чей сейчас ход (не себя).
               // chatsList через read: не пересобираем доску на каждый poll чатов.
@@ -507,6 +524,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               statusText = turnName.isNotEmpty
                   ? 'Ход $turnName'
                   : context.l10n.gamesOpponentTurn;
+              statusMark = game.turn.trim().isEmpty ? null : game.turn;
             }
 
             final iWon = iWonEarly;
@@ -593,6 +611,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   children: [
                     _StatusWithReward(
                       statusText: statusText,
+                      statusMark: isOver ? null : statusMark,
                       showReward: showRewardChip,
                       rewardBronze: rewardBronze,
                       rewardKey: _winRewardKey,
@@ -604,6 +623,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: _TurnCountdown(
+                          key: ValueKey(
+                            '${game.turn}_${game.turnDeadline}',
+                          ),
                           turnDeadline: game.turnDeadline!,
                           isMyTurn: isMyTurn,
                           onExpired: _onTurnTimeExpired,
@@ -832,6 +854,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         try {
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
         } catch (_) {}
+        if (!mounted) return;
+        ref.read(gameStateOverrideProvider(gameId).notifier).state = null;
+        ref.invalidate(gameStateProvider(gameId));
+        ref.invalidate(activeGameProvider);
       }());
     });
   }
@@ -1101,16 +1127,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
         ],
       ),
-    ).then((exit) {
+    ).then((exit) async {
       if (exit != true || !mounted) return;
       final gameId = widget.gameId;
+      // Сначала forfeit — иначе у остальных партия «зависает» без WS.
+      try {
+        await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
+      } catch (_) {}
+      if (!mounted) return;
       ref.read(activeGameProvider.notifier).clearLocal();
       context.go('/games');
-      unawaited(() async {
-        try {
-          await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
-        } catch (_) {}
-      }());
     });
   }
 
@@ -1589,7 +1615,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ref.invalidate(activeGameProvider);
         });
       } else {
-        ref.invalidate(gameStateProvider(widget.gameId));
+        // PvP: override уже с новым turn/доской. Немедленный invalidate
+        // гоняется со старым AsyncValue и снова показывает «Ваш ход».
+        // Свежие данные подтянет WS game_state или sync-таймер.
         ref.invalidate(activeGameProvider);
       }
     } catch (e) {
@@ -2754,10 +2782,12 @@ class _StatusWithReward extends StatelessWidget {
     required this.showReward,
     required this.rewardBronze,
     required this.rewardKey,
+    this.statusMark,
     this.fontSize,
   });
 
   final String statusText;
+  final String? statusMark;
   final bool showReward;
   final int rewardBronze;
   final GlobalKey rewardKey;
@@ -2770,9 +2800,18 @@ class _StatusWithReward extends StatelessWidget {
           color: AppColors.textPrimary,
           fontSize: fontSize,
         );
+    final mark = (statusMark ?? '').trim().toLowerCase();
+    final markSize = fontSize != null ? 22.0 : 26.0;
+    final markWidget = mark.isEmpty
+        ? null
+        : SizedBox(
+            width: markSize,
+            height: markSize,
+            child: _SymbolWidget(symbol: mark),
+          );
     // Обычный вес, перенос строк разрешён (длинные статусы вроде
     // «Вы победили, время соперника вышло» переносятся на вторую строку).
-    if (!showReward) {
+    if (!showReward && markWidget == null) {
       return Text(
         statusText,
         textAlign: TextAlign.center,
@@ -2783,6 +2822,10 @@ class _StatusWithReward extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (markWidget != null) ...[
+          markWidget,
+          const SizedBox(width: 8),
+        ],
         Flexible(
           child: Text(
             statusText,
@@ -2790,11 +2833,13 @@ class _StatusWithReward extends StatelessWidget {
             style: style,
           ),
         ),
-        const SizedBox(width: 8),
-        _GameRewardChip(
-          key: rewardKey,
-          rewardBronze: rewardBronze,
-        ),
+        if (showReward) ...[
+          const SizedBox(width: 8),
+          _GameRewardChip(
+            key: rewardKey,
+            rewardBronze: rewardBronze,
+          ),
+        ],
       ],
     );
   }
@@ -3160,6 +3205,7 @@ class _GridPainter extends CustomPainter {
 
 class _TurnCountdown extends StatefulWidget {
   const _TurnCountdown({
+    super.key,
     required this.turnDeadline,
     required this.isMyTurn,
     required this.onExpired,
@@ -3176,15 +3222,32 @@ class _TurnCountdown extends StatefulWidget {
 class _TurnCountdownState extends State<_TurnCountdown> {
   Timer? _timer;
   int _remaining = 0;
+  bool _expiredFired = false;
 
   @override
   void initState() {
     super.initState();
     _updateRemaining();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TurnCountdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.turnDeadline != widget.turnDeadline) {
+      _expiredFired = false;
+      _timer?.cancel();
+      _updateRemaining();
+      _startTimer();
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _updateRemaining();
-      if (_remaining <= 0) {
-        _timer?.cancel();
+      if (_remaining <= 0 && !_expiredFired) {
+        _expiredFired = true;
         widget.onExpired();
       }
     });
@@ -3195,6 +3258,8 @@ class _TurnCountdownState extends State<_TurnCountdown> {
     final r = widget.turnDeadline - now;
     if (r != _remaining && mounted) {
       setState(() => _remaining = r.clamp(0, 999));
+    } else if (r <= 0 && _remaining != 0 && mounted) {
+      setState(() => _remaining = 0);
     }
   }
 

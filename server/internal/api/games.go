@@ -2118,7 +2118,8 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		return false
 	}
 	deadline, err := strconv.ParseInt(dl, 10, 64)
-	if err != nil || time.Now().UTC().Unix() <= deadline {
+	// При now == deadline время уже вышло (клиент показывает 0 с).
+	if err != nil || time.Now().UTC().Unix() < deadline {
 		return false
 	}
 	turn := m["turn"]
