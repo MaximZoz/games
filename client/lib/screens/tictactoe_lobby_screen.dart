@@ -203,10 +203,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           const SizedBox(height: 16),
                         ],
                         if (isInviteMode && isCreator) ...[
-                          // Заголовок «Своя игра» + иконка правил справа.
-                          _buildInviteHeaderRow(context),
-                          const SizedBox(height: 12),
-                          // Ссылка — максимально высоко.
+                          // Ссылка — максимально высоко (заголовок уже в AppBar).
                           _buildShareInviteLinkCard(context),
                           const SizedBox(height: 12),
                           // Друзья — растягиваются на оставшееся место.
@@ -379,21 +376,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       } catch (_) {}
     }
     await refreshChatsList(ref, force: true).catchError((_) {});
-  }
-
-  /// Заголовок «Своя игра» (иконка правил — в AppBar, на уровне крестика).
-  Widget _buildInviteHeaderRow(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        context.l10n.lobbyPrivateGame,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-        ),
-      ),
-    );
   }
 
   /// Общая всплывашка с правилами (как в экране игры).
