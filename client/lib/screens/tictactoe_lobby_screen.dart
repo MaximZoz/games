@@ -307,7 +307,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                             ),
                           ),
                         ] else if (isMatchmakeMode) ...[
-                          // Поиск + правила / кто ищет — заполняем низ экрана.
+                          // Поиск + правила по высоте контента (без растягивания).
                           GradientCard(
                             padding: const EdgeInsets.all(24),
                             child: Column(
@@ -337,9 +337,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Expanded(
-                            child: _buildMatchmakeInfoCard(context, lobby),
-                          ),
+                          _buildMatchmakeInfoCard(context, lobby),
                         ] else if (isInviteMode && !isCreator) ...[
                           Expanded(
                             child: GradientCard(
@@ -682,35 +680,31 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  /// Блок под «Поиск соперника»: только правила партии.
+  /// Блок под «Поиск соперника»: только правила, высота по контенту.
   Widget _buildMatchmakeInfoCard(BuildContext context, LobbyItem lobby) {
     return GradientCard(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: ClampingScrollPhysics(),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.l10n.gamesRulesTitle,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.gamesRulesTitle,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
-            const SizedBox(height: 8),
-            buildTictactoeRulesTextWidget(
-              gridSize: lobby.gridSize,
-              turnTimeSec: lobby.turnTimeSec,
-              swapRule: lobby.swapRule,
-              firstMoveRestriction: lobby.firstMoveRestriction,
-              stakeBronze: lobby.stakeBronze,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          buildTictactoeRulesTextWidget(
+            gridSize: lobby.gridSize,
+            turnTimeSec: lobby.turnTimeSec,
+            swapRule: lobby.swapRule,
+            firstMoveRestriction: lobby.firstMoveRestriction,
+            stakeBronze: lobby.stakeBronze,
+          ),
+        ],
       ),
     );
   }
