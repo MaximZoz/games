@@ -1695,6 +1695,55 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return user == null ? fallback : _peerTitle(user);
   }
 
+  /// Аватар + логин слева для чужих сообщений в групповом чате.
+  Widget _wrapGroupSender({
+    required ChatPreviewItem? chat,
+    required bool mine,
+    required String senderUserID,
+    required Widget child,
+  }) {
+    final show = chat?.isGroup == true && !mine;
+    if (!show) return child;
+    final senderUser = _chatMember(chat, senderUserID);
+    final senderName =
+        senderUser == null ? context.l10n.commonUser : _peerTitle(senderUser);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _buildPeerAvatar(
+            user: senderUser,
+            fallbackTitle: senderName,
+            radius: 14,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                senderName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              child,
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   ChatUserItem? _chatMember(ChatPreviewItem? item, String userId) {
     if (item == null || userId.isEmpty) return null;
     for (final member in item.members) {
@@ -2246,10 +2295,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     value: _RoomAction.sendFriendRequest,
                     child: Text(context.l10n.friendsAdd),
                   ),
-                  PopupMenuItem<_RoomAction>(
-                    value: _RoomAction.clearChat,
-                    child: Text(context.l10n.chatsClearConfirm),
-                  ),
                 ];
               }
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
@@ -2633,35 +2678,44 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   if (isGift) {
                     return _wrapSwipeReply(
                       message: message,
-                      alignment: Alignment.center,
+                      alignment: mine
+                          ? Alignment.centerRight
+                          : (currentChat?.isGroup == true
+                              ? Alignment.centerLeft
+                              : Alignment.center),
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 14, top: 6),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _ChatGiftCard(body: message.body),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _formatBubbleDateTime(message.createdAt),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 11,
+                        child: _wrapGroupSender(
+                          chat: currentChat,
+                          mine: mine,
+                          senderUserID: message.senderUserID,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _ChatGiftCard(body: message.body),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formatBubbleDateTime(message.createdAt),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                ),
-                                if (mine) ...[
-                                  const SizedBox(width: 4),
-                                  MessageStatusTicks(
-                                    deliveredAt: message.deliveredAt,
-                                    readAt: message.readAt,
-                                    size: 14,
-                                  ),
+                                  if (mine) ...[
+                                    const SizedBox(width: 4),
+                                    MessageStatusTicks(
+                                      deliveredAt: message.deliveredAt,
+                                      readAt: message.readAt,
+                                      size: 14,
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -2695,102 +2749,80 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   if (isEmoji) {
                     return _wrapSwipeReply(
                       message: message,
-                      alignment: Alignment.center,
+                      alignment: mine
+                          ? Alignment.centerRight
+                          : (currentChat?.isGroup == true
+                              ? Alignment.centerLeft
+                              : Alignment.center),
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12, top: 4),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _ChatMessageBody(
-                              body: message.body,
-                              largeCentered: true,
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _formatBubbleDateTime(message.createdAt),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 11,
+                        child: _wrapGroupSender(
+                          chat: currentChat,
+                          mine: mine,
+                          senderUserID: message.senderUserID,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _ChatMessageBody(
+                                body: message.body,
+                                largeCentered: true,
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formatBubbleDateTime(message.createdAt),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                ),
-                                if (mine) ...[
-                                  const SizedBox(width: 4),
-                                  MessageStatusTicks(
-                                    deliveredAt: message.deliveredAt,
-                                    readAt: message.readAt,
-                                    size: 14,
-                                  ),
+                                  if (mine) ...[
+                                    const SizedBox(width: 4),
+                                    MessageStatusTicks(
+                                      deliveredAt: message.deliveredAt,
+                                      readAt: message.readAt,
+                                      size: 14,
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
                   }
-                  final showGroupSender =
-                      currentChat?.isGroup == true && !mine;
-                  final senderUser = showGroupSender
-                      ? _chatMember(currentChat, message.senderUserID)
-                      : null;
-                  final senderName =
-                      senderUser == null ? context.l10n.commonUser : _peerTitle(senderUser);
                   return _wrapSwipeReply(
                     message: message,
                     alignment:
                         mine ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (showGroupSender) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _buildPeerAvatar(
-                              user: senderUser,
-                              fallbackTitle: senderName,
-                              radius: 14,
+                    child: _wrapGroupSender(
+                      chat: currentChat,
+                      mine: mine,
+                      senderUserID: message.senderUserID,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 320),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: mine
+                                ? AppColors.accentSoft
+                                : AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: mine
+                                  ? AppColors.accentStart
+                                      .withValues(alpha: 0.35)
+                                  : Colors.black.withValues(alpha: 0.08),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                        ],
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 320),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 9),
-                            decoration: BoxDecoration(
-                              color: mine
-                                  ? AppColors.accentSoft
-                                  : AppColors.surfaceCard,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: mine
-                                    ? AppColors.accentStart
-                                        .withValues(alpha: 0.35)
-                                    : Colors.black.withValues(alpha: 0.08),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (showGroupSender) ...[
-                                  Text(
-                                    senderName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Color(0xFF2563EB),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                ],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                                 if (message.replyToMessageID != null) ...[
                                   Material(
                                     color: Colors.transparent,
@@ -2914,11 +2946,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },

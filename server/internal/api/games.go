@@ -1510,6 +1510,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
 		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -2897,11 +2898,21 @@ func (h *GamesHandler) onGameFinishedWithMap(
 			notifyAchievementUnlocks(h.Push, u, unlocked)
 		}
 	}
-	// Групповой чат лобби удаляется вместе с завершением multi-партии.
+	// Multi: лобби завершается вместе с партией → удаляем групповой чат.
 	if lobbyID := strings.TrimSpace(m["lobby_id"]); lobbyID != "" {
 		maxPlayers, _ := strconv.Atoi(m["max_players"])
 		if maxPlayers > 2 || m["t_user_id"] != "" || m["s_user_id"] != "" {
+			if h.Rdb != nil {
+				h.Rdb.Del(ctx, "lobby:"+lobbyID)
+				h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
+			}
 			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
+			h.broadcast(humanUserIDsFromGame(m), map[string]any{
+				"type":     "lobby_updated",
+				"lobby_id": lobbyID,
+				"left":     true,
+				"closed":   true,
+			})
 			h.broadcast(humanUserIDsFromGame(m), map[string]any{"type": "chat_list_changed"})
 		}
 	}
@@ -3159,8 +3170,9 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 	if err == nil && gameID != "" {
 		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
 		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
-			isMyTurn := (m["turn"] == "x" && m["x_user_id"] == userID.String()) ||
-				(m["turn"] == "o" && m["o_user_id"] == userID.String())
+			myMark := markForUserID(m, userID.String())
+			elim := parseEliminatedMarks(m["eliminated_marks"])
+			isMyTurn := myMark != "" && !elim[myMark] && m["turn"] == myMark
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type":       "game",

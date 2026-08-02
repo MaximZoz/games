@@ -685,29 +685,8 @@ func ClearChatForUser(
 	}
 
 	if kind == ChatKindGroup {
-		// Групповой чат лобби нельзя «очистить» удалением — только выход из участников.
-		if err := RemoveChatMember(ctx, pool, chatID, currentUserID); err != nil {
-			return uuid.Nil, uuid.Nil, err
-		}
-		left := make([]uuid.UUID, 0, len(ids))
-		for _, id := range ids {
-			if id != currentUserID {
-				left = append(left, id)
-			}
-		}
-		if len(left) == 0 {
-			_, _ = pool.Exec(ctx, `DELETE FROM chats WHERE id = $1`, chatID)
-		}
-		a, b := uuid.Nil, uuid.Nil
-		if len(left) > 0 {
-			a = left[0]
-		}
-		if len(left) > 1 {
-			b = left[1]
-		} else {
-			b = a
-		}
-		return a, b, nil
+		// Групповой чат лобби живёт с лобби — очистка/выход из UI запрещены.
+		return uuid.Nil, uuid.Nil, ErrChatForbidden
 	}
 
 	tag, err := pool.Exec(ctx, `

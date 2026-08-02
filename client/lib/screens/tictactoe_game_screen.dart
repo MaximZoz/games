@@ -390,7 +390,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               _prevGameStatus = game.status;
             }
             // Полное состояние игры — источник истины для текущего хода.
-            final isMyTurn = game.isTurnOf(currentUser?.id);
+            final isMyTurn = game.isTurnOf(currentUser?.id) &&
+                !(myMark != null && game.isEliminated(myMark));
             final opponentName = opponentId.startsWith('bot:')
                 ? context.l10n.gameBot
                 : (game.xUserId == currentUser?.id
@@ -433,8 +434,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               : context.l10n.gameOpponentWon(opponentName));
                 }
               } else if (game.status == 'draw') {
-                statusText = context.l10n.gameDraw;
+                // В multi значка/режима ничьей нет — нейтральный итог.
+                statusText = isMultiGame
+                    ? 'Партия окончена'
+                    : context.l10n.gameDraw;
               }
+            } else if (myMark != null && game.isEliminated(myMark)) {
+              statusText = 'Вы выбыли';
             } else {
               statusText = isMyTurn
                   ? context.l10n.gamesMyTurn
@@ -615,7 +621,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
                   ),
                 // «Сдаться» и «ничья» — справа сверху, в одну линию с «правилами».
-                if (gameActive)
+                // Выбывший в multi больше не сдаётся / не ходит.
+                if (gameActive &&
+                    !(meId != null &&
+                        game.markForUser(meId) != null &&
+                        game.isEliminated(game.markForUser(meId)!)))
                   Positioned(
                     right: 4,
                     top: topPad + 4,
@@ -700,6 +710,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   void _confirmSurrender(BuildContext context) {
     final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
     if (game == null || game.status != 'active') return;
+    final me = ref.read(authStateProvider).valueOrNull?.id;
+    final mark = game.markForUser(me);
+    if (mark != null && game.isEliminated(mark)) return;
     showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
