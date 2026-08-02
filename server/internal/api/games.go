@@ -2183,6 +2183,9 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 			"timeout": true, "eliminated_marks": strings.Split(elimCSV, ","),
 			"variant": string(variant), "max_players": cfg.MaxPlayers,
 		}
+		if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
+			payload["chat_id"] = chatID
+		}
 		if turnTimeSec > 0 {
 			payload["turn_time_sec"] = turnTimeSec
 			payload["turn_deadline"] = newDeadline
@@ -2451,6 +2454,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 			"max_players": cfg.MaxPlayers,
 			"x_user_id":  m["x_user_id"], "o_user_id": m["o_user_id"],
 		}
+		if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
+			resp["chat_id"] = chatID
+		}
 		if m["t_user_id"] != "" {
 			resp["t_user_id"] = m["t_user_id"]
 		}
@@ -2561,6 +2567,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		"board": res.State.Board, "turn": nextTurn, "winner": winner, "status": status,
 		"variant": string(variant), "grid_size": gridSize, "can_swap": false,
 	}
+	if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
+		broadcastPayload["chat_id"] = chatID
+	}
 	if elimCSV := strings.TrimSpace(m["eliminated_marks"]); elimCSV != "" {
 		broadcastPayload["eliminated_marks"] = strings.Split(elimCSV, ",")
 	}
@@ -2603,6 +2612,9 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		"x_user_id":   xUserID,
 		"o_user_id":   oUserID,
 		"can_swap":    false,
+	}
+	if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
+		resp["chat_id"] = chatID
 	}
 	if m["t_user_id"] != "" {
 		resp["t_user_id"] = m["t_user_id"]
@@ -2768,6 +2780,9 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		"forfeit": true, "eliminated_marks": strings.Split(elimCSV, ","),
 		"variant": string(variant), "max_players": cfg.MaxPlayers,
 		"left_user_id": userID.String(),
+	}
+	if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
+		payload["chat_id"] = chatID
 	}
 	if turnTimeSec > 0 {
 		payload["turn_time_sec"] = turnTimeSec
@@ -3040,6 +3055,9 @@ func (h *GamesHandler) onGameFinishedWithMap(
 			if h.Rdb != nil {
 				h.Rdb.Del(ctx, "lobby:"+lobbyID)
 				h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
+				if gameID != "" {
+					h.Rdb.HDel(ctx, "game:"+gameID, "chat_id")
+				}
 			}
 			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 			h.broadcast(humanUserIDsFromGame(m), map[string]any{

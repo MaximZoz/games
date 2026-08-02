@@ -780,7 +780,11 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(updatedIDs) > 0 {
+	kind, _ := store.ChatKind(r.Context(), h.Pool, chatID)
+	if kind == store.ChatKindGroup {
+		// Per-user unread: обновляем список только у читателя.
+		h.publishChatListChanged(userID)
+	} else if len(updatedIDs) > 0 {
 		if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 			h.publishChatRead(
 				members,

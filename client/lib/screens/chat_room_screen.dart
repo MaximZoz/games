@@ -23,6 +23,7 @@ import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
@@ -1170,7 +1171,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       // пришёл офлайн и пользователь сразу открыл чат (до sync списка).
       // Только ещё не прочитанные — чтобы старые подарки не поднимали бейдж снова.
       final me = ref.read(authStateProvider).valueOrNull?.id;
-      if (me != null && me.isNotEmpty) {
+      // В группе read_at на сообщениях больше не ставится — не поднимаем подарки
+      // повторно после локального markRead.
+      final groupAlreadyRead =
+          ref.read(locallyReadChatIdsProvider).contains(widget.chatID);
+      if (me != null && me.isNotEmpty && !groupAlreadyRead) {
         final giftCodes = <String>{};
         for (final m in list) {
           if (m.senderUserID == me) continue;
@@ -1209,6 +1214,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
         if (mounted) context.go('/login');
+        return;
+      }
+      // Удалённый групповой чат / нет доступа — на список, не «Доступ запрещён».
+      if (e.statusCode == 403 || e.statusCode == 404) {
+        removeChatFromChatsCache(ref, widget.chatID);
+        if (mounted) context.go('/chats');
         return;
       }
       if (!surfaceErrors) return;
@@ -1695,7 +1706,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return user == null ? fallback : _peerTitle(user);
   }
 
-  /// Аватар + логин слева для чужих сообщений в групповом чате.
+  /// Имя отправителя для группового чата (внутри пузыря, как в Telegram).
+  String? _groupSenderName({
+    required ChatPreviewItem? chat,
+    required bool mine,
+    required String senderUserID,
+  }) {
+    if (chat?.isGroup != true || mine) return null;
+    final senderUser = _chatMember(chat, senderUserID);
+    return senderUser == null ? context.l10n.commonUser : _peerTitle(senderUser);
+  }
+
+  /// Аватар слева для чужих сообщений в групповом чате (логин — внутри пузыря).
   Widget _wrapGroupSender({
     required ChatPreviewItem? chat,
     required bool mine,
@@ -1720,26 +1742,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           ),
         ),
         const SizedBox(width: 6),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                senderName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              child,
-            ],
-          ),
-        ),
+        Flexible(child: child),
       ],
     );
   }
@@ -2691,7 +2694,30 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           senderUserID: message.senderUserID,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (_groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  ) !=
+                                  null) ...[
+                                Text(
+                                  _groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  )!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF7C3AED),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
                               _ChatGiftCard(body: message.body),
                               const SizedBox(height: 6),
                               Row(
@@ -2762,7 +2788,30 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           senderUserID: message.senderUserID,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (_groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  ) !=
+                                  null) ...[
+                                Text(
+                                  _groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  )!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF7C3AED),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
                               _ChatMessageBody(
                                 body: message.body,
                                 largeCentered: true,
@@ -2823,6 +2872,28 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                                if (_groupSenderName(
+                                      chat: currentChat,
+                                      mine: mine,
+                                      senderUserID: message.senderUserID,
+                                    ) !=
+                                    null) ...[
+                                  Text(
+                                    _groupSenderName(
+                                      chat: currentChat,
+                                      mine: mine,
+                                      senderUserID: message.senderUserID,
+                                    )!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xFF7C3AED),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                ],
                                 if (message.replyToMessageID != null) ...[
                                   Material(
                                     color: Colors.transparent,
@@ -3655,7 +3726,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   }
 }
 
-class _ChatInviteCard extends StatelessWidget {
+class _ChatInviteCard extends ConsumerWidget {
   const _ChatInviteCard({
     required this.link,
     required this.messageId,
@@ -3664,8 +3735,40 @@ class _ChatInviteCard extends StatelessWidget {
   final InviteLobbyLink link;
   final String messageId;
 
+  Future<void> _acceptAndGo(BuildContext context, WidgetRef ref) async {
+    final lobbyId = link.lobbyId.trim();
+    if (lobbyId.isEmpty) {
+      context.go(link.appPathFromMessage(messageId));
+      return;
+    }
+    try {
+      final result =
+          await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
+      if (!context.mounted) return;
+      ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      if (result.joined && result.gameId != null) {
+        context.go('/games/tictactoe/game/${result.gameId}');
+        return;
+      }
+      context.go(link.appPathFromMessage(messageId));
+    } catch (_) {
+      if (context.mounted) {
+        context.go(link.appPathFromMessage(messageId));
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 280),
@@ -3673,9 +3776,8 @@ class _ChatInviteCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          // go, не push: иначе «Своя игра» остаётся в истории и снова
-          // всплывает при возврате в Чаты.
-          onTap: () => context.go(link.appPathFromMessage(messageId)),
+          // Сразу join + редирект в лобби (не оставляем «Войти в игру» вручную).
+          onTap: () => unawaited(_acceptAndGo(context, ref)),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: BoxDecoration(

@@ -384,7 +384,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         ref.invalidate(openLobbiesProvider);
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         if (context.mounted) {
-          context.push('/games/tictactoe/lobby/$lobbyId?mode=invite');
+          context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         }
         return;
       }
@@ -647,7 +647,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             );
         ref.invalidate(lobbyDetailProvider(lobbyId));
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-        context.push('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         return;
       }
       if (result.joined && result.gameId != null) {

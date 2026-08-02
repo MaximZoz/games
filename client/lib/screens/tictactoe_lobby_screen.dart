@@ -935,16 +935,38 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'Чат группы',
-            // Чат только для уже вступивших — иначе «Доступ запрещён».
-            onPressed: (lobby.chatId ?? '').trim().isEmpty ||
-                    currentUserId == null ||
-                    !players.any((p) => p.id == currentUserId)
-                ? null
-                : () => _openGroupChat(context, lobby),
-            icon: const Icon(Icons.forum_rounded),
-            color: AppColors.accentStart,
+          Builder(
+            builder: (context) {
+              final chatId = (lobby.chatId ?? '').trim();
+              final isMember = currentUserId != null &&
+                  players.any((p) => p.id == currentUserId);
+              final canOpen = chatId.isNotEmpty && isMember;
+              final unread = !canOpen
+                  ? 0
+                  : ref.watch(chatsListProvider.select((async) {
+                      final list = async.valueOrNull;
+                      if (list == null) return 0;
+                      for (final c in list) {
+                        if (c.chatID == chatId) return c.unreadCount;
+                      }
+                      return 0;
+                    }));
+              return IconButton(
+                tooltip: 'Чат группы',
+                // Чат только для уже вступивших — иначе «Доступ запрещён».
+                onPressed: canOpen ? () => _openGroupChat(context, lobby) : null,
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text(
+                    unread > 99 ? '99+' : '$unread',
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                  ),
+                  backgroundColor: Colors.redAccent,
+                  child: const Icon(Icons.forum_rounded),
+                ),
+                color: AppColors.accentStart,
+              );
+            },
           ),
           IconButton(
             tooltip: context.l10n.friendsAdd,

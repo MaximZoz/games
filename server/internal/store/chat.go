@@ -351,7 +351,16 @@ func ListChatsForUser(
 				COUNT(*)::int AS unread_count
 			FROM chat_messages m
 			JOIN my_chats mc ON mc.id = m.chat_id
-			WHERE m.sender_user_id <> $1 AND m.read_at IS NULL
+			LEFT JOIN chat_members cm
+			  ON cm.chat_id = m.chat_id AND cm.user_id = $1
+			WHERE m.sender_user_id <> $1
+			  AND (
+			    (COALESCE(mc.kind, 'direct') = 'direct' AND m.read_at IS NULL)
+			    OR (
+			      mc.kind = 'group'
+			      AND m.created_at > COALESCE(cm.last_read_at, '-infinity'::timestamptz)
+			    )
+			  )
 			GROUP BY m.chat_id
 		)
 		SELECT
@@ -639,6 +648,20 @@ func MarkChatRead(
 	chatID, currentUserID uuid.UUID,
 ) ([]uuid.UUID, error) {
 	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
+		return nil, err
+	}
+
+	kind, err := ChatKind(ctx, pool, chatID)
+	if err != nil {
+		return nil, err
+	}
+	// Группа: только свой last_read_at — иначе «прочитал один → прочитано у всех».
+	if kind == ChatKindGroup {
+		_, err = pool.Exec(ctx, `
+			UPDATE chat_members
+			SET last_read_at = now()
+			WHERE chat_id = $1 AND user_id = $2
+		`, chatID, currentUserID)
 		return nil, err
 	}
 

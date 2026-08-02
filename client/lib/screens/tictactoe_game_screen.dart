@@ -72,6 +72,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
+  /// chat_id из GetGame — MakeMove раньше мог не вернуть его (иконка мигала).
+  String? _stickyGroupChatId;
 
   @override
   void didChangeDependencies() {
@@ -96,6 +98,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
       _balanceGainPlayed = false;
+      _stickyGroupChatId = null;
       ref.invalidate(gameStateProvider(widget.gameId));
       setState(() {
         _rematchLobbyId = null;
@@ -545,9 +548,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
             Widget opponentCard() {
               if (isMultiGame) {
-                final chatId = (game.chatId ?? '').trim();
+                final fromGame = (game.chatId ?? '').trim();
+                if (fromGame.isNotEmpty) {
+                  _stickyGroupChatId = fromGame;
+                }
+                final chatId = fromGame.isNotEmpty
+                    ? fromGame
+                    : (_stickyGroupChatId ?? '').trim();
+                final chats = ref.watch(chatsListProvider).valueOrNull;
+                final chatStillExists = chatId.isNotEmpty &&
+                    (chats?.any((c) => c.chatID == chatId) ?? false);
+                // После конца партии чат удаляется — иконка остаётся, но disabled.
+                final canOpenChat = !isOver && chatStillExists;
                 // Только unread нужного группового чата — не весь список.
-                final groupUnread = chatId.isEmpty
+                final groupUnread = !canOpenChat
                     ? 0
                     : ref.watch(chatsListProvider.select((async) {
                         final list = async.valueOrNull;
@@ -561,12 +575,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   game: game,
                   // Только чужие; без me — пусто (не мелькает «я» / «Соперник»).
                   opponents: game.opponentsOf(currentUser?.id),
-                  chatsList:
-                      ref.read(chatsListProvider).valueOrNull ?? const [],
+                  chatsList: chats ?? const [],
                   groupUnread: groupUnread,
-                  onGroupChatTap: chatId.isEmpty
-                      ? null
-                      : () => _openGroupChat(context, game),
+                  showGroupChat: chatId.isNotEmpty,
+                  onGroupChatTap:
+                      canOpenChat ? () => _openGroupChat(context, game) : null,
                 );
               }
               final messageUnread = opponentId.isEmpty
@@ -1961,6 +1974,7 @@ class _MultiOpponentsCard extends StatelessWidget {
     required this.opponents,
     required this.chatsList,
     required this.groupUnread,
+    required this.showGroupChat,
     required this.onGroupChatTap,
   });
 
@@ -1968,6 +1982,7 @@ class _MultiOpponentsCard extends StatelessWidget {
   final List<GamePlayerMeta> opponents;
   final List<ChatPreviewItem> chatsList;
   final int groupUnread;
+  final bool showGroupChat;
   final VoidCallback? onGroupChatTap;
 
   @override
@@ -1995,7 +2010,7 @@ class _MultiOpponentsCard extends StatelessWidget {
         ),
       );
     }
-    if (chips.isEmpty && onGroupChatTap == null) {
+    if (chips.isEmpty && !showGroupChat) {
       return const SizedBox.shrink();
     }
     final card = GradientCard(
@@ -2017,7 +2032,7 @@ class _MultiOpponentsCard extends StatelessWidget {
               ),
             ),
           ),
-          if (onGroupChatTap != null)
+          if (showGroupChat)
             _IconWithBadge(
               icon: Icons.forum_rounded,
               badge: groupBadge,
