@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Tryb sieci",
   "shopPurchaseApplied": "{title} — zakup zastosowany",
   "shopPurchaseQueued": "Zakup zapisany — zostanie zastosowany w trybie online",
-  "shopPurchaseRejected": "{title} — zakup nie zastosowany: {reason}"
+  "shopPurchaseRejected": "{title} — zakup nie zastosowany: {reason}",
+  "supportTitle": "Wsparcie",
+  "supportUnavailable": "Wsparcie jest niedostępne",
+  "supportOpenFailed": "Nie udało się otworzyć czatu wsparcia",
+  "coinsGrantedTitle": "Przyznano Ci {amount} monet",
+  "coinsDeductedTitle": "Odjęto {amount} monet",
+  "coinsCreditCardTitle": "Przyznano Ci monety",
+  "coinsClaim": "Odbierz"
 }

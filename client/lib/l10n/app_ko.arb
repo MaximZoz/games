@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "네트워크 모드",
   "shopPurchaseApplied": "{title} — 구매 적용됨",
   "shopPurchaseQueued": "구매가 저장됨 — 온라인 모드에서 적용됩니다",
-  "shopPurchaseRejected": "{title} — 구매 미적용: {reason}"
+  "shopPurchaseRejected": "{title} — 구매 미적용: {reason}",
+  "supportTitle": "고객지원",
+  "supportUnavailable": "고객지원을 사용할 수 없습니다",
+  "supportOpenFailed": "고객지원 채팅을 열 수 없습니다",
+  "coinsGrantedTitle": "{amount}코인이 지급되었습니다",
+  "coinsDeductedTitle": "{amount}코인이 차감되었습니다",
+  "coinsCreditCardTitle": "코인이 지급되었습니다",
+  "coinsClaim": "받기"
 }

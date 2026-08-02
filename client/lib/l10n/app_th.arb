@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "โหมดเครือข่าย",
   "shopPurchaseApplied": "{title} — ใช้การซื้อแล้ว",
   "shopPurchaseQueued": "บันทึกการซื้อแล้ว — จะใช้ในโหมดออนไลน์",
-  "shopPurchaseRejected": "{title} — ไม่ได้ใช้การซื้อ: {reason}"
+  "shopPurchaseRejected": "{title} — ไม่ได้ใช้การซื้อ: {reason}",
+  "supportTitle": "ฝ่ายสนับสนุน",
+  "supportUnavailable": "ฝ่ายสนับสนุนไม่พร้อมใช้งาน",
+  "supportOpenFailed": "ไม่สามารถเปิดแชทฝ่ายสนับสนุนได้",
+  "coinsGrantedTitle": "คุณได้รับ {amount} เหรียญ",
+  "coinsDeductedTitle": "หัก {amount} เหรียญแล้ว",
+  "coinsCreditCardTitle": "คุณได้รับเหรียญ",
+  "coinsClaim": "รับ"
 }

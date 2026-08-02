@@ -221,6 +221,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
+	if u.IsFrozen() {
+		WriteErr(w, r, http.StatusForbidden, "account frozen")
+		return
+	}
 
 	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {

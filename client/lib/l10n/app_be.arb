@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Рэжым сеткі",
   "shopPurchaseApplied": "{title} — пакупку прыменена",
   "shopPurchaseQueued": "Пакупка захавана — прымяніцца ў рэжыме анлайн",
-  "shopPurchaseRejected": "{title} — пакупку не прыменена: {reason}"
+  "shopPurchaseRejected": "{title} — пакупку не прыменена: {reason}",
+  "supportTitle": "Падтрымка",
+  "supportUnavailable": "Падтрымка недаступная",
+  "supportOpenFailed": "Не ўдалося адкрыць чат з падтрымкай",
+  "coinsGrantedTitle": "Вам налічана {amount} манет",
+  "coinsDeductedTitle": "Спісана {amount} манет",
+  "coinsCreditCardTitle": "Вам налічаны манеты",
+  "coinsClaim": "Забраць"
 }

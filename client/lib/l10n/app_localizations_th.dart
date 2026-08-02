@@ -1730,4 +1730,29 @@ class AppLocalizationsTh extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'คุณยอมแพ้ $name ชนะ';
   }
+
+  @override
+  String get supportTitle => 'ฝ่ายสนับสนุน';
+
+  @override
+  String get supportUnavailable => 'ฝ่ายสนับสนุนไม่พร้อมใช้งาน';
+
+  @override
+  String get supportOpenFailed => 'ไม่สามารถเปิดแชทฝ่ายสนับสนุนได้';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'คุณได้รับ $amount เหรียญ';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return 'หัก $amount เหรียญแล้ว';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'คุณได้รับเหรียญ';
+
+  @override
+  String get coinsClaim => 'รับ';
 }

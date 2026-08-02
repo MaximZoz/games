@@ -165,6 +165,18 @@ class DailyRewardClaimResult {
   final int streak;
 }
 
+class AdminGrantClaimResult {
+  const AdminGrantClaimResult({
+    required this.balanceBronze,
+    required this.rewardBronze,
+    required this.messageBody,
+  });
+
+  final int balanceBronze;
+  final int rewardBronze;
+  final String messageBody;
+}
+
 class AuthRepository {
   AuthRepository({SharedPreferences? prefs}) : _prefs = prefs;
 
@@ -734,6 +746,36 @@ class AuthRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  /// POST /api/coins/claim-admin-grant — «Забрать» из карточки поддержки.
+  Future<AdminGrantClaimResult> claimAdminGrant(String grantId) async {
+    final response = await sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/coins/claim-admin-grant'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'grant_id': grantId}),
+        operation: 'AuthRepository.claimAdminGrant',
+      ),
+    );
+    if (response.statusCode != 200) {
+      String message = LocaleService.l10n.commonGenericError;
+      try {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final err = body['error']?.toString();
+        if (err != null && err.isNotEmpty) message = err;
+      } catch (_) {}
+      throw AuthException(response.statusCode, message);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return AdminGrantClaimResult(
+      balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
+      rewardBronze: (body['reward_bronze'] as num?)?.toInt() ?? 0,
+      messageBody: body['message_body'] as String? ?? '',
+    );
   }
 
   Future<http.Response> sendAuthorized(

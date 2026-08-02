@@ -11,6 +11,10 @@ import 'package:multigames_client/chats/chat_image_pick.dart';
 import 'package:multigames_client/chats/chat_image_widgets.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/chats/coins_credit_message.dart';
+import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
@@ -339,6 +343,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         action == _RoomAction.acceptFriendRequest) {
       final id = (peerUserID ?? '').trim();
       if (id.isEmpty) return;
+      final chats =
+          ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+      for (final c in chats) {
+        if (c.chatID == widget.chatID &&
+            (c.user.isSupport ||
+                c.user.displayName?.trim() == 'Поддержка')) {
+          return;
+        }
+      }
       setState(() => _roomActionInFlight = true);
       try {
         final repo = ref.read(friendsRepositoryProvider);
@@ -448,6 +461,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (action == _RoomAction.blockUser) {
       final id = (peerUserID ?? '').trim();
       if (id.isEmpty) return;
+      final chats =
+          ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+      for (final c in chats) {
+        if (c.chatID == widget.chatID && c.user.isSupport) return;
+      }
       final confirmed = await _confirmAction(
         title: context.l10n.chatsBlockTitle,
         description: context.l10n.chatsBlockDesc,
@@ -759,6 +777,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         (message.body.trim().isNotEmpty || message.hasImage) &&
         !isAnimatedEmojiMessage(message.body) &&
         !isGiftCollectionMessage(message.body) &&
+        !isCoinsCreditMessage(message.body) &&
         !isInviteLobbyMessage(message.body);
 
     final media = MediaQuery.of(context);
@@ -1560,6 +1579,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   String _peerTitle(ChatUserItem user) {
     final value = user.displayName?.trim();
+    if (user.isSupport || value == 'Поддержка') {
+      return context.l10n.supportTitle;
+    }
     if (value == null || value.isEmpty) return context.l10n.commonUser;
     return value;
   }
@@ -1642,6 +1664,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }) {
     Widget avatar;
     if (user != null &&
+        (user.isSupport || user.displayName?.trim() == 'Поддержка')) {
+      avatar = CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.accentSoft,
+        child: Icon(
+          Icons.support_agent_rounded,
+          color: AppColors.accentStart,
+          size: radius * 1.15,
+        ),
+      );
+    } else if (user != null &&
         user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
@@ -2040,6 +2073,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             },
             itemBuilder: (context) {
               final peerId = (peerUser?.id ?? '').trim();
+              final isSupport = peerUser?.isSupport == true ||
+                  peerUser?.displayName?.trim() == 'Поддержка';
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final isFriend = peerId.isNotEmpty &&
                   snapshot?.friends.any((f) => f.user.id == peerId) == true;
@@ -2049,12 +2084,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   snapshot?.incoming.any((r) => r.user.id == peerId) == true;
 
               return <PopupMenuEntry<_RoomAction>>[
-                if (isFriend)
+                if (!isSupport && isFriend)
                   PopupMenuItem<_RoomAction>(
                     value: _RoomAction.removeFriend,
                     child: Text(context.l10n.friendsRemove),
                   )
-                else if (peerId.isNotEmpty && snapshot != null)
+                else if (!isSupport && peerId.isNotEmpty && snapshot != null)
                   if (hasIncoming)
                     PopupMenuItem<_RoomAction>(
                       value: _RoomAction.acceptFriendRequest,
@@ -2075,11 +2110,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   value: _RoomAction.clearChat,
                   child: Text(context.l10n.chatsClearConfirm),
                 ),
-                PopupMenuItem<_RoomAction>(
-                  value: _RoomAction.blockUser,
-                  enabled: peerId.isNotEmpty,
-                  child: Text(context.l10n.chatsBlockConfirm),
-                ),
+                if (!isSupport)
+                  PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.blockUser,
+                    enabled: peerId.isNotEmpty,
+                    child: Text(context.l10n.chatsBlockConfirm),
+                  ),
               ];
             },
             icon: const Icon(Icons.more_vert_rounded),
@@ -2239,6 +2275,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   final mine = message.senderUserID == meID;
                   final isEmoji = isAnimatedEmojiMessage(message.body);
                   final isGift = isGiftCollectionMessage(message.body);
+                  final isCoinsCredit = isCoinsCreditMessage(message.body);
                   final inviteLink = parseInviteLobbyShareUrl(message.body);
                   if (inviteLink != null) {
                     return _wrapSwipeReply(
@@ -2309,6 +2346,32 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   ),
                                 ],
                               ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  if (isCoinsCredit) {
+                    return _wrapSwipeReply(
+                      message: message,
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 14, top: 6),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ChatCoinsCreditCard(
+                              messageId: message.id,
+                              body: message.body,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _formatBubbleDateTime(message.createdAt),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -3324,6 +3387,234 @@ class _ChatInviteCard extends StatelessWidget {
   }
 }
 
+class _ChatCoinsCreditCard extends ConsumerStatefulWidget {
+  const _ChatCoinsCreditCard({
+    required this.messageId,
+    required this.body,
+  });
+
+  final String messageId;
+  final String body;
+
+  @override
+  ConsumerState<_ChatCoinsCreditCard> createState() =>
+      _ChatCoinsCreditCardState();
+}
+
+class _ChatCoinsCreditCardState extends ConsumerState<_ChatCoinsCreditCard> {
+  final GlobalKey _claimKey = GlobalKey();
+  bool _claiming = false;
+  bool? _claimedOverride;
+
+  @override
+  void didUpdateWidget(covariant _ChatCoinsCreditCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.body != widget.body) {
+      _claimedOverride = null;
+    }
+  }
+
+  Future<void> _claim(CoinsCreditPayload credit) async {
+    if (_claiming || credit.claimed || (_claimedOverride ?? false)) return;
+    setState(() => _claiming = true);
+    try {
+      final fromBalance =
+          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+      final result =
+          await ref.read(authRepositoryProvider).claimAdminGrant(credit.grantId);
+      if (!mounted) return;
+      setState(() => _claimedOverride = true);
+      if (result.rewardBronze > 0) {
+        await playBalanceGain(
+          ref: ref,
+          context: context,
+          newBalanceBronze: result.balanceBronze,
+          fromBronze: fromBalance,
+          rewardBronze: result.rewardBronze,
+          sourceKey: _claimKey,
+        );
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .applyBalance(result.balanceBronze);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: formatUserError(e, fallback: context.l10n.commonGenericError),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) setState(() => _claiming = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final credit = parseCoinsCreditMessage(widget.body);
+    if (credit == null) {
+      return _ChatMessageBody(body: widget.body, largeCentered: true);
+    }
+    final claimed = _claimedOverride ?? credit.claimed;
+    final l10n = context.l10n;
+    final reason = credit.reason.trim();
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.accentStart.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.surfaceCard,
+                AppColors.accentSoft.withValues(alpha: 0.55),
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.accentStart, AppColors.accentEnd],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.monetization_on_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.coinsCreditCardTitle,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (reason.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  reason,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              if (claimed)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentStart.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle_rounded,
+                        size: 18,
+                        color: AppColors.accentStart.withValues(alpha: 0.85),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.coinsAlreadyClaimed,
+                        style: TextStyle(
+                          color: AppColors.accentStart.withValues(alpha: 0.9),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                FilledButton(
+                  key: _claimKey,
+                  onPressed: _claiming ? null : () => _claim(credit),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _claiming
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n.coinsClaim,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: BalanceDisplay(
+                                bronze: credit.amountBronze,
+                                coinSize: 18,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                spacing: 5,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ChatGiftCard extends StatelessWidget {
   const _ChatGiftCard({required this.body});
 
@@ -3471,6 +3762,9 @@ class _ChatMessageBody extends StatelessWidget {
     if (gift != null) {
       // Запасной путь — основная отрисовка через [_ChatGiftCard].
       return _ChatGiftCard(body: body);
+    }
+    if (isCoinsCreditMessage(body)) {
+      return _ChatCoinsCreditCard(messageId: '', body: body);
     }
     final name = parseAnimatedEmojiName(body);
     if (name != null) {

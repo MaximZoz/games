@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Netzwerkmodus",
   "shopPurchaseApplied": "{title} — Kauf angewendet",
   "shopPurchaseQueued": "Kauf gespeichert — wird im Online-Modus angewendet",
-  "shopPurchaseRejected": "{title} — Kauf nicht angewendet: {reason}"
+  "shopPurchaseRejected": "{title} — Kauf nicht angewendet: {reason}",
+  "supportTitle": "Support",
+  "supportUnavailable": "Support ist nicht verfügbar",
+  "supportOpenFailed": "Support-Chat konnte nicht geöffnet werden",
+  "coinsGrantedTitle": "Ihnen wurden {amount} Münzen gutgeschrieben",
+  "coinsDeductedTitle": "{amount} Münzen wurden abgezogen",
+  "coinsCreditCardTitle": "Ihnen wurden Münzen gutgeschrieben",
+  "coinsClaim": "Abholen"
 }

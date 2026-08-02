@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Netwerkmodus",
   "shopPurchaseApplied": "{title} — aankoop toegepast",
   "shopPurchaseQueued": "Aankoop opgeslagen — wordt toegepast in onlinemodus",
-  "shopPurchaseRejected": "{title} — aankoop niet toegepast: {reason}"
+  "shopPurchaseRejected": "{title} — aankoop niet toegepast: {reason}",
+  "supportTitle": "Support",
+  "supportUnavailable": "Support is niet beschikbaar",
+  "supportOpenFailed": "Supportchat kon niet worden geopend",
+  "coinsGrantedTitle": "Je hebt {amount} munten ontvangen",
+  "coinsDeductedTitle": "{amount} munten zijn afgetrokken",
+  "coinsCreditCardTitle": "Je hebt munten ontvangen",
+  "coinsClaim": "Ophalen"
 }

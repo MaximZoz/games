@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Nettverksmodus",
   "shopPurchaseApplied": "{title} — kjøp brukt",
   "shopPurchaseQueued": "Kjøp lagret — brukes i online-modus",
-  "shopPurchaseRejected": "{title} — kjøp ikke brukt: {reason}"
+  "shopPurchaseRejected": "{title} — kjøp ikke brukt: {reason}",
+  "supportTitle": "Support",
+  "supportUnavailable": "Support er utilgjengelig",
+  "supportOpenFailed": "Kunne ikke åpne supportchat",
+  "coinsGrantedTitle": "Du har fått {amount} mynter",
+  "coinsDeductedTitle": "{amount} mynter ble trukket",
+  "coinsCreditCardTitle": "Du har fått mynter",
+  "coinsClaim": "Hent"
 }

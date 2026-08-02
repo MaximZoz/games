@@ -1730,4 +1730,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'आपने हार मान ली। $name जीत गया';
   }
+
+  @override
+  String get supportTitle => 'सहायता';
+
+  @override
+  String get supportUnavailable => 'सहायता उपलब्ध नहीं है';
+
+  @override
+  String get supportOpenFailed => 'सहायता चैट नहीं खुल सकी';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'आपको $amount सिक्के जमा किए गए';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount सिक्के काटे गए';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'आपको सिक्के जमा किए गए';
+
+  @override
+  String get coinsClaim => 'प्राप्त करें';
 }

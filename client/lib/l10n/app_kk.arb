@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Желі режимі",
   "shopPurchaseApplied": "{title} — сатып алу қолданылды",
   "shopPurchaseQueued": "Сатып алу сақталды — онлайн режимде қолданылады",
-  "shopPurchaseRejected": "{title} — сатып алу қолданылмады: {reason}"
+  "shopPurchaseRejected": "{title} — сатып алу қолданылмады: {reason}",
+  "supportTitle": "Қолдау",
+  "supportUnavailable": "Қолдау қолжетімсіз",
+  "supportOpenFailed": "Қолдау чатын ашу мүмкін болмады",
+  "coinsGrantedTitle": "Сізге {amount} тиын есептелді",
+  "coinsDeductedTitle": "{amount} тиын шегерілді",
+  "coinsCreditCardTitle": "Сізге тиындар есептелді",
+  "coinsClaim": "Алу"
 }

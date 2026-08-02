@@ -1730,4 +1730,29 @@ class AppLocalizationsNl extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Je gaf op. $name won';
   }
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportUnavailable => 'Support is niet beschikbaar';
+
+  @override
+  String get supportOpenFailed => 'Supportchat kon niet worden geopend';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Je hebt $amount munten ontvangen';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount munten zijn afgetrokken';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Je hebt munten ontvangen';
+
+  @override
+  String get coinsClaim => 'Ophalen';
 }

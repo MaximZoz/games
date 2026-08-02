@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "नेटवर्क मोड",
   "shopPurchaseApplied": "{title} — खरीदारी लागू",
   "shopPurchaseQueued": "खरीदारी सहेजी गई — ऑनलाइन मोड में लागू होगी",
-  "shopPurchaseRejected": "{title} — खरीदारी लागू नहीं: {reason}"
+  "shopPurchaseRejected": "{title} — खरीदारी लागू नहीं: {reason}",
+  "supportTitle": "सहायता",
+  "supportUnavailable": "सहायता उपलब्ध नहीं है",
+  "supportOpenFailed": "सहायता चैट नहीं खुल सकी",
+  "coinsGrantedTitle": "आपको {amount} सिक्के जमा किए गए",
+  "coinsDeductedTitle": "{amount} सिक्के काटे गए",
+  "coinsCreditCardTitle": "आपको सिक्के जमा किए गए",
+  "coinsClaim": "प्राप्त करें"
 }

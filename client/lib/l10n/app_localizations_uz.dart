@@ -1730,4 +1730,29 @@ class AppLocalizationsUz extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Siz taslim bo‘ldingiz. $name yutdi';
   }
+
+  @override
+  String get supportTitle => 'Yordam';
+
+  @override
+  String get supportUnavailable => 'Yordam mavjud emas';
+
+  @override
+  String get supportOpenFailed => 'Yordam chatini ochib bo‘lmadi';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Sizga $amount tanga hisoblandi';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return '$amount tanga yechildi';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Sizga tangalar hisoblandi';
+
+  @override
+  String get coinsClaim => 'Olish';
 }

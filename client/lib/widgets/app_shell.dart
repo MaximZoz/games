@@ -28,6 +28,7 @@ import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
+import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 bool _activeGameUsable(ActiveGameItem? active) {
@@ -225,8 +226,25 @@ class AppShell extends ConsumerWidget {
             ref.invalidate(dailyRewardStatusProvider);
             ref.invalidate(dailyRewardAvailableProvider);
           }
+          if (type == 'support_message') {
+            ref.invalidate(supportChatsProvider);
+          }
+          if (type == 'coins_granted') {
+            // Анимация «Забрать» идёт из карточки в чате; здесь только
+            // синхронизация баланса на других вкладках / после списания.
+            final balance = (event['balance'] as num?)?.toInt();
+            if (balance != null) {
+              unawaited(
+                ref.read(authStateProvider.notifier).applyBalance(balance),
+              );
+            }
+          }
         });
       });
+      // Держим подписку на обновления inbox поддержки для админ-бейджа.
+      if (authState.valueOrNull?.isAdmin == true) {
+        ref.watch(supportInboxRealtimeProvider);
+      }
     }
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
@@ -472,12 +490,13 @@ class AppShell extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (user.isAdmin)
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.admin_panel_settings),
-                                    onPressed: () => context.go('/admin'),
+                                  _AdminIconWithBadge(
+                                    onTap: () => context.go('/admin'),
                                     tooltip: context.l10n.adminTitle,
-                                    visualDensity: VisualDensity.compact,
+                                    unreadCount: ref
+                                            .watch(supportUnreadTotalProvider)
+                                            .valueOrNull ??
+                                        0,
                                   ),
                                 Flexible(
                                   child: Tooltip(
@@ -870,4 +889,54 @@ Widget _navIcon(
       ),
     ],
   );
+}
+
+/// Иконка админки с badge непрочитанных обращений в поддержку.
+class _AdminIconWithBadge extends StatelessWidget {
+  const _AdminIconWithBadge({
+    required this.onTap,
+    required this.tooltip,
+    required this.unreadCount,
+  });
+
+  final VoidCallback onTap;
+  final String tooltip;
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = IconButton(
+      icon: const Icon(Icons.admin_panel_settings),
+      onPressed: onTap,
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+    );
+    if (unreadCount <= 0) return icon;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        icon,
+        Positioned(
+          right: -2,
+          top: -2,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: Colors.red.shade600,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppColors.surfaceCard, width: 1.2),
+            ),
+            child: Text(
+              unreadCount > 99 ? '99+' : '$unreadCount',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

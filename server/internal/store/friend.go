@@ -19,6 +19,7 @@ var (
 	ErrFriendRequestAlreadySent    = errors.New("friend request already sent")
 	ErrFriendRequestAlreadyPending = errors.New("friend request already pending")
 	ErrCannotFriendYourself        = errors.New("cannot friend yourself")
+	ErrCannotFriendSupport         = errors.New("cannot friend support")
 )
 
 type FriendUser struct {
@@ -244,6 +245,7 @@ func SearchUsersWithFriendRelation(
 		)
 		WHERE
 			u.id <> $1
+			AND COALESCE(u.is_support, false) = false
 			AND COALESCE(u.display_name, '') ILIKE $2
 			AND NOT EXISTS (
 				SELECT 1
@@ -310,6 +312,9 @@ func CreateFriendRequest(
 	receiver, err := GetUserByID(ctx, pool, receiverUserID)
 	if err != nil || receiver == nil {
 		return uuid.Nil, ErrFriendNotFound
+	}
+	if receiver.IsSupport {
+		return uuid.Nil, ErrCannotFriendSupport
 	}
 
 	blocked, err := IsUsersBlocked(ctx, pool, senderUserID, receiverUserID)

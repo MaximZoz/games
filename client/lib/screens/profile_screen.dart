@@ -890,6 +890,7 @@ class _ProfileView extends ConsumerWidget {
       ],
     );
   }
+
 }
 
 class _ProfileInfoChip extends StatelessWidget {

@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "وضع الشبكة",
   "shopPurchaseApplied": "{title} — تم تطبيق الشراء",
   "shopPurchaseQueued": "تم حفظ الشراء — سيُطبَّق في وضع الاتصال",
-  "shopPurchaseRejected": "{title} — لم يُطبَّق الشراء: {reason}"
+  "shopPurchaseRejected": "{title} — لم يُطبَّق الشراء: {reason}",
+  "supportTitle": "الدعم",
+  "supportUnavailable": "الدعم غير متاح",
+  "supportOpenFailed": "تعذر فتح محادثة الدعم",
+  "coinsGrantedTitle": "تم إضافة {amount} عملة إلى رصيدك",
+  "coinsDeductedTitle": "تم خصم {amount} عملة",
+  "coinsCreditCardTitle": "تم إضافة عملات إلى رصيدك",
+  "coinsClaim": "استلام"
 }

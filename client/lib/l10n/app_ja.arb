@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "ネットワークモード",
   "shopPurchaseApplied": "{title} — 購入を適用しました",
   "shopPurchaseQueued": "購入を保存しました — オンラインモードで適用されます",
-  "shopPurchaseRejected": "{title} — 購入を適用できませんでした: {reason}"
+  "shopPurchaseRejected": "{title} — 購入を適用できませんでした: {reason}",
+  "supportTitle": "サポート",
+  "supportUnavailable": "サポートは利用できません",
+  "supportOpenFailed": "サポートチャットを開けませんでした",
+  "coinsGrantedTitle": "{amount} コインが付与されました",
+  "coinsDeductedTitle": "{amount} コインが差し引かれました",
+  "coinsCreditCardTitle": "コインが付与されました",
+  "coinsClaim": "受け取る"
 }

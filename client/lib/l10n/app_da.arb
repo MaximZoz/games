@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Netværkstilstand",
   "shopPurchaseApplied": "{title} — køb anvendt",
   "shopPurchaseQueued": "Køb gemt — anvendes i online-tilstand",
-  "shopPurchaseRejected": "{title} — køb ikke anvendt: {reason}"
+  "shopPurchaseRejected": "{title} — køb ikke anvendt: {reason}",
+  "supportTitle": "Support",
+  "supportUnavailable": "Support er utilgængelig",
+  "supportOpenFailed": "Kunne ikke åbne supportchat",
+  "coinsGrantedTitle": "Du har fået {amount} mønter",
+  "coinsDeductedTitle": "{amount} mønter er trukket",
+  "coinsCreditCardTitle": "Du har fået mønter",
+  "coinsClaim": "Hent"
 }

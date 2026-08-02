@@ -34,6 +34,7 @@ type ChatUserItem struct {
 	About       *string `json:"about,omitempty"`
 	FrameColor  string  `json:"frame_color,omitempty"`
 	FrameCode   string  `json:"frame_code,omitempty"`
+	IsSupport   bool    `json:"is_support,omitempty"`
 }
 
 type ChatPreviewItem struct {
@@ -174,6 +175,7 @@ func chatUserToItem(u store.ChatUser) ChatUserItem {
 		Age:         u.Age,
 		Gender:      u.Gender,
 		About:       u.About,
+		IsSupport:   u.IsSupport,
 	}
 }
 
@@ -202,6 +204,8 @@ func writeChatError(w http.ResponseWriter, r *http.Request, err error) {
 		WriteErr(w, r, http.StatusBadRequest, "invalid reply target")
 	case errors.Is(err, store.ErrCannotBlockYourself):
 		WriteErr(w, r, http.StatusBadRequest, "cannot block yourself")
+	case errors.Is(err, store.ErrCannotBlockSupport):
+		WriteErr(w, r, http.StatusBadRequest, "cannot block support")
 	case errors.Is(err, store.ErrChatFriendsOnlyText):
 		WriteErr(w, r, http.StatusForbidden, "only friends can send text messages")
 	case errors.Is(err, store.ErrChatEditForbidden):
@@ -578,6 +582,18 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 				)
 				deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
 				item.DeliveredAt = &deliveredAt
+			}
+		}
+		// Сообщение в поддержку — уведомить онлайн-админов (inbox + badge).
+		if peer, err := store.GetUserByID(r.Context(), h.Pool, peerID); err == nil && peer != nil && peer.IsSupport {
+			if h.Hub != nil {
+				if admins, aerr := store.ListAdminIDs(r.Context(), h.Pool); aerr == nil && len(admins) > 0 {
+					h.Hub.PublishToUsers(admins, map[string]any{
+						"type":    "support_message",
+						"user_id": userID.String(),
+						"chat_id": chatID.String(),
+					})
+				}
 			}
 		}
 	}

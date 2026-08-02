@@ -1012,5 +1012,12 @@
   "settingsOfflineModeTitle": "Mode réseau",
   "shopPurchaseApplied": "{title} — achat appliqué",
   "shopPurchaseQueued": "Achat enregistré — sera appliqué en mode en ligne",
-  "shopPurchaseRejected": "{title} — achat non appliqué : {reason}"
+  "shopPurchaseRejected": "{title} — achat non appliqué : {reason}",
+  "supportTitle": "Support",
+  "supportUnavailable": "Le support est indisponible",
+  "supportOpenFailed": "Impossible d'ouvrir le chat support",
+  "coinsGrantedTitle": "Vous avez reçu {amount} pièces",
+  "coinsDeductedTitle": "{amount} pièces ont été déduites",
+  "coinsCreditCardTitle": "Des pièces vous ont été créditées",
+  "coinsClaim": "Récupérer"
 }

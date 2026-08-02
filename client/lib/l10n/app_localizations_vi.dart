@@ -1730,4 +1730,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String gameYouForfeitOpponentWon(String name) {
     return 'Bạn đầu hàng. $name thắng';
   }
+
+  @override
+  String get supportTitle => 'Hỗ trợ';
+
+  @override
+  String get supportUnavailable => 'Hỗ trợ không khả dụng';
+
+  @override
+  String get supportOpenFailed => 'Không thể mở chat hỗ trợ';
+
+  @override
+  String coinsGrantedTitle(int amount) {
+    return 'Bạn đã được cộng $amount xu';
+  }
+
+  @override
+  String coinsDeductedTitle(int amount) {
+    return 'Đã trừ $amount xu';
+  }
+
+  @override
+  String get coinsCreditCardTitle => 'Bạn đã được cộng xu';
+
+  @override
+  String get coinsClaim => 'Nhận';
 }

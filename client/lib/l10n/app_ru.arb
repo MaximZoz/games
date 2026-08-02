@@ -1060,5 +1060,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "supportTitle": "Поддержка",
+  "supportUnavailable": "Поддержка недоступна",
+  "supportOpenFailed": "Не удалось открыть чат с поддержкой",
+  "coinsGrantedTitle": "Вам начислено {amount} монет",
+  "coinsDeductedTitle": "Списано {amount} монет",
+  "@coinsGrantedTitle": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "@coinsDeductedTitle": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "coinsCreditCardTitle": "Вам начислены монеты",
+  "coinsClaim": "Забрать"
 }
