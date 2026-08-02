@@ -16,10 +16,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type ChatsHandler struct {
 	Pool *pgxpool.Pool
+	Rdb  *redis.Client
 	Hub  *RealtimeHub
 	Push *WebPushSender
 }
@@ -269,6 +271,11 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		offset = n
+	}
+
+	// Сносим групповые чаты завершённых лобби (иначе висят «На троих» и т.п.).
+	if offset == 0 {
+		h.cleanupOrphanGroupChats(r.Context(), userID)
 	}
 
 	chats, err := store.ListChatsForUser(r.Context(), h.Pool, userID, limit, offset)
@@ -1063,6 +1070,34 @@ func (h *ChatsHandler) publishChatListChanged(userIDs ...uuid.UUID) {
 	h.Hub.PublishToUsers(userIDs, map[string]any{
 		"type": "chat_list_changed",
 	})
+}
+
+// cleanupOrphanGroupChats удаляет групповые чаты, чьё лобби уже нет в Redis
+// (партия закончилась / лобби истекло).
+func (h *ChatsHandler) cleanupOrphanGroupChats(ctx context.Context, userID uuid.UUID) {
+	if h == nil || h.Pool == nil || h.Rdb == nil {
+		return
+	}
+	lobbyIDs, err := store.ListUserGroupLobbyIDs(ctx, h.Pool, userID)
+	if err != nil || len(lobbyIDs) == 0 {
+		return
+	}
+	removed := 0
+	for _, lobbyID := range lobbyIDs {
+		n, err := h.Rdb.Exists(ctx, "lobby:"+lobbyID).Result()
+		if err != nil {
+			continue
+		}
+		if n > 0 {
+			continue
+		}
+		if err := store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID); err == nil {
+			removed++
+		}
+	}
+	if removed > 0 {
+		h.publishChatListChanged(userID)
+	}
 }
 
 func uuidSliceToStrings(ids []uuid.UUID) []string {

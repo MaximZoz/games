@@ -24,7 +24,6 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -40,6 +39,7 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -1735,10 +1735,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: _buildPeerAvatar(
-            user: senderUser,
-            fallbackTitle: senderName,
-            radius: 14,
+          child: GestureDetector(
+            onTap: senderUser == null
+                ? null
+                : () => unawaited(_showUserInfoDialog(senderUser)),
+            child: _buildPeerAvatar(
+              user: senderUser,
+              fallbackTitle: senderName,
+              radius: 14,
+            ),
           ),
         ),
         const SizedBox(width: 6),
@@ -1753,76 +1758,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (member.id == userId) return member;
     }
     return null;
-  }
-
-  IconData? _genderIcon(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    if (normalized == null || normalized.isEmpty) return null;
-    switch (normalized) {
-      case 'male':
-      case 'm':
-      case 'man':
-      case 'м':
-      case 'муж':
-      case 'мужской':
-        return Icons.male_rounded;
-      case 'female':
-      case 'f':
-      case 'woman':
-      case 'ж':
-      case 'жен':
-      case 'женский':
-        return Icons.female_rounded;
-      default:
-        return null;
-    }
-  }
-
-  bool _isFemaleGender(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    return normalized == 'female' ||
-        normalized == 'f' ||
-        normalized == 'woman' ||
-        normalized == 'ж' ||
-        normalized == 'жен' ||
-        normalized == 'женский';
-  }
-
-  Widget _buildInfoPill({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? foregroundColor,
-    double? minWidth,
-  }) {
-    final bg = backgroundColor ?? AppColors.accentSoft;
-    final fg = foregroundColor ?? AppColors.textPrimary;
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth ?? 0),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
-            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
-          ],
-          if (text != null && text.isNotEmpty)
-            Text(
-              text,
-              style: TextStyle(
-                color: fg,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-        ],
-      ),
-    );
   }
 
   Widget _buildPeerAvatar({
@@ -1964,132 +1899,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
-    final name = _peerTitle(user);
-    final about = user.about?.trim();
-    final genderIcon = _genderIcon(user.gender);
-    final female = _isFemaleGender(user.gender);
-    await showDialog<void>(
+    await showUserProfileDialog(
       context: context,
-      builder: (dialogContext) {
-        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        final statusText = presence == null
-            ? null
-            : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 420,
-              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
-            ),
-            child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.all(compact ? 12 : 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildPeerAvatar(
-                      user: user,
-                      fallbackTitle: name,
-                      radius: 22,
-                      isOnline: presence?.online,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            name,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (statusText != null && statusText.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                statusText,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.commonClose,
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                    ),
-                  ],
-                ),
-                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (user.age != null && user.age! > 0)
-                        _buildInfoPill(
-                          text: context.l10n.profileAgeYears(user.age!),
-                          minWidth: 72,
-                        ),
-                      if (genderIcon != null)
-                        _buildInfoPill(
-                          icon: genderIcon,
-                          minWidth: 46,
-                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
-                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
-                        ),
-                    ],
-                  ),
-                ],
-                if (about != null && about.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    context.l10n.commonAboutMe,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    about,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      height: 1.35,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                HeadToHeadSection(
-                  opponentId: user.id,
-                  opponentName: user.displayName,
-                ),
-                PeerCollectionsSection(userId: user.id),
-              ],
-            ),
-          ),
-          ),
-        );
-      },
+      ref: ref,
+      userId: user.id,
+      displayName: _peerTitle(user),
+      avatarKind: user.avatarKind,
+      avatarValue: user.avatarValue,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      messageFrom: widget.fromGames ? 'games' : 'chats',
+      messageReturnPath: widget.fromGames ? widget.gameReturnPath : null,
     );
   }
 
@@ -2209,7 +2032,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ),
             ),
           isGroup
-              ? _buildGroupAvatarStack(chat, radius: 18)
+              ? Tooltip(
+                  message: context.l10n.userInfoTitle,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => unawaited(_showGroupParticipantsSheet(chat)),
+                      behavior: HitTestBehavior.opaque,
+                      child: _buildGroupAvatarStack(chat, radius: 18),
+                    ),
+                  ),
+                )
               : Tooltip(
                   message: context.l10n.userInfoTitle,
                   child: MouseRegion(
@@ -2237,31 +2070,67 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
           const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+            child: isGroup
+                ? MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () =>
+                          unawaited(_showGroupParticipantsSheet(chat)),
+                      behavior: HitTestBehavior.opaque,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          Text(
+                            '${chat?.members.length ?? 0} уч.',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
-                ),
-                if (statusText != null && statusText.isNotEmpty)
-                  Text(
-                    statusText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
                     ),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      if (statusText != null && statusText.isNotEmpty)
+                        Text(
+                          statusText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
           ),
           PopupMenuButton<_RoomAction>(
             enabled: !_roomActionInFlight,
@@ -2386,89 +2255,96 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _showGroupMembersFriendSheet(ChatPreviewItem? chat) async {
+    await _showGroupParticipantsSheet(chat);
+  }
+
+  /// Список участников группового чата → карточка профиля.
+  Future<void> _showGroupParticipantsSheet(ChatPreviewItem? chat) async {
     if (chat == null || !chat.isGroup) return;
-    final meId = ref.read(authStateProvider).valueOrNull?.id;
-    final members = chat.members
-        .where((m) => m.id.isNotEmpty && m.id != meId)
-        .toList(growable: false);
+    final members =
+        chat.members.where((m) => m.id.isNotEmpty).toList(growable: false);
     if (members.isEmpty) return;
+    final meId = ref.read(authStateProvider).valueOrNull?.id;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (sheetContext) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.friendsAdd,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      const SizedBox(height: 12),
-                      for (final member in members)
-                        Builder(
-                          builder: (context) {
-                            final isFriend = snapshot?.friends
-                                    .any((f) => f.user.id == member.id) ==
-                                true;
-                            final hasOutgoing = snapshot?.outgoing
-                                    .any((r) => r.user.id == member.id) ==
-                                true;
-                            final title = _peerTitle(member);
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: _buildPeerAvatar(
-                                  user: member,
-                                  fallbackTitle: title,
-                                  radius: 20,
-                                ),
-                                title: Text(
-                                  title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: Icon(
-                                  isFriend
-                                      ? Icons.check_rounded
-                                      : Icons.person_add_alt_1_rounded,
-                                  color: isFriend || hasOutgoing
-                                      ? AppColors.textSecondary
-                                      : AppColors.accentStart,
-                                ),
-                                onTap: isFriend || hasOutgoing
-                                    ? null
-                                    : () {
-                                        Navigator.of(sheetContext).pop();
-                                        unawaited(_runRoomAction(
-                                          _RoomAction.sendFriendRequest,
-                                          peerUserID: member.id,
-                                        ));
-                                      },
-                              ),
-                            );
-                          },
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    (chat.title ?? '').trim().isNotEmpty
+                        ? chat.title!.trim()
+                        : context.l10n.navChats,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
                         ),
-                    ],
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Участники: ${members.length}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: members.length,
+                      itemBuilder: (context, index) {
+                        final member = members[index];
+                        final title = _peerTitle(member);
+                        final isMe = member.id == meId;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: _buildPeerAvatar(
+                              user: member,
+                              fallbackTitle: title,
+                              radius: 20,
+                            ),
+                            title: Text(
+                              isMe ? '$title (вы)' : title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: isMe
+                                ? null
+                                : const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: AppColors.textSecondary,
+                                  ),
+                            onTap: isMe
+                                ? null
+                                : () {
+                                    Navigator.of(sheetContext).pop();
+                                    unawaited(_showUserInfoDialog(member));
+                                  },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );

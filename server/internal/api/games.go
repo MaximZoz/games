@@ -3337,13 +3337,15 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				clearUserActiveGame(ctx, h.Rdb, userID)
 			} else {
 				elim := parseEliminatedMarks(m["eliminated_marks"])
-				isMyTurn := !elim[myMark] && m["turn"] == myMark
+				isEliminated := elim[myMark]
+				isMyTurn := !isEliminated && m["turn"] == myMark
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(map[string]any{
-					"type":       "game",
-					"game_id":    gameID,
-					"lobby_id":   m["lobby_id"],
-					"is_my_turn": isMyTurn,
+					"type":          "game",
+					"game_id":       gameID,
+					"lobby_id":      m["lobby_id"],
+					"is_my_turn":    isMyTurn,
+					"is_eliminated": isEliminated,
 				})
 				return
 			}

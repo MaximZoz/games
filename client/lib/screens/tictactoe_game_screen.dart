@@ -8,15 +8,11 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
-import 'package:multigames_client/utils/relative_time.dart';
-import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -25,6 +21,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/router.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
@@ -580,6 +577,18 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   showGroupChat: chatId.isNotEmpty,
                   onGroupChatTap:
                       canOpenChat ? () => _openGroupChat(context, game) : null,
+                  onPlayerTap: (player, login) {
+                    if (player.userId.startsWith('bot:')) return;
+                    _showOpponentInfo(
+                      context,
+                      opponentId: player.userId,
+                      displayName: login,
+                      avatarKind: player.avatarKind,
+                      avatarValue: player.avatarValue,
+                      frameCode: player.frameCode,
+                      frameColor: player.frameColor,
+                    );
+                  },
                 );
               }
               final messageUnread = opponentId.isEmpty
@@ -610,6 +619,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   displayName: opponentName,
                   avatarKind: opponentAvatarKind,
                   avatarValue: opponentAvatarValue,
+                  frameCode: opponentFrameCode,
+                  frameColor: opponentFrameColor,
                 ),
                 onMessageTap: () =>
                     _openChat(context, opponentId, opponentName),
@@ -1104,7 +1115,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
   void _handleClose(GameStateItem? game) {
     final isOver = game?.status != 'active';
-    if (isOver) {
+    final me = ref.read(authStateProvider).valueOrNull?.id;
+    final mark = game?.markForUser(me);
+    final eliminated =
+        mark != null && game != null && game.isEliminated(mark);
+    // Выбывший / партия окончена — без предупреждения «проиграете».
+    if (isOver || eliminated) {
       final rematchLobbyId = _rematchLobbyId;
       _rematchLobbyId = null;
       ref.read(activeGameProvider.notifier).clearLocal();
@@ -1159,190 +1175,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     required String displayName,
     required String avatarKind,
     required String? avatarValue,
+    String? frameCode,
+    String? frameColor,
   }) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-        backgroundColor: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 420,
-            maxHeight: MediaQuery.sizeOf(ctx).height * 0.85,
-          ),
-          child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: const EdgeInsets.all(14),
-            child: Consumer(
-              builder: (context, ref, _) {
-                final friendsSnapshot =
-                    ref.watch(friendsSnapshotProvider).valueOrNull;
-                final presence =
-                    ref.watch(presenceMapProvider).valueOrNull ?? const {};
-                final chatsList =
-                    ref.watch(chatsListProvider).valueOrNull ?? const [];
-                FriendUserItem? friendUser;
-                for (final f in friendsSnapshot?.friends ?? []) {
-                  if (f.user.id == opponentId) {
-                    friendUser = f.user;
-                    break;
-                  }
-                }
-                if (friendUser == null) {
-                  for (final r in friendsSnapshot?.incoming ?? []) {
-                    if (r.user.id == opponentId) {
-                      friendUser = r.user;
-                      break;
-                    }
-                  }
-                }
-                if (friendUser == null) {
-                  for (final r in friendsSnapshot?.outgoing ?? []) {
-                    if (r.user.id == opponentId) {
-                      friendUser = r.user;
-                      break;
-                    }
-                  }
-                }
-                if (friendUser == null) {
-                  for (final chat in chatsList) {
-                    if (chat.user.id == opponentId) {
-                      friendUser = FriendUserItem(
-                        id: chat.user.id,
-                        email: '',
-                        displayName: chat.user.displayName,
-                        avatarKind: chat.user.avatarKind,
-                        avatarValue: chat.user.avatarValue,
-                        age: chat.user.age,
-                        gender: chat.user.gender,
-                        about: chat.user.about,
-                      );
-                      break;
-                    }
-                  }
-                }
-                final presenceEntry = presence[opponentId];
-                final statusText = presenceEntry == null
-                    ? null
-                    : (presenceEntry.online
-                        ? context.l10n.commonOnlineCap
-                        : formatLastSeen(presenceEntry.lastSeenAt));
-                final about = friendUser?.about?.trim();
-                final genderIcon = _genderIcon(friendUser?.gender);
-                final female = _isFemaleGender(friendUser?.gender);
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildOpponentAvatar(
-                          friendUser?.avatarKind ?? avatarKind,
-                          friendUser?.avatarValue ?? avatarValue,
-                          friendUser?.displayName ?? displayName,
-                          22,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                friendUser?.displayName?.trim().isNotEmpty ==
-                                        true
-                                    ? friendUser!.displayName!
-                                    : displayName,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (statusText != null && statusText.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    statusText,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: context.l10n.commonClose,
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () => Navigator.of(ctx).pop(),
-                        ),
-                      ],
-                    ),
-                    if ((friendUser?.age != null && friendUser!.age! > 0) ||
-                        genderIcon != null) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          if (friendUser?.age != null && friendUser!.age! > 0)
-                            _buildInfoPill(
-                              text:
-                                  context.l10n.profileAgeYears(friendUser.age!),
-                              minWidth: 72,
-                            ),
-                          if (genderIcon != null)
-                            _buildInfoPill(
-                              icon: genderIcon,
-                              minWidth: 46,
-                              backgroundColor: female
-                                  ? const Color(0xFFFCE7F3)
-                                  : AppColors.accentSoft,
-                              foregroundColor: female
-                                  ? const Color(0xFFBE185D)
-                                  : AppColors.textPrimary,
-                            ),
-                        ],
-                      ),
-                    ],
-                    if (about != null && about.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        context.l10n.commonAboutMe,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        about,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          height: 1.35,
-                        ),
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    HeadToHeadSection(
-                      opponentId: opponentId,
-                      opponentName: friendUser?.displayName ?? displayName,
-                    ),
-                    PeerCollectionsSection(userId: opponentId),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: opponentId,
+        displayName: displayName,
+        avatarKind: avatarKind,
+        avatarValue: avatarValue,
+        frameCode: frameCode,
+        frameColor: frameColor,
+        messageReturnPath: '/games/tictactoe/game/${widget.gameId}',
+        messageFrom: 'games',
       ),
     );
   }
@@ -1491,107 +1338,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       },
     );
     ctx.push(uri.toString());
-  }
-
-  IconData? _genderIcon(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    if (normalized == null || normalized.isEmpty) return null;
-    switch (normalized) {
-      case 'male':
-      case 'm':
-      case 'man':
-      case 'м':
-      case 'муж':
-      case 'мужской':
-        return Icons.male_rounded;
-      case 'female':
-      case 'f':
-      case 'woman':
-      case 'ж':
-      case 'жен':
-      case 'женский':
-        return Icons.female_rounded;
-      default:
-        return null;
-    }
-  }
-
-  bool _isFemaleGender(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    return normalized == 'female' ||
-        normalized == 'f' ||
-        normalized == 'woman' ||
-        normalized == 'ж' ||
-        normalized == 'жен' ||
-        normalized == 'женский';
-  }
-
-  Widget _buildInfoPill({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? foregroundColor,
-    double? minWidth,
-  }) {
-    final bg = backgroundColor ?? AppColors.accentSoft;
-    final fg = foregroundColor ?? AppColors.textPrimary;
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth ?? 0),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: icon != null
-          ? Icon(icon, size: 16, color: fg)
-          : Text(
-              text ?? '',
-              style: TextStyle(fontSize: 13, color: fg),
-            ),
-    );
-  }
-
-  Widget _buildOpponentAvatar(
-    String avatarKind,
-    String? avatarValue,
-    String displayName,
-    double radius,
-  ) {
-    if (avatarKind == 'file' &&
-        avatarValue != null &&
-        avatarValue.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
-      if (img != null) {
-        return CircleAvatar(
-          radius: radius,
-          backgroundImage: img,
-        );
-      }
-    }
-    if (avatarKind == 'preset' && avatarValue != null) {
-      final idx = int.tryParse(avatarValue);
-      if (idx != null && idx >= 0 && idx < _presetAvatarIcons.length) {
-        return CircleAvatar(
-          radius: radius,
-          backgroundColor: AppColors.accentSoft,
-          child: Icon(_presetAvatarIcons[idx], color: AppColors.accentStart),
-        );
-      }
-    }
-    final letter =
-        displayName.trim().isEmpty ? '?' : displayName[0].toUpperCase();
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: AppColors.accentSoft,
-      child: Text(
-        letter,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 24,
-        ),
-      ),
-    );
   }
 
   Future<void> _makeMove(int cell) async {
@@ -1976,6 +1722,7 @@ class _MultiOpponentsCard extends StatelessWidget {
     required this.groupUnread,
     required this.showGroupChat,
     required this.onGroupChatTap,
+    this.onPlayerTap,
   });
 
   final GameStateItem game;
@@ -1984,6 +1731,7 @@ class _MultiOpponentsCard extends StatelessWidget {
   final int groupUnread;
   final bool showGroupChat;
   final VoidCallback? onGroupChatTap;
+  final void Function(GamePlayerMeta player, String login)? onPlayerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -2007,6 +1755,9 @@ class _MultiOpponentsCard extends StatelessWidget {
           player: player,
           eliminated: game.isEliminated(player.mark),
           compact: true,
+          onTap: onPlayerTap == null
+              ? null
+              : () => onPlayerTap!(player, login),
         ),
       );
     }
@@ -2060,12 +1811,14 @@ class _MultiOpponentChip extends StatelessWidget {
     required this.player,
     required this.eliminated,
     this.compact = false,
+    this.onTap,
   });
 
   final String displayName;
   final GamePlayerMeta player;
   final bool eliminated;
   final bool compact;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -2097,9 +1850,21 @@ class _MultiOpponentChip extends StatelessWidget {
         ),
       ],
     );
-    return Opacity(
+    final chip = Opacity(
       opacity: eliminated ? 0.45 : 1,
       child: content,
+    );
+    if (onTap == null) return chip;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: chip,
+        ),
+      ),
     );
   }
 }

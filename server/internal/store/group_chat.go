@@ -93,6 +93,35 @@ func DeleteGameGroupChatByLobby(ctx context.Context, pool *pgxpool.Pool, lobbyID
 	return err
 }
 
+// ListUserGroupLobbyIDs — lobby_id групповых чатов, в которых состоит пользователь.
+func ListUserGroupLobbyIDs(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]string, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT DISTINCT c.lobby_id
+		FROM chats c
+		JOIN chat_members m ON m.chat_id = c.id
+		WHERE c.kind = 'group'
+		  AND c.lobby_id IS NOT NULL
+		  AND TRIM(c.lobby_id) <> ''
+		  AND m.user_id = $1
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var lobbyID string
+		if err := rows.Scan(&lobbyID); err != nil {
+			return nil, err
+		}
+		lobbyID = strings.TrimSpace(lobbyID)
+		if lobbyID != "" {
+			out = append(out, lobbyID)
+		}
+	}
+	return out, rows.Err()
+}
+
 // RemoveChatMember убирает участника из группового чата.
 func RemoveChatMember(ctx context.Context, pool *pgxpool.Pool, chatID, userID uuid.UUID) error {
 	_, err := pool.Exec(ctx, `

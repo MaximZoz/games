@@ -921,12 +921,15 @@ class ActiveGameItem {
   final String? gameId;
   final String? lobbyId;
   final bool isMyTurn;
+  /// Выбыл из multi — вкладка «Игры» не авто-открывает доску.
+  final bool isEliminated;
 
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
+    this.isEliminated = false,
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -935,6 +938,7 @@ class ActiveGameItem {
       gameId: json['game_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       isMyTurn: json['is_my_turn'] as bool? ?? false,
+      isEliminated: json['is_eliminated'] as bool? ?? false,
     );
   }
 }

@@ -45,10 +45,12 @@ bool _activeGameUsable(ActiveGameItem? active) {
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
+  // Выбывший смотрит партию только по клику на «Текущая игра», не с вкладки.
   if (active != null &&
       active.type == 'game' &&
       active.gameId != null &&
-      active.gameId!.isNotEmpty) {
+      active.gameId!.isNotEmpty &&
+      !active.isEliminated) {
     final dest = '/games/tictactoe/game/${active.gameId}';
     if (currentPath == dest) return;
     context.go(dest);
