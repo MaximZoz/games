@@ -161,13 +161,43 @@ class SupportChatItem {
   });
 
   factory SupportChatItem.fromJson(Map<String, dynamic> json) {
+    // last_message может прийти строкой (новый API) или объектом (legacy).
+    String? lastMessage;
+    final rawLast = json['last_message'];
+    if (rawLast is String) {
+      lastMessage = rawLast;
+    } else if (rawLast is Map) {
+      lastMessage = rawLast['body'] as String? ?? rawLast['Body'] as String?;
+    }
+
+    String peerId =
+        json['peer_id'] as String? ?? json['user_id'] as String? ?? '';
+    String? peerName =
+        json['peer_name'] as String? ?? json['display_name'] as String?;
+    final peer = json['peer'] ?? json['Peer'];
+    if (peer is Map) {
+      final peerMap = Map<String, dynamic>.from(peer);
+      if (peerId.isEmpty) {
+        peerId = peerMap['id'] as String? ??
+            peerMap['ID'] as String? ??
+            '';
+      }
+      peerName ??= peerMap['display_name'] as String? ??
+          peerMap['DisplayName'] as String? ??
+          peerMap['email'] as String? ??
+          peerMap['Email'] as String?;
+    }
+
     return SupportChatItem(
-      chatId: json['id'] as String? ?? '',
-      peerId: json['peer_id'] as String? ?? json['user_id'] as String? ?? '',
-      peerName: json['peer_name'] as String? ?? json['display_name'] as String?,
-      lastMessage: json['last_message'] as String?,
-      lastMessageAt: json['last_message_at'] as String? ?? json['created_at'] as String?,
-      unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      chatId: json['id'] as String? ?? json['ChatID'] as String? ?? '',
+      peerId: peerId,
+      peerName: peerName,
+      lastMessage: lastMessage,
+      lastMessageAt: json['last_message_at'] as String? ??
+          json['created_at'] as String?,
+      unreadCount: (json['unread_count'] as num?)?.toInt() ??
+          (json['UnreadCount'] as num?)?.toInt() ??
+          0,
       avatarKind: json['avatar_kind'] as String?,
       avatarValue: json['avatar_value'] as String?,
     );
@@ -188,12 +218,17 @@ class SupportMessageItem {
     required this.isMine,
   });
 
-  factory SupportMessageItem.fromJson(Map<String, dynamic> json, String myUserId) {
+  /// [supportUserId] — id системного аккаунта поддержки; его сообщения = «наши».
+  factory SupportMessageItem.fromJson(
+    Map<String, dynamic> json,
+    String supportUserId,
+  ) {
+    final sender = json['sender_user_id'] as String? ?? '';
     return SupportMessageItem(
       id: json['id'] as String? ?? '',
       body: json['body'] as String? ?? '',
       createdAt: json['created_at'] as String? ?? '',
-      isMine: (json['sender_user_id'] as String?) == myUserId,
+      isMine: supportUserId.isNotEmpty && sender == supportUserId,
     );
   }
 }
@@ -377,7 +412,7 @@ class AdminRepository {
 
   Future<List<SupportMessageItem>> listSupportMessages(
     String userId,
-    String myUserId,
+    String supportUserId,
   ) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
@@ -391,10 +426,12 @@ class AdminRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final list = body['messages'] as List<dynamic>? ?? const [];
+    // support_user_id из ответа — надёжнее, чем клиентский кэш контакта.
+    final suId = body['support_user_id'] as String? ?? supportUserId;
     return list
         .map((e) => SupportMessageItem.fromJson(
               Map<String, dynamic>.from(e as Map),
-              myUserId,
+              suId,
             ))
         .toList();
   }

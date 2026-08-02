@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 
 final adminRepositoryProvider = Provider<AdminRepository>((ref) {
   return AdminRepository(authRepository: ref.watch(authRepositoryProvider));
@@ -108,4 +109,24 @@ final supportChatsProvider =
     FutureProvider.autoDispose<List<SupportChatItem>>((ref) async {
   final repo = ref.watch(adminRepositoryProvider);
   return repo.listSupportChats();
+});
+
+/// Сумма непрочитанных обращений в поддержку (для бейджа у админа).
+final supportUnreadTotalProvider = Provider<AsyncValue<int>>((ref) {
+  return ref.watch(supportChatsProvider).whenData(
+        (items) => items.fold<int>(0, (sum, c) => sum + c.unreadCount),
+      );
+});
+
+/// Следит за WS и обновляет inbox поддержки при новых сообщениях.
+/// Нужно watch'ить в shell/админке, пока админ онлайн.
+final supportInboxRealtimeProvider = Provider<void>((ref) {
+  ref.listen<AsyncValue<Map<String, dynamic>>>(realtimeEventsProvider,
+      (_, next) {
+    next.whenData((event) {
+      if (event['type'] == 'support_message') {
+        ref.invalidate(supportChatsProvider);
+      }
+    });
+  });
 });

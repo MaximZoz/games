@@ -527,6 +527,7 @@ func (h *AdminHandler) supportUserID(ctx context.Context) (uuid.UUID, bool) {
 }
 
 // SupportChats возвращает список диалогов support-аккаунта.
+// Формат — плоский snake_case под клиент админки (не сырой store.ChatPreview).
 func (h *AdminHandler) SupportChats(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
@@ -543,7 +544,32 @@ func (h *AdminHandler) SupportChats(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"chats": chats})
+	items := make([]map[string]any, 0, len(chats))
+	for _, c := range chats {
+		peerName := ""
+		if c.Peer.DisplayName != nil {
+			peerName = strings.TrimSpace(*c.Peer.DisplayName)
+		}
+		if peerName == "" {
+			peerName = c.Peer.Email
+		}
+		item := map[string]any{
+			"id":           c.ChatID.String(),
+			"peer_id":      c.Peer.ID.String(),
+			"peer_name":    peerName,
+			"unread_count": c.UnreadCount,
+			"avatar_kind":  c.Peer.AvatarKind,
+		}
+		if c.Peer.AvatarValue != nil {
+			item["avatar_value"] = *c.Peer.AvatarValue
+		}
+		if c.LastMessage != nil {
+			item["last_message"] = c.LastMessage.Body
+			item["last_message_at"] = c.LastMessage.CreatedAt.UTC().Format(time.RFC3339Nano)
+		}
+		items = append(items, item)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"chats": items})
 }
 
 // SupportMessages обслуживает чтение (GET) и отправку (POST) сообщений
@@ -579,7 +605,21 @@ func (h *AdminHandler) SupportMessages(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"messages": msgs, "chat_id": chatID})
+		// Прочтение от имени support — сбрасывает unread в inbox админки.
+		if _, err := store.MarkChatRead(ctx, h.Pool, chatID, suID); err == nil && h.Hub != nil {
+			h.broadcastToAdmins(ctx, map[string]any{
+				"type": "support_message", "user_id": peerID.String(), "chat_id": chatID.String(),
+			})
+		}
+		items := make([]ChatMessageItem, 0, len(msgs))
+		for _, m := range msgs {
+			items = append(items, chatMessageToItem(m))
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"messages":        items,
+			"chat_id":         chatID.String(),
+			"support_user_id": suID.String(),
+		})
 	case http.MethodPost:
 		var body struct {
 			Body string `json:"body"`
@@ -593,16 +633,17 @@ func (h *AdminHandler) SupportMessages(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
+		item := chatMessageToItem(msg)
 		// WS-уведомление пользователю + админам (badge).
 		if h.Hub != nil {
 			h.Hub.PublishToUsers([]uuid.UUID{peerID}, map[string]any{
-				"type": "chat_message", "chat_id": chatID, "message": msg,
+				"type": "chat_message", "chat_id": chatID.String(), "message": item,
 			})
 			h.broadcastToAdmins(ctx, map[string]any{
-				"type": "support_message", "user_id": peerID, "chat_id": chatID,
+				"type": "support_message", "user_id": peerID.String(), "chat_id": chatID.String(),
 			})
 		}
-		writeJSON(w, http.StatusOK, msg)
+		writeJSON(w, http.StatusOK, map[string]any{"message": item})
 	default:
 		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 	}

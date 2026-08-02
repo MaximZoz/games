@@ -1325,13 +1325,30 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       mainAxisSize: maxListHeight != null ? MainAxisSize.min : MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.l10n.chatsNewChat,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.l10n.chatsNewChat,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Поддержка',
+              onPressed: () {
+                Navigator.of(modalContext).maybePop();
+                _openSupport();
+              },
+              icon: const Icon(
+                Icons.support_agent_rounded,
+                color: AppColors.accentStart,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         TextField(
@@ -1589,15 +1606,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Поддержка — рядом с «Новый чат», на одной строке.
-        Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: _buildHeaderFrameIconButton(
-            icon: Icons.support_agent_rounded,
-            tooltip: 'Поддержка',
-            onPressed: actionBusy ? null : _openSupport,
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 4),
           child: _buildHeaderFrameIconButton(

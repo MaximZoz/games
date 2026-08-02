@@ -743,13 +743,22 @@ class _SupportTab extends ConsumerStatefulWidget {
 
 class _SupportTabState extends ConsumerState<_SupportTab> {
   String? _selectedUserId;
+  String? _selectedPeerName;
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(supportInboxRealtimeProvider);
     if (_selectedUserId != null) {
       return _SupportConversation(
         userId: _selectedUserId!,
-        onBack: () => setState(() => _selectedUserId = null),
+        peerName: _selectedPeerName,
+        onBack: () {
+          setState(() {
+            _selectedUserId = null;
+            _selectedPeerName = null;
+          });
+          ref.invalidate(supportChatsProvider);
+        },
       );
     }
     final async = ref.watch(supportChatsProvider);
@@ -792,7 +801,12 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    onTap: () => setState(() => _selectedUserId = c.peerId),
+                    onTap: c.peerId.isEmpty
+                        ? null
+                        : () => setState(() {
+                              _selectedUserId = c.peerId;
+                              _selectedPeerName = c.peerName;
+                            }),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Row(
@@ -810,16 +824,20 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  c.peerName?.isNotEmpty == true
-                                      ? c.peerName!
-                                      : 'Пользователь',
+                                  (c.peerName != null &&
+                                          c.peerName!.trim().isNotEmpty)
+                                      ? c.peerName!.trim()
+                                      : (c.peerId.isNotEmpty
+                                          ? c.peerId
+                                          : 'Пользователь'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 15),
                                 ),
-                                if (c.lastMessage != null) ...[
+                                if (c.lastMessage != null &&
+                                    c.lastMessage!.trim().isNotEmpty) ...[
                                   const SizedBox(height: 2),
                                   Text(c.lastMessage!,
                                       maxLines: 1,
@@ -860,8 +878,13 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
 }
 
 class _SupportConversation extends ConsumerStatefulWidget {
-  const _SupportConversation({required this.userId, required this.onBack});
+  const _SupportConversation({
+    required this.userId,
+    required this.onBack,
+    this.peerName,
+  });
   final String userId;
+  final String? peerName;
   final VoidCallback onBack;
 
   @override
@@ -875,7 +898,6 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
   final List<SupportMessageItem> _messages = [];
   bool _loading = true;
   bool _sending = false;
-  String _myId = '';
 
   @override
   void initState() {
@@ -892,11 +914,9 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
 
   Future<void> _load() async {
     try {
-      final authRepo = ref.read(authRepositoryProvider);
-      final me = await authRepo.getStoredUser();
-      _myId = me?.id ?? '';
       final repo = ref.read(adminRepositoryProvider);
-      final msgs = await repo.listSupportMessages(widget.userId, _myId);
+      // isMine считается по support_user_id из ответа API, не по id админа.
+      final msgs = await repo.listSupportMessages(widget.userId, '');
       if (!mounted) return;
       setState(() {
         _messages
@@ -904,6 +924,7 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
           ..addAll(msgs.reversed);
         _loading = false;
       });
+      ref.invalidate(supportChatsProvider);
       _scrollToBottom();
     } catch (_) {
       if (!mounted) return;
@@ -965,9 +986,11 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: widget.onBack,
         ),
-        title: const Text(
-          'Поддержка',
-          style: TextStyle(
+        title: Text(
+          (widget.peerName != null && widget.peerName!.trim().isNotEmpty)
+              ? widget.peerName!.trim()
+              : 'Поддержка',
+          style: const TextStyle(
               color: AppColors.textPrimary, fontWeight: FontWeight.w700),
         ),
       ),
@@ -981,13 +1004,20 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
                       color: AppColors.accentStart,
                     ),
                   )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, i) =>
-                        _MessageBubble(message: _messages[i]),
-                  ),
+                : _messages.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Нет сообщений',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, i) =>
+                            _MessageBubble(message: _messages[i]),
+                      ),
           ),
           SafeArea(
             top: false,

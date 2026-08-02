@@ -226,8 +226,15 @@ class AppShell extends ConsumerWidget {
             ref.invalidate(dailyRewardStatusProvider);
             ref.invalidate(dailyRewardAvailableProvider);
           }
+          if (type == 'support_message') {
+            ref.invalidate(supportChatsProvider);
+          }
         });
       });
+      // Держим подписку на обновления inbox поддержки для админ-бейджа.
+      if (authState.valueOrNull?.isAdmin == true) {
+        ref.watch(supportInboxRealtimeProvider);
+      }
     }
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
@@ -477,12 +484,8 @@ class AppShell extends ConsumerWidget {
                                     onTap: () => context.go('/admin'),
                                     tooltip: context.l10n.adminTitle,
                                     unreadCount: ref
-                                        .watch(supportChatsProvider)
-                                        .valueOrNull
-                                        ?.fold<int>(
-                                            0,
-                                            (sum, c) =>
-                                                sum + c.unreadCount) ??
+                                            .watch(supportUnreadTotalProvider)
+                                            .valueOrNull ??
                                         0,
                                   ),
                                 Flexible(

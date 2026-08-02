@@ -580,6 +580,18 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 				item.DeliveredAt = &deliveredAt
 			}
 		}
+		// Сообщение в поддержку — уведомить онлайн-админов (inbox + badge).
+		if peer, err := store.GetUserByID(r.Context(), h.Pool, peerID); err == nil && peer != nil && peer.IsSupport {
+			if h.Hub != nil {
+				if admins, aerr := store.ListAdminIDs(r.Context(), h.Pool); aerr == nil && len(admins) > 0 {
+					h.Hub.PublishToUsers(admins, map[string]any{
+						"type":    "support_message",
+						"user_id": userID.String(),
+						"chat_id": chatID.String(),
+					})
+				}
+			}
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
