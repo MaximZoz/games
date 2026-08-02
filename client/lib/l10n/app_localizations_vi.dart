@@ -482,6 +482,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbySearchingOpponent => 'Đang tìm đối thủ…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Đang tìm trận này: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Đang chờ ai đó nhấn “Tìm trận” hoặc “Tham gia”';
 
   @override

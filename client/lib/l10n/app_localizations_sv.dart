@@ -482,6 +482,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get lobbySearchingOpponent => 'Söker motståndare…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Söker detta spel: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Väntar på att någon trycker på ”Hitta ett spel” eller ”Gå med”';
 
   @override

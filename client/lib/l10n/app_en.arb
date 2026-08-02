@@ -212,6 +212,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Private game",
   "lobbySearchingOpponent": "Looking for an opponent…",
+  "lobbyPlayersSearching": "Looking for this game: {count}",
   "lobbyWaitingJoin": "Waiting for someone to tap “Find a game” or “Join”",
   "lobbyInviteTitle": "Game invite",
   "lobbyInvitedToPlay": "You were invited to play",

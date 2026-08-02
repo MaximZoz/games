@@ -1067,6 +1067,12 @@ abstract class AppLocalizations {
   /// **'Поиск соперника…'**
   String get lobbySearchingOpponent;
 
+  /// No description provided for @lobbyPlayersSearching.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ищут эту игру: {count}'**
+  String lobbyPlayersSearching(int count);
+
   /// No description provided for @lobbyWaitingJoin.
   ///
   /// In ru, this message translates to:

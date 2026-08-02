@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -128,7 +129,9 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+              constraints: BoxConstraints(
+                maxWidth: isWide(context) ? 720 : 480,
+              ),
               child: status != null
                   ? _LoginRewardsBody(
                       status: status,
@@ -170,6 +173,78 @@ class _LoginRewardsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final canClaim = status.available;
+    // Плитка: планшет/десктоп и телефон landscape; portrait телефона — как было.
+    final useTiles = useDesktopTiles(context);
+    final alignTop = isTablet(context) || isPhoneLandscape(context);
+
+    Widget card(int days) => _CompactMilestoneCard(
+          targetDays: days,
+          rewardBronze: status.milestonesBronze[days] ?? (days == 1 ? 10 : 0),
+          streak: status.streak,
+          nextStreak: status.nextStreak,
+          availableToday: status.available,
+          rewardKey: status.nextStreak == days ? claimSourceKey : null,
+          compactTile: useTiles,
+        );
+
+    final claimButton = SizedBox(
+      width: useTiles ? 320 : double.infinity,
+      child: FilledButton.icon(
+        onPressed: canClaim ? onClaim : null,
+        icon: const Icon(Icons.card_giftcard, size: 18),
+        label: Text(
+          status.available ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accentStart,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor:
+              AppColors.accentStart.withValues(alpha: 0.45),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.75),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+
+    if (useTiles) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(20, alignTop ? 8 : 16, 20, 20),
+        child: Column(
+          children: [
+            Expanded(
+              child: Align(
+                alignment:
+                    alignTop ? Alignment.topCenter : Alignment.center,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio:
+                              isPhoneLandscape(context) ? 2.4 : 2.2,
+                          children: [
+                            for (final days in _milestones) card(days),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        claimButton,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -181,45 +256,13 @@ class _LoginRewardsBody extends StatelessWidget {
               children: [
                 for (var i = 0; i < _milestones.length; i++) ...[
                   if (i > 0) const SizedBox(height: 8),
-                  Expanded(
-                    child: _CompactMilestoneCard(
-                      targetDays: _milestones[i],
-                      rewardBronze: status.milestonesBronze[_milestones[i]] ??
-                          (_milestones[i] == 1 ? 10 : 0),
-                      streak: status.streak,
-                      nextStreak: status.nextStreak,
-                      availableToday: status.available,
-                      rewardKey: status.nextStreak == _milestones[i]
-                          ? claimSourceKey
-                          : null,
-                    ),
-                  ),
+                  Expanded(child: card(_milestones[i])),
                 ],
               ],
             ),
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: canClaim ? onClaim : null,
-              icon: const Icon(Icons.card_giftcard, size: 18),
-              label: Text(
-                status.available
-                    ? l10n.coinsClaimReward
-                    : l10n.coinsAlreadyClaimed,
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentStart,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    AppColors.accentStart.withValues(alpha: 0.45),
-                disabledForegroundColor: Colors.white.withValues(alpha: 0.75),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-          ),
+          claimButton,
         ],
       ),
     );
@@ -234,6 +277,7 @@ class _CompactMilestoneCard extends StatelessWidget {
     required this.nextStreak,
     required this.availableToday,
     this.rewardKey,
+    this.compactTile = false,
   });
 
   final int targetDays;
@@ -242,6 +286,7 @@ class _CompactMilestoneCard extends StatelessWidget {
   final int nextStreak;
   final bool availableToday;
   final GlobalKey? rewardKey;
+  final bool compactTile;
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +357,10 @@ class _CompactMilestoneCard extends StatelessWidget {
               ),
             ],
           ),
-          const Spacer(),
+          if (compactTile)
+            const SizedBox(height: 16)
+          else
+            const Spacer(),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(

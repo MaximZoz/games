@@ -6,6 +6,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 
 /// Контент главной страницы. Тулбар (Войти/Регистрация) в [AppShell].
@@ -35,52 +36,64 @@ class HomeScreen extends ConsumerWidget {
             ? l10n.homeItemsIncome
             : l10n.homeItemsInventory);
 
+    final phoneLandscape = isPhoneLandscape(context);
+    // В landscape на телефоне — узкая колонка по центру, чтобы карточки
+    // визуально проходили между монетами и логином в верхней панели.
+    final maxWidth = phoneLandscape ? 268.0 : 460.0;
+    final pad = phoneLandscape
+        ? const EdgeInsets.fromLTRB(12, 8, 12, 16)
+        : const EdgeInsets.fromLTRB(20, 24, 20, 32);
+
+    final cards = <Widget>[
+      HomeActionCard(
+        icon: Icons.emoji_events_rounded,
+        title: l10n.homeAchievements,
+        subtitle: unclaimedAchievements > 0
+            ? l10n.homeAchievementsRewards
+            : l10n.homeAchievementsSubtitle,
+        badgeCount: unclaimedAchievements,
+        onTap: () => context.push('/achievements'),
+        dense: phoneLandscape,
+      ),
+      SizedBox(height: phoneLandscape ? 8 : 12),
+      HomeActionCard(
+        icon: Icons.monetization_on_rounded,
+        title: l10n.homeCoins,
+        subtitle: rewardAvailable
+            ? l10n.homeCoinsDailyReward
+            : l10n.homeCoinsSubtitle,
+        badgeCount: rewardAvailable ? 1 : 0,
+        onTap: () => context.push('/coins'),
+        dense: phoneLandscape,
+      ),
+      SizedBox(height: phoneLandscape ? 8 : 12),
+      HomeActionCard(
+        icon: Icons.inventory_2_rounded,
+        title: l10n.homeItems,
+        subtitle: itemsSubtitle,
+        badgeCount: itemsBadge,
+        onTap: () => context.push('/inventory'),
+        dense: phoneLandscape,
+      ),
+      SizedBox(height: phoneLandscape ? 8 : 12),
+      HomeActionCard(
+        icon: Icons.storefront_rounded,
+        title: l10n.homeShop,
+        subtitle: l10n.homeShopSubtitle,
+        onTap: () => context.push('/shop'),
+        dense: phoneLandscape,
+      ),
+    ];
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            padding: pad,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: ListView(
-                children: [
-                  HomeActionCard(
-                    icon: Icons.emoji_events_rounded,
-                    title: l10n.homeAchievements,
-                    subtitle: unclaimedAchievements > 0
-                        ? l10n.homeAchievementsRewards
-                        : l10n.homeAchievementsSubtitle,
-                    badgeCount: unclaimedAchievements,
-                    onTap: () => context.push('/achievements'),
-                  ),
-                  const SizedBox(height: 12),
-                  HomeActionCard(
-                    icon: Icons.monetization_on_rounded,
-                    title: l10n.homeCoins,
-                    subtitle: rewardAvailable
-                        ? l10n.homeCoinsDailyReward
-                        : l10n.homeCoinsSubtitle,
-                    badgeCount: rewardAvailable ? 1 : 0,
-                    onTap: () => context.push('/coins'),
-                  ),
-                  const SizedBox(height: 12),
-                  HomeActionCard(
-                    icon: Icons.inventory_2_rounded,
-                    title: l10n.homeItems,
-                    subtitle: itemsSubtitle,
-                    badgeCount: itemsBadge,
-                    onTap: () => context.push('/inventory'),
-                  ),
-                  const SizedBox(height: 12),
-                  HomeActionCard(
-                    icon: Icons.storefront_rounded,
-                    title: l10n.homeShop,
-                    subtitle: l10n.homeShopSubtitle,
-                    onTap: () => context.push('/shop'),
-                  ),
-                ],
-              ),
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: ListView(children: cards),
             ),
           ),
         ),

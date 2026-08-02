@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Privat spel",
   "lobbySearchingOpponent": "Söker motståndare…",
+  "lobbyPlayersSearching": "Söker detta spel: {count}",
   "lobbyWaitingJoin": "Väntar på att någon trycker på ”Hitta ett spel” eller ”Gå med”",
   "lobbyInviteTitle": "Spelinbjudan",
   "lobbyInvitedToPlay": "Du har blivit inbjuden att spela",

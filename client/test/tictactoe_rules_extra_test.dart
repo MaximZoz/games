@@ -18,7 +18,8 @@ void main() {
       expect(text, contains('3x3'));
       expect(text, contains('3 в ряд'));
       expect(text, contains('Без ограничения'));
-      expect(text, contains('10 бр'));
+      expect(text, contains('10$kTictactoeRulesStakeIconMarker'));
+      expect(text, isNot(contains('бр')));
       expect(text, isNot(contains('Смена сторон')));
       expect(text, isNot(contains('Запрет центра')));
     });
@@ -36,7 +37,9 @@ void main() {
       expect(text, contains('1 мин'));
       expect(text, contains('Смена сторон'));
       expect(text, contains('Запрет центра'));
-      expect(text, contains('1 с'));
+      // 100 бронзы = 1 серебро → «1» + маркер иконки (не «1 с»).
+      expect(text, contains('1$kTictactoeRulesStakeIconMarker'));
+      expect(text, isNot(contains('1 с')));
     });
 
     test('stake 0 omits stake line (offline)', () {

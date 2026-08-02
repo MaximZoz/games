@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Лобби",
   "lobbyPrivateGame": "Жеке ойын",
   "lobbySearchingOpponent": "Қарсылас ізделуде…",
+  "lobbyPlayersSearching": "Осы ойынды іздеп жүр: {count}",
   "lobbyWaitingJoin": "Біреу «Ойын табу» немесе «Қосылу» басқанша күтеміз",
   "lobbyInviteTitle": "Ойынға шақыру",
   "lobbyInvitedToPlay": "Сізді ойнауға шақырды",

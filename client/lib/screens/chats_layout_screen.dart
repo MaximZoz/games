@@ -52,7 +52,7 @@ class ChatsLayoutScreen extends ConsumerWidget {
   }
 }
 
-const double _sidebarExpandedWidth = 380;
+const double _sidebarExpandedWidth = 360;
 const double _sidebarCollapsedWidth = 72;
 
 class _DesktopChatsLayout extends ConsumerStatefulWidget {

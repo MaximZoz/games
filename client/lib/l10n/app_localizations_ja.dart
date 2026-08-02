@@ -482,6 +482,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get lobbySearchingOpponent => '対戦相手を探しています…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'この対局を探しています: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => '誰かが「対戦を探す」または「参加」をタップするまで待機中';
 
   @override

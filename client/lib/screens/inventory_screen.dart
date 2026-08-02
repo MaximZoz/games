@@ -17,9 +17,11 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -421,125 +423,30 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
-                  : ListView(
+                  : DesktopContentFrame(
+                      maxWidth: 1080,
+                      child: ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
                       children: [
-                        _Section(
-                          title: context.l10n.shopCollections,
-                          empty: context.l10n.inventoryNoCollections,
-                          children: [
-                            if (collections.isNotEmpty &&
-                                income != null &&
-                                income.amountBronze > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: KeyedSubtree(
-                                        key: _claimIncomeKey,
-                                        child: Wrap(
-                                          crossAxisAlignment:
-                                              WrapCrossAlignment.center,
-                                          spacing: 6,
-                                          runSpacing: 4,
-                                          children: [
-                                            Text(
-                                              income.available
-                                                  ? context.l10n
-                                                      .inventoryIncomeReadyLabel
-                                                  : context.l10n
-                                                      .inventoryIncomeTomorrowLabel,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                            BalanceDisplay(
-                                              bronze: income.amountBronze,
-                                              prefix:
-                                                  income.available ? '+' : null,
-                                              perDay: true,
-                                              coinSize: 16,
-                                              fontSize: 13,
-                                              spacing: 5,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textPrimary,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    if (income.available)
-                                      FilledButton(
-                                        onPressed:
-                                            _claimBusy ? null : _claimIncome,
-                                        child: Text(_claimBusy
-                                            ? '…'
-                                            : context.l10n.inventoryClaim),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            if (collections.isEmpty)
-                              const SizedBox.shrink()
-                            else
-                              for (final set in collectionSetKeys) ...[
-                                Builder(
-                                  builder: (context) {
-                                    final ownedCount =
-                                        collectionsBySet[set]?.length ?? 0;
-                                    final totalCount = catalogBySet[set] ??
-                                        ownedCount;
-                                    final setBonus = catalogDailyBySet[set] ??
-                                        (collectionsBySet[set] ?? const [])
-                                            .fold<int>(
-                                          0,
-                                          (s, e) => s + e.dailyBronze,
-                                        );
-                                    return _CollectionSetFrame(
-                                      title: collectionSetTitle(set),
-                                      owned: ownedCount,
-                                      total: totalCount,
-                                      setBonusBronze: setBonus,
-                                      onOpenShop: set == 'other'
-                                          ? null
-                                          : () => context.push(
-                                                '/shop/collections/$set',
-                                              ),
-                                      children: [
-                                        for (final it
-                                            in collectionsBySet[set] ??
-                                                const <InventoryItem>[])
-                                          _CollectionInvTile(
-                                            item: it,
-                                            sellSourceKey:
-                                                _sellKeyFor(it.code),
-                                            highlightGift: _highlightGifts
-                                                .contains(it.code),
-                                            onOpen: () =>
-                                                showCollectionFullscreen(
-                                              context,
-                                              title: catalogTitle(
-                                                it.code,
-                                                fallback: it.title,
-                                                l10n: context.l10n,
-                                              ),
-                                              animatedName: it.animatedName ??
-                                                  'sparkles',
-                                              fallback: it.emoji,
-                                              subtitle: null,
-                                            ),
-                                            onGift: () => _gift(it),
-                                            onSell: () => _sell(it),
-                                          ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                              ],
-                          ],
+                        // Группы коллекций — колонка на всю ширину (не Wrap
+                        // «кривых» плиток). Внутри группы карточки — плиткой.
+                        _CollectionsBlock(
+                          income: income,
+                          claimIncomeKey: _claimIncomeKey,
+                          claimBusy: _claimBusy,
+                          onClaimIncome: _claimIncome,
+                          collectionsEmpty: collections.isEmpty,
+                          collectionSetKeys: collectionSetKeys,
+                          collectionsBySet: collectionsBySet,
+                          catalogBySet: catalogBySet,
+                          catalogDailyBySet: catalogDailyBySet,
+                          highlightGifts: _highlightGifts,
+                          sellKeyFor: _sellKeyFor,
+                          onGift: _gift,
+                          onSell: _sell,
                         ),
                         const SizedBox(height: 16),
                         for (final g in groupOrder)
@@ -614,8 +521,181 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         ],
                       ],
                     ),
+                    ),
         ),
       ),
+    );
+  }
+}
+
+class _CollectionsBlock extends StatelessWidget {
+  const _CollectionsBlock({
+    required this.income,
+    required this.claimIncomeKey,
+    required this.claimBusy,
+    required this.onClaimIncome,
+    required this.collectionsEmpty,
+    required this.collectionSetKeys,
+    required this.collectionsBySet,
+    required this.catalogBySet,
+    required this.catalogDailyBySet,
+    required this.highlightGifts,
+    required this.sellKeyFor,
+    required this.onGift,
+    required this.onSell,
+  });
+
+  final CollectionIncomeInfo? income;
+  final GlobalKey claimIncomeKey;
+  final bool claimBusy;
+  final VoidCallback onClaimIncome;
+  final bool collectionsEmpty;
+  final List<String> collectionSetKeys;
+  final Map<String, List<InventoryItem>> collectionsBySet;
+  final Map<String, int> catalogBySet;
+  final Map<String, int> catalogDailyBySet;
+  final Set<String> highlightGifts;
+  final GlobalKey Function(String code) sellKeyFor;
+  final void Function(InventoryItem item) onGift;
+  final void Function(InventoryItem item) onSell;
+
+  @override
+  Widget build(BuildContext context) {
+    final tileSets = useDesktopTiles(context);
+    final setFrames = <Widget>[
+      for (final set in collectionSetKeys)
+        Builder(
+          builder: (context) {
+            final ownedCount = collectionsBySet[set]?.length ?? 0;
+            final totalCount = catalogBySet[set] ?? ownedCount;
+            final setBonus = catalogDailyBySet[set] ??
+                (collectionsBySet[set] ?? const [])
+                    .fold<int>(0, (s, e) => s + e.dailyBronze);
+            return _CollectionSetFrame(
+              title: collectionSetTitle(set),
+              owned: ownedCount,
+              total: totalCount,
+              setBonusBronze: setBonus,
+              onOpenShop: set == 'other'
+                  ? null
+                  : () => context.push('/shop/collections/$set'),
+              children: [
+                for (final it
+                    in collectionsBySet[set] ?? const <InventoryItem>[])
+                  _CollectionInvTile(
+                    item: it,
+                    sellSourceKey: sellKeyFor(it.code),
+                    highlightGift: highlightGifts.contains(it.code),
+                    onOpen: () => showCollectionFullscreen(
+                      context,
+                      title: catalogTitle(
+                        it.code,
+                        fallback: it.title,
+                        l10n: context.l10n,
+                      ),
+                      animatedName: it.animatedName ?? 'sparkles',
+                      fallback: it.emoji,
+                      subtitle: null,
+                    ),
+                    onGift: () => onGift(it),
+                    onSell: () => onSell(it),
+                  ),
+              ],
+            );
+          },
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.l10n.shopCollections,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (!collectionsEmpty &&
+            income != null &&
+            income!.amountBronze > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: KeyedSubtree(
+                    key: claimIncomeKey,
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          income!.available
+                              ? context.l10n.inventoryIncomeReadyLabel
+                              : context.l10n.inventoryIncomeTomorrowLabel,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        BalanceDisplay(
+                          bronze: income!.amountBronze,
+                          prefix: income!.available ? '+' : null,
+                          perDay: true,
+                          coinSize: 16,
+                          fontSize: 13,
+                          spacing: 5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (income!.available)
+                  FilledButton(
+                    onPressed: claimBusy ? null : onClaimIncome,
+                    child: Text(
+                      claimBusy ? '…' : context.l10n.inventoryClaim,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (collectionsEmpty)
+          Text(
+            context.l10n.inventoryNoCollections,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          )
+        else if (tileSets && isTablet(context))
+          // Планшет: группы коллекций плиткой (2 в ряд).
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 12.0;
+              final cols = constraints.maxWidth >= 700 ? 2 : 1;
+              final itemWidth =
+                  (constraints.maxWidth - gap * (cols - 1)) / cols;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final frame in setFrames)
+                    SizedBox(width: itemWidth, child: frame),
+                ],
+              );
+            },
+          )
+        else
+          // Десктоп и телефон: группы колонкой на всю ширину (без «кривизны»).
+          for (var i = 0; i < setFrames.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            setFrames[i],
+          ],
+      ],
     );
   }
 }
@@ -723,10 +803,35 @@ class _CollectionSetFrame extends StatelessWidget {
             header,
           if (children.isNotEmpty) ...[
             const SizedBox(height: 10),
-            for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              children[i],
-            ],
+            if (useDesktopTiles(context))
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const gap = 10.0;
+                  final maxCell = isPhoneLandscape(context)
+                      ? 200.0
+                      : (isTablet(context) ? 220.0 : 260.0);
+                  final maxCols =
+                      isPhoneLandscape(context) || isTablet(context) ? 4 : 3;
+                  final cols = (constraints.maxWidth / (maxCell + gap))
+                      .floor()
+                      .clamp(1, maxCols);
+                  final itemWidth =
+                      (constraints.maxWidth - gap * (cols - 1)) / cols;
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      for (final child in children)
+                        SizedBox(width: itemWidth, child: child),
+                    ],
+                  );
+                },
+              )
+            else
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: 8),
+                children[i],
+              ],
           ],
         ],
       ),
@@ -898,6 +1003,30 @@ class _Section extends StatelessWidget {
           Text(
             empty,
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          )
+        else if (useDesktopTiles(context))
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 10.0;
+              // Эмоции и пр.: на планшете/landscape до 4 в ряд.
+              final maxCell = isPhoneLandscape(context)
+                  ? 180.0
+                  : (isTablet(context) ? 200.0 : 240.0);
+              final maxCols =
+                  isPhoneLandscape(context) || isTablet(context) ? 4 : 3;
+              final cols =
+                  (constraints.maxWidth / (maxCell + gap)).floor().clamp(1, maxCols);
+              final itemWidth =
+                  (constraints.maxWidth - gap * (cols - 1)) / cols;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final child in children)
+                    SizedBox(width: itemWidth, child: child),
+                ],
+              );
+            },
           )
         else
           ...[

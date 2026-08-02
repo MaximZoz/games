@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Privéspel",
   "lobbySearchingOpponent": "Tegenstander zoeken…",
+  "lobbyPlayersSearching": "Zoeken dit spel: {count}",
   "lobbyWaitingJoin": "Wachten tot iemand op «Spel zoeken» of «Meedoen» tikt",
   "lobbyInviteTitle": "Speluitnodiging",
   "lobbyInvitedToPlay": "Je bent uitgenodigd om te spelen",

@@ -482,6 +482,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lobbySearchingOpponent => 'Rakip aranıyor…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Bu oyunu arıyor: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Birinin «Oyun bul» veya «Katıl»a basması bekleniyor';
 
   @override

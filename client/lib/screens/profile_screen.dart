@@ -334,17 +334,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _exitEditingImmediate();
     });
 
+    final phoneLandscape = isPhoneLandscape(context);
+    // Landscape на телефоне — шире; portrait/десктоп без изменений.
+    final profileMaxWidth = phoneLandscape ? 640.0 : 400.0;
+
     Widget scrollableBody(Widget child) {
+      final framed = Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: profileMaxWidth),
+          child: child,
+        ),
+      );
+      // На телефоне — карточка по центру экрана (если помещается).
+      if (mobile) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                phoneLandscape ? 10 : 16,
+                8,
+                phoneLandscape ? 10 : 16,
+                24,
+              ),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 32,
+                ),
+                child: Center(child: framed),
+              ),
+            );
+          },
+        );
+      }
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: child,
-            ),
-          ),
-        ],
+        children: [framed],
       );
     }
 
@@ -387,23 +414,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Widget buildProfile(ProfileExtra extra) {
                   if (mobile && _isEditing) {
                     // translucent edge: чекбокс у левого края остаётся кликабельным.
+                    final editForm = _ProfileEditForm(
+                      key: const ValueKey('mobile_edit_form'),
+                      user: user,
+                      profileExtra: extra,
+                      displayNameController: _displayNameController,
+                      focusNode: _displayNameFocus,
+                      onCancel: _cancelEditing,
+                      onSave: _saveProfile,
+                      compact: true,
+                    );
+                    // Landscape на телефоне — форма прокручивается (иначе обрезается).
+                    if (phoneLandscape) {
+                      return SwipeBackScope(
+                        onBack: _cancelEditing,
+                        opaqueEdge: false,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return SingleChildScrollView(
+                              padding:
+                                  const EdgeInsets.fromLTRB(12, 4, 12, 10),
+                              physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics(),
+                              ),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight - 14,
+                                  maxWidth: profileMaxWidth,
+                                ),
+                                child: editForm,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }
                     return SwipeBackScope(
                       onBack: _cancelEditing,
                       opaqueEdge: false,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-                        child: SizedBox.expand(
-                          child: _ProfileEditForm(
-                            key: const ValueKey('mobile_edit_form'),
-                            user: user,
-                            profileExtra: extra,
-                            displayNameController: _displayNameController,
-                            focusNode: _displayNameFocus,
-                            onCancel: _cancelEditing,
-                            onSave: _saveProfile,
-                            compact: true,
-                          ),
-                        ),
+                        child: SizedBox.expand(child: editForm),
                       ),
                     );
                   }
@@ -618,16 +669,18 @@ class _ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final phoneLandscape = isPhoneLandscape(context);
+    final cardMaxWidth = phoneLandscape ? 640.0 : 460.0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
+            constraints: BoxConstraints(maxWidth: cardMaxWidth),
             child: AnimatedBorderBox(
               key: cardKey,
               padding: EdgeInsets.symmetric(
-                horizontal: 18,
+                horizontal: phoneLandscape ? 16 : 18,
                 vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
               ),
               child: AnimatedSwitcher(
@@ -1461,12 +1514,43 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   Widget _buildCompactEditor(BuildContext context) {
     // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
     final aboutTypingMode = _aboutTypingActive && _aboutFocus.hasFocus;
+    // В phone landscape родитель уже SingleChildScrollView — Expanded там
+    // ломает скролл и кнопка «Сохранить» уезжает «в бесконечность».
+    final phoneLand = isPhoneLandscape(context);
+
+    final Widget aboutField;
+    if (phoneLand) {
+      aboutField = SizedBox(
+        height: aboutTypingMode ? 120 : 72,
+        width: double.infinity,
+        child: _buildCompactAboutField(expands: true),
+      );
+    } else {
+      aboutField = Expanded(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final height = aboutTypingMode
+                ? math.min(168.0, constraints.maxHeight)
+                : constraints.maxHeight;
+            return Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: height,
+                child: _buildCompactAboutField(expands: true),
+              ),
+            );
+          },
+        ),
+      );
+    }
 
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
     // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
     // SwipeBackScope — снаружи (ProfileScreen), здесь только форма.
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: phoneLand ? MainAxisSize.min : MainAxisSize.max,
         children: [
           _buildCompactHeader(context),
           SizedBox(height: aboutTypingMode ? 10 : 16),
@@ -1480,11 +1564,11 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  height: 82,
+                  height: phoneLand ? 64 : 82,
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 76,
+                        width: phoneLand ? 56 : 76,
                         child: Center(child: _buildCurrentAvatar()),
                       ),
                       const SizedBox(width: 10),
@@ -1505,10 +1589,11 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                               }),
                               child: AnimatedContainer(
                                 duration: AppDurations.short,
-                                width: 48,
-                                height: 48,
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 15),
+                                width: phoneLand ? 40 : 48,
+                                height: phoneLand ? 40 : 48,
+                                margin: EdgeInsets.symmetric(
+                                  vertical: phoneLand ? 12 : 15,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.accentSoft,
                                   shape: BoxShape.circle,
@@ -1522,7 +1607,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                                 child: Icon(
                                   _presetAvatarIcons[index],
                                   color: AppColors.accentStart,
-                                  size: 25,
+                                  size: phoneLand ? 22 : 25,
                                 ),
                               ),
                             );
@@ -1532,31 +1617,15 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: phoneLand ? 10 : 16),
                 _buildCompactNameAgeRow(),
-                const SizedBox(height: 12),
+                SizedBox(height: phoneLand ? 8 : 12),
                 _buildShowStatsCheckbox(),
-                const SizedBox(height: 12),
+                SizedBox(height: phoneLand ? 8 : 12),
               ],
             ),
           ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final height = aboutTypingMode
-                    ? math.min(168.0, constraints.maxHeight)
-                    : constraints.maxHeight;
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: constraints.maxWidth,
-                    height: height,
-                    child: _buildCompactAboutField(expands: true),
-                  ),
-                );
-              },
-            ),
-          ),
+          aboutField,
           Visibility(
             visible: !aboutTypingMode,
             maintainState: true,
@@ -1566,7 +1635,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 12),
+                SizedBox(height: phoneLand ? 8 : 12),
                 OutlinedButton.icon(
                   onPressed:
                       (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1586,7 +1655,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                     type: BannerType.error,
                   ),
                 ],
-                const SizedBox(height: 16),
+                SizedBox(height: phoneLand ? 10 : 16),
                 _buildCompactSaveButton(),
               ],
             ),

@@ -151,9 +151,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
 
     final isDesktop = isWide(context);
+    final phoneLandscape = isPhoneLandscape(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
-    final contentPadding = isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0);
+    final contentPadding = phoneLandscape
+        ? 12.0
+        : (isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0));
     final isOffline = ref.watch(isOfflineProvider);
     // При входе в офлайн включаем ⇄ (чередование первого хода с ботом).
     // Локально — без persist в онлайн-настройки pie-rule.
@@ -369,13 +372,18 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
-  String _inviteRulesText(GameInvite inv) {
-    return buildTictactoeRulesText(
+  Widget _inviteRulesWidget(GameInvite inv) {
+    return buildTictactoeRulesTextWidget(
       gridSize: inv.gridSize,
       turnTimeSec: inv.turnTimeSec,
       swapRule: inv.swapRule,
       firstMoveRestriction: inv.firstMoveRestriction,
       stakeBronze: inv.stakeBronze,
+      style: const TextStyle(
+        color: AppColors.textSecondary,
+        fontSize: 13,
+        height: 1.35,
+      ),
     );
   }
 
@@ -560,14 +568,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                   ),
                   const SizedBox(height: 8),
                   SingleChildScrollView(
-                    child: Text(
-                      _inviteRulesText(inv),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
+                    child: _inviteRulesWidget(inv),
                   ),
                 ],
               ),
@@ -609,13 +610,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _showLobbyRulesInfo(BuildContext context, LobbyItem lobby) {
-    final rulesText = buildTictactoeRulesText(
-      gridSize: lobby.gridSize,
-      turnTimeSec: lobby.turnTimeSec,
-      swapRule: lobby.swapRule,
-      firstMoveRestriction: lobby.firstMoveRestriction,
-      stakeBronze: lobby.stakeBronze,
-    );
     showDialog<void>(
       context: context,
       builder: (ctx) {
@@ -630,7 +624,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             constraints:
                 BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
             child: SingleChildScrollView(
-              child: Text(rulesText),
+              child: buildTictactoeRulesTextWidget(
+                gridSize: lobby.gridSize,
+                turnTimeSec: lobby.turnTimeSec,
+                swapRule: lobby.swapRule,
+                firstMoveRestriction: lobby.firstMoveRestriction,
+                stakeBronze: lobby.stakeBronze,
+              ),
             ),
           ),
           actions: [
@@ -706,7 +706,7 @@ class _GamesPageContent extends StatelessWidget {
       builder: (context, constraints) {
         return SingleChildScrollView(
           primary: false,
-          physics: isDesktop
+          physics: (isDesktop || isPhoneLandscape(context) || isTablet(context))
               ? const ClampingScrollPhysics()
               : const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
@@ -731,21 +731,25 @@ class _GamesPageContent extends StatelessWidget {
                 children: [
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      if (isDesktop) {
-                        const gap = 16.0;
-                        const minCardWidth = 400.0;
+                      final phoneLandscape = isPhoneLandscape(context);
+                      final tablet = isTablet(context);
+                      if (isDesktop || phoneLandscape) {
+                        // Одна карточка игры — по центру, достаточно широкая,
+                        // чтобы «Крестики-нолики» не обрезалось на планшете.
+                        final minCardWidth = phoneLandscape
+                            ? 300.0
+                            : (tablet ? 440.0 : 400.0);
+                        final maxCardWidth = phoneLandscape
+                            ? 420.0
+                            : (tablet ? 560.0 : 520.0);
                         final availableWidth = constraints.maxWidth;
-                        final crossAxisCount =
-                            (availableWidth / (minCardWidth + gap))
-                                .floor()
-                                .clamp(1, 4);
-                        final cardWidth =
-                            (availableWidth - (crossAxisCount - 1) * gap) /
-                                crossAxisCount;
+                        final cardWidth = availableWidth
+                            .clamp(minCardWidth, maxCardWidth)
+                            .toDouble();
                         return SizedBox(
                           width: availableWidth,
                           child: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: Alignment.topCenter,
                             child: SizedBox(
                               width: cardWidth,
                               child: _TictactoeGameCard(
@@ -1262,7 +1266,7 @@ class _TictactoeGameCard extends StatelessWidget {
     onStakeChanged(options[next]);
   }
 
-  String _buildRulesText() => buildTictactoeRulesText(
+  Widget _buildRulesWidget() => buildTictactoeRulesTextWidget(
         gridSize: gridSize,
         turnTimeSec: turnTimeSec,
         swapRule: swapRule,
@@ -1487,7 +1491,7 @@ class _TictactoeGameCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.gamesRulesTitle),
         content: SingleChildScrollView(
-          child: Text(_buildRulesText()),
+          child: _buildRulesWidget(),
         ),
         actions: [
           TextButton(
@@ -1548,15 +1552,20 @@ class _TictactoeGameCard extends StatelessWidget {
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
-                          fontSize: isDesktop ? 20 : 18,
+                          // На планшете чуть компактнее — полное имя влезает.
+                          fontSize: isMedium
+                              ? 18
+                              : (isDesktop ? 20 : 18),
                           letterSpacing: -0.3,
+                          height: 1.15,
                         ),
+                        softWrap: true,
                         overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                        maxLines: isMedium || isTablet(context) ? 2 : 1,
                       ),
                     ),
                     if (!isOffline && stakeBronze > 0) ...[
-                      SizedBox(width: isDesktop ? 24 : 12),
+                      SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -1565,7 +1574,7 @@ class _TictactoeGameCard extends StatelessWidget {
                           child: Tooltip(
                             message: context.l10n.gamesTapChangeStake,
                             child: Padding(
-                              padding: const EdgeInsets.only(right: 4),
+                              padding: const EdgeInsets.only(right: 2),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1602,8 +1611,9 @@ class _TictactoeGameCard extends StatelessWidget {
                       tooltip: context.l10n.gamesRulesTitle,
                       style: IconButton.styleFrom(
                         visualDensity: VisualDensity.compact,
-                        minimumSize: const Size(36, 36),
-                        padding: const EdgeInsets.all(6),
+                        minimumSize: const Size(32, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.all(4),
                       ),
                     ),
                   ],

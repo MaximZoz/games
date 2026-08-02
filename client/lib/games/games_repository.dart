@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/display_names.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
@@ -151,7 +153,13 @@ String formatTurnTime(int sec) {
 
 String formatGridSize(int size) => '${size}x$size';
 
+/// Маркер иконки монеты в [buildTictactoeRulesText] (рисуется как [CoinIcon]).
+const String kTictactoeRulesStakeIconMarker = '\uFFFC';
+
 /// Общий формат правил крестиков-ноликов (игра, лобби, приглашения).
+///
+/// Ставка — число + [kTictactoeRulesStakeIconMarker]; для UI используйте
+/// [buildTictactoeRulesTextWidget], чтобы показать иконку монеты.
 String buildTictactoeRulesText({
   required int gridSize,
   required int turnTimeSec,
@@ -175,8 +183,13 @@ String buildTictactoeRulesText({
     );
   }
   // 0 — офлайн / без ставок: строку про ставку не показываем.
+  // Формат: «1￼» → «1» + иконка монеты (не «1 бр»).
   if (stakeBronze > 0) {
-    parts.add(l10n.rulesStake(formatBalance(stakeBronze)));
+    parts.add(
+      l10n.rulesStake(
+        '${formatStakeAmount(stakeBronze)}$kTictactoeRulesStakeIconMarker',
+      ),
+    );
   }
   if (swapRule) {
     parts.add(offlineBot ? l10n.rulesAlternateStarts : l10n.rulesSwap);
@@ -185,6 +198,61 @@ String buildTictactoeRulesText({
     parts.add(l10n.rulesNoCenter);
   }
   return parts.join('\n\n');
+}
+
+/// Правила с иконкой монеты в строке ставки.
+Widget buildTictactoeRulesTextWidget({
+  required int gridSize,
+  required int turnTimeSec,
+  required bool swapRule,
+  required bool firstMoveRestriction,
+  int stakeBronze = 1,
+  bool includeTurnTime = true,
+  bool offlineBot = false,
+  TextStyle? style,
+  TextAlign textAlign = TextAlign.start,
+}) {
+  final text = buildTictactoeRulesText(
+    gridSize: gridSize,
+    turnTimeSec: turnTimeSec,
+    swapRule: swapRule,
+    firstMoveRestriction: firstMoveRestriction,
+    stakeBronze: stakeBronze,
+    includeTurnTime: includeTurnTime,
+    offlineBot: offlineBot,
+  );
+  final baseStyle = style ??
+      const TextStyle(
+        fontSize: 13,
+        height: 1.4,
+        color: AppColors.textSecondary,
+      );
+  const marker = kTictactoeRulesStakeIconMarker;
+  final idx = text.indexOf(marker);
+  if (idx < 0 || stakeBronze <= 0) {
+    return Text(text, style: baseStyle, textAlign: textAlign);
+  }
+  final coinSize = (baseStyle.fontSize ?? 13) + 1;
+  return Text.rich(
+    TextSpan(
+      style: baseStyle,
+      children: [
+        TextSpan(text: text.substring(0, idx)),
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 1, right: 1),
+            child: CoinIcon(
+              coinType: stakeCoinType(stakeBronze),
+              size: coinSize,
+            ),
+          ),
+        ),
+        TextSpan(text: text.substring(idx + marker.length)),
+      ],
+    ),
+    textAlign: textAlign,
+  );
 }
 
 /// 100 бронзы=1 серебро, 100 серебра=1 золото, 100 золота=1 бриллиант.
