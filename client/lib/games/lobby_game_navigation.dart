@@ -8,7 +8,8 @@ import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 
-const lobbyGameRecoveryPollInterval = Duration(seconds: 10);
+// Fallback, если WS game_started/lobby_updated потерян. Не чаще — лишняя нагрузка в multi-лобби.
+const lobbyGameRecoveryPollInterval = Duration(seconds: 15);
 
 /// Тихий опрос: читает lobby/active через репозиторий, не инвалидируя
 /// [lobbyDetailProvider] / [activeGameProvider] (иначе UI лобби мигает спиннером).

@@ -65,7 +65,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   bool _waitingForBotMove = false;
   Timer? _rematchPollTimer;
   Timer? _syncStateTimer;
-  Timer? _chatsRefreshTimer;
   Timer? _timeoutRetryTimer;
   late AnimationController _pulseController;
   String? _prevGameStatus;
@@ -124,7 +123,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
     ref.invalidate(gameStateProvider(widget.gameId));
     ref.invalidate(activeGameProvider);
-    _syncStateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Fallback-синк: реже, чем раньше — основной канал game_state по WS.
+    _syncStateTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (!mounted || _waitingForBotMove) return;
       final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
       if (game != null && !game.isActivePvp) return;
@@ -133,9 +133,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) refreshChatsList(ref, force: true);
     });
-    _chatsRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) refreshChatsList(ref, force: true);
-    });
+    // Периодический refresh чатов на экране игры убран — badge/логины
+    // обновляются по WS (chat_message / chat_list_changed).
     _realtimeSubscription = ref.listenManual(
       realtimeEventsProvider,
       (_, next) {
@@ -217,7 +216,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     chatsRouteObserver.unsubscribe(this);
     _rematchPollTimer?.cancel();
     _syncStateTimer?.cancel();
-    _chatsRefreshTimer?.cancel();
     _timeoutRetryTimer?.cancel();
     _realtimeSubscription?.close();
     _pulseController.dispose();
@@ -457,13 +455,17 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               statusText = context.l10n.gamesMyTurn;
             } else {
               // «Ход {логин}» — чей сейчас ход (не себя).
+              // chatsList через read: не пересобираем доску на каждый poll чатов.
               final turnMeta = game.playerMeta(game.turn);
-              final turnName = _resolvePlayerLogin(
-                turnMeta,
-                chatsList:
-                    ref.watch(chatsListProvider).valueOrNull ?? const [],
-                chatId: game.chatId,
-              );
+              final fromMeta = turnMeta?.displayName?.trim() ?? '';
+              final turnName = fromMeta.isNotEmpty
+                  ? fromMeta
+                  : _resolvePlayerLogin(
+                      turnMeta,
+                      chatsList:
+                          ref.read(chatsListProvider).valueOrNull ?? const [],
+                      chatId: game.chatId,
+                    );
               statusText = turnName.isNotEmpty
                   ? 'Ход $turnName'
                   : context.l10n.gamesOpponentTurn;
@@ -487,17 +489,41 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
             Widget opponentCard() {
               if (isMultiGame) {
+                final chatId = (game.chatId ?? '').trim();
+                // Только unread нужного группового чата — не весь список.
+                final groupUnread = chatId.isEmpty
+                    ? 0
+                    : ref.watch(chatsListProvider.select((async) {
+                        final list = async.valueOrNull;
+                        if (list == null) return 0;
+                        for (final c in list) {
+                          if (c.chatID == chatId) return c.unreadCount;
+                        }
+                        return 0;
+                      }));
                 return _MultiOpponentsCard(
                   game: game,
                   // Только чужие; без me — пусто (не мелькает «я» / «Соперник»).
                   opponents: game.opponentsOf(currentUser?.id),
                   chatsList:
-                      ref.watch(chatsListProvider).valueOrNull ?? const [],
-                  onGroupChatTap: (game.chatId ?? '').trim().isEmpty
+                      ref.read(chatsListProvider).valueOrNull ?? const [],
+                  groupUnread: groupUnread,
+                  onGroupChatTap: chatId.isEmpty
                       ? null
                       : () => _openGroupChat(context, game),
                 );
               }
+              final messageUnread = opponentId.isEmpty
+                  ? 0
+                  : ref.watch(chatsListProvider.select((async) {
+                      final list = async.valueOrNull;
+                      if (list == null) return 0;
+                      var sum = 0;
+                      for (final c in list) {
+                        if (c.user.id == opponentId) sum += c.unreadCount;
+                      }
+                      return sum;
+                    }));
               return _OpponentCard(
                 opponentId: opponentId,
                 displayName: opponentName,
@@ -508,8 +534,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 isBot: opponentId.startsWith('bot:'),
                 friendsSnapshot:
                     ref.watch(friendsSnapshotProvider).valueOrNull,
-                chatsList:
-                    ref.watch(chatsListProvider).valueOrNull ?? const [],
+                messageUnread: messageUnread,
                 onInfoTap: () => _showOpponentInfo(
                   context,
                   opponentId: opponentId,
@@ -575,7 +600,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     isOver: isOver,
                     isMakingMove: _isMakingMove,
                     onMove: _makeMove,
-                    pulseController: _pulseController,
+                    // Pulse на 8×8/10×10 — десятки AnimatedBuilder каждый кадр.
+                    pulseController:
+                        game.gridSize <= 3 ? _pulseController : null,
                     compact: narrow,
                   ),
                 );
@@ -1854,20 +1881,19 @@ class _MultiOpponentsCard extends StatelessWidget {
     required this.game,
     required this.opponents,
     required this.chatsList,
+    required this.groupUnread,
     required this.onGroupChatTap,
   });
 
   final GameStateItem game;
   final List<GamePlayerMeta> opponents;
   final List<ChatPreviewItem> chatsList;
+  final int groupUnread;
   final VoidCallback? onGroupChatTap;
 
   @override
   Widget build(BuildContext context) {
-    final groupBadge = chatsList
-        .where((c) => c.chatID == game.chatId)
-        .map((c) => c.unreadCount)
-        .fold<int>(0, (a, b) => a + b);
+    final groupBadge = groupUnread;
     final narrow = isNarrow(context);
     final chips = <Widget>[];
     for (final player in opponents) {
@@ -1994,7 +2020,7 @@ class _OpponentCard extends StatelessWidget {
     this.frameColor,
     this.isBot = false,
     required this.friendsSnapshot,
-    required this.chatsList,
+    required this.messageUnread,
     required this.onInfoTap,
     required this.onMessageTap,
     required this.onAddFriendTap,
@@ -2008,7 +2034,7 @@ class _OpponentCard extends StatelessWidget {
   final String? frameColor;
   final bool isBot;
   final FriendsSnapshot? friendsSnapshot;
-  final List<ChatPreviewItem> chatsList;
+  final int messageUnread;
   final VoidCallback onInfoTap;
   final VoidCallback onMessageTap;
   final void Function(String? requestId) onAddFriendTap;
@@ -2029,10 +2055,7 @@ class _OpponentCard extends StatelessWidget {
     final hasIncoming = incoming.isNotEmpty;
     final incomingRequestId = hasIncoming ? incoming.first.requestId : null;
     final addFriendEnabled = !hasOutgoing;
-    final messageBadge = chatsList
-        .where((c) => c.user.id == opponentId)
-        .map((c) => c.unreadCount)
-        .fold<int>(0, (a, b) => a + b);
+    final messageBadge = messageUnread;
 
     final narrow = isNarrow(context);
     final card = GradientCard(
@@ -2165,6 +2188,7 @@ class _OpponentAvatar extends StatelessWidget {
       borderWidth: compact ? 2.4 : 3.0,
       frameCode: frameCode,
       frameColor: frameColor,
+      animate: false,
       child: avatar,
     );
   }
@@ -2203,7 +2227,7 @@ class _GameBoard extends StatefulWidget {
   final bool isOver;
   final bool isMakingMove;
   final ValueChanged<int> onMove;
-  final AnimationController pulseController;
+  final AnimationController? pulseController;
   final bool compact;
 
   @override
@@ -3174,57 +3198,57 @@ class _AnimatedGameCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cell = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: isForbidden
+                ? Colors.grey.withValues(alpha: 0.15)
+                : isClosedBoard
+                    ? AppColors.textSecondary.withValues(alpha: 0.06)
+                    : isActiveBoard
+                        ? AppColors.accentStart.withValues(alpha: 0.14)
+                        : canTap && isMyTurn
+                            ? AppColors.accentSoft.withValues(alpha: 0.25)
+                            : Colors.transparent,
+          ),
+          child: pulse != null && canTap && isMyTurn
+              ? AnimatedBuilder(
+                  animation: pulse!,
+                  builder: (context, _) {
+                    final alpha = 0.2 +
+                        0.12 * (0.5 + 0.5 * (pulse!.value * 2 - 1).abs());
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: AppColors.accentStart.withValues(alpha: alpha),
+                      ),
+                      child: Center(
+                        child: _SymbolWidget(symbol: symbol),
+                      ),
+                    );
+                  },
+                )
+              : Center(
+                  child: _SymbolWidget(symbol: symbol),
+                ),
+        ),
+      ),
+    );
+    // Пустые клетки без pulse — без TweenAnimationBuilder (критично для 8×8/10×10).
+    if (symbol.isEmpty) return cell;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: AppDurations.short,
       curve: Curves.easeOutBack,
       builder: (context, t, child) {
-        return Transform.scale(
-          scale: symbol.isNotEmpty ? t : 1,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: isForbidden
-                      ? Colors.grey.withValues(alpha: 0.15)
-                      : isClosedBoard
-                          ? AppColors.textSecondary.withValues(alpha: 0.06)
-                          : isActiveBoard
-                              ? AppColors.accentStart.withValues(alpha: 0.14)
-                              : canTap && isMyTurn
-                                  ? AppColors.accentSoft.withValues(alpha: 0.25)
-                                  : Colors.transparent,
-                ),
-                child: pulse != null && canTap && isMyTurn
-                    ? AnimatedBuilder(
-                        animation: pulse!,
-                        builder: (context, _) {
-                          final alpha = 0.2 +
-                              0.12 * (0.5 + 0.5 * (pulse!.value * 2 - 1).abs());
-                          return Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              color: AppColors.accentStart
-                                  .withValues(alpha: alpha),
-                            ),
-                            child: Center(
-                              child: _SymbolWidget(symbol: symbol),
-                            ),
-                          );
-                        },
-                      )
-                    : Center(
-                        child: _SymbolWidget(symbol: symbol),
-                      ),
-              ),
-            ),
-          ),
-        );
+        return Transform.scale(scale: t, child: child);
       },
+      child: cell,
     );
   }
 }

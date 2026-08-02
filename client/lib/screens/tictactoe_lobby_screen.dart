@@ -111,7 +111,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       ref.invalidate(openLobbiesProvider);
       refreshChatsList(ref, force: true).catchError((_) {});
     });
-    _chatsRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Редко: основной апдейт — по WS (chat_message / lobby_updated).
+    _chatsRefreshTimer = Timer.periodic(const Duration(seconds: 45), (_) {
       if (mounted) refreshChatsList(ref, force: true);
     });
   }
@@ -133,9 +134,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       lobbyId: widget.lobbyId,
       onRealtimeEvent: (event) {
         final type = event['type']?.toString();
-        if (type == 'chat_message' ||
-            type == 'chat_list_changed' ||
-            type == 'lobby_updated') {
+        // lobby_updated меняет состав — чаты не трогаем (badge обновится по chat_*).
+        if (type == 'chat_message' || type == 'chat_list_changed') {
           refreshChatsList(ref, force: true).catchError((_) {});
         }
       },
@@ -826,6 +826,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   ) {
     final players = lobby.players;
     return GradientCard(
+      animate: false,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Row(
         children: [
@@ -1441,6 +1442,7 @@ class _LobbyPlayerAvatar extends StatelessWidget {
       borderWidth: 2.6,
       frameCode: player.frameCode,
       frameColor: player.frameColor,
+      animate: false,
       child: avatar,
     );
   }

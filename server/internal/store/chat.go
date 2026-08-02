@@ -105,12 +105,14 @@ func DeleteInviteLobbyShareMessages(
 	if lobbyID == "" || pool == nil {
 		return nil, nil
 	}
-	needle := "/games/tictactoe/lobby/" + lobbyID
+	// LIKE по фрагменту пути — уже сужает выборку до кандидатов; точная
+	// проверка InviteLobbyIDFromBody отсекает ложные совпадения.
+	likePat := "%/games/tictactoe/lobby/" + lobbyID + "%"
 	rows, err := pool.Query(ctx, `
 		SELECT id, chat_id, body
 		FROM chat_messages
-		WHERE position($1 in body) > 0
-	`, needle)
+		WHERE body LIKE $1
+	`, likePat)
 	if err != nil {
 		return nil, err
 	}
@@ -119,19 +121,25 @@ func DeleteInviteLobbyShareMessages(
 	type candidate struct {
 		id     uuid.UUID
 		chatID uuid.UUID
-		body   string
 	}
 	var toDelete []candidate
+	chatSeen := make(map[uuid.UUID]struct{})
+	var chatIDs []uuid.UUID
 	for rows.Next() {
-		var c candidate
-		if err := rows.Scan(&c.id, &c.chatID, &c.body); err != nil {
+		var id, chatID uuid.UUID
+		var body string
+		if err := rows.Scan(&id, &chatID, &body); err != nil {
 			return nil, err
 		}
-		gotID, ok := InviteLobbyIDFromBody(c.body)
+		gotID, ok := InviteLobbyIDFromBody(body)
 		if !ok || gotID != lobbyID {
 			continue
 		}
-		toDelete = append(toDelete, c)
+		toDelete = append(toDelete, candidate{id: id, chatID: chatID})
+		if _, ok := chatSeen[chatID]; !ok {
+			chatSeen[chatID] = struct{}{}
+			chatIDs = append(chatIDs, chatID)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -140,25 +148,38 @@ func DeleteInviteLobbyShareMessages(
 		return nil, nil
 	}
 
-	out := make([]DeletedInviteChatMessage, 0, len(toDelete))
-	for _, c := range toDelete {
-		ct, err := pool.Exec(ctx, `DELETE FROM chat_messages WHERE id = $1`, c.id)
+	participants := make(map[uuid.UUID][2]uuid.UUID, len(chatIDs))
+	for _, chatID := range chatIDs {
+		lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
 		if err != nil {
-			return out, err
-		}
-		if ct.RowsAffected() == 0 {
 			continue
 		}
-		lowID, highID, err := ChatParticipantIDs(ctx, pool, c.chatID)
-		if err != nil {
-			// Сообщение уже удалено; участников нет — пропускаем realtime.
+		participants[chatID] = [2]uuid.UUID{lowID, highID}
+	}
+
+	ids := make([]uuid.UUID, len(toDelete))
+	for i, c := range toDelete {
+		ids[i] = c.id
+	}
+	ct, err := pool.Exec(ctx, `DELETE FROM chat_messages WHERE id = ANY($1)`, ids)
+	if err != nil {
+		return nil, err
+	}
+	if ct.RowsAffected() == 0 {
+		return nil, nil
+	}
+
+	out := make([]DeletedInviteChatMessage, 0, len(toDelete))
+	for _, c := range toDelete {
+		pair, ok := participants[c.chatID]
+		if !ok {
 			continue
 		}
 		out = append(out, DeletedInviteChatMessage{
 			MessageID:  c.id,
 			ChatID:     c.chatID,
-			LowUserID:  lowID,
-			HighUserID: highID,
+			LowUserID:  pair[0],
+			HighUserID: pair[1],
 		})
 	}
 	return out, nil
@@ -474,19 +495,32 @@ func ListChatsForUser(
 			}
 		}
 
-		if item.Kind == ChatKindGroup {
-			if meta, merr := GetGroupChatMeta(ctx, pool, item.ChatID); merr == nil && meta != nil {
-				item.Title = meta.Title
-				item.LobbyID = meta.LobbyID
-				item.GameType = meta.GameType
-				item.Members = meta.Members
-			}
-		}
-
 		result = append(result, item)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-	return result, rows.Err()
+	// Участников групповых чатов грузим одним запросом (раньше — N+1 GetGroupChatMeta).
+	groupIDs := make([]uuid.UUID, 0)
+	for _, item := range result {
+		if item.Kind == ChatKindGroup {
+			groupIDs = append(groupIDs, item.ChatID)
+		}
+	}
+	if len(groupIDs) > 0 {
+		membersByChat, merr := ListGroupChatMembersByChatIDs(ctx, pool, groupIDs)
+		if merr == nil {
+			for i := range result {
+				if result[i].Kind != ChatKindGroup {
+					continue
+				}
+				result[i].Members = membersByChat[result[i].ChatID]
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func ListChatMessages(

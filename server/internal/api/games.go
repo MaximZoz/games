@@ -1369,6 +1369,13 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 }
 
 func (h *GamesHandler) loadLobbyPlayers(ctx context.Context, playerIDs []string) []LobbyPlayerItem {
+	uids := make([]uuid.UUID, 0, len(playerIDs))
+	for _, idStr := range playerIDs {
+		if uid, err := uuid.Parse(idStr); err == nil {
+			uids = append(uids, uid)
+		}
+	}
+	users, _ := store.GetUsersByIDs(ctx, h.Pool, uids)
 	out := make([]LobbyPlayerItem, 0, len(playerIDs))
 	for _, idStr := range playerIDs {
 		p := LobbyPlayerItem{ID: idStr, DisplayName: "Игрок"}
@@ -1377,8 +1384,7 @@ func (h *GamesHandler) loadLobbyPlayers(ctx context.Context, playerIDs []string)
 			out = append(out, p)
 			continue
 		}
-		u, err := store.GetUserByID(ctx, h.Pool, uid)
-		if err == nil && u != nil {
+		if u := users[uid]; u != nil {
 			if u.DisplayName != nil && *u.DisplayName != "" {
 				p.DisplayName = *u.DisplayName
 			}
@@ -1544,7 +1550,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		lockKey := "rematch_lock:" + minUUID(creatorUUID, userID) + ":" + maxUUID(creatorUUID, userID)
 		ok, _ := h.Rdb.SetNX(ctx, lockKey, "1", 15*time.Second).Result()
 		if !ok {
-			time.Sleep(300 * time.Millisecond)
+			// Без Sleep на воркере — клиент сам обновит лобби/активную игру.
 			for _, u := range []uuid.UUID{creatorUUID, userID} {
 				if gid, _ := h.Rdb.Get(ctx, userActiveGameKey(u)).Result(); gid != "" {
 					if gm, _ := h.Rdb.HGet(ctx, "game:"+gid, "status").Result(); gm == gameStatusActive {
@@ -2279,7 +2285,13 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		}
 		frameIDs = append(frameIDs, id)
 		parsed[id] = s
-		if u, err := store.GetUserByID(ctx, h.Pool, id); err == nil && u != nil {
+	}
+	if users, err := store.GetUsersByIDs(ctx, h.Pool, frameIDs); err == nil {
+		for id, s := range parsed {
+			u := users[id]
+			if u == nil {
+				continue
+			}
 			if u.DisplayName != nil && *u.DisplayName != "" {
 				s.setDN(u.DisplayName)
 			}

@@ -213,7 +213,8 @@ func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 		if level == "" {
 			level = "info"
 		}
-		_ = store.InsertAppLog(r.Context(), h.Pool, store.InsertAppLogParams{
+		pool := h.Pool
+		params := store.InsertAppLogParams{
 			EventID:    event.EventID,
 			EventTime:  evTime,
 			Source:     "frontend",
@@ -226,7 +227,10 @@ func (h *FrontendLogHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 			Path:       strPtr(event.Path),
 			StatusCode: event.StatusCode,
 			DurationMS: event.DurationMS,
-		})
+		}
+		go func() {
+			_ = store.InsertAppLog(context.Background(), pool, params)
+		}()
 	}
 	w.WriteHeader(http.StatusAccepted)
 }

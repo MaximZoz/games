@@ -262,14 +262,19 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 				meta["recipient_ids"] = ids
 			}
-			_ = store.InsertAppLog(ctx, h.Pool, store.InsertAppLogParams{
-				Source:     "backend",
-				MethodName: "realtime.presence_online",
-				UserID:     &userID,
-				Level:      "info",
-				Message:    "user connected, user_online sent to " + strconv.Itoa(len(recipients)) + " recipients",
-				Metadata:   meta,
-			})
+			uid := userID
+			pool := h.Pool
+			msg := "user connected, user_online sent to " + strconv.Itoa(len(recipients)) + " recipients"
+			go func() {
+				_ = store.InsertAppLog(context.Background(), pool, store.InsertAppLogParams{
+					Source:     "backend",
+					MethodName: "realtime.presence_online",
+					UserID:     &uid,
+					Level:      "info",
+					Message:    msg,
+					Metadata:   meta,
+				})
+			}()
 		}
 	}
 
@@ -324,14 +329,19 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					}
 					meta["recipient_ids"] = ids
 				}
-				_ = store.InsertAppLog(context.Background(), h.Pool, store.InsertAppLogParams{
-					Source:     "backend",
-					MethodName: "realtime.presence_offline",
-					UserID:     &userID,
-					Level:      "info",
-					Message:    "user disconnected, user_offline sent to " + strconv.Itoa(len(recipients)) + " recipients",
-					Metadata:   meta,
-				})
+				uid := userID
+				pool := h.Pool
+				msg := "user disconnected, user_offline sent to " + strconv.Itoa(len(recipients)) + " recipients"
+				go func() {
+					_ = store.InsertAppLog(context.Background(), pool, store.InsertAppLogParams{
+						Source:     "backend",
+						MethodName: "realtime.presence_offline",
+						UserID:     &uid,
+						Level:      "info",
+						Message:    msg,
+						Metadata:   meta,
+					})
+				}()
 			}
 		}
 		h.Hub.Unregister(userID, conn)

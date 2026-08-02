@@ -56,15 +56,24 @@ func EnsureGameGroupChat(
 		`, chatID, title, gameType)
 	}
 
+	uniq := make([]uuid.UUID, 0, len(memberIDs))
+	seen := make(map[uuid.UUID]struct{}, len(memberIDs))
 	for _, uid := range memberIDs {
 		if uid == uuid.Nil {
 			continue
 		}
+		if _, ok := seen[uid]; ok {
+			continue
+		}
+		seen[uid] = struct{}{}
+		uniq = append(uniq, uid)
+	}
+	if len(uniq) > 0 {
 		_, err = pool.Exec(ctx, `
 			INSERT INTO chat_members (chat_id, user_id)
-			VALUES ($1, $2)
+			SELECT $1, UNNEST($2::uuid[])
 			ON CONFLICT DO NOTHING
-		`, chatID, uid)
+		`, chatID, uniq)
 		if err != nil {
 			return uuid.Nil, err
 		}
@@ -177,33 +186,51 @@ func GetGroupChatMeta(ctx context.Context, pool *pgxpool.Pool, chatID uuid.UUID)
 	if err != nil {
 		return nil, err
 	}
+	byChat, err := ListGroupChatMembersByChatIDs(ctx, pool, []uuid.UUID{chatID})
+	if err != nil {
+		return nil, err
+	}
+	m.Members = byChat[chatID]
+	return &m, nil
+}
+
+// ListGroupChatMembersByChatIDs — участники нескольких групповых чатов одним запросом.
+func ListGroupChatMembersByChatIDs(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatIDs []uuid.UUID,
+) (map[uuid.UUID][]ChatUser, error) {
+	out := make(map[uuid.UUID][]ChatUser, len(chatIDs))
+	if len(chatIDs) == 0 {
+		return out, nil
+	}
 	rows, err := pool.Query(ctx, `
 		SELECT
+			cm.chat_id,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value,
 			u.age, u.gender, u.about, COALESCE(u.is_support, false),
 			COALESCE(us.preferred_language, '')
 		FROM chat_members cm
 		JOIN users u ON u.id = cm.user_id
 		LEFT JOIN user_settings us ON us.user_id = u.id
-		WHERE cm.chat_id = $1
-		ORDER BY cm.joined_at
-	`, chatID)
+		WHERE cm.chat_id = ANY($1)
+		ORDER BY cm.chat_id, cm.joined_at
+	`, chatIDs)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
+		var chatID uuid.UUID
 		var cu ChatUser
 		if err := rows.Scan(
+			&chatID,
 			&cu.ID, &cu.Email, &cu.DisplayName, &cu.AvatarKind, &cu.AvatarValue,
 			&cu.Age, &cu.Gender, &cu.About, &cu.IsSupport, &cu.PreferredLanguage,
 		); err != nil {
 			return nil, err
 		}
-		m.Members = append(m.Members, cu)
+		out[chatID] = append(out[chatID], cu)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return &m, nil
+	return out, rows.Err()
 }
