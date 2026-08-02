@@ -2041,15 +2041,12 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	humans := humanUserIDsFromGame(m)
 
 	// Multi: таймаут = выбывание, как сдача.
+	// active_game НЕ сбрасываем до конца партии — иначе выбывший/«чей ход»
+	// пропадает из «Игры» и не может открыть доску, а у остальных UI зависает.
 	if cfg.MaxPlayers > 2 {
 		eliminated := parseEliminatedMarks(m["eliminated_marks"])
 		if !eliminated[turn] {
 			eliminated[turn] = true
-		}
-		if uid := markOwnerUserID(m, turn); uid != "" {
-			if u, e := uuid.Parse(uid); e == nil {
-				clearUserActiveGame(ctx, h.Rdb, u)
-			}
 		}
 		alive := aliveMarks(cfg.Marks, eliminated)
 		elimCSV := formatEliminatedMarks(eliminated)
@@ -2349,9 +2346,22 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 			"game_id": gameID, "board": board,
 			"turn": m["turn"], "winner": m["winner"], "status": m["status"],
 			"timeout": true, "grid_size": gridSize, "variant": string(variant),
-			"x_user_id": m["x_user_id"], "o_user_id": m["o_user_id"],
+			"max_players": cfg.MaxPlayers,
+			"x_user_id":  m["x_user_id"], "o_user_id": m["o_user_id"],
 		}
-		h.addGamePlayerMetadata(ctx, resp, m["x_user_id"], m["o_user_id"])
+		if m["t_user_id"] != "" {
+			resp["t_user_id"] = m["t_user_id"]
+		}
+		if m["s_user_id"] != "" {
+			resp["s_user_id"] = m["s_user_id"]
+		}
+		if elimCSV := strings.TrimSpace(m["eliminated_marks"]); elimCSV != "" {
+			resp["eliminated_marks"] = strings.Split(elimCSV, ",")
+		}
+		h.addGamePlayerMetadataFromMap(ctx, resp, map[string]string{
+			"x": m["x_user_id"], "o": m["o_user_id"],
+			"t": m["t_user_id"], "s": m["s_user_id"],
+		})
 		_ = json.NewEncoder(w).Encode(resp)
 		return
 	}
@@ -2480,22 +2490,26 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
-		"game_id":   gameID,
-		"board":     res.State.Board,
-		"turn":      nextTurn,
-		"winner":    winner,
-		"status":    status,
-		"grid_size": gridSize,
-		"variant":   string(variant),
-		"x_user_id": xUserID,
-		"o_user_id": oUserID,
-		"can_swap":  false,
+		"game_id":     gameID,
+		"board":       res.State.Board,
+		"turn":        nextTurn,
+		"winner":      winner,
+		"status":      status,
+		"grid_size":   gridSize,
+		"variant":     string(variant),
+		"max_players": cfg.MaxPlayers,
+		"x_user_id":   xUserID,
+		"o_user_id":   oUserID,
+		"can_swap":    false,
 	}
 	if m["t_user_id"] != "" {
 		resp["t_user_id"] = m["t_user_id"]
 	}
 	if m["s_user_id"] != "" {
 		resp["s_user_id"] = m["s_user_id"]
+	}
+	if elimCSV := strings.TrimSpace(m["eliminated_marks"]); elimCSV != "" {
+		resp["eliminated_marks"] = strings.Split(elimCSV, ",")
 	}
 	if len(res.WinningCells) > 0 {
 		resp["winning_cells"] = res.WinningCells
@@ -2508,7 +2522,10 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		resp["turn_time_sec"] = turnTimeSec
 		resp["turn_deadline"] = time.Now().UTC().Unix() + int64(turnTimeSec)
 	}
-	h.addGamePlayerMetadata(ctx, resp, xUserID, oUserID)
+	h.addGamePlayerMetadataFromMap(ctx, resp, map[string]string{
+		"x": xUserID, "o": oUserID,
+		"t": m["t_user_id"], "s": m["s_user_id"],
+	})
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
@@ -2581,8 +2598,8 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 	}
 
 	// Multi: выбывание; играют оставшиеся, пока не останется один.
+	// active_game держим до конца партии (см. applyGameTimeout).
 	eliminated[mark] = true
-	clearUserActiveGame(ctx, h.Rdb, userID)
 	alive := aliveMarks(cfg.Marks, eliminated)
 	elimCSV := formatEliminatedMarks(eliminated)
 	humans := humanUserIDsFromGame(m)
@@ -3184,21 +3201,35 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 
 	gameID, err := h.Rdb.Get(ctx, userActiveGameKey(userID)).Result()
 	if err == nil && gameID != "" {
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		key := "game:" + gameID
+		m, err := h.Rdb.HGetAll(ctx, key).Result()
+		if err == nil && len(m) > 0 {
+			// Протухший ход применяем и здесь — иначе «Игры» показывает
+			// чужой/старый ход, пока кто-то не откроет GetGame.
+			if m["status"] == gameStatusActive && h.applyGameTimeout(ctx, key, m) {
+				m, _ = h.Rdb.HGetAll(ctx, key).Result()
+			}
+		}
 		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
 			myMark := markForUserID(m, userID.String())
-			elim := parseEliminatedMarks(m["eliminated_marks"])
-			isMyTurn := myMark != "" && !elim[myMark] && m["turn"] == myMark
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"type":       "game",
-				"game_id":    gameID,
-				"lobby_id":   m["lobby_id"],
-				"is_my_turn": isMyTurn,
-			})
-			return
+			// Игрок должен оставаться в партии (в т.ч. выбывший — смотреть).
+			if myMark == "" {
+				clearUserActiveGame(ctx, h.Rdb, userID)
+			} else {
+				elim := parseEliminatedMarks(m["eliminated_marks"])
+				isMyTurn := !elim[myMark] && m["turn"] == myMark
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"type":       "game",
+					"game_id":    gameID,
+					"lobby_id":   m["lobby_id"],
+					"is_my_turn": isMyTurn,
+				})
+				return
+			}
+		} else {
+			clearUserActiveGame(ctx, h.Rdb, userID)
 		}
-		clearUserActiveGame(ctx, h.Rdb, userID)
 	}
 
 	lobbyID, err := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result()

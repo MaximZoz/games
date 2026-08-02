@@ -123,12 +123,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
     ref.invalidate(gameStateProvider(widget.gameId));
     ref.invalidate(activeGameProvider);
-    // Fallback-синк: реже, чем раньше — основной канал game_state по WS.
-    _syncStateTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+    // Fallback-синк + дожим протухшего хода (сервер применяет timeout на GetGame).
+    _syncStateTimer = Timer.periodic(const Duration(seconds: 12), (_) {
       if (!mounted || _waitingForBotMove) return;
-      final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+      final override = ref.read(gameStateOverrideProvider(widget.gameId));
+      final game = override ??
+          ref.read(gameStateProvider(widget.gameId)).valueOrNull;
       if (game != null && !game.isActivePvp) return;
+      final deadline = game?.turnDeadline;
+      if (deadline != null &&
+          deadline > 0 &&
+          DateTime.now().toUtc().millisecondsSinceEpoch >= deadline * 1000) {
+        ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+            null;
+      }
       ref.invalidate(gameStateProvider(widget.gameId));
+      ref.invalidate(activeGameProvider);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) refreshChatsList(ref, force: true);
@@ -142,7 +152,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (type == 'game_state' &&
             next.valueOrNull?['game_id'] == widget.gameId &&
             !_waitingForBotMove) {
+          // Сбрасываем optimistic override — иначе у одного «ход A», у другого «ход B».
+          ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+              null;
           ref.invalidate(gameStateProvider(widget.gameId));
+          ref.invalidate(activeGameProvider);
         }
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
@@ -197,17 +211,25 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
 
   void _onTurnTimeExpired() {
     _timeoutRetryTimer?.cancel();
+    var attempt = 0;
     void doRefresh() {
+      if (!mounted) return;
+      // Без сброса override клиент может вечно показывать старый «Ход X» при 0 с.
+      ref.read(gameStateOverrideProvider(widget.gameId).notifier).state = null;
       ref.invalidate(gameStateProvider(widget.gameId));
       ref.invalidate(activeGameProvider);
-      if (mounted) setState(() {});
+      setState(() {});
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => doRefresh());
-    _timeoutRetryTimer = Timer(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
+    // Сервер применяет timeout на GetGame/GetActive — повторяем пару раз.
+    _timeoutRetryTimer = Timer.periodic(const Duration(milliseconds: 900), (t) {
+      attempt++;
       doRefresh();
-      _timeoutRetryTimer = null;
+      if (attempt >= 3) {
+        t.cancel();
+        _timeoutRetryTimer = null;
+      }
     });
   }
 
