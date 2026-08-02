@@ -343,6 +343,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         action == _RoomAction.acceptFriendRequest) {
       final id = (peerUserID ?? '').trim();
       if (id.isEmpty) return;
+      final chats =
+          ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+      for (final c in chats) {
+        if (c.chatID == widget.chatID &&
+            (c.user.isSupport ||
+                c.user.displayName?.trim() == 'Поддержка')) {
+          return;
+        }
+      }
       setState(() => _roomActionInFlight = true);
       try {
         final repo = ref.read(friendsRepositoryProvider);
@@ -452,6 +461,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     if (action == _RoomAction.blockUser) {
       final id = (peerUserID ?? '').trim();
       if (id.isEmpty) return;
+      final chats =
+          ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+      for (final c in chats) {
+        if (c.chatID == widget.chatID && c.user.isSupport) return;
+      }
       final confirmed = await _confirmAction(
         title: context.l10n.chatsBlockTitle,
         description: context.l10n.chatsBlockDesc,
@@ -1650,6 +1664,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }) {
     Widget avatar;
     if (user != null &&
+        (user.isSupport || user.displayName?.trim() == 'Поддержка')) {
+      avatar = CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.accentSoft,
+        child: Icon(
+          Icons.support_agent_rounded,
+          color: AppColors.accentStart,
+          size: radius * 1.15,
+        ),
+      );
+    } else if (user != null &&
         user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
@@ -2048,6 +2073,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             },
             itemBuilder: (context) {
               final peerId = (peerUser?.id ?? '').trim();
+              final isSupport = peerUser?.isSupport == true ||
+                  peerUser?.displayName?.trim() == 'Поддержка';
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final isFriend = peerId.isNotEmpty &&
                   snapshot?.friends.any((f) => f.user.id == peerId) == true;
@@ -2057,12 +2084,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   snapshot?.incoming.any((r) => r.user.id == peerId) == true;
 
               return <PopupMenuEntry<_RoomAction>>[
-                if (isFriend)
+                if (!isSupport && isFriend)
                   PopupMenuItem<_RoomAction>(
                     value: _RoomAction.removeFriend,
                     child: Text(context.l10n.friendsRemove),
                   )
-                else if (peerId.isNotEmpty && snapshot != null)
+                else if (!isSupport && peerId.isNotEmpty && snapshot != null)
                   if (hasIncoming)
                     PopupMenuItem<_RoomAction>(
                       value: _RoomAction.acceptFriendRequest,
@@ -2083,11 +2110,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   value: _RoomAction.clearChat,
                   child: Text(context.l10n.chatsClearConfirm),
                 ),
-                PopupMenuItem<_RoomAction>(
-                  value: _RoomAction.blockUser,
-                  enabled: peerId.isNotEmpty,
-                  child: Text(context.l10n.chatsBlockConfirm),
-                ),
+                if (!isSupport)
+                  PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.blockUser,
+                    enabled: peerId.isNotEmpty,
+                    child: Text(context.l10n.chatsBlockConfirm),
+                  ),
               ];
             },
             icon: const Icon(Icons.more_vert_rounded),

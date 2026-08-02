@@ -23,6 +23,7 @@ var (
 	ErrChatFriendsOnlyText    = errors.New("only friends can send text messages")
 	ErrUserBlocked            = errors.New("user is blocked")
 	ErrCannotBlockYourself    = errors.New("cannot block yourself")
+	ErrCannotBlockSupport     = errors.New("cannot block support")
 	ErrUserNotFound           = errors.New("user not found")
 )
 
@@ -610,24 +611,19 @@ func BlockUser(
 		return false, ErrCannotBlockYourself
 	}
 
+	target, err := GetUserByID(ctx, pool, blockedUserID)
+	if err != nil || target == nil {
+		return false, ErrUserNotFound
+	}
+	if target.IsSupport {
+		return false, ErrCannotBlockSupport
+	}
+
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return false, err
 	}
 	defer tx.Rollback(ctx)
-
-	var exists int
-	err = tx.QueryRow(ctx, `
-		SELECT 1
-		FROM users
-		WHERE id = $1
-	`, blockedUserID).Scan(&exists)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return false, ErrUserNotFound
-		}
-		return false, err
-	}
 
 	insertTag, err := tx.Exec(ctx, `
 		INSERT INTO user_blocks (blocker_user_id, blocked_user_id)

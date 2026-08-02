@@ -862,6 +862,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   Future<void> _blockChatUserFromList(ChatPreviewItem item) async {
+    if (item.user.isSupport ||
+        item.user.displayName?.trim() == 'Поддержка') {
+      return;
+    }
     final userID = item.user.id.trim();
     if (userID.isEmpty) return;
     final confirmed = await _confirmChatAction(
@@ -1994,8 +1998,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       true;
                               final friendBusy = _chatActionInFlight
                                   .contains('friend_$peerId');
-                              final showAddFriend =
-                                  peerId.isNotEmpty && !isFriend;
+                              final isSupportPeer = item.user.isSupport ||
+                                  item.user.displayName?.trim() == 'Поддержка';
+                              final showAddFriend = peerId.isNotEmpty &&
+                                  !isFriend &&
+                                  !isSupportPeer;
                               return Padding(
                                 padding: EdgeInsets.only(
                                   top: index == 0 ? 0 : 10,
@@ -2006,7 +2013,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   enabled: !itemBusy,
                                   endActionPane: ActionPane(
                                     motion: const DrawerMotion(),
-                                    extentRatio: 0.40,
+                                    extentRatio: isSupportPeer ? 0.20 : 0.40,
                                     children: [
                                       CustomSlidableAction(
                                         onPressed: itemBusy
@@ -2032,30 +2039,31 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                           busy: clearBusy,
                                         ),
                                       ),
-                                      CustomSlidableAction(
-                                        onPressed: itemBusy
-                                            ? null
-                                            : (actionContext) {
-                                                unawaited(
-                                                  _onSlidableActionPressed(
-                                                    actionContext,
-                                                    item,
-                                                    _ChatSwipeAction.block,
-                                                  ),
-                                                );
-                                              },
-                                        backgroundColor: Colors.transparent,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 8,
+                                      if (!isSupportPeer)
+                                        CustomSlidableAction(
+                                          onPressed: itemBusy
+                                              ? null
+                                              : (actionContext) {
+                                                  unawaited(
+                                                    _onSlidableActionPressed(
+                                                      actionContext,
+                                                      item,
+                                                      _ChatSwipeAction.block,
+                                                    ),
+                                                  );
+                                                },
+                                          backgroundColor: Colors.transparent,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 8,
+                                          ),
+                                          child: _buildSlidableActionContent(
+                                            icon: Icons.block_rounded,
+                                            iconColor: const Color(0xFFD32F2F),
+                                            phaseShift: 0.5,
+                                            busy: blockBusy,
+                                          ),
                                         ),
-                                        child: _buildSlidableActionContent(
-                                          icon: Icons.block_rounded,
-                                          iconColor: const Color(0xFFD32F2F),
-                                          phaseShift: 0.5,
-                                          busy: blockBusy,
-                                        ),
-                                      ),
                                     ],
                                   ),
                                   child: Opacity(
@@ -2338,7 +2346,17 @@ class _AvatarDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget avatar;
-    if (user.avatarKind == 'file' &&
+    if (user.isSupport || user.displayName?.trim() == 'Поддержка') {
+      avatar = CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.accentSoft,
+        child: Icon(
+          Icons.support_agent_rounded,
+          color: AppColors.accentStart,
+          size: radius * 1.15,
+        ),
+      );
+    } else if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
       final memoryImage = AvatarMemoryCache.fromAvatarValue(user.avatarValue);

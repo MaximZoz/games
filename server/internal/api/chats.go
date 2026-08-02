@@ -204,6 +204,8 @@ func writeChatError(w http.ResponseWriter, r *http.Request, err error) {
 		WriteErr(w, r, http.StatusBadRequest, "invalid reply target")
 	case errors.Is(err, store.ErrCannotBlockYourself):
 		WriteErr(w, r, http.StatusBadRequest, "cannot block yourself")
+	case errors.Is(err, store.ErrCannotBlockSupport):
+		WriteErr(w, r, http.StatusBadRequest, "cannot block support")
 	case errors.Is(err, store.ErrChatFriendsOnlyText):
 		WriteErr(w, r, http.StatusForbidden, "only friends can send text messages")
 	case errors.Is(err, store.ErrChatEditForbidden):

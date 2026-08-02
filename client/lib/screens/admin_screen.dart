@@ -36,6 +36,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AdminOpenSupportChat?>(adminOpenSupportChatProvider, (_, next) {
+      if (next != null) {
+        _tabController.animateTo(1);
+      }
+    });
     return Scaffold(
       backgroundColor: AppColors.surfaceUnified,
       appBar: AppBar(
@@ -424,7 +429,7 @@ class _UserCard extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          onTap: () => _showActions(context),
+          onTap: () => _showActions(context, ref),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -495,7 +500,7 @@ class _UserCard extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert_rounded, size: 20),
-                  onPressed: () => _showActions(context),
+                  onPressed: () => _showActions(context, ref),
                 ),
               ],
             ),
@@ -540,7 +545,7 @@ class _UserCard extends ConsumerWidget {
     }
   }
 
-  void _showActions(BuildContext context) {
+  void _showActions(BuildContext context, WidgetRef ref) {
     final isSelf = user.id == currentUserId;
     showModalBottomSheet<void>(
       context: context,
@@ -588,6 +593,22 @@ class _UserCard extends ConsumerWidget {
                 onTap: () {
                   Navigator.pop(ctx);
                   _showGrantCoinsDialog(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.support_agent_rounded,
+                    color: AppColors.accentStart),
+                title: const Text('Написать от поддержки'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  final name = user.displayName?.trim().isNotEmpty == true
+                      ? user.displayName!.trim()
+                      : user.email;
+                  ref.read(adminOpenSupportChatProvider.notifier).state =
+                      AdminOpenSupportChat(
+                    userId: user.id,
+                    peerName: name,
+                  );
                 },
               ),
               ListTile(
@@ -748,6 +769,15 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
   @override
   Widget build(BuildContext context) {
     ref.watch(supportInboxRealtimeProvider);
+    ref.listen<AdminOpenSupportChat?>(adminOpenSupportChatProvider, (_, next) {
+      if (next == null) return;
+      setState(() {
+        _selectedUserId = next.userId;
+        _selectedPeerName = next.peerName;
+      });
+      // Сбрасываем запрос, чтобы повторное открытие того же юзера сработало.
+      ref.read(adminOpenSupportChatProvider.notifier).state = null;
+    });
     if (_selectedUserId != null) {
       return _SupportConversation(
         userId: _selectedUserId!,

@@ -111,6 +111,16 @@ final supportChatsProvider =
   return repo.listSupportChats();
 });
 
+/// Запрос открыть переписку поддержки с пользователем (из меню админки).
+class AdminOpenSupportChat {
+  const AdminOpenSupportChat({required this.userId, this.peerName});
+  final String userId;
+  final String? peerName;
+}
+
+final adminOpenSupportChatProvider =
+    StateProvider<AdminOpenSupportChat?>((ref) => null);
+
 /// Сумма непрочитанных обращений в поддержку (для бейджа у админа).
 final supportUnreadTotalProvider = Provider<AsyncValue<int>>((ref) {
   return ref.watch(supportChatsProvider).whenData(
