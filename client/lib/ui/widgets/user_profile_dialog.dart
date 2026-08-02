@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -141,229 +142,241 @@ Future<void> showUserProfileDialog({
                         : formatLastSeen(presenceEntry.lastSeenAt));
                 final genderIcon = _genderIcon(resolvedGender);
                 final female = _isFemaleGender(resolvedGender);
-                final showAddFriend = !isFriend && !hasOutgoing;
+                final myId =
+                    ref.watch(authStateProvider).valueOrNull?.id.trim() ?? '';
+                final isSelf = myId.isNotEmpty && myId == id;
+                // «В друзья» — только если ещё не друг и нет исходящей заявки.
+                final showAddFriend = !isSelf && !isFriend && !hasOutgoing;
+                final showMessage = !isSelf;
+                final resolvedFrameCode =
+                    friendUser?.frameCode ?? frameCode;
+                final resolvedFrameColor =
+                    friendUser?.frameColor ?? frameColor;
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _ProfileAvatar(
-                          displayName: name,
-                          avatarKind:
-                              friendUser?.avatarKind ?? avatarKind,
-                          avatarValue:
-                              friendUser?.avatarValue ?? avatarValue,
-                          frameCode: frameCode,
-                          frameColor: frameColor,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
+                return SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _ProfileAvatar(
+                            displayName: name,
+                            avatarKind:
+                                friendUser?.avatarKind ?? avatarKind,
+                            avatarValue:
+                                friendUser?.avatarValue ?? avatarValue,
+                            frameCode: resolvedFrameCode,
+                            frameColor: resolvedFrameColor,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (statusText != null &&
-                                  statusText.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    statusText,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
+                                if (statusText != null &&
+                                    statusText.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      statusText,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        if (showAddFriend)
+                          if (showAddFriend)
+                            IconButton(
+                              tooltip: incomingRequestId != null
+                                  ? context.l10n.commonAccept
+                                  : context.l10n.friendsAdd,
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.all(6),
+                              constraints: const BoxConstraints(
+                                minWidth: 36,
+                                minHeight: 36,
+                              ),
+                              icon: const Icon(
+                                Icons.person_add_alt_1_rounded,
+                                color: AppColors.accentStart,
+                              ),
+                              onPressed: () async {
+                                try {
+                                  final incoming = incomingRequestId;
+                                  if (incoming != null &&
+                                      incoming.isNotEmpty) {
+                                    await ref
+                                        .read(friendsRepositoryProvider)
+                                        .acceptRequest(incoming);
+                                    if (context.mounted) {
+                                      showAppSnackBar(
+                                        context,
+                                        message: context
+                                            .l10n.friendsRequestAccepted,
+                                        kind: AppSnackKind.success,
+                                      );
+                                    }
+                                  } else {
+                                    await ref
+                                        .read(friendsRepositoryProvider)
+                                        .sendRequest(id);
+                                    if (context.mounted) {
+                                      showAppSnackBar(
+                                        context,
+                                        message: context
+                                            .l10n.friendsRequestSent,
+                                        kind: AppSnackKind.success,
+                                      );
+                                    }
+                                  }
+                                  await refreshFriendsSnapshot(ref);
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    showAppSnackBar(
+                                      context,
+                                      message: context.l10n.commonError,
+                                      kind: AppSnackKind.error,
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          if (showMessage)
+                            IconButton(
+                              tooltip: context.l10n.navChats,
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.all(6),
+                              constraints: const BoxConstraints(
+                                minWidth: 36,
+                                minHeight: 36,
+                              ),
+                              icon: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                color: AppColors.accentStart,
+                              ),
+                              onPressed: () async {
+                                try {
+                                  final chatId = await ref
+                                      .read(chatsRepositoryProvider)
+                                      .startChat(id);
+                                  if (!dialogContext.mounted) return;
+                                  Navigator.of(dialogContext).pop();
+                                  if (!context.mounted || chatId.isEmpty) {
+                                    return;
+                                  }
+                                  final params = <String, String>{
+                                    'name': name,
+                                    'from': messageFrom,
+                                  };
+                                  final ret =
+                                      messageReturnPath?.trim() ?? '';
+                                  if (ret.isNotEmpty) {
+                                    params['game'] = ret;
+                                  }
+                                  context.push(
+                                    Uri(
+                                      path: '/chats/$chatId',
+                                      queryParameters: params,
+                                    ).toString(),
+                                  );
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    showAppSnackBar(
+                                      context,
+                                      message: context.l10n.commonError,
+                                      kind: AppSnackKind.error,
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          const SizedBox(width: 4),
                           IconButton(
-                            tooltip: incomingRequestId != null
-                                ? context.l10n.commonAccept
-                                : context.l10n.friendsAdd,
+                            tooltip: context.l10n.commonClose,
                             visualDensity: VisualDensity.compact,
                             padding: const EdgeInsets.all(6),
                             constraints: const BoxConstraints(
                               minWidth: 36,
                               minHeight: 36,
                             ),
-                            icon: Icon(
-                              incomingRequestId != null
-                                  ? Icons.person_add_alt_1_rounded
-                                  : Icons.person_add_alt_1_rounded,
-                              color: AppColors.accentStart,
-                            ),
-                            onPressed: () async {
-                              try {
-                                final incoming = incomingRequestId;
-                                if (incoming != null && incoming.isNotEmpty) {
-                                  await ref
-                                      .read(friendsRepositoryProvider)
-                                      .acceptRequest(incoming);
-                                  if (context.mounted) {
-                                    showAppSnackBar(
-                                      context,
-                                      message: context
-                                          .l10n.friendsRequestAccepted,
-                                      kind: AppSnackKind.success,
-                                    );
-                                  }
-                                } else {
-                                  await ref
-                                      .read(friendsRepositoryProvider)
-                                      .sendRequest(id);
-                                  if (context.mounted) {
-                                    showAppSnackBar(
-                                      context,
-                                      message:
-                                          context.l10n.friendsRequestSent,
-                                      kind: AppSnackKind.success,
-                                    );
-                                  }
-                                }
-                                ref.invalidate(friendsSnapshotProvider);
-                              } catch (_) {
-                                if (context.mounted) {
-                                  showAppSnackBar(
-                                    context,
-                                    message: context.l10n.commonError,
-                                    kind: AppSnackKind.error,
-                                  );
-                                }
-                              }
-                            },
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(),
                           ),
-                        IconButton(
-                          tooltip: context.l10n.navChats,
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(6),
-                          constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
-                          ),
-                          icon: const Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            color: AppColors.accentStart,
-                          ),
-                          onPressed: () async {
-                            try {
-                              final chatId = await ref
-                                  .read(chatsRepositoryProvider)
-                                  .startChat(id);
-                              if (!dialogContext.mounted) return;
-                              Navigator.of(dialogContext).pop();
-                              if (!context.mounted || chatId.isEmpty) {
-                                return;
-                              }
-                              final params = <String, String>{
-                                'name': name,
-                                'from': messageFrom,
-                              };
-                              final ret = messageReturnPath?.trim() ?? '';
-                              if (ret.isNotEmpty) {
-                                params['game'] = ret;
-                              }
-                              context.push(
-                                Uri(
-                                  path: '/chats/$chatId',
-                                  queryParameters: params,
-                                ).toString(),
-                              );
-                            } catch (_) {
-                              if (context.mounted) {
-                                showAppSnackBar(
-                                  context,
-                                  message: context.l10n.commonError,
-                                  kind: AppSnackKind.error,
-                                );
-                              }
-                            }
-                          },
-                        ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          tooltip: context.l10n.commonClose,
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(6),
-                          constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
-                          ),
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () =>
-                              Navigator.of(dialogContext).pop(),
-                        ),
-                      ],
-                    ),
-                    if ((resolvedAge != null && resolvedAge > 0) ||
-                        genderIcon != null) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          if (resolvedAge != null && resolvedAge > 0)
-                            _infoPill(
-                              text: context.l10n
-                                  .profileAgeYears(resolvedAge),
-                              minWidth: 72,
-                            ),
-                          if (genderIcon != null)
-                            _infoPill(
-                              icon: genderIcon,
-                              minWidth: 46,
-                              backgroundColor: female
-                                  ? const Color(0xFFFCE7F3)
-                                  : AppColors.accentSoft,
-                              foregroundColor: female
-                                  ? const Color(0xFFBE185D)
-                                  : AppColors.textPrimary,
-                            ),
                         ],
                       ),
-                    ],
-                    if (resolvedAbout != null &&
-                        resolvedAbout.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        context.l10n.commonAboutMe,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                      if ((resolvedAge != null && resolvedAge > 0) ||
+                          genderIcon != null) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            if (resolvedAge != null && resolvedAge > 0)
+                              _infoPill(
+                                text: context.l10n
+                                    .profileAgeYears(resolvedAge),
+                                minWidth: 72,
+                              ),
+                            if (genderIcon != null)
+                              _infoPill(
+                                icon: genderIcon,
+                                minWidth: 46,
+                                backgroundColor: female
+                                    ? const Color(0xFFFCE7F3)
+                                    : AppColors.accentSoft,
+                                foregroundColor: female
+                                    ? const Color(0xFFBE185D)
+                                    : AppColors.textPrimary,
+                              ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        resolvedAbout,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          height: 1.35,
+                      ],
+                      if (resolvedAbout != null &&
+                          resolvedAbout.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          context.l10n.commonAboutMe,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 4),
+                        Text(
+                          resolvedAbout,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            height: 1.35,
+                          ),
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      HeadToHeadSection(
+                        opponentId: id,
+                        opponentName: name,
                       ),
+                      PeerCollectionsSection(userId: id),
                     ],
-                    HeadToHeadSection(
-                      opponentId: id,
-                      opponentName: name,
-                    ),
-                    PeerCollectionsSection(userId: id),
-                  ],
+                  ),
                 );
               },
             ),

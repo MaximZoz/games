@@ -4,26 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
-import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
-import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
-import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
-import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class GamesScreen extends ConsumerStatefulWidget {
@@ -469,142 +463,16 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _showCreatorInfo(BuildContext context, GameInvite inv) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 80 : 14,
-            vertical: isDesktop ? 40 : 20,
-          ),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints:
-                BoxConstraints(maxWidth: isDesktop ? 440 : double.infinity),
-            child: Consumer(
-              builder: (context, ref, _) {
-                final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
-                final presence =
-                    ref.watch(presenceMapProvider).valueOrNull ?? const {};
-                FriendUserItem? user;
-                for (final f in snapshot?.friends ?? []) {
-                  if (f.user.id == inv.creatorId) {
-                    user = f.user;
-                    break;
-                  }
-                }
-                if (user == null) {
-                  for (final r in snapshot?.incoming ?? []) {
-                    if (r.user.id == inv.creatorId) {
-                      user = r.user;
-                      break;
-                    }
-                  }
-                }
-                if (user == null) {
-                  for (final r in snapshot?.outgoing ?? []) {
-                    if (r.user.id == inv.creatorId) {
-                      user = r.user;
-                      break;
-                    }
-                  }
-                }
-                final p = presence[inv.creatorId];
-                final statusText = p == null
-                    ? null
-                    : (p.online
-                        ? context.l10n.commonOnlineCap
-                        : formatLastSeen(p.lastSeenAt));
-                final name = user?.displayName?.trim().isNotEmpty == true
-                    ? user!.displayName!
-                    : inv.creatorName;
-                final about = user?.about?.trim();
-                return GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _InviteCreatorAvatar(
-                            creatorName: name,
-                            avatarKind: user?.avatarKind ?? 'letter',
-                            avatarValue: user?.avatarValue,
-                            creatorId: inv.creatorId,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  name,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (statusText != null && statusText.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      statusText,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: context.l10n.commonClose,
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => Navigator.of(ctx).pop(),
-                          ),
-                        ],
-                      ),
-                      if (about != null && about.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          context.l10n.commonAboutMe,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          about,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                      HeadToHeadSection(
-                        opponentId: inv.creatorId,
-                        opponentName: name,
-                      ),
-                      PeerCollectionsSection(userId: inv.creatorId),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: inv.creatorId,
+        displayName: inv.creatorName,
+        avatarKind: inv.creatorAvatarKind,
+        avatarValue: inv.creatorAvatarValue,
+        messageFrom: 'games',
+      ),
     );
   }
 
@@ -1907,17 +1775,24 @@ class _InviteCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      _InviteGameIcon(gameType: inv.gameType),
+                      GestureDetector(
+                        onTap: () => onShowCreatorInfo(context, inv),
+                        child: _InviteGameIcon(gameType: inv.gameType),
+                      ),
                       const SizedBox(width: 12),
                       Flexible(
-                        child: Text(
-                          inv.creatorName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                        child: InkWell(
+                          onTap: () => onShowCreatorInfo(context, inv),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Text(
+                            inv.creatorName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -2057,85 +1932,3 @@ class _InviteGameIcon extends StatelessWidget {
   }
 }
 
-class _InviteCreatorAvatar extends ConsumerWidget {
-  const _InviteCreatorAvatar({
-    required this.creatorName,
-    required this.avatarKind,
-    required this.avatarValue,
-    required this.creatorId,
-  });
-
-  final String creatorName;
-  final String avatarKind;
-  final String? avatarValue;
-  final String creatorId;
-
-  static const _presetIcons = [
-    Icons.face_rounded,
-    Icons.face_2_rounded,
-    Icons.face_3_rounded,
-    Icons.face_4_rounded,
-    Icons.face_5_rounded,
-    Icons.face_6_rounded,
-    Icons.man_rounded,
-    Icons.woman_rounded,
-    Icons.person_rounded,
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    String kind = avatarKind;
-    String? value = avatarValue;
-    if ((value == null || value.isEmpty) && kind == 'letter') {
-      final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
-      for (final f in snapshot?.friends ?? []) {
-        if (f.user.id == creatorId) {
-          kind = f.user.avatarKind;
-          value = f.user.avatarValue;
-          break;
-        }
-      }
-    }
-    Widget avatar;
-    if (kind == 'file' && value != null && value.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(value);
-      avatar = img != null
-          ? CircleAvatar(
-              radius: 22,
-              backgroundImage: img,
-            )
-          : _letterAvatar(creatorName);
-    } else if (kind == 'preset' && value != null) {
-      final idx = int.tryParse(value);
-      if (idx != null && idx >= 0 && idx < _presetIcons.length) {
-        avatar = CircleAvatar(
-          radius: 22,
-          backgroundColor: AppColors.accentSoft,
-          child:
-              Icon(_presetIcons[idx], color: AppColors.accentStart, size: 26),
-        );
-      } else {
-        avatar = _letterAvatar(creatorName);
-      }
-    } else {
-      avatar = _letterAvatar(creatorName);
-    }
-    return avatar;
-  }
-
-  Widget _letterAvatar(String name) {
-    final letter = name.trim().isEmpty ? '?' : name[0].toUpperCase();
-    return CircleAvatar(
-      radius: 22,
-      backgroundColor: AppColors.accentSoft,
-      child: Text(
-        letter,
-        style: const TextStyle(
-          color: AppColors.accentStart,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
-    );
-  }
-}
