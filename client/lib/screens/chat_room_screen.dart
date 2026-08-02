@@ -1913,6 +1913,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       about: user.about,
       messageFrom: widget.fromGames ? 'games' : 'chats',
       messageReturnPath: widget.fromGames ? widget.gameReturnPath : null,
+      // Уже в переписке — кнопка «написать» не нужна.
+      showMessageButton: false,
     );
   }
 

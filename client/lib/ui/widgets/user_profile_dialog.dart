@@ -32,6 +32,8 @@ Future<void> showUserProfileDialog({
   /// Куда вернуться из чата (например путь к игре).
   String? messageReturnPath,
   String messageFrom = 'games',
+  /// В комнате чата «написать» не нужно — уже в переписке.
+  bool showMessageButton = true,
 }) async {
   final id = userId.trim();
   if (id.isEmpty || id.startsWith('bot:')) return;
@@ -145,9 +147,10 @@ Future<void> showUserProfileDialog({
                 final myId =
                     ref.watch(authStateProvider).valueOrNull?.id.trim() ?? '';
                 final isSelf = myId.isNotEmpty && myId == id;
-                // «В друзья» — только если ещё не друг и нет исходящей заявки.
+                // «В друзья» — если ещё не друг и нет исходящей заявки.
                 final showAddFriend = !isSelf && !isFriend && !hasOutgoing;
-                final showMessage = !isSelf;
+                // «Написать» — везде, кроме комнаты текущего чата.
+                final showMessage = showMessageButton && !isSelf;
                 final resolvedFrameCode =
                     friendUser?.frameCode ?? frameCode;
                 final resolvedFrameColor =
