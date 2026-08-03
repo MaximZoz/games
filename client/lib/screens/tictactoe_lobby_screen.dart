@@ -1176,11 +1176,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               ActiveGameItem(type: 'lobby', lobbyId: widget.lobbyId),
             );
         // Дождаться свежего состава — сразу видно себя в «Игроки».
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
         try {
-          await ref.refresh(lobbyDetailProvider(widget.lobbyId).future);
-        } catch (_) {
-          ref.invalidate(lobbyDetailProvider(widget.lobbyId));
-        }
+          await ref.read(lobbyDetailProvider(widget.lobbyId).future);
+        } catch (_) {}
         await refreshChatsList(ref, force: true).catchError((_) {});
         return;
       }
@@ -1217,11 +1216,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               ActiveGameItem(type: 'lobby', lobbyId: widget.lobbyId),
             );
         // Дождаться состава — иначе кратко «не вижу себя» в «Игроки».
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
         try {
-          await ref.refresh(lobbyDetailProvider(widget.lobbyId).future);
-        } catch (_) {
-          ref.invalidate(lobbyDetailProvider(widget.lobbyId));
-        }
+          await ref.read(lobbyDetailProvider(widget.lobbyId).future);
+        } catch (_) {}
         return;
       }
       final gone = e is GamesException &&
