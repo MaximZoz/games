@@ -800,43 +800,57 @@ class _GamesPageContent extends StatelessWidget {
                             alignment: Alignment.topCenter,
                             child: SizedBox(
                               width: cardWidth,
-                              child: _TictactoeGameCard(
-                                isCreating: isCreating,
-                                isFinding: isFinding,
-                                isOffline: isOffline,
-                                turnTimeSec: turnTimeSec,
-                                onTurnTimeChanged: onTurnTimeChanged,
-                                variant: variant,
-                                playersControlActive: playersControlActive,
-                                onPlayersChipTap: onPlayersChipTap,
-                                onModeChipTap: onModeChipTap,
-                                stakeBronze: stakeBronze,
-                                stakeOptionsList: stakeOptionsList,
-                                onStakeChanged: onStakeChanged,
-                                onCreateGame: onCreateGame,
-                                onFindGame: onFindGame,
-                                onPlayOffline: onPlayOffline,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _TictactoeGameCard(
+                                    isCreating: isCreating,
+                                    isFinding: isFinding,
+                                    isOffline: isOffline,
+                                    turnTimeSec: turnTimeSec,
+                                    onTurnTimeChanged: onTurnTimeChanged,
+                                    variant: variant,
+                                    playersControlActive: playersControlActive,
+                                    onPlayersChipTap: onPlayersChipTap,
+                                    onModeChipTap: onModeChipTap,
+                                    stakeBronze: stakeBronze,
+                                    stakeOptionsList: stakeOptionsList,
+                                    onStakeChanged: onStakeChanged,
+                                    onCreateGame: onCreateGame,
+                                    onFindGame: onFindGame,
+                                    onPlayOffline: onPlayOffline,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const _DurakGameCard(),
+                                ],
                               ),
                             ),
                           ),
                         );
                       }
-                      return _TictactoeGameCard(
-                        isCreating: isCreating,
-                        isFinding: isFinding,
-                        isOffline: isOffline,
-                        turnTimeSec: turnTimeSec,
-                        onTurnTimeChanged: onTurnTimeChanged,
-                        variant: variant,
-                        playersControlActive: playersControlActive,
-                        onPlayersChipTap: onPlayersChipTap,
-                        onModeChipTap: onModeChipTap,
-                        stakeBronze: stakeBronze,
-                        stakeOptionsList: stakeOptionsList,
-                        onStakeChanged: onStakeChanged,
-                        onCreateGame: onCreateGame,
-                        onFindGame: onFindGame,
-                        onPlayOffline: onPlayOffline,
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _TictactoeGameCard(
+                            isCreating: isCreating,
+                            isFinding: isFinding,
+                            isOffline: isOffline,
+                            turnTimeSec: turnTimeSec,
+                            onTurnTimeChanged: onTurnTimeChanged,
+                            variant: variant,
+                            playersControlActive: playersControlActive,
+                            onPlayersChipTap: onPlayersChipTap,
+                            onModeChipTap: onModeChipTap,
+                            stakeBronze: stakeBronze,
+                            stakeOptionsList: stakeOptionsList,
+                            onStakeChanged: onStakeChanged,
+                            onCreateGame: onCreateGame,
+                            onFindGame: onFindGame,
+                            onPlayOffline: onPlayOffline,
+                          ),
+                          const SizedBox(height: 16),
+                          const _DurakGameCard(),
+                        ],
                       );
                     },
                   ),
@@ -1250,6 +1264,118 @@ class _LobbiesPageContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Карточка «Дурак» — вход в игру. MVP: онлайн ещё не готов, только офлайн
+/// vs бот на 36 картах, подкидной, 2 игрока. Ставки/лобби добавим следующими
+/// итерациями (иконки/чипы — плейсхолдер).
+class _DurakGameCard extends StatelessWidget {
+  const _DurakGameCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientCard(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.accentStart, AppColors.accentEnd],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.style_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Дурак',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                    ),
+                    const Text(
+                      'Подкидной · 36 карт · 2 игрока',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.accentStart.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'MVP',
+                  style: TextStyle(
+                    color: AppColors.accentStart,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: null,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.people_alt_rounded),
+                  label: const Text('Онлайн — скоро'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => context.push('/games/durak/offline?deck=36'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.smart_toy_rounded),
+                  label: const Text('Играть с ботом'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

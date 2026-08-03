@@ -1,0 +1,199 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_bot.dart';
+import 'package:multigames_client/games/durak/durak_engine.dart';
+
+void main() {
+  group('PlayingCard.beats', () {
+    test('same suit — higher rank wins', () {
+      expect(
+        PlayingCard(Rank.jack, Suit.hearts)
+            .beats(PlayingCard(Rank.ten, Suit.hearts), Suit.clubs),
+        isTrue,
+      );
+      expect(
+        PlayingCard(Rank.ten, Suit.hearts)
+            .beats(PlayingCard(Rank.jack, Suit.hearts), Suit.clubs),
+        isFalse,
+      );
+    });
+
+    test('different non-trump suits — cannot beat', () {
+      expect(
+        PlayingCard(Rank.ace, Suit.hearts)
+            .beats(PlayingCard(Rank.six, Suit.diamonds), Suit.clubs),
+        isFalse,
+      );
+    });
+
+    test('trump beats any non-trump', () {
+      expect(
+        PlayingCard(Rank.six, Suit.clubs)
+            .beats(PlayingCard(Rank.ace, Suit.hearts), Suit.clubs),
+        isTrue,
+      );
+      expect(
+        PlayingCard(Rank.ace, Suit.hearts)
+            .beats(PlayingCard(Rank.six, Suit.clubs), Suit.clubs),
+        isFalse,
+      );
+    });
+
+    test('trump vs trump — higher rank wins', () {
+      expect(
+        PlayingCard(Rank.queen, Suit.clubs)
+            .beats(PlayingCard(Rank.jack, Suit.clubs), Suit.clubs),
+        isTrue,
+      );
+      expect(
+        PlayingCard(Rank.jack, Suit.clubs)
+            .beats(PlayingCard(Rank.queen, Suit.clubs), Suit.clubs),
+        isFalse,
+      );
+    });
+  });
+
+  group('Deck', () {
+    test('36-card deck contains 6..A across 4 suits', () {
+      final deck = Deck.standard(36, seed: 1);
+      expect(deck.length, 36);
+      final values = deck.cards.map((c) => c.rank.value).toSet();
+      expect(values, equals({6, 7, 8, 9, 10, 11, 12, 13, 14}));
+    });
+
+    test('24-card deck contains 9..A', () {
+      final deck = Deck.standard(24, seed: 2);
+      expect(deck.length, 24);
+      final values = deck.cards.map((c) => c.rank.value).toSet();
+      expect(values, equals({9, 10, 11, 12, 13, 14}));
+    });
+
+    test('52-card deck contains 2..A', () {
+      final deck = Deck.standard(52, seed: 3);
+      expect(deck.length, 52);
+      final values = deck.cards.map((c) => c.rank.value).toSet();
+      expect(values, equals({2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}));
+    });
+  });
+
+  group('DurakGame.startNew', () {
+    test('deals 6 cards to each player and exposes trump', () {
+      final game = DurakGame.startNew(playerCount: 2, seed: 42);
+      expect(game.hands.length, 2);
+      expect(game.hands[0].length, 6);
+      expect(game.hands[1].length, 6);
+      // 36 - 12 = 24 в колоде (включая открытый козырь снизу).
+      expect(game.deck.length, 24);
+      expect(game.openTrumpCard, isNotNull);
+      expect(game.openTrumpCard!.suit, game.trump);
+    });
+
+    test('starting attacker has the lowest trump (if any)', () {
+      final game = DurakGame.startNew(playerCount: 2, seed: 42);
+      final trumps = <int, List<int>>{
+        0: game.hands[0]
+            .where((c) => c.suit == game.trump)
+            .map((c) => c.rank.value)
+            .toList(),
+        1: game.hands[1]
+            .where((c) => c.suit == game.trump)
+            .map((c) => c.rank.value)
+            .toList(),
+      };
+      final anyTrump = trumps.values.any((l) => l.isNotEmpty);
+      if (!anyTrump) return;
+      final minEach = trumps.map(
+        (k, v) => MapEntry(k, v.isEmpty ? 100 : v.reduce((a, b) => a < b ? a : b)),
+      );
+      final expected =
+          minEach.entries.reduce((a, b) => a.value <= b.value ? a : b).key;
+      expect(game.attackerIndex, expected);
+    });
+  });
+
+  group('DurakGame moves', () {
+    test('cannot attack with card not in hand', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.six, Suit.hearts)],
+          [PlayingCard(Rank.seven, Suit.clubs)],
+        ],
+        deck: Deck([]),
+        trump: Suit.spades,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      expect(
+        game.canAttackWith(PlayingCard(Rank.eight, Suit.hearts), 0),
+        isFalse,
+      );
+    });
+
+    test('attack -> defend -> bito with clean table clears to bito pile', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.six, Suit.hearts)],
+          [PlayingCard(Rank.seven, Suit.hearts)],
+        ],
+        deck: Deck([]),
+        trump: Suit.spades,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
+      expect(game.table.length, 1);
+      expect(game.turn, DurakTurn.defender);
+
+      game.defend(PlayingCard(Rank.seven, Suit.hearts), playerIndex: 1);
+      expect(game.table.first.isBeaten, isTrue);
+      expect(game.turn, DurakTurn.attackerFollowUp);
+      expect(game.canAttackerSayBito, isTrue);
+
+      game.sayBito();
+      expect(game.table, isEmpty);
+      expect(game.bito.length, 2);
+      // Ходит бывший защитник.
+      expect(game.attackerIndex, 1);
+    });
+
+    test('take: defender collects all cards and loses turn', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.jack, Suit.hearts)],
+          [PlayingCard(Rank.six, Suit.diamonds)],
+        ],
+        deck: Deck([]),
+        trump: Suit.spades,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      game.attack(PlayingCard(Rank.jack, Suit.hearts), playerIndex: 0);
+      expect(game.canDefenderTake, isTrue);
+      game.take();
+      expect(game.hands[1].length, 2);
+      // Не осталось карт у атакующего → он победил, защитник — дурак.
+      expect(game.loserIndex, 1);
+    });
+
+    test('bot defends with minimum higher card of same suit', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.six, Suit.hearts)],
+          [
+            PlayingCard(Rank.seven, Suit.hearts),
+            PlayingCard(Rank.ace, Suit.hearts),
+            PlayingCard(Rank.jack, Suit.spades), // trump
+          ],
+        ],
+        deck: Deck([]),
+        trump: Suit.spades,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
+      const bot = DurakBot(index: 1);
+      bot.step(game);
+      expect(game.table.first.defense, PlayingCard(Rank.seven, Suit.hearts));
+    });
+  });
+}

@@ -17,6 +17,7 @@ import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/screens/durak_offline_screen.dart';
 import 'package:multigames_client/screens/offline_tictactoe_screen.dart';
 import 'package:multigames_client/screens/tictactoe_game_screen.dart';
 import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
@@ -442,6 +443,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                       swapRule: q['swap'] == '1',
                       firstMoveRestriction: q['nocenter'] == '1',
                     ),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/games/durak/offline',
+                pageBuilder: (_, state) {
+                  final q = state.uri.queryParameters;
+                  final size = int.tryParse(q['deck'] ?? '') ?? 36;
+                  return _noTransitionPage(
+                    state,
+                    DurakOfflineScreen(deckSize: size),
                   );
                 },
               ),
