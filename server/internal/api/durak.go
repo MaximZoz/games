@@ -140,12 +140,32 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// «Найти игру»: сначала пробуем схлопнуться с уже открытым лобби тех же
+	// правил (как multi-поиск в крестиках-ноликах), и только если такого нет —
+	// создаём своё. Иначе два игрока с одинаковыми настройками не находят
+	// друг друга.
+	if mode == "matchmake" {
+		lockKey := fmt.Sprintf("durak_open_lock:%d:%d:%s:%d:%d",
+			body.TurnTimeSec, deckSize, gameMode, maxPlayers, stakeBronze)
+		if locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result(); locked {
+			defer h.Rdb.Del(ctx, lockKey)
+		}
+		if existing := h.findOpenDurakLobbyID(
+			ctx, userID, body.TurnTimeSec, deckSize, gameMode, maxPlayers, stakeBronze,
+		); existing != "" {
+			if h.mergeIntoOpenDurakLobby(w, r, ctx, userID, existing) {
+				return
+			}
+			// Лобби успели закрыть — создаём новое ниже.
+		}
+	}
+
 	lobbyID := uuid.New().String()
 	key := "lobby:" + lobbyID
+	// Открытый поиск живёт как waiting_invite + mode=matchmake — так же,
+	// как multi «Найти игру» в крестиках: тогда ListLobbies его видит,
+	// а друга можно пригласить прямо из поиска.
 	status := lobbyStatusWaitingInvite
-	if mode == "matchmake" {
-		status = lobbyStatusWaitingMatchmake
-	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 
 	pipe := h.Rdb.Pipeline()
@@ -167,34 +187,14 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	if mode == "matchmake" {
-		h.Rdb.LPush(ctx, durakMatchmakeKey(body.TurnTimeSec, deckSize, gameMode, maxPlayers, stakeBronze), userID.String()+":"+lobbyID)
-	}
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
 	// Групповой чат для 3-4 игроков.
-	chatIDStr := ""
 	if maxPlayers > 2 {
 		title := durakGroupChatTitle(maxPlayers)
 		if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{userID}, title, durakGameType); cerr == nil {
-			chatIDStr = cid.String()
-			h.Rdb.HSet(ctx, key, "chat_id", chatIDStr)
+			h.Rdb.HSet(ctx, key, "chat_id", cid.String())
 			h.broadcast([]uuid.UUID{userID}, map[string]any{"type": "chat_list_changed"})
-		}
-	}
-
-	// matchmake 2 игрока — попробовать сразу связать с ожидающим.
-	if mode == "matchmake" && maxPlayers == 2 {
-		if other, err := h.Rdb.RPop(ctx, durakMatchmakeKey(body.TurnTimeSec, deckSize, gameMode, maxPlayers, stakeBronze)).Result(); err == nil && other != "" {
-			parts := strings.SplitN(other, ":", 2)
-			// Игнорируем, если это мы сами.
-			if parts[0] != userID.String() {
-				otherUUID, err := uuid.Parse(parts[0])
-				if err == nil {
-					h.startDurakGame(ctx, w, r, lobbyID, []uuid.UUID{otherUUID, userID}, deckSize, gameMode, body.TurnTimeSec, stakeBronze, maxPlayers)
-					return
-				}
-			}
 		}
 	}
 
@@ -207,10 +207,86 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// durakMatchmakeKey — очередь ожидающих матчмейка durak.
-func durakMatchmakeKey(turnTimeSec, deckSize int, gameMode string, maxPlayers, stakeBronze int) string {
-	return fmt.Sprintf("durak:matchmake:%d:%d:%s:%d:%d",
-		turnTimeSec, deckSize, gameMode, maxPlayers, stakeBronze)
+// findOpenDurakLobbyID — открытое durak-лобби тех же правил, куда можно войти.
+func (h *GamesHandler) findOpenDurakLobbyID(
+	ctx context.Context,
+	excludeUser uuid.UUID,
+	turnTimeSec, deckSize int,
+	gameMode string,
+	maxPlayers, stakeBronze int,
+) string {
+	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	if err != nil {
+		return ""
+	}
+	for _, key := range keys {
+		if strings.HasSuffix(key, ":invited") {
+			continue
+		}
+		m, err := h.Rdb.HGetAll(ctx, key).Result()
+		if err != nil || len(m) == 0 {
+			continue
+		}
+		if m["game_type"] != durakGameType || m["mode"] != "matchmake" {
+			continue
+		}
+		st := m["status"]
+		if st != lobbyStatusWaitingInvite && st != lobbyStatusWaitingMatchmake {
+			continue
+		}
+		if strings.TrimSpace(m["invite_target_id"]) != "" {
+			continue
+		}
+		if m["creator_id"] == excludeUser.String() {
+			continue
+		}
+		if tt, _ := strconv.Atoi(m["turn_time_sec"]); tt != turnTimeSec {
+			continue
+		}
+		if ds, _ := strconv.Atoi(m["deck_size"]); ds != deckSize {
+			continue
+		}
+		if strings.TrimSpace(m["game_mode"]) != gameMode {
+			continue
+		}
+		if mp, _ := strconv.Atoi(m["max_players"]); mp != maxPlayers {
+			continue
+		}
+		stakes, _ := strconv.Atoi(m["stake_bronze"])
+		if stakes < 1 {
+			stakes = 1
+		}
+		if stakes != stakeBronze {
+			continue
+		}
+		players := parsePlayerIDsCSV(m["player_ids"])
+		if len(players) >= maxPlayers {
+			continue
+		}
+		for _, p := range players {
+			if p == excludeUser.String() {
+				return ""
+			}
+		}
+		return strings.TrimPrefix(key, "lobby:")
+	}
+	return ""
+}
+
+// mergeIntoOpenDurakLobby — вход в найденное открытое лобби. true, если ответ уже записан.
+func (h *GamesHandler) mergeIntoOpenDurakLobby(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctx context.Context,
+	userID uuid.UUID,
+	lobbyID string,
+) bool {
+	m, err := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
+	if err != nil || len(m) == 0 {
+		return false
+	}
+	h.JoinDurakLobby(w, r, lobbyID)
+	return true
 }
 
 func durakGroupChatTitle(n int) string {

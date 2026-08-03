@@ -1866,7 +1866,10 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
-	if m["status"] != lobbyStatusWaitingInvite {
+	// Из открытого поиска тоже можно позвать друга — лобби ждёт игроков
+	// (waiting_matchmake), и приглашение просто добавляет ещё одного.
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
 		WriteErr(w, r, http.StatusBadRequest, "lobby not in invite mode")
 		return
 	}

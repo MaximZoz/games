@@ -11,6 +11,7 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException, formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/games/invite_link.dart';
@@ -63,12 +64,19 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
 
   Future<void> _leave() async {
     if (_leaving) return;
-    setState(() => _leaving = true);
-    // Сразу уходим: не ждём сеть, лобби закроется на сервере.
+    _leaving = true;
+    // Как в крестиках-ноликах: сразу уходим и сбрасываем активную сессию,
+    // иначе список игр редиректит обратно в уже удалённое лобби
+    // («Лобби не найдено»).
+    ref.read(activeGameProvider.notifier).clearLocal();
+    ref.invalidate(openLobbiesProvider);
     context.go('/games');
-    try {
-      await ref.read(durakRepositoryProvider).leaveLobby(widget.lobbyId);
-    } catch (_) {}
+    unawaited(
+      ref
+          .read(durakRepositoryProvider)
+          .leaveLobby(widget.lobbyId)
+          .catchError((_) {}),
+    );
   }
 
   Future<void> _invite(String friendId) async {
