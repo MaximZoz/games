@@ -977,6 +977,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
         } catch (_) {}
         if (!mounted) return;
+        // Multi: партия ещё идёт — держим карточку «Текущая игра» (spectate).
+        final game = ref.read(gameStateOverrideProvider(gameId)) ??
+            ref.read(gameStateProvider(gameId)).valueOrNull;
+        final multi = (game?.maxPlayers ?? 0) > 2 ||
+            (game?.playerUserIds.length ?? 0) > 2;
+        if (multi) {
+          final prev = ref.read(activeGameProvider).valueOrNull;
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  lobbyId: prev?.lobbyId,
+                  isMyTurn: false,
+                  isEliminated: true,
+                ),
+              );
+        }
         ref.read(gameStateOverrideProvider(gameId).notifier).state = null;
         ref.invalidate(gameStateProvider(gameId));
         unawaited(ref.read(activeGameProvider.notifier).refresh());
@@ -1322,7 +1339,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       _rematchRespondedIds.clear();
       clearBlockingGamePin(ref, ifGameId: widget.gameId);
       if (eliminated && !isOver) {
-        // Партия ещё идёт — локально помечаем выбывшим (сервер уже снял active_game).
+        // Партия ещё идёт — карточка «Текущая игра» для просмотра.
         final prev = ref.read(activeGameProvider).valueOrNull;
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -1376,8 +1393,28 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
       } catch (_) {}
       if (!mounted) return;
-      ref.read(activeGameProvider.notifier).clearLocal();
+      clearBlockingGamePin(ref, ifGameId: gameId);
+      final game = ref.read(gameStateOverrideProvider(gameId)) ??
+          ref.read(gameStateProvider(gameId)).valueOrNull;
+      final multi = (game?.maxPlayers ?? 0) > 2 ||
+          (game?.playerUserIds.length ?? 0) > 2;
+      if (multi && game?.status == 'active') {
+        // Multi: выбыли, но партия жива — карточка для просмотра.
+        final prev = ref.read(activeGameProvider).valueOrNull;
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: prev?.lobbyId,
+                isMyTurn: false,
+                isEliminated: true,
+              ),
+            );
+      } else {
+        ref.read(activeGameProvider.notifier).clearLocal();
+      }
       context.go('/games');
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
     });
   }
 

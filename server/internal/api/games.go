@@ -2592,12 +2592,9 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		}
 		h.Rdb.HSet(ctx, key, fields...)
 		h.Rdb.Expire(ctx, key, 24*time.Hour)
-		// Выбывший по таймауту свободен начинать другую игру.
-		if timedOutID := markOwnerUserID(m, turn); timedOutID != "" {
-			if u, e := uuid.Parse(timedOutID); e == nil {
-				clearUserActiveGame(ctx, h.Rdb, u)
-			}
-		}
+		// active_game НЕ сбрасываем: выбывший видит карточку «Текущая игра»
+		// и может открыть доску смотреть. Блок новой игры — через
+		// blockingActiveGameID (выбывший не блокируется).
 		payload := map[string]any{
 			"type": "game_state", "game_id": gameID,
 			"board": board, "turn": next, "status": gameStatusActive,
@@ -3195,9 +3192,9 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	// Выбывший свободен начинать другую игру: не держим active_game на этой партии.
-	// Иначе реванш/инвайт могут перетереть новую активную сессию.
-	clearUserActiveGame(ctx, h.Rdb, userID)
+	// active_game оставляем: GetActive вернёт is_eliminated и карточку
+	// «Текущая игра» для просмотра. Новую партию не блокируем
+	// (blockingActiveGameID игнорирует выбывших).
 	payload := map[string]any{
 		"type": "game_state", "game_id": gameID,
 		"board": board, "turn": turn, "status": gameStatusActive,
