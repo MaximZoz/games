@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -344,6 +345,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _createGame(BuildContext context, String mode) async {
+    if (blockJoinIfBusy(context, ref)) return;
     setState(() {
       if (mode == 'invite') {
         _isCreating = true;
@@ -403,6 +405,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
+    if (blockJoinIfBusy(context, ref, targetLobbyId: lobbyId)) return;
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -553,6 +556,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _joinLobby(BuildContext context, String lobbyId) async {
+    if (blockJoinIfBusy(context, ref, targetLobbyId: lobbyId)) return;
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);

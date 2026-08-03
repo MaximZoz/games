@@ -1679,6 +1679,26 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		_ = json.NewEncoder(w).Encode(resp)
 		return
 	}
+
+	// Уже в другой активной партии / своём лобби — нельзя принять новый инвайт.
+	if gid, gerr := h.Rdb.Get(ctx, userActiveGameKey(userID)).Result(); gerr == nil && gid != "" {
+		if gm, _ := h.Rdb.HGetAll(ctx, "game:"+gid).Result(); len(gm) > 0 && gm["status"] == gameStatusActive {
+			if markForUserID(gm, userID.String()) != "" {
+				WriteErr(w, r, http.StatusConflict, "finish your current game first")
+				return
+			}
+		}
+	}
+	if lid, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result(); lerr == nil && lid != "" && lid != lobbyID {
+		if lm, _ := h.Rdb.HGetAll(ctx, "lobby:"+lid).Result(); len(lm) > 0 {
+			st := lm["status"]
+			if st == lobbyStatusWaitingInvite || st == lobbyStatusWaitingMatchmake {
+				WriteErr(w, r, http.StatusConflict, "finish your current game first")
+				return
+			}
+		}
+	}
+
 	if len(players) >= cfg.MaxPlayers {
 		WriteErr(w, r, http.StatusConflict, "lobby is full")
 		return
@@ -2155,8 +2175,9 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 
 	h.Rdb.Del(ctx, key)
 	h.Rdb.Del(ctx, invitedKey)
-	clearUserActiveLobby(ctx, h.Rdb, userID)
-	clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
+	// Не трогаем active_game и чужие лобби отказавшегося.
+	clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
+	clearUserActiveLobbyIfMatch(ctx, h.Rdb, creatorUUID, lobbyID)
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 	_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 
@@ -3369,6 +3390,17 @@ func setUserActiveLobby(ctx context.Context, rdb *redis.Client, userID uuid.UUID
 }
 func clearUserActiveLobby(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
 	if rdb == nil {
+		return
+	}
+	rdb.Del(ctx, userActiveLobbyKey(userID))
+}
+
+func clearUserActiveLobbyIfMatch(ctx context.Context, rdb *redis.Client, userID uuid.UUID, lobbyID string) {
+	if rdb == nil || lobbyID == "" {
+		return
+	}
+	cur, err := rdb.Get(ctx, userActiveLobbyKey(userID)).Result()
+	if err != nil || cur != lobbyID {
 		return
 	}
 	rdb.Del(ctx, userActiveLobbyKey(userID))

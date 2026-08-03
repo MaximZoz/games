@@ -43,19 +43,34 @@ bool _activeGameUsable(ActiveGameItem? active) {
   return false;
 }
 
+String? _gameIdFromPath(String path) {
+  const prefix = '/games/tictactoe/game/';
+  if (!path.startsWith(prefix)) return null;
+  final id = path.substring(prefix.length).split('/').first.trim();
+  return id.isEmpty ? null : id;
+}
+
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
+/// При активной партии — только редирект в неё (не список с инвайтами).
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
-  // Выбывший смотрит партию только по клику на «Текущая игра», не с вкладки.
+  final pathGameId = _gameIdFromPath(currentPath);
+
+  // Активная партия (в т.ч. выбывший смотрит) — только в неё.
   if (active != null &&
       active.type == 'game' &&
       active.gameId != null &&
-      active.gameId!.isNotEmpty &&
-      !active.isEliminated) {
+      active.gameId!.isNotEmpty) {
     final dest = '/games/tictactoe/game/${active.gameId}';
     if (currentPath == dest || currentPath.startsWith('$dest/')) return;
     context.go(dest);
     return;
   }
+
+  // Уже на экране партии, active ещё грузится — не уходим на список инвайтов.
+  if (pathGameId != null) {
+    return;
+  }
+
   if (active != null &&
       active.type == 'lobby' &&
       active.lobbyId != null &&
@@ -379,12 +394,29 @@ class AppShell extends ConsumerWidget {
         final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
         final cacheUsable = _activeGameUsable(cachedActive);
+        // На экране партии — закрепить active, чтобы инвайт/refresh не «съели» матч.
+        final pathGameId = _gameIdFromPath(currentPath);
+        if (pathGameId != null &&
+            (cachedActive == null ||
+                cachedActive.type != 'game' ||
+                cachedActive.gameId != pathGameId)) {
+          activeNotifier.setLocal(
+            ActiveGameItem(
+              type: 'game',
+              gameId: pathGameId,
+              lobbyId: cachedActive?.lobbyId,
+              isMyTurn: cachedActive?.isMyTurn ?? false,
+              isEliminated: cachedActive?.isEliminated ?? false,
+            ),
+          );
+        }
+        final activeForNav = ref.read(activeGameProvider).valueOrNull;
         Router.neglect(context, () {
-          _goGamesTab(context, currentPath, cachedActive);
+          _goGamesTab(context, currentPath, activeForNav ?? cachedActive);
         });
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         // Если кэш был пуст (создали лобби и ушли в чаты) — после refresh
-        // увести в «Своя игра». Epoch отсекает гонку с leaveLobby.
+        // увести в активную партию / «Своя игра». Epoch отсекает leaveLobby.
         unawaited(() async {
           try {
             ref.invalidate(activeGameProvider);
@@ -393,16 +425,46 @@ class AppShell extends ConsumerWidget {
             if (ref.read(activeGameProvider.notifier).epoch != epochAtTap) {
               return;
             }
-            if (cacheUsable || fresh == null || !_activeGameUsable(fresh)) {
+            // Партия с экрана важнее «пустого» ответа — не теряем её.
+            if ((fresh == null || !_activeGameUsable(fresh)) &&
+                pathGameId != null) {
+              ref.read(activeGameProvider.notifier).setLocal(
+                    ActiveGameItem(
+                      type: 'game',
+                      gameId: pathGameId,
+                      lobbyId: cachedActive?.lobbyId,
+                      isMyTurn: cachedActive?.isMyTurn ?? false,
+                      isEliminated: cachedActive?.isEliminated ?? false,
+                    ),
+                  );
+              return;
+            }
+            if (fresh == null || !_activeGameUsable(fresh)) return;
+            // Даже если кэш был — сервер мог вернуть актуальную партию.
+            if (cacheUsable &&
+                fresh.type == cachedActive?.type &&
+                fresh.gameId == cachedActive?.gameId &&
+                fresh.lobbyId == cachedActive?.lobbyId) {
               return;
             }
             final nowPath =
                 GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
-            if (nowPath != '/games') return;
             Router.neglect(context, () {
               _goGamesTab(context, nowPath, fresh);
             });
-          } catch (_) {}
+          } catch (_) {
+            if (pathGameId != null && context.mounted) {
+              ref.read(activeGameProvider.notifier).setLocal(
+                    ActiveGameItem(
+                      type: 'game',
+                      gameId: pathGameId,
+                      lobbyId: cachedActive?.lobbyId,
+                      isMyTurn: cachedActive?.isMyTurn ?? false,
+                      isEliminated: cachedActive?.isEliminated ?? false,
+                    ),
+                  );
+            }
+          }
         }());
         return;
       }

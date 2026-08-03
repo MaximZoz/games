@@ -22,6 +22,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
@@ -3626,6 +3627,14 @@ class _ChatInviteCard extends ConsumerWidget {
     final lobbyId = link.lobbyId.trim();
     if (lobbyId.isEmpty) {
       context.go(link.appPathFromMessage(messageId));
+      return;
+    }
+    if (blockJoinIfBusy(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
       return;
     }
     try {

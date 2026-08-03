@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
@@ -106,6 +107,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     // Не инвалидируем lobbyDetail здесь: invalidate → loading без данных →
     // мигание всего экрана при каждом remount (таб «Игры», query без mode).
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Deep-link / чат: если уже в другой партии — всплывашка и назад.
+      final active = ref.read(activeGameProvider).valueOrNull;
+      if (isBusyWithOtherSession(active, targetLobbyId: widget.lobbyId)) {
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        goToActiveSession(context, active!);
+        return;
+      }
       // Deep-link / push: пользователь уже открыл лобби — убрать карточку
       // «Вас пригласили» и бейдж в табе «Игры».
       ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
@@ -1164,6 +1177,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   }
 
   Future<void> _joinViaLink(BuildContext context) async {
+    if (blockJoinIfBusy(
+      context,
+      ref,
+      targetLobbyId: widget.lobbyId,
+      redirectToActive: true,
+    )) {
+      return;
+    }
     setState(() => _isJoining = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
