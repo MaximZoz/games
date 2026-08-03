@@ -904,15 +904,15 @@ class _GamesPageContent extends StatelessWidget {
                   Builder(
                     builder: (context) {
                       final active = activeAsync.valueOrNull;
+                      final obs = observation;
                       // Active game на списке не показываем — таб уводит в неё.
                       // Observation — карточка, пока партия не закроется.
-                      if (observation == null ||
-                          observation.gameId.trim().isEmpty) {
+                      if (obs == null || obs.gameId.trim().isEmpty) {
                         return const SizedBox.shrink();
                       }
                       // Если эта же партия уже active (ещё играю) — карточка не нужна.
                       if (active?.type == 'game' &&
-                          active?.gameId == observation.gameId) {
+                          active?.gameId == obs.gameId) {
                         return const SizedBox.shrink();
                       }
                       return Padding(
@@ -921,7 +921,7 @@ class _GamesPageContent extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           child: InkWell(
                             onTap: () => context.push(
-                                '/games/tictactoe/game/${observation.gameId}'),
+                                '/games/tictactoe/game/${obs.gameId}'),
                             borderRadius: BorderRadius.circular(16),
                             child: const Row(
                               children: [
