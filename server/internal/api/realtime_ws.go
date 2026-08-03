@@ -89,6 +89,29 @@ func (h *RealtimeHub) IsUserOnline(userID uuid.UUID) bool {
 	return ok && len(conns) > 0
 }
 
+// DisconnectUser шлёт payload (если задан) и закрывает все WS пользователя.
+func (h *RealtimeHub) DisconnectUser(userID uuid.UUID, payload any) {
+	if h == nil {
+		return
+	}
+	var raw []byte
+	if payload != nil {
+		raw, _ = json.Marshal(payload)
+	}
+
+	h.mu.Lock()
+	conns := h.clients[userID]
+	delete(h.clients, userID)
+	h.mu.Unlock()
+
+	for _, client := range conns {
+		if len(raw) > 0 {
+			_ = client.writeText(raw)
+		}
+		_ = client.conn.Close()
+	}
+}
+
 func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 	if h == nil || len(userIDs) == 0 {
 		return
@@ -184,6 +207,18 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid token")
 		return
+	}
+	if h.Pool != nil {
+		sid, sidErr := uuid.Parse(strings.TrimSpace(claims.SessionID))
+		if sidErr != nil {
+			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+			return
+		}
+		ok, existsErr := store.SessionExists(r.Context(), h.Pool, sid)
+		if existsErr != nil || !ok {
+			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+			return
+		}
 	}
 
 	conn, err := wsUpgrader.Upgrade(w, r, nil)

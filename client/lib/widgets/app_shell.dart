@@ -221,6 +221,11 @@ class AppShell extends ConsumerWidget {
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
+          if (type == 'session_replaced') {
+            // Вход с другого устройства — выходим на этом.
+            unawaited(ref.read(authStateProvider.notifier).logout());
+            return;
+          }
           if (type == 'game_started' || type == 'lobby_updated') {
             final router = GoRouter.of(context);
             final gameId = realtimeGameIdForNavigation(
