@@ -1,0 +1,135 @@
+package durak
+
+import "testing"
+
+func TestBeats(t *testing.T) {
+	trump := Clubs
+	cases := []struct {
+		a, b Card
+		want bool
+	}{
+		{Card{10, Hearts}, Card{9, Hearts}, true},
+		{Card{9, Hearts}, Card{10, Hearts}, false},
+		{Card{14, Hearts}, Card{6, Diamonds}, false},
+		{Card{6, Clubs}, Card{14, Hearts}, true},
+		{Card{6, Hearts}, Card{6, Clubs}, false},
+		{Card{12, Clubs}, Card{11, Clubs}, true},
+	}
+	for i, c := range cases {
+		if got := c.a.Beats(c.b, trump); got != c.want {
+			t.Fatalf("#%d %v beats %v (trump=%v) = %v, want %v", i, c.a, c.b, trump, got, c.want)
+		}
+	}
+}
+
+func TestNewDeal(t *testing.T) {
+	st, err := New([]string{"a", "b"}, 36, ModePodkidnoi, 42)
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	if got := len(st.Hands[0]); got != 6 {
+		t.Fatalf("hand[0] = %d, want 6", got)
+	}
+	if got := len(st.Deck); got != 24 {
+		t.Fatalf("deck = %d, want 24 (36-12)", got)
+	}
+	if st.TrumpCard.Suit != st.Trump {
+		t.Fatalf("trump mismatch")
+	}
+}
+
+func TestAttackDefendBito(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Hearts}},
+			{{7, Hearts}},
+		},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{6, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase = %v", st.Phase)
+	}
+	if err := st.Defend(1, Card{7, Hearts}); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Phase != PhaseAttackFollow {
+		t.Fatalf("phase after defend = %v", st.Phase)
+	}
+	if err := st.SayBito(0); err != nil {
+		t.Fatalf("bito: %v", err)
+	}
+	if len(st.Table) != 0 || len(st.BitoPile) != 2 {
+		t.Fatalf("bito state: %+v", st)
+	}
+	if st.AttackerIndex != 1 {
+		t.Fatalf("next attacker = %d, want 1", st.AttackerIndex)
+	}
+}
+
+func TestTakeAndFinish(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{11, Hearts}}, // атакующий бьёт защитника козырем нет — простая J♥ vs 6♦
+			{{6, Diamonds}},
+		},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{11, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Take(1); err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if st.Hands[1][0].Rank != 6 && st.Hands[1][1].Rank != 11 {
+		// после сортировки: 6D 11H
+		t.Logf("hand after take: %v", st.Hands[1])
+	}
+	if st.Status != StatusOver || st.LoserIndex != 1 {
+		t.Fatalf("expected loser=1 game over, got status=%s loser=%d", st.Status, st.LoserIndex)
+	}
+}
+
+func TestTransferInPerevodnoi(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Hearts}, {9, Diamonds}, {10, Diamonds}},
+			{{6, Diamonds}, {8, Spades}},
+		},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		Mode:          ModePerevodnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{6, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Transfer(1, Card{6, Diamonds}); err != nil {
+		t.Fatalf("transfer: %v", err)
+	}
+	// Атакующим стал бывший защитник, атакует старый атакующий (следующий по кругу).
+	if st.AttackerIndex != 1 {
+		t.Fatalf("attacker after transfer = %d", st.AttackerIndex)
+	}
+	if st.DefenderIndex() != 0 {
+		t.Fatalf("defender = %d", st.DefenderIndex())
+	}
+}

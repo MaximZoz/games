@@ -2,22 +2,31 @@
 String buildInviteLobbyShareUrl({
   required String lobbyId,
   required Uri baseUri,
+  String gameType = 'tictactoe',
 }) {
   final id = lobbyId.trim();
   final origin = baseUri.origin;
-  return '$origin/games/tictactoe/lobby/$id?mode=invite';
+  return '$origin/games/$gameType/lobby/$id?mode=invite';
 }
 
-/// Распарсенная ссылка-приглашение в лобби крестиков-ноликов.
+/// Сокращённая форма (без baseUri) — использует относительный путь.
+String buildInviteLink(String lobbyId, {String gameType = 'tictactoe'}) {
+  final id = lobbyId.trim();
+  return '/games/$gameType/lobby/$id?mode=invite';
+}
+
+/// Распарсенная ссылка-приглашение в лобби.
 class InviteLobbyLink {
   const InviteLobbyLink({
     required this.lobbyId,
     required this.appPath,
+    this.gameType = 'tictactoe',
   });
 
   final String lobbyId;
+  final String gameType;
 
-  /// Путь приложения: `/games/tictactoe/lobby/{id}?mode=invite`.
+  /// Путь приложения: `/games/{game}/lobby/{id}?mode=invite`.
   final String appPath;
 
   /// Путь с id сообщения чата — после «Войти в игру» сообщение удалится.
@@ -46,19 +55,17 @@ InviteLobbyLink? parseInviteLobbyShareUrl(String raw) {
 
   final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
   if (segments.length < 4) return null;
-  if (segments[0] != 'games' ||
-      segments[1] != 'tictactoe' ||
-      segments[2] != 'lobby') {
-    return null;
-  }
+  if (segments[0] != 'games' || segments[2] != 'lobby') return null;
+  final gt = segments[1];
+  if (gt != 'tictactoe' && gt != 'durak') return null;
   final id = segments[3].trim();
   if (id.isEmpty) return null;
-  // UUID или иной id лобби без пробелов/слэшей.
   if (id.contains('/') || id.contains(' ')) return null;
 
   return InviteLobbyLink(
     lobbyId: id,
-    appPath: '/games/tictactoe/lobby/$id?mode=invite',
+    gameType: gt,
+    appPath: '/games/$gt/lobby/$id?mode=invite',
   );
 }
 

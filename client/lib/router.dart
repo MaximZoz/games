@@ -17,6 +17,8 @@ import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/screens/durak_game_screen.dart';
+import 'package:multigames_client/screens/durak_lobby_screen.dart';
 import 'package:multigames_client/screens/durak_offline_screen.dart';
 import 'package:multigames_client/screens/offline_tictactoe_screen.dart';
 import 'package:multigames_client/screens/tictactoe_game_screen.dart';
@@ -456,6 +458,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     DurakOfflineScreen(deckSize: size),
                   );
                 },
+              ),
+              GoRoute(
+                path: '/games/durak/lobby/:lobbyId',
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  DurakLobbyScreen(
+                    lobbyId: state.pathParameters['lobbyId'] ?? '',
+                    initialMode: state.uri.queryParameters['mode'],
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: '/games/durak/game/:gameId',
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state,
+                  DurakGameScreen(
+                    gameId: state.pathParameters['gameId'] ?? '',
+                  ),
+                ),
               ),
               GoRoute(
                 path: '/tournaments',

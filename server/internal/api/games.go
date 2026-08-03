@@ -291,6 +291,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !h.requireRedis(w, r) {
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/durak/") {
+		h.serveDurak(w, r)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 

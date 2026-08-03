@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -414,13 +415,41 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
-  Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
+  Future<void> _acceptInvite(BuildContext context, GameInvite inv) async {
+    final lobbyId = inv.lobbyId;
     if (await blockJoinIfBusyAsync(
       context,
       ref,
       targetLobbyId: lobbyId,
       redirectToActive: true,
     )) {
+      return;
+    }
+    // Ветвление по game_type: используем правильный repository + роут.
+    if (inv.gameType == 'durak') {
+      try {
+        final res = await ref
+            .read(durakRepositoryProvider)
+            .joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          if (context.mounted) {
+            context.go('/games/durak/game/${res.gameId}');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+              );
+          if (context.mounted) {
+            context.go('/games/durak/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
       return;
     }
     try {
@@ -744,7 +773,7 @@ class _GamesPageContent extends StatelessWidget {
   final List<GameInvite> invites;
   final AsyncValue<ActiveGameItem?> activeAsync;
   final ObservationItem? observation;
-  final void Function(BuildContext, String) onAcceptInvite;
+  final void Function(BuildContext, GameInvite) onAcceptInvite;
   final void Function(String) onDeclineInvite;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
@@ -1268,11 +1297,119 @@ class _LobbiesPageContent extends StatelessWidget {
   }
 }
 
-/// Карточка «Дурак» — вход в игру. MVP: онлайн ещё не готов, только офлайн
-/// vs бот на 36 картах, подкидной, 2 игрока. Ставки/лобби добавим следующими
-/// итерациями (иконки/чипы — плейсхолдер).
-class _DurakGameCard extends StatelessWidget {
+/// Карточка «Дурак» — с чипами вариантов, аналогично `_TictactoeGameCard`.
+/// Настройки хранятся локально в StateProvider'ах (persist можно добавить позже).
+class _DurakGameCard extends ConsumerStatefulWidget {
   const _DurakGameCard();
+
+  @override
+  ConsumerState<_DurakGameCard> createState() => _DurakGameCardState();
+}
+
+class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
+  int _players = 2;
+  int _deckSize = 36;
+  String _gameMode = 'podkidnoi'; // подкидной | переводной
+  int _turnTimeSec = 60;
+  int _stake = 1;
+  bool _creating = false;
+  bool _finding = false;
+
+  Future<void> _create(String mode) async {
+    if (await blockJoinIfBusyAsync(context, ref)) return;
+    if (!context.mounted) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final repo = ref.read(durakRepositoryProvider);
+      final result = await repo.createLobby(
+        mode: mode,
+        maxPlayers: _players,
+        deckSize: _deckSize,
+        gameMode: _gameMode,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stake,
+      );
+      if (!mounted) return;
+      final lobbyId = result.lobbyId;
+      final gameId = result.gameId;
+      if (gameId != null && gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'game', gameId: gameId, lobbyId: lobbyId),
+            );
+        pinBlockingGame(ref, gameId);
+        context.push('/games/durak/game/$gameId');
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        context.push('/games/durak/lobby/$lobbyId?mode=$mode');
+      }
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(e)
+            ? finishCurrentGameMessage
+            : formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: formatUserError(e), kind: AppSnackKind.error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _cyclePlayers() {
+    setState(() {
+      _players = _players == 4 ? 2 : _players + 1;
+      // 24-карт поддерживает только 2 игрока.
+      if (_players > 2 && _deckSize == 24) _deckSize = 36;
+    });
+  }
+
+  void _cycleDeck() {
+    setState(() {
+      final next = switch (_deckSize) {
+        24 => 36,
+        36 => 52,
+        _ => 24,
+      };
+      _deckSize = next;
+      if (_deckSize == 24 && _players > 2) _players = 2;
+    });
+  }
+
+  void _cycleGameMode() {
+    setState(() {
+      _gameMode = _gameMode == 'podkidnoi' ? 'perevodnoi' : 'podkidnoi';
+    });
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      final i = arr.indexOf(_turnTimeSec);
+      _turnTimeSec = arr[(i + 1) % arr.length];
+    });
+  }
+
+  void _cycleStake() {
+    setState(() {
+      const arr = [1, 10, 50];
+      final i = arr.indexOf(_stake);
+      _stake = arr[(i + 1) % arr.length];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1292,84 +1429,99 @@ class _DurakGameCard extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.style_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
+                child: const Icon(Icons.style_rounded,
+                    color: Colors.white, size: 26),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Дурак',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                    ),
-                    const Text(
-                      'Подкидной · 36 карт · 2 игрока',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
+                child: Text(
+                  'Дурак',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
                       ),
-                    ),
-                  ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.accentStart.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'MVP',
-                  style: TextStyle(
-                    color: AppColors.accentStart,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                  ),
-                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _chip('$_players игрока', Icons.groups_rounded, _cyclePlayers),
+              _chip('$_deckSize карт', Icons.style_rounded, _cycleDeck),
+              _chip(
+                _gameMode == 'perevodnoi' ? 'Переводной' : 'Подкидной',
+                Icons.swap_horiz_rounded,
+                _cycleGameMode,
               ),
+              _chip(_turnTimeLabel(_turnTimeSec), Icons.timer_outlined,
+                  _cycleTurnTime),
+              _chip('Ставка $_stake', Icons.monetization_on_rounded, _cycleStake),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: null,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.people_alt_rounded),
-                  label: const Text('Онлайн — скоро'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
                 child: FilledButton.icon(
-                  onPressed: () => context.push('/games/durak/offline?deck=36'),
+                  onPressed: _creating || _finding ? null : () => _create('invite'),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accentStart,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: _creating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.person_add_alt_1_rounded),
+                  label: const Text('Создать'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _creating || _finding
+                      ? null
+                      : () => _create('matchmake'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: _finding
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentStart,
+                          ),
+                        )
+                      : const Icon(Icons.search_rounded),
+                  label: const Text('Найти'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      context.push('/games/durak/offline?deck=$_deckSize'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.smart_toy_rounded),
-                  label: const Text('Играть с ботом'),
+                  label: const Text('Оффлайн'),
                 ),
               ),
             ],
@@ -1377,6 +1529,50 @@ class _DurakGameCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _chip(String label, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.accentSoft,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: AppColors.accentStart),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _turnTimeLabel(int sec) {
+    switch (sec) {
+      case 0:
+        return '∞';
+      case 20:
+        return '20 с';
+      case 60:
+        return '1 мин';
+      case 600:
+        return '10 мин';
+      default:
+        return '$sec с';
+    }
   }
 }
 
@@ -1969,11 +2165,13 @@ class _InviteCard extends ConsumerWidget {
     required this.onAcceptInvite,
   });
 
+
+
   final GameInvite inv;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
   final void Function(String) onDeclineInvite;
-  final void Function(BuildContext, String) onAcceptInvite;
+  final void Function(BuildContext, GameInvite) onAcceptInvite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -2104,7 +2302,7 @@ class _InviteCard extends ConsumerWidget {
                   style: IconButton.styleFrom(foregroundColor: Colors.red),
                 ),
                 IconButton.filled(
-                  onPressed: () => onAcceptInvite(context, inv.lobbyId),
+                  onPressed: () => onAcceptInvite(context, inv),
                   icon: const Icon(Icons.check_rounded),
                   tooltip: context.l10n.commonAccept,
                   style: IconButton.styleFrom(
@@ -2129,6 +2327,7 @@ class _InviteGameIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = switch (gameType) {
+      'durak' => Icons.style_rounded,
       'tictactoe' => Icons.grid_3x3_rounded,
       _ => Icons.grid_3x3_rounded,
     };
