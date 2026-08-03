@@ -176,6 +176,7 @@
   "lobbyMatchmake": "ล็อบบี้",
   "lobbyPrivateGame": "เกมส่วนตัว",
   "lobbySearchingOpponent": "กำลังหาคู่แข่ง…",
+  "lobbyPlayersSearching": "กำลังหาแมตช์นี้: {count}",
   "lobbyWaitingJoin": "รอให้ใครสักคนแตะ “หาเกม” หรือ “เข้าร่วม”",
   "lobbyInviteTitle": "คำเชิญเล่นเกม",
   "lobbyInvitedToPlay": "คุณได้รับเชิญให้เล่น",
@@ -678,6 +679,7 @@
   "chatBackToGame": "กลับไปเกม",
   "chatBackToChats": "กลับไปแชท",
   "chatActions": "การดำเนินการแชท",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "ไปท้ายบทสนทนา",
   "chatReplyingTo": "ตอบกลับ {name}",
   "@chatReplyingTo": {

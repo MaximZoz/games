@@ -9,18 +9,17 @@ import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
-import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
-import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
@@ -203,25 +202,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     Map<String, PresenceEntry> presence,
     String searchQuery,
   ) {
-    var list =
+    final list =
         friends.where((f) => _matchesSearch(f.user, searchQuery)).toList();
-    list.sort((a, b) {
-      final pa = presence[a.user.id];
-      final pb = presence[b.user.id];
-      final aOnline = pa?.online ?? false;
-      final bOnline = pb?.online ?? false;
-      if (aOnline != bOnline) return bOnline ? 1 : -1;
-      if (aOnline) return 0;
-      final aTime = pa?.lastSeenAt;
-      final bTime = pb?.lastSeenAt;
-      if (aTime == null && bTime == null) return 0;
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
-      final da = DateTime.tryParse(aTime);
-      final db = DateTime.tryParse(bTime);
-      if (da == null || db == null) return 0;
-      return db.compareTo(da);
-    });
+    sortByPresenceOnlineFirst(list, (f) => f.user.id, presence);
     return list;
   }
 
@@ -242,210 +225,23 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         '${two(local.hour)}:${two(local.minute)}';
   }
 
-  IconData? _genderIcon(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    if (normalized == null || normalized.isEmpty) return null;
-    switch (normalized) {
-      case 'male':
-      case 'm':
-      case 'man':
-      case 'м':
-      case 'муж':
-      case 'мужской':
-        return Icons.male_rounded;
-      case 'female':
-      case 'f':
-      case 'woman':
-      case 'ж':
-      case 'жен':
-      case 'женский':
-        return Icons.female_rounded;
-      default:
-        return null;
-    }
-  }
-
-  bool _isFemaleGender(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    return normalized == 'female' ||
-        normalized == 'f' ||
-        normalized == 'woman' ||
-        normalized == 'ж' ||
-        normalized == 'жен' ||
-        normalized == 'женский';
-  }
-
-  Widget _buildInfoPill({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? foregroundColor,
-    double? minWidth,
-  }) {
-    final bg = backgroundColor ?? AppColors.accentSoft;
-    final fg = foregroundColor ?? AppColors.textPrimary;
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth ?? 0),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
-            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
-          ],
-          if (text != null && text.isNotEmpty)
-            Text(
-              text,
-              style: TextStyle(
-                color: fg,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _showRequestInfoDialog({
     required FriendUserItem user,
     PresenceEntry? presence,
   }) async {
-    final name = _displayName(user);
-    final about = user.about?.trim();
-    final genderIcon = _genderIcon(user.gender);
-    final female = _isFemaleGender(user.gender);
-    final l10n = context.l10n;
-    final statusText = presence == null
-        ? null
-        : (presence.online
-            ? l10n.commonOnlineCap
-            : formatLastSeen(presence.lastSeenAt));
-    await showDialog<void>(
+    await showUserProfileDialog(
       context: context,
-      builder: (dialogContext) {
-        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 420,
-              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
-            ),
-            child: GradientCard(
-              animate: false,
-              margin: EdgeInsets.zero,
-              padding: EdgeInsets.all(compact ? 12 : 14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildAvatar(user, isOnline: presence?.online),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (statusText != null && statusText.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  statusText,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: l10n.commonClose,
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.of(dialogContext).pop(),
-                      ),
-                    ],
-                  ),
-                  if ((user.age != null && user.age! > 0) ||
-                      genderIcon != null) ...[
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        if (user.age != null && user.age! > 0)
-                          _buildInfoPill(
-                            text: l10n.profileAgeYears(user.age!),
-                            minWidth: 72,
-                          ),
-                        if (genderIcon != null)
-                          _buildInfoPill(
-                            icon: genderIcon,
-                            minWidth: 46,
-                            backgroundColor: female
-                                ? const Color(0xFFFCE7F3)
-                                : AppColors.accentSoft,
-                            foregroundColor: female
-                                ? const Color(0xFFBE185D)
-                                : AppColors.textPrimary,
-                          ),
-                      ],
-                    ),
-                  ],
-                  if (about != null && about.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.commonAboutMe,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      about,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  HeadToHeadSection(
-                    opponentId: user.id,
-                    opponentName: user.displayName,
-                  ),
-                  PeerCollectionsSection(userId: user.id),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      ref: ref,
+      userId: user.id,
+      displayName: _displayName(user),
+      avatarKind: user.avatarKind,
+      avatarValue: user.avatarValue,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      messageFrom: 'friends',
     );
   }
 
@@ -892,12 +688,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     PresenceEntry? presence,
   }) {
     final compactDesktopCard = isWide(context);
-    final l10n = context.l10n;
-    final statusText = presence == null
-        ? null
-        : (presence.online
-            ? l10n.commonOnlineCap
-            : formatLastSeen(presence.lastSeenAt));
+    final statusText = presence == null ? null : formatPresenceStatus(presence);
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: EdgeInsets.all(compactDesktopCard ? 10 : 14),
@@ -1044,28 +835,39 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final hasMore = visibleCount < items.length;
     final totalCount = visibleCount + (hasMore ? 1 : 0);
 
-    final useGrid = isWide(context);
+    // Плитки на десктопе и на телефоне в landscape (portrait — список).
+    final useGrid = useDesktopTiles(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         if (useGrid) {
           const gap = 12.0;
-          const maxCellWidth = 320.0;
-          final availableWidth = constraints.maxWidth - 32;
+          // Уже плитки: телефон landscape / планшет — 3 в ряд, десктоп шире.
+          final maxCellWidth = isPhoneLandscape(context)
+              ? 220.0
+              : (isTablet(context) ? 260.0 : 300.0);
+          const maxContentWidth = 960.0;
+          final availableWidth =
+              (constraints.maxWidth - 32).clamp(0.0, maxContentWidth);
           final crossAxisCount =
-              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 4);
+              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 3);
           final itemWidth =
               (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
-            child: Column(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: availableWidth,
+                child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Wrap(
                   spacing: gap,
                   runSpacing: gap,
+                  alignment: WrapAlignment.center,
                   children: [
                     for (var i = 0; i < visibleCount; i++)
                       SizedBox(
@@ -1089,6 +891,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     ),
                   ),
               ],
+                ),
+              ),
             ),
           );
         }
@@ -1507,9 +1311,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 const SizedBox(height: 2),
                 if (presence[item.user.id] != null) ...[
                   Text(
-                    presence[item.user.id]!.online
-                        ? l10n.commonOnlineCap
-                        : formatLastSeen(presence[item.user.id]!.lastSeenAt),
+                    formatPresenceStatus(presence[item.user.id]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(

@@ -110,22 +110,40 @@ class SettingsScreen extends ConsumerWidget {
                     child: _SwitchRow(
                       title: l10n.settingsModeOffline,
                       subtitle: l10n.settingsOfflineModeSubtitle,
-                      value: offlineMode.preference ==
-                          OfflinePreference.offline,
+                      // Эффективный офлайн (ручной или нет сети/сервера).
+                      value: offlineMode.isOffline,
                       onChanged: (v) async {
-                        await ref
-                            .read(offlineModeProvider.notifier)
-                            .setPreference(
-                              v
-                                  ? OfflinePreference.offline
-                                  : OfflinePreference.online,
-                            );
-                        // Явный flush при выходе из офлайна (на случай гонки слушателя).
-                        if (!v) {
-                          await ref
-                              .read(pendingPurchasesProvider.notifier)
-                              .flush();
+                        final notifier =
+                            ref.read(offlineModeProvider.notifier);
+                        if (v) {
+                          await notifier
+                              .setPreference(OfflinePreference.offline);
+                          return;
                         }
+                        // Выход в онлайн: если сети/сервера нет — тост с причиной.
+                        final reason = await notifier.tryGoOnline();
+                        if (!context.mounted) return;
+                        if (reason == OnlineUnavailableReason.noInternet) {
+                          showAppSnackBar(
+                            context,
+                            message: l10n.errNoInternet,
+                            kind: AppSnackKind.error,
+                          );
+                          return;
+                        }
+                        if (reason ==
+                            OnlineUnavailableReason.serverUnreachable) {
+                          showAppSnackBar(
+                            context,
+                            message: l10n.connectionError,
+                            kind: AppSnackKind.error,
+                          );
+                          return;
+                        }
+                        // Явный flush при выходе из офлайна (на случай гонки слушателя).
+                        await ref
+                            .read(pendingPurchasesProvider.notifier)
+                            .flush();
                       },
                     ),
                   ),
@@ -320,6 +338,7 @@ class SettingsScreen extends ConsumerWidget {
     } else if (chosen is String) {
       await ref.read(appLocaleProvider.notifier).setLocale(Locale(chosen));
     }
+    await syncPreferredLanguageToServer(ref);
   }
 }
 

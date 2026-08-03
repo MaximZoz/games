@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -22,7 +23,9 @@ class GameInvite {
     required this.creatorName,
     required this.gameType,
     this.turnTimeSec = 0,
+    this.variant = variantClassic,
     this.gridSize = 3,
+    this.maxPlayers = 2,
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.creatorAvatarKind = 'letter',
@@ -34,7 +37,9 @@ class GameInvite {
   final String creatorName;
   final String gameType;
   final int turnTimeSec;
+  final String variant;
   final int gridSize;
+  final int maxPlayers;
   final bool swapRule;
   final bool firstMoveRestriction;
   final String creatorAvatarKind;
@@ -60,10 +65,16 @@ final gameInvitesProvider =
         );
         final gameType = data['game_type']?.toString() ?? 'tictactoe';
         final turnTimeSec = (data['turn_time_sec'] as num?)?.toInt() ?? 0;
-        final gridSize = (data['grid_size'] as num?)?.toInt() ?? 3;
+        final legacyGrid = (data['grid_size'] as num?)?.toInt() ?? 3;
+        final rawVariant = data['variant']?.toString();
+        final variant = rawVariant == null || rawVariant.isEmpty
+            ? variantFromLegacyGrid(legacyGrid)
+            : parseVariant(rawVariant);
+        final cfg = configForVariant(variant);
         final swapRule = data['swap_rule'] == true;
         final firstMoveRestriction = data['first_move_restriction'] == true;
-        final creatorAvatarKind = data['creator_avatar_kind']?.toString() ?? 'letter';
+        final creatorAvatarKind =
+            data['creator_avatar_kind']?.toString() ?? 'letter';
         final creatorAvatarValue = data['creator_avatar_value']?.toString();
         final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
         if (lobbyId != null && creatorId != null) {
@@ -73,7 +84,10 @@ final gameInvitesProvider =
             creatorName: creatorName,
             gameType: gameType,
             turnTimeSec: turnTimeSec,
-            gridSize: gridSize,
+            variant: variant,
+            gridSize: cfg.gridSize,
+            maxPlayers:
+                (data['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
             swapRule: swapRule,
             firstMoveRestriction: firstMoveRestriction,
             creatorAvatarKind: creatorAvatarKind,
@@ -89,10 +103,11 @@ final gameInvitesProvider =
         final lobbyId = data['lobby_id']?.toString();
         if (lobbyId == null || lobbyId.isEmpty) return;
         final left = data['left'] == true;
+        final closed = data['closed'] == true;
         final gameId = data['game_id']?.toString();
-        final gameStarted = type == 'game_started' ||
-            (gameId != null && gameId.isNotEmpty);
-        if (left || gameStarted) {
+        final gameStarted =
+            type == 'game_started' || (gameId != null && gameId.isNotEmpty);
+        if (left || closed || gameStarted) {
           notifier.remove(lobbyId);
         }
       }
@@ -164,7 +179,8 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
   }
 }
 
-final lobbyDetailProvider = FutureProvider.autoDispose.family<LobbyItem, String>(
+final lobbyDetailProvider =
+    FutureProvider.autoDispose.family<LobbyItem, String>(
   (ref, lobbyId) async {
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getLobby(lobbyId);
@@ -181,12 +197,16 @@ final gameStateProvider =
 
 /// Временное состояние после makeMove для немедленного отображения победы/ничьей
 /// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
-final gameStateOverrideProvider =
-    StateProvider.autoDispose.family<GameStateItem?, String>((ref, gameId) => null);
+final gameStateOverrideProvider = StateProvider.autoDispose
+    .family<GameStateItem?, String>((ref, gameId) => null);
 
 /// Блокирует invalidate по game_state (чтобы не перезапрашивать до хода бота).
 final gameStateInvalidateBlockedProvider =
     StateProvider.autoDispose.family<bool, String>((ref, gameId) => false);
+
+/// Наблюдение после выбывания (карточка в «Играх», не блокирует и не авто-роутит).
+final observationGameProvider =
+    StateProvider<ObservationItem?>((ref) => null);
 
 final activeGameProvider =
     AsyncNotifierProvider.autoDispose<ActiveGameNotifier, ActiveGameItem?>(
@@ -198,6 +218,10 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   int _epoch = 0;
   int get epoch => _epoch;
 
+  void _applyObservation(ObservationItem? obs) {
+    ref.read(observationGameProvider.notifier).state = obs;
+  }
+
   @override
   Future<ActiveGameItem?> build() async {
     ref.listen(
@@ -206,10 +230,24 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         final data = next.valueOrNull;
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
-        if (type == 'game_state' || type == 'game_started' ||
-            type == 'lobby_updated') {
-          ref.invalidate(activeGameProvider);
+        if (type == 'game_state' || type == 'game_started') {
+          unawaited(ref.read(activeGameProvider.notifier).refresh());
           final gameId = data['game_id']?.toString();
+          if (gameId != null && gameId.isNotEmpty) {
+            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
+              ref.invalidate(gameStateProvider(gameId));
+            }
+          }
+          return;
+        }
+        // lobby_updated при ожидании игроков не трогаем active — иначе таб
+        // «Игры» на мгновение видит null и уводит со экрана лобби.
+        if (type == 'lobby_updated') {
+          final left = data['left'] == true;
+          final gameId = data['game_id']?.toString();
+          if (left || (gameId != null && gameId.isNotEmpty)) {
+            unawaited(ref.read(activeGameProvider.notifier).refresh());
+          }
           if (gameId != null && gameId.isNotEmpty) {
             if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
               ref.invalidate(gameStateProvider(gameId));
@@ -219,9 +257,39 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
       },
     );
     final user = ref.watch(authStateProvider).valueOrNull;
-    if (user == null) return null;
-    final repo = ref.read(gamesRepositoryProvider);
-    return repo.getActive();
+    if (user == null) {
+      _applyObservation(null);
+      return null;
+    }
+    final session = await ref.read(gamesRepositoryProvider).getActiveSession();
+    _applyObservation(session.observation);
+    return session.active;
+  }
+
+  /// Обновить с сервера, не обнуляя кэш на время запроса (гард join не «слепнет»).
+  Future<ActiveGameItem?> refresh() async {
+    final previous = state;
+    final previousData = state.asData?.value;
+    state = const AsyncValue<ActiveGameItem?>.loading().copyWithPrevious(previous);
+    try {
+      final user = ref.read(authStateProvider).valueOrNull;
+      if (user == null) {
+        _applyObservation(null);
+        state = const AsyncValue.data(null);
+        return null;
+      }
+      final session = await ref.read(gamesRepositoryProvider).getActiveSession();
+      _applyObservation(session.observation);
+      state = AsyncValue.data(session.active);
+      return session.active;
+    } catch (e, st) {
+      if (previousData != null) {
+        state = AsyncValue.data(previousData);
+        return previousData;
+      }
+      state = AsyncValue.error(e, st);
+      return null;
+    }
   }
 
   /// Мгновенно сбросить локально (выход из лобби без ожидания сети).
@@ -233,6 +301,19 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   /// Сразу после createLobby — чтобы таб «Игры» открывал «Своя игра».
   void setLocal(ActiveGameItem item) {
     state = AsyncValue.data(item);
+  }
+
+  /// Локально включить наблюдение (после сдачи), пока не придёт refresh.
+  void setObservationLocal(ObservationItem? item) {
+    _applyObservation(item);
+  }
+
+  void clearObservationLocal({String? ifGameId}) {
+    final cur = ref.read(observationGameProvider);
+    if (cur == null) return;
+    final only = ifGameId?.trim() ?? '';
+    if (only.isNotEmpty && cur.gameId != only) return;
+    _applyObservation(null);
   }
 }
 
@@ -332,8 +413,8 @@ final gameStatsProvider =
 });
 
 /// Счёт head-to-head между текущим игроком и указанным соперником.
-final headToHeadProvider =
-    FutureProvider.autoDispose.family<HeadToHead, String>((ref, opponentId) async {
+final headToHeadProvider = FutureProvider.autoDispose
+    .family<HeadToHead, String>((ref, opponentId) async {
   final repo = ref.watch(gamesRepositoryProvider);
   return repo.getHeadToHead(opponentId);
 });

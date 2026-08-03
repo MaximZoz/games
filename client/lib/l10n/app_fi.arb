@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Aula",
   "lobbyPrivateGame": "Yksityispeli",
   "lobbySearchingOpponent": "Etsitään vastustajaa…",
+  "lobbyPlayersSearching": "Etsivät tätä peliä: {count}",
   "lobbyWaitingJoin": "Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”",
   "lobbyInviteTitle": "Pelikutsu",
   "lobbyInvitedToPlay": "Sinut kutsuttiin pelaamaan",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Takaisin peliin",
   "chatBackToChats": "Takaisin chatteihin",
   "chatActions": "Chatin toiminnot",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Keskustelun loppuun",
   "chatReplyingTo": "Vastaus käyttäjälle {name}",
   "@chatReplyingTo": {

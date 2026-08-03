@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Jogo privado",
   "lobbySearchingOpponent": "Procurando adversário…",
+  "lobbyPlayersSearching": "Procurando este jogo: {count}",
   "lobbyWaitingJoin": "Aguardando alguém tocar em “Encontrar jogo” ou “Entrar”",
   "lobbyInviteTitle": "Convite para jogar",
   "lobbyInvitedToPlay": "Você foi convidado a jogar",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Voltar ao jogo",
   "chatBackToChats": "Voltar aos chats",
   "chatActions": "Ações do chat",
+  "chatAutoTranslate": "Tradução automática",
   "chatScrollToEnd": "Ir para o fim",
   "chatReplyingTo": "Em resposta a {name}",
   "@chatReplyingTo": {

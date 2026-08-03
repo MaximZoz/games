@@ -482,6 +482,11 @@ class AppLocalizationsKk extends AppLocalizations {
   String get lobbySearchingOpponent => 'Қарсылас ізделуде…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Осы ойынды іздеп жүр: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Біреу «Ойын табу» немесе «Қосылу» басқанша күтеміз';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get chatActions => 'Чат әрекеттері';
+
+  @override
+  String get chatAutoTranslate => 'Автоаударма';
 
   @override
   String get chatScrollToEnd => 'Сөйлесу соңына';

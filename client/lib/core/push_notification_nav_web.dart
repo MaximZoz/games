@@ -91,8 +91,20 @@ bool _documentIsVisible() {
   }
 }
 
-/// Сообщает SW текущий маршрут и foreground — чтобы не показывать пуш
-/// про уже открытый чат/матч (на iOS client.focused часто врёт).
+/// Снять из шторки все баннеры о сообщениях в этом чате (после прочтения).
+void clearPushNotificationsForChat(String chatId) {
+  if (!kIsWeb) return;
+  final id = chatId.trim();
+  if (id.isEmpty) return;
+  _postToPushSw({
+    'type': 'clear_notifications',
+    'tag': 'chat_$id',
+    'path': '/chats/$id',
+  });
+}
+
+/// Сообщает SW текущий маршрут и foreground — пока приложение на экране
+/// SW глушит все пуши; после сворачивания foreground=false → пуши снова идут.
 void reportPushSwActiveRoute(String path) {
   if (!kIsWeb) return;
   final normalized = _normalizeAppPath(path);
@@ -108,21 +120,66 @@ void reportPushSwActiveRoute(String path) {
 void _startHeartbeat() {
   _heartbeatTimer?.cancel();
   // Чаще пингуем SW: между push Safari поднимает «чистый» worker.
-  _heartbeatTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+  // В фоне тоже шлём (foreground:false), чтобы не залипал старый TTL.
+  _heartbeatTimer = Timer.periodic(const Duration(seconds: 3), (_) {
     reportPushSwActiveRoute(
       _lastReportedPath.isEmpty ? '/' : _lastReportedPath,
     );
   });
 }
 
-void _go(String raw, {String? tag}) {
-  final path = _normalizeAppPath(raw);
-  if (path.isEmpty || path == '/') return;
+int _pathSpecificity(String path) {
+  final p = _normalizeAppPath(path);
+  if (p.isEmpty || p == '/') return 0;
+  if (p == '/chats' || p == '/games' || p == '/friends') return 1;
+  if (RegExp(r'^/chats/[^/?#]+').hasMatch(p)) return 3;
+  if (RegExp(r'^/games/tictactoe/(game|lobby)/[^/?#]+').hasMatch(p)) {
+    return 3;
+  }
+  return 2;
+}
+
+void _navigateTo(String path, {String? tag}) {
   _onNavigate?.call(path);
   _askServiceWorkerClearNotifications(
     tag: tag ?? _tagFromPath(path),
     path: path,
   );
+}
+
+Future<void> _goPreferringPending(String path, {String? tag}) async {
+  final pending = await _peekPendingPath();
+  if (pending != null &&
+      _pathSpecificity(pending) > _pathSpecificity(path)) {
+    _navigateTo(pending, tag: tag ?? _tagFromPath(pending));
+    return;
+  }
+  _navigateTo(path, tag: tag);
+}
+
+void _go(String raw, {String? tag}) {
+  final path = _normalizeAppPath(raw);
+  if (path.isEmpty || path == '/') return;
+  // Слабый путь (/chats) не должен перебивать pending deep-link.
+  if (_pathSpecificity(path) <= 1) {
+    unawaited(_goPreferringPending(path, tag: tag));
+    return;
+  }
+  _navigateTo(path, tag: tag);
+}
+
+Future<String?> _peekPendingPath() async {
+  try {
+    final cache = await web.window.caches.open(_pendingCache).toDart;
+    final response = await cache.match(_pendingKey.toJS).toDart;
+    if (response == null) return null;
+    final text = (await response.text().toDart).toDart;
+    final decoded = jsonDecode(text);
+    if (decoded is Map && decoded['path'] is String) {
+      return decoded['path'] as String;
+    }
+  } catch (_) {}
+  return null;
 }
 
 Future<String?> _takePendingPath() async {
@@ -184,7 +241,7 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
     }
   }
 
-  void handlePageHide(web.Event _) {
+  void handleBackground(web.Event _) {
     _postToPushSw({
       'type': 'active_route',
       'path': _lastReportedPath,
@@ -194,13 +251,15 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
 
   _messageListener = handleMessage.toJS;
   _visibilityListener = handleVisibility.toJS;
-  _pageHideListener = handlePageHide.toJS;
+  _pageHideListener = handleBackground.toJS;
   web.window.navigator.serviceWorker
       .addEventListener('message', _messageListener!);
   web.document.addEventListener('visibilitychange', _visibilityListener!);
   web.window.addEventListener('focus', _visibilityListener!);
   web.window.addEventListener('pageshow', _visibilityListener!);
   web.window.addEventListener('pagehide', _pageHideListener!);
+  web.window.addEventListener('blur', _pageHideListener!);
+  web.document.addEventListener('freeze', _pageHideListener!);
 
   // Подтянуть новый push-sw без переустановки PWA.
   try {
@@ -238,6 +297,8 @@ void uninstallPushNotificationNavigation() {
   try {
     if (_pageHideListener != null) {
       web.window.removeEventListener('pagehide', _pageHideListener!);
+      web.window.removeEventListener('blur', _pageHideListener!);
+      web.document.removeEventListener('freeze', _pageHideListener!);
     }
   } catch (_) {}
   _messageListener = null;

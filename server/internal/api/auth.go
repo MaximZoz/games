@@ -31,6 +31,7 @@ type AuthHandler struct {
 	Push      *WebPushSender
 	Mailer    *mailer.Mailer
 	OAuth     *OAuthConfig
+	Hub       *RealtimeHub // опционально: сброс WS на других устройствах
 }
 
 type RegisterRequest struct {
@@ -282,12 +283,12 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire)
+	accessToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire, session.ID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	nextRefreshToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire)
+	nextRefreshToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire, session.ID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -339,24 +340,44 @@ func (h *AuthHandler) issueSessionTokens(ctx context.Context, u *store.User) (
 	expiresIn int,
 	err error,
 ) {
-	accessToken, err = auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire)
-	if err != nil {
-		return "", "", 0, err
+	// Один пользователь — одна сессия: сбросить остальные устройства.
+	_ = store.DeleteSessionsByUserID(ctx, h.Pool, u.ID)
+	if h.Hub != nil {
+		h.Hub.DisconnectUser(u.ID, map[string]any{
+			"type":    "session_replaced",
+			"message": "logged in elsewhere",
+		})
 	}
 
-	refreshToken, err = auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire)
-	if err != nil {
-		return "", "", 0, err
-	}
-
-	_, err = store.CreateSession(
+	session, err := store.CreateSession(
 		ctx,
 		h.Pool,
 		u.ID,
-		refreshTokenHash(refreshToken),
+		// временный хеш — заменим после выпуска refresh JWT
+		"pending",
 		time.Now().Add(refreshTokenExpire),
 	)
 	if err != nil {
+		return "", "", 0, err
+	}
+
+	accessToken, err = auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire, session.ID)
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	refreshToken, err = auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire, session.ID)
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	if err = store.RotateSessionRefreshToken(
+		ctx,
+		h.Pool,
+		session.ID,
+		refreshTokenHash(refreshToken),
+		time.Now().Add(refreshTokenExpire),
+	); err != nil {
 		return "", "", 0, err
 	}
 

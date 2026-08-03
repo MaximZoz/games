@@ -1,6 +1,9 @@
 /* Web Push service worker for Zozu Games PWA.
- * v10: viewer в Cache (SW убивается между push — память пустая);
- *      visible client = приложение открыто (Safari focused часто false).
+ * v13: при открытии/прочтении чата снимаем все баннеры этого чата из шторки
+ *      (iOS часто копит несколько с одним tag / пустым data).
+ * v12: пока приложение на экране — глушим ВСЕ пуши; в фоне — доставляем.
+ * v11: клик не затирает deep-link на iOS; chat_id fallback.
+ * v10: viewer в Cache (SW убивается между push — память пустая).
  * v9: в foreground глушим ВСЕ пуши.
  * v8: глушим пуш, если открыт тот же чат/матч.
  * v7: clear_all_notifications при logout.
@@ -13,8 +16,9 @@ const PENDING_CACHE = 'zozu-push-pending-v1';
 const PENDING_KEY = '/__pending_nav';
 const VIEWER_CACHE = 'zozu-push-viewer-v1';
 const VIEWER_KEY = '/__viewer';
-/** Пока Flutter шлёт heartbeat — считаем экран «смотрит» приложение. */
-const VIEWER_TTL_MS = 45000;
+/** Flutter шлёт heartbeat ~каждые 4с. Короткий TTL: после сворачивания
+ *  pagehide/visibility → foreground:false; иначе пуши снова идут. */
+const VIEWER_TTL_MS = 12000;
 
 /** Состояние экрана из Flutter (надёжнее client.focused на iOS). */
 let viewer = {
@@ -133,28 +137,97 @@ async function setPendingPath(path) {
   }
 }
 
+async function peekPendingPath() {
+  try {
+    const cache = await caches.open(PENDING_CACHE);
+    const res = await cache.match(PENDING_KEY);
+    if (!res) return null;
+    const parsed = await res.json();
+    const path = parsed && parsed.path != null ? String(parsed.path) : '';
+    return path || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** iOS иногда отдаёт data строкой JSON, а не объектом. */
+function readNotificationData(notification) {
+  let data = notification && notification.data;
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data);
+    } catch (_) {
+      data = null;
+    }
+  }
+  return data && typeof data === 'object' ? data : {};
+}
+
+/**
+ * Путь из клика. null = неизвестно (не затирать pending Cache).
+ * Не возвращаем голый '/chats' как «успех», если есть chat_id.
+ */
 function resolveClickPath(notification) {
-  const dataUrl =
-    notification.data && notification.data.url
-      ? String(notification.data.url)
-      : '';
+  const data = readNotificationData(notification);
+  const dataUrl = data.url != null ? String(data.url) : '';
   const fromTag = pathFromTag(notification.tag);
-  if (dataUrl && dataUrl !== '/') {
+  const chatId = data.chat_id != null ? String(data.chat_id).trim() : '';
+  const fromChatId = chatId ? `/chats/${chatId}` : null;
+
+  if (dataUrl && dataUrl !== '/' && dataUrl !== '/chats') {
     return appPathFromUrl(resolveTargetUrl(dataUrl));
   }
-  if (fromTag) return fromTag;
-  return '/';
+  if (fromTag && fromTag !== '/chats') return fromTag;
+  if (fromChatId) return fromChatId;
+  if (dataUrl === '/chats' || fromTag === '/chats') return '/chats';
+  return null;
+}
+
+/** Насколько путь «конкретный» для выбора между click и pending. */
+function pathSpecificity(path) {
+  const p = String(path || '');
+  if (!p || p === '/') return 0;
+  if (p === '/chats' || p === '/games' || p === '/friends') return 1;
+  if (/^\/chats\/[^/?#]+/.test(p)) return 3;
+  if (/^\/games\/tictactoe\/(game|lobby)\/[^/?#]+/.test(p)) return 3;
+  return 2;
+}
+
+function notificationMatchesChat(notification, chatId) {
+  if (!chatId) return false;
+  const id = String(chatId);
+  const t = (notification.tag && String(notification.tag)) || '';
+  if (t === `chat_${id}`) return true;
+  const data = readNotificationData(notification);
+  if (data.chat_id && String(data.chat_id) === id) return true;
+  if (data.url) {
+    try {
+      const path = appPathFromUrl(resolveTargetUrl(String(data.url)));
+      const m = path.match(/^\/chats\/([^/?#]+)/);
+      if (m && m[1] === id) return true;
+    } catch (_) {}
+  }
+  return false;
 }
 
 /**
  * На iOS одного event.notification.close() часто недостаточно —
- * баннер остаётся в Notification Center. Снимаем все с тем же tag
- * и, при необходимости, по префиксу path.
+ * баннер остаётся в Notification Center. Снимаем все с тем же tag,
+ * по path и полным сканом (iOS копит дубликаты).
  */
 async function closeShownNotifications({ tag, path } = {}) {
+  const p = path != null ? String(path) : '';
+  const exactTag = tag || tagFromPath(p) || '';
+  const chatMatch = p.match(/^\/chats\/([^/?#]+)/);
+  const chatId =
+    (chatMatch && chatMatch[1]) ||
+    (exactTag.startsWith('chat_') ? exactTag.slice('chat_'.length) : '');
+
   try {
-    if (tag) {
-      const byTag = await self.registration.getNotifications({ tag: String(tag) });
+    if (exactTag) {
+      const byTag = await self.registration.getNotifications({
+        tag: String(exactTag),
+      });
       for (const n of byTag) {
         try {
           n.close();
@@ -165,33 +238,21 @@ async function closeShownNotifications({ tag, path } = {}) {
     console.warn('[push-sw] getNotifications(tag) failed', err);
   }
 
-  const p = path != null ? String(path) : '';
-  if (!p || p === '/') return;
-
-  const exactTag = tagFromPath(p);
-  if (exactTag && exactTag !== tag) {
-    try {
-      const byPath = await self.registration.getNotifications({ tag: exactTag });
-      for (const n of byPath) {
-        try {
-          n.close();
-        } catch (_) {}
-      }
-    } catch (_) {}
-  }
-
-  // achievement_*/reward_gift_* — конкретный tag неизвестен из path.
-  if (p.startsWith('/achievements') || p.startsWith('/inventory')) {
+  // Полный скан: iOS иногда отдаёт пустой tag/data или дубли без filter.
+  if (chatId || p.startsWith('/achievements') || p.startsWith('/inventory')) {
     try {
       const all = await self.registration.getNotifications();
       for (const n of all) {
         const t = (n.tag && String(n.tag)) || '';
+        let close = false;
+        if (chatId && notificationMatchesChat(n, chatId)) close = true;
         if (p.startsWith('/achievements') && t.startsWith('achievement_')) {
-          try {
-            n.close();
-          } catch (_) {}
+          close = true;
         }
         if (p.startsWith('/inventory') && t.startsWith('reward_gift_')) {
+          close = true;
+        }
+        if (close) {
           try {
             n.close();
           } catch (_) {}
@@ -202,20 +263,23 @@ async function closeShownNotifications({ tag, path } = {}) {
 }
 
 /**
- * PWA реально на экране и в фокусе.
- * На iOS при сворачивании visibility часто остаётся visible, а focused=false —
- * поэтому для подавления пуша требуем focused === true.
+ * Окно реально в фокусе (Desktop / корректный Safari).
+ * На iOS при сворачивании visibility часто остаётся 'visible', а focused=false —
+ * поэтому НЕ считаем visibility alone достаточным для «приложение открыто».
  */
-function clientLooksOpen(client) {
+function clientIsFocusedForeground(client) {
   if (!client) return false;
-  // Safari PWA: при открытом приложении focused часто false, а
-  // visibilityState === 'visible' — надёжный сигнал «пользователь внутри».
-  if (client.visibilityState === 'visible') return true;
-  if ('focused' in client && client.focused === true) return true;
-  return false;
+  if (client.visibilityState && client.visibilityState !== 'visible') {
+    return false;
+  }
+  if ('focused' in client) {
+    return client.focused === true;
+  }
+  // Старые движки без focused: ориентируемся только на visibility.
+  return client.visibilityState === 'visible';
 }
 
-async function isPwaWindowOpen() {
+async function isPwaFocusedForeground() {
   const clientsList = await self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
@@ -228,7 +292,7 @@ async function isPwaWindowOpen() {
       continue;
     }
     if (!sameOrigin) continue;
-    if (clientLooksOpen(client)) return true;
+    if (clientIsFocusedForeground(client)) return true;
   }
   return false;
 }
@@ -239,18 +303,20 @@ function viewerStateIsFreshForeground(state) {
   return Date.now() - at < VIEWER_TTL_MS;
 }
 
-async function isViewerReportedlyForeground() {
-  if (viewerStateIsFreshForeground(viewer)) return true;
-  // SW часто убивают между heartbeat и push — читаем Cache.
+async function getFreshViewerState() {
+  if (viewerStateIsFreshForeground(viewer)) return viewer;
   const saved = await loadViewerState();
-  return viewerStateIsFreshForeground(saved);
+  if (viewerStateIsFreshForeground(saved)) return saved;
+  return null;
 }
 
 async function shouldSuppressPush(_notifPath) {
-  // 1) Есть видимое окно PWA — пользователь в приложении.
-  if (await isPwaWindowOpen()) return true;
-  // 2) Flutter недавно подтвердил foreground (Cache + память).
-  if (await isViewerReportedlyForeground()) return true;
+  // 1) Окно реально в фокусе (Desktop / корректный Safari focused).
+  if (await isPwaFocusedForeground()) return true;
+  // 2) Flutter сообщает, что документ видим (приложение на экране, не свёрнуто).
+  //    Не смотрим Clients.visibility — на iOS он часто остаётся visible в фоне.
+  //    Flutter на pagehide/visibilitychange шлёт foreground:false.
+  if (await getFreshViewerState()) return true;
   return false;
 }
 
@@ -277,11 +343,20 @@ self.addEventListener('push', (event) => {
   const body = data.body != null ? String(data.body) : '';
   const tag = data.tag || 'zozu';
   const url = data.url || pathFromTag(tag) || '/';
+  const chatId =
+    data.chat_id != null && String(data.chat_id).trim()
+      ? String(data.chat_id).trim()
+      : '';
   const options = {
     body: body,
     icon: '/icons/Icon-192.png',
     badge: '/icons/Icon-192.png',
-    data: { url: url, kind: data.kind || '' },
+    data: {
+      url: url,
+      kind: data.kind || '',
+      chat_id: chatId,
+      tag: tag,
+    },
     tag: tag,
     renotify: true,
     silent: false,
@@ -307,9 +382,8 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   const notification = event.notification;
-  const appPath = resolveClickPath(notification);
+  const resolved = resolveClickPath(notification);
   const tag = notification.tag || '';
-  const target = resolveTargetUrl(appPath);
 
   try {
     notification.close();
@@ -317,9 +391,22 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     (async () => {
-      await closeShownNotifications({ tag, path: appPath });
-      await setPendingPath(appPath);
+      const pending = await peekPendingPath();
+      let appPath = resolved;
+      // iOS: data/tag пустые → не затираем pending из push event.
+      if (!appPath || pathSpecificity(appPath) < pathSpecificity(pending)) {
+        if (pending && pathSpecificity(pending) > 0) {
+          appPath = pending;
+        }
+      }
+      if (!appPath) appPath = '/';
 
+      await closeShownNotifications({ tag, path: appPath });
+      if (appPath && appPath !== '/') {
+        await setPendingPath(appPath);
+      }
+
+      const target = resolveTargetUrl(appPath);
       const all = await self.clients.matchAll({
         type: 'window',
         includeUncontrolled: true,
@@ -390,6 +477,20 @@ self.addEventListener('message', (event) => {
       foreground: foreground,
       at: Date.now(),
     };
+    // Открыли чат на экране — сразу убрать баннеры этого чата из шторки.
+    const chat = path.match(/^\/chats\/([^/?#]+)/);
+    if (foreground && chat && chat[1]) {
+      event.waitUntil(
+        Promise.all([
+          saveViewerState(viewer),
+          closeShownNotifications({
+            tag: `chat_${chat[1]}`,
+            path: `/chats/${chat[1]}`,
+          }),
+        ]),
+      );
+      return;
+    }
     event.waitUntil(saveViewerState(viewer));
     return;
   }

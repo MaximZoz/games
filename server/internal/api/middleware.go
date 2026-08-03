@@ -29,7 +29,9 @@ func CORS(next http.Handler) http.Handler {
 	})
 }
 
-func RequireAuth(secret []byte, next http.Handler) http.Handler {
+// RequireAuth проверяет JWT. Если pool != nil — сессия должна существовать в БД
+// (один активный вход; вход с другого устройства инвалидирует прошлые токены).
+func RequireAuth(secret []byte, pool *pgxpool.Pool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		if header == "" {
@@ -50,6 +52,18 @@ func RequireAuth(secret []byte, next http.Handler) http.Handler {
 		if err != nil {
 			WriteErr(w, r, http.StatusUnauthorized, "invalid token")
 			return
+		}
+		if pool != nil {
+			sid, sidErr := uuid.Parse(strings.TrimSpace(claims.SessionID))
+			if sidErr != nil {
+				WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+				return
+			}
+			ok, existsErr := store.SessionExists(r.Context(), pool, sid)
+			if existsErr != nil || !ok {
+				WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+				return
+			}
 		}
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))

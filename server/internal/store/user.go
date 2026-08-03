@@ -317,6 +317,43 @@ func GetUserByID(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) (*User, 
 	return scanUser(row)
 }
 
+// GetUsersByIDs — пакетная загрузка профилей (без N+1 в лобби/игре).
+func GetUsersByIDs(ctx context.Context, pool *pgxpool.Pool, ids []uuid.UUID) (map[uuid.UUID]*User, error) {
+	out := make(map[uuid.UUID]*User, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	uniq := make([]uuid.UUID, 0, len(ids))
+	seen := make(map[uuid.UUID]struct{}, len(ids))
+	for _, id := range ids {
+		if id == uuid.Nil {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniq = append(uniq, id)
+	}
+	if len(uniq) == 0 {
+		return out, nil
+	}
+	rows, err := pool.Query(ctx,
+		`SELECT `+selectUserCols+` FROM users WHERE id = ANY($1)`, uniq)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		u, err := scanUser(rows)
+		if err != nil {
+			return nil, err
+		}
+		out[u.ID] = u
+	}
+	return out, rows.Err()
+}
+
 func ListUsers(ctx context.Context, pool *pgxpool.Pool) ([]User, error) {
 	rows, err := pool.Query(ctx,
 		`SELECT `+selectUserCols+` FROM users ORDER BY created_at DESC`)

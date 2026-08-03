@@ -5,3 +5,5 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {}
 void uninstallPushNotificationNavigation() {}
 
 void reportPushSwActiveRoute(String path) {}
+
+void clearPushNotificationsForChat(String chatId) {}

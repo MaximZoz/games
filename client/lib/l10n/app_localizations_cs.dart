@@ -482,6 +482,11 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbySearchingOpponent => 'Hledání soupeře…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Hledají tuto hru: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Čekáme, až někdo stiskne „Najít hru“ nebo „Připojit se“';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get chatActions => 'Akce chatu';
+
+  @override
+  String get chatAutoTranslate => 'Auto-translate';
 
   @override
   String get chatScrollToEnd => 'Na konec konverzace';

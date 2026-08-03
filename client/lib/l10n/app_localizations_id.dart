@@ -482,6 +482,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get lobbySearchingOpponent => 'Mencari lawan…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Mencari permainan ini: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Menunggu seseorang mengetuk “Cari game” atau “Gabung”';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatActions => 'Tindakan obrolan';
+
+  @override
+  String get chatAutoTranslate => 'Auto-translate';
 
   @override
   String get chatScrollToEnd => 'Ke akhir percakapan';

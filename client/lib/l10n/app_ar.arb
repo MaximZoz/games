@@ -176,6 +176,7 @@
   "lobbyMatchmake": "الردهة",
   "lobbyPrivateGame": "لعبة خاصة",
   "lobbySearchingOpponent": "جارٍ البحث عن منافس…",
+  "lobbyPlayersSearching": "يبحثون عن هذه اللعبة: {count}",
   "lobbyWaitingJoin": "بانتظار أن يضغط أحد «ابحث عن لعبة» أو «انضمام»",
   "lobbyInviteTitle": "دعوة للعبة",
   "lobbyInvitedToPlay": "تمت دعوتك للعب",
@@ -678,6 +679,7 @@
   "chatBackToGame": "العودة إلى اللعبة",
   "chatBackToChats": "العودة إلى المحادثات",
   "chatActions": "إجراءات المحادثة",
+  "chatAutoTranslate": "ترجمة تلقائية",
   "chatScrollToEnd": "إلى نهاية المحادثة",
   "chatReplyingTo": "رد على {name}",
   "@chatReplyingTo": {

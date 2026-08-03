@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Sảnh",
   "lobbyPrivateGame": "Trận riêng",
   "lobbySearchingOpponent": "Đang tìm đối thủ…",
+  "lobbyPlayersSearching": "Đang tìm trận này: {count}",
   "lobbyWaitingJoin": "Đang chờ ai đó nhấn “Tìm trận” hoặc “Tham gia”",
   "lobbyInviteTitle": "Lời mời chơi",
   "lobbyInvitedToPlay": "Bạn được mời chơi",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Quay lại trò chơi",
   "chatBackToChats": "Quay lại chat",
   "chatActions": "Thao tác chat",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Đến cuối cuộc trò chuyện",
   "chatReplyingTo": "Trả lời {name}",
   "@chatReplyingTo": {

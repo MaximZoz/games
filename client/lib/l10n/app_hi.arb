@@ -176,6 +176,7 @@
   "lobbyMatchmake": "लॉबी",
   "lobbyPrivateGame": "निजी गेम",
   "lobbySearchingOpponent": "प्रतिद्वंद्वी खोज रहे हैं…",
+  "lobbyPlayersSearching": "इस गेम की खोज: {count}",
   "lobbyWaitingJoin": "किसी के “गेम खोजें” या “शामिल हों” टैप करने की प्रतीक्षा",
   "lobbyInviteTitle": "गेम आमंत्रण",
   "lobbyInvitedToPlay": "आपको खेलने के लिए आमंत्रित किया गया",
@@ -678,6 +679,7 @@
   "chatBackToGame": "खेल पर वापस",
   "chatBackToChats": "चैट पर वापस",
   "chatActions": "चैट क्रियाएँ",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "बातचीत के अंत तक",
   "chatReplyingTo": "{name} को उत्तर",
   "@chatReplyingTo": {

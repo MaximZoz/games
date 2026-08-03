@@ -482,6 +482,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbySearchingOpponent => '상대를 찾는 중…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return '이 게임 찾는 중: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => '누군가 「게임 찾기」 또는 「참가」를 누를 때까지 대기 중';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chatActions => '채팅 작업';
+
+  @override
+  String get chatAutoTranslate => '자동 번역';
 
   @override
   String get chatScrollToEnd => '대화 끝으로';

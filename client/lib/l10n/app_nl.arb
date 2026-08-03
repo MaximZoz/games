@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Privéspel",
   "lobbySearchingOpponent": "Tegenstander zoeken…",
+  "lobbyPlayersSearching": "Zoeken dit spel: {count}",
   "lobbyWaitingJoin": "Wachten tot iemand op «Spel zoeken» of «Meedoen» tikt",
   "lobbyInviteTitle": "Speluitnodiging",
   "lobbyInvitedToPlay": "Je bent uitgenodigd om te spelen",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Terug naar het spel",
   "chatBackToChats": "Terug naar chats",
   "chatActions": "Chatacties",
+  "chatAutoTranslate": "Auto-vertaling",
   "chatScrollToEnd": "Naar het einde",
   "chatReplyingTo": "Antwoord aan {name}",
   "@chatReplyingTo": {

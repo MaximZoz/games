@@ -80,4 +80,39 @@ void main() {
     expect(backFromButton, 1);
     expect(backFromSwipe, 0);
   });
+
+  testWidgets('opaqueEdge=false пропускает тап к виджету у левого края',
+      (tester) async {
+    var taps = 0;
+    var backs = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SwipeBackScope(
+          opaqueEdge: false,
+          edgeWidth: 48,
+          topInset: 0,
+          onBack: () => backs++,
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: GestureDetector(
+                  onTap: () => taps++,
+                  child: const ColoredBox(color: Colors.red),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tapAt(const Offset(12, 300));
+    await tester.pump();
+
+    expect(taps, 1);
+    expect(backs, 0);
+  });
 }

@@ -482,6 +482,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get lobbySearchingOpponent => 'Procurando adversário…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Procurando este jogo: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Aguardando alguém tocar em “Encontrar jogo” ou “Entrar”';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatActions => 'Ações do chat';
+
+  @override
+  String get chatAutoTranslate => 'Tradução automática';
 
   @override
   String get chatScrollToEnd => 'Ir para o fim';

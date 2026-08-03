@@ -22,11 +22,13 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
@@ -38,9 +40,11 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
   const ChatRoomScreen({
@@ -131,6 +135,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final Map<String, String> _pendingDeliveredAtByID = <String, String>{};
   final Map<String, String> _pendingReadAtByID = <String, String>{};
 
+  /// Автоперевод входящих сообщений (локальный переключатель на чат).
+  bool _autoTranslate = false;
+  final Map<String, String> _translations = <String, String>{};
+  bool _translateInFlight = false;
+  String? _peerLanguageHint;
+
+  String get _autoTranslatePrefsKey => 'chat_auto_translate_${widget.chatID}';
+
   @override
   void initState() {
     super.initState();
@@ -138,6 +150,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _textController.addListener(_onComposerTextChanged);
     _scrollController.addListener(_onMessagesScroll);
+    unawaited(_restoreAutoTranslatePref());
     _loadMessages(initial: true);
     unawaited(_loadCapabilities());
     // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
@@ -164,11 +177,83 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _pasteSuggestionVisible = false;
       _messageKeys.clear();
       _messageIDs.clear();
+      _translations.clear();
+      _autoTranslate = false;
+      _peerLanguageHint = null;
+      unawaited(_restoreAutoTranslatePref());
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_maybeShowPasteSuggestion());
       });
+    }
+  }
+
+  Future<void> _restoreAutoTranslatePref() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool(_autoTranslatePrefsKey) ?? false;
+    if (!mounted) return;
+    setState(() => _autoTranslate = enabled);
+    if (enabled) unawaited(_ensureTranslations());
+  }
+
+  Future<void> _setAutoTranslate(bool enabled) async {
+    setState(() {
+      _autoTranslate = enabled;
+      if (!enabled) _translations.clear();
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoTranslatePrefsKey, enabled);
+    if (enabled) unawaited(_ensureTranslations());
+  }
+
+  bool _isTranslatableBody(String body) {
+    final t = body.trim();
+    if (t.isEmpty) return false;
+    if (isAnimatedEmojiMessage(t) ||
+        isGiftCollectionMessage(t) ||
+        isCoinsCreditMessage(t) ||
+        isInviteLobbyMessage(t)) {
+      return false;
+    }
+    return true;
+  }
+
+  String _displayBodyFor(ChatMessageItem message, {required bool mine}) {
+    if (!_autoTranslate || mine) return message.body;
+    return _translations[message.id] ?? message.body;
+  }
+
+  Future<void> _ensureTranslations({String? onlyMessageID}) async {
+    if (!_autoTranslate || _translateInFlight || !mounted) return;
+    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    if (meID == null || meID.isEmpty) return;
+    final targetLang =
+        effectiveAppLocale(ref.read(appLocaleProvider)).languageCode;
+    final items = <({String id, String text})>[];
+    for (final m in _messages) {
+      if (m.senderUserID == meID) continue;
+      if (onlyMessageID != null && m.id != onlyMessageID) continue;
+      if (_translations.containsKey(m.id)) continue;
+      if (!_isTranslatableBody(m.body)) continue;
+      items.add((id: m.id, text: m.body));
+    }
+    if (items.isEmpty) return;
+    _translateInFlight = true;
+    try {
+      final mapped = await ref.read(chatsRepositoryProvider).translateMessages(
+            items: items,
+            targetLang: targetLang,
+            sourceLang: _peerLanguageHint,
+            chatID: widget.chatID,
+          );
+      if (!mounted || !_autoTranslate) return;
+      if (mapped.isEmpty) return;
+      setState(() => _translations.addAll(mapped));
+    } catch (_) {
+      // оставляем оригинал
+    } finally {
+      _translateInFlight = false;
     }
   }
 
@@ -1087,7 +1172,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       // пришёл офлайн и пользователь сразу открыл чат (до sync списка).
       // Только ещё не прочитанные — чтобы старые подарки не поднимали бейдж снова.
       final me = ref.read(authStateProvider).valueOrNull?.id;
-      if (me != null && me.isNotEmpty) {
+      // В группе read_at на сообщениях больше не ставится — не поднимаем подарки
+      // повторно после локального markRead.
+      final groupAlreadyRead =
+          ref.read(locallyReadChatIdsProvider).contains(widget.chatID);
+      if (me != null && me.isNotEmpty && !groupAlreadyRead) {
         final giftCodes = <String>{};
         for (final m in list) {
           if (m.senderUserID == me) continue;
@@ -1119,10 +1208,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           }
         }());
       }
+      if (_autoTranslate) {
+        unawaited(_ensureTranslations());
+      }
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
         if (mounted) context.go('/login');
+        return;
+      }
+      // Удалённый групповой чат / нет доступа — на список, не «Доступ запрещён».
+      if (e.statusCode == 403 || e.statusCode == 404) {
+        removeChatFromChatsCache(ref, widget.chatID);
+        if (mounted) context.go('/chats');
         return;
       }
       if (!surfaceErrors) return;
@@ -1198,6 +1296,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _loadingOlder = false;
         _hasMoreOlder = older.length >= _messagesPageSize;
       });
+      if (_autoTranslate && deduplicated.isNotEmpty) {
+        unawaited(_ensureTranslations());
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingOlder = false);
@@ -1399,7 +1500,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       setState(() {
         _messages = updated;
         _messageIDs.add(withPending.id);
+        // Текст мог измениться — сбросить кэш перевода.
+        if (existing.body != merged.body) {
+          _translations.remove(merged.id);
+        }
       });
+      if (_autoTranslate) {
+        unawaited(_ensureTranslations(onlyMessageID: merged.id));
+      }
       return;
     }
 
@@ -1407,6 +1515,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _messages = [..._messages, withPending];
       _messageIDs.add(withPending.id);
     });
+    if (_autoTranslate) {
+      unawaited(_ensureTranslations(onlyMessageID: withPending.id));
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -1586,74 +1697,68 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return value;
   }
 
-  IconData? _genderIcon(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    if (normalized == null || normalized.isEmpty) return null;
-    switch (normalized) {
-      case 'male':
-      case 'm':
-      case 'man':
-      case 'м':
-      case 'муж':
-      case 'мужской':
-        return Icons.male_rounded;
-      case 'female':
-      case 'f':
-      case 'woman':
-      case 'ж':
-      case 'жен':
-      case 'женский':
-        return Icons.female_rounded;
-      default:
-        return null;
+  String _chatTitle(ChatPreviewItem? item, String fallback) {
+    if (item?.isGroup == true) {
+      final title = item?.title?.trim();
+      if (title != null && title.isNotEmpty) return title;
+      return 'Групповой чат';
     }
+    final user = item?.user;
+    return user == null ? fallback : _peerTitle(user);
   }
 
-  bool _isFemaleGender(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    return normalized == 'female' ||
-        normalized == 'f' ||
-        normalized == 'woman' ||
-        normalized == 'ж' ||
-        normalized == 'жен' ||
-        normalized == 'женский';
-  }
-
-  Widget _buildInfoPill({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? foregroundColor,
-    double? minWidth,
+  /// Имя отправителя для группового чата (внутри пузыря, как в Telegram).
+  String? _groupSenderName({
+    required ChatPreviewItem? chat,
+    required bool mine,
+    required String senderUserID,
   }) {
-    final bg = backgroundColor ?? AppColors.accentSoft;
-    final fg = foregroundColor ?? AppColors.textPrimary;
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth ?? 0),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
-            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
-          ],
-          if (text != null && text.isNotEmpty)
-            Text(
-              text,
-              style: TextStyle(
-                color: fg,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+    if (chat?.isGroup != true || mine) return null;
+    final senderUser = _chatMember(chat, senderUserID);
+    return senderUser == null ? context.l10n.commonUser : _peerTitle(senderUser);
+  }
+
+  /// Аватар слева для чужих сообщений в групповом чате (логин — внутри пузыря).
+  Widget _wrapGroupSender({
+    required ChatPreviewItem? chat,
+    required bool mine,
+    required String senderUserID,
+    required Widget child,
+  }) {
+    final show = chat?.isGroup == true && !mine;
+    if (!show) return child;
+    final senderUser = _chatMember(chat, senderUserID);
+    final senderName =
+        senderUser == null ? context.l10n.commonUser : _peerTitle(senderUser);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GestureDetector(
+            onTap: senderUser == null
+                ? null
+                : () => unawaited(_showUserInfoDialog(senderUser)),
+            child: _buildPeerAvatar(
+              user: senderUser,
+              fallbackTitle: senderName,
+              radius: 14,
             ),
-        ],
-      ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(child: child),
+      ],
     );
+  }
+
+  ChatUserItem? _chatMember(ChatPreviewItem? item, String userId) {
+    if (item == null || userId.isEmpty) return null;
+    for (final member in item.members) {
+      if (member.id == userId) return member;
+    }
+    return null;
   }
 
   Widget _buildPeerAvatar({
@@ -1738,6 +1843,46 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     return avatar;
   }
 
+  Widget _buildGroupAvatarStack(ChatPreviewItem? chat, {double radius = 18}) {
+    final members = chat?.members.take(3).toList(growable: false) ??
+        const <ChatUserItem>[];
+    final size = radius * 2;
+    return SizedBox(
+      width: size + 18,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CircleAvatar(
+            radius: radius,
+            backgroundColor: AppColors.accentSoft,
+            child: Icon(
+              Icons.grid_3x3_rounded,
+              color: AppColors.accentStart,
+              size: radius * 1.15,
+            ),
+          ),
+          for (var i = 0; i < members.length; i++)
+            Positioned(
+              left: radius * 0.9 + i * (radius * 0.48),
+              bottom: i.isEven ? -1 : radius * 0.28,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surfaceCard, width: 1),
+                ),
+                child: _buildPeerAvatar(
+                  user: members[i],
+                  fallbackTitle: members[i].displayName ?? '?',
+                  radius: radius * 0.38,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLetterAvatar({required String raw, required double radius}) {
     final letter = raw.isEmpty ? '?' : raw.substring(0, 1).toUpperCase();
     return CircleAvatar(
@@ -1755,132 +1900,31 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
-    final name = _peerTitle(user);
-    final about = user.about?.trim();
-    final genderIcon = _genderIcon(user.gender);
-    final female = _isFemaleGender(user.gender);
-    await showDialog<void>(
+    // В личке кнопка «написать» не нужна. В групповом — открыть личные сообщения.
+    var isGroup = false;
+    final chats =
+        ref.read(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
+    for (final c in chats) {
+      if (c.chatID == widget.chatID) {
+        isGroup = c.isGroup;
+        break;
+      }
+    }
+    await showUserProfileDialog(
       context: context,
-      builder: (dialogContext) {
-        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        final statusText = presence == null
-            ? null
-            : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 420,
-              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
-            ),
-            child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.all(compact ? 12 : 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildPeerAvatar(
-                      user: user,
-                      fallbackTitle: name,
-                      radius: 22,
-                      isOnline: presence?.online,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            name,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (statusText != null && statusText.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                statusText,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.commonClose,
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                    ),
-                  ],
-                ),
-                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (user.age != null && user.age! > 0)
-                        _buildInfoPill(
-                          text: context.l10n.profileAgeYears(user.age!),
-                          minWidth: 72,
-                        ),
-                      if (genderIcon != null)
-                        _buildInfoPill(
-                          icon: genderIcon,
-                          minWidth: 46,
-                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
-                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
-                        ),
-                    ],
-                  ),
-                ],
-                if (about != null && about.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    context.l10n.commonAboutMe,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    about,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      height: 1.35,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                HeadToHeadSection(
-                  opponentId: user.id,
-                  opponentName: user.displayName,
-                ),
-                PeerCollectionsSection(userId: user.id),
-              ],
-            ),
-          ),
-          ),
-        );
-      },
+      ref: ref,
+      userId: user.id,
+      displayName: _peerTitle(user),
+      avatarKind: user.avatarKind,
+      avatarValue: user.avatarValue,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      messageFrom: widget.fromGames ? 'games' : 'chats',
+      messageReturnPath: widget.fromGames ? widget.gameReturnPath : null,
+      showMessageButton: isGroup,
     );
   }
 
@@ -1935,11 +1979,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Widget _buildChatToolbar({
     required ChatUserItem? peerUser,
+    required ChatPreviewItem? chat,
     required String title,
     PresenceEntry? presence,
   }) {
     final infoUser = peerUser;
-    final statusText = presence == null
+    final isGroup = chat?.isGroup == true;
+    final statusText = isGroup || presence == null
         ? null
         : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
     final notifyCount = _shellNotificationCount();
@@ -1997,63 +2043,115 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               ),
             ),
-          Tooltip(
-            message: context.l10n.userInfoTitle,
-            child: MouseRegion(
-              cursor: infoUser == null
-                  ? SystemMouseCursors.basic
-                  : SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: infoUser == null
-                    ? null
-                    : () {
-                        final user = infoUser;
-                        unawaited(
-                          _showUserInfoDialog(user, presence: presence),
-                        );
-                      },
-                behavior: HitTestBehavior.opaque,
-                child: _buildPeerAvatar(
-                  user: peerUser,
-                  fallbackTitle: title,
-                  radius: 18,
-                  isOnline: presence?.online,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                if (statusText != null && statusText.isNotEmpty)
-                  Text(
-                    statusText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
+          isGroup
+              ? Tooltip(
+                  message: context.l10n.userInfoTitle,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => unawaited(_showGroupParticipantsSheet(chat)),
+                      behavior: HitTestBehavior.opaque,
+                      child: _buildGroupAvatarStack(chat, radius: 18),
                     ),
                   ),
-              ],
-            ),
+                )
+              : Tooltip(
+                  message: context.l10n.userInfoTitle,
+                  child: MouseRegion(
+                    cursor: infoUser == null
+                        ? SystemMouseCursors.basic
+                        : SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: infoUser == null
+                          ? null
+                          : () {
+                              final user = infoUser;
+                              unawaited(
+                                _showUserInfoDialog(user, presence: presence),
+                              );
+                            },
+                      behavior: HitTestBehavior.opaque,
+                      child: _buildPeerAvatar(
+                        user: peerUser,
+                        fallbackTitle: title,
+                        radius: 18,
+                        isOnline: presence?.online,
+                      ),
+                    ),
+                  ),
+                ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: isGroup
+                ? MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () =>
+                          unawaited(_showGroupParticipantsSheet(chat)),
+                      behavior: HitTestBehavior.opaque,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          Text(
+                            '${chat?.members.length ?? 0} уч.',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      if (statusText != null && statusText.isNotEmpty)
+                        Text(
+                          statusText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
           ),
           PopupMenuButton<_RoomAction>(
             enabled: !_roomActionInFlight,
             tooltip: context.l10n.chatActions,
             onSelected: (action) {
+              if (isGroup && action == _RoomAction.sendFriendRequest) {
+                unawaited(_showGroupMembersFriendSheet(chat));
+                return;
+              }
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final peerId = (peerUser?.id ?? '').trim();
               String? incomingRequestId;
@@ -2075,6 +2173,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               final peerId = (peerUser?.id ?? '').trim();
               final isSupport = peerUser?.isSupport == true ||
                   peerUser?.displayName?.trim() == 'Поддержка';
+              if (isGroup) {
+                return <PopupMenuEntry<_RoomAction>>[
+                  PopupMenuItem<_RoomAction>(
+                    value: _RoomAction.sendFriendRequest,
+                    child: Text(context.l10n.friendsAdd),
+                  ),
+                ];
+              }
               final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
               final isFriend = peerId.isNotEmpty &&
                   snapshot?.friends.any((f) => f.user.id == peerId) == true;
@@ -2120,8 +2226,139 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             },
             icon: const Icon(Icons.more_vert_rounded),
           ),
+          if (_shouldShowAutoTranslate(peerUser))
+            Tooltip(
+              message: context.l10n.chatAutoTranslate,
+              child: IconButton(
+                onPressed: () => unawaited(_setAutoTranslate(!_autoTranslate)),
+                icon: Icon(
+                  Icons.translate_rounded,
+                  color: _autoTranslate
+                      ? AppColors.accentStart
+                      : AppColors.textPrimary,
+                  shadows: _autoTranslate
+                      ? const [
+                          Shadow(
+                            color: Color(0x996366F1),
+                            blurRadius: 10,
+                          ),
+                          Shadow(
+                            color: Color(0x668B5CF6),
+                            blurRadius: 16,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  bool _shouldShowAutoTranslate(ChatUserItem? peerUser) {
+    final peerLang = (peerUser?.preferredLanguage ?? _peerLanguageHint ?? '')
+        .trim()
+        .toLowerCase();
+    if (peerLang.isEmpty) return false;
+    final myLang =
+        effectiveAppLocale(ref.read(appLocaleProvider)).languageCode;
+    return peerLang != myLang;
+  }
+
+  Future<void> _showGroupMembersFriendSheet(ChatPreviewItem? chat) async {
+    await _showGroupParticipantsSheet(chat);
+  }
+
+  /// Список участников группового чата → карточка профиля.
+  Future<void> _showGroupParticipantsSheet(ChatPreviewItem? chat) async {
+    if (chat == null || !chat.isGroup) return;
+    final members =
+        chat.members.where((m) => m.id.isNotEmpty).toList(growable: false);
+    if (members.isEmpty) return;
+    final meId = ref.read(authStateProvider).valueOrNull?.id;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    (chat.title ?? '').trim().isNotEmpty
+                        ? chat.title!.trim()
+                        : context.l10n.navChats,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Участники: ${members.length}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: members.length,
+                      itemBuilder: (context, index) {
+                        final member = members[index];
+                        final title = _peerTitle(member);
+                        final isMe = member.id == meId;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: _buildPeerAvatar(
+                              user: member,
+                              fallbackTitle: title,
+                              radius: 20,
+                            ),
+                            title: Text(
+                              isMe ? '$title (вы)' : title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: isMe
+                                ? null
+                                : const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: AppColors.textSecondary,
+                                  ),
+                            onTap: isMe
+                                ? null
+                                : () {
+                                    Navigator.of(sheetContext).pop();
+                                    unawaited(_showUserInfoDialog(member));
+                                  },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -2157,27 +2394,40 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final meID = ref.watch(authStateProvider).valueOrNull?.id;
     // Нужен watch: пункты меню «заявка» / «убрать из друзей» зависят от снимка.
     ref.watch(friendsSnapshotProvider);
+    ref.watch(appLocaleProvider);
     final media = MediaQuery.of(context);
     final narrowLandscape =
         isNarrow(context) && media.size.width > media.size.height;
     final routeTitle = (widget.peerName ?? '').trim().isEmpty ? context.l10n.chatDialog : widget.peerName!.trim();
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
+    ChatPreviewItem? currentChat;
     ChatUserItem? peerUser;
     for (final item in chats) {
       if (item.chatID == widget.chatID) {
+        currentChat = item;
         peerUser = item.user;
         break;
       }
     }
-    final title = peerUser == null ? routeTitle : _peerTitle(peerUser);
-    final peerPresence = peerUser != null ? presence[peerUser.id] : null;
+    final peerLang = (peerUser?.preferredLanguage ?? '').trim();
+    if (peerLang.isNotEmpty && peerLang != _peerLanguageHint) {
+      _peerLanguageHint = peerLang;
+    }
+    final title = _chatTitle(currentChat, routeTitle);
+    final peerPresence =
+        currentChat?.isGroup == true || peerUser == null ? null : presence[peerUser.id];
 
     if (narrowLandscape) {
       Future.microtask(() {
         if (!mounted) return;
         ref.read(mobileToolbarLeadingProvider.notifier).state =
-            _buildChatToolbar(peerUser: peerUser, title: title, presence: peerPresence);
+            _buildChatToolbar(
+          peerUser: peerUser,
+          chat: currentChat,
+          title: title,
+          presence: peerPresence,
+        );
       });
     }
 
@@ -2319,35 +2569,67 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   if (isGift) {
                     return _wrapSwipeReply(
                       message: message,
-                      alignment: Alignment.center,
+                      alignment: mine
+                          ? Alignment.centerRight
+                          : (currentChat?.isGroup == true
+                              ? Alignment.centerLeft
+                              : Alignment.center),
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 14, top: 6),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _ChatGiftCard(body: message.body),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
+                        child: _wrapGroupSender(
+                          chat: currentChat,
+                          mine: mine,
+                          senderUserID: message.senderUserID,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  ) !=
+                                  null) ...[
                                 Text(
-                                  _formatBubbleDateTime(message.createdAt),
+                                  _groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  )!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 11,
+                                    color: Color(0xFF7C3AED),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                if (mine) ...[
-                                  const SizedBox(width: 4),
-                                  MessageStatusTicks(
-                                    deliveredAt: message.deliveredAt,
-                                    readAt: message.readAt,
-                                    size: 14,
-                                  ),
-                                ],
+                                const SizedBox(height: 4),
                               ],
-                            ),
-                          ],
+                              _ChatGiftCard(body: message.body),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formatBubbleDateTime(message.createdAt),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  if (mine) ...[
+                                    const SizedBox(width: 4),
+                                    MessageStatusTicks(
+                                      deliveredAt: message.deliveredAt,
+                                      readAt: message.readAt,
+                                      size: 14,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -2381,170 +2663,51 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   if (isEmoji) {
                     return _wrapSwipeReply(
                       message: message,
-                      alignment: Alignment.center,
+                      alignment: mine
+                          ? Alignment.centerRight
+                          : (currentChat?.isGroup == true
+                              ? Alignment.centerLeft
+                              : Alignment.center),
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12, top: 4),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _ChatMessageBody(
-                              body: message.body,
-                              largeCentered: true,
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
+                        child: _wrapGroupSender(
+                          chat: currentChat,
+                          mine: mine,
+                          senderUserID: message.senderUserID,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  ) !=
+                                  null) ...[
                                 Text(
-                                  _formatBubbleDateTime(message.createdAt),
+                                  _groupSenderName(
+                                    chat: currentChat,
+                                    mine: mine,
+                                    senderUserID: message.senderUserID,
+                                  )!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 11,
+                                    color: Color(0xFF7C3AED),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                if (mine) ...[
-                                  const SizedBox(width: 4),
-                                  MessageStatusTicks(
-                                    deliveredAt: message.deliveredAt,
-                                    readAt: message.readAt,
-                                    size: 14,
-                                  ),
-                                ],
+                                const SizedBox(height: 4),
                               ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return _wrapSwipeReply(
-                    message: message,
-                    alignment:
-                        mine ? Alignment.centerRight : Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 320),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: mine
-                              ? AppColors.accentSoft
-                              : AppColors.surfaceCard,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: mine
-                                ? AppColors.accentStart
-                                    .withValues(alpha: 0.35)
-                                : Colors.black.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (message.replyToMessageID != null) ...[
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => unawaited(
-                                    _jumpToMessage(message.replyToMessageID!),
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    width: double.infinity,
-                                    margin: const EdgeInsets.only(bottom: 6),
-                                    padding: const EdgeInsets.fromLTRB(
-                                        8, 6, 8, 6),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.05),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: const Border(
-                                        left: BorderSide(
-                                          color: AppColors.accentStart,
-                                          width: 3,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      message.replyToHasImage
-                                          ? (message.replyToBody
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true
-                                              ? context.l10n.photoWithText(
-                                                  formatChatMessagePreview(
-                                                    message.replyToBody!,
-                                                  ),
-                                                )
-                                              : context.l10n.photo)
-                                          : (message.replyToBody
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true
-                                              ? formatChatMessagePreview(
-                                                  message.replyToBody!)
-                                              : context.l10n.chatMessageHint),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              _ChatMessageBody(
+                                body: message.body,
+                                largeCentered: true,
                               ),
-                            ],
-                            if (message.hasImage) ...[
-                              Builder(
-                                builder: (context) {
-                                  final count = message.imageCount > 0
-                                      ? message.imageCount.clamp(1, 3)
-                                      : 1;
-                                  final side = count == 1
-                                      ? 168.0
-                                      : (count == 2 ? 128.0 : 88.0);
-                                  return Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      for (var i = 0; i < count; i++) ...[
-                                        if (i > 0) const SizedBox(width: 4),
-                                        ChatMessageImageThumb(
-                                          messageID: message.id,
-                                          imageIndex: i,
-                                          width: side,
-                                          height: side,
-                                          borderRadius: 10,
-                                        ),
-                                      ],
-                                    ],
-                                  );
-                                },
-                              ),
-                              if (message.body.trim().isNotEmpty)
-                                const SizedBox(height: 6),
-                            ],
-                            if (message.body.trim().isNotEmpty)
-                              _ChatMessageBody(body: message.body),
-                            const SizedBox(height: 4),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Row(
+                              const SizedBox(height: 6),
+                              Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (message.editedAt != null &&
-                                      message.editedAt!.isNotEmpty) ...[
-                                    Text(
-                                      context.l10n.messageEdited,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 10,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ],
                                   Text(
                                     _formatBubbleDateTime(message.createdAt),
                                     style: const TextStyle(
@@ -2562,8 +2725,188 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   ],
                                 ],
                               ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return _wrapSwipeReply(
+                    message: message,
+                    alignment:
+                        mine ? Alignment.centerRight : Alignment.centerLeft,
+                    child: _wrapGroupSender(
+                      chat: currentChat,
+                      mine: mine,
+                      senderUserID: message.senderUserID,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 320),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: mine
+                                ? AppColors.accentSoft
+                                : AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: mine
+                                  ? AppColors.accentStart
+                                      .withValues(alpha: 0.35)
+                                  : Colors.black.withValues(alpha: 0.08),
                             ),
-                          ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                if (_groupSenderName(
+                                      chat: currentChat,
+                                      mine: mine,
+                                      senderUserID: message.senderUserID,
+                                    ) !=
+                                    null) ...[
+                                  Text(
+                                    _groupSenderName(
+                                      chat: currentChat,
+                                      mine: mine,
+                                      senderUserID: message.senderUserID,
+                                    )!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xFF7C3AED),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                ],
+                                if (message.replyToMessageID != null) ...[
+                                  Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => unawaited(
+                                        _jumpToMessage(message.replyToMessageID!),
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        width: double.infinity,
+                                        margin: const EdgeInsets.only(bottom: 6),
+                                        padding: const EdgeInsets.fromLTRB(
+                                            8, 6, 8, 6),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              Colors.black.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: const Border(
+                                            left: BorderSide(
+                                              color: AppColors.accentStart,
+                                              width: 3,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          message.replyToHasImage
+                                              ? (message.replyToBody
+                                                          ?.trim()
+                                                          .isNotEmpty ==
+                                                      true
+                                                  ? context.l10n.photoWithText(
+                                                      formatChatMessagePreview(
+                                                        message.replyToBody!,
+                                                      ),
+                                                    )
+                                                  : context.l10n.photo)
+                                              : (message.replyToBody
+                                                          ?.trim()
+                                                          .isNotEmpty ==
+                                                      true
+                                                  ? formatChatMessagePreview(
+                                                      message.replyToBody!)
+                                                  : context.l10n.chatMessageHint),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (message.hasImage) ...[
+                                  Builder(
+                                    builder: (context) {
+                                      final count = message.imageCount > 0
+                                          ? message.imageCount.clamp(1, 3)
+                                          : 1;
+                                      final side = count == 1
+                                          ? 168.0
+                                          : (count == 2 ? 128.0 : 88.0);
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          for (var i = 0; i < count; i++) ...[
+                                            if (i > 0) const SizedBox(width: 4),
+                                            ChatMessageImageThumb(
+                                              messageID: message.id,
+                                              imageIndex: i,
+                                              width: side,
+                                              height: side,
+                                              borderRadius: 10,
+                                            ),
+                                          ],
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                  if (message.body.trim().isNotEmpty)
+                                    const SizedBox(height: 6),
+                                ],
+                                if (message.body.trim().isNotEmpty)
+                                  _ChatMessageBody(
+                                    body: _displayBodyFor(message, mine: mine),
+                                  ),
+                                const SizedBox(height: 4),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (message.editedAt != null &&
+                                          message.editedAt!.isNotEmpty) ...[
+                                        Text(
+                                          context.l10n.messageEdited,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 10,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      Text(
+                                        _formatBubbleDateTime(message.createdAt),
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      if (mine) ...[
+                                        const SizedBox(width: 4),
+                                        MessageStatusTicks(
+                                          deliveredAt: message.deliveredAt,
+                                          readAt: message.readAt,
+                                          size: 14,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -2595,6 +2938,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                   child: _buildChatToolbar(
                     peerUser: peerUser,
+                    chat: currentChat,
                     title: title,
                     presence: peerPresence,
                   ),
@@ -3087,8 +3431,18 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final preferredFlagIso =
+        preferredFlagIsoForLocale(LocaleService.locale);
+    final emojis = List<InventoryItem>.from(widget.emojis);
+    preferFlagIsoFirstInMixedList<InventoryItem>(
+      emojis,
+      preferredIso: preferredFlagIso,
+      isFlag: (e) => (e.group ?? '') == 'flags',
+      codeOf: (e) => e.code,
+      animatedNameOf: (e) => e.animatedName,
+    );
     final grouped = <String, List<InventoryItem>>{};
-    for (final e in widget.emojis) {
+    for (final e in emojis) {
       grouped.putIfAbsent(e.group ?? 'other', () => []).add(e);
     }
     const known = [
@@ -3176,13 +3530,13 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          itemCount: widget.emojis.length,
+                          itemCount: emojis.length,
                           separatorBuilder: (_, __) => const SizedBox(width: 2),
                           itemBuilder: (context, index) {
                             return SizedBox(
                               width: 58,
                               child: _emojiTile(
-                                widget.emojis[index],
+                                emojis[index],
                                 emojiSize: 42,
                                 qtySize: 11,
                               ),
@@ -3260,7 +3614,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   }
 }
 
-class _ChatInviteCard extends StatelessWidget {
+class _ChatInviteCard extends ConsumerWidget {
   const _ChatInviteCard({
     required this.link,
     required this.messageId,
@@ -3269,8 +3623,96 @@ class _ChatInviteCard extends StatelessWidget {
   final InviteLobbyLink link;
   final String messageId;
 
+  Future<void> _acceptAndGo(BuildContext context, WidgetRef ref) async {
+    final lobbyId = link.lobbyId.trim();
+    if (lobbyId.isEmpty) {
+      if (await blockJoinIfBusyAsync(
+        context,
+        ref,
+        redirectToActive: true,
+      )) {
+        return;
+      }
+      if (context.mounted) context.go(link.appPathFromMessage(messageId));
+      return;
+    }
+    // Чат из партии: ?game=… — дождаться active, иначе join «проскакивает».
+    if (await blockJoinIfBusyAsync(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
+      return;
+    }
+    try {
+      final result =
+          await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
+      if (!context.mounted) return;
+      ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      if (result.joined && result.gameId != null) {
+        context.go('/games/tictactoe/game/${result.gameId}');
+        return;
+      }
+      context.go(link.appPathFromMessage(messageId));
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      // 409 при активной партии — только всплывашка, без ухода в чужое лобби.
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
+        final active = resolveActiveForGuard(ref, context);
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e) || hasBlockingActiveMatch(active)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+        if (active != null &&
+            (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
+          goToActiveSession(context, active);
+        }
+        return;
+      }
+      if (e.statusCode == 404) {
+        context.go(link.appPathFromMessage(messageId));
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      final active = resolveActiveForGuard(ref, context);
+      if (hasBlockingActiveMatch(active)) {
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        goToActiveSession(context, active!);
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 280),
@@ -3278,9 +3720,8 @@ class _ChatInviteCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          // go, не push: иначе «Своя игра» остаётся в истории и снова
-          // всплывает при возврате в Чаты.
-          onTap: () => context.go(link.appPathFromMessage(messageId)),
+          // Сразу join + редирект в лобби (не оставляем «Войти в игру» вручную).
+          onTap: () => unawaited(_acceptAndGo(context, ref)),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: BoxDecoration(

@@ -6,6 +6,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/referral_link.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
@@ -48,11 +49,16 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+              constraints: BoxConstraints(
+                maxWidth: useDesktopTiles(context) ? 520 : 480,
+              ),
               child: user == null
                   ? const SizedBox.shrink()
-                  : Padding(
+                  : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.lg),
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

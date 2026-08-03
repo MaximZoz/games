@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Λόμπι",
   "lobbyPrivateGame": "Ιδιωτικό παιχνίδι",
   "lobbySearchingOpponent": "Αναζήτηση αντιπάλου…",
+  "lobbyPlayersSearching": "Αναζητούν αυτό το παιχνίδι: {count}",
   "lobbyWaitingJoin": "Αναμονή να πατήσει κάποιος «Εύρεση παιχνιδιού» ή «Συμμετοχή»",
   "lobbyInviteTitle": "Πρόσκληση παιχνιδιού",
   "lobbyInvitedToPlay": "Σας προσκάλεσαν να παίξετε",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Πίσω στο παιχνίδι",
   "chatBackToChats": "Πίσω στις συνομιλίες",
   "chatActions": "Ενέργειες συνομιλίας",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Στο τέλος της συνομιλίας",
   "chatReplyingTo": "Απάντηση στον/στην {name}",
   "@chatReplyingTo": {

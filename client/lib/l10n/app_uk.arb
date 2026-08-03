@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Лобі",
   "lobbyPrivateGame": "Приватна гра",
   "lobbySearchingOpponent": "Пошук суперника…",
+  "lobbyPlayersSearching": "Шукають цю гру: {count}",
   "lobbyWaitingJoin": "Чекаємо, поки хтось натисне «Знайти гру» або «Приєднатися»",
   "lobbyInviteTitle": "Запрошення в гру",
   "lobbyInvitedToPlay": "Вас запросили зіграти",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Назад до гри",
   "chatBackToChats": "Назад до чатів",
   "chatActions": "Дії з чатом",
+  "chatAutoTranslate": "Автопереклад",
   "chatScrollToEnd": "В кінець переписки",
   "chatReplyingTo": "У відповідь {name}",
   "@chatReplyingTo": {

@@ -482,6 +482,11 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbySearchingOpponent => 'Etsitään vastustajaa…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Etsivät tätä peliä: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Odotetaan, että joku napauttaa ”Etsi peli” tai ”Liity”';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get chatActions => 'Chatin toiminnot';
+
+  @override
+  String get chatAutoTranslate => 'Auto-translate';
 
   @override
   String get chatScrollToEnd => 'Keskustelun loppuun';

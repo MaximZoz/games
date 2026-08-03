@@ -12,8 +12,10 @@ import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -124,114 +126,127 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              : DesktopTileGrid(
                   itemCount: orderedSets.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final set = orderedSets[index];
-                    final groupItems = bySet[set]!;
-                    final preview = groupItems.first;
-                    final setDaily = groupItems.fold<int>(
-                      0,
-                      (sum, e) => sum + e.dailyBronze,
-                    );
-                    final ownedCount = groupItems.where((e) => e.owned).length;
-                    return Material(
-                      color: AppColors.surfaceCard,
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () async {
-                          await context.push('/shop/collections/$set');
-                          if (!mounted) return;
-                          ref.invalidate(shopCatalogProvider);
-                          await _reloadSilent();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.06),
-                            ),
+                  maxCellWidth: 340,
+                  maxContentWidth: 1080,
+                  itemBuilder: (context, index) =>
+                      _buildCollectionSetTile(context, orderedSets[index], bySet),
+                  mobileBuilder: (context) => ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    itemCount: orderedSets.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) => _buildCollectionSetTile(
+                      context,
+                      orderedSets[index],
+                      bySet,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionSetTile(
+    BuildContext context,
+    String set,
+    Map<String, List<ShopItem>> bySet,
+  ) {
+    final groupItems = bySet[set]!;
+    final preview = groupItems.first;
+    final setDaily = groupItems.fold<int>(
+      0,
+      (sum, e) => sum + e.dailyBronze,
+    );
+    final ownedCount = groupItems.where((e) => e.owned).length;
+    return Material(
+      color: AppColors.surfaceCard,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () async {
+          await context.push('/shop/collections/$set');
+          if (!mounted) return;
+          ref.invalidate(shopCatalogProvider);
+          await _reloadSilent();
+        },
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.06),
+            ),
+          ),
+          child: Row(
+            children: [
+              ShopAnimatedEmoji(
+                animatedName: preview.animatedName ?? 'sparkles',
+                size: 40,
+                fallback: preview.emoji,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      collectionSetTitle(set),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      children: [
+                        Text(
+                          context.l10n.shopSetProgress(
+                            ownedCount,
+                            groupItems.length,
                           ),
-                          child: Row(
-                            children: [
-                              ShopAnimatedEmoji(
-                                animatedName: preview.animatedName ?? 'sparkles',
-                                size: 40,
-                                fallback: preview.emoji,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      collectionSetTitle(set),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          context.l10n.shopSetProgress(
-                                            ownedCount,
-                                            groupItems.length,
-                                          ),
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                        if (setDaily > 0) ...[
-                                          Text(
-                                            ' · ',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.textSecondary
-                                                  .withValues(alpha: 0.8),
-                                            ),
-                                          ),
-                                          BalanceDisplay(
-                                            bronze: setDaily,
-                                            prefix: ownedCount >=
-                                                    groupItems.length
-                                                ? '+'
-                                                : null,
-                                            perDay: true,
-                                            coinSize: 14,
-                                            fontSize: 12,
-                                            spacing: 4,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textSecondary,
-                                            opacity: ownedCount >=
-                                                    groupItems.length
-                                                ? 1
-                                                : 0.35,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                color: AppColors.textSecondary,
-                              ),
-                            ],
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                      ),
-                    );
-                  },
+                        if (setDaily > 0) ...[
+                          Text(
+                            '·',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.8),
+                            ),
+                          ),
+                          BalanceDisplay(
+                            bronze: setDaily,
+                            prefix: ownedCount >= groupItems.length ? '+' : null,
+                            perDay: true,
+                            coinSize: 14,
+                            fontSize: 12,
+                            spacing: 4,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                            opacity:
+                                ownedCount >= groupItems.length ? 1 : 0.35,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -410,74 +425,127 @@ class _ShopCollectionGroupScreenState
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: groupItems.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      final l10n = context.l10n;
-                      return Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              complete
-                                  ? l10n.shopSetComplete
-                                  : l10n.shopSetProgress(
-                                      ownedCount,
-                                      groupItems.length,
-                                    ),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          if (setDaily > 0) ...[
-                            const SizedBox(width: 8),
-                            BalanceDisplay(
-                              bronze: setDaily,
-                              prefix: complete ? '+' : null,
-                              perDay: true,
-                              coinSize: 14,
-                              fontSize: 12,
-                              spacing: 4,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              opacity: complete ? 1 : 0.32,
-                            ),
-                          ],
-                        ],
-                      );
-                    }
-                    final item = groupItems[index - 1];
-                    return _CollectionShopCard(
-                      item: item,
-                      busy: _buyInFlight.contains(item.code),
-                      onBuy: () => _buy(item),
-                      onPreview: () => showCollectionFullscreen(
-                        context,
-                        title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
-                        animatedName: item.animatedName ?? 'sparkles',
-                        fallback: item.emoji,
-                        subtitle: collectionItemSubtitle(item.dailyBronze),
-                        bottomAction: item.owned
-                            ? null
-                            : Builder(
-                                builder: (dialogContext) => FilledButton(
-                                  onPressed: () {
-                                    Navigator.of(dialogContext).pop();
-                                    unawaited(_buy(item));
-                                  },
-                                  child: Text(context.l10n.shopBuy),
-                                ),
-                              ),
-                      ),
-                    );
-                  },
+              : _buildCollectionGroupBody(
+                  groupItems: groupItems,
+                  complete: complete,
+                  ownedCount: ownedCount,
+                  setDaily: setDaily,
                 ),
         ),
       ),
+    );
+  }
+
+  Widget _collectionProgressHeader({
+    required bool complete,
+    required int ownedCount,
+    required int total,
+    required int setDaily,
+  }) {
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            complete
+                ? l10n.shopSetComplete
+                : l10n.shopSetProgress(ownedCount, total),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        if (setDaily > 0) ...[
+          const SizedBox(width: 8),
+          BalanceDisplay(
+            bronze: setDaily,
+            prefix: complete ? '+' : null,
+            perDay: true,
+            coinSize: 14,
+            fontSize: 12,
+            spacing: 4,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            opacity: complete ? 1 : 0.32,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _collectionShopCardFor(ShopItem item) {
+    return _CollectionShopCard(
+      item: item,
+      busy: _buyInFlight.contains(item.code),
+      onBuy: () => _buy(item),
+      onPreview: () => showCollectionFullscreen(
+        context,
+        title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+        animatedName: item.animatedName ?? 'sparkles',
+        fallback: item.emoji,
+        subtitle: collectionItemSubtitle(item.dailyBronze),
+        bottomAction: item.owned
+            ? null
+            : Builder(
+                builder: (dialogContext) => FilledButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    unawaited(_buy(item));
+                  },
+                  child: Text(context.l10n.shopBuy),
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionGroupBody({
+    required List<ShopItem> groupItems,
+    required bool complete,
+    required int ownedCount,
+    required int setDaily,
+  }) {
+    final progress = _collectionProgressHeader(
+      complete: complete,
+      ownedCount: ownedCount,
+      total: groupItems.length,
+      setDaily: setDaily,
+    );
+
+    if (!isWide(context)) {
+      return ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        itemCount: groupItems.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          if (index == 0) return progress;
+          return _collectionShopCardFor(groupItems[index - 1]);
+        },
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: DesktopContentFrame(
+            maxWidth: 1080,
+            child: progress,
+          ),
+        ),
+        Expanded(
+          child: DesktopTileGrid(
+            itemCount: groupItems.length,
+            maxCellWidth: 340,
+            maxContentWidth: 1080,
+            itemBuilder: (context, index) =>
+                _collectionShopCardFor(groupItems[index]),
+            mobileBuilder: (_) => const SizedBox.shrink(),
+          ),
+        ),
+      ],
     );
   }
 }

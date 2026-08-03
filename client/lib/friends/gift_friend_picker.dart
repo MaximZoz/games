@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
+import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
-import 'package:multigames_client/utils/relative_time.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
 /// Диалог выбора друга для подарка.
 /// Список как во вкладке «Друзья»: аватар (клик → карточка), статус,
@@ -110,23 +109,7 @@ class _GiftFriendPickerDialogState
     final query = _searchController.text.trim();
     final list =
         friends.where((f) => _matchesSearch(f.user, query)).toList();
-    list.sort((a, b) {
-      final pa = presence[a.user.id];
-      final pb = presence[b.user.id];
-      final aOnline = pa?.online ?? false;
-      final bOnline = pb?.online ?? false;
-      if (aOnline != bOnline) return bOnline ? 1 : -1;
-      if (aOnline) return 0;
-      final aTime = pa?.lastSeenAt;
-      final bTime = pb?.lastSeenAt;
-      if (aTime == null && bTime == null) return 0;
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
-      final da = DateTime.tryParse(aTime);
-      final db = DateTime.tryParse(bTime);
-      if (da == null || db == null) return 0;
-      return db.compareTo(da);
-    });
+    sortByPresenceOnlineFirst(list, (f) => f.user.id, presence);
     return list;
   }
 
@@ -134,104 +117,19 @@ class _GiftFriendPickerDialogState
     FriendUserItem user,
     PresenceEntry? presence,
   ) async {
-    final name = _displayName(user);
-    final about = user.about?.trim();
-    final statusText = presence == null
-        ? null
-        : (presence.online ? LocaleService.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
-    await showDialog<void>(
+    await showUserProfileDialog(
       context: context,
-      builder: (dialogContext) {
-        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 420,
-              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
-            ),
-            child: GradientCard(
-              animate: false,
-              margin: EdgeInsets.zero,
-              padding: EdgeInsets.all(compact ? 12 : 14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildAvatar(user, isOnline: presence?.online),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (statusText != null && statusText.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  statusText,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: dialogContext.l10n.commonClose,
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.of(dialogContext).pop(),
-                      ),
-                    ],
-                  ),
-                  if (about != null && about.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      dialogContext.l10n.commonAboutMe,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      about,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  HeadToHeadSection(
-                    opponentId: user.id,
-                    opponentName: user.displayName,
-                  ),
-                  PeerCollectionsSection(userId: user.id),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      ref: ref,
+      userId: user.id,
+      displayName: _displayName(user),
+      avatarKind: user.avatarKind,
+      avatarValue: user.avatarValue,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      messageFrom: 'friends',
     );
   }
 
@@ -326,9 +224,8 @@ class _GiftFriendPickerDialogState
   }
 
   Widget _friendTile(FriendItem item, PresenceEntry? presence) {
-    final statusText = presence == null
-        ? null
-        : (presence.online ? LocaleService.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
+    final statusText =
+        presence == null ? null : formatPresenceStatus(presence);
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),

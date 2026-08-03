@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Salon",
   "lobbyPrivateGame": "Partie privée",
   "lobbySearchingOpponent": "Recherche d’un adversaire…",
+  "lobbyPlayersSearching": "Recherchent cette partie : {count}",
   "lobbyWaitingJoin": "En attente que quelqu’un appuie sur « Trouver une partie » ou « Rejoindre »",
   "lobbyInviteTitle": "Invitation à jouer",
   "lobbyInvitedToPlay": "Vous avez été invité à jouer",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Retour au jeu",
   "chatBackToChats": "Retour aux chats",
   "chatActions": "Actions du chat",
+  "chatAutoTranslate": "Traduction auto",
   "chatScrollToEnd": "Aller à la fin",
   "chatReplyingTo": "En réponse à {name}",
   "@chatReplyingTo": {

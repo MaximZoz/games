@@ -482,6 +482,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbySearchingOpponent => 'Đang tìm đối thủ…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Đang tìm trận này: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Đang chờ ai đó nhấn “Tìm trận” hoặc “Tham gia”';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatActions => 'Thao tác chat';
+
+  @override
+  String get chatAutoTranslate => 'Auto-translate';
 
   @override
   String get chatScrollToEnd => 'Đến cuối cuộc trò chuyện';

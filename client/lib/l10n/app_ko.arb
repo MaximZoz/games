@@ -176,6 +176,7 @@
   "lobbyMatchmake": "로비",
   "lobbyPrivateGame": "비공개 게임",
   "lobbySearchingOpponent": "상대를 찾는 중…",
+  "lobbyPlayersSearching": "이 게임 찾는 중: {count}",
   "lobbyWaitingJoin": "누군가 「게임 찾기」 또는 「참가」를 누를 때까지 대기 중",
   "lobbyInviteTitle": "게임 초대",
   "lobbyInvitedToPlay": "게임에 초대되었습니다",
@@ -678,6 +679,7 @@
   "chatBackToGame": "게임으로 돌아가기",
   "chatBackToChats": "채팅으로 돌아가기",
   "chatActions": "채팅 작업",
+  "chatAutoTranslate": "자동 번역",
   "chatScrollToEnd": "대화 끝으로",
   "chatReplyingTo": "{name}님에게 답장",
   "@chatReplyingTo": {

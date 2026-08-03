@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobi",
   "lobbyPrivateGame": "Game pribadi",
   "lobbySearchingOpponent": "Mencari lawan…",
+  "lobbyPlayersSearching": "Mencari permainan ini: {count}",
   "lobbyWaitingJoin": "Menunggu seseorang mengetuk “Cari game” atau “Gabung”",
   "lobbyInviteTitle": "Undangan game",
   "lobbyInvitedToPlay": "Anda diundang untuk bermain",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Kembali ke permainan",
   "chatBackToChats": "Kembali ke obrolan",
   "chatActions": "Tindakan obrolan",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Ke akhir percakapan",
   "chatReplyingTo": "Membalas {name}",
   "@chatReplyingTo": {

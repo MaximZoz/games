@@ -4,6 +4,10 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/push_notification_nav_stub.dart'
+    if (dart.library.html)
+        'package:multigames_client/core/push_notification_nav_web.dart'
+    show clearPushNotificationsForChat;
 import 'package:multigames_client/core/realtime_events_provider.dart';
 
 final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
@@ -89,6 +93,8 @@ void markChatReadInChatsCache(WidgetRef ref, String chatId) {
   if (!prev.contains(id)) {
     ref.read(locallyReadChatIdsProvider.notifier).state = {...prev, id};
   }
+  // Прочитали чат — убрать висящие push-баннеры этого диалога из шторки.
+  clearPushNotificationsForChat(id);
 }
 
 /// Убрать чат из локального кэша списка (очистка/блок из комнаты на десктопе).

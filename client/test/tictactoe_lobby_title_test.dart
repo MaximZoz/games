@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 
@@ -21,10 +22,29 @@ void main() {
       );
     });
 
-    test('prefers loaded status over initialMode', () {
+    test('open multi find (waiting_invite + matchmake) is Лобби', () {
       expect(
         tictactoeLobbyAppBarTitle(
           status: 'waiting_invite',
+          lobbyMode: 'matchmake',
+          initialMode: 'invite',
+        ),
+        'Лобби',
+      );
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          initialMode: 'matchmake',
+        ),
+        'Лобби',
+      );
+    });
+
+    test('prefers loaded status over initialMode for private invite', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          lobbyMode: 'invite',
           initialMode: 'matchmake',
         ),
         'Своя игра',
@@ -53,10 +73,39 @@ void main() {
       expect(
         tictactoeLobbyAppBarTitle(
           status: 'waiting_invite',
+          lobbyMode: 'invite',
           fromInviteLink: true,
         ),
         'Войти в игру',
       );
+    });
+
+    test('joined invitee sees Своя игра, not Войти в игру', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          lobbyMode: 'invite',
+          fromInviteLink: true,
+          isLobbyMember: true,
+        ),
+        'Своя игра',
+      );
+    });
+
+    test('joined open-find member sees Лобби', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          lobbyMode: 'matchmake',
+          fromInviteLink: true,
+          isLobbyMember: true,
+        ),
+        'Лобби',
+      );
+    });
+
+    test('lobby app bar uses tictactoe grid icon', () {
+      expect(tictactoeLobbyAppBarIcon, Icons.grid_3x3_rounded);
     });
   });
 }

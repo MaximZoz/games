@@ -6,7 +6,7 @@ import 'test_locale.dart';
 void main() {
   setUp(setUpTestLocaleRu);
 
-  test('buildTictactoeRulesText includes stake amount', () {
+  test('buildTictactoeRulesText includes stake amount with coin marker', () {
     final text = buildTictactoeRulesText(
       gridSize: 3,
       turnTimeSec: 0,
@@ -15,11 +15,15 @@ void main() {
       stakeBronze: 5,
     );
 
-    expect(text, contains('Ставка: 5 бр.'));
+    expect(
+      text,
+      contains('Ставка: 5$kTictactoeRulesStakeIconMarker'),
+    );
+    expect(text, isNot(contains('бр')));
     expect(text, contains('На столько монет идёт игра.'));
   });
 
-  test('buildTictactoeRulesText defaults stake to 1 bronze', () {
+  test('buildTictactoeRulesText defaults stake to 1 with coin marker', () {
     final text = buildTictactoeRulesText(
       gridSize: 3,
       turnTimeSec: 30,
@@ -27,6 +31,10 @@ void main() {
       firstMoveRestriction: true,
     );
 
-    expect(text, contains('Ставка: 1 бр.'));
+    expect(
+      text,
+      contains('Ставка: 1$kTictactoeRulesStakeIconMarker'),
+    );
+    expect(text, isNot(contains('бр')));
   });
 }

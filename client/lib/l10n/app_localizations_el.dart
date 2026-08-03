@@ -482,6 +482,11 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbySearchingOpponent => 'Αναζήτηση αντιπάλου…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Αναζητούν αυτό το παιχνίδι: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Αναμονή να πατήσει κάποιος «Εύρεση παιχνιδιού» ή «Συμμετοχή»';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get chatActions => 'Ενέργειες συνομιλίας';
+
+  @override
+  String get chatAutoTranslate => 'Auto-translate';
 
   @override
   String get chatScrollToEnd => 'Στο τέλος της συνομιλίας';

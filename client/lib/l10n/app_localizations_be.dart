@@ -482,6 +482,11 @@ class AppLocalizationsBe extends AppLocalizations {
   String get lobbySearchingOpponent => 'Пошук суперніка…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Шукаюць гэту гульню: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Чакаем, пакуль хтосьці націсне «Знайсці гульню» або «Далучыцца»';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get chatActions => 'Дзеянні з чатам';
+
+  @override
+  String get chatAutoTranslate => 'Аўтапераклад';
 
   @override
   String get chatScrollToEnd => 'У канец перапіскі';

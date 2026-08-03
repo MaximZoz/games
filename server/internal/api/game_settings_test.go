@@ -8,11 +8,11 @@ import (
 
 func TestNormalizeGameSettingsDefaultsAndValid(t *testing.T) {
 	s, errMsg := normalizeGameSettings(gameSettingsBody{
-		TurnTimeSec: 30,
-		GridSize:    5,
-		SwapRule:    true,
+		TurnTimeSec:          20,
+		Variant:              "gomoku",
+		SwapRule:             true,
 		FirstMoveRestriction: true,
-		StakeBronze: 50,
+		StakeBronze:          50,
 	})
 	if errMsg != "" {
 		t.Fatalf("err=%s", errMsg)
@@ -20,8 +20,11 @@ func TestNormalizeGameSettingsDefaultsAndValid(t *testing.T) {
 	if s.GameType != store.GameTypeTicTacToe {
 		t.Fatalf("game_type=%s", s.GameType)
 	}
-	if s.TurnTimeSec != 30 || s.GridSize != 5 || !s.SwapRule || !s.FirstMoveRestriction || s.StakeBronze != 50 {
+	if s.TurnTimeSec != 20 || s.GridSize != 15 || s.Variant != "gomoku" || s.StakeBronze != 50 {
 		t.Fatalf("unexpected %+v", s)
+	}
+	if s.SwapRule || s.FirstMoveRestriction {
+		t.Fatalf("deprecated flags must be false: %+v", s)
 	}
 }
 
@@ -43,8 +46,6 @@ func TestNormalizeGameSettingsRejects(t *testing.T) {
 	cases := []gameSettingsBody{
 		{GameType: "chess", TurnTimeSec: 0, GridSize: 3, StakeBronze: 1},
 		{TurnTimeSec: 15, GridSize: 3, StakeBronze: 1},
-		{TurnTimeSec: 0, GridSize: 2, StakeBronze: 1},
-		{TurnTimeSec: 0, GridSize: 9, StakeBronze: 1},
 	}
 	for i, body := range cases {
 		if _, errMsg := normalizeGameSettings(body); errMsg == "" {
@@ -53,16 +54,19 @@ func TestNormalizeGameSettingsRejects(t *testing.T) {
 	}
 }
 
-func TestNormalizeGameSettingsAllTurnTimesAndGrids(t *testing.T) {
-	for _, tt := range []int{0, 10, 30, 60, 600} {
-		for _, g := range []int{3, 4, 5, 6, 7, 8} {
-			_, errMsg := normalizeGameSettings(gameSettingsBody{
+func TestNormalizeGameSettingsVariants(t *testing.T) {
+	for _, tt := range []int{0, 20, 60, 600} {
+		for _, v := range []string{"classic", "gomoku", "ultimate", "multi3", "multi4"} {
+			s, errMsg := normalizeGameSettings(gameSettingsBody{
 				TurnTimeSec: tt,
-				GridSize:    g,
+				Variant:     v,
 				StakeBronze: 1,
 			})
 			if errMsg != "" {
-				t.Fatalf("tt=%d g=%d: %s", tt, g, errMsg)
+				t.Fatalf("tt=%d v=%s: %s", tt, v, errMsg)
+			}
+			if s.Variant != v {
+				t.Fatalf("variant=%s want %s", s.Variant, v)
 			}
 		}
 	}
@@ -72,15 +76,17 @@ func TestGameSettingsToJSON(t *testing.T) {
 	m := gameSettingsToJSON(store.UserGameSettings{
 		GameType:             "tictactoe",
 		TurnTimeSec:          60,
-		GridSize:             4,
+		GridSize:             3,
+		Variant:              "classic",
 		SwapRule:             true,
-		FirstMoveRestriction: false,
+		FirstMoveRestriction: true,
 		StakeBronze:          10,
 	})
-	if m["turn_time_sec"] != 60 || m["grid_size"] != 4 || m["swap_rule"] != true {
+	if m["turn_time_sec"] != 60 || m["grid_size"] != 3 || m["variant"] != "classic" {
 		t.Fatalf("%v", m)
 	}
-	if m["first_move_restriction"] != false || m["stake_bronze"] != 10 {
+	// swap / nocenter больше не используются.
+	if m["swap_rule"] != false || m["first_move_restriction"] != false || m["stake_bronze"] != 10 {
 		t.Fatalf("%v", m)
 	}
 }

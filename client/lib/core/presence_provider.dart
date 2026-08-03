@@ -105,9 +105,9 @@ final presenceMapProvider = StreamProvider.autoDispose<Map<String, PresenceEntry
       }
     } else if (type == 'realtime_connected') {
       unawaited(load());
-    } else if (type == 'chat_message') {
-      unawaited(load());
     }
+    // chat_message больше не триггерит полный reload presence —
+    // в multi/групповом чате это давало шторм запросов на каждое сообщение.
   });
 
   final refreshTimer = Timer.periodic(const Duration(minutes: 2), (_) => unawaited(load()));

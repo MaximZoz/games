@@ -482,6 +482,11 @@ class AppLocalizationsUz extends AppLocalizations {
   String get lobbySearchingOpponent => 'Raqib qidirilmoqda…';
 
   @override
+  String lobbyPlayersSearching(int count) {
+    return 'Bu o‘yinni qidiryapti: $count';
+  }
+
+  @override
   String get lobbyWaitingJoin => 'Kimdir «O‘yin topish» yoki «Qo‘shilish»ni bosishini kutmoqdamiz';
 
   @override
@@ -1296,6 +1301,9 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get chatActions => 'Chat amallari';
+
+  @override
+  String get chatAutoTranslate => 'Avtomatik tarjima';
 
   @override
   String get chatScrollToEnd => 'Suhbat oxiriga';

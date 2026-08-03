@@ -176,6 +176,7 @@
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Privat spil",
   "lobbySearchingOpponent": "Leder efter modstander…",
+  "lobbyPlayersSearching": "Søger dette spil: {count}",
   "lobbyWaitingJoin": "Venter på, at nogen trykker på »Find et spil« eller »Deltag«",
   "lobbyInviteTitle": "Spilinvitation",
   "lobbyInvitedToPlay": "Du blev inviteret til at spille",
@@ -678,6 +679,7 @@
   "chatBackToGame": "Tilbage til spillet",
   "chatBackToChats": "Tilbage til chats",
   "chatActions": "Chathandlinger",
+  "chatAutoTranslate": "Auto-translate",
   "chatScrollToEnd": "Til slutningen af samtalen",
   "chatReplyingTo": "Svar til {name}",
   "@chatReplyingTo": {

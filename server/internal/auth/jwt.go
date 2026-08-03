@@ -14,11 +14,12 @@ var (
 
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
+	SessionID string `json:"sid,omitempty"`
 }
 
-func NewJWT(secret []byte, userID uuid.UUID, email string, expiresIn time.Duration) (string, error) {
+func NewJWT(secret []byte, userID uuid.UUID, email string, expiresIn time.Duration, sessionID uuid.UUID) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -26,8 +27,9 @@ func NewJWT(secret []byte, userID uuid.UUID, email string, expiresIn time.Durati
 			IssuedAt:  jwt.NewNumericDate(now),
 			ID:        uuid.New().String(),
 		},
-		UserID: userID.String(),
-		Email:  email,
+		UserID:    userID.String(),
+		Email:     email,
+		SessionID: sessionID.String(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(secret)
