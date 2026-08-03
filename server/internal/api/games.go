@@ -2527,7 +2527,8 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 
 	h.Rdb.Del(ctx, key)
 	h.Rdb.Del(ctx, invitedKey)
-	// Не трогаем active_game и чужие лобби отказавшегося.
+	// Не трогаем active_game и чужие лобби — отказ от инвайта не должен
+	// сбрасывать текущую партию отказавшегося.
 	clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
 	clearUserActiveLobbyIfMatch(ctx, h.Rdb, creatorUUID, lobbyID)
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
@@ -3782,6 +3783,8 @@ func clearUserActiveLobby(ctx context.Context, rdb *redis.Client, userID uuid.UU
 	rdb.Del(ctx, userActiveLobbyKey(userID))
 }
 
+// clearUserActiveLobbyIfMatch сбрасывает active_lobby только если он указывает
+// на lobbyID — иначе отказ/закрытие чужого инвайта затирало текущую сессию.
 func clearUserActiveLobbyIfMatch(ctx context.Context, rdb *redis.Client, userID uuid.UUID, lobbyID string) {
 	if rdb == nil || lobbyID == "" {
 		return

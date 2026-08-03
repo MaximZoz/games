@@ -51,6 +51,12 @@ String? _gameIdFromPath(String path) {
   return id.isEmpty ? null : id;
 }
 
+/// Для unit-тестов навигации таба «Игры».
+bool activeGameUsableForTest(ActiveGameItem? active) => _activeGameUsable(active);
+
+/// Для unit-тестов навигации таба «Игры».
+String? gameIdFromPathForTest(String path) => _gameIdFromPath(path);
+
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 /// Active game/lobby — всегда туда. Observation только карточкой в списке.
 void _goGamesTab(
