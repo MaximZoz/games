@@ -16,10 +16,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type ChatsHandler struct {
 	Pool *pgxpool.Pool
+	Rdb  *redis.Client
 	Hub  *RealtimeHub
 	Push *WebPushSender
 }
@@ -45,6 +47,11 @@ type ChatPreviewItem struct {
 	UnreadCount int              `json:"unread_count"`
 	CreatedAt   string           `json:"created_at"`
 	UpdatedAt   string           `json:"updated_at"`
+	Kind        string           `json:"kind,omitempty"`
+	Title       string           `json:"title,omitempty"`
+	LobbyID     string           `json:"lobby_id,omitempty"`
+	GameType    string           `json:"game_type,omitempty"`
+	Members     []ChatUserItem   `json:"members,omitempty"`
 }
 
 type BlockedChatUserItem struct {
@@ -266,6 +273,11 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 		offset = n
 	}
 
+	// Сносим групповые чаты завершённых лобби (иначе висят «На троих» и т.п.).
+	if offset == 0 {
+		h.cleanupOrphanGroupChats(r.Context(), userID)
+	}
+
 	chats, err := store.ListChatsForUser(r.Context(), h.Pool, userID, limit, offset)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
@@ -278,7 +290,12 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 	items := make([]ChatPreviewItem, 0, len(chats))
 	peerIDs := make([]uuid.UUID, 0, len(chats))
 	for _, c := range chats {
-		peerIDs = append(peerIDs, c.Peer.ID)
+		if c.Kind != store.ChatKindGroup && c.Peer.ID != uuid.Nil {
+			peerIDs = append(peerIDs, c.Peer.ID)
+		}
+		for _, m := range c.Members {
+			peerIDs = append(peerIDs, m.ID)
+		}
 	}
 	frames, _ := store.EquippedFramesMap(r.Context(), h.Pool, peerIDs)
 	for _, c := range chats {
@@ -287,14 +304,32 @@ func (h *ChatsHandler) List(w http.ResponseWriter, r *http.Request) {
 			item := chatMessageToItem(*c.LastMessage)
 			lastMessage = &item
 		}
-		items = append(items, ChatPreviewItem{
+		preview := ChatPreviewItem{
 			ChatID:      c.ChatID.String(),
 			User:        chatUserToItemWithFrame(c.Peer, frames),
 			LastMessage: lastMessage,
 			UnreadCount: c.UnreadCount,
 			CreatedAt:   c.CreatedAt.UTC().Format(time.RFC3339Nano),
 			UpdatedAt:   c.UpdatedAt.UTC().Format(time.RFC3339Nano),
-		})
+			Kind:        c.Kind,
+			Title:       c.Title,
+			LobbyID:     c.LobbyID,
+			GameType:    c.GameType,
+		}
+		if c.Kind == store.ChatKindGroup {
+			preview.Members = make([]ChatUserItem, 0, len(c.Members))
+			for _, m := range c.Members {
+				preview.Members = append(preview.Members, chatUserToItemWithFrame(m, frames))
+			}
+			if preview.Title == "" {
+				preview.Title = "Игра"
+			}
+			// Для совместимости UI списка: user = первый участник (не я) или заглушка.
+			if len(preview.Members) > 0 {
+				preview.User = preview.Members[0]
+			}
+		}
+		items = append(items, preview)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -363,33 +398,44 @@ func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lowID, highID, err := store.ChatParticipantIDs(r.Context(), h.Pool, chatID)
+	okMember, err := store.IsChatMember(r.Context(), h.Pool, chatID, userID)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
 	}
-	if userID != lowID && userID != highID {
+	if !okMember {
 		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
-	peerID := highID
-	if userID == highID {
-		peerID = lowID
-	}
-
-	emojiOnly := false
-	peerSettings, err := store.GetUserSettings(r.Context(), h.Pool, peerID)
+	kind, err := store.ChatKind(r.Context(), h.Pool, chatID)
 	if err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		writeChatError(w, r, err)
 		return
 	}
-	if peerSettings.MessagesFriendsOnly {
-		friends, err := store.AreFriends(r.Context(), h.Pool, userID, peerID)
+	emojiOnly := false
+	if kind != store.ChatKindGroup {
+		ids, err := store.ListChatMemberIDs(r.Context(), h.Pool, chatID)
+		if err != nil || len(ids) < 2 {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		peerID := ids[0]
+		if peerID == userID {
+			peerID = ids[1]
+		}
+		peerSettings, err := store.GetUserSettings(r.Context(), h.Pool, peerID)
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
-		emojiOnly = !friends
+		if peerSettings.MessagesFriendsOnly {
+			friends, err := store.AreFriends(r.Context(), h.Pool, userID, peerID)
+			if err != nil {
+				WriteErr(w, r, http.StatusInternalServerError, "server error")
+				return
+			}
+			emojiOnly = !friends
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -397,6 +443,7 @@ func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"can_send_text": !emojiOnly,
 		"emoji_only":    emojiOnly,
+		"kind":          kind,
 	})
 }
 
@@ -457,9 +504,9 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 
 	// Открытие/синхронизация чата = доставка входящих (как в Telegram).
 	if ids, deliverErr := store.MarkChatDelivered(r.Context(), h.Pool, chatID, userID); deliverErr == nil && len(ids) > 0 {
-		if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 			h.publishChatDelivered(
-				[]uuid.UUID{lowID, highID},
+				members,
 				chatID.String(),
 				userID.String(),
 				ids,
@@ -566,35 +613,36 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	item := chatMessageToItem(msg)
-	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
-		h.publishChatMessage([]uuid.UUID{lowID, highID}, item)
-		h.publishChatListChanged(lowID, highID)
+	if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		h.publishChatMessage(members, item)
+		h.publishChatListChanged(members...)
 
-		peerID := highID
-		if userID == highID {
-			peerID = lowID
-		}
-		if h.Hub != nil && h.Hub.IsUserOnline(peerID) {
-			if ids, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, peerID); err == nil && len(ids) > 0 {
-				h.publishChatDelivered(
-					[]uuid.UUID{lowID, highID},
-					chatID.String(),
-					peerID.String(),
-					ids,
-				)
-				deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
-				item.DeliveredAt = &deliveredAt
+		for _, peerID := range members {
+			if peerID == userID {
+				continue
 			}
-		}
-		// Сообщение в поддержку — уведомить онлайн-админов (inbox + badge).
-		if peer, err := store.GetUserByID(r.Context(), h.Pool, peerID); err == nil && peer != nil && peer.IsSupport {
-			if h.Hub != nil {
-				if admins, aerr := store.ListAdminIDs(r.Context(), h.Pool); aerr == nil && len(admins) > 0 {
-					h.Hub.PublishToUsers(admins, map[string]any{
-						"type":    "support_message",
-						"user_id": userID.String(),
-						"chat_id": chatID.String(),
-					})
+			if h.Hub != nil && h.Hub.IsUserOnline(peerID) {
+				if ids, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, peerID); err == nil && len(ids) > 0 {
+					h.publishChatDelivered(
+						members,
+						chatID.String(),
+						peerID.String(),
+						ids,
+					)
+					deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
+					item.DeliveredAt = &deliveredAt
+				}
+			}
+			// Сообщение в поддержку — уведомить онлайн-админов (inbox + badge).
+			if peer, err := store.GetUserByID(r.Context(), h.Pool, peerID); err == nil && peer != nil && peer.IsSupport {
+				if h.Hub != nil {
+					if admins, aerr := store.ListAdminIDs(r.Context(), h.Pool); aerr == nil && len(admins) > 0 {
+						h.Hub.PublishToUsers(admins, map[string]any{
+							"type":    "support_message",
+							"user_id": userID.String(),
+							"chat_id": chatID.String(),
+						})
+					}
 				}
 			}
 		}
@@ -633,9 +681,9 @@ func (h *ChatsHandler) EditMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	item := chatMessageToItem(msg)
-	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, msg.ChatID); pairErr == nil {
-		h.publishChatMessageUpdated([]uuid.UUID{lowID, highID}, item)
-		h.publishChatListChanged(lowID, highID)
+	if members, pairErr := chatMemberIDs(r.Context(), h.Pool, msg.ChatID); pairErr == nil {
+		h.publishChatMessageUpdated(members, item)
+		h.publishChatListChanged(members...)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -668,9 +716,9 @@ func (h *ChatsHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		writeChatError(w, r, err)
 		return
 	}
-	if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
-		h.publishChatMessageDeleted([]uuid.UUID{lowID, highID}, chatID.String(), messageID.String())
-		h.publishChatListChanged(lowID, highID)
+	if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		h.publishChatMessageDeleted(members, chatID.String(), messageID.String())
+		h.publishChatListChanged(members...)
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -739,15 +787,19 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(updatedIDs) > 0 {
-		if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+	kind, _ := store.ChatKind(r.Context(), h.Pool, chatID)
+	if kind == store.ChatKindGroup {
+		// Per-user unread: обновляем список только у читателя.
+		h.publishChatListChanged(userID)
+	} else if len(updatedIDs) > 0 {
+		if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 			h.publishChatRead(
-				[]uuid.UUID{lowID, highID},
+				members,
 				chatID.String(),
 				userID.String(),
 				updatedIDs,
 			)
-			h.publishChatListChanged(lowID, highID)
+			h.publishChatListChanged(members...)
 		}
 	}
 
@@ -786,9 +838,9 @@ func (h *ChatsHandler) Delivered(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(updatedIDs) > 0 {
-		if lowID, highID, pairErr := store.ChatParticipantIDs(r.Context(), h.Pool, chatID); pairErr == nil {
+		if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 			h.publishChatDelivered(
-				[]uuid.UUID{lowID, highID},
+				members,
 				chatID.String(),
 				userID.String(),
 				updatedIDs,
@@ -982,10 +1034,12 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 		body = i18n.Content(lang, "push.new_message")
 	}
 	h.Push.NotifyUsers(recipients, store.WebPushCategoryChat, PushPayload{
-		Title: from,
-		Body:  body,
-		URL:   "/chats/" + item.ChatID,
-		Tag:   "chat_" + item.ChatID,
+		Title:  from,
+		Body:   body,
+		URL:    "/chats/" + item.ChatID,
+		Tag:    "chat_" + item.ChatID,
+		Kind:   "chat",
+		ChatID: item.ChatID,
 	})
 }
 
@@ -1020,12 +1074,44 @@ func (h *ChatsHandler) publishChatListChanged(userIDs ...uuid.UUID) {
 	})
 }
 
+// cleanupOrphanGroupChats удаляет групповые чаты, чьё лобби уже нет в Redis
+// (партия закончилась / лобби истекло).
+func (h *ChatsHandler) cleanupOrphanGroupChats(ctx context.Context, userID uuid.UUID) {
+	if h == nil || h.Pool == nil || h.Rdb == nil {
+		return
+	}
+	lobbyIDs, err := store.ListUserGroupLobbyIDs(ctx, h.Pool, userID)
+	if err != nil || len(lobbyIDs) == 0 {
+		return
+	}
+	removed := 0
+	for _, lobbyID := range lobbyIDs {
+		n, err := h.Rdb.Exists(ctx, "lobby:"+lobbyID).Result()
+		if err != nil {
+			continue
+		}
+		if n > 0 {
+			continue
+		}
+		if err := store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID); err == nil {
+			removed++
+		}
+	}
+	if removed > 0 {
+		h.publishChatListChanged(userID)
+	}
+}
+
 func uuidSliceToStrings(ids []uuid.UUID) []string {
 	out := make([]string, 0, len(ids))
 	for _, id := range ids {
 		out = append(out, id.String())
 	}
 	return out
+}
+
+func chatMemberIDs(ctx context.Context, pool *pgxpool.Pool, chatID uuid.UUID) ([]uuid.UUID, error) {
+	return store.ChatBroadcastUserIDs(ctx, pool, chatID)
 }
 
 // syncIncomingDelivered отмечает доставку входящих и шлёт chat_delivered отправителям.
@@ -1045,11 +1131,11 @@ func syncIncomingDelivered(
 	deliverer := delivererUserID.String()
 	deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
 	for _, batch := range batches {
-		lowID, highID, pairErr := store.ChatParticipantIDs(ctx, pool, batch.ChatID)
+		members, pairErr := chatMemberIDs(ctx, pool, batch.ChatID)
 		if pairErr != nil {
 			continue
 		}
-		hub.PublishToUsers([]uuid.UUID{lowID, highID}, map[string]any{
+		hub.PublishToUsers(members, map[string]any{
 			"type":              "chat_delivered",
 			"chat_id":           batch.ChatID.String(),
 			"deliverer_user_id": deliverer,

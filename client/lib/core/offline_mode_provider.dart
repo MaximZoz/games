@@ -19,27 +19,56 @@ enum OfflinePreference {
   offline,
 }
 
+/// Почему сейчас нельзя включить онлайн (для тоста в настройках).
+enum OnlineUnavailableReason {
+  /// Сеть и API доступны.
+  none,
+
+  /// Нет сети на устройстве.
+  noInternet,
+
+  /// Сеть есть, но API/сервер недоступен.
+  serverUnreachable,
+}
+
 /// Сводка режима для UI и репозиториев.
 class OfflineModeState {
   const OfflineModeState({
     required this.preference,
-    required this.hasNetwork,
+    required this.deviceOnline,
+    required this.serverReachable,
   });
 
   final OfflinePreference preference;
-  final bool hasNetwork;
 
-  /// Эффективный офлайн: ручной офлайн или нет сети.
+  /// Браузер/ОС считают устройство онлайн.
+  final bool deviceOnline;
+
+  /// Probe `/api/start` успешен.
+  final bool serverReachable;
+
+  /// Можно работать с API.
+  bool get hasNetwork => deviceOnline && serverReachable;
+
+  /// Эффективный офлайн: ручной офлайн или нет сети/сервера.
   bool get isOffline =>
       preference == OfflinePreference.offline || !hasNetwork;
 
+  OnlineUnavailableReason get onlineUnavailableReason {
+    if (!deviceOnline) return OnlineUnavailableReason.noInternet;
+    if (!serverReachable) return OnlineUnavailableReason.serverUnreachable;
+    return OnlineUnavailableReason.none;
+  }
+
   OfflineModeState copyWith({
     OfflinePreference? preference,
-    bool? hasNetwork,
+    bool? deviceOnline,
+    bool? serverReachable,
   }) {
     return OfflineModeState(
       preference: preference ?? this.preference,
-      hasNetwork: hasNetwork ?? this.hasNetwork,
+      deviceOnline: deviceOnline ?? this.deviceOnline,
+      serverReachable: serverReachable ?? this.serverReachable,
     );
   }
 }
@@ -58,7 +87,8 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
   OfflineModeNotifier()
       : super(OfflineModeState(
           preference: OfflinePreference.online,
-          hasNetwork: readDeviceOnline(),
+          deviceOnline: readDeviceOnline(),
+          serverReachable: readDeviceOnline(),
         )) {
     _init();
   }
@@ -71,9 +101,11 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
     await _loadPreference();
     _deviceSub = deviceOnlineStream().listen((online) {
       if (_disposed) return;
-      state = state.copyWith(hasNetwork: online);
+      state = state.copyWith(deviceOnline: online);
       if (online) {
         unawaited(_probeReachable());
+      } else {
+        state = state.copyWith(serverReachable: false);
       }
     });
     // Периодический probe: ловит «online» без реального API.
@@ -92,7 +124,7 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
     if (_disposed) return;
     state = state.copyWith(
       preference: preference,
-      hasNetwork: readDeviceOnline(),
+      deviceOnline: readDeviceOnline(),
     );
   }
 
@@ -109,10 +141,27 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
     }
   }
 
+  /// Попытка выйти в онлайн. `null` — ок; иначе причина для тоста.
+  Future<OnlineUnavailableReason?> tryGoOnline() async {
+    await _probeReachable();
+    if (_disposed) return OnlineUnavailableReason.serverUnreachable;
+    final reason = state.onlineUnavailableReason;
+    if (reason != OnlineUnavailableReason.none) {
+      return reason;
+    }
+    await setPreference(OfflinePreference.online);
+    return null;
+  }
+
   /// Лёгкая проверка доступности API.
   Future<void> _probeReachable() async {
-    if (state.preference == OfflinePreference.offline) {
-      // Ручной офлайн: сеть не важна для режима, но обновим флаг.
+    final deviceOnline = readDeviceOnline() || state.deviceOnline;
+    if (!deviceOnline) {
+      if (_disposed) return;
+      if (state.deviceOnline || state.serverReachable) {
+        state = state.copyWith(deviceOnline: false, serverReachable: false);
+      }
+      return;
     }
     try {
       final res = await http
@@ -120,13 +169,18 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
           .timeout(const Duration(seconds: 4));
       final ok = res.statusCode >= 200 && res.statusCode < 500;
       if (_disposed) return;
-      if (state.hasNetwork != ok) {
-        state = state.copyWith(hasNetwork: ok);
+      // Успешный probe подтверждает и сеть устройства, и сервер.
+      if (ok) {
+        if (!state.deviceOnline || !state.serverReachable) {
+          state = state.copyWith(deviceOnline: true, serverReachable: true);
+        }
+      } else if (state.serverReachable) {
+        state = state.copyWith(serverReachable: false);
       }
     } catch (_) {
       if (_disposed) return;
-      if (state.hasNetwork) {
-        state = state.copyWith(hasNetwork: false);
+      if (state.serverReachable) {
+        state = state.copyWith(serverReachable: false);
       }
     }
   }

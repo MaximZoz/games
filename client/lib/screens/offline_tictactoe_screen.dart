@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/offline_tictactoe.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -13,11 +14,13 @@ const _keyLastHumanStarted = 'offline_ttt_last_human_started';
 class OfflineTicTacToeScreen extends ConsumerStatefulWidget {
   const OfflineTicTacToeScreen({
     super.key,
+    this.variant = variantClassic,
     this.gridSize = 3,
     this.swapRule = false,
     this.firstMoveRestriction = false,
   });
 
+  final String variant;
   final int gridSize;
   final bool swapRule;
   final bool firstMoveRestriction;
@@ -27,7 +30,8 @@ class OfflineTicTacToeScreen extends ConsumerStatefulWidget {
       _OfflineTicTacToeScreenState();
 }
 
-class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen> {
+class _OfflineTicTacToeScreenState
+    extends ConsumerState<OfflineTicTacToeScreen> {
   OfflineTicTacToeGame? _game;
   bool _starting = true;
 
@@ -51,7 +55,8 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
     if (!mounted) return;
     setState(() {
       _game = OfflineTicTacToeGame(
-        gridSize: widget.gridSize.clamp(3, 8),
+        variant: widget.variant,
+        gridSize: widget.gridSize,
         firstMoveRestriction: widget.firstMoveRestriction,
         humanStarts: humanStarts,
       );
@@ -71,13 +76,9 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
     final l10n = context.l10n;
     switch (game.status) {
       case 'x_won':
-        return game.humanMark == 'x'
-            ? l10n.gameYouWon
-            : l10n.offlineBotWon;
+        return game.humanMark == 'x' ? l10n.gameYouWon : l10n.offlineBotWon;
       case 'o_won':
-        return game.humanMark == 'o'
-            ? l10n.gameYouWon
-            : l10n.offlineBotWon;
+        return game.humanMark == 'o' ? l10n.gameYouWon : l10n.offlineBotWon;
       case 'draw':
         return l10n.gameDraw;
       default:
@@ -92,6 +93,10 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
 
     return SwipeBackScope(
       onBack: goBack,
+      // Левые клетки доски не должны перехватываться свайпом «назад».
+      opaqueEdge: false,
+      edgeWidth: 16,
+      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -144,12 +149,10 @@ class _OfflineTicTacToeScreenState extends ConsumerState<OfflineTicTacToeScreen>
                                 final n = game.gridSize;
                                 final win =
                                     game.winningCells?.toSet() ?? const <int>{};
-                                final markSize = n <= 3
-                                    ? 42.0
-                                    : (n <= 5 ? 32.0 : 22.0);
+                                final markSize =
+                                    n <= 3 ? 42.0 : (n <= 5 ? 32.0 : 22.0);
                                 return GridView.builder(
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
+                                  physics: const NeverScrollableScrollPhysics(),
                                   gridDelegate:
                                       SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: n,

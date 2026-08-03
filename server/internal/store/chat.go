@@ -105,12 +105,14 @@ func DeleteInviteLobbyShareMessages(
 	if lobbyID == "" || pool == nil {
 		return nil, nil
 	}
-	needle := "/games/tictactoe/lobby/" + lobbyID
+	// LIKE по фрагменту пути — уже сужает выборку до кандидатов; точная
+	// проверка InviteLobbyIDFromBody отсекает ложные совпадения.
+	likePat := "%/games/tictactoe/lobby/" + lobbyID + "%"
 	rows, err := pool.Query(ctx, `
 		SELECT id, chat_id, body
 		FROM chat_messages
-		WHERE position($1 in body) > 0
-	`, needle)
+		WHERE body LIKE $1
+	`, likePat)
 	if err != nil {
 		return nil, err
 	}
@@ -119,19 +121,25 @@ func DeleteInviteLobbyShareMessages(
 	type candidate struct {
 		id     uuid.UUID
 		chatID uuid.UUID
-		body   string
 	}
 	var toDelete []candidate
+	chatSeen := make(map[uuid.UUID]struct{})
+	var chatIDs []uuid.UUID
 	for rows.Next() {
-		var c candidate
-		if err := rows.Scan(&c.id, &c.chatID, &c.body); err != nil {
+		var id, chatID uuid.UUID
+		var body string
+		if err := rows.Scan(&id, &chatID, &body); err != nil {
 			return nil, err
 		}
-		gotID, ok := InviteLobbyIDFromBody(c.body)
+		gotID, ok := InviteLobbyIDFromBody(body)
 		if !ok || gotID != lobbyID {
 			continue
 		}
-		toDelete = append(toDelete, c)
+		toDelete = append(toDelete, candidate{id: id, chatID: chatID})
+		if _, ok := chatSeen[chatID]; !ok {
+			chatSeen[chatID] = struct{}{}
+			chatIDs = append(chatIDs, chatID)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -140,25 +148,38 @@ func DeleteInviteLobbyShareMessages(
 		return nil, nil
 	}
 
-	out := make([]DeletedInviteChatMessage, 0, len(toDelete))
-	for _, c := range toDelete {
-		ct, err := pool.Exec(ctx, `DELETE FROM chat_messages WHERE id = $1`, c.id)
+	participants := make(map[uuid.UUID][2]uuid.UUID, len(chatIDs))
+	for _, chatID := range chatIDs {
+		lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
 		if err != nil {
-			return out, err
-		}
-		if ct.RowsAffected() == 0 {
 			continue
 		}
-		lowID, highID, err := ChatParticipantIDs(ctx, pool, c.chatID)
-		if err != nil {
-			// Сообщение уже удалено; участников нет — пропускаем realtime.
+		participants[chatID] = [2]uuid.UUID{lowID, highID}
+	}
+
+	ids := make([]uuid.UUID, len(toDelete))
+	for i, c := range toDelete {
+		ids[i] = c.id
+	}
+	ct, err := pool.Exec(ctx, `DELETE FROM chat_messages WHERE id = ANY($1)`, ids)
+	if err != nil {
+		return nil, err
+	}
+	if ct.RowsAffected() == 0 {
+		return nil, nil
+	}
+
+	out := make([]DeletedInviteChatMessage, 0, len(toDelete))
+	for _, c := range toDelete {
+		pair, ok := participants[c.chatID]
+		if !ok {
 			continue
 		}
 		out = append(out, DeletedInviteChatMessage{
 			MessageID:  c.id,
 			ChatID:     c.chatID,
-			LowUserID:  lowID,
-			HighUserID: highID,
+			LowUserID:  pair[0],
+			HighUserID: pair[1],
 		})
 	}
 	return out, nil
@@ -202,6 +223,12 @@ type ChatPreview struct {
 	LastMessage *ChatMessage
 	UnreadCount int
 	UpdatedAt   time.Time
+	// Group chat fields (kind=group).
+	Kind     string
+	Title    string
+	LobbyID  string
+	GameType string
+	Members  []ChatUser
 }
 
 type ChatBlockedUser struct {
@@ -243,9 +270,10 @@ func EnsureDirectChat(
 
 	low, high := orderedChatPair(currentUserID, targetUserID)
 	_, err = pool.Exec(ctx, `
-		INSERT INTO chats (user_low, user_high)
-		VALUES ($1, $2)
-		ON CONFLICT (user_low, user_high) DO NOTHING
+		INSERT INTO chats (user_low, user_high, kind)
+		VALUES ($1, $2, 'direct')
+		ON CONFLICT (user_low, user_high) WHERE kind = 'direct' AND user_low IS NOT NULL AND user_high IS NOT NULL
+		DO NOTHING
 	`, low, high)
 	if err != nil {
 		return uuid.Nil, err
@@ -255,7 +283,7 @@ func EnsureDirectChat(
 	err = pool.QueryRow(ctx, `
 		SELECT id
 		FROM chats
-		WHERE user_low = $1 AND user_high = $2
+		WHERE user_low = $1 AND user_high = $2 AND kind = 'direct'
 	`, low, high).Scan(&chatID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -287,12 +315,20 @@ func ListChatsForUser(
 			SELECT
 				c.id,
 				c.created_at,
+				COALESCE(c.kind, 'direct') AS kind,
+				COALESCE(c.title, '') AS title,
+				COALESCE(c.lobby_id, '') AS lobby_id,
+				COALESCE(c.game_type, '') AS game_type,
 				CASE
-					WHEN c.user_low = $1 THEN c.user_high
-					ELSE c.user_low
+					WHEN COALESCE(c.kind, 'direct') = 'direct' AND c.user_low = $1 THEN c.user_high
+					WHEN COALESCE(c.kind, 'direct') = 'direct' THEN c.user_low
+					ELSE NULL
 				END AS peer_id
 			FROM chats c
-			WHERE c.user_low = $1 OR c.user_high = $1
+			WHERE (COALESCE(c.kind, 'direct') = 'direct' AND (c.user_low = $1 OR c.user_high = $1))
+			   OR (c.kind = 'group' AND EXISTS (
+			        SELECT 1 FROM chat_members cm WHERE cm.chat_id = c.id AND cm.user_id = $1
+			   ))
 		),
 		last_msg AS (
 			SELECT DISTINCT ON (m.chat_id)
@@ -315,12 +351,25 @@ func ListChatsForUser(
 				COUNT(*)::int AS unread_count
 			FROM chat_messages m
 			JOIN my_chats mc ON mc.id = m.chat_id
-			WHERE m.sender_user_id <> $1 AND m.read_at IS NULL
+			LEFT JOIN chat_members cm
+			  ON cm.chat_id = m.chat_id AND cm.user_id = $1
+			WHERE m.sender_user_id <> $1
+			  AND (
+			    (COALESCE(mc.kind, 'direct') = 'direct' AND m.read_at IS NULL)
+			    OR (
+			      mc.kind = 'group'
+			      AND m.created_at > COALESCE(cm.last_read_at, '-infinity'::timestamptz)
+			    )
+			  )
 			GROUP BY m.chat_id
 		)
 		SELECT
 			mc.id,
 			mc.created_at,
+			mc.kind,
+			mc.title,
+			mc.lobby_id,
+			mc.game_type,
 			u.id, u.email, u.display_name, u.avatar_kind, u.avatar_value, u.age, u.gender, u.about,
 			COALESCE(u.is_support, false),
 			COALESCE(us.preferred_language, ''),
@@ -328,7 +377,7 @@ func ListChatsForUser(
 			COALESCE(un.unread_count, 0),
 			COALESCE(lm.created_at, mc.created_at) AS updated_at
 		FROM my_chats mc
-		JOIN users u ON u.id = mc.peer_id
+		LEFT JOIN users u ON u.id = mc.peer_id
 		LEFT JOIN user_settings us ON us.user_id = u.id
 		LEFT JOIN last_msg lm ON lm.chat_id = mc.id
 		LEFT JOIN unread un ON un.chat_id = mc.id
@@ -345,6 +394,16 @@ func ListChatsForUser(
 	result := make([]ChatPreview, 0, limit)
 	for rows.Next() {
 		var item ChatPreview
+		var peerID uuid.NullUUID
+		var peerEmail sql.NullString
+		var peerDisplayName sql.NullString
+		var peerAvatarKind sql.NullString
+		var peerAvatarValue sql.NullString
+		var peerAge sql.NullInt32
+		var peerGender sql.NullString
+		var peerAbout sql.NullString
+		var peerIsSupport sql.NullBool
+		var peerLang sql.NullString
 		var lastMessageIDRaw sql.NullString
 		var lastSenderIDRaw sql.NullString
 		var lastBody sql.NullString
@@ -357,16 +416,20 @@ func ListChatsForUser(
 		if err := rows.Scan(
 			&item.ChatID,
 			&item.CreatedAt,
-			&item.Peer.ID,
-			&item.Peer.Email,
-			&item.Peer.DisplayName,
-			&item.Peer.AvatarKind,
-			&item.Peer.AvatarValue,
-			&item.Peer.Age,
-			&item.Peer.Gender,
-			&item.Peer.About,
-			&item.Peer.IsSupport,
-			&item.Peer.PreferredLanguage,
+			&item.Kind,
+			&item.Title,
+			&item.LobbyID,
+			&item.GameType,
+			&peerID,
+			&peerEmail,
+			&peerDisplayName,
+			&peerAvatarKind,
+			&peerAvatarValue,
+			&peerAge,
+			&peerGender,
+			&peerAbout,
+			&peerIsSupport,
+			&peerLang,
 			&lastMessageIDRaw,
 			&lastSenderIDRaw,
 			&lastBody,
@@ -381,8 +444,38 @@ func ListChatsForUser(
 			return nil, err
 		}
 
+		if item.Kind == "" {
+			item.Kind = ChatKindDirect
+		}
 		item.CreatedAt = item.CreatedAt.UTC()
 		item.UpdatedAt = item.UpdatedAt.UTC()
+		if peerID.Valid {
+			item.Peer.ID = peerID.UUID
+			item.Peer.Email = peerEmail.String
+			if peerDisplayName.Valid {
+				dn := peerDisplayName.String
+				item.Peer.DisplayName = &dn
+			}
+			item.Peer.AvatarKind = peerAvatarKind.String
+			if peerAvatarValue.Valid {
+				av := peerAvatarValue.String
+				item.Peer.AvatarValue = &av
+			}
+			if peerAge.Valid {
+				age := int(peerAge.Int32)
+				item.Peer.Age = &age
+			}
+			if peerGender.Valid {
+				g := peerGender.String
+				item.Peer.Gender = &g
+			}
+			if peerAbout.Valid {
+				a := peerAbout.String
+				item.Peer.About = &a
+			}
+			item.Peer.IsSupport = peerIsSupport.Valid && peerIsSupport.Bool
+			item.Peer.PreferredLanguage = peerLang.String
+		}
 		if lastMessageIDRaw.Valid && lastSenderIDRaw.Valid && lastCreatedAt.Valid {
 			messageID, errID := uuid.Parse(lastMessageIDRaw.String)
 			senderID, errSender := uuid.Parse(lastSenderIDRaw.String)
@@ -413,8 +506,30 @@ func ListChatsForUser(
 
 		result = append(result, item)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-	return result, rows.Err()
+	// Участников групповых чатов грузим одним запросом (раньше — N+1 GetGroupChatMeta).
+	groupIDs := make([]uuid.UUID, 0)
+	for _, item := range result {
+		if item.Kind == ChatKindGroup {
+			groupIDs = append(groupIDs, item.ChatID)
+		}
+	}
+	if len(groupIDs) > 0 {
+		membersByChat, merr := ListGroupChatMembersByChatIDs(ctx, pool, groupIDs)
+		if merr == nil {
+			for i := range result {
+				if result[i].Kind != ChatKindGroup {
+					continue
+				}
+				result[i].Members = membersByChat[result[i].ChatID]
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func ListChatMessages(
@@ -486,7 +601,12 @@ func MarkIncomingDeliveredForUser(
 		SET delivered_at = now()
 		FROM chats AS c
 		WHERE m.chat_id = c.id
-		  AND (c.user_low = $1 OR c.user_high = $1)
+		  AND (
+		    (COALESCE(c.kind, 'direct') = 'direct' AND (c.user_low = $1 OR c.user_high = $1))
+		    OR (c.kind = 'group' AND EXISTS (
+		          SELECT 1 FROM chat_members cm WHERE cm.chat_id = c.id AND cm.user_id = $1
+		    ))
+		  )
 		  AND m.sender_user_id <> $1
 		  AND m.delivered_at IS NULL
 		RETURNING m.chat_id, m.id
@@ -528,6 +648,20 @@ func MarkChatRead(
 	chatID, currentUserID uuid.UUID,
 ) ([]uuid.UUID, error) {
 	if err := ensureChatMembership(ctx, pool, chatID, currentUserID); err != nil {
+		return nil, err
+	}
+
+	kind, err := ChatKind(ctx, pool, chatID)
+	if err != nil {
+		return nil, err
+	}
+	// Группа: только свой last_read_at — иначе «прочитал один → прочитано у всех».
+	if kind == ChatKindGroup {
+		_, err = pool.Exec(ctx, `
+			UPDATE chat_members
+			SET last_read_at = now()
+			WHERE chat_id = $1 AND user_id = $2
+		`, chatID, currentUserID)
 		return nil, err
 	}
 
@@ -585,11 +719,30 @@ func ClearChatForUser(
 	pool *pgxpool.Pool,
 	chatID, currentUserID uuid.UUID,
 ) (uuid.UUID, uuid.UUID, error) {
-	lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
+	kind, err := ChatKind(ctx, pool, chatID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return uuid.Nil, uuid.Nil, ErrChatNotFound
+		}
+		return uuid.Nil, uuid.Nil, err
+	}
+	ids, err := ListChatMemberIDs(ctx, pool, chatID)
 	if err != nil {
 		return uuid.Nil, uuid.Nil, err
 	}
-	if currentUserID != lowID && currentUserID != highID {
+	member := false
+	for _, id := range ids {
+		if id == currentUserID {
+			member = true
+			break
+		}
+	}
+	if !member {
+		return uuid.Nil, uuid.Nil, ErrChatForbidden
+	}
+
+	if kind == ChatKindGroup {
+		// Групповой чат лобби живёт с лобби — очистка/выход из UI запрещены.
 		return uuid.Nil, uuid.Nil, ErrChatForbidden
 	}
 
@@ -603,7 +756,13 @@ func ClearChatForUser(
 	if tag.RowsAffected() == 0 {
 		return uuid.Nil, uuid.Nil, ErrChatNotFound
 	}
-	return lowID, highID, nil
+	if len(ids) == 0 {
+		return uuid.Nil, uuid.Nil, nil
+	}
+	if len(ids) == 1 {
+		return ids[0], ids[0], nil
+	}
+	return ids[0], ids[1], nil
 }
 
 func BlockUser(
@@ -740,20 +899,29 @@ func ChatParticipantIDs(
 	pool *pgxpool.Pool,
 	chatID uuid.UUID,
 ) (uuid.UUID, uuid.UUID, error) {
-	var low uuid.UUID
-	var high uuid.UUID
-	err := pool.QueryRow(ctx, `
-		SELECT user_low, user_high
-		FROM chats
-		WHERE id = $1
-	`, chatID).Scan(&low, &high)
+	ids, err := ListChatMemberIDs(ctx, pool, chatID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return uuid.Nil, uuid.Nil, ErrChatNotFound
 		}
 		return uuid.Nil, uuid.Nil, err
 	}
-	return low, high, nil
+	if len(ids) == 0 {
+		return uuid.Nil, uuid.Nil, ErrChatNotFound
+	}
+	if len(ids) == 1 {
+		return ids[0], ids[0], nil
+	}
+	return ids[0], ids[1], nil
+}
+
+// ChatBroadcastUserIDs — все участники чата для realtime/push.
+func ChatBroadcastUserIDs(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	chatID uuid.UUID,
+) ([]uuid.UUID, error) {
+	return ListChatMemberIDs(ctx, pool, chatID)
 }
 
 func ensureChatMembership(
@@ -761,11 +929,11 @@ func ensureChatMembership(
 	pool *pgxpool.Pool,
 	chatID, userID uuid.UUID,
 ) error {
-	low, high, err := ChatParticipantIDs(ctx, pool, chatID)
+	ok, err := IsChatMember(ctx, pool, chatID, userID)
 	if err != nil {
 		return err
 	}
-	if userID != low && userID != high {
+	if !ok {
 		return ErrChatForbidden
 	}
 	return nil

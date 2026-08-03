@@ -348,7 +348,7 @@ func main() {
 	translateService := translate.NewService()
 	chatTranslateHandler := &api.ChatTranslateHandler{Pool: pool, Translate: translateService}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
-	chatsHandler := &api.ChatsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
+	chatsHandler := &api.ChatsHandler{Pool: pool, Rdb: rdb, Hub: realtimeHub, Push: pushSender}
 	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
 	gamesHandler := &api.GamesHandler{
 		Pool:        pool,

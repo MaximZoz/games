@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:web/web.dart' as web;
 
-const _swUrl = '/push-sw.js?v=10';
+const _swUrl = '/push-sw.js?v=11';
 
 /// Поддержка Web Push в текущем браузере.
 bool browserPushSupported() {

@@ -1,44 +1,49 @@
 import 'dart:math';
 
-import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 
 /// Локальная партия крестики-нолики против бота (без API).
 class OfflineTicTacToeGame {
   OfflineTicTacToeGame({
-    this.gridSize = 3,
+    String variant = variantClassic,
+    int? gridSize,
     this.firstMoveRestriction = false,
     bool humanStarts = true,
-  }) : board = List<String>.filled(gridSize * gridSize, '') {
+  })  : variant = _offlineVariant(variant, gridSize),
+        engine = newEngine(_offlineVariant(variant, gridSize)) {
+    final initial = engine.newState();
+    board = List<String>.from(initial.board);
+    this.gridSize = engine.config().gridSize;
+    _state = initial;
     humanMark = humanStarts ? 'x' : 'o';
-    turn = 'x';
     if (humanMark != turn) {
       // Бот ходит первым.
       applyBotMove();
     }
   }
 
-  final int gridSize;
+  final String variant;
+  final Engine engine;
+  late final int gridSize;
   final bool firstMoveRestriction;
   late String humanMark;
   late final List<String> board;
-  late String turn;
+  late GameEngineState _state;
   String status = 'playing'; // playing | x_won | o_won | draw
   List<int>? winningCells;
 
+  String get turn => _state.turn;
   String get botMark => humanMark == 'x' ? 'o' : 'x';
   bool get isHumanTurn => status == 'playing' && turn == humanMark;
   bool get isFinished => status != 'playing';
   bool get humanStarts => humanMark == 'x';
 
-  int get winLen => GameStateItem.winLength(gridSize);
+  int get winLen => engine.config().winLength;
 
   bool playHuman(int cell) {
     if (!isHumanTurn) return false;
-    if (cell < 0 || cell >= board.length) return false;
-    if (board[cell].isNotEmpty) return false;
-    if (!_isValidMove(cell, turn)) return false;
-    board[cell] = turn;
-    _afterMove();
+    if (!engine.legalCells(_state).contains(cell)) return false;
+    _applyMove(cell);
     if (status == 'playing' && turn == botMark) {
       applyBotMove();
     }
@@ -52,69 +57,34 @@ class OfflineTicTacToeGame {
       gridSize: gridSize,
       turn: turn,
       firstMoveRestriction: firstMoveRestriction,
+      variant: variant,
+      legalCells: engine.legalCells(_state),
     );
     if (cell < 0) return;
-    board[cell] = turn;
-    _afterMove();
+    _applyMove(cell);
   }
 
-  void _afterMove() {
-    final line = _findWin(board, turn, gridSize);
-    if (line != null) {
-      winningCells = line;
-      status = turn == 'x' ? 'x_won' : 'o_won';
-      return;
+  void _applyMove(int cell) {
+    final result = engine.applyMove(_state, cell);
+    _state = result.state;
+    for (var i = 0; i < board.length && i < result.state.board.length; i++) {
+      board[i] = result.state.board[i];
     }
-    if (board.every((c) => c.isNotEmpty)) {
+    winningCells = result.winningCells.isEmpty ? null : result.winningCells;
+    if (result.state.status == 'won') {
+      status = '${result.state.winner}_won';
+    } else if (result.state.status == 'draw') {
       status = 'draw';
-      return;
+    } else {
+      status = 'playing';
     }
-    turn = turn == 'x' ? 'o' : 'x';
-  }
-
-  bool _isValidMove(int cell, String mark) {
-    if (!firstMoveRestriction || mark != 'x') return true;
-    if (board.any((c) => c.isNotEmpty)) return true;
-    final centers = _centerIndices(gridSize);
-    return !centers.contains(cell);
   }
 }
 
-List<int> _centerIndices(int gridSize) {
-  if (gridSize.isOdd) {
-    final c = gridSize ~/ 2;
-    return [c * gridSize + c];
-  }
-  final a = gridSize ~/ 2 - 1;
-  final b = gridSize ~/ 2;
-  return [
-    a * gridSize + a,
-    a * gridSize + b,
-    b * gridSize + a,
-    b * gridSize + b,
-  ];
-}
-
-List<int> _validMoves(
-  List<String> board,
-  int gridSize,
-  String turn,
-  bool firstMoveRestriction,
-) {
-  final out = <int>[];
-  final empty = board.every((c) => c.isEmpty);
-  final centers = _centerIndices(gridSize);
-  for (var i = 0; i < board.length; i++) {
-    if (board[i].isNotEmpty) continue;
-    if (firstMoveRestriction &&
-        turn == 'x' &&
-        empty &&
-        centers.contains(i)) {
-      continue;
-    }
-    out.add(i);
-  }
-  return out;
+String _offlineVariant(String variant, int? gridSize) {
+  final parsed = parseVariant(variant);
+  if (parsed != variantClassic || gridSize == null) return parsed;
+  return variantFromLegacyGrid(gridSize);
 }
 
 bool _cellCompletesWin(
@@ -122,15 +92,20 @@ bool _cellCompletesWin(
   int cell,
   String mark,
   int gridSize,
+  String variant,
 ) {
   final next = List<String>.from(board);
   next[cell] = mark;
-  return _findWin(next, mark, gridSize) != null;
+  return _findWin(next, mark, gridSize, variant) != null;
 }
 
-List<int>? _findWin(List<String> board, String mark, int gridSize) {
-  // Публичный хелпер GameStateItem недоступен как static compute — дублируем логику.
-  final winLen = GameStateItem.winLength(gridSize);
+List<int>? _findWin(
+  List<String> board,
+  String mark,
+  int gridSize,
+  String variant,
+) {
+  final winLen = configForVariant(_offlineVariant(variant, gridSize)).winLength;
   if (winLen > gridSize) return null;
   for (var row = 0; row < gridSize; row++) {
     for (var col = 0; col <= gridSize - winLen; col++) {
@@ -201,19 +176,37 @@ int pickBotCell({
   required int gridSize,
   required String turn,
   required bool firstMoveRestriction,
+  String variant = variantClassic,
+  List<int>? legalCells,
 }) {
-  final moves = _validMoves(board, gridSize, turn, firstMoveRestriction);
+  final resolvedVariant = _offlineVariant(variant, gridSize);
+  final moves = legalCells ??
+      newEngine(resolvedVariant).legalCells(
+        GameEngineState(
+          board: board,
+          turn: turn,
+          status: 'active',
+          nextBoard: -1,
+        ),
+      );
   if (moves.isEmpty) return -1;
   final opponent = turn == 'o' ? 'x' : 'o';
-  for (final cell in moves) {
-    if (_cellCompletesWin(board, cell, turn, gridSize)) return cell;
+  final cfg = configForVariant(resolvedVariant);
+  if (cfg.variant == variantClassic || cfg.variant == variantGomoku) {
+    for (final cell in moves) {
+      if (_cellCompletesWin(board, cell, turn, gridSize, resolvedVariant)) {
+        return cell;
+      }
+    }
+    for (final cell in moves) {
+      if (_cellCompletesWin(board, cell, opponent, gridSize, resolvedVariant)) {
+        return cell;
+      }
+    }
   }
-  for (final cell in moves) {
-    if (_cellCompletesWin(board, cell, opponent, gridSize)) return cell;
-  }
-  final centers = _centerIndices(gridSize);
-  for (final ci in centers) {
-    if (moves.contains(ci)) return ci;
+  if (cfg.variant != variantUltimate) {
+    final center = (gridSize ~/ 2) * gridSize + (gridSize ~/ 2);
+    if (moves.contains(center)) return center;
   }
   return moves[Random().nextInt(moves.length)];
 }

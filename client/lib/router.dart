@@ -14,6 +14,7 @@ import 'package:multigames_client/screens/coins_login_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
 import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/screens/offline_tictactoe_screen.dart';
@@ -414,8 +415,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   TicTacToeLobbyScreen(
                     lobbyId: state.pathParameters['lobbyId'] ?? '',
                     initialMode: state.uri.queryParameters['mode'],
-                    fromMessageId:
-                        state.uri.queryParameters['from_message'],
+                    fromMessageId: state.uri.queryParameters['from_message'],
                   ),
                 ),
               ),
@@ -433,9 +433,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (_, state) {
                   final q = state.uri.queryParameters;
                   final grid = int.tryParse(q['grid'] ?? '') ?? 3;
+                  final variant = parseVariant(q['variant']);
                   return _noTransitionPage(
                     state,
                     OfflineTicTacToeScreen(
+                      variant: variant,
                       gridSize: grid,
                       swapRule: q['swap'] == '1',
                       firstMoveRestriction: q['nocenter'] == '1',

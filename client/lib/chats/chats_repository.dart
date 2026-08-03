@@ -195,6 +195,11 @@ class ChatMessageItem {
 class ChatPreviewItem {
   final String chatID;
   final ChatUserItem user;
+  final String kind;
+  final String? title;
+  final String? lobbyId;
+  final String? gameType;
+  final List<ChatUserItem> members;
   final ChatMessageItem? lastMessage;
   final int unreadCount;
   final String createdAt;
@@ -203,11 +208,18 @@ class ChatPreviewItem {
   ChatPreviewItem({
     required this.chatID,
     required this.user,
+    this.kind = 'direct',
+    this.title,
+    this.lobbyId,
+    this.gameType,
+    this.members = const [],
     required this.lastMessage,
     required this.unreadCount,
     required this.createdAt,
     required this.updatedAt,
   });
+
+  bool get isGroup => kind == 'group';
 
   ChatPreviewItem copyWith({
     ChatMessageItem? lastMessage,
@@ -217,6 +229,11 @@ class ChatPreviewItem {
     return ChatPreviewItem(
       chatID: chatID,
       user: user,
+      kind: kind,
+      title: title,
+      lobbyId: lobbyId,
+      gameType: gameType,
+      members: members,
       lastMessage: lastMessage ?? this.lastMessage,
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt,
@@ -228,6 +245,11 @@ class ChatPreviewItem {
     return ChatPreviewItem(
       chatID: json['chat_id'] as String? ?? '',
       user: ChatUserItem.fromJson(Map<String, dynamic>.from((json['user'] ?? const {}) as Map)),
+      kind: json['kind'] as String? ?? 'direct',
+      title: json['title'] as String?,
+      lobbyId: json['lobby_id'] as String?,
+      gameType: json['game_type'] as String?,
+      members: _parseMembers(json['members']),
       lastMessage: json['last_message'] == null
           ? null
           : ChatMessageItem.fromJson(
@@ -237,6 +259,15 @@ class ChatPreviewItem {
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
     );
+  }
+
+  static List<ChatUserItem> _parseMembers(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => ChatUserItem.fromJson(Map<String, dynamic>.from(e)))
+        .where((u) => u.id.isNotEmpty)
+        .toList(growable: false);
   }
 }
 

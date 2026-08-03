@@ -12,12 +12,10 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
-import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -25,6 +23,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -862,6 +861,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   Future<void> _blockChatUserFromList(ChatPreviewItem item) async {
+    if (item.isGroup) return;
     if (item.user.isSupport ||
         item.user.displayName?.trim() == 'Поддержка') {
       return;
@@ -1407,6 +1407,23 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return value;
   }
 
+  String _chatTitle(ChatPreviewItem item) {
+    if (item.isGroup) {
+      final title = item.title?.trim();
+      if (title != null && title.isNotEmpty) return title;
+      return 'Групповой чат';
+    }
+    return _peerTitle(item.user);
+  }
+
+  String _chatSubtitle(ChatPreviewItem item, String subtitle, PresenceEntry? presence) {
+    if (item.isGroup) {
+      final preview = formatChatMessagePreview(subtitle);
+      return preview.isEmpty ? context.l10n.chatsNoMessages : preview;
+    }
+    return _chatSubtitleWithPresence(subtitle, presence);
+  }
+
   String _chatSubtitleWithPresence(String subtitle, PresenceEntry? presence) {
     final preview = formatChatMessagePreview(subtitle);
     if (presence == null) {
@@ -1419,191 +1436,20 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return preview.isEmpty ? statusText : '$statusText · $preview';
   }
 
-  IconData? _genderIcon(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    if (normalized == null || normalized.isEmpty) return null;
-    switch (normalized) {
-      case 'male':
-      case 'm':
-      case 'man':
-      case 'м':
-      case 'муж':
-      case 'мужской':
-        return Icons.male_rounded;
-      case 'female':
-      case 'f':
-      case 'woman':
-      case 'ж':
-      case 'жен':
-      case 'женский':
-        return Icons.female_rounded;
-      default:
-        return null;
-    }
-  }
-
-  bool _isFemaleGender(String? value) {
-    final normalized = value?.trim().toLowerCase();
-    return normalized == 'female' ||
-        normalized == 'f' ||
-        normalized == 'woman' ||
-        normalized == 'ж' ||
-        normalized == 'жен' ||
-        normalized == 'женский';
-  }
-
-  Widget _buildInfoPill({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? foregroundColor,
-    double? minWidth,
-  }) {
-    final bg = backgroundColor ?? AppColors.accentSoft;
-    final fg = foregroundColor ?? AppColors.textPrimary;
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth ?? 0),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
-            if (text != null && text.isNotEmpty) const SizedBox(width: 4),
-          ],
-          if (text != null && text.isNotEmpty)
-            Text(
-              text,
-              style: TextStyle(
-                color: fg,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _showUserInfoDialog(ChatUserItem user, {PresenceEntry? presence}) async {
-    final name = _peerTitle(user);
-    final about = user.about?.trim();
-    final genderIcon = _genderIcon(user.gender);
-    final female = _isFemaleGender(user.gender);
-    await showDialog<void>(
+    await showUserProfileDialog(
       context: context,
-      builder: (dialogContext) {
-        final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        final statusText = presence == null
-            ? null
-            : (presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 420,
-              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.85,
-            ),
-            child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.all(compact ? 12 : 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _AvatarDot(user: user, radius: 22, isOnline: presence?.online),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.commonClose,
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                    ),
-                  ],
-                ),
-                if (statusText != null && statusText.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    statusText,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-                if ((user.age != null && user.age! > 0) || genderIcon != null) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (user.age != null && user.age! > 0)
-                        _buildInfoPill(
-                          text: context.l10n.profileAgeYears(user.age!),
-                          minWidth: 72,
-                        ),
-                      if (genderIcon != null)
-                        _buildInfoPill(
-                          icon: genderIcon,
-                          minWidth: 46,
-                          backgroundColor: female ? const Color(0xFFFCE7F3) : AppColors.accentSoft,
-                          foregroundColor: female ? const Color(0xFFBE185D) : AppColors.textPrimary,
-                        ),
-                    ],
-                  ),
-                ],
-                if (about != null && about.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    context.l10n.commonAboutMe,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    about,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      height: 1.35,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                HeadToHeadSection(
-                  opponentId: user.id,
-                  opponentName: user.displayName,
-                ),
-                PeerCollectionsSection(userId: user.id),
-              ],
-            ),
-          ),
-        ),
-        );
-      },
+      ref: ref,
+      userId: user.id,
+      displayName: _peerTitle(user),
+      avatarKind: user.avatarKind,
+      avatarValue: user.avatarValue,
+      frameCode: user.frameCode,
+      frameColor: user.frameColor,
+      age: user.age,
+      gender: user.gender,
+      about: user.about,
+      messageFrom: 'chats',
     );
   }
 
@@ -1850,17 +1696,24 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             ? null
                                             : () => _openChatRoute(
                                                   chatID: item.chatID,
-                                                  peerName: _peerTitle(item.user),
+                                                  peerName: _chatTitle(item),
                                                 ),
                                         borderRadius: BorderRadius.circular(24),
                                         child: Stack(
                                           clipBehavior: Clip.none,
                                           children: [
-                                            _AvatarDot(
-                                              user: item.user,
-                                              radius: 24,
-                                              isOnline: presence[item.user.id]?.online,
-                                            ),
+                                            item.isGroup
+                                                ? _GroupChatLeading(
+                                                    members: item.members,
+                                                    radius: 24,
+                                                  )
+                                                : _AvatarDot(
+                                                    user: item.user,
+                                                    radius: 24,
+                                                    isOnline:
+                                                        presence[item.user.id]
+                                                            ?.online,
+                                                  ),
                                             if (item.unreadCount > 0)
                                               Positioned(
                                                 right: -2,
@@ -2000,9 +1853,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   .contains('friend_$peerId');
                               final isSupportPeer = item.user.isSupport ||
                                   item.user.displayName?.trim() == 'Поддержка';
+                              final blockDisabled =
+                                  isSupportPeer || item.isGroup;
                               final showAddFriend = peerId.isNotEmpty &&
                                   !isFriend &&
-                                  !isSupportPeer;
+                                  !isSupportPeer &&
+                                  !item.isGroup;
                               return Padding(
                                 padding: EdgeInsets.only(
                                   top: index == 0 ? 0 : 10,
@@ -2013,7 +1869,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   enabled: !itemBusy,
                                   endActionPane: ActionPane(
                                     motion: const DrawerMotion(),
-                                    extentRatio: isSupportPeer ? 0.20 : 0.40,
+                                    extentRatio: blockDisabled ? 0.20 : 0.40,
                                     children: [
                                       CustomSlidableAction(
                                         onPressed: itemBusy
@@ -2039,7 +1895,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                           busy: clearBusy,
                                         ),
                                       ),
-                                      if (!isSupportPeer)
+                                      if (!blockDisabled)
                                         CustomSlidableAction(
                                           onPressed: itemBusy
                                               ? null
@@ -2076,41 +1932,48 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             ? null
                                             : () => _openChatRoute(
                                                   chatID: item.chatID,
-                                                  peerName: _peerTitle(item.user),
+                                                  peerName: _chatTitle(item),
                                                 ),
                                         borderRadius:
                                             BorderRadius.circular(AppRadius.card),
                                         child: Row(
                                           children: [
-                                            Tooltip(
-                                              message:
-                                                  context.l10n.userInfoTitle,
-                                              child: MouseRegion(
-                                                cursor:
-                                                    SystemMouseCursors.click,
-                                                child: GestureDetector(
-                                                  onTap: itemBusy
-                                                      ? null
-                                                      : () {
-                                                          unawaited(
-                                                            _showUserInfoDialog(
-                                                              item.user,
-                                                              presence: presence[
-                                                                  item.user.id],
-                                                            ),
-                                                          );
-                                                        },
-                                                  behavior:
-                                                      HitTestBehavior.opaque,
-                                                  child: _AvatarDot(
-                                                    user: item.user,
-                                                    isOnline: presence[
-                                                            item.user.id]
-                                                        ?.online,
+                                            item.isGroup
+                                                ? _GroupChatLeading(
+                                                    members: item.members,
+                                                  )
+                                                : Tooltip(
+                                                    message: context
+                                                        .l10n.userInfoTitle,
+                                                    child: MouseRegion(
+                                                      cursor:
+                                                          SystemMouseCursors
+                                                              .click,
+                                                      child: GestureDetector(
+                                                        onTap: itemBusy
+                                                            ? null
+                                                            : () {
+                                                                unawaited(
+                                                                  _showUserInfoDialog(
+                                                                    item.user,
+                                                                    presence: presence[
+                                                                        item.user
+                                                                            .id],
+                                                                  ),
+                                                                );
+                                                              },
+                                                        behavior:
+                                                            HitTestBehavior
+                                                                .opaque,
+                                                        child: _AvatarDot(
+                                                          user: item.user,
+                                                          isOnline: presence[
+                                                                  item.user.id]
+                                                              ?.online,
+                                                        ),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                            ),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
@@ -2128,8 +1991,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                       ),
                                                       children: [
                                                         TextSpan(
-                                                          text: _peerTitle(
-                                                              item.user),
+                                                          text:
+                                                              _chatTitle(item),
                                                         ),
                                                         if (showAddFriend)
                                                           WidgetSpan(
@@ -2212,7 +2075,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
-                                                    _chatSubtitleWithPresence(
+                                                    _chatSubtitle(
+                                                      item,
                                                       subtitle,
                                                       presence[item.user.id],
                                                     ),
@@ -2327,6 +2191,63 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GroupChatLeading extends StatelessWidget {
+  const _GroupChatLeading({
+    required this.members,
+    this.radius = 22,
+  });
+
+  final List<ChatUserItem> members;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = radius * 2;
+    final shown = members.take(3).toList(growable: false);
+    return SizedBox(
+      width: size + 18,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.accentStart, AppColors.accentEnd],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.grid_3x3_rounded,
+              color: Colors.white,
+              size: radius,
+            ),
+          ),
+          for (var i = 0; i < shown.length; i++)
+            Positioned(
+              left: radius * 0.95 + i * (radius * 0.48),
+              bottom: i.isEven ? -1 : radius * 0.32,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surfaceCard, width: 1.2),
+                ),
+                child: _AvatarDot(
+                  user: shown[i],
+                  radius: radius * 0.38,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

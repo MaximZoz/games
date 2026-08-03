@@ -186,35 +186,42 @@ func SendChatMessageOpts(
 		return ChatMessage{}, err
 	}
 
-	lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
+	kind, err := ChatKind(ctx, pool, chatID)
 	if err != nil {
 		return ChatMessage{}, err
 	}
-	peerID := highID
-	if senderUserID == highID {
-		peerID = lowID
-	}
-	blocked, err := IsUsersBlocked(ctx, pool, senderUserID, peerID)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-	if blocked {
-		return ChatMessage{}, ErrUserBlocked
-	}
-
-	peerSettings, err := GetUserSettings(ctx, pool, peerID)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-	if peerSettings.MessagesFriendsOnly {
-		friends, err := AreFriends(ctx, pool, senderUserID, peerID)
+	// Direct: блок и messages_friends_only. Group: все участники лобби могут писать.
+	if kind != ChatKindGroup {
+		lowID, highID, err := ChatParticipantIDs(ctx, pool, chatID)
 		if err != nil {
 			return ChatMessage{}, err
 		}
-		if !friends {
-			// Фото и свободный текст — только друзьям; смайлики/подарки — ок.
-			if hasImage || !IsRestrictedChatMessageAllowed(text) {
-				return ChatMessage{}, ErrChatFriendsOnlyText
+		peerID := highID
+		if senderUserID == highID {
+			peerID = lowID
+		}
+		blocked, err := IsUsersBlocked(ctx, pool, senderUserID, peerID)
+		if err != nil {
+			return ChatMessage{}, err
+		}
+		if blocked {
+			return ChatMessage{}, ErrUserBlocked
+		}
+
+		peerSettings, err := GetUserSettings(ctx, pool, peerID)
+		if err != nil {
+			return ChatMessage{}, err
+		}
+		if peerSettings.MessagesFriendsOnly {
+			friends, err := AreFriends(ctx, pool, senderUserID, peerID)
+			if err != nil {
+				return ChatMessage{}, err
+			}
+			if !friends {
+				// Фото и свободный текст — только друзьям; смайлики/подарки — ок.
+				if hasImage || !IsRestrictedChatMessageAllowed(text) {
+					return ChatMessage{}, ErrChatFriendsOnlyText
+				}
 			}
 		}
 	}

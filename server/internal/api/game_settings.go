@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"multigames/server/internal/gameengine"
 	"multigames/server/internal/store"
 )
 
@@ -12,6 +13,7 @@ type gameSettingsBody struct {
 	GameType             string `json:"game_type"`
 	TurnTimeSec          int    `json:"turn_time_sec"`
 	GridSize             int    `json:"grid_size"`
+	Variant              string `json:"variant"`
 	SwapRule             bool   `json:"swap_rule"`
 	FirstMoveRestriction bool   `json:"first_move_restriction"`
 	StakeBronze          int    `json:"stake_bronze"`
@@ -22,8 +24,9 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		"game_type":              s.GameType,
 		"turn_time_sec":          s.TurnTimeSec,
 		"grid_size":              s.GridSize,
-		"swap_rule":              s.SwapRule,
-		"first_move_restriction": s.FirstMoveRestriction,
+		"variant":                s.Variant,
+		"swap_rule":              false,
+		"first_move_restriction": false,
 		"stake_bronze":           s.StakeBronze,
 	}
 }
@@ -39,19 +42,19 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 	if !validTurnTimeSec[body.TurnTimeSec] {
 		return store.UserGameSettings{}, "invalid turn_time_sec"
 	}
-	if !validGridSize[body.GridSize] {
-		return store.UserGameSettings{}, "invalid grid_size"
-	}
+	cfg, variant := resolveVariantConfig(body.Variant, body.GridSize)
 	stake := body.StakeBronze
 	if stake < 1 {
 		stake = 1
 	}
+	_ = gameengine.Variant(variant)
 	return store.UserGameSettings{
 		GameType:             gameType,
 		TurnTimeSec:          body.TurnTimeSec,
-		GridSize:             body.GridSize,
-		SwapRule:             body.SwapRule,
-		FirstMoveRestriction: body.FirstMoveRestriction,
+		GridSize:             cfg.GridSize,
+		Variant:              string(variant),
+		SwapRule:             false,
+		FirstMoveRestriction: false,
 		StakeBronze:          stake,
 	}, ""
 }
@@ -87,6 +90,10 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	// Нормализуем variant/grid из legacy.
+	cfg, v := resolveVariantConfig(s.Variant, s.GridSize)
+	s.Variant = string(v)
+	s.GridSize = cfg.GridSize
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")
 	_ = json.NewEncoder(w).Encode(gameSettingsToJSON(s))

@@ -35,12 +35,17 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 FROM alpine:3.20
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata
+# redis: лобби/матчмейкинг живут в Redis; при REDIS_URL=localhost
+# поднимаем redis-server в том же контейнере (см. docker-entrypoint.sh).
+RUN apk add --no-cache ca-certificates tzdata redis
 
 COPY --from=go_build /server ./server
 COPY server/migrations ./migrations
+COPY scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 ENV PORT=8080
+ENV REDIS_URL=redis://127.0.0.1:6379/0
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["./docker-entrypoint.sh"]

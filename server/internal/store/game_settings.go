@@ -16,6 +16,7 @@ type UserGameSettings struct {
 	GameType             string
 	TurnTimeSec          int
 	GridSize             int
+	Variant              string
 	SwapRule             bool
 	FirstMoveRestriction bool
 	StakeBronze          int
@@ -30,6 +31,7 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		GameType:             gameType,
 		TurnTimeSec:          0,
 		GridSize:             3,
+		Variant:              "classic",
 		SwapRule:             false,
 		FirstMoveRestriction: false,
 		StakeBronze:          1,
@@ -43,14 +45,15 @@ func GetUserGameSettings(ctx context.Context, pool *pgxpool.Pool, userID uuid.UU
 	}
 	var s UserGameSettings
 	err := pool.QueryRow(ctx, `
-		SELECT game_type, turn_time_sec, grid_size, swap_rule,
-		       first_move_restriction, stake_bronze, updated_at
+		SELECT game_type, turn_time_sec, grid_size, COALESCE(variant, 'classic'),
+		       swap_rule, first_move_restriction, stake_bronze, updated_at
 		FROM user_game_settings
 		WHERE user_id = $1 AND game_type = $2
 	`, userID, gameType).Scan(
 		&s.GameType,
 		&s.TurnTimeSec,
 		&s.GridSize,
+		&s.Variant,
 		&s.SwapRule,
 		&s.FirstMoveRestriction,
 		&s.StakeBronze,
@@ -62,6 +65,9 @@ func GetUserGameSettings(ctx context.Context, pool *pgxpool.Pool, userID uuid.UU
 	if err != nil {
 		return UserGameSettings{}, err
 	}
+	if s.Variant == "" {
+		s.Variant = "classic"
+	}
 	return s, nil
 }
 
@@ -70,24 +76,29 @@ func UpsertUserGameSettings(ctx context.Context, pool *pgxpool.Pool, userID uuid
 	if s.GameType == "" {
 		s.GameType = GameTypeTicTacToe
 	}
+	if s.Variant == "" {
+		s.Variant = "classic"
+	}
 	err := pool.QueryRow(ctx, `
 		INSERT INTO user_game_settings (
-			user_id, game_type, turn_time_sec, grid_size,
+			user_id, game_type, turn_time_sec, grid_size, variant,
 			swap_rule, first_move_restriction, stake_bronze, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
 		ON CONFLICT (user_id, game_type) DO UPDATE SET
 			turn_time_sec = EXCLUDED.turn_time_sec,
 			grid_size = EXCLUDED.grid_size,
+			variant = EXCLUDED.variant,
 			swap_rule = EXCLUDED.swap_rule,
 			first_move_restriction = EXCLUDED.first_move_restriction,
 			stake_bronze = EXCLUDED.stake_bronze,
 			updated_at = now()
-		RETURNING game_type, turn_time_sec, grid_size, swap_rule,
-		          first_move_restriction, stake_bronze, updated_at
-	`, userID, s.GameType, s.TurnTimeSec, s.GridSize, s.SwapRule, s.FirstMoveRestriction, s.StakeBronze).Scan(
+		RETURNING game_type, turn_time_sec, grid_size, COALESCE(variant, 'classic'),
+		          swap_rule, first_move_restriction, stake_bronze, updated_at
+	`, userID, s.GameType, s.TurnTimeSec, s.GridSize, s.Variant, s.SwapRule, s.FirstMoveRestriction, s.StakeBronze).Scan(
 		&s.GameType,
 		&s.TurnTimeSec,
 		&s.GridSize,
+		&s.Variant,
 		&s.SwapRule,
 		&s.FirstMoveRestriction,
 		&s.StakeBronze,

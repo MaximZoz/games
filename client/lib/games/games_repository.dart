@@ -6,6 +6,8 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -19,11 +21,35 @@ class GamesException implements Exception {
   String toString() => 'GamesException($statusCode): $message';
 }
 
-/// Допустимые значения времени на ход (сек): 0=без лимита, 10, 30, 60, 600
-const List<int> turnTimeOptions = [10, 30, 60, 600, 0];
+/// Допустимые значения времени на ход (сек): 0=∞, 20, 60=1м, 600=10м
+const List<int> turnTimeOptions = [20, 60, 600, 0];
 
-/// Размеры сетки: 3x3, 4x4, 5x5, 6x6, 7x7, 8x8
-const List<int> gridSizeOptions = [3, 4, 5, 6, 7, 8];
+/// Размеры сетки теперь выводятся из режима; список оставлен для API-совместимости.
+const List<int> gridSizeOptions = [3, 8, 9, 10, 15];
+
+const List<String> variantOptions = allGameVariants;
+
+String variantLabel(String variant) {
+  switch (parseVariant(variant)) {
+    case variantGomoku:
+      return 'Гомоку';
+    case variantUltimate:
+      return 'Ультимейт';
+    case variantMulti3:
+      return 'На троих';
+    case variantMulti4:
+      return 'На четверых';
+    case variantClassic:
+    default:
+      return 'Классика';
+  }
+}
+
+String variantShortLabel(String variant) => variantLabel(variant);
+
+int gridSizeForVariant(String variant) => configForVariant(variant).gridSize;
+
+int winLengthForVariant(String variant) => configForVariant(variant).winLength;
 
 /// Базовые ставки в бронзе (без покупки в магазине).
 const List<int> freeStakeOptions = [1, 10, 50];
@@ -36,14 +62,25 @@ class UserGameSettings {
   const UserGameSettings({
     this.gameType = 'tictactoe',
     this.turnTimeSec = 0,
-    this.gridSize = 3,
+    this.variant = variantClassic,
+    int? gridSize,
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 1,
-  });
+  }) : gridSize = gridSize ??
+            (variant == variantGomoku
+                ? 15
+                : variant == variantUltimate
+                    ? 9
+                    : variant == variantMulti3
+                        ? 8
+                        : variant == variantMulti4
+                            ? 10
+                            : 3);
 
   final String gameType;
   final int turnTimeSec;
+  final String variant;
   final int gridSize;
   final bool swapRule;
   final bool firstMoveRestriction;
@@ -54,18 +91,20 @@ class UserGameSettings {
   UserGameSettings copyWith({
     String? gameType,
     int? turnTimeSec,
+    String? variant,
     int? gridSize,
     bool? swapRule,
     bool? firstMoveRestriction,
     int? stakeBronze,
   }) {
+    final nextVariant = variant ?? this.variant;
     return UserGameSettings(
       gameType: gameType ?? this.gameType,
       turnTimeSec: turnTimeSec ?? this.turnTimeSec,
-      gridSize: gridSize ?? this.gridSize,
+      variant: nextVariant,
+      gridSize: gridSize ?? gridSizeForVariant(nextVariant),
       swapRule: swapRule ?? this.swapRule,
-      firstMoveRestriction:
-          firstMoveRestriction ?? this.firstMoveRestriction,
+      firstMoveRestriction: firstMoveRestriction ?? this.firstMoveRestriction,
       stakeBronze: stakeBronze ?? this.stakeBronze,
     );
   }
@@ -74,10 +113,14 @@ class UserGameSettings {
     final turn = (json['turn_time_sec'] as num?)?.toInt() ?? 0;
     final grid = (json['grid_size'] as num?)?.toInt() ?? 3;
     final stake = (json['stake_bronze'] as num?)?.toInt() ?? 1;
+    final rawVariant = json['variant'] as String?;
+    final variant = rawVariant == null || rawVariant.isEmpty
+        ? variantFromLegacyGrid(grid)
+        : parseVariant(rawVariant);
     return UserGameSettings(
       gameType: json['game_type'] as String? ?? 'tictactoe',
       turnTimeSec: turnTimeOptions.contains(turn) ? turn : 0,
-      gridSize: gridSizeOptions.contains(grid) ? grid : 3,
+      variant: variant,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       stakeBronze: stake < 1 ? 1 : stake,
@@ -87,6 +130,7 @@ class UserGameSettings {
   Map<String, dynamic> toJson() => {
         'game_type': gameType,
         'turn_time_sec': turnTimeSec,
+        'variant': parseVariant(variant),
         'grid_size': gridSize,
         'swap_rule': swapRule,
         'first_move_restriction': firstMoveRestriction,
@@ -99,6 +143,7 @@ class UserGameSettings {
       other is UserGameSettings &&
           gameType == other.gameType &&
           turnTimeSec == other.turnTimeSec &&
+          variant == other.variant &&
           gridSize == other.gridSize &&
           swapRule == other.swapRule &&
           firstMoveRestriction == other.firstMoveRestriction &&
@@ -108,6 +153,7 @@ class UserGameSettings {
   int get hashCode => Object.hash(
         gameType,
         turnTimeSec,
+        variant,
         gridSize,
         swapRule,
         firstMoveRestriction,
@@ -161,6 +207,7 @@ const String kTictactoeRulesStakeIconMarker = '\uFFFC';
 /// Ставка — число + [kTictactoeRulesStakeIconMarker]; для UI используйте
 /// [buildTictactoeRulesTextWidget], чтобы показать иконку монеты.
 String buildTictactoeRulesText({
+  String variant = variantClassic,
   required int gridSize,
   required int turnTimeSec,
   required bool swapRule,
@@ -170,10 +217,11 @@ String buildTictactoeRulesText({
   bool offlineBot = false,
 }) {
   final l10n = LocaleService.l10n;
-  final winN = gridSize >= 6 ? 5 : gridSize;
+  final cfg = configForVariant(variant);
+  final resolvedGridSize = cfg.gridSize;
   final parts = <String>[
-    l10n.rulesIntro(formatGridSize(gridSize)),
-    l10n.rulesWin(winN),
+    'Режим: ${variantLabel(cfg.variant)}',
+    ..._variantRulesBody(cfg, l10n, resolvedGridSize),
   ];
   if (includeTurnTime) {
     parts.add(
@@ -200,8 +248,52 @@ String buildTictactoeRulesText({
   return parts.join('\n\n');
 }
 
+/// Текст правил по режиму (после строки «Режим: …»).
+List<String> _variantRulesBody(
+  GameConfig cfg,
+  AppLocalizations l10n,
+  int resolvedGridSize,
+) {
+  switch (cfg.variant) {
+    case variantUltimate:
+      return const [
+        'Девять малых полей 3×3 объединены в одно большое. Ходят по очереди, X начинает.',
+        'Ход в клетку малого поля указывает, в какое малое поле обязан ходить соперник '
+            '(по той же позиции клетки: центр → центр, угол → угол и т.д.). '
+            'Если это поле уже выиграно или заполнено — соперник может выбрать любое открытое.',
+        'Малое поле выигрывает тот, кто собрал в нём 3 в ряд; при заполнении без победителя поле закрывается ничьей.',
+        'Победа в партии: выиграть три малых поля в ряд на большом поле '
+            '(горизонталь, вертикаль или диагональ).',
+      ];
+    case variantGomoku:
+      return [
+        l10n.rulesIntro(formatGridSize(resolvedGridSize)),
+        l10n.rulesWin(cfg.winLength),
+      ];
+    case variantMulti3:
+      return [
+        'Трое игроков на поле ${formatGridSize(resolvedGridSize)}. '
+            'Знаки: крестик (X), нолик (O) и треугольник. Ходят по кругу, X начинает.',
+        l10n.rulesWin(cfg.winLength),
+      ];
+    case variantMulti4:
+      return [
+        'Четверо игроков на поле ${formatGridSize(resolvedGridSize)}. '
+            'Знаки: крестик (X), нолик (O), треугольник и квадрат. Ходят по кругу, X начинает.',
+        l10n.rulesWin(cfg.winLength),
+      ];
+    case variantClassic:
+    default:
+      return [
+        l10n.rulesIntro(formatGridSize(resolvedGridSize)),
+        l10n.rulesWin(cfg.winLength),
+      ];
+  }
+}
+
 /// Правила с иконкой монеты в строке ставки.
 Widget buildTictactoeRulesTextWidget({
+  String variant = variantClassic,
   required int gridSize,
   required int turnTimeSec,
   required bool swapRule,
@@ -213,6 +305,7 @@ Widget buildTictactoeRulesTextWidget({
   TextAlign textAlign = TextAlign.start,
 }) {
   final text = buildTictactoeRulesText(
+    variant: variant,
     gridSize: gridSize,
     turnTimeSec: turnTimeSec,
     swapRule: swapRule,
@@ -272,9 +365,36 @@ String formatBalance(int bronze) {
   }
   final diamond = gold ~/ 100;
   final g = gold % 100;
-  return g > 0 || s > 0 || b > 0
-      ? '$diamond ◆ $g $gld $s $sil'
-      : '$diamond ◆';
+  return g > 0 || s > 0 || b > 0 ? '$diamond ◆ $g $gld $s $sil' : '$diamond ◆';
+}
+
+class LobbyPlayer {
+  final String id;
+  final String displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameColor;
+  final String? frameCode;
+
+  LobbyPlayer({
+    required this.id,
+    String? displayName,
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.frameColor,
+    this.frameCode,
+  }) : displayName = localizeDisplayName(displayName);
+
+  factory LobbyPlayer.fromJson(Map<String, dynamic> json) {
+    return LobbyPlayer(
+      id: json['id'] as String? ?? '',
+      displayName: json['display_name'] as String?,
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
+      frameColor: json['frame_color'] as String?,
+      frameCode: json['frame_code'] as String?,
+    );
+  }
 }
 
 class LobbyItem {
@@ -286,7 +406,13 @@ class LobbyItem {
   final String? gameId;
   final String createdAt;
   final int turnTimeSec;
+  final String variant;
   final int gridSize;
+  final int maxPlayers;
+  final int playersCount;
+  final List<String> playerIds;
+  final List<LobbyPlayer> players;
+  final String? chatId;
   final bool swapRule;
   final bool firstMoveRestriction;
   final int stakeBronze;
@@ -300,13 +426,33 @@ class LobbyItem {
     this.gameId,
     required this.createdAt,
     this.turnTimeSec = 0,
-    this.gridSize = 3,
+    this.variant = variantClassic,
+    int? gridSize,
+    int? maxPlayers,
+    int? playersCount,
+    List<String>? playerIds,
+    List<LobbyPlayer>? players,
+    this.chatId,
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 1,
-  }) : creatorName = localizeDisplayName(creatorName);
+  })  : gridSize = gridSize ?? gridSizeForVariant(variant),
+        maxPlayers = maxPlayers ?? configForVariant(variant).maxPlayers,
+        players = players ?? const [],
+        playerIds = playerIds ?? const [],
+        playersCount =
+            playersCount ?? (players?.length ?? playerIds?.length ?? 1),
+        creatorName = localizeDisplayName(creatorName);
 
   factory LobbyItem.fromJson(Map<String, dynamic> json) {
+    final legacyGrid = (json['grid_size'] as num?)?.toInt() ?? 3;
+    final rawVariant = json['variant'] as String?;
+    final variant = rawVariant == null || rawVariant.isEmpty
+        ? variantFromLegacyGrid(legacyGrid)
+        : parseVariant(rawVariant);
+    final cfg = configForVariant(variant);
+    final players = _parseLobbyPlayers(json['players']);
+    final playerIds = _parseStringList(json['player_ids']);
     return LobbyItem(
       id: json['id'] as String? ?? '',
       creatorId: json['creator_id'] as String? ?? '',
@@ -316,17 +462,62 @@ class LobbyItem {
       gameId: json['game_id'] as String?,
       createdAt: json['created_at'] as String? ?? '',
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
-      gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
+      variant: variant,
+      gridSize: cfg.gridSize,
+      maxPlayers: (json['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
+      playersCount: (json['players_count'] as num?)?.toInt() ??
+          (players.isNotEmpty ? players.length : playerIds.length),
+      playerIds: playerIds,
+      players: players,
+      chatId: json['chat_id'] as String?,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
     );
   }
+
+  static List<LobbyPlayer> _parseLobbyPlayers(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => LobbyPlayer.fromJson(Map<String, dynamic>.from(e)))
+        .where((p) => p.id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static List<String> _parseStringList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .map((e) => e?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+  }
+}
+
+class GamePlayerMeta {
+  const GamePlayerMeta({
+    required this.mark,
+    required this.userId,
+    this.displayName,
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.frameColor,
+    this.frameCode,
+  });
+
+  final String mark;
+  final String userId;
+  final String? displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameColor;
+  final String? frameCode;
 }
 
 class GameStateItem {
   final String id;
   final List<String> board;
+  final String variant;
   final String turn;
   final String? winner;
   final String status;
@@ -335,8 +526,11 @@ class GameStateItem {
   final int turnTimeSec;
   final int? turnDeadline;
   final int gridSize;
+  final int maxPlayers;
   final String xUserId;
   final String oUserId;
+  final String tUserId;
+  final String sUserId;
   final bool swapRule;
   final bool firstMoveRestriction;
   final bool canSwap;
@@ -351,13 +545,29 @@ class GameStateItem {
   final String? oAvatarValue;
   final String? oFrameColor;
   final String? oFrameCode;
+  final String? tDisplayName;
+  final String? sDisplayName;
+  final String tAvatarKind;
+  final String? tAvatarValue;
+  final String? tFrameColor;
+  final String? tFrameCode;
+  final String sAvatarKind;
+  final String? sAvatarValue;
+  final String? sFrameColor;
+  final String? sFrameCode;
+  final String? chatId;
+  final List<String> eliminatedMarks;
   final List<int>? winningCells;
+  final int? nextBoard;
+  final List<String> metaBoard;
+
   /// User id того, кто предложил ничью; null — предложения нет.
   final String? drawOfferBy;
 
   GameStateItem({
     required this.id,
     required this.board,
+    this.variant = variantClassic,
     required this.turn,
     this.winner,
     required this.status,
@@ -366,8 +576,11 @@ class GameStateItem {
     this.turnTimeSec = 0,
     this.turnDeadline,
     this.gridSize = 3,
+    this.maxPlayers = 2,
     required this.xUserId,
     required this.oUserId,
+    this.tUserId = '',
+    this.sUserId = '',
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.canSwap = false,
@@ -382,24 +595,118 @@ class GameStateItem {
     this.oAvatarValue,
     this.oFrameColor,
     this.oFrameCode,
+    this.tDisplayName,
+    this.sDisplayName,
+    this.tAvatarKind = 'letter',
+    this.tAvatarValue,
+    this.tFrameColor,
+    this.tFrameCode,
+    this.sAvatarKind = 'letter',
+    this.sAvatarValue,
+    this.sFrameColor,
+    this.sFrameCode,
+    this.chatId,
+    this.eliminatedMarks = const [],
     this.winningCells,
+    this.nextBoard,
+    this.metaBoard = const [],
     this.drawOfferBy,
   });
 
   bool isTurnOf(String? userId) {
     if (userId == null || status != 'active') return false;
-    return (turn == 'x' && xUserId == userId) ||
-        (turn == 'o' && oUserId == userId);
+    return markForUser(userId) == turn;
+  }
+
+  String? markForUser(String? userId) {
+    if (userId == null) return null;
+    if (xUserId == userId) return 'x';
+    if (oUserId == userId) return 'o';
+    if (tUserId == userId) return 't';
+    if (sUserId == userId) return 's';
+    return null;
+  }
+
+  List<String> get playerUserIds => [
+        xUserId,
+        oUserId,
+        if (tUserId.isNotEmpty) tUserId,
+        if (sUserId.isNotEmpty) sUserId,
+      ].where((id) => id.isNotEmpty).toList(growable: false);
+
+  List<GamePlayerMeta> get playerMetas => [
+        GamePlayerMeta(
+          mark: 'x',
+          userId: xUserId,
+          displayName: xDisplayName,
+          avatarKind: xAvatarKind,
+          avatarValue: xAvatarValue,
+          frameColor: xFrameColor,
+          frameCode: xFrameCode,
+        ),
+        GamePlayerMeta(
+          mark: 'o',
+          userId: oUserId,
+          displayName: oDisplayName,
+          avatarKind: oAvatarKind,
+          avatarValue: oAvatarValue,
+          frameColor: oFrameColor,
+          frameCode: oFrameCode,
+        ),
+        if (tUserId.isNotEmpty)
+          GamePlayerMeta(
+            mark: 't',
+            userId: tUserId,
+            displayName: tDisplayName,
+            avatarKind: tAvatarKind,
+            avatarValue: tAvatarValue,
+            frameColor: tFrameColor,
+            frameCode: tFrameCode,
+          ),
+        if (sUserId.isNotEmpty)
+          GamePlayerMeta(
+            mark: 's',
+            userId: sUserId,
+            displayName: sDisplayName,
+            avatarKind: sAvatarKind,
+            avatarValue: sAvatarValue,
+            frameColor: sFrameColor,
+            frameCode: sFrameCode,
+          ),
+      ].where((p) => p.userId.isNotEmpty).toList(growable: false);
+
+  /// Чужие участники партии. Без [userId] — пусто (не показываем «себя» по ошибке).
+  List<GamePlayerMeta> opponentsOf(String? userId) {
+    final me = userId?.trim() ?? '';
+    if (me.isEmpty) return const [];
+    return playerMetas
+        .where((p) => p.userId.trim() != me)
+        .toList(growable: false);
+  }
+
+  bool isEliminated(String mark) =>
+      eliminatedMarks.contains(mark.trim().toLowerCase());
+
+  GamePlayerMeta? playerMeta(String mark) {
+    final target = mark.trim().toLowerCase();
+    for (final p in playerMetas) {
+      if (p.mark == target) return p;
+    }
+    return null;
   }
 
   bool get isActivePvp =>
-      status == 'active' &&
-      !xUserId.startsWith('bot:') &&
-      !oUserId.startsWith('bot:');
+      status == 'active' && playerUserIds.every((id) => !id.startsWith('bot:'));
 
   factory GameStateItem.fromJson(Map<String, dynamic> json) {
-    final gridSize = (json['grid_size'] as num?)?.toInt() ?? 3;
-    final n = gridSize * gridSize;
+    final legacyGrid = (json['grid_size'] as num?)?.toInt() ?? 3;
+    final rawVariant = json['variant'] as String?;
+    final variant = rawVariant == null || rawVariant.isEmpty
+        ? variantFromLegacyGrid(legacyGrid)
+        : parseVariant(rawVariant);
+    final cfg = configForVariant(variant);
+    final gridSize = cfg.gridSize;
+    final n = cfg.cellCount;
     final boardRaw = json['board'];
     List<String> board = List.filled(n, '');
     if (boardRaw is List) {
@@ -417,6 +724,7 @@ class GameStateItem {
     return GameStateItem(
       id: json['id'] as String? ?? json['game_id'] as String? ?? '',
       board: board,
+      variant: variant,
       turn: json['turn'] as String? ?? 'x',
       winner: json['winner'] as String?,
       status: json['status'] as String? ?? 'active',
@@ -424,9 +732,12 @@ class GameStateItem {
       timeout: json['timeout'] == true,
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: turnDeadline,
-      gridSize: (json['grid_size'] as num?)?.toInt() ?? 3,
+      gridSize: gridSize,
+      maxPlayers: (json['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
       xUserId: json['x_user_id'] as String? ?? '',
       oUserId: json['o_user_id'] as String? ?? '',
+      tUserId: json['t_user_id'] as String? ?? '',
+      sUserId: json['s_user_id'] as String? ?? '',
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       canSwap: json['can_swap'] == true,
@@ -449,7 +760,25 @@ class GameStateItem {
       oAvatarValue: json['o_avatar_value'] as String?,
       oFrameColor: json['o_frame_color'] as String?,
       oFrameCode: json['o_frame_code'] as String?,
+      tDisplayName: _localizedOptionalName(json['t_display_name']),
+      sDisplayName: _localizedOptionalName(json['s_display_name']),
+      tAvatarKind: json['t_avatar_kind'] as String? ?? 'letter',
+      tAvatarValue: json['t_avatar_value'] as String?,
+      tFrameColor: json['t_frame_color'] as String?,
+      tFrameCode: json['t_frame_code'] as String?,
+      sAvatarKind: json['s_avatar_kind'] as String? ?? 'letter',
+      sAvatarValue: json['s_avatar_value'] as String?,
+      sFrameColor: json['s_frame_color'] as String?,
+      sFrameCode: json['s_frame_code'] as String?,
+      chatId: json['chat_id'] as String?,
+      eliminatedMarks: _parseStringList(json['eliminated_marks']),
       winningCells: _parseWinningCells(json['winning_cells']),
+      nextBoard: () {
+        final raw = json['next_board'];
+        if (raw is num) return raw.toInt();
+        return null;
+      }(),
+      metaBoard: _parseMetaBoard(json['meta_board']),
       drawOfferBy: () {
         final raw = json['draw_offer_by'] as String?;
         if (raw == null || raw.trim().isEmpty) return null;
@@ -459,7 +788,7 @@ class GameStateItem {
   }
 
   static List<int>? _parseWinningCells(dynamic raw) {
-    if (raw is! List || raw.length < 3 || raw.length > 8) return null;
+    if (raw is! List || raw.length < 3 || raw.length > 9) return null;
     final list = <int>[];
     for (final e in raw) {
       final n = (e is num) ? e.toInt() : null;
@@ -469,26 +798,54 @@ class GameStateItem {
     return list;
   }
 
+  static List<String> _parseMetaBoard(dynamic raw) {
+    if (raw is! List) return const [];
+    final out = List<String>.filled(9, '');
+    for (var i = 0; i < raw.length && i < 9; i++) {
+      out[i] = raw[i]?.toString() ?? '';
+    }
+    return out;
+  }
+
+  static List<String> _parseStringList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .map((e) => e?.toString().trim().toLowerCase() ?? '')
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static String? _localizedOptionalName(dynamic rawValue) {
+    final raw = rawValue as String?;
+    if (raw == null || raw.trim().isEmpty) return null;
+    return localizeDisplayName(raw);
+  }
+
   /// Победная линия: из winningCells или вычисленная по доске.
   List<int>? get effectiveWinningCells {
-    final winLen = GameStateItem.winLength(gridSize);
+    final winLen = GameStateItem.winLength(gridSize, variant: variant);
     if (winningCells != null && winningCells!.length == winLen) {
       return winningCells;
     }
     final mark = winner;
     if (mark == null || mark.isEmpty) return null;
-    if (status != 'x_won' && status != 'o_won') return null;
-    return _computeWinningCells(board, mark, gridSize);
+    if (!status.endsWith('_won')) return null;
+    return _computeWinningCells(board, mark, gridSize, winLen);
   }
 
-  /// Для 3–5: N в ряд. Для 6–8: 5 в ряд (гомоку).
-  static int winLength(int gridSize) => gridSize >= 6 ? 5 : gridSize;
+  static int winLength(int gridSize, {String? variant}) {
+    if (variant != null && variant.isNotEmpty) {
+      return configForVariant(variant).winLength;
+    }
+    if (gridSize == 15) return 5;
+    if (gridSize == 8 || gridSize == 10) return 4;
+    return 3;
+  }
 
   static List<int>? _computeWinningCells(
-      List<String> board, String mark, int gridSize) {
+      List<String> board, String mark, int gridSize, int winLen) {
     final n = gridSize * gridSize;
     if (board.length < n) return null;
-    final winLen = GameStateItem.winLength(gridSize);
     if (winLen > gridSize) return null;
     // Горизонтали
     for (var row = 0; row < gridSize; row++) {
@@ -564,12 +921,15 @@ class ActiveGameItem {
   final String? gameId;
   final String? lobbyId;
   final bool isMyTurn;
+  /// Выбыл из multi — вкладка «Игры» не авто-открывает доску.
+  final bool isEliminated;
 
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
+    this.isEliminated = false,
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -578,6 +938,7 @@ class ActiveGameItem {
       gameId: json['game_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       isMyTurn: json['is_my_turn'] as bool? ?? false,
+      isEliminated: json['is_eliminated'] as bool? ?? false,
     );
   }
 }
@@ -638,11 +999,19 @@ class JoinLobbyResult {
   final bool joined;
   final String? gameId;
   final String? status;
+  final bool waitingMore;
+  final String? chatId;
+  final int? playersCount;
+  final int? maxPlayers;
 
   JoinLobbyResult({
     required this.joined,
     this.gameId,
     this.status,
+    this.waitingMore = false,
+    this.chatId,
+    this.playersCount,
+    this.maxPlayers,
   });
 
   factory JoinLobbyResult.fromJson(Map<String, dynamic> json) {
@@ -650,6 +1019,10 @@ class JoinLobbyResult {
       joined: json['joined'] as bool? ?? false,
       gameId: json['game_id'] as String?,
       status: json['status'] as String?,
+      waitingMore: json['waiting_more'] as bool? ?? false,
+      chatId: json['chat_id'] as String?,
+      playersCount: (json['players_count'] as num?)?.toInt(),
+      maxPlayers: (json['max_players'] as num?)?.toInt(),
     );
   }
 }
@@ -678,6 +1051,7 @@ class GameStats {
   final List<OpponentStat> topWon;
   final List<OpponentStat> topDrawn;
   final List<OpponentStat> topLost;
+
   /// Разбивка по типам игр.
   final List<GameTypeScore> games;
 
@@ -799,8 +1173,10 @@ class HeadToHead {
   final int won;
   final int drawn;
   final int lost;
+
   /// Счёт по каждой игре (tictactoe, …).
   final List<GameTypeScore> games;
+
   /// Разрешил ли соперник показывать свою статистику другим.
   final bool showStatsToOthers;
 
@@ -860,9 +1236,7 @@ class GamesRepository {
     } on AuthException catch (e) {
       throw GamesException(
         e.statusCode,
-        e.statusCode == 401
-            ? LocaleService.l10n.sessionExpired
-            : e.message,
+        e.statusCode == 401 ? LocaleService.l10n.sessionExpired : e.message,
       );
     }
   }
@@ -926,19 +1300,22 @@ class GamesRepository {
   Future<CreateLobbyResult> createLobby({
     required String mode,
     int turnTimeSec = 0,
+    String variant = variantClassic,
     int gridSize = 3,
     bool swapRule = false,
     bool firstMoveRestriction = false,
     int stakeBronze = 1,
     bool addBotsAfter30s = false,
   }) async {
+    final parsedVariant = parseVariant(variant);
     final body = <String, dynamic>{
       'mode': mode,
       'stake_bronze': stakeBronze.clamp(1, 999999),
       'turn_time_sec': turnTimeSec,
-      'grid_size': gridSize,
-      'swap_rule': swapRule,
-      'first_move_restriction': firstMoveRestriction,
+      'variant': parsedVariant,
+      'grid_size': gridSizeForVariant(parsedVariant),
+      'swap_rule': false,
+      'first_move_restriction': false,
     };
     if (mode == 'matchmake') {
       body['add_bots_after_30s'] = addBotsAfter30s;

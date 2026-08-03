@@ -4,24 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
-import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
-import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
-import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
-import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class GamesScreen extends ConsumerStatefulWidget {
@@ -33,15 +29,21 @@ class GamesScreen extends ConsumerStatefulWidget {
 
 enum _GamesTab { games, lobbies }
 
+/// Режимы для второй кнопки: Классика → Гомоку → Ультимейт.
+const _modeCycleVariants = <String>[
+  variantClassic,
+  variantGomoku,
+  variantUltimate,
+];
+
 class _GamesScreenState extends ConsumerState<GamesScreen> {
   bool _isCreating = false;
   bool _isFinding = false;
   _GamesTab _selectedTab = _GamesTab.games;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
-  int _selectedGridSize = 3; // 3, 4, 5
-  // В офлайне чип ⇄ = «по очереди кто начинает»; по умолчанию включён.
-  bool _selectedSwapRule = true;
-  bool _selectedFirstMoveRestriction = false;
+  String _selectedVariant = variantClassic;
+  /// true — активна кнопка игроков (2/3/4); false — кнопка режима.
+  bool _playersControlActive = false;
   int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
   bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
@@ -63,14 +65,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final saved = ref.read(userGameSettingsProvider).valueOrNull;
     if (saved == null) return;
     _settingsHydrated = true;
-    final offline = ref.read(isOfflineProvider);
     setState(() {
       _selectedTurnTimeSec = saved.turnTimeSec;
-      _selectedGridSize = saved.gridSize;
-      // В офлайне ⇄ = чередование первого хода (по умолчанию вкл.),
-      // а не онлайн-правило «смены сторон» из сохранённых настроек.
-      _selectedSwapRule = offline ? true : saved.swapRule;
-      _selectedFirstMoveRestriction = saved.firstMoveRestriction;
+      _selectedVariant = saved.variant;
+      _playersControlActive =
+          saved.variant == variantMulti3 || saved.variant == variantMulti4;
       _selectedStakeBronze = saved.stakeBronze;
     });
   }
@@ -79,12 +78,57 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     ref.read(userGameSettingsProvider.notifier).updateLocal(
           UserGameSettings(
             turnTimeSec: _selectedTurnTimeSec,
-            gridSize: _selectedGridSize,
-            swapRule: _selectedSwapRule,
-            firstMoveRestriction: _selectedFirstMoveRestriction,
+            variant: _selectedVariant,
+            swapRule: false,
+            firstMoveRestriction: false,
             stakeBronze: _selectedStakeBronze,
           ),
         );
+  }
+
+  void _onPlayersChipTap() {
+    final offline = ref.read(isOfflineProvider);
+    if (offline) return;
+    setState(() {
+      if (!_playersControlActive) {
+        // Переключились с режимов → игроки фиолетовые, режим «Классика» тёмный.
+        _playersControlActive = true;
+        _selectedVariant = variantClassic; // 2 игрока
+      } else {
+        // 2 → 3 → 4 → 2
+        final n = configForVariant(_selectedVariant).maxPlayers;
+        if (n <= 2) {
+          _selectedVariant = variantMulti3;
+        } else if (n == 3) {
+          _selectedVariant = variantMulti4;
+        } else {
+          _selectedVariant = variantClassic;
+        }
+      }
+    });
+    _persistSettings();
+  }
+
+  void _onModeChipTap() {
+    final offline = ref.read(isOfflineProvider);
+    setState(() {
+      if (_playersControlActive ||
+          _selectedVariant == variantMulti3 ||
+          _selectedVariant == variantMulti4) {
+        // С игроков → режимы: 2 тёмные, Классика фиолетовая.
+        _playersControlActive = false;
+        _selectedVariant = variantClassic;
+      } else {
+        final cycle = offline
+            ? const [variantClassic, variantGomoku]
+            : _modeCycleVariants;
+        final current = parseVariant(_selectedVariant);
+        final idx = cycle.indexOf(current);
+        final next = (idx < 0 ? 0 : idx + 1) % cycle.length;
+        _selectedVariant = cycle[next];
+      }
+    });
+    _persistSettings();
   }
 
   @override
@@ -124,18 +168,34 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
+    // После «Присоединиться» не оставляем список с карточкой лобби —
+    // сразу экран «Войти в игру».
+    ref.listen<AsyncValue<ActiveGameItem?>>(activeGameProvider, (prev, next) {
+      final active = next.valueOrNull;
+      if (active == null ||
+          active.type != 'lobby' ||
+          active.lobbyId == null ||
+          active.lobbyId!.isEmpty) {
+        return;
+      }
+      final path =
+          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+      if (path != '/games') return;
+      context.go(
+        '/games/tictactoe/lobby/${active.lobbyId}?mode=invite',
+      );
+    });
     // Подхватываем конфиг из БД, когда он лениво догрузится.
     ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider,
         (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
-      final offline = ref.read(isOfflineProvider);
       setState(() {
         _selectedTurnTimeSec = saved.turnTimeSec;
-        _selectedGridSize = saved.gridSize;
-        _selectedSwapRule = offline ? true : saved.swapRule;
-        _selectedFirstMoveRestriction = saved.firstMoveRestriction;
+        _selectedVariant = saved.variant;
+        _playersControlActive =
+            saved.variant == variantMulti3 || saved.variant == variantMulti4;
         _selectedStakeBronze = saved.stakeBronze;
       });
     });
@@ -154,37 +214,45 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final phoneLandscape = isPhoneLandscape(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
-    final contentPadding = phoneLandscape
-        ? 12.0
-        : (isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0));
+    final contentPadding =
+        phoneLandscape ? 12.0 : (isMedium ? 20.0 : (isDesktop ? 32.0 : 24.0));
     final isOffline = ref.watch(isOfflineProvider);
-    // При входе в офлайн включаем ⇄ (чередование первого хода с ботом).
-    // Локально — без persist в онлайн-настройки pie-rule.
-    ref.listen<bool>(isOfflineProvider, (prev, next) {
-      if (next && prev != true && mounted && !_selectedSwapRule) {
-        setState(() => _selectedSwapRule = true);
-      }
-    });
-    if (isOffline && !_selectedSwapRule) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !ref.read(isOfflineProvider)) return;
-        if (_selectedSwapRule) return;
-        setState(() => _selectedSwapRule = true);
-      });
-    }
     if (isOffline && _selectedTab != _GamesTab.games) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _selectedTab = _GamesTab.games);
       });
     }
+    // Уже есть активное лобби при открытии списка — уйти в «Войти в игру».
+    final activeLobby = activeAsync.valueOrNull;
+    if (!isOffline &&
+        activeLobby != null &&
+        activeLobby.type == 'lobby' &&
+        activeLobby.lobbyId != null &&
+        activeLobby.lobbyId!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final path = GoRouter.of(context)
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .path;
+        if (path != '/games') return;
+        context.go(
+          '/games/tictactoe/lobby/${activeLobby.lobbyId}?mode=invite',
+        );
+      });
+    }
 
     void playOffline() {
+      final offlineVariant = (_selectedVariant == variantClassic ||
+              _selectedVariant == variantGomoku)
+          ? _selectedVariant
+          : variantClassic;
       final qs = <String, String>{
-        'grid': '$_selectedGridSize',
-        // В офлайне всегда чередуем, кто начинает (даже если чип ещё не
-        // успел включиться после перехода из онлайна).
+        'variant': offlineVariant,
+        'grid': '${gridSizeForVariant(offlineVariant)}',
+        // В офлайне всегда чередуем, кто начинает.
         'swap': '1',
-        if (_selectedFirstMoveRestriction) 'nocenter': '1',
       };
       final uri = Uri(
         path: '/games/tictactoe/offline',
@@ -218,9 +286,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
               // indexedStack остаётся живой при /login|/register (PWA),
               // а PageController с viewport=0 после возврата ломает смену табов.
               child: IndexedStack(
-                index: isOffline
-                    ? 0
-                    : (_selectedTab == _GamesTab.games ? 0 : 1),
+                index:
+                    isOffline ? 0 : (_selectedTab == _GamesTab.games ? 0 : 1),
                 sizing: StackFit.expand,
                 children: [
                   _GamesPageContent(
@@ -233,21 +300,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       setState(() => _selectedTurnTimeSec = v);
                       _persistSettings();
                     },
-                    gridSize: _selectedGridSize,
-                    onGridSizeChanged: (v) {
-                      setState(() => _selectedGridSize = v);
-                      _persistSettings();
-                    },
-                    swapRule: _selectedSwapRule,
-                    onSwapRuleChanged: (v) {
-                      setState(() => _selectedSwapRule = v);
-                      _persistSettings();
-                    },
-                    firstMoveRestriction: _selectedFirstMoveRestriction,
-                    onFirstMoveRestrictionChanged: (v) {
-                      setState(() => _selectedFirstMoveRestriction = v);
-                      _persistSettings();
-                    },
+                    variant: _selectedVariant,
+                    playersControlActive: _playersControlActive,
+                    onPlayersChipTap: _onPlayersChipTap,
+                    onModeChipTap: _onModeChipTap,
                     stakeBronze: isOffline ? 0 : _selectedStakeBronze,
                     stakeOptionsList: availableStakes,
                     onStakeChanged: (v) {
@@ -255,7 +311,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       _persistSettings();
                     },
                     onCreateGame: () => _createGame(context, 'invite'),
-                    onFindGame: () => _createGame(context, 'matchmake'),
+                    onFindGame: () => _createGame(
+                      context,
+                      configForVariant(_selectedVariant).maxPlayers > 2
+                          ? 'invite'
+                          : 'matchmake',
+                    ),
                     onPlayOffline: playOffline,
                     invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,
@@ -295,9 +356,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       final result = await repo.createLobby(
         mode: mode,
         turnTimeSec: _selectedTurnTimeSec,
-        gridSize: _selectedGridSize,
-        swapRule: _selectedSwapRule,
-        firstMoveRestriction: _selectedFirstMoveRestriction,
+        variant: _selectedVariant,
+        gridSize: gridSizeForVariant(_selectedVariant),
+        swapRule: false,
+        firstMoveRestriction: false,
         stakeBronze: _selectedStakeBronze,
         addBotsAfter30s: false,
       );
@@ -341,14 +403,28 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
+      ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        ref.invalidate(openLobbiesProvider);
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        if (context.mounted) {
+          context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        }
+        return;
+      }
       if (result.joined && result.gameId != null) {
         _navigateToJoinedGame(result.gameId!);
       }
     } catch (e) {
+      // Лобби уже нет — убрать «висящее» приглашение.
+      ref.read(gameInvitesProvider.notifier).remove(lobbyId);
       _showInviteError(e);
     }
   }
@@ -374,6 +450,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   Widget _inviteRulesWidget(GameInvite inv) {
     return buildTictactoeRulesTextWidget(
+      variant: inv.variant,
       gridSize: inv.gridSize,
       turnTimeSec: inv.turnTimeSec,
       swapRule: inv.swapRule,
@@ -388,140 +465,16 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _showCreatorInfo(BuildContext context, GameInvite inv) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 80 : 14,
-            vertical: isDesktop ? 40 : 20,
-          ),
-          backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints:
-                BoxConstraints(maxWidth: isDesktop ? 440 : double.infinity),
-            child: Consumer(
-              builder: (context, ref, _) {
-                final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
-                final presence =
-                    ref.watch(presenceMapProvider).valueOrNull ?? const {};
-                FriendUserItem? user;
-                for (final f in snapshot?.friends ?? []) {
-                  if (f.user.id == inv.creatorId) {
-                    user = f.user;
-                    break;
-                  }
-                }
-                if (user == null) {
-                  for (final r in snapshot?.incoming ?? []) {
-                    if (r.user.id == inv.creatorId) {
-                      user = r.user;
-                      break;
-                    }
-                  }
-                }
-                if (user == null) {
-                  for (final r in snapshot?.outgoing ?? []) {
-                    if (r.user.id == inv.creatorId) {
-                      user = r.user;
-                      break;
-                    }
-                  }
-                }
-                final p = presence[inv.creatorId];
-                final statusText = p == null
-                    ? null
-                    : (p.online ? context.l10n.commonOnlineCap : formatLastSeen(p.lastSeenAt));
-                final name = user?.displayName?.trim().isNotEmpty == true
-                    ? user!.displayName!
-                    : inv.creatorName;
-                final about = user?.about?.trim();
-                return GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _InviteCreatorAvatar(
-                            creatorName: name,
-                            avatarKind: user?.avatarKind ?? 'letter',
-                            avatarValue: user?.avatarValue,
-                            creatorId: inv.creatorId,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  name,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (statusText != null && statusText.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      statusText,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: context.l10n.commonClose,
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => Navigator.of(ctx).pop(),
-                          ),
-                        ],
-                      ),
-                      if (about != null && about.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          context.l10n.commonAboutMe,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          about,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                      HeadToHeadSection(
-                        opponentId: inv.creatorId,
-                        opponentName: name,
-                      ),
-                      PeerCollectionsSection(userId: inv.creatorId),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: inv.creatorId,
+        displayName: inv.creatorName,
+        avatarKind: inv.creatorAvatarKind,
+        avatarValue: inv.creatorAvatarValue,
+        messageFrom: 'games',
+      ),
     );
   }
 
@@ -595,6 +548,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (!context.mounted) return;
       ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
       ref.invalidate(openLobbiesProvider);
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
       if (result.joined && result.gameId != null) {
         context.push('/games/tictactoe/game/${result.gameId}');
       }
@@ -625,6 +587,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
             child: SingleChildScrollView(
               child: buildTictactoeRulesTextWidget(
+                variant: lobby.variant,
                 gridSize: lobby.gridSize,
                 turnTimeSec: lobby.turnTimeSec,
                 swapRule: lobby.swapRule,
@@ -653,12 +616,10 @@ class _GamesPageContent extends StatelessWidget {
     required this.isOffline,
     required this.turnTimeSec,
     required this.onTurnTimeChanged,
-    required this.gridSize,
-    required this.onGridSizeChanged,
-    required this.swapRule,
-    required this.onSwapRuleChanged,
-    required this.firstMoveRestriction,
-    required this.onFirstMoveRestrictionChanged,
+    required this.variant,
+    required this.playersControlActive,
+    required this.onPlayersChipTap,
+    required this.onModeChipTap,
     required this.stakeBronze,
     required this.stakeOptionsList,
     required this.onStakeChanged,
@@ -680,12 +641,10 @@ class _GamesPageContent extends StatelessWidget {
   final bool isOffline;
   final int turnTimeSec;
   final void Function(int) onTurnTimeChanged;
-  final int gridSize;
-  final void Function(int) onGridSizeChanged;
-  final bool swapRule;
-  final void Function(bool) onSwapRuleChanged;
-  final bool firstMoveRestriction;
-  final void Function(bool) onFirstMoveRestrictionChanged;
+  final String variant;
+  final bool playersControlActive;
+  final VoidCallback onPlayersChipTap;
+  final VoidCallback onModeChipTap;
   final int stakeBronze;
   final List<int> stakeOptionsList;
   final void Function(int) onStakeChanged;
@@ -736,12 +695,10 @@ class _GamesPageContent extends StatelessWidget {
                       if (isDesktop || phoneLandscape) {
                         // Одна карточка игры — по центру, достаточно широкая,
                         // чтобы «Крестики-нолики» не обрезалось на планшете.
-                        final minCardWidth = phoneLandscape
-                            ? 300.0
-                            : (tablet ? 440.0 : 400.0);
-                        final maxCardWidth = phoneLandscape
-                            ? 420.0
-                            : (tablet ? 560.0 : 520.0);
+                        final minCardWidth =
+                            phoneLandscape ? 300.0 : (tablet ? 440.0 : 400.0);
+                        final maxCardWidth =
+                            phoneLandscape ? 420.0 : (tablet ? 560.0 : 520.0);
                         final availableWidth = constraints.maxWidth;
                         final cardWidth = availableWidth
                             .clamp(minCardWidth, maxCardWidth)
@@ -758,13 +715,10 @@ class _GamesPageContent extends StatelessWidget {
                                 isOffline: isOffline,
                                 turnTimeSec: turnTimeSec,
                                 onTurnTimeChanged: onTurnTimeChanged,
-                                gridSize: gridSize,
-                                onGridSizeChanged: onGridSizeChanged,
-                                swapRule: swapRule,
-                                onSwapRuleChanged: onSwapRuleChanged,
-                                firstMoveRestriction: firstMoveRestriction,
-                                onFirstMoveRestrictionChanged:
-                                    onFirstMoveRestrictionChanged,
+                                variant: variant,
+                                playersControlActive: playersControlActive,
+                                onPlayersChipTap: onPlayersChipTap,
+                                onModeChipTap: onModeChipTap,
                                 stakeBronze: stakeBronze,
                                 stakeOptionsList: stakeOptionsList,
                                 onStakeChanged: onStakeChanged,
@@ -782,13 +736,10 @@ class _GamesPageContent extends StatelessWidget {
                         isOffline: isOffline,
                         turnTimeSec: turnTimeSec,
                         onTurnTimeChanged: onTurnTimeChanged,
-                        gridSize: gridSize,
-                        onGridSizeChanged: onGridSizeChanged,
-                        swapRule: swapRule,
-                        onSwapRuleChanged: onSwapRuleChanged,
-                        firstMoveRestriction: firstMoveRestriction,
-                        onFirstMoveRestrictionChanged:
-                            onFirstMoveRestrictionChanged,
+                        variant: variant,
+                        playersControlActive: playersControlActive,
+                        onPlayersChipTap: onPlayersChipTap,
+                        onModeChipTap: onModeChipTap,
                         stakeBronze: stakeBronze,
                         stakeOptionsList: stakeOptionsList,
                         onStakeChanged: onStakeChanged,
@@ -864,6 +815,11 @@ class _GamesPageContent extends StatelessWidget {
                   activeAsync.when(
                     data: (active) {
                       if (active == null) return const SizedBox.shrink();
+                      // Активное лобби («Войти в игру» / поиск) — без карточки
+                      // на списке: уводим в лобби (см. listen выше).
+                      if (active.type == 'lobby') {
+                        return const SizedBox.shrink();
+                      }
                       if (active.type == 'game' && active.gameId != null) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 20),
@@ -1082,15 +1038,15 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
-                                                    Icons.grid_on_rounded,
+                                                    Icons.extension_rounded,
                                                     size: 14,
                                                     color:
                                                         AppColors.textSecondary,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    formatGridSize(
-                                                        lobby.gridSize),
+                                                    variantShortLabel(
+                                                        lobby.variant),
                                                     style: TextStyle(
                                                       fontSize:
                                                           isDesktop ? 14 : 13,
@@ -1100,26 +1056,28 @@ class _LobbiesPageContent extends StatelessWidget {
                                                   ),
                                                 ],
                                               ),
-                                              if (lobby.swapRule)
-                                                Tooltip(
-                                                  message: context.l10n.gamesSwapSides,
-                                                  child: const Icon(
-                                                    Icons.swap_horiz_rounded,
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons
+                                                        .person_outline_rounded,
                                                     size: 14,
                                                     color:
                                                         AppColors.textSecondary,
                                                   ),
-                                                ),
-                                              if (lobby.firstMoveRestriction)
-                                                Tooltip(
-                                                  message: context.l10n.gamesNoCenter,
-                                                  child: const Icon(
-                                                    Icons.block_rounded,
-                                                    size: 14,
-                                                    color:
-                                                        AppColors.textSecondary,
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    '${lobby.maxPlayers}',
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          isDesktop ? 14 : 13,
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
                                                   ),
-                                                ),
+                                                ],
+                                              ),
                                             ],
                                           ),
                                         ],
@@ -1214,12 +1172,10 @@ class _TictactoeGameCard extends StatelessWidget {
     required this.isOffline,
     required this.turnTimeSec,
     required this.onTurnTimeChanged,
-    required this.gridSize,
-    required this.onGridSizeChanged,
-    required this.swapRule,
-    required this.onSwapRuleChanged,
-    required this.firstMoveRestriction,
-    required this.onFirstMoveRestrictionChanged,
+    required this.variant,
+    required this.playersControlActive,
+    required this.onPlayersChipTap,
+    required this.onModeChipTap,
     required this.stakeBronze,
     required this.stakeOptionsList,
     required this.onStakeChanged,
@@ -1233,12 +1189,10 @@ class _TictactoeGameCard extends StatelessWidget {
   final bool isOffline;
   final int turnTimeSec;
   final void Function(int) onTurnTimeChanged;
-  final int gridSize;
-  final void Function(int) onGridSizeChanged;
-  final bool swapRule;
-  final void Function(bool) onSwapRuleChanged;
-  final bool firstMoveRestriction;
-  final void Function(bool) onFirstMoveRestrictionChanged;
+  final String variant;
+  final bool playersControlActive;
+  final VoidCallback onPlayersChipTap;
+  final VoidCallback onModeChipTap;
   final int stakeBronze;
   final List<int> stakeOptionsList;
   final void Function(int) onStakeChanged;
@@ -1252,12 +1206,6 @@ class _TictactoeGameCard extends StatelessWidget {
     onTurnTimeChanged(turnTimeOptions[next]);
   }
 
-  void _cycleGridSize() {
-    final idx = gridSizeOptions.indexOf(gridSize);
-    final next = (idx + 1) % gridSizeOptions.length;
-    onGridSizeChanged(gridSizeOptions[next]);
-  }
-
   void _cycleStake() {
     final options =
         stakeOptionsList.isEmpty ? freeStakeOptions : stakeOptionsList;
@@ -1267,14 +1215,70 @@ class _TictactoeGameCard extends StatelessWidget {
   }
 
   Widget _buildRulesWidget() => buildTictactoeRulesTextWidget(
-        gridSize: gridSize,
+        variant: variant,
+        gridSize: gridSizeForVariant(variant),
         turnTimeSec: turnTimeSec,
-        swapRule: swapRule,
-        firstMoveRestriction: firstMoveRestriction,
+        swapRule: false,
+        firstMoveRestriction: false,
         stakeBronze: stakeBronze,
         includeTurnTime: !isOffline,
         offlineBot: isOffline,
       );
+
+  Widget _selectableChip({
+    required bool selected,
+    required VoidCallback? onTap,
+    required IconData icon,
+    required String label,
+    required TextTheme? theme,
+    required double padV,
+    required double padH,
+    required double iconSz,
+    required double fontSz,
+    required bool compact,
+  }) {
+    final color = selected ? AppColors.accentStart : AppColors.textSecondary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        splashColor: AppColors.accentStart.withValues(alpha: 0.2),
+        highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.accentSoft.withValues(alpha: 0.6)
+                : AppColors.textSecondary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? AppColors.accentStart.withValues(alpha: 0.3)
+                  : AppColors.textSecondary.withValues(alpha: 0.25),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: iconSz, color: color),
+              SizedBox(width: compact ? 4 : 6),
+              Text(
+                label,
+                style: theme?.bodyMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: fontSz,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   List<Widget> _buildChipList({
     required BuildContext context,
@@ -1290,43 +1294,41 @@ class _TictactoeGameCard extends StatelessWidget {
     final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
     final fontSz =
         compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+    final busy = isCreating || isFinding;
+    // Кнопка игроков: активна → 2/3/4 фиолетовая; иначе тёмная «2».
+    final playersSelected = !isOffline && playersControlActive;
+    final playersLabel = playersSelected
+        ? '${configForVariant(variant).maxPlayers}'
+        : '2';
+    // Кнопка режима: активна → Классика/Гомоку/Ультимейт; иначе тёмная «Классика».
+    final modeSelected = isOffline || !playersControlActive;
+    final modeVariant = modeSelected
+        ? parseVariant(variant)
+        : variantClassic;
+    final modeIcon = modeVariant == variantGomoku
+        ? Icons.grid_on_rounded
+        : modeVariant == variantUltimate
+            ? Icons.dashboard_customize_rounded
+            : Icons.close_rounded;
     return [
-      Container(
-        padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-        decoration: BoxDecoration(
-          color: AppColors.textSecondary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: AppColors.textSecondary.withValues(alpha: 0.25),
-            width: 1,
-          ),
+      if (!isOffline)
+        _selectableChip(
+          selected: playersSelected,
+          onTap: busy ? null : onPlayersChipTap,
+          icon: Icons.groups_rounded,
+          label: playersLabel,
+          theme: theme,
+          padV: padV,
+          padH: padH,
+          iconSz: iconSz,
+          fontSz: fontSz,
+          compact: compact,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.person_outline_rounded,
-              size: iconSz,
-              color: AppColors.textSecondary,
-            ),
-            SizedBox(width: compact ? 3 : 4),
-            Text(
-              '2',
-              style: theme?.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-                fontSize: fontSz,
-                height: 1.35,
-              ),
-            ),
-          ],
-        ),
-      ),
       if (!isOffline)
         Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: isCreating || isFinding ? null : _cycleTurnTime,
+            onTap: busy ? null : _cycleTurnTime,
             borderRadius: BorderRadius.circular(10),
             splashColor: AppColors.accentStart.withValues(alpha: 0.2),
             highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
@@ -1366,121 +1368,17 @@ class _TictactoeGameCard extends StatelessWidget {
             ),
           ),
         ),
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isCreating || isFinding ? null : _cycleGridSize,
-          borderRadius: BorderRadius.circular(10),
-          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-          child: Tooltip(
-            message: context.l10n.gamesTapChangeGrid,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-              decoration: BoxDecoration(
-                color: AppColors.accentSoft.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.grid_on_rounded,
-                    size: iconSz,
-                    color: AppColors.accentStart,
-                  ),
-                  SizedBox(width: compact ? 4 : 6),
-                  Text(
-                    formatGridSize(gridSize),
-                    style: theme?.bodyMedium?.copyWith(
-                      color: AppColors.accentStart,
-                      fontWeight: FontWeight.w600,
-                      fontSize: fontSz,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isCreating || isFinding
-              ? null
-              : () => onSwapRuleChanged(!swapRule),
-          borderRadius: BorderRadius.circular(10),
-          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-          child: Tooltip(
-            message: isOffline
-                ? context.l10n.gamesAlternateStartsHint
-                : context.l10n.gamesSwapSidesHint,
-            child: Container(
-              padding: EdgeInsets.all(compact ? 4 : 6),
-              decoration: BoxDecoration(
-                color: swapRule
-                    ? AppColors.accentSoft.withValues(alpha: 0.6)
-                    : AppColors.textSecondary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: swapRule
-                      ? AppColors.accentStart.withValues(alpha: 0.3)
-                      : AppColors.textSecondary.withValues(alpha: 0.25),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.swap_horiz_rounded,
-                size: iconSz,
-                color:
-                    swapRule ? AppColors.accentStart : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ),
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isCreating || isFinding
-              ? null
-              : () => onFirstMoveRestrictionChanged(!firstMoveRestriction),
-          borderRadius: BorderRadius.circular(10),
-          splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-          highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-          child: Tooltip(
-            message: context.l10n.gamesNoCenterHint,
-            child: Container(
-              padding: EdgeInsets.all(compact ? 4 : 6),
-              decoration: BoxDecoration(
-                color: firstMoveRestriction
-                    ? AppColors.accentSoft.withValues(alpha: 0.6)
-                    : AppColors.textSecondary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: firstMoveRestriction
-                      ? AppColors.accentStart.withValues(alpha: 0.3)
-                      : AppColors.textSecondary.withValues(alpha: 0.25),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.block_rounded,
-                size: iconSz,
-                color: firstMoveRestriction
-                    ? AppColors.accentStart
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
+      _selectableChip(
+        selected: modeSelected,
+        onTap: busy ? null : onModeChipTap,
+        icon: modeIcon,
+        label: variantLabel(modeVariant),
+        theme: theme,
+        padV: padV,
+        padH: padH,
+        iconSz: iconSz,
+        fontSz: fontSz,
+        compact: compact,
       ),
     ];
   }
@@ -1553,9 +1451,7 @@ class _TictactoeGameCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                           // На планшете чуть компактнее — полное имя влезает.
-                          fontSize: isMedium
-                              ? 18
-                              : (isDesktop ? 20 : 18),
+                          fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
                           letterSpacing: -0.3,
                           height: 1.15,
                         ),
@@ -1881,17 +1777,24 @@ class _InviteCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      _InviteGameIcon(gameType: inv.gameType),
+                      GestureDetector(
+                        onTap: () => onShowCreatorInfo(context, inv),
+                        child: _InviteGameIcon(gameType: inv.gameType),
+                      ),
                       const SizedBox(width: 12),
                       Flexible(
-                        child: Text(
-                          inv.creatorName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                        child: InkWell(
+                          onTap: () => onShowCreatorInfo(context, inv),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Text(
+                            inv.creatorName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1951,29 +1854,22 @@ class _InviteCard extends ConsumerWidget {
                             ),
                             const SizedBox(width: 4),
                             Tooltip(
-                              message: context.l10n.gamesGridSize,
-                              child: Icon(Icons.grid_on_rounded,
+                              message: context.l10n.gamesRulesTitle,
+                              child: Icon(Icons.extension_rounded,
                                   size: iconSz, color: AppColors.textSecondary),
                             ),
                             Text(
-                              formatGridSize(inv.gridSize),
+                              variantShortLabel(inv.variant),
                               style: const TextStyle(
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
-                            if (inv.swapRule)
-                              Tooltip(
-                                message: context.l10n.gamesSwapSides,
-                                child: Icon(Icons.swap_horiz_rounded,
-                                    size: iconSz,
-                                    color: AppColors.textSecondary),
-                              ),
-                            if (inv.firstMoveRestriction)
-                              Tooltip(
-                                message: context.l10n.gamesNoCenter,
-                                child: Icon(Icons.block_rounded,
-                                    size: iconSz,
-                                    color: AppColors.textSecondary),
-                              ),
+                            Icon(Icons.person_outline_rounded,
+                                size: iconSz, color: AppColors.textSecondary),
+                            Text(
+                              '${inv.maxPlayers}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textSecondary),
+                            ),
                           ],
                         ),
                       ),
@@ -2038,85 +1934,3 @@ class _InviteGameIcon extends StatelessWidget {
   }
 }
 
-class _InviteCreatorAvatar extends ConsumerWidget {
-  const _InviteCreatorAvatar({
-    required this.creatorName,
-    required this.avatarKind,
-    required this.avatarValue,
-    required this.creatorId,
-  });
-
-  final String creatorName;
-  final String avatarKind;
-  final String? avatarValue;
-  final String creatorId;
-
-  static const _presetIcons = [
-    Icons.face_rounded,
-    Icons.face_2_rounded,
-    Icons.face_3_rounded,
-    Icons.face_4_rounded,
-    Icons.face_5_rounded,
-    Icons.face_6_rounded,
-    Icons.man_rounded,
-    Icons.woman_rounded,
-    Icons.person_rounded,
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    String kind = avatarKind;
-    String? value = avatarValue;
-    if ((value == null || value.isEmpty) && kind == 'letter') {
-      final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
-      for (final f in snapshot?.friends ?? []) {
-        if (f.user.id == creatorId) {
-          kind = f.user.avatarKind;
-          value = f.user.avatarValue;
-          break;
-        }
-      }
-    }
-    Widget avatar;
-    if (kind == 'file' && value != null && value.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(value);
-      avatar = img != null
-          ? CircleAvatar(
-              radius: 22,
-              backgroundImage: img,
-            )
-          : _letterAvatar(creatorName);
-    } else if (kind == 'preset' && value != null) {
-      final idx = int.tryParse(value);
-      if (idx != null && idx >= 0 && idx < _presetIcons.length) {
-        avatar = CircleAvatar(
-          radius: 22,
-          backgroundColor: AppColors.accentSoft,
-          child:
-              Icon(_presetIcons[idx], color: AppColors.accentStart, size: 26),
-        );
-      } else {
-        avatar = _letterAvatar(creatorName);
-      }
-    } else {
-      avatar = _letterAvatar(creatorName);
-    }
-    return avatar;
-  }
-
-  Widget _letterAvatar(String name) {
-    final letter = name.trim().isEmpty ? '?' : name[0].toUpperCase();
-    return CircleAvatar(
-      radius: 22,
-      backgroundColor: AppColors.accentSoft,
-      child: Text(
-        letter,
-        style: const TextStyle(
-          color: AppColors.accentStart,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
-    );
-  }
-}
