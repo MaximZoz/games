@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -86,6 +87,7 @@ type LobbyItem struct {
 	CreatorName          string            `json:"creator_name,omitempty"`
 	OpponentID           *string           `json:"opponent_id,omitempty"`
 	Status               string            `json:"status"`
+	Mode                 string            `json:"mode,omitempty"`
 	GameID               *string           `json:"game_id,omitempty"`
 	CreatedAt            string            `json:"created_at"`
 	TurnTimeSec          int               `json:"turn_time_sec,omitempty"`
@@ -409,10 +411,9 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	swapRule := false
 	firstMoveRestriction := false
 	addBotsAfter30s := body.AddBotsAfter30s
-	// multi3/multi4 — пока только invite (очередь на N игроков отдельно).
-	if (variant == gameengine.VariantMulti3 || variant == gameengine.VariantMulti4) && mode == "matchmake" {
-		mode = "invite"
-	}
+	// multi «Найти игру»: mode остаётся matchmake (публичное лобби),
+	// статус waiting_invite — чтобы добирать игроков до N через JoinLobby.
+	openMultiFind := cfg.MaxPlayers > 2 && mode == "matchmake"
 
 	// Уже в живой партии — нельзя создавать/матчмейкать новую.
 	if h.blockingActiveGameID(ctx, userID) != "" {
@@ -420,7 +421,22 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if mode == "matchmake" {
+	// Multi find: схлопнуть с уже открытым лобби тех же правил (2/3, 3/4…).
+	if openMultiFind {
+		lockKey := fmt.Sprintf("open_multi_lock:%d:%s:%d", turnTimeSec, variant, stakeBronze)
+		locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+		if locked {
+			defer h.Rdb.Del(ctx, lockKey)
+		}
+		if existingID := h.findOpenMultiLobbyID(ctx, userID, turnTimeSec, string(variant), stakeBronze, cfg.MaxPlayers); existingID != "" {
+			if h.mergeIntoOpenMultiLobby(w, r, ctx, userID, existingID, turnTimeSec, variant, gridSize, stakeBronze, cfg) {
+				return
+			}
+			// Лобби успели закрыть — создаём новое ниже.
+		}
+	}
+
+	if mode == "matchmake" && !openMultiFind {
 		otherEntry, err := h.Rdb.RPop(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze)).Result()
 		if err == nil && otherEntry != "" {
 			parts := strings.SplitN(otherEntry, ":", 2)
@@ -468,7 +484,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 
 	lobbyID := uuid.New().String()
 	status := lobbyStatusWaitingInvite
-	if mode == "matchmake" {
+	if mode == "matchmake" && !openMultiFind {
 		status = lobbyStatusWaitingMatchmake
 	}
 
@@ -492,7 +508,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		"add_bots_after_30s", strconv.FormatBool(addBotsAfter30s),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
-	if mode == "matchmake" {
+	if mode == "matchmake" && !openMultiFind {
 		mmKey := matchmakeKeyVariant(turnTimeSec, variant, stakeBronze)
 		pipe.LPush(ctx, mmKey, userID.String()+":"+lobbyID)
 		pipe.Expire(ctx, mmKey, 5*time.Minute)
@@ -533,6 +549,276 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		resp["chat_id"] = chatIDStr
 	}
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// findOpenMultiLobbyID — открытое multi-лобби «Найти игру» с теми же правилами и свободным слотом.
+func (h *GamesHandler) findOpenMultiLobbyID(
+	ctx context.Context,
+	excludeUser uuid.UUID,
+	turnTimeSec int,
+	variantStr string,
+	stakeBronze, maxPlayers int,
+) string {
+	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	if err != nil {
+		return ""
+	}
+	for _, key := range keys {
+		if strings.HasSuffix(key, ":invited") {
+			continue
+		}
+		m, err := h.Rdb.HGetAll(ctx, key).Result()
+		if err != nil || len(m) == 0 {
+			continue
+		}
+		if m["mode"] != "matchmake" {
+			continue
+		}
+		st := m["status"]
+		if st != lobbyStatusWaitingInvite && st != lobbyStatusWaitingMatchmake {
+			continue
+		}
+		if strings.TrimSpace(m["invite_target_id"]) != "" {
+			continue
+		}
+		if m["creator_id"] == excludeUser.String() {
+			continue
+		}
+		tt, _ := strconv.Atoi(m["turn_time_sec"])
+		if tt != turnTimeSec {
+			continue
+		}
+		stakes, _ := strconv.Atoi(m["stake_bronze"])
+		if stakes < 1 {
+			stakes = 1
+		}
+		if stakes != stakeBronze {
+			continue
+		}
+		_, v := resolveVariantConfig(m["variant"], func() int {
+			gs, _ := strconv.Atoi(m["grid_size"])
+			return gs
+		}())
+		if string(v) != variantStr {
+			continue
+		}
+		mp, _ := strconv.Atoi(m["max_players"])
+		if mp < 1 {
+			mp = maxPlayers
+		}
+		players := parsePlayerIDsCSV(m["player_ids"])
+		if len(players) == 0 {
+			players = []string{m["creator_id"]}
+		}
+		already := false
+		for _, p := range players {
+			if p == excludeUser.String() {
+				already = true
+				break
+			}
+		}
+		if already || len(players) >= mp {
+			continue
+		}
+		return strings.TrimPrefix(key, "lobby:")
+	}
+	return ""
+}
+
+// mergeIntoOpenMultiLobby добавляет игрока в существующее open multi-лобби.
+// true — ответ уже записан в w.
+func (h *GamesHandler) mergeIntoOpenMultiLobby(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctx context.Context,
+	userID uuid.UUID,
+	lobbyID string,
+	turnTimeSec int,
+	variant gameengine.Variant,
+	gridSize, stakeBronze int,
+	cfg gameengine.Config,
+) bool {
+	key := "lobby:" + lobbyID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		return false
+	}
+	st := m["status"]
+	if st != lobbyStatusWaitingInvite && st != lobbyStatusWaitingMatchmake {
+		return false
+	}
+	if m["mode"] != "matchmake" || strings.TrimSpace(m["invite_target_id"]) != "" {
+		return false
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{m["creator_id"]}
+	}
+	for _, p := range players {
+		if p == userID.String() {
+			setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
+			writeJSON(w, http.StatusOK, map[string]any{
+				"lobby_id":   lobbyID,
+				"status":     st,
+				"created_at": m["created_at"],
+				"creator_id": m["creator_id"],
+				"chat_id":    m["chat_id"],
+			})
+			return true
+		}
+	}
+	if len(players) >= cfg.MaxPlayers {
+		return false
+	}
+
+	players = append(players, userID.String())
+	notify := make([]uuid.UUID, 0, len(players))
+	for _, p := range players {
+		if u, e := uuid.Parse(p); e == nil {
+			notify = append(notify, u)
+		}
+	}
+	chatIDStr := m["chat_id"]
+	if cfg.MaxPlayers > 2 {
+		title := "На троих"
+		if variant == gameengine.VariantMulti4 {
+			title = "На четверых"
+		}
+		if cid, cerr := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, notify, title, "tictactoe"); cerr == nil {
+			chatIDStr = cid.String()
+		}
+	}
+
+	// Ещё не полный состав — только дописываем игрока.
+	if len(players) < cfg.MaxPlayers {
+		pipe := h.Rdb.Pipeline()
+		pipe.HSet(ctx, key,
+			"player_ids", formatPlayerIDsCSV(players),
+			"opponent_id", userID.String(),
+			"variant", string(variant),
+			"max_players", strconv.Itoa(cfg.MaxPlayers),
+		)
+		if chatIDStr != "" {
+			pipe.HSet(ctx, key, "chat_id", chatIDStr)
+		}
+		pipe.Expire(ctx, key, lobbyTTL)
+		if _, err := pipe.Exec(ctx); err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return true
+		}
+		payload := map[string]any{
+			"type":          "lobby_updated",
+			"lobby_id":      lobbyID,
+			"player_ids":    players,
+			"players_count": len(players),
+			"max_players":   cfg.MaxPlayers,
+			"players":       h.loadLobbyPlayers(ctx, players),
+		}
+		if chatIDStr != "" {
+			payload["chat_id"] = chatIDStr
+		}
+		h.broadcast(notify, payload)
+		h.broadcast(notify, map[string]any{"type": "chat_list_changed"})
+		setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
+		resp := map[string]any{
+			"lobby_id":   lobbyID,
+			"status":     st,
+			"created_at": m["created_at"],
+			"creator_id": m["creator_id"],
+		}
+		if chatIDStr != "" {
+			resp["chat_id"] = chatIDStr
+		}
+		writeJSON(w, http.StatusOK, resp)
+		return true
+	}
+
+	// Полный состав — стартуем через обычный JoinLobby (идемпотентно допишет/запустит).
+	// Откатываем append: JoinLobby сам добавит игрока.
+	// Здесь players уже с новым — запускаем игру напрямую.
+	uuids := notify
+	for _, u := range uuids {
+		pb, e := store.GetBalance(ctx, h.Pool, u)
+		if e != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return true
+		}
+		if pb < stakeBronze {
+			WriteErr(w, r, http.StatusConflict, "a player has insufficient balance")
+			return true
+		}
+	}
+	if err := store.DeductCoinsMany(ctx, h.Pool, uuids, stakeBronze); err != nil {
+		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
+		return true
+	}
+	gameID := uuid.New().String()
+	gameKey := "game:" + gameID
+	assignment := assignMarksRandom(cfg.Marks, players, rand.Shuffle)
+	board := emptyBoardJSON(gridSize)
+	pipe := h.Rdb.Pipeline()
+	pipe.HSet(ctx, key,
+		"opponent_id", userID.String(),
+		"status", lobbyStatusInGame,
+		"game_id", gameID,
+		"variant", string(variant),
+		"player_ids", formatPlayerIDsCSV(players),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+	)
+	if chatIDStr != "" {
+		pipe.HSet(ctx, key, "chat_id", chatIDStr)
+	}
+	pipe.Expire(ctx, key, 24*time.Hour)
+	gameFields := []any{
+		"board", board,
+		"turn", cfg.Marks[0],
+		"status", gameStatusActive,
+		"lobby_id", lobbyID,
+		"turn_time_sec", strconv.Itoa(turnTimeSec),
+		"variant", string(variant),
+		"grid_size", strconv.Itoa(gridSize),
+		"max_players", strconv.Itoa(cfg.MaxPlayers),
+		"swap_rule", "false",
+		"first_move_restriction", "false",
+		"swapped", "false",
+		"stake_bronze", strconv.Itoa(stakeBronze),
+		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	if chatIDStr != "" {
+		gameFields = append(gameFields, "chat_id", chatIDStr)
+	}
+	gameFields = append(gameFields, markFieldsForRedis(assignment)...)
+	if turnTimeSec > 0 {
+		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
+		gameFields = append(gameFields, "turn_deadline", strconv.FormatInt(deadline, 10))
+	}
+	pipe.HSet(ctx, gameKey, gameFields...)
+	pipe.Expire(ctx, gameKey, 24*time.Hour)
+	if _, err := pipe.Exec(ctx); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return true
+	}
+	for _, u := range uuids {
+		clearUserActiveLobby(ctx, h.Rdb, u)
+		setUserActiveGame(ctx, h.Rdb, u, gameID)
+	}
+	startPayload := map[string]any{
+		"type":        "lobby_updated",
+		"lobby_id":    lobbyID,
+		"game_id":     gameID,
+		"opponent_id": userID.String(),
+	}
+	if chatIDStr != "" {
+		startPayload["chat_id"] = chatIDStr
+	}
+	h.broadcast(uuids, startPayload)
+	h.publishGameStarted(uuids, gameID, lobbyID)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"lobby_id": lobbyID,
+		"game_id":  gameID,
+		"matched":  true,
+	})
+	return true
 }
 
 type RematchBody struct {
@@ -1288,11 +1574,15 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		status := m["status"]
-		// Публичный список: matchmake + открытые invite (без реванша/личного invite_target).
+		// Публичный список: 1v1 matchmake + открытый multi find (mode=matchmake).
+		// «Своя игра» (mode=invite) и реванш сюда не попадают.
 		switch status {
 		case lobbyStatusWaitingMatchmake:
 			// ok
 		case lobbyStatusWaitingInvite:
+			if m["mode"] != "matchmake" {
+				continue
+			}
 			if strings.TrimSpace(m["invite_target_id"]) != "" {
 				continue
 			}
@@ -1335,6 +1625,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			CreatorID:            creatorID,
 			CreatorName:          creatorName,
 			Status:               status,
+			Mode:                 m["mode"],
 			CreatedAt:            m["created_at"],
 			TurnTimeSec:          turnTimeSec,
 			Variant:              string(variant),
@@ -1441,6 +1732,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		CreatorID:    creatorID,
 		CreatorName:  creatorName,
 		Status:       status,
+		Mode:         m["mode"],
 		CreatedAt:    m["created_at"],
 		TurnTimeSec:  turnTimeSec,
 		Variant:      string(variant),

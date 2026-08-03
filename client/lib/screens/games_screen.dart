@@ -312,12 +312,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       _persistSettings();
                     },
                     onCreateGame: () => _createGame(context, 'invite'),
-                    onFindGame: () => _createGame(
-                      context,
-                      configForVariant(_selectedVariant).maxPlayers > 2
-                          ? 'invite'
-                          : 'matchmake',
-                    ),
+                    // Всегда matchmake: multi схлопывается на сервере в одно лобби.
+                    onFindGame: () => _createGame(context, 'matchmake'),
                     onPlayOffline: playOffline,
                     invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,

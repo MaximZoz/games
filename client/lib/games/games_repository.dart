@@ -403,6 +403,8 @@ class LobbyItem {
   final String creatorName;
   final String? opponentId;
   final String status;
+  /// `matchmake` — открытый поиск («Лобби»); `invite` — «Своя игра» / реванш.
+  final String mode;
   final String? gameId;
   final String createdAt;
   final int turnTimeSec;
@@ -423,6 +425,7 @@ class LobbyItem {
     String? creatorName,
     this.opponentId,
     required this.status,
+    this.mode = '',
     this.gameId,
     required this.createdAt,
     this.turnTimeSec = 0,
@@ -459,6 +462,7 @@ class LobbyItem {
       creatorName: localizeDisplayName(json['creator_name'] as String?),
       opponentId: json['opponent_id'] as String?,
       status: json['status'] as String? ?? '',
+      mode: (json['mode'] as String?)?.trim() ?? '',
       gameId: json['game_id'] as String?,
       createdAt: json['created_at'] as String? ?? '',
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,

@@ -50,22 +50,29 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
 /// Пока деталь лобби не загружена, опираемся на [initialMode] из query
 /// (`?mode=invite|matchmake`), чтобы не показывать «Лобби» для своей игры.
 /// Ссылки из чата ([fromInviteLink]) — не «Своя игра»: это вход гостя.
+/// Открытый multi-поиск: status=waiting_invite + mode=matchmake → «Лобби».
 String tictactoeLobbyAppBarTitle({
   String? status,
   String? initialMode,
+  String? lobbyMode,
   bool fromInviteLink = false,
   bool isLobbyMember = false,
 }) {
   final l10n = LocaleService.l10n;
+  final mode = (lobbyMode != null && lobbyMode.trim().isNotEmpty)
+      ? lobbyMode.trim()
+      : (initialMode ?? '');
   if (status == 'waiting_matchmake') return l10n.lobbyMatchmake;
   if (status == 'waiting_invite') {
+    // «Найти игру» (открытый поиск) — Лобби, не «Своя игра».
+    if (mode == 'matchmake') return l10n.lobbyMatchmake;
     // Уже в составе — «Своя игра», а не «Войти в игру».
     if (isLobbyMember || !fromInviteLink) return l10n.lobbyPrivateGame;
     return l10n.lobbyEnterGame;
   }
   if (fromInviteLink && !isLobbyMember) return l10n.lobbyEnterGame;
-  if (initialMode == 'matchmake') return l10n.lobbyMatchmake;
-  if (initialMode == 'invite') return l10n.lobbyPrivateGame;
+  if (mode == 'matchmake') return l10n.lobbyMatchmake;
+  if (mode == 'invite') return l10n.lobbyPrivateGame;
   return '';
 }
 
@@ -184,11 +191,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                 final title = tictactoeLobbyAppBarTitle(
                   status: lobby?.status,
                   initialMode: widget.initialMode,
+                  lobbyMode: lobby?.mode,
                   fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
                           true ||
                       (lobby != null &&
                           currentUser != null &&
-                          lobby.creatorId != currentUser.id),
+                          lobby.creatorId != currentUser.id &&
+                          lobby.mode != 'matchmake'),
                   isLobbyMember: member,
                 );
                 if (title.isEmpty) return const SizedBox.shrink();

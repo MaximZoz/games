@@ -1189,8 +1189,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       final variant = game?.variant ?? variantClassic;
       final turnTimeSec = game?.turnTimeSec ?? 0;
       final stakeBronze = game?.stakeBronze ?? 1;
-      final cfg = configForVariant(variant);
-      final mode = cfg.maxPlayers > 2 ? 'invite' : 'matchmake';
+      // Всегда matchmake: multi схлопывается на сервере в одно «Лобби».
+      const mode = 'matchmake';
       final repo = ref.read(gamesRepositoryProvider);
 
       // Присоединиться к такому же открытому лобби, если уже есть.

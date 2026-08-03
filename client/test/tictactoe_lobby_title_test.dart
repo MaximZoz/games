@@ -22,10 +22,29 @@ void main() {
       );
     });
 
-    test('prefers loaded status over initialMode', () {
+    test('open multi find (waiting_invite + matchmake) is Лобби', () {
       expect(
         tictactoeLobbyAppBarTitle(
           status: 'waiting_invite',
+          lobbyMode: 'matchmake',
+          initialMode: 'invite',
+        ),
+        'Лобби',
+      );
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          initialMode: 'matchmake',
+        ),
+        'Лобби',
+      );
+    });
+
+    test('prefers loaded status over initialMode for private invite', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          lobbyMode: 'invite',
           initialMode: 'matchmake',
         ),
         'Своя игра',
@@ -54,6 +73,7 @@ void main() {
       expect(
         tictactoeLobbyAppBarTitle(
           status: 'waiting_invite',
+          lobbyMode: 'invite',
           fromInviteLink: true,
         ),
         'Войти в игру',
@@ -64,10 +84,23 @@ void main() {
       expect(
         tictactoeLobbyAppBarTitle(
           status: 'waiting_invite',
+          lobbyMode: 'invite',
           fromInviteLink: true,
           isLobbyMember: true,
         ),
         'Своя игра',
+      );
+    });
+
+    test('joined open-find member sees Лобби', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          lobbyMode: 'matchmake',
+          fromInviteLink: true,
+          isLobbyMember: true,
+        ),
+        'Лобби',
       );
     });
 
