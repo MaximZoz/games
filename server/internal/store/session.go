@@ -83,3 +83,22 @@ func RotateSessionRefreshToken(
 	}
 	return nil
 }
+
+// DeleteSessionsByUserID удаляет все сессии пользователя (один активный вход).
+func DeleteSessionsByUserID(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) error {
+	_, err := pool.Exec(ctx, `DELETE FROM sessions WHERE user_id = $1`, userID)
+	return err
+}
+
+// SessionExists возвращает true, если сессия ещё в БД и не истекла.
+func SessionExists(ctx context.Context, pool *pgxpool.Pool, sessionID uuid.UUID) (bool, error) {
+	var ok bool
+	err := pool.QueryRow(ctx,
+		`SELECT EXISTS(
+			SELECT 1 FROM sessions
+			WHERE id = $1 AND expires_at > NOW()
+		)`,
+		sessionID,
+	).Scan(&ok)
+	return ok, err
+}

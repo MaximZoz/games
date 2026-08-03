@@ -427,12 +427,18 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 }
               }
               // Не трогаем провайдеры баланса из build — только после кадра.
+              // Сервер: банк stake*N победителю; чистый плюс к доматчевому = stake*(N-1).
+              final playersN = game.playerUserIds.length >= 2
+                  ? game.playerUserIds.length
+                  : (game.maxPlayers > 2 ? game.maxPlayers : 2);
+              final pot = game.stakeBronze * playersN;
+              final netProfit = game.stakeBronze * (playersN - 1);
               final settledCredit = iWonEarly
-                  ? game.stakeBronze * 2
+                  ? pot
                   : isDraw
                       ? game.stakeBronze
                       : 0;
-              final settledReward = iWonEarly ? game.stakeBronze : 0;
+              final settledReward = iWonEarly ? netProfit : 0;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
                 setState(() {
@@ -528,8 +534,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             }
 
             final iWon = iWonEarly;
+            final playersNForReward = game.playerUserIds.length >= 2
+                ? game.playerUserIds.length
+                : (game.maxPlayers > 2 ? game.maxPlayers : 2);
             final showRewardChip = isOver && iWon && game.stakeBronze > 0;
-            final rewardBronze = game.stakeBronze;
+            // Чистый выигрыш (как меняется баланс относительно до матча).
+            final rewardBronze = game.stakeBronze * (playersNForReward - 1);
             final isDesktop = isWide(context);
             final narrow = isNarrow(context);
             final phoneLandscape = isPhoneLandscape(context);
@@ -1125,7 +1135,21 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (isOver || eliminated) {
       final rematchLobbyId = _rematchLobbyId;
       _rematchLobbyId = null;
-      ref.read(activeGameProvider.notifier).clearLocal();
+      if (eliminated && !isOver) {
+        // Партия ещё идёт — оставляем «Текущая игра», чтобы вернуться смотреть.
+        final prev = ref.read(activeGameProvider).valueOrNull;
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: widget.gameId,
+                lobbyId: prev?.lobbyId,
+                isMyTurn: false,
+                isEliminated: true,
+              ),
+            );
+      } else {
+        ref.read(activeGameProvider.notifier).clearLocal();
+      }
       context.go('/games');
       if (rematchLobbyId != null) {
         unawaited(
@@ -2627,7 +2651,7 @@ class _StatusWithReward extends StatelessWidget {
   }
 }
 
-/// Чип чистого выигрыша (= ставка) — источник полёта монеты в баланс.
+/// Чип чистого выигрыша (= stake*(N-1)) — источник полёта монеты в баланс.
 class _GameRewardChip extends StatelessWidget {
   const _GameRewardChip({
     super.key,

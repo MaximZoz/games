@@ -16,7 +16,7 @@ func TestRequireAuth_NoHeader(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	handler := RequireAuth(secret, next)
+	handler := RequireAuth(secret, nil, next)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
 	rec := httptest.NewRecorder()
@@ -33,7 +33,7 @@ func TestRequireAuth_InvalidHeader(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	handler := RequireAuth(secret, next)
+	handler := RequireAuth(secret, nil, next)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
 	req.Header.Set("Authorization", "InvalidFormat")
@@ -51,7 +51,7 @@ func TestRequireAuth_InvalidToken(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	handler := RequireAuth(secret, next)
+	handler := RequireAuth(secret, nil, next)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
 	req.Header.Set("Authorization", "Bearer invalid.jwt.token")
@@ -67,7 +67,8 @@ func TestRequireAuth_InvalidToken(t *testing.T) {
 func TestRequireAuth_ValidToken(t *testing.T) {
 	secret := []byte("secret")
 	userID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-	token, err := auth.NewJWT(secret, userID, "user@test.com", time.Minute)
+	sessionID := uuid.MustParse("660e8400-e29b-41d4-a716-446655440000")
+	token, err := auth.NewJWT(secret, userID, "user@test.com", time.Minute, sessionID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +84,7 @@ func TestRequireAuth_ValidToken(t *testing.T) {
 		capturedID = id
 		w.WriteHeader(http.StatusOK)
 	})
-	handler := RequireAuth(secret, next)
+	handler := RequireAuth(secret, nil, next)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
 	req.Header.Set("Authorization", "Bearer "+token)

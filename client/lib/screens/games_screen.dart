@@ -869,9 +869,12 @@ class _GamesPageContent extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          active.isMyTurn
-                                              ? context.l10n.gamesMyTurn
-                                              : context.l10n.gamesOpponentTurn,
+                                          active.isEliminated
+                                              ? 'Вы выбыли'
+                                              : active.isMyTurn
+                                                  ? context.l10n.gamesMyTurn
+                                                  : context
+                                                      .l10n.gamesOpponentTurn,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w600,
                                             color: AppColors.textPrimary,

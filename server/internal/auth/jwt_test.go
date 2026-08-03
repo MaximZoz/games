@@ -11,10 +11,11 @@ var testSecret = []byte("test-secret-key")
 
 func TestNewJWT_and_ParseJWT(t *testing.T) {
 	userID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
+	sessionID := uuid.MustParse("660e8400-e29b-41d4-a716-446655440000")
 	email := "user@test.com"
 	expiresIn := 5 * time.Minute
 
-	token, err := NewJWT(testSecret, userID, email, expiresIn)
+	token, err := NewJWT(testSecret, userID, email, expiresIn, sessionID)
 	if err != nil {
 		t.Fatalf("NewJWT: %v", err)
 	}
@@ -32,11 +33,14 @@ func TestNewJWT_and_ParseJWT(t *testing.T) {
 	if claims.Email != email {
 		t.Errorf("Email = %q, want %q", claims.Email, email)
 	}
+	if claims.SessionID != sessionID.String() {
+		t.Errorf("SessionID = %q, want %q", claims.SessionID, sessionID.String())
+	}
 }
 
 func TestParseJWT_invalid(t *testing.T) {
 	tests := []struct {
-		name string
+		name  string
 		token string
 	}{
 		{"empty", ""},
@@ -55,7 +59,8 @@ func TestParseJWT_invalid(t *testing.T) {
 
 func TestParseJWT_wrongSecret(t *testing.T) {
 	userID := uuid.New()
-	token, _ := NewJWT(testSecret, userID, "a@b.c", time.Minute)
+	sessionID := uuid.New()
+	token, _ := NewJWT(testSecret, userID, "a@b.c", time.Minute, sessionID)
 	otherSecret := []byte("other-secret")
 	_, err := ParseJWT(otherSecret, token)
 	if err == nil {
