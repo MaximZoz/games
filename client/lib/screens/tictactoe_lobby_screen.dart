@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
@@ -704,13 +705,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
           final friends = snapshot.friends;
           final presence =
               ref.watch(presenceMapProvider).valueOrNull ?? const {};
-          final visibleFriends = List.of(friends)
-            ..sort((a, b) {
-              final aOnline = presence[a.user.id]?.online ?? false;
-              final bOnline = presence[b.user.id]?.online ?? false;
-              if (aOnline == bOnline) return 0;
-              return aOnline ? -1 : 1;
-            });
+          final visibleFriends = List.of(friends);
+          sortByPresenceOnlineFirst(
+            visibleFriends,
+            (f) => f.user.id,
+            presence,
+          );
           if (visibleFriends.isEmpty) {
             final empty = Padding(
               padding: const EdgeInsets.all(16),
@@ -737,6 +737,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             itemBuilder: (context, i) {
               final f = visibleFriends[i];
               final friendId = f.user.id;
+              final friendPresence = presence[friendId];
+              final statusText = formatPresenceStatus(friendPresence);
               final isInvited = _invitedFriendIds.contains(friendId);
               final isInviting = _invitingFriendIds.contains(friendId);
               return Padding(
@@ -750,21 +752,43 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                         child: GestureDetector(
                           onTap: () => _showFriendInfo(context, f),
                           behavior: HitTestBehavior.opaque,
-                          child: _buildFriendAvatar(f.user, 20),
+                          child: _buildFriendAvatar(
+                            f.user,
+                            20,
+                            isOnline: friendPresence?.online == true,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        f.user.displayName?.trim().isNotEmpty == true
-                            ? f.user.displayName!
-                            : context.l10n.commonUser,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            f.user.displayName?.trim().isNotEmpty == true
+                                ? f.user.displayName!
+                                : context.l10n.commonUser,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (statusText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     OutlinedButton(
@@ -1456,25 +1480,58 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     }());
   }
 
-  Widget _buildFriendAvatar(FriendUserItem user, double radius) {
+  Widget _buildFriendAvatar(
+    FriendUserItem user,
+    double radius, {
+    bool isOnline = false,
+  }) {
+    Widget avatar;
     if (user.avatarKind == 'file' &&
         user.avatarValue != null &&
         user.avatarValue!.trim().isNotEmpty) {
       final img = AvatarMemoryCache.fromAvatarValue(user.avatarValue!);
       if (img != null) {
-        return CircleAvatar(radius: radius, backgroundImage: img);
+        avatar = CircleAvatar(radius: radius, backgroundImage: img);
+      } else {
+        avatar = _friendLetterAvatar(user, radius);
       }
-    }
-    if (user.avatarKind == 'preset' && user.avatarValue != null) {
+    } else if (user.avatarKind == 'preset' && user.avatarValue != null) {
       final idx = int.tryParse(user.avatarValue!);
       if (idx != null && idx >= 0 && idx < _presetAvatarIcons.length) {
-        return CircleAvatar(
+        avatar = CircleAvatar(
           radius: radius,
           backgroundColor: AppColors.accentSoft,
           child: Icon(_presetAvatarIcons[idx], color: AppColors.accentStart),
         );
+      } else {
+        avatar = _friendLetterAvatar(user, radius);
       }
+    } else {
+      avatar = _friendLetterAvatar(user, radius);
     }
+    if (!isOnline) return avatar;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        avatar,
+        Positioned(
+          right: -1,
+          bottom: -1,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.surfaceCard, width: 1),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _friendLetterAvatar(FriendUserItem user, double radius) {
     final displayName = user.displayName?.trim() ?? '';
     final letter = displayName.isEmpty ? '?' : displayName[0].toUpperCase();
     return CircleAvatar(
