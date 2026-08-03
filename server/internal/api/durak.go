@@ -455,7 +455,7 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		clearUserActiveLobby(ctx, h.Rdb, u)
 		setUserActiveGame(ctx, h.Rdb, u, gameID)
 	}
-	h.publishGameStarted(players, gameID, lobbyID)
+	h.publishGameStartedTyped(players, gameID, lobbyID, durakGameType)
 
 	// В ответ — либо game_id (создателю), либо просто joined.
 	w.Header().Set("Content-Type", "application/json")

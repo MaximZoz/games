@@ -3382,12 +3382,22 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 	writeJSON(w, http.StatusOK, map[string]any{"status": gameStatusDraw, "draw": true})
 }
 
-func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
+// publishGameStartedTyped — как publishGameStarted, но включает game_type в payload,
+// чтобы клиент понял, в какой экран роутить `/games/<gameType>/game/...`.
+func (h *GamesHandler) publishGameStartedTyped(userIDs []uuid.UUID, gameID, lobbyID, gameType string) {
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
 	h.broadcast(userIDs, map[string]any{
-		"type":     "game_started",
-		"game_id":  gameID,
-		"lobby_id": lobbyID,
+		"type":      "game_started",
+		"game_id":   gameID,
+		"lobby_id":  lobbyID,
+		"game_type": gameType,
 	})
+}
+
+func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
+	h.publishGameStartedTyped(userIDs, gameID, lobbyID, "tictactoe")
 }
 
 // notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).

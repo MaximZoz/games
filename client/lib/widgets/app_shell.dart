@@ -269,12 +269,17 @@ class AppShell extends ConsumerWidget {
           }
           if (type == 'game_started' || type == 'lobby_updated') {
             final router = GoRouter.of(context);
-            final gameId = realtimeGameIdForNavigation(
+            final nav = realtimeGameNavForEvent(
               event,
               currentPath: router.routerDelegate.currentConfiguration.uri.path,
             );
-            if (context.mounted) {
-              navigateToGame(router, gameNavigation, gameId);
+            if (context.mounted && nav != null) {
+              navigateToGame(
+                router,
+                gameNavigation,
+                nav.gameId,
+                gameType: nav.gameType,
+              );
             }
           }
           if (type == 'daily_reward_available' ||

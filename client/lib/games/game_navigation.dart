@@ -1,6 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+/// Префиксы пути партии по типу игры.
+const _gamePathPrefixes = <String, String>{
+  'tictactoe': '/games/tictactoe/game/',
+  'durak': '/games/durak/game/',
+};
+const _lobbyPathPrefixes = <String, String>{
+  'tictactoe': '/games/tictactoe/lobby/',
+  'durak': '/games/durak/lobby/',
+};
+
+/// Возвращает префикс пути партии для game_type ('/games/<gt>/game/').
+String gamePathPrefixFor(String gameType) {
+  return _gamePathPrefixes[gameType] ?? _gamePathPrefixes['tictactoe']!;
+}
+
+/// Префикс лобби для game_type.
+String lobbyPathPrefixFor(String gameType) {
+  return _lobbyPathPrefixes[gameType] ?? _lobbyPathPrefixes['tictactoe']!;
+}
+
+/// Совместимая константа для legacy-кода. Новый код — используйте
+/// [gamePathPrefixFor].
 const tictactoeGamePathPrefix = '/games/tictactoe/game/';
 
 final gameNavigationCoordinatorProvider =
@@ -13,6 +35,7 @@ class GameNavigationCoordinator {
     String? gameId, {
     required String currentPath,
     String? expectedLobbyId,
+    String gameType = 'tictactoe',
   }) {
     final normalizedId = gameId?.trim();
     if (normalizedId == null || normalizedId.isEmpty) return null;
@@ -23,7 +46,7 @@ class GameNavigationCoordinator {
       return null;
     }
 
-    final target = '$tictactoeGamePathPrefix$normalizedId';
+    final target = '${gamePathPrefixFor(gameType)}$normalizedId';
     return currentPath == target ? null : target;
   }
 }
@@ -33,19 +56,29 @@ bool navigateToGame(
   GameNavigationCoordinator coordinator,
   String? gameId, {
   String? expectedLobbyId,
+  String gameType = 'tictactoe',
 }) {
   final currentPath = router.routerDelegate.currentConfiguration.uri.path;
   final target = coordinator.targetForGame(
     gameId,
     currentPath: currentPath,
     expectedLobbyId: expectedLobbyId,
+    gameType: gameType,
   );
   if (target == null) return false;
   router.go(target);
   return true;
 }
 
-String? realtimeGameIdForNavigation(
+/// Разрешение realtime-события в переход на партию: возвращает пару
+/// (gameId, gameType) либо null.
+class RealtimeGameNavTarget {
+  const RealtimeGameNavTarget({required this.gameId, this.gameType = 'tictactoe'});
+  final String gameId;
+  final String gameType;
+}
+
+RealtimeGameNavTarget? realtimeGameNavForEvent(
   Map<String, dynamic> event, {
   required String currentPath,
   String? expectedLobbyId,
@@ -60,7 +93,6 @@ String? realtimeGameIdForNavigation(
   }
 
   final eventLobbyId = event['lobby_id']?.toString().trim();
-  // Watcher конкретного лобби: чужие события не трогаем.
   if (expectedLobbyId != null &&
       eventLobbyId != null &&
       eventLobbyId.isNotEmpty &&
@@ -77,20 +109,35 @@ String? realtimeGameIdForNavigation(
   }
 
   final gameId = event['game_id']?.toString().trim();
-  return gameId == null || gameId.isEmpty ? null : gameId;
+  if (gameId == null || gameId.isEmpty) return null;
+  final gt = event['game_type']?.toString().trim();
+  return RealtimeGameNavTarget(
+    gameId: gameId,
+    gameType: (gt == null || gt.isEmpty) ? 'tictactoe' : gt,
+  );
+}
+
+/// Совместимый API — только gameId. Используется в старом коде.
+@Deprecated('Use realtimeGameNavForEvent for full gameType support')
+String? realtimeGameIdForNavigation(
+  Map<String, dynamic> event, {
+  required String currentPath,
+  String? expectedLobbyId,
+}) {
+  return realtimeGameNavForEvent(
+    event,
+    currentPath: currentPath,
+    expectedLobbyId: expectedLobbyId,
+  )?.gameId;
 }
 
 /// Авто-вход в партию с любой вкладки (чаты, друзья, главная…),
-/// кроме экранов авторизации. Иначе создатель инвайта, ушедший со страницы
-/// лобби, не попадает в игру, когда соперник принял приглашение.
+/// кроме экранов авторизации.
 bool _allowsAutomaticGameNavigation(
   String currentPath, {
   String? expectedLobbyId,
 }) {
   if (_isAuthOrPublicPath(currentPath)) return false;
-  // expectedLobbyId ограничивает только совпадение lobby_id в событии
-  // (см. realtimeGameIdForNavigation), а не текущий URL — пользователь
-  // мог переключить вкладку, пока лобби ещё ждёт.
   return true;
 }
 
@@ -104,8 +151,12 @@ bool _isAuthOrPublicPath(String path) {
 }
 
 String? _lobbyIdFromPath(String currentPath) {
-  const prefix = '/games/tictactoe/lobby/';
-  if (!currentPath.startsWith(prefix)) return null;
-  final lobbyId = currentPath.substring(prefix.length).trim();
-  return lobbyId.isEmpty || lobbyId.contains('/') ? null : lobbyId;
+  for (final prefix in _lobbyPathPrefixes.values) {
+    if (currentPath.startsWith(prefix)) {
+      final id = currentPath.substring(prefix.length).trim();
+      if (id.isEmpty || id.contains('/')) return null;
+      return id;
+    }
+  }
+  return null;
 }

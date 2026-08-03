@@ -248,9 +248,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             .uri
             .path;
         if (path != '/games') return;
-        context.go(
-          '/games/tictactoe/lobby/${activeLobby.lobbyId}?mode=invite',
-        );
+        final gt = activeLobby.gameType.isEmpty
+            ? 'tictactoe'
+            : activeLobby.gameType;
+        context.go('/games/$gt/lobby/${activeLobby.lobbyId}?mode=invite');
       });
     }
 
@@ -1518,45 +1519,38 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       chips: chips,
       actions: GameCardActionsRow(
         createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
         onCreate: () => _create('invite'),
         findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
         onFind: () => _create('matchmake'),
-        showOffline: widget.isOffline,
-        offlineLabel: context.l10n.gamesPlay,
-        onOffline: () =>
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () =>
             context.push('/games/durak/offline?deck=$_deckSize'),
         isCreating: _creating,
         isFinding: _finding,
         isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     );
   }
 
   void _showRules(BuildContext context) {
-    showDialog(
+    showGameRulesDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Правила «Дурака»'),
-        content: SingleChildScrollView(
-          child: Text(
-            '${_modeLabel(_gameMode)}\n'
-            'Игроков: $_players\n'
-            'Колода: ${_deckLabel(_deckSize)}\n'
-            '${widget.isOffline ? 'Игра против бота, без ставок.' : 'Ставка: $_stake бронзы. Время на ход: ${formatTurnTime(_turnTimeSec)}.'}\n\n'
-            'Атакующий кладёт карты, защитник бьёт (той же масти старше или '
-            'козырем). Козырь бьёт только козырь. Когда все карты отбиты — '
-            'атакующий говорит «Бито», и они уходят в отбой. Если защитник '
-            'не хочет отбивать — забирает все со стола. Проигравший — тот, '
-            'у кого в конце партии остались карты, «дурак».',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.l10n.commonClose),
-          ),
-        ],
-      ),
+      title: context.l10n.gamesRulesTitle,
+      content: rulesTextLines([
+        'Режим: ${_modeLabel(_gameMode)}',
+        'Игроки: $_players. Колода: ${_deckLabel(_deckSize)}.',
+        widget.isOffline
+            ? 'Игра против бота, без ставок и лимита времени.'
+            : 'Время на ход: ${formatTurnTime(_turnTimeSec)}. Ставка: $_stake бронзы.',
+        'Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.',
+        'Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.',
+        'Проигравший — у кого в конце партии остались карты, «дурак».',
+      ]),
+      closeLabel: context.l10n.commonClose,
     );
   }
 }
@@ -1780,20 +1774,11 @@ class _TictactoeGameCard extends StatelessWidget {
   }
 
   void _showRulesInfo(BuildContext context) {
-    showDialog(
+    showGameRulesDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gamesRulesTitle),
-        content: SingleChildScrollView(
-          child: _buildRulesWidget(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.l10n.commonClose),
-          ),
-        ],
-      ),
+      title: context.l10n.gamesRulesTitle,
+      content: _buildRulesWidget(),
+      closeLabel: context.l10n.commonClose,
     );
   }
 
@@ -1931,90 +1916,22 @@ class _TictactoeGameCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
-          if (isOffline)
-            FilledButton.icon(
-              onPressed: onPlayOffline,
-              icon: const Icon(Icons.play_arrow_rounded, size: 22),
-              label: Text(context.l10n.gamesPlay),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentStart,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                ),
-              ),
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: isCreating || isFinding ? null : onCreateGame,
-                    icon: isCreating
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.add_rounded, size: 20),
-                    label: Text(isCreating
-                        ? context.l10n.commonCreating
-                        : context.l10n.gamesCreate),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: isMedium ? 10 : 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: isCreating || isFinding ? null : onFindGame,
-                    icon: isFinding
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.accentStart,
-                            ),
-                          )
-                        : const Icon(Icons.search_rounded, size: 20),
-                    label: Text(isFinding
-                        ? context.l10n.commonSearching
-                        : context.l10n.gamesFindMatch),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accentStart,
-                      side: BorderSide(
-                        color: AppColors.accentStart.withValues(alpha: 0.6),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          // Общий виджет — тот же, что у карточки Дурака.
+          GameCardActionsRow(
+            createLabel: context.l10n.gamesCreate,
+            creatingLabel: context.l10n.commonCreating,
+            onCreate: onCreateGame,
+            findLabel: context.l10n.gamesFindMatch,
+            findingLabel: context.l10n.commonSearching,
+            onFind: onFindGame,
+            offline: isOffline,
+            offlinePlayLabel: context.l10n.gamesPlay,
+            onOfflinePlay: onPlayOffline,
+            isCreating: isCreating,
+            isFinding: isFinding,
+            isDesktop: isDesktop,
+            isMedium: isMedium,
+          ),
         ],
       ),
     );

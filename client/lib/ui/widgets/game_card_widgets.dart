@@ -201,124 +201,170 @@ class GameCardChip extends StatelessWidget {
   }
 }
 
-/// Ряд кнопок «Создать игру» / «Найти игру» / «Играть с ботом».
-/// Первая — заполненная (accent), остальные — outlined. Loading внутри кнопки
-/// заменяет иконку. Кнопка «Оффлайн» отображается только если [showOffline].
+/// Ряд кнопок «Создать игру» / «Найти игру». Визуально идентичен
+/// tictactoe-карточке: filled фиолетовая + outlined с той же геометрией,
+/// иконки 20, размер vpadding зависит от ширины экрана. Loading заменяет
+/// иконку на spinner и текст на «Создание…» / «Поиск…».
+///
+/// В offline-режиме показывается ОДНА широкая кнопка «Играть» (как у tictactoe).
 class GameCardActionsRow extends StatelessWidget {
   const GameCardActionsRow({
     super.key,
     required this.createLabel,
+    required this.creatingLabel,
     required this.onCreate,
     required this.findLabel,
+    required this.findingLabel,
     required this.onFind,
-    this.offlineLabel,
-    this.onOffline,
-    this.showOffline = false,
+    this.offline = false,
+    this.offlinePlayLabel,
+    this.onOfflinePlay,
     this.isCreating = false,
     this.isFinding = false,
     this.isDesktop = false,
+    this.isMedium = false,
   });
 
   final String createLabel;
+  final String creatingLabel;
   final VoidCallback? onCreate;
+
   final String findLabel;
+  final String findingLabel;
   final VoidCallback? onFind;
 
-  final String? offlineLabel;
-  final VoidCallback? onOffline;
-  final bool showOffline;
+  final bool offline;
+  final String? offlinePlayLabel;
+  final VoidCallback? onOfflinePlay;
 
   final bool isCreating;
   final bool isFinding;
   final bool isDesktop;
+  final bool isMedium;
+
+  double get _padV => isMedium ? 12 : (isDesktop ? 14 : 12);
 
   @override
   Widget build(BuildContext context) {
-    final gap = isDesktop ? 12.0 : 8.0;
-    final btnPadV = isDesktop ? 14.0 : 12.0;
-    final children = <Widget>[
-      Expanded(
-        child: FilledButton.icon(
-          onPressed:
-              isCreating || isFinding ? null : onCreate,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accentStart,
-            disabledBackgroundColor:
-                AppColors.accentStart.withValues(alpha: 0.5),
-            padding: EdgeInsets.symmetric(vertical: btnPadV),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    if (offline) {
+      return FilledButton.icon(
+        onPressed: onOfflinePlay,
+        icon: const Icon(Icons.play_arrow_rounded, size: 22),
+        label: Text(offlinePlayLabel ?? 'Играть'),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accentStart,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: EdgeInsets.symmetric(vertical: _padV),
+        ),
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: isCreating || isFinding ? null : onCreate,
+            icon: isCreating
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.add_rounded, size: 20),
+            label: Text(isCreating ? creatingLabel : createLabel),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: EdgeInsets.symmetric(vertical: _padV),
             ),
           ),
-          icon: isCreating
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.add_rounded),
-          label: Text(createLabel,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w700, color: Colors.white)),
         ),
-      ),
-      SizedBox(width: gap),
-      Expanded(
-        child: OutlinedButton.icon(
-          onPressed: isCreating || isFinding ? null : onFind,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentStart,
-            padding: EdgeInsets.symmetric(vertical: btnPadV),
-            side: BorderSide(
-              color: AppColors.accentStart.withValues(alpha: 0.5),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          icon: isFinding
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.accentStart,
-                  ),
-                )
-              : const Icon(Icons.search_rounded),
-          label: Text(findLabel,
-              style: const TextStyle(fontWeight: FontWeight.w600)),
-        ),
-      ),
-    ];
-    if (showOffline && onOffline != null && offlineLabel != null) {
-      children.addAll([
-        SizedBox(width: gap),
+        SizedBox(width: isMedium ? 10 : 12),
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: isCreating || isFinding ? null : onOffline,
+            onPressed: isCreating || isFinding ? null : onFind,
+            icon: isFinding
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.accentStart,
+                    ),
+                  )
+                : const Icon(Icons.search_rounded, size: 20),
+            label: Text(isFinding ? findingLabel : findLabel),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.accentStart,
-              padding: EdgeInsets.symmetric(vertical: btnPadV),
               side: BorderSide(
-                color: AppColors.accentStart.withValues(alpha: 0.5),
+                color: AppColors.accentStart.withValues(alpha: 0.6),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              padding: EdgeInsets.symmetric(vertical: _padV),
             ),
-            icon: const Icon(Icons.smart_toy_rounded),
-            label: Text(offlineLabel!,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
         ),
-      ]);
-    }
-    return Row(children: children);
+      ],
+    );
   }
+}
+
+/// Открывает единый диалог правил игры. Единый вид: заголовок, произвольный
+/// widget-контент (например [buildTictactoeRulesTextWidget] или список
+/// строк), кнопка «Закрыть».
+Future<void> showGameRulesDialog({
+  required BuildContext context,
+  required String title,
+  required Widget content,
+  String closeLabel = 'Закрыть',
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: SingleChildScrollView(child: content),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: Text(closeLabel),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Простой widget-конструктор списка строк-правил с одинаковым отступом,
+/// стилизованный под остальные секции приложения.
+Widget rulesTextLines(List<String> lines) {
+  const style = TextStyle(
+    fontSize: 13,
+    height: 1.4,
+    color: AppColors.textSecondary,
+  );
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var i = 0; i < lines.length; i++) ...[
+        Text(lines[i], style: style),
+        if (i != lines.length - 1) const SizedBox(height: 10),
+      ],
+    ],
+  );
 }
 
 /// Общий «скелет» карточки игры: заголовок + чипы + кнопки, единый стиль.
