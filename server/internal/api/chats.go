@@ -982,10 +982,12 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 		body = i18n.Content(lang, "push.new_message")
 	}
 	h.Push.NotifyUsers(recipients, store.WebPushCategoryChat, PushPayload{
-		Title: from,
-		Body:  body,
-		URL:   "/chats/" + item.ChatID,
-		Tag:   "chat_" + item.ChatID,
+		Title:  from,
+		Body:   body,
+		URL:    "/chats/" + item.ChatID,
+		Tag:    "chat_" + item.ChatID,
+		Kind:   "chat",
+		ChatID: item.ChatID,
 	})
 }
 

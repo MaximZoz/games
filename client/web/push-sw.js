@@ -1,4 +1,6 @@
 /* Web Push service worker for Zozu Games PWA.
+ * v11: клик не затирает deep-link на iOS; пуши в фоне снова доходят
+ *      (не глушим по visibility alone); suppress только тот же чат/матч.
  * v10: viewer в Cache (SW убивается между push — память пустая);
  *      visible client = приложение открыто (Safari focused часто false).
  * v9: в foreground глушим ВСЕ пуши.
@@ -13,8 +15,9 @@ const PENDING_CACHE = 'zozu-push-pending-v1';
 const PENDING_KEY = '/__pending_nav';
 const VIEWER_CACHE = 'zozu-push-viewer-v1';
 const VIEWER_KEY = '/__viewer';
-/** Пока Flutter шлёт heartbeat — считаем экран «смотрит» приложение. */
-const VIEWER_TTL_MS = 45000;
+/** Пока Flutter шлёт heartbeat — считаем экран «смотрит» приложение.
+ *  Короткий TTL: на iOS pagehide иногда опаздывает, иначе пуши глушатся. */
+const VIEWER_TTL_MS = 20000;
 
 /** Состояние экрана из Flutter (надёжнее client.focused на iOS). */
 let viewer = {
@@ -133,17 +136,60 @@ async function setPendingPath(path) {
   }
 }
 
+async function peekPendingPath() {
+  try {
+    const cache = await caches.open(PENDING_CACHE);
+    const res = await cache.match(PENDING_KEY);
+    if (!res) return null;
+    const parsed = await res.json();
+    const path = parsed && parsed.path != null ? String(parsed.path) : '';
+    return path || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** iOS иногда отдаёт data строкой JSON, а не объектом. */
+function readNotificationData(notification) {
+  let data = notification && notification.data;
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data);
+    } catch (_) {
+      data = null;
+    }
+  }
+  return data && typeof data === 'object' ? data : {};
+}
+
+/**
+ * Путь из клика. null = неизвестно (не затирать pending Cache).
+ * Не возвращаем голый '/chats' как «успех», если есть chat_id.
+ */
 function resolveClickPath(notification) {
-  const dataUrl =
-    notification.data && notification.data.url
-      ? String(notification.data.url)
-      : '';
+  const data = readNotificationData(notification);
+  const dataUrl = data.url != null ? String(data.url) : '';
   const fromTag = pathFromTag(notification.tag);
-  if (dataUrl && dataUrl !== '/') {
+  const chatId = data.chat_id != null ? String(data.chat_id).trim() : '';
+  const fromChatId = chatId ? `/chats/${chatId}` : null;
+
+  if (dataUrl && dataUrl !== '/' && dataUrl !== '/chats') {
     return appPathFromUrl(resolveTargetUrl(dataUrl));
   }
-  if (fromTag) return fromTag;
-  return '/';
+  if (fromTag && fromTag !== '/chats') return fromTag;
+  if (fromChatId) return fromChatId;
+  if (dataUrl === '/chats' || fromTag === '/chats') return '/chats';
+  return null;
+}
+
+/** Насколько путь «конкретный» для выбора между click и pending. */
+function pathSpecificity(path) {
+  const p = String(path || '');
+  if (!p || p === '/') return 0;
+  if (p === '/chats' || p === '/games' || p === '/friends') return 1;
+  if (/^\/chats\/[^/?#]+/.test(p)) return 3;
+  if (/^\/games\/tictactoe\/(game|lobby)\/[^/?#]+/.test(p)) return 3;
+  return 2;
 }
 
 /**
@@ -202,20 +248,23 @@ async function closeShownNotifications({ tag, path } = {}) {
 }
 
 /**
- * PWA реально на экране и в фокусе.
- * На iOS при сворачивании visibility часто остаётся visible, а focused=false —
- * поэтому для подавления пуша требуем focused === true.
+ * Окно реально в фокусе (Desktop / корректный Safari).
+ * На iOS при сворачивании visibility часто остаётся 'visible', а focused=false —
+ * поэтому НЕ считаем visibility alone достаточным для «приложение открыто».
  */
-function clientLooksOpen(client) {
+function clientIsFocusedForeground(client) {
   if (!client) return false;
-  // Safari PWA: при открытом приложении focused часто false, а
-  // visibilityState === 'visible' — надёжный сигнал «пользователь внутри».
-  if (client.visibilityState === 'visible') return true;
-  if ('focused' in client && client.focused === true) return true;
-  return false;
+  if (client.visibilityState && client.visibilityState !== 'visible') {
+    return false;
+  }
+  if ('focused' in client) {
+    return client.focused === true;
+  }
+  // Старые движки без focused: ориентируемся только на visibility.
+  return client.visibilityState === 'visible';
 }
 
-async function isPwaWindowOpen() {
+async function isPwaFocusedForeground() {
   const clientsList = await self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
@@ -228,7 +277,7 @@ async function isPwaWindowOpen() {
       continue;
     }
     if (!sameOrigin) continue;
-    if (clientLooksOpen(client)) return true;
+    if (clientIsFocusedForeground(client)) return true;
   }
   return false;
 }
@@ -239,18 +288,47 @@ function viewerStateIsFreshForeground(state) {
   return Date.now() - at < VIEWER_TTL_MS;
 }
 
-async function isViewerReportedlyForeground() {
-  if (viewerStateIsFreshForeground(viewer)) return true;
-  // SW часто убивают между heartbeat и push — читаем Cache.
+async function getFreshViewerState() {
+  if (viewerStateIsFreshForeground(viewer)) return viewer;
   const saved = await loadViewerState();
-  return viewerStateIsFreshForeground(saved);
+  if (viewerStateIsFreshForeground(saved)) return saved;
+  return null;
 }
 
-async function shouldSuppressPush(_notifPath) {
-  // 1) Есть видимое окно PWA — пользователь в приложении.
-  if (await isPwaWindowOpen()) return true;
-  // 2) Flutter недавно подтвердил foreground (Cache + память).
-  if (await isViewerReportedlyForeground()) return true;
+/**
+ * Пуш про тот же экран, который сейчас открыт (чат / матч / лобби).
+ * Другие чаты/игры — не глушим.
+ */
+function pathsMatchForSuppress(activePath, notifPath) {
+  const a = stripQueryHash(activePath);
+  const n = stripQueryHash(notifPath);
+  if (!a || !n || a === '/' || n === '/') return false;
+  if (a === n) return true;
+
+  const chatA = a.match(/^\/chats\/([^/]+)/);
+  const chatN = n.match(/^\/chats\/([^/]+)/);
+  if (chatA && chatN) return chatA[1] === chatN[1];
+
+  const gameA = a.match(/^\/games\/tictactoe\/game\/([^/]+)/);
+  const gameN = n.match(/^\/games\/tictactoe\/game\/([^/]+)/);
+  if (gameA && gameN) return gameA[1] === gameN[1];
+
+  const lobbyA = a.match(/^\/games\/tictactoe\/lobby\/([^/]+)/);
+  const lobbyN = n.match(/^\/games\/tictactoe\/lobby\/([^/]+)/);
+  if (lobbyA && lobbyN) return lobbyA[1] === lobbyN[1];
+
+  return false;
+}
+
+async function shouldSuppressPush(notifPath) {
+  // 1) Окно реально в фокусе — пользователь смотрит PWA (Desktop / iOS focused).
+  if (await isPwaFocusedForeground()) return true;
+  // 2) Flutter heartbeat: глушим только пуш про ТОТ ЖЕ чат/матч.
+  //    Не глушим все пуши — на iOS visibility/stale heartbeat иначе роняют доставку.
+  const state = await getFreshViewerState();
+  if (state && pathsMatchForSuppress(state.path || '', notifPath)) {
+    return true;
+  }
   return false;
 }
 
@@ -277,11 +355,20 @@ self.addEventListener('push', (event) => {
   const body = data.body != null ? String(data.body) : '';
   const tag = data.tag || 'zozu';
   const url = data.url || pathFromTag(tag) || '/';
+  const chatId =
+    data.chat_id != null && String(data.chat_id).trim()
+      ? String(data.chat_id).trim()
+      : '';
   const options = {
     body: body,
     icon: '/icons/Icon-192.png',
     badge: '/icons/Icon-192.png',
-    data: { url: url, kind: data.kind || '' },
+    data: {
+      url: url,
+      kind: data.kind || '',
+      chat_id: chatId,
+      tag: tag,
+    },
     tag: tag,
     renotify: true,
     silent: false,
@@ -307,9 +394,8 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   const notification = event.notification;
-  const appPath = resolveClickPath(notification);
+  const resolved = resolveClickPath(notification);
   const tag = notification.tag || '';
-  const target = resolveTargetUrl(appPath);
 
   try {
     notification.close();
@@ -317,9 +403,22 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     (async () => {
-      await closeShownNotifications({ tag, path: appPath });
-      await setPendingPath(appPath);
+      const pending = await peekPendingPath();
+      let appPath = resolved;
+      // iOS: data/tag пустые → не затираем pending из push event.
+      if (!appPath || pathSpecificity(appPath) < pathSpecificity(pending)) {
+        if (pending && pathSpecificity(pending) > 0) {
+          appPath = pending;
+        }
+      }
+      if (!appPath) appPath = '/';
 
+      await closeShownNotifications({ tag, path: appPath });
+      if (appPath && appPath !== '/') {
+        await setPendingPath(appPath);
+      }
+
+      const target = resolveTargetUrl(appPath);
       const all = await self.clients.matchAll({
         type: 'window',
         includeUncontrolled: true,
