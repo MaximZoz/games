@@ -1,8 +1,8 @@
 /* Web Push service worker for Zozu Games PWA.
- * v11: клик не затирает deep-link на iOS; пуши в фоне снова доходят
- *      (не глушим по visibility alone); suppress только тот же чат/матч.
- * v10: viewer в Cache (SW убивается между push — память пустая);
- *      visible client = приложение открыто (Safari focused часто false).
+ * v12: пока приложение на экране (Flutter foreground) — глушим ВСЕ пуши;
+ *      в фоне/свёрнутом — доставляем. Не используем Clients.visibility alone.
+ * v11: клик не затирает deep-link на iOS; chat_id fallback.
+ * v10: viewer в Cache (SW убивается между push — память пустая).
  * v9: в foreground глушим ВСЕ пуши.
  * v8: глушим пуш, если открыт тот же чат/матч.
  * v7: clear_all_notifications при logout.
@@ -15,9 +15,9 @@ const PENDING_CACHE = 'zozu-push-pending-v1';
 const PENDING_KEY = '/__pending_nav';
 const VIEWER_CACHE = 'zozu-push-viewer-v1';
 const VIEWER_KEY = '/__viewer';
-/** Пока Flutter шлёт heartbeat — считаем экран «смотрит» приложение.
- *  Короткий TTL: на iOS pagehide иногда опаздывает, иначе пуши глушатся. */
-const VIEWER_TTL_MS = 20000;
+/** Flutter шлёт heartbeat ~каждые 4с. Короткий TTL: после сворачивания
+ *  pagehide/visibility → foreground:false; иначе пуши снова идут. */
+const VIEWER_TTL_MS = 12000;
 
 /** Состояние экрана из Flutter (надёжнее client.focused на iOS). */
 let viewer = {
@@ -295,40 +295,13 @@ async function getFreshViewerState() {
   return null;
 }
 
-/**
- * Пуш про тот же экран, который сейчас открыт (чат / матч / лобби).
- * Другие чаты/игры — не глушим.
- */
-function pathsMatchForSuppress(activePath, notifPath) {
-  const a = stripQueryHash(activePath);
-  const n = stripQueryHash(notifPath);
-  if (!a || !n || a === '/' || n === '/') return false;
-  if (a === n) return true;
-
-  const chatA = a.match(/^\/chats\/([^/]+)/);
-  const chatN = n.match(/^\/chats\/([^/]+)/);
-  if (chatA && chatN) return chatA[1] === chatN[1];
-
-  const gameA = a.match(/^\/games\/tictactoe\/game\/([^/]+)/);
-  const gameN = n.match(/^\/games\/tictactoe\/game\/([^/]+)/);
-  if (gameA && gameN) return gameA[1] === gameN[1];
-
-  const lobbyA = a.match(/^\/games\/tictactoe\/lobby\/([^/]+)/);
-  const lobbyN = n.match(/^\/games\/tictactoe\/lobby\/([^/]+)/);
-  if (lobbyA && lobbyN) return lobbyA[1] === lobbyN[1];
-
-  return false;
-}
-
-async function shouldSuppressPush(notifPath) {
-  // 1) Окно реально в фокусе — пользователь смотрит PWA (Desktop / iOS focused).
+async function shouldSuppressPush(_notifPath) {
+  // 1) Окно реально в фокусе (Desktop / корректный Safari focused).
   if (await isPwaFocusedForeground()) return true;
-  // 2) Flutter heartbeat: глушим только пуш про ТОТ ЖЕ чат/матч.
-  //    Не глушим все пуши — на iOS visibility/stale heartbeat иначе роняют доставку.
-  const state = await getFreshViewerState();
-  if (state && pathsMatchForSuppress(state.path || '', notifPath)) {
-    return true;
-  }
+  // 2) Flutter сообщает, что документ видим (приложение на экране, не свёрнуто).
+  //    Не смотрим Clients.visibility — на iOS он часто остаётся visible в фоне.
+  //    Flutter на pagehide/visibilitychange шлёт foreground:false.
+  if (await getFreshViewerState()) return true;
   return false;
 }
 
