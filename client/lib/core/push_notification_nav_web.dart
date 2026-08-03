@@ -91,8 +91,20 @@ bool _documentIsVisible() {
   }
 }
 
-/// Сообщает SW текущий маршрут и foreground — чтобы не показывать пуш
-/// про уже открытый чат/матч (на iOS client.focused часто врёт).
+/// Снять из шторки все баннеры о сообщениях в этом чате (после прочтения).
+void clearPushNotificationsForChat(String chatId) {
+  if (!kIsWeb) return;
+  final id = chatId.trim();
+  if (id.isEmpty) return;
+  _postToPushSw({
+    'type': 'clear_notifications',
+    'tag': 'chat_$id',
+    'path': '/chats/$id',
+  });
+}
+
+/// Сообщает SW текущий маршрут и foreground — пока приложение на экране
+/// SW глушит все пуши; после сворачивания foreground=false → пуши снова идут.
 void reportPushSwActiveRoute(String path) {
   if (!kIsWeb) return;
   final normalized = _normalizeAppPath(path);
@@ -108,7 +120,8 @@ void reportPushSwActiveRoute(String path) {
 void _startHeartbeat() {
   _heartbeatTimer?.cancel();
   // Чаще пингуем SW: между push Safari поднимает «чистый» worker.
-  _heartbeatTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+  // В фоне тоже шлём (foreground:false), чтобы не залипал старый TTL.
+  _heartbeatTimer = Timer.periodic(const Duration(seconds: 3), (_) {
     reportPushSwActiveRoute(
       _lastReportedPath.isEmpty ? '/' : _lastReportedPath,
     );
@@ -228,7 +241,7 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
     }
   }
 
-  void handlePageHide(web.Event _) {
+  void handleBackground(web.Event _) {
     _postToPushSw({
       'type': 'active_route',
       'path': _lastReportedPath,
@@ -238,13 +251,15 @@ void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
 
   _messageListener = handleMessage.toJS;
   _visibilityListener = handleVisibility.toJS;
-  _pageHideListener = handlePageHide.toJS;
+  _pageHideListener = handleBackground.toJS;
   web.window.navigator.serviceWorker
       .addEventListener('message', _messageListener!);
   web.document.addEventListener('visibilitychange', _visibilityListener!);
   web.window.addEventListener('focus', _visibilityListener!);
   web.window.addEventListener('pageshow', _visibilityListener!);
   web.window.addEventListener('pagehide', _pageHideListener!);
+  web.window.addEventListener('blur', _pageHideListener!);
+  web.document.addEventListener('freeze', _pageHideListener!);
 
   // Подтянуть новый push-sw без переустановки PWA.
   try {
@@ -282,6 +297,8 @@ void uninstallPushNotificationNavigation() {
   try {
     if (_pageHideListener != null) {
       web.window.removeEventListener('pagehide', _pageHideListener!);
+      web.window.removeEventListener('blur', _pageHideListener!);
+      web.document.removeEventListener('freeze', _pageHideListener!);
     }
   } catch (_) {}
   _messageListener = null;
