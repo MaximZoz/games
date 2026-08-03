@@ -58,6 +58,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   String? _rematchLobbyId;
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
+  /// Участники прошлой партии, ответившие на реванш (join или decline).
+  final Set<String> _rematchRespondedIds = <String>{};
   bool _isFindingGame = false;
   bool _waitingForBotMove = false;
   Timer? _rematchPollTimer;
@@ -101,6 +103,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         _rematchLobbyId = null;
         _rematchDeclined = false;
         _iDeclinedRematch = false;
+        _rematchRespondedIds.clear();
         _isRematching = false;
         _isAcceptingRematch = false;
         _isFindingGame = false;
@@ -161,22 +164,37 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
           final gameId = next.valueOrNull?['game_id']?.toString();
-          if (lobbyId == _rematchLobbyId && gameId != null && mounted) {
-            ref.invalidate(gameStateProvider(gameId));
-            ref.invalidate(activeGameProvider);
-            context.go('/games/tictactoe/game/$gameId');
+          if (lobbyId == _rematchLobbyId && mounted) {
+            final meId = ref.read(authStateProvider).valueOrNull?.id;
+            _applyRematchPlayerIds(
+              next.valueOrNull?['player_ids'],
+              meId: meId,
+            );
+            if (gameId != null && gameId.isNotEmpty) {
+              ref.invalidate(gameStateProvider(gameId));
+              ref.invalidate(activeGameProvider);
+              context.go('/games/tictactoe/game/$gameId');
+            }
           }
         }
         if (type == 'invite_declined') {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
           // Multi: отказ одного не закрывает лобби (closed=false) — ждём остальных.
           final closed = next.valueOrNull?['closed'] != false;
-          if (lobbyId == _rematchLobbyId && mounted && closed) {
-            _rematchPollTimer?.cancel();
-            setState(() {
-              _rematchLobbyId = null;
-              _rematchDeclined = true;
-            });
+          if (lobbyId == _rematchLobbyId && mounted) {
+            final declinedUserId =
+                next.valueOrNull?['user_id']?.toString().trim() ?? '';
+            if (declinedUserId.isNotEmpty) {
+              setState(() => _rematchRespondedIds.add(declinedUserId));
+            }
+            if (closed) {
+              _rematchPollTimer?.cancel();
+              setState(() {
+                _rematchLobbyId = null;
+                _rematchDeclined = true;
+                _rematchRespondedIds.clear();
+              });
+            }
           }
         }
         if (type == 'chat_message' || type == 'chat_list_changed') {
@@ -184,6 +202,29 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         }
       },
     );
+  }
+
+  void _applyRematchPlayerIds(dynamic raw, {String? meId}) {
+    final ids = <String>[];
+    if (raw is List) {
+      for (final e in raw) {
+        final id = e?.toString().trim() ?? '';
+        if (id.isNotEmpty) ids.add(id);
+      }
+    } else if (raw is String && raw.trim().isNotEmpty) {
+      for (final part in raw.split(',')) {
+        final id = part.trim();
+        if (id.isNotEmpty) ids.add(id);
+      }
+    }
+    if (ids.isEmpty) return;
+    final me = meId?.trim() ?? '';
+    var changed = false;
+    for (final id in ids) {
+      if (me.isNotEmpty && id == me) continue;
+      if (_rematchRespondedIds.add(id)) changed = true;
+    }
+    if (changed && mounted) setState(() {});
   }
 
   void _startRematchPoll() {
@@ -196,6 +237,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         final lobby =
             await ref.read(gamesRepositoryProvider).getLobby(_rematchLobbyId!);
         if (!mounted) return;
+        final meId = ref.read(authStateProvider).valueOrNull?.id;
+        _applyRematchPlayerIds(lobby.playerIds, meId: meId);
         if (lobby.gameId != null && lobby.gameId!.isNotEmpty) {
           _rematchPollTimer?.cancel();
           final gameId = lobby.gameId!;
@@ -205,7 +248,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       } on GamesException catch (e) {
         if (e.statusCode == 404 && mounted) {
           _rematchPollTimer?.cancel();
-          setState(() => _rematchLobbyId = null);
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchRespondedIds.clear();
+          });
         }
       } catch (_) {}
     });
@@ -445,6 +491,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   _rematchLobbyId = null;
                   _rematchDeclined = false;
                   _iDeclinedRematch = false;
+                  _rematchRespondedIds.clear();
                   _isRematching = false;
                   _isFindingGame = false;
                 });
@@ -582,6 +629,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   game: game,
                   // Только чужие; без me — пусто (не мелькает «я» / «Соперник»).
                   opponents: game.opponentsOf(currentUser?.id),
+                  rematchRespondedIds: _rematchLobbyId == null
+                      ? const <String>{}
+                      : _rematchRespondedIds,
                   chatsList: chats ?? const [],
                   groupUnread: groupUnread,
                   showGroupChat: chatId.isNotEmpty,
@@ -1008,6 +1058,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           _rematchLobbyId = result.lobbyId;
           _rematchDeclined = false;
           _iDeclinedRematch = false;
+          _rematchRespondedIds.clear();
           _isRematching = false;
         });
         _startRematchPoll();
@@ -1081,7 +1132,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (_rematchLobbyId == null) return;
     _rematchPollTimer?.cancel();
     final lobbyId = _rematchLobbyId!;
-    setState(() => _rematchLobbyId = null);
+    setState(() {
+      _rematchLobbyId = null;
+      _rematchRespondedIds.clear();
+    });
     try {
       await ref.read(gamesRepositoryProvider).leaveLobby(lobbyId);
     } catch (_) {}
@@ -1135,6 +1189,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     if (isOver || eliminated) {
       final rematchLobbyId = _rematchLobbyId;
       _rematchLobbyId = null;
+      _rematchRespondedIds.clear();
       if (eliminated && !isOver) {
         // Партия ещё идёт — оставляем «Текущая игра», чтобы вернуться смотреть.
         final prev = ref.read(activeGameProvider).valueOrNull;
@@ -1744,6 +1799,7 @@ class _MultiOpponentsCard extends StatelessWidget {
   const _MultiOpponentsCard({
     required this.game,
     required this.opponents,
+    this.rematchRespondedIds = const <String>{},
     required this.chatsList,
     required this.groupUnread,
     required this.showGroupChat,
@@ -1753,6 +1809,7 @@ class _MultiOpponentsCard extends StatelessWidget {
 
   final GameStateItem game;
   final List<GamePlayerMeta> opponents;
+  final Set<String> rematchRespondedIds;
   final List<ChatPreviewItem> chatsList;
   final int groupUnread;
   final bool showGroupChat;
@@ -1775,11 +1832,12 @@ class _MultiOpponentsCard extends StatelessWidget {
       if (chips.isNotEmpty) {
         chips.add(SizedBox(width: narrow ? 8 : 10));
       }
+      final responded = rematchRespondedIds.contains(player.userId);
       chips.add(
         _MultiOpponentChip(
           displayName: login,
           player: player,
-          eliminated: game.isEliminated(player.mark),
+          eliminated: game.isEliminated(player.mark) || responded,
           compact: true,
           onTap: onPlayerTap == null
               ? null

@@ -2167,6 +2167,14 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		}
 		canFill := len(players)+len(remaining) >= maxPlayers
 		if canFill {
+			// Частичный отказ: лобби живо, но инициатор реванша должен видеть,
+			// кто уже ответил (зачёркивание в шапке игроков).
+			h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
+				"type":     "invite_declined",
+				"lobby_id": lobbyID,
+				"closed":   false,
+				"user_id":  userID.String(),
+			})
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"declined": true,
