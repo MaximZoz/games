@@ -168,6 +168,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final lobbiesAsync = ref.watch(openLobbiesProvider);
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
+    final observation = ref.watch(observationGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
     // После «Присоединиться» не оставляем список с карточкой лобби —
     // сразу экран «Войти в игру».
@@ -324,6 +325,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onPlayOffline: playOffline,
                     invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,
+                    observation: observation,
                     onAcceptInvite: _acceptInvite,
                     onDeclineInvite: _declineInvite,
                     onShowCreatorInfo: _showCreatorInfo,
@@ -713,6 +715,7 @@ class _GamesPageContent extends StatelessWidget {
     required this.onPlayOffline,
     required this.invites,
     required this.activeAsync,
+    required this.observation,
     required this.onAcceptInvite,
     required this.onDeclineInvite,
     required this.onShowCreatorInfo,
@@ -738,6 +741,7 @@ class _GamesPageContent extends StatelessWidget {
   final VoidCallback onPlayOffline;
   final List<GameInvite> invites;
   final AsyncValue<ActiveGameItem?> activeAsync;
+  final ObservationItem? observation;
   final void Function(BuildContext, String) onAcceptInvite;
   final void Function(String) onDeclineInvite;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
@@ -897,67 +901,62 @@ class _GamesPageContent extends StatelessWidget {
                       },
                     ),
                   ],
-                  activeAsync.when(
-                    data: (active) {
-                      if (active == null) return const SizedBox.shrink();
-                      // Активное лобби («Войти в игру» / поиск) — без карточки
-                      // на списке: уводим в лобби (см. listen выше).
-                      if (active.type == 'lobby') {
+                  Builder(
+                    builder: (context) {
+                      final active = activeAsync.valueOrNull;
+                      // Active game на списке не показываем — таб уводит в неё.
+                      // Observation — карточка, пока партия не закроется.
+                      if (observation == null ||
+                          observation.gameId.trim().isEmpty) {
                         return const SizedBox.shrink();
                       }
-                      if (active.type == 'game' && active.gameId != null) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: GradientCard(
-                            padding: const EdgeInsets.all(16),
-                            child: InkWell(
-                              onTap: () => context.push(
-                                  '/games/tictactoe/game/${active.gameId}'),
-                              borderRadius: BorderRadius.circular(16),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.sports_esports_rounded,
-                                      size: 40, color: AppColors.accentStart),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          active.isEliminated
-                                              ? 'Вы выбыли'
-                                              : active.isMyTurn
-                                                  ? context.l10n.gamesMyTurn
-                                                  : context
-                                                      .l10n.gamesOpponentTurn,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                            fontSize: 16,
-                                          ),
+                      // Если эта же партия уже active (ещё играю) — карточка не нужна.
+                      if (active?.type == 'game' &&
+                          active?.gameId == observation.gameId) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: GradientCard(
+                          padding: const EdgeInsets.all(16),
+                          child: InkWell(
+                            onTap: () => context.push(
+                                '/games/tictactoe/game/${observation.gameId}'),
+                            borderRadius: BorderRadius.circular(16),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.visibility_rounded,
+                                    size: 40, color: AppColors.accentStart),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Наблюдение',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                          fontSize: 16,
                                         ),
-                                        Text(
-                                          context.l10n.gamesCurrentGame,
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppColors.textSecondary),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                      Text(
+                                        'Вы выбыли — можно смотреть',
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary),
+                                      ),
+                                    ],
                                   ),
-                                  const Icon(Icons.arrow_forward_ios_rounded,
-                                      size: 16),
-                                ],
-                              ),
+                                ),
+                                Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                              ],
                             ),
                           ),
-                        );
-                      }
-                      return const SizedBox.shrink();
+                        ),
+                      );
                     },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
                   ),
                 ],
               ),

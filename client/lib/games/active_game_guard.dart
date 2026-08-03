@@ -34,9 +34,9 @@ bool hasActiveMatch(ActiveGameItem? active) {
   return id.isNotEmpty;
 }
 
-/// Партия ещё блокирует новую игру (выбывший может только смотреть — не блокирует).
+/// Партия ещё блокирует новую игру (observation не блокирует).
 bool hasBlockingActiveMatch(ActiveGameItem? active) {
-  return hasActiveMatch(active) && !active!.isEliminated;
+  return hasActiveMatch(active);
 }
 
 bool hasActiveLobby(ActiveGameItem? active) {
@@ -46,7 +46,6 @@ bool hasActiveLobby(ActiveGameItem? active) {
 }
 
 /// Есть блокирующая сессия (партия или своё лобби), мешающая входу в [targetLobbyId].
-/// Выбывший в multi — партия для него завершена: можно создавать/входить в новую.
 bool isBusyWithOtherSession(
   ActiveGameItem? active, {
   String? targetLobbyId,
@@ -86,6 +85,7 @@ String? gameIdFromLocation(String? location) {
 }
 
 /// Активная сессия для гарда: пин + кэш + путь партии + `?game=` из чата.
+/// Observation не считается блокирующей.
 ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
   final async = ref.read(activeGameProvider);
   final fromProvider = async.asData?.value ?? async.valueOrNull;
@@ -106,16 +106,18 @@ ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
   final pathGameId = gameIdFromLocation(uri.toString()) ??
       gameIdFromLocation(uri.queryParameters['game']);
   if (pathGameId != null) {
+    // Наблюдение на этой доске — не блокирует новую игру.
+    final observing = ref.read(observationGameProvider);
+    if (observing?.gameId == pathGameId) {
+      return fromProvider;
+    }
     final same =
         fromProvider?.type == 'game' && fromProvider?.gameId == pathGameId;
-    final eliminated = same && (fromProvider?.isEliminated ?? false);
-    if (eliminated) return fromProvider;
     return ActiveGameItem(
       type: 'game',
       gameId: pathGameId,
       lobbyId: fromProvider?.lobbyId,
       isMyTurn: same ? (fromProvider?.isMyTurn ?? false) : false,
-      isEliminated: false,
     );
   }
   return fromProvider;

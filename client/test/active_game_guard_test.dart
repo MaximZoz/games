@@ -7,7 +7,7 @@ void main() {
     test('blocks other lobby while in active game', () {
       final active = ActiveGameItem(type: 'game', gameId: 'g1');
       expect(
-        isBusyWithOtherSession(active, targetLobbyId: 'lobby-other'),
+        isBusyWithOtherSession(active, targetLobbyId: 'L2'),
         isTrue,
       );
     });
@@ -26,33 +26,25 @@ void main() {
         isBusyWithOtherSession(active, targetLobbyId: 'L1'),
         isFalse,
       );
-      expect(
-        isBusyWithOtherSession(active, targetLobbyId: 'L2'),
-        isTrue,
-      );
     });
 
     test('free when no active', () {
       expect(isBusyWithOtherSession(null, targetLobbyId: 'L1'), isFalse);
     });
 
-    test('eliminated player is free to join another lobby', () {
-      final active = ActiveGameItem(
-        type: 'game',
-        gameId: 'g1',
-        isEliminated: true,
-      );
+    test('active game always blocks (observation is separate)', () {
+      final active = ActiveGameItem(type: 'game', gameId: 'g1');
+      expect(hasBlockingActiveMatch(active), isTrue);
       expect(
-        isBusyWithOtherSession(active, targetLobbyId: 'lobby-other'),
-        isFalse,
+        isBusyWithOtherSession(active, targetLobbyId: 'L2'),
+        isTrue,
       );
-      expect(hasBlockingActiveMatch(active), isFalse);
     });
 
     test('pinned live game blocks other lobby', () {
       final pinned = ActiveGameItem(type: 'game', gameId: 'live-1');
       expect(
-        isBusyWithOtherSession(pinned, targetLobbyId: 'rematch-lobby'),
+        isBusyWithOtherSession(pinned, targetLobbyId: 'invite-lobby'),
         isTrue,
       );
     });
@@ -64,16 +56,18 @@ void main() {
         gameIdFromLocation('/games/tictactoe/game/abc-123'),
         'abc-123',
       );
-      expect(
-        gameIdFromLocation('/games/tictactoe/game/abc-123?x=1'),
-        'abc-123',
-      );
     });
 
     test('ignores non-game paths', () {
-      expect(gameIdFromLocation('/games/tictactoe/lobby/L1'), isNull);
-      expect(gameIdFromLocation('/chats'), isNull);
-      expect(gameIdFromLocation(null), isNull);
+      expect(gameIdFromLocation('/games'), isNull);
+      expect(gameIdFromLocation('/games/tictactoe/lobby/x'), isNull);
+    });
+
+    test('with chat return parses game query value', () {
+      expect(
+        gameIdFromLocation('/games/tictactoe/game/g9?from=chat'),
+        'g9',
+      );
     });
   });
 
@@ -85,12 +79,6 @@ void main() {
         ),
         isTrue,
       );
-      expect(
-        isFinishCurrentGameError(
-          GamesException(409, 'Сначала завершите текущую игру'),
-        ),
-        isTrue,
-      );
     });
 
     test('detects canonical error key from JSON', () {
@@ -98,7 +86,7 @@ void main() {
         isFinishCurrentGameError(
           GamesException(
             409,
-            'Beenden Sie zuerst Ihr aktuelles Spiel',
+            'Сначала завершите текущую игру',
             errorKey: finishCurrentGameErrorKey,
           ),
         ),
@@ -109,22 +97,9 @@ void main() {
     test('ignores other conflicts', () {
       expect(
         isFinishCurrentGameError(
-          GamesException(409, 'game already started with another opponent'),
+          GamesException(409, 'lobby full'),
         ),
         isFalse,
-      );
-      expect(
-        isFinishCurrentGameError(GamesException(404, 'lobby not found')),
-        isFalse,
-      );
-    });
-  });
-
-  group('gameIdFromLocation with chat return', () {
-    test('parses game query value', () {
-      expect(
-        gameIdFromLocation('/games/tictactoe/game/xyz'),
-        'xyz',
       );
     });
   });

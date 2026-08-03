@@ -921,21 +921,18 @@ class GameStateItem {
   }
 }
 
-/// Результат GET /api/games/tictactoe/active
+/// Результат GET /api/games/tictactoe/active — живая сессия (играю / лобби).
 class ActiveGameItem {
   final String type; // "game" | "lobby"
   final String? gameId;
   final String? lobbyId;
   final bool isMyTurn;
-  /// Выбыл из multi — вкладка «Игры» не авто-открывает доску.
-  final bool isEliminated;
 
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
-    this.isEliminated = false,
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -944,8 +941,45 @@ class ActiveGameItem {
       gameId: json['game_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       isMyTurn: json['is_my_turn'] as bool? ?? false,
-      isEliminated: json['is_eliminated'] as bool? ?? false,
     );
+  }
+}
+
+/// Наблюдение за multi-партией после выбывания (пока лобби/партия жива).
+class ObservationItem {
+  final String gameId;
+  final String? lobbyId;
+
+  const ObservationItem({required this.gameId, this.lobbyId});
+
+  factory ObservationItem.fromJson(Map<String, dynamic> json) {
+    return ObservationItem(
+      gameId: json['game_id'] as String? ?? '',
+      lobbyId: json['lobby_id'] as String?,
+    );
+  }
+}
+
+/// Ответ GetActive: active и/или observation.
+class ActiveSessionResult {
+  final ActiveGameItem? active;
+  final ObservationItem? observation;
+
+  const ActiveSessionResult({this.active, this.observation});
+
+  factory ActiveSessionResult.fromJson(Map<String, dynamic> json) {
+    ObservationItem? obs;
+    final rawObs = json['observation'];
+    if (rawObs is Map<String, dynamic>) {
+      final item = ObservationItem.fromJson(rawObs);
+      if (item.gameId.trim().isNotEmpty) obs = item;
+    }
+    final type = json['type']?.toString();
+    ActiveGameItem? active;
+    if (type == 'game' || type == 'lobby') {
+      active = ActiveGameItem.fromJson(json);
+    }
+    return ActiveSessionResult(active: active, observation: obs);
   }
 }
 
@@ -1466,7 +1500,7 @@ class GamesRepository {
     return GameStateItem.fromJson(body);
   }
 
-  Future<ActiveGameItem?> getActive() async {
+  Future<ActiveSessionResult> getActiveSession() async {
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/active'),
@@ -1474,12 +1508,20 @@ class GamesRepository {
         operation: 'GamesRepository.getActive',
       ),
     );
-    if (response.statusCode == 204 || response.statusCode == 404) return null;
+    if (response.statusCode == 204 || response.statusCode == 404) {
+      return const ActiveSessionResult();
+    }
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    return ActiveGameItem.fromJson(body);
+    return ActiveSessionResult.fromJson(body);
+  }
+
+  /// Только active (игра/лобби). Observation — через [getActiveSession].
+  Future<ActiveGameItem?> getActive() async {
+    final session = await getActiveSession();
+    return session.active;
   }
 
   Future<void> forfeitGame(String gameId) async {

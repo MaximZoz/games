@@ -52,18 +52,19 @@ String? _gameIdFromPath(String path) {
 }
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
-/// Живая партия (не выбыл) — всегда в неё, даже при инвайтах/лобби реванша.
-/// Выбывший без новой сессии — список + карточка «Текущая игра».
+/// Active game/lobby — всегда туда. Observation только карточкой в списке.
 void _goGamesTab(
   BuildContext context,
   String currentPath,
   ActiveGameItem? active, {
   String? pinnedLiveGameId,
+  String? observingGameId,
 }) {
   final pathGameId = _gameIdFromPath(currentPath);
   final pinned = pinnedLiveGameId?.trim() ?? '';
+  final observing = observingGameId?.trim() ?? '';
 
-  // Живая партия (пин или active) важнее лобби/инвайтов.
+  // Активная партия (пин или active) — всегда в неё.
   String? liveGameId;
   if (hasBlockingActiveMatch(active)) {
     liveGameId = active!.gameId!.trim();
@@ -77,9 +78,10 @@ void _goGamesTab(
     return;
   }
 
-  // Выбывший на экране партии тапнул «Игры» — список (создать/найти),
-  // карточка «Текущая игра» остаётся для просмотра.
-  if (pathGameId != null && active?.isEliminated == true) {
+  // Наблюдение на доске — в список «Игры» (карточка «Наблюдение» там же).
+  if (pathGameId != null &&
+      observing.isNotEmpty &&
+      pathGameId == observing) {
     if (currentPath != '/games') context.go('/games');
     return;
   }
@@ -414,25 +416,27 @@ class AppShell extends ConsumerWidget {
         final cacheUsable = _activeGameUsable(cachedActive);
         final pinnedLive =
             ref.read(blockingGamePinProvider)?.trim() ?? '';
-        // На экране партии — закрепить active, чтобы инвайт/refresh не «съели» матч.
+        final observingId =
+            ref.read(observationGameProvider)?.gameId.trim() ?? '';
+        // На экране живой партии — закрепить active, чтобы refresh не «съел» матч.
         final pathGameId = _gameIdFromPath(currentPath);
+        final pathIsObserving =
+            pathGameId != null && observingId.isNotEmpty && pathGameId == observingId;
         final pathIsLive = pathGameId != null &&
-            (pinnedLive == pathGameId ||
-                (cachedActive?.gameId == pathGameId &&
-                    !(cachedActive?.isEliminated ?? false)));
-        if (pathGameId != null &&
+            !pathIsObserving &&
+            (pinnedLive == pathGameId || cachedActive?.gameId == pathGameId);
+        final livePathForPin = pathGameId;
+        if (pathIsLive &&
+            livePathForPin != null &&
             (cachedActive == null ||
                 cachedActive.type != 'game' ||
-                cachedActive.gameId != pathGameId)) {
+                cachedActive.gameId != livePathForPin)) {
           activeNotifier.setLocal(
             ActiveGameItem(
               type: 'game',
-              gameId: pathGameId,
+              gameId: livePathForPin,
               lobbyId: cachedActive?.lobbyId,
               isMyTurn: cachedActive?.isMyTurn ?? false,
-              isEliminated: pathIsLive
-                  ? false
-                  : (cachedActive?.isEliminated ?? false),
             ),
           );
         }
@@ -445,6 +449,7 @@ class AppShell extends ConsumerWidget {
             pinnedLiveGameId: pinnedLive.isNotEmpty
                 ? pinnedLive
                 : (pathIsLive ? pathGameId : null),
+            observingGameId: observingId.isNotEmpty ? observingId : null,
           );
         });
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
@@ -460,45 +465,61 @@ class AppShell extends ConsumerWidget {
             }
             final pinNow =
                 ref.read(blockingGamePinProvider)?.trim() ?? pinnedLive;
+            final obsNow =
+                ref.read(observationGameProvider)?.gameId.trim() ?? observingId;
             // Живая партия на экране / в пине важнее лобби-инвайта с GetActive.
             final livePathId = pathGameId;
             if (pathIsLive &&
                 livePathId != null &&
-                (fresh == null ||
-                    fresh.type == 'lobby' ||
-                    (fresh.type == 'game' && fresh.isEliminated))) {
+                (fresh == null || fresh.type == 'lobby')) {
               ref.read(activeGameProvider.notifier).setLocal(
                     ActiveGameItem(
                       type: 'game',
                       gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
-                      isEliminated: false,
                     ),
                   );
               return;
             }
             // Партия с экрана важнее «пустого» ответа — не теряем её.
             if ((fresh == null || !_activeGameUsable(fresh)) &&
-                pathGameId != null) {
+                pathIsLive &&
+                livePathId != null) {
               ref.read(activeGameProvider.notifier).setLocal(
                     ActiveGameItem(
                       type: 'game',
-                      gameId: pathGameId,
+                      gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
-                      isEliminated: cachedActive?.isEliminated ?? false,
                     ),
                   );
               return;
             }
-            if (fresh == null || !_activeGameUsable(fresh)) return;
+            if (fresh == null || !_activeGameUsable(fresh)) {
+              // Только observation — остаёмся/идём на список.
+              if (obsNow.isNotEmpty) {
+                final nowPath = GoRouter.of(context)
+                    .routerDelegate
+                    .currentConfiguration
+                    .uri
+                    .path;
+                Router.neglect(context, () {
+                  _goGamesTab(
+                    context,
+                    nowPath,
+                    null,
+                    observingGameId: obsNow,
+                  );
+                });
+              }
+              return;
+            }
             // Даже если кэш был — сервер мог вернуть актуальную партию.
             if (cacheUsable &&
                 fresh.type == cachedActive?.type &&
                 fresh.gameId == cachedActive?.gameId &&
-                fresh.lobbyId == cachedActive?.lobbyId &&
-                fresh.isEliminated == cachedActive?.isEliminated) {
+                fresh.lobbyId == cachedActive?.lobbyId) {
               return;
             }
             final nowPath =
@@ -509,17 +530,17 @@ class AppShell extends ConsumerWidget {
                 nowPath,
                 fresh,
                 pinnedLiveGameId: pinNow.isNotEmpty ? pinNow : null,
+                observingGameId: obsNow.isNotEmpty ? obsNow : null,
               );
             });
           } catch (_) {
-            if (pathGameId != null && context.mounted) {
+            if (pathIsLive && livePathForPin != null && context.mounted) {
               ref.read(activeGameProvider.notifier).setLocal(
                     ActiveGameItem(
                       type: 'game',
-                      gameId: pathGameId,
+                      gameId: livePathForPin,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
-                      isEliminated: cachedActive?.isEliminated ?? false,
                     ),
                   );
             }

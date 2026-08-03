@@ -204,6 +204,10 @@ final gameStateOverrideProvider = StateProvider.autoDispose
 final gameStateInvalidateBlockedProvider =
     StateProvider.autoDispose.family<bool, String>((ref, gameId) => false);
 
+/// Наблюдение после выбывания (карточка в «Играх», не блокирует и не авто-роутит).
+final observationGameProvider =
+    StateProvider<ObservationItem?>((ref) => null);
+
 final activeGameProvider =
     AsyncNotifierProvider.autoDispose<ActiveGameNotifier, ActiveGameItem?>(
         ActiveGameNotifier.new);
@@ -213,6 +217,10 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   /// не вернул в лобби сразу после выхода.
   int _epoch = 0;
   int get epoch => _epoch;
+
+  void _applyObservation(ObservationItem? obs) {
+    ref.read(observationGameProvider.notifier).state = obs;
+  }
 
   @override
   Future<ActiveGameItem?> build() async {
@@ -249,9 +257,13 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
       },
     );
     final user = ref.watch(authStateProvider).valueOrNull;
-    if (user == null) return null;
-    final repo = ref.read(gamesRepositoryProvider);
-    return repo.getActive();
+    if (user == null) {
+      _applyObservation(null);
+      return null;
+    }
+    final session = await ref.read(gamesRepositoryProvider).getActiveSession();
+    _applyObservation(session.observation);
+    return session.active;
   }
 
   /// Обновить с сервера, не обнуляя кэш на время запроса (гард join не «слепнет»).
@@ -262,12 +274,14 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
     try {
       final user = ref.read(authStateProvider).valueOrNull;
       if (user == null) {
+        _applyObservation(null);
         state = const AsyncValue.data(null);
         return null;
       }
-      final next = await ref.read(gamesRepositoryProvider).getActive();
-      state = AsyncValue.data(next);
-      return next;
+      final session = await ref.read(gamesRepositoryProvider).getActiveSession();
+      _applyObservation(session.observation);
+      state = AsyncValue.data(session.active);
+      return session.active;
     } catch (e, st) {
       if (previousData != null) {
         state = AsyncValue.data(previousData);
@@ -287,6 +301,19 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   /// Сразу после createLobby — чтобы таб «Игры» открывал «Своя игра».
   void setLocal(ActiveGameItem item) {
     state = AsyncValue.data(item);
+  }
+
+  /// Локально включить наблюдение (после сдачи), пока не придёт refresh.
+  void setObservationLocal(ObservationItem? item) {
+    _applyObservation(item);
+  }
+
+  void clearObservationLocal({String? ifGameId}) {
+    final cur = ref.read(observationGameProvider);
+    if (cur == null) return;
+    final only = ifGameId?.trim() ?? '';
+    if (only.isNotEmpty && cur.gameId != only) return;
+    _applyObservation(null);
   }
 }
 

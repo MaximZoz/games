@@ -1437,10 +1437,9 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 	humans := humanUserIDsFromGame(m)
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		h.onGameFinishedWithMap(ctx, strings.TrimPrefix(key, "game:"), m, cfg.GridSize, stakeBronze, status, "normal", m["started_at"])
-		for _, u := range humans {
-			clearUserActiveGame(ctx, h.Rdb, u)
-		}
+		finishedID := strings.TrimPrefix(key, "game:")
+		h.onGameFinishedWithMap(ctx, finishedID, m, cfg.GridSize, stakeBronze, status, "normal", m["started_at"])
+		clearUsersFinishedGame(ctx, h.Rdb, humans, finishedID)
 		payload := map[string]any{
 			"type": "game_state", "game_id": strings.TrimPrefix(key, "game:"),
 			"board": res.State.Board, "turn": res.State.Turn, "winner": winner, "status": status,
@@ -2551,8 +2550,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	humans := humanUserIDsFromGame(m)
 
 	// Multi: таймаут = выбывание, как сдача.
-	// active_game НЕ сбрасываем до конца партии — иначе выбывший
-	// пропадает из «Игры» и не может открыть доску смотреть.
+	// Выбывший → observation (не active), пока партия не закроется.
 	if cfg.MaxPlayers > 2 {
 		eliminated := parseEliminatedMarks(m["eliminated_marks"])
 		if !eliminated[turn] {
@@ -2572,9 +2570,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 			)
 			h.Rdb.Expire(ctx, key, 24*time.Hour)
 			h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "timeout", m["started_at"])
-			for _, u := range humans {
-				clearUserActiveGame(ctx, h.Rdb, u)
-			}
+			clearUsersFinishedGame(ctx, h.Rdb, humans, gameID)
 			h.broadcast(humans, map[string]any{
 				"type": "game_state", "game_id": gameID,
 				"board": board, "turn": winnerMark, "winner": winnerMark,
@@ -2594,9 +2590,12 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		}
 		h.Rdb.HSet(ctx, key, fields...)
 		h.Rdb.Expire(ctx, key, 24*time.Hour)
-		// active_game НЕ сбрасываем: выбывший видит карточку «Текущая игра»
-		// и может открыть доску смотреть. Блок новой игры — через
-		// blockingActiveGameID (выбывший не блокируется).
+		// Выбывший: active снимаем, observation — пока партия не закончится.
+		if timedOutID := markOwnerUserID(m, turn); timedOutID != "" {
+			if u, e := uuid.Parse(timedOutID); e == nil {
+				moveActiveToObserving(ctx, h.Rdb, u, gameID)
+			}
+		}
 		payload := map[string]any{
 			"type": "game_state", "game_id": gameID,
 			"board": board, "turn": next, "status": gameStatusActive,
@@ -2632,9 +2631,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	h.Rdb.HSet(ctx, key, "status", status, "winner", winner, "timeout", "1")
 	h.Rdb.Expire(ctx, key, 24*time.Hour)
 	h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "timeout", m["started_at"])
-	for _, u := range humans {
-		clearUserActiveGame(ctx, h.Rdb, u)
-	}
+	clearUsersFinishedGame(ctx, h.Rdb, humans, gameID)
 	h.broadcast(humans, map[string]any{
 		"type": "game_state", "game_id": gameID,
 		"board": board, "turn": turn, "winner": winner, "status": status, "timeout": true,
@@ -2977,9 +2974,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 	if status != gameStatusActive {
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "normal", m["started_at"])
-		for _, u := range humans {
-			clearUserActiveGame(ctx, h.Rdb, u)
-		}
+		clearUsersFinishedGame(ctx, h.Rdb, humans, gameID)
 	}
 
 	broadcastPayload := map[string]any{
@@ -3118,10 +3113,9 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		}
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "forfeit", m["started_at"])
-		for _, u := range humanUserIDsFromGame(m) {
-			clearUserActiveGame(ctx, h.Rdb, u)
-		}
-		h.broadcast(humanUserIDsFromGame(m), map[string]any{
+		humansDone := humanUserIDsFromGame(m)
+		clearUsersFinishedGame(ctx, h.Rdb, humansDone, gameID)
+		h.broadcast(humansDone, map[string]any{
 			"type": "game_state", "game_id": gameID,
 			"board": board, "turn": m["turn"], "winner": winnerVal,
 			"status": status, "forfeit": true, "variant": string(variant),
@@ -3158,9 +3152,7 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		}
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 		h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, status, "forfeit", m["started_at"])
-		for _, u := range humans {
-			clearUserActiveGame(ctx, h.Rdb, u)
-		}
+		clearUsersFinishedGame(ctx, h.Rdb, humans, gameID)
 		h.broadcast(humans, map[string]any{
 			"type": "game_state", "game_id": gameID,
 			"board": board, "turn": winnerMark, "winner": winnerMark,
@@ -3194,9 +3186,8 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	// active_game оставляем: GetActive вернёт is_eliminated и карточку
-	// «Текущая игра» для просмотра. Новую партию не блокируем
-	// (blockingActiveGameID игнорирует выбывших).
+	// Выбывший больше не в active_game — observation до конца партии.
+	moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 	payload := map[string]any{
 		"type": "game_state", "game_id": gameID,
 		"board": board, "turn": turn, "status": gameStatusActive,
@@ -3354,10 +3345,9 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, gameStatusDraw, "draw_agreement", m["started_at"])
-	for _, u := range humanUserIDs(xUserID, oUserID) {
-		clearUserActiveGame(ctx, h.Rdb, u)
-	}
-	h.broadcast(humanUserIDs(xUserID, oUserID), map[string]any{
+	drawHumans := humanUserIDs(xUserID, oUserID)
+	clearUsersFinishedGame(ctx, h.Rdb, drawHumans, gameID)
+	h.broadcast(drawHumans, map[string]any{
 		"type":    "game_state",
 		"game_id": gameID,
 		"board":   board,
@@ -3431,10 +3421,11 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	})
 }
 
-func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
-func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.String() + ":active_lobby" }
+func userActiveGameKey(userID uuid.UUID) string     { return "user:" + userID.String() + ":active_game" }
+func userActiveLobbyKey(userID uuid.UUID) string    { return "user:" + userID.String() + ":active_lobby" }
+func userObservingGameKey(userID uuid.UUID) string { return "user:" + userID.String() + ":observing_game" }
 
-// blockingActiveGameID — id живой партии, в которой пользователь ещё не выбыл.
+// blockingActiveGameID — id живой партии, где пользователь ещё играет (не наблюдает).
 // Пустая строка = можно создавать/входить в другую игру.
 func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUID) string {
 	gid, err := h.Rdb.Get(ctx, userActiveGameKey(userID)).Result()
@@ -3449,10 +3440,26 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 	if mark == "" {
 		return ""
 	}
+	// Выбывший не должен оставаться в active_game — переносим в observation.
 	if parseEliminatedMarks(gm["eliminated_marks"])[mark] {
+		clearUserActiveGame(ctx, h.Rdb, userID)
+		setUserObservingGame(ctx, h.Rdb, userID, gid)
 		return ""
 	}
 	return gid
+}
+
+// moveActiveToObserving — выбывание в multi: active снимаем, observation держим до конца партии.
+func moveActiveToObserving(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
+	clearUserActiveGame(ctx, rdb, userID)
+	setUserObservingGame(ctx, rdb, userID, gameID)
+}
+
+func clearUsersFinishedGame(ctx context.Context, rdb *redis.Client, users []uuid.UUID, gameID string) {
+	for _, u := range users {
+		clearUserActiveGame(ctx, rdb, u)
+		clearUserObservingGameIfMatch(ctx, rdb, u, gameID)
+	}
 }
 
 // onGameFinished — монеты + счётчик партий/достижения для людей (не ботов) +
@@ -3766,6 +3773,71 @@ func clearUserActiveLobbyIfMatch(ctx context.Context, rdb *redis.Client, userID 
 	rdb.Del(ctx, userActiveLobbyKey(userID))
 }
 
+func setUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
+	if rdb == nil || gameID == "" {
+		return
+	}
+	rdb.Set(ctx, userObservingGameKey(userID), gameID, 24*time.Hour)
+}
+
+func clearUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
+	if rdb == nil {
+		return
+	}
+	rdb.Del(ctx, userObservingGameKey(userID))
+}
+
+func clearUserObservingGameIfMatch(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
+	if rdb == nil || gameID == "" {
+		return
+	}
+	cur, err := rdb.Get(ctx, userObservingGameKey(userID)).Result()
+	if err != nil || cur != gameID {
+		return
+	}
+	rdb.Del(ctx, userObservingGameKey(userID))
+}
+
+// observationPayload — карточка «Наблюдение», пока партия ещё идёт.
+func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID) map[string]any {
+	if h.Rdb == nil {
+		return nil
+	}
+	gameID, err := h.Rdb.Get(ctx, userObservingGameKey(userID)).Result()
+	if err != nil || gameID == "" {
+		return nil
+	}
+	m, _ := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+	if len(m) == 0 || m["status"] != gameStatusActive {
+		clearUserObservingGame(ctx, h.Rdb, userID)
+		return nil
+	}
+	if markForUserID(m, userID.String()) == "" {
+		clearUserObservingGame(ctx, h.Rdb, userID)
+		return nil
+	}
+	return map[string]any{
+		"game_id":  gameID,
+		"lobby_id": m["lobby_id"],
+	}
+}
+
+func writeActiveJSON(w http.ResponseWriter, active map[string]any, observation map[string]any) {
+	if len(active) == 0 && len(observation) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	resp := map[string]any{}
+	for k, v := range active {
+		resp[k] = v
+	}
+	if len(observation) > 0 {
+		resp["observation"] = observation
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
 func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 	userID, ok := currentUserIDFromGames(r)
 	if !ok {
@@ -3773,6 +3845,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
+
+	var active map[string]any
 
 	gameID, err := h.Rdb.Get(ctx, userActiveGameKey(userID)).Result()
 	if err == nil && gameID != "" {
@@ -3787,71 +3861,40 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		}
 		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
 			myMark := markForUserID(m, userID.String())
-			// Игрок должен оставаться в партии (в т.ч. выбывший — смотреть).
 			if myMark == "" {
 				clearUserActiveGame(ctx, h.Rdb, userID)
+			} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
+				// Миграция: выбывший больше не в active, а в observation.
+				moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 			} else {
-				elim := parseEliminatedMarks(m["eliminated_marks"])
-				isEliminated := elim[myMark]
-				// Выбывший начал новое лобби — приоритет у новой сессии.
-				if isEliminated {
-					if lobbyID, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result(); lerr == nil && lobbyID != "" {
-						if lm, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result(); len(lm) > 0 {
-							st := lm["status"]
-							if st == lobbyStatusWaitingInvite || st == lobbyStatusWaitingMatchmake || st == lobbyStatusInGame {
-								w.Header().Set("Content-Type", "application/json")
-								_ = json.NewEncoder(w).Encode(map[string]any{
-									"type":     "lobby",
-									"lobby_id": lobbyID,
-								})
-								return
-							}
-						}
-					}
-				} else {
-					isMyTurn := m["turn"] == myMark
-					w.Header().Set("Content-Type", "application/json")
-					_ = json.NewEncoder(w).Encode(map[string]any{
-						"type":          "game",
-						"game_id":       gameID,
-						"lobby_id":      m["lobby_id"],
-						"is_my_turn":    isMyTurn,
-						"is_eliminated": false,
-					})
-					return
+				active = map[string]any{
+					"type":       "game",
+					"game_id":    gameID,
+					"lobby_id":   m["lobby_id"],
+					"is_my_turn": m["turn"] == myMark,
 				}
-				// Выбывший без нового лобби — карточка «Текущая игра» для просмотра.
-				w.Header().Set("Content-Type", "application/json")
-				_ = json.NewEncoder(w).Encode(map[string]any{
-					"type":          "game",
-					"game_id":       gameID,
-					"lobby_id":      m["lobby_id"],
-					"is_my_turn":    false,
-					"is_eliminated": true,
-				})
-				return
 			}
 		} else {
 			clearUserActiveGame(ctx, h.Rdb, userID)
 		}
 	}
 
-	lobbyID, err := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result()
-	if err == nil && lobbyID != "" {
-		m, err := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
-		// HGetAll для отсутствующего ключа возвращает пустую map и err=nil.
-		if err == nil && len(m) > 0 {
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"type":     "lobby",
-				"lobby_id": lobbyID,
-			})
-			return
+	if len(active) == 0 {
+		lobbyID, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result()
+		if lerr == nil && lobbyID != "" {
+			m, merr := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
+			if merr == nil && len(m) > 0 {
+				active = map[string]any{
+					"type":     "lobby",
+					"lobby_id": lobbyID,
+				}
+			} else {
+				clearUserActiveLobby(ctx, h.Rdb, userID)
+			}
 		}
-		clearUserActiveLobby(ctx, h.Rdb, userID)
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	writeActiveJSON(w, active, h.observationPayload(ctx, userID))
 }
 
 func minUUID(a, b uuid.UUID) string {

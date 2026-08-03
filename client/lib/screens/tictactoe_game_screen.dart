@@ -136,24 +136,33 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final eliminatedNow = myMark != null &&
         knownGame != null &&
         knownGame.isEliminated(myMark);
-    final elim = eliminatedNow ||
-        (prevActive?.gameId == widget.gameId &&
-            (prevActive?.isEliminated ?? false));
-    ref.read(activeGameProvider.notifier).setLocal(
-          ActiveGameItem(
-            type: 'game',
-            gameId: widget.gameId,
-            lobbyId: prevActive?.lobbyId,
-            isMyTurn: prevActive?.gameId == widget.gameId
-                ? (prevActive?.isMyTurn ?? false)
-                : false,
-            isEliminated: elim,
-          ),
-        );
+    final observing =
+        ref.read(observationGameProvider)?.gameId == widget.gameId;
+    final elim = eliminatedNow || observing;
     if (elim) {
       clearBlockingGamePin(ref, ifGameId: widget.gameId);
+      ref.read(activeGameProvider.notifier).setObservationLocal(
+            ObservationItem(
+              gameId: widget.gameId,
+              lobbyId: prevActive?.lobbyId,
+            ),
+          );
+      // Observation не active — не перетираем чужую живую партию/лобби.
+      if (prevActive?.gameId == widget.gameId) {
+        ref.read(activeGameProvider.notifier).clearLocal();
+      }
     } else {
       pinBlockingGame(ref, widget.gameId);
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(
+              type: 'game',
+              gameId: widget.gameId,
+              lobbyId: prevActive?.lobbyId,
+              isMyTurn: prevActive?.gameId == widget.gameId
+                  ? (prevActive?.isMyTurn ?? false)
+                  : false,
+            ),
+          );
     }
     unawaited(ref.read(activeGameProvider.notifier).refresh());
     // Fallback-синк + дожим протухшего хода (сервер применяет timeout на GetGame).
@@ -540,6 +549,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               pinBlockingGame(ref, widget.gameId);
             } else if (eliminatedNow) {
               clearBlockingGamePin(ref, ifGameId: widget.gameId);
+              ref.read(activeGameProvider.notifier).setObservationLocal(
+                    ObservationItem(
+                      gameId: widget.gameId,
+                      lobbyId: ref.read(activeGameProvider).valueOrNull?.lobbyId,
+                    ),
+                  );
+              final prev = ref.read(activeGameProvider).valueOrNull;
+              if (prev?.gameId == widget.gameId) {
+                ref.read(activeGameProvider.notifier).clearLocal();
+              }
+            } else if (isOver) {
+              ref
+                  .read(activeGameProvider.notifier)
+                  .clearObservationLocal(ifGameId: widget.gameId);
             }
             // Полное состояние игры — источник истины для текущего хода.
             final isMyTurn = game.isTurnOf(currentUser?.id) && !eliminatedNow;
@@ -977,22 +1000,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
         } catch (_) {}
         if (!mounted) return;
-        // Multi: партия ещё идёт — держим карточку «Текущая игра» (spectate).
+        // Multi: партия ещё идёт — observation, не active.
         final game = ref.read(gameStateOverrideProvider(gameId)) ??
             ref.read(gameStateProvider(gameId)).valueOrNull;
         final multi = (game?.maxPlayers ?? 0) > 2 ||
             (game?.playerUserIds.length ?? 0) > 2;
         if (multi) {
           final prev = ref.read(activeGameProvider).valueOrNull;
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
+          ref.read(activeGameProvider.notifier).setObservationLocal(
+                ObservationItem(
                   gameId: gameId,
                   lobbyId: prev?.lobbyId,
-                  isMyTurn: false,
-                  isEliminated: true,
                 ),
               );
+          if (prev?.gameId == gameId) {
+            ref.read(activeGameProvider.notifier).clearLocal();
+          }
         }
         ref.read(gameStateOverrideProvider(gameId).notifier).state = null;
         ref.invalidate(gameStateProvider(gameId));
@@ -1339,19 +1362,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       _rematchRespondedIds.clear();
       clearBlockingGamePin(ref, ifGameId: widget.gameId);
       if (eliminated && !isOver) {
-        // Партия ещё идёт — карточка «Текущая игра» для просмотра.
+        // Партия ещё идёт — observation до закрытия.
         final prev = ref.read(activeGameProvider).valueOrNull;
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(
-                type: 'game',
+        ref.read(activeGameProvider.notifier).setObservationLocal(
+              ObservationItem(
                 gameId: widget.gameId,
                 lobbyId: prev?.lobbyId,
-                isMyTurn: false,
-                isEliminated: true,
               ),
             );
+        if (prev?.gameId == widget.gameId) {
+          ref.read(activeGameProvider.notifier).clearLocal();
+        }
       } else {
         ref.read(activeGameProvider.notifier).clearLocal();
+        ref
+            .read(activeGameProvider.notifier)
+            .clearObservationLocal(ifGameId: widget.gameId);
       }
       context.go('/games');
       if (rematchLobbyId != null) {
@@ -1399,19 +1425,22 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       final multi = (game?.maxPlayers ?? 0) > 2 ||
           (game?.playerUserIds.length ?? 0) > 2;
       if (multi && game?.status == 'active') {
-        // Multi: выбыли, но партия жива — карточка для просмотра.
+        // Multi: observation, пока партия не закончится.
         final prev = ref.read(activeGameProvider).valueOrNull;
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(
-                type: 'game',
+        ref.read(activeGameProvider.notifier).setObservationLocal(
+              ObservationItem(
                 gameId: gameId,
                 lobbyId: prev?.lobbyId,
-                isMyTurn: false,
-                isEliminated: true,
               ),
             );
+        if (prev?.gameId == gameId) {
+          ref.read(activeGameProvider.notifier).clearLocal();
+        }
       } else {
         ref.read(activeGameProvider.notifier).clearLocal();
+        ref
+            .read(activeGameProvider.notifier)
+            .clearObservationLocal(ifGameId: gameId);
       }
       context.go('/games');
       unawaited(ref.read(activeGameProvider.notifier).refresh());
