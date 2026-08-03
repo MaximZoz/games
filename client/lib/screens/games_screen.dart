@@ -642,13 +642,63 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
-  Future<void> _joinLobby(BuildContext context, String lobbyId) async {
+  Future<void> _joinLobby(
+    BuildContext context,
+    String lobbyId, {
+    String gameType = 'tictactoe',
+  }) async {
     if (await blockJoinIfBusyAsync(
       context,
       ref,
       targetLobbyId: lobbyId,
       redirectToActive: true,
     )) {
+      return;
+    }
+    // Durak — свой стек API и роутов.
+    if (gameType == 'durak') {
+      try {
+        final res =
+            await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'durak',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId);
+          context.go('/games/durak/game/${res.gameId}');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'durak',
+                ),
+              );
+          context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (e) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (context.mounted) {
+          showAppSnackBar(context,
+              message: formatUserError(e), kind: AppSnackKind.error);
+        }
+      }
       return;
     }
     try {
@@ -1050,7 +1100,7 @@ class _LobbiesPageContent extends StatelessWidget {
 
   final AsyncValue<List<LobbyItem>> lobbiesAsync;
   final bool isDesktop;
-  final void Function(BuildContext, String) onJoinLobby;
+  final void Function(BuildContext, String, {String gameType}) onJoinLobby;
   final void Function(BuildContext, LobbyItem) onShowLobbyRules;
   final VoidCallback onRefresh;
   final double contentPadding;
@@ -1121,7 +1171,9 @@ class _LobbiesPageContent extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.grid_3x3_rounded,
+                                      lobby.isDurak
+                                          ? Icons.style_rounded
+                                          : Icons.grid_3x3_rounded,
                                       size: isDesktop ? 36 : 32,
                                       color: AppColors.accentStart,
                                     ),
@@ -1195,15 +1247,21 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
-                                                    Icons.extension_rounded,
+                                                    lobby.isDurak
+                                                        ? Icons
+                                                            .swap_horiz_rounded
+                                                        : Icons
+                                                            .extension_rounded,
                                                     size: 14,
                                                     color:
                                                         AppColors.textSecondary,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    variantShortLabel(
-                                                        lobby.variant),
+                                                    lobby.isDurak
+                                                        ? '${durakModeLabel(lobby.gameMode)} · ${lobby.deckSize}'
+                                                        : variantShortLabel(
+                                                            lobby.variant),
                                                     style: TextStyle(
                                                       fontSize:
                                                           isDesktop ? 14 : 13,
@@ -1249,7 +1307,8 @@ class _LobbiesPageContent extends StatelessWidget {
                                     ),
                                     IconButton.filled(
                                       onPressed: () =>
-                                          onJoinLobby(context, lobby.id),
+                                          onJoinLobby(context, lobby.id,
+                                              gameType: lobby.gameType),
                                       icon: const Icon(Icons.login_rounded),
                                       tooltip: context.l10n.gamesJoin,
                                       style: IconButton.styleFrom(

@@ -141,11 +141,87 @@ class LobbyShareLinkCard extends StatelessWidget {
   }
 }
 
+/// Оценка высоты карточки друзей — общая эвристика для обеих игр,
+/// чтобы карточка не растягивалась на весь экран при паре друзей.
+double estimateLobbyFriendsCardHeight(int friendCount) {
+  if (friendCount <= 0) return 88;
+  return 24 + friendCount * 56.0;
+}
+
+/// Баннер «Поиск соперника…» — общий для matchmake-лобби всех игр.
+class LobbySearchBanner extends StatelessWidget {
+  const LobbySearchBanner({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientCard(
+      animate: false,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Диалог подтверждения выхода из лобби — общий для всех игр.
+/// Возвращает true, если пользователь подтвердил.
+Future<bool> confirmLeaveLobbyDialog({
+  required BuildContext context,
+  required String title,
+  required String message,
+  required String cancelLabel,
+  required String leaveLabel,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(cancelLabel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
+          child: Text(leaveLabel),
+        ),
+      ],
+    ),
+  );
+  return ok == true;
+}
+
 /// Скелет экрана «Своя игра» в состоянии ожидания игроков.
 ///
 /// Для 2 игроков — чип ставки сверху (как в крестиках-ноликах);
 /// для 3–4 — карточка «Игроки N/M» ([multiPlayersCard]).
-/// Дальше идут ссылка-приглашение и панель друзей.
+/// Дальше идут ссылка-приглашение и панель друзей: она занимает высоту
+/// по контенту, пока помещается, и растягивается только когда друзей много.
 class GameLobbyWaitingLayout extends StatelessWidget {
   const GameLobbyWaitingLayout({
     super.key,
@@ -153,9 +229,10 @@ class GameLobbyWaitingLayout extends StatelessWidget {
     required this.stakeBronze,
     required this.stakeLabel,
     required this.shareLinkCard,
-    required this.friendsCard,
+    required this.friendsCardBuilder,
+    required this.friendsCount,
     this.multiPlayersCard,
-    this.expandFriends = true,
+    this.searchBanner,
     this.padding = const EdgeInsets.all(24),
     this.maxWidth = 480,
   });
@@ -166,9 +243,18 @@ class GameLobbyWaitingLayout extends StatelessWidget {
 
   /// Карточка «Игроки N/M» — показывается только при maxPlayers > 2.
   final Widget? multiPlayersCard;
+
+  /// Баннер «Поиск соперника…» для matchmake — сверху, если задан.
+  final Widget? searchBanner;
+
   final Widget shareLinkCard;
-  final Widget friendsCard;
-  final bool expandFriends;
+
+  /// [expand]=true — карточка занимает остаток экрана и скроллит список.
+  final Widget Function(bool expand) friendsCardBuilder;
+
+  /// Количество друзей — для оценки нужной высоты.
+  final int friendsCount;
+
   final EdgeInsets padding;
   final double maxWidth;
 
@@ -176,6 +262,7 @@ class GameLobbyWaitingLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMulti = maxPlayers > 2;
     final head = <Widget>[
+      if (searchBanner != null) ...[searchBanner!, const SizedBox(height: 12)],
       if (isMulti && multiPlayersCard != null) ...[
         multiPlayersCard!,
         const SizedBox(height: 12),
@@ -196,10 +283,22 @@ class GameLobbyWaitingLayout extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ...head,
-                if (expandFriends)
-                  Expanded(child: friendsCard)
-                else
-                  Align(alignment: Alignment.topCenter, child: friendsCard),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final estimated =
+                          estimateLobbyFriendsCardHeight(friendsCount);
+                      final expand = estimated >= constraints.maxHeight;
+                      final card = friendsCardBuilder(expand);
+                      if (expand) return card;
+                      // Мало друзей — высота по контенту, карточка сверху.
+                      return Align(
+                        alignment: Alignment.topCenter,
+                        child: card,
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),

@@ -19,7 +19,6 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
-import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -912,33 +911,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   }
 
   Widget _buildSearchLoaderBanner(BuildContext context) {
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              context.l10n.lobbySearchingOpponent,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    // Общий виджет — тот же, что в лобби Дурака.
+    return LobbySearchBanner(label: context.l10n.lobbySearchingOpponent);
   }
 
   Widget _buildMultiLobbyCard(

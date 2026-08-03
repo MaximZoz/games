@@ -421,6 +421,15 @@ class LobbyItem {
   final bool firstMoveRestriction;
   final int stakeBronze;
 
+  /// Тип игры лобби: 'tictactoe' | 'durak'.
+  final String gameType;
+
+  /// Durak: размер колоды и режим (подкидной/переводной).
+  final int deckSize;
+  final String gameMode;
+
+  bool get isDurak => gameType == 'durak';
+
   LobbyItem({
     required this.id,
     required this.creatorId,
@@ -441,6 +450,9 @@ class LobbyItem {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 1,
+    this.gameType = 'tictactoe',
+    this.deckSize = 36,
+    this.gameMode = 'podkidnoi',
   })  : gridSize = gridSize ?? gridSizeForVariant(variant),
         maxPlayers = maxPlayers ?? configForVariant(variant).maxPlayers,
         players = players ?? const [],
@@ -479,6 +491,13 @@ class LobbyItem {
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_type'] as String).trim()
+          : 'tictactoe',
+      deckSize: (json['deck_size'] as num?)?.toInt() ?? 36,
+      gameMode: (json['game_mode'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_mode'] as String).trim()
+          : 'podkidnoi',
     );
   }
 

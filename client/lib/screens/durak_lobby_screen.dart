@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -45,14 +46,29 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     super.dispose();
   }
 
+  /// Кнопка «Назад» и свайп: сначала подтверждение — как в крестиках-ноликах.
+  Future<void> _confirmLeave() async {
+    if (_leaving) return;
+    final l10n = context.l10n;
+    final ok = await confirmLeaveLobbyDialog(
+      context: context,
+      title: l10n.lobbyLeaveTitle,
+      message: l10n.lobbyLeaveConfirm,
+      cancelLabel: l10n.commonCancel,
+      leaveLabel: l10n.lobbyLeave,
+    );
+    if (!ok || !mounted) return;
+    await _leave();
+  }
+
   Future<void> _leave() async {
     if (_leaving) return;
     setState(() => _leaving = true);
+    // Сразу уходим: не ждём сеть, лобби закроется на сервере.
+    context.go('/games');
     try {
       await ref.read(durakRepositoryProvider).leaveLobby(widget.lobbyId);
     } catch (_) {}
-    if (!mounted) return;
-    context.go('/games');
   }
 
   Future<void> _invite(String friendId) async {
@@ -99,54 +115,65 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     });
 
     final lobby = lobbyAsync.valueOrNull;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    final isMatchmake = (lobby?.mode ?? widget.initialMode) == 'matchmake';
+    return SwipeBackScope(
+      enabled: !_leaving,
+      onBack: _confirmLeave,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: _leaving ? null : _leave,
-        ),
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.style_rounded, size: 22, color: AppColors.accentStart),
-            SizedBox(width: 8),
-            Text('Своя игра'),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: _leaving ? null : _confirmLeave,
+          ),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.style_rounded,
+                  size: 22, color: AppColors.accentStart),
+              const SizedBox(width: 8),
+              Text(isMatchmake
+                  ? context.l10n.gamesLobbyTab
+                  : context.l10n.lobbyPrivateGame),
+            ],
+          ),
+          centerTitle: true,
+          actions: [
+            if (lobby != null)
+              IconButton(
+                tooltip: context.l10n.gamesRulesTitle,
+                icon: const Icon(Icons.rule_rounded),
+                onPressed: () => showGameRulesDialog(
+                  context: context,
+                  title: context.l10n.gamesRulesTitle,
+                  content: rulesTextLines(durakRuleLines(
+                    mode: lobby.gameMode,
+                    players: lobby.maxPlayers,
+                    deckSize: lobby.deckSize,
+                    turnTimeSec: lobby.turnTimeSec,
+                    stakeBronze: lobby.stakeBronze,
+                  )),
+                  closeLabel: context.l10n.commonClose,
+                ),
+              ),
           ],
         ),
-        centerTitle: true,
-        actions: [
-          if (lobby != null)
-            IconButton(
-              tooltip: 'Правила игры',
-              icon: const Icon(Icons.rule_rounded),
-              onPressed: () => showGameRulesDialog(
-                context: context,
-                title: 'Правила игры',
-                content: rulesTextLines(durakRuleLines(
-                  mode: lobby.gameMode,
-                  players: lobby.maxPlayers,
-                  deckSize: lobby.deckSize,
-                  turnTimeSec: lobby.turnTimeSec,
-                  stakeBronze: lobby.stakeBronze,
-                )),
+        body: GradientBackground(
+          child: SafeArea(
+            child: lobbyAsync.when(
+              skipLoadingOnReload: true,
+              skipLoadingOnRefresh: true,
+              data: (lobby) => _buildBody(lobby, friendsAsync),
+              loading: () => const Center(
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.accentStart),
               ),
-            ),
-        ],
-      ),
-      body: GradientBackground(
-        child: SafeArea(
-          child: lobbyAsync.when(
-            data: (lobby) => _buildBody(lobby, friendsAsync),
-            loading: () => const Center(
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.accentStart),
-            ),
-            error: (e, _) => Center(
-              child: Text(
-                formatUserError(e, fallback: 'Лобби недоступно'),
-                style: const TextStyle(color: Colors.red),
+              error: (e, _) => Center(
+                child: Text(
+                  formatUserError(e, fallback: context.l10n.lobbyGone),
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ),
           ),
@@ -159,12 +186,22 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     DurakLobbyView lobby,
     AsyncValue<FriendsSnapshot> friendsAsync,
   ) {
+    final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
+    final friendsCount = friendsAsync.valueOrNull?.friends
+            .where((f) => !memberIds.contains(f.user.id))
+            .length ??
+        0;
+    final isMatchmake = lobby.mode == 'matchmake';
     // Тот же скелет, что и в крестиках-ноликах: 2 игрока → чип ставки,
-    // 3–4 → карточка «Игроки N/M».
+    // 3–4 → карточка «Игроки N/M», друзья — по контенту.
     return GameLobbyWaitingLayout(
       maxPlayers: lobby.maxPlayers,
       stakeBronze: lobby.stakeBronze,
       stakeLabel: context.l10n.shopStakes,
+      friendsCount: friendsCount,
+      searchBanner: isMatchmake
+          ? LobbySearchBanner(label: context.l10n.lobbySearchingOpponent)
+          : null,
       multiPlayersCard: _buildMultiPlayersCard(lobby),
       shareLinkCard: LobbyShareLinkCard(
         title: context.l10n.lobbyCopyLink,
@@ -174,7 +211,8 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
         copied: _linkCopied,
         onTap: () => _copyLink(lobby.id),
       ),
-      friendsCard: _buildFriendsCard(lobby, friendsAsync),
+      friendsCardBuilder: (expand) =>
+          _buildFriendsCard(lobby, friendsAsync, expand: expand),
     );
   }
 
@@ -235,12 +273,15 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
 
   Widget _buildFriendsCard(
     DurakLobbyView lobby,
-    AsyncValue<FriendsSnapshot> friendsAsync,
-  ) {
+    AsyncValue<FriendsSnapshot> friendsAsync, {
+    bool expand = true,
+  }) {
     return GradientCard(
       animate: false,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: friendsAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         data: (snapshot) {
           final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
           final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
@@ -248,15 +289,25 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
               snapshot.friends.where((f) => !memberIds.contains(f.user.id)).toList();
           sortByPresenceOnlineFirst(list, (f) => f.user.id, presence);
           if (list.isEmpty) {
-            return const Center(
+            final empty = Padding(
+              padding: const EdgeInsets.all(16),
               child: Text(
-                'Друзей для приглашения нет',
-                style: TextStyle(color: AppColors.textSecondary),
+                context.l10n.friendsEmpty,
+                style: const TextStyle(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
               ),
             );
+            return expand ? Center(child: empty) : empty;
           }
           return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 4),
+            key: const PageStorageKey('durak-lobby-friends'),
+            padding: const EdgeInsets.only(bottom: 8),
+            shrinkWrap: !expand,
+            physics: expand
+                ? const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  )
+                : const NeverScrollableScrollPhysics(),
             itemCount: list.length,
             itemBuilder: (context, i) {
               final f = list[i];

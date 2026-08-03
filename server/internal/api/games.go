@@ -1629,7 +1629,11 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 		swapRule := m["swap_rule"] == "true"
 		firstMoveRestriction := m["first_move_restriction"] == "true"
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		lobbies = append(lobbies, LobbyItem{
+		gameType := strings.TrimSpace(m["game_type"])
+		if gameType == "" {
+			gameType = "tictactoe"
+		}
+		item := LobbyItem{
 			ID:                   id,
 			CreatorID:            creatorID,
 			CreatorName:          creatorName,
@@ -1645,7 +1649,24 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			SwapRule:             swapRule,
 			FirstMoveRestriction: firstMoveRestriction,
 			StakeBronze:          stakeBronze,
-		})
+			GameType:             gameType,
+		}
+		// Durak: правила и подписи строятся по колоде/режиму, не по variant.
+		if gameType == durakGameType {
+			deckSize, _ := strconv.Atoi(m["deck_size"])
+			if deckSize == 0 {
+				deckSize = 36
+			}
+			gm := strings.TrimSpace(m["game_mode"])
+			if gm == "" {
+				gm = "podkidnoi"
+			}
+			item.DeckSize = deckSize
+			item.GameMode = gm
+			item.Variant = ""
+			item.GridSize = 0
+		}
+		lobbies = append(lobbies, item)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
