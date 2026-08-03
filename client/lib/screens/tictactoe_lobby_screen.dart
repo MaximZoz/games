@@ -261,6 +261,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final showPrivateInviteWaiting =
                   isInviteMode && isLobbyMember && !isOpenFind;
               final showOpenFindWaiting = isOpenFind && isLobbyMember;
+              final lobbyMemberIds = <String>{
+                ...lobby.playerIds,
+                ...lobby.players.map((p) => p.id),
+                if (lobby.creatorId.trim().isNotEmpty) lobby.creatorId,
+                if ((lobby.opponentId ?? '').trim().isNotEmpty)
+                  lobby.opponentId!.trim(),
+              };
               if (lobby.gameId != null) {
                 return const Center(
                   child: CircularProgressIndicator(
@@ -289,8 +296,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     child: useScrollFriends
                         ? LayoutBuilder(
                             builder: (context, constraints) {
-                              final friendCount =
-                                  friendsAsync.valueOrNull?.friends.length ?? 0;
+                              final friendCount = friendsAsync
+                                      .valueOrNull?.friends
+                                      .where((f) =>
+                                          !lobbyMemberIds.contains(f.user.id))
+                                      .length ??
+                                  0;
                               final estimated =
                                   _estimateFriendsCardHeight(friendCount);
                               final maxFriendsH = (constraints.maxHeight * 0.55)
@@ -331,6 +342,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                           context,
                                           friendsAsync,
                                           expand: true,
+                                          excludeUserIds: lobbyMemberIds,
                                         ),
                                       )
                                     else
@@ -338,6 +350,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                         context,
                                         friendsAsync,
                                         expand: false,
+                                        excludeUserIds: lobbyMemberIds,
                                       ),
                                   ],
                                 ),
@@ -369,6 +382,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                           final friendCount = friendsAsync
                                                   .valueOrNull
                                                   ?.friends
+                                                  .where((f) => !lobbyMemberIds
+                                                      .contains(f.user.id))
                                                   .length ??
                                               0;
                                           final estimated =
@@ -380,6 +395,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                             context,
                                             friendsAsync,
                                             expand: expand,
+                                            excludeUserIds: lobbyMemberIds,
                                           );
                                           if (expand) return card;
                                           return Align(
@@ -438,7 +454,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     child: LayoutBuilder(
                                       builder: (context, constraints) {
                                         final friendCount = friendsAsync
-                                                .valueOrNull?.friends.length ??
+                                                .valueOrNull?.friends
+                                                .where((f) => !lobbyMemberIds
+                                                    .contains(f.user.id))
+                                                .length ??
                                             0;
                                         final estimated =
                                             _estimateFriendsCardHeight(
@@ -449,6 +468,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                           context,
                                           friendsAsync,
                                           expand: expand,
+                                          excludeUserIds: lobbyMemberIds,
                                         );
                                         if (expand) return card;
                                         return Align(
@@ -684,15 +704,21 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     BuildContext context,
     AsyncValue<FriendsSnapshot> friendsAsync, {
     bool expand = true,
+    Set<String> excludeUserIds = const {},
   }) {
     return GradientCard(
+      // Без appear-анимации: иначе setState после «Пригласить» «переписывает» карточку.
+      animate: false,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: friendsAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         data: (snapshot) {
-          final friends = snapshot.friends;
           final presence =
               ref.watch(presenceMapProvider).valueOrNull ?? const {};
-          final visibleFriends = List.of(friends);
+          final visibleFriends = snapshot.friends
+              .where((f) => !excludeUserIds.contains(f.user.id))
+              .toList();
           sortByPresenceOnlineFirst(
             visibleFriends,
             (f) => f.user.id,
@@ -713,6 +739,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             return expand ? Center(child: empty) : empty;
           }
           final list = ListView.builder(
+            key: const PageStorageKey('lobby-friends-invite'),
             padding: const EdgeInsets.only(bottom: 8),
             shrinkWrap: !expand,
             physics: expand
@@ -729,6 +756,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final isInvited = _invitedFriendIds.contains(friendId);
               final isInviting = _invitingFriendIds.contains(friendId);
               return Padding(
+                key: ValueKey('lobby-invite-$friendId'),
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
@@ -1393,24 +1421,30 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   }
 
   Future<void> _inviteFriend(BuildContext context, String friendUserId) async {
+    if (_invitingFriendIds.contains(friendUserId) ||
+        _invitedFriendIds.contains(friendUserId)) {
+      return;
+    }
+    final fallbackError = context.l10n.commonTryLater;
     setState(() => _invitingFriendIds.add(friendUserId));
     try {
       final repo = ref.read(gamesRepositoryProvider);
       await repo.inviteToLobby(widget.lobbyId, friendUserId);
-      if (context.mounted) {
-        // Без всплывашки: визуальный отклик — кнопка превращается в «Отправлено»
-        // с галочкой (через _invitedFriendIds).
-        setState(() {
-          _invitedFriendIds.add(friendUserId);
-          _invitingFriendIds.remove(friendUserId);
-        });
-      }
+      if (!mounted) return;
+      // Без всплывашки: кнопка → «Отправлено». Не уходим с экрана.
+      setState(() {
+        _invitedFriendIds.add(friendUserId);
+        _invitingFriendIds.remove(friendUserId);
+      });
     } catch (e) {
-      if (context.mounted) context.go('/games');
-    } finally {
-      if (mounted) {
-        setState(() => _invitingFriendIds.remove(friendUserId));
-      }
+      if (!mounted) return;
+      setState(() => _invitingFriendIds.remove(friendUserId));
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: formatUserError(e, fallback: fallbackError),
+        kind: AppSnackKind.error,
+      );
     }
   }
 

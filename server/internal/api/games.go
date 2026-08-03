@@ -1811,13 +1811,33 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
-	if m["creator_id"] != userID.String() {
-		WriteErr(w, r, http.StatusForbidden, "forbidden")
-		return
-	}
 	if m["status"] != lobbyStatusWaitingInvite {
 		WriteErr(w, r, http.StatusBadRequest, "lobby not in invite mode")
 		return
+	}
+	// Приглашать может любой участник лобби (не только создатель) —
+	// иначе после Join в multi «Своя игра» кнопка «Пригласить» даёт 403.
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{m["creator_id"]}
+	}
+	isMember := false
+	for _, p := range players {
+		if p == userID.String() {
+			isMember = true
+			break
+		}
+	}
+	if !isMember && m["creator_id"] != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	// Уже в лобби — повторно не зовём.
+	for _, p := range players {
+		if p == friendID.String() {
+			WriteErr(w, r, http.StatusBadRequest, "user already in lobby")
+			return
+		}
 	}
 
 	friends, err := store.ListFriendships(ctx, h.Pool, userID)
