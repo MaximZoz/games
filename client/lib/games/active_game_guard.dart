@@ -14,6 +14,11 @@ bool hasActiveMatch(ActiveGameItem? active) {
   return id.isNotEmpty;
 }
 
+/// Партия ещё блокирует новую игру (выбывший может только смотреть — не блокирует).
+bool hasBlockingActiveMatch(ActiveGameItem? active) {
+  return hasActiveMatch(active) && !active!.isEliminated;
+}
+
 bool hasActiveLobby(ActiveGameItem? active) {
   if (active == null || active.type != 'lobby') return false;
   final id = active.lobbyId?.trim() ?? '';
@@ -21,12 +26,13 @@ bool hasActiveLobby(ActiveGameItem? active) {
 }
 
 /// Есть блокирующая сессия (партия или своё лобби), мешающая входу в [targetLobbyId].
+/// Выбывший в multi — партия для него завершена: можно создавать/входить в новую.
 bool isBusyWithOtherSession(
   ActiveGameItem? active, {
   String? targetLobbyId,
   String? targetGameId,
 }) {
-  if (hasActiveMatch(active)) {
+  if (hasBlockingActiveMatch(active)) {
     final gid = active!.gameId!.trim();
     if (targetGameId != null && targetGameId.trim() == gid) return false;
     return true;

@@ -1681,11 +1681,14 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	// Уже в другой активной партии / своём лобби — нельзя принять новый инвайт.
+	// Выбывший в multi может смотреть и параллельно войти в новую игру.
 	if gid, gerr := h.Rdb.Get(ctx, userActiveGameKey(userID)).Result(); gerr == nil && gid != "" {
 		if gm, _ := h.Rdb.HGetAll(ctx, "game:"+gid).Result(); len(gm) > 0 && gm["status"] == gameStatusActive {
-			if markForUserID(gm, userID.String()) != "" {
-				WriteErr(w, r, http.StatusConflict, "finish your current game first")
-				return
+			if mark := markForUserID(gm, userID.String()); mark != "" {
+				if !parseEliminatedMarks(gm["eliminated_marks"])[mark] {
+					WriteErr(w, r, http.StatusConflict, "finish your current game first")
+					return
+				}
 			}
 		}
 	}
@@ -3433,14 +3436,41 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 			} else {
 				elim := parseEliminatedMarks(m["eliminated_marks"])
 				isEliminated := elim[myMark]
-				isMyTurn := !isEliminated && m["turn"] == myMark
+				// Выбывший начал новое лобби — приоритет у новой сессии.
+				if isEliminated {
+					if lobbyID, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result(); lerr == nil && lobbyID != "" {
+						if lm, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result(); len(lm) > 0 {
+							st := lm["status"]
+							if st == lobbyStatusWaitingInvite || st == lobbyStatusWaitingMatchmake || st == lobbyStatusInGame {
+								w.Header().Set("Content-Type", "application/json")
+								_ = json.NewEncoder(w).Encode(map[string]any{
+									"type":     "lobby",
+									"lobby_id": lobbyID,
+								})
+								return
+							}
+						}
+					}
+				} else {
+					isMyTurn := m["turn"] == myMark
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]any{
+						"type":          "game",
+						"game_id":       gameID,
+						"lobby_id":      m["lobby_id"],
+						"is_my_turn":    isMyTurn,
+						"is_eliminated": false,
+					})
+					return
+				}
+				// Выбывший без нового лобби — карточка «Текущая игра» для просмотра.
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(map[string]any{
 					"type":          "game",
 					"game_id":       gameID,
 					"lobby_id":      m["lobby_id"],
-					"is_my_turn":    isMyTurn,
-					"is_eliminated": isEliminated,
+					"is_my_turn":    false,
+					"is_eliminated": true,
 				})
 				return
 			}

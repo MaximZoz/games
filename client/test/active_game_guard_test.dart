@@ -35,5 +35,18 @@ void main() {
     test('free when no active', () {
       expect(isBusyWithOtherSession(null, targetLobbyId: 'L1'), isFalse);
     });
+
+    test('eliminated player is free to join another lobby', () {
+      final active = ActiveGameItem(
+        type: 'game',
+        gameId: 'g1',
+        isEliminated: true,
+      );
+      expect(
+        isBusyWithOtherSession(active, targetLobbyId: 'lobby-other'),
+        isFalse,
+      );
+      expect(hasBlockingActiveMatch(active), isFalse);
+    });
   });
 }

@@ -52,17 +52,26 @@ String? _gameIdFromPath(String path) {
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 /// При активной партии — только редирект в неё (не список с инвайтами).
+/// Выбывший может смотреть через «Текущая игра», таб открывает список.
 void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
   final pathGameId = _gameIdFromPath(currentPath);
 
-  // Активная партия (в т.ч. выбывший смотрит) — только в неё.
+  // Ещё играю — только в свою партию.
   if (active != null &&
       active.type == 'game' &&
       active.gameId != null &&
-      active.gameId!.isNotEmpty) {
+      active.gameId!.isNotEmpty &&
+      !active.isEliminated) {
     final dest = '/games/tictactoe/game/${active.gameId}';
     if (currentPath == dest || currentPath.startsWith('$dest/')) return;
     context.go(dest);
+    return;
+  }
+
+  // Выбывший на экране партии тапнул «Игры» — список (создать/найти),
+  // карточка «Текущая игра» остаётся для просмотра.
+  if (pathGameId != null && active?.isEliminated == true) {
+    if (currentPath != '/games') context.go('/games');
     return;
   }
 
