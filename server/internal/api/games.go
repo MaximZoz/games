@@ -3455,10 +3455,13 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 	}
 	gm, _ := h.Rdb.HGetAll(ctx, "game:"+gid).Result()
 	if len(gm) == 0 || gm["status"] != gameStatusActive {
+		// Протухший указатель после конца партии — не блокируем create/find.
+		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
 	mark := markForUserID(gm, userID.String())
 	if mark == "" {
+		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
 	// Выбывший не должен оставаться в active_game — переносим в observation.
@@ -3476,10 +3479,21 @@ func moveActiveToObserving(ctx context.Context, rdb *redis.Client, userID uuid.U
 	setUserObservingGame(ctx, rdb, userID, gameID)
 }
 
+// clearUsersFinishedGame — снять active/observation/lobby по оконченной партии.
 func clearUsersFinishedGame(ctx context.Context, rdb *redis.Client, users []uuid.UUID, gameID string) {
+	if rdb == nil {
+		return
+	}
+	lobbyID := ""
+	if gm, _ := rdb.HGetAll(ctx, "game:"+gameID).Result(); len(gm) > 0 {
+		lobbyID = strings.TrimSpace(gm["lobby_id"])
+	}
 	for _, u := range users {
 		clearUserActiveGame(ctx, rdb, u)
 		clearUserObservingGameIfMatch(ctx, rdb, u, gameID)
+		if lobbyID != "" {
+			clearUserActiveLobbyIfMatch(ctx, rdb, u, lobbyID)
+		}
 	}
 }
 

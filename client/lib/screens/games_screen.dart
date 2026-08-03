@@ -350,7 +350,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _createGame(BuildContext context, String mode) async {
-    if (blockJoinIfBusy(context, ref)) return;
+    // Async: после конца партии пин/кэш могли ещё держать старый gameId.
+    if (await blockJoinIfBusyAsync(context, ref)) return;
+    if (!context.mounted) return;
     setState(() {
       if (mode == 'invite') {
         _isCreating = true;

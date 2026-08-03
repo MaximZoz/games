@@ -163,7 +163,7 @@ bool blockJoinIfBusy(
   return true;
 }
 
-/// Асинхронный вариант: дождаться GetActive, если кэш пуст/грузится.
+/// Асинхронный вариант: сверить с GetActive (протухший пин после конца партии).
 Future<bool> blockJoinIfBusyAsync(
   BuildContext context,
   WidgetRef ref, {
@@ -171,18 +171,16 @@ Future<bool> blockJoinIfBusyAsync(
   String? targetGameId,
   bool redirectToActive = false,
 }) async {
-  var active = resolveActiveForGuard(ref, context);
-  if (!isBusyWithOtherSession(
-    active,
-    targetLobbyId: targetLobbyId,
-    targetGameId: targetGameId,
-  )) {
-    try {
-      await ref.read(activeGameProvider.notifier).refresh();
-    } catch (_) {}
-    if (!context.mounted) return true;
-    active = resolveActiveForGuard(ref, context);
+  try {
+    await ref.read(activeGameProvider.notifier).refresh();
+  } catch (_) {}
+  if (!context.mounted) return true;
+  // Сервер без active/lobby — пин от оконченной партии больше не блокирует.
+  final fresh = ref.read(activeGameProvider).valueOrNull;
+  if (!hasBlockingActiveMatch(fresh) && !hasActiveLobby(fresh)) {
+    clearBlockingGamePin(ref);
   }
+  final active = resolveActiveForGuard(ref, context);
   if (!isBusyWithOtherSession(
     active,
     targetLobbyId: targetLobbyId,
