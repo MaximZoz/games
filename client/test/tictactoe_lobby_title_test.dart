@@ -60,6 +60,17 @@ void main() {
       );
     });
 
+    test('joined invitee sees Своя игра, not Войти в игру', () {
+      expect(
+        tictactoeLobbyAppBarTitle(
+          status: 'waiting_invite',
+          fromInviteLink: true,
+          isLobbyMember: true,
+        ),
+        'Своя игра',
+      );
+    });
+
     test('lobby app bar uses tictactoe grid icon', () {
       expect(tictactoeLobbyAppBarIcon, Icons.grid_3x3_rounded);
     });

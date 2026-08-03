@@ -1648,11 +1648,36 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	if len(players) == 0 {
 		players = []string{creatorID}
 	}
+	alreadyMember := false
 	for _, p := range players {
 		if p == userID.String() {
-			WriteErr(w, r, http.StatusBadRequest, "already in lobby")
-			return
+			alreadyMember = true
+			break
 		}
+	}
+	// Повторный join (двойной тап / перезаход) — не ошибка, а текущее состояние.
+	if alreadyMember {
+		setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
+		chatIDStr := strings.TrimSpace(m["chat_id"])
+		waitingMore := len(players) < cfg.MaxPlayers
+		w.Header().Set("Content-Type", "application/json")
+		resp := map[string]any{
+			"joined":        true,
+			"status":        status,
+			"players_count": len(players),
+			"max_players":   cfg.MaxPlayers,
+			"waiting_more":  waitingMore,
+			"already":       true,
+		}
+		if chatIDStr != "" {
+			resp["chat_id"] = chatIDStr
+		}
+		if gid := strings.TrimSpace(m["game_id"]); gid != "" {
+			resp["game_id"] = gid
+			resp["waiting_more"] = false
+		}
+		_ = json.NewEncoder(w).Encode(resp)
+		return
 	}
 	if len(players) >= cfg.MaxPlayers {
 		WriteErr(w, r, http.StatusConflict, "lobby is full")
