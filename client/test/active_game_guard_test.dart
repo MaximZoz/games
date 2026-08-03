@@ -85,6 +85,19 @@ void main() {
       );
     });
 
+    test('detects canonical error key from JSON', () {
+      expect(
+        isFinishCurrentGameError(
+          GamesException(
+            409,
+            'Beenden Sie zuerst Ihr aktuelles Spiel',
+            errorKey: finishCurrentGameErrorKey,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
     test('ignores other conflicts', () {
       expect(
         isFinishCurrentGameError(
@@ -95,6 +108,15 @@ void main() {
       expect(
         isFinishCurrentGameError(GamesException(404, 'lobby not found')),
         isFalse,
+      );
+    });
+  });
+
+  group('gameIdFromLocation with chat return', () {
+    test('parses game query value', () {
+      expect(
+        gameIdFromLocation('/games/tictactoe/game/xyz'),
+        'xyz',
       );
     });
   });

@@ -13,9 +13,11 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
-  GamesException(this.statusCode, this.message);
+  GamesException(this.statusCode, this.message, {this.errorKey = ''});
   final int statusCode;
   final String message;
+  /// Канонический ключ с сервера (`error` в JSON), без локали.
+  final String errorKey;
 
   @override
   String toString() => 'GamesException($statusCode): $message';
@@ -1253,33 +1255,41 @@ class GamesRepository {
 
   Never _throwForErrorResponse(http.Response response) {
     var message = response.body.trim();
+    var errorKey = '';
     try {
       final body = jsonDecode(response.body);
       if (body is Map) {
-        message = (body['message'] ?? body['error'] ?? message).toString();
+        errorKey = (body['error'] ?? body['code'] ?? '').toString().trim();
+        message =
+            (body['message'] ?? body['error'] ?? message).toString();
       }
     } catch (_) {}
 
     final l10n = LocaleService.l10n;
     if (response.statusCode == 401) {
-      throw GamesException(401, l10n.sessionExpired);
+      throw GamesException(401, l10n.sessionExpired, errorKey: errorKey);
     }
     if (response.statusCode == 402) {
       throw GamesException(
         402,
         message.trim().isEmpty ? l10n.commonInsufficientCoins : message.trim(),
+        errorKey: errorKey,
       );
     }
     if (response.statusCode == 403 && message.trim().isEmpty) {
-      throw GamesException(403, l10n.commonForbidden);
+      throw GamesException(403, l10n.commonForbidden, errorKey: errorKey);
     }
     if (response.statusCode == 404 && message.trim().isEmpty) {
-      throw GamesException(404, l10n.commonNotFound);
+      throw GamesException(404, l10n.commonNotFound, errorKey: errorKey);
     }
     if (response.statusCode == 503 && message.trim().isEmpty) {
-      throw GamesException(503, l10n.errGamesUnavailable);
+      throw GamesException(503, l10n.errGamesUnavailable, errorKey: errorKey);
     }
-    throw GamesException(response.statusCode, _messageFromBody(message));
+    throw GamesException(
+      response.statusCode,
+      _messageFromBody(message),
+      errorKey: errorKey,
+    );
   }
 
   Future<RematchResult> rematch(String gameId) async {

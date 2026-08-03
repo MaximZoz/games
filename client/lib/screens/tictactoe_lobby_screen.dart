@@ -115,23 +115,15 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     // мигание всего экрана при каждом remount (таб «Игры», query без mode).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Deep-link / чат: если уже в другой партии — всплывашка и назад.
-      // Дождаться GetActive, если кэш ещё грузится после invalidate.
-      ActiveGameItem? active = resolveActiveForGuard(ref, context);
-      if (!isBusyWithOtherSession(active, targetLobbyId: widget.lobbyId)) {
-        try {
-          active = await ref.read(activeGameProvider.future);
-        } catch (_) {}
-      }
-      if (!mounted) return;
-      if (isBusyWithOtherSession(active, targetLobbyId: widget.lobbyId)) {
-        showAppSnackBar(
-          context,
-          message: finishCurrentGameMessage,
-          kind: AppSnackKind.error,
-        );
-        goToActiveSession(context, active!);
+      if (await blockJoinIfBusyAsync(
+        context,
+        ref,
+        targetLobbyId: widget.lobbyId,
+        redirectToActive: true,
+      )) {
         return;
       }
+      if (!mounted) return;
       // Deep-link / push: пользователь уже открыл лобби — убрать карточку
       // «Вас пригласили» и бейдж в табе «Игры».
       ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
@@ -224,9 +216,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             actions: [
               if (() {
                 final lobby = lobbyAsync.valueOrNull;
-                return lobby != null &&
-                    lobby.status == 'waiting_invite' &&
-                    currentUser?.id == lobby.creatorId;
+                if (lobby == null) return false;
+                final uid = currentUser?.id;
+                if (uid == null) return false;
+                final member = uid == lobby.creatorId ||
+                    lobby.playerIds.contains(uid) ||
+                    lobby.players.any((p) => p.id == uid);
+                if (!member) return false;
+                // Открытый поиск / своя игра — правила в AppBar у всех участников.
+                return lobby.status == 'waiting_invite' ||
+                    lobby.status == 'waiting_matchmake';
               }())
                 IconButton(
                   tooltip: context.l10n.gamesRulesTitle,
@@ -251,10 +250,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                       lobby.opponentId == uid);
               final isInviteMode = lobby.status == 'waiting_invite';
               final isMatchmakeMode = lobby.status == 'waiting_matchmake';
+              // Открытый поиск (1v1 matchmake или multi «Найти игру»).
+              final isOpenFind = isMatchmakeMode ||
+                  (isInviteMode && lobby.mode == 'matchmake');
               final showMultiLobby = lobby.maxPlayers > 2;
               // Уже вступили (реванш / повторный заход) — не показываем «Войти в игру».
-              final showInviteAccept = isInviteMode && !isLobbyMember;
-              final showInviteWaiting = isInviteMode && isLobbyMember;
+              final showInviteAccept =
+                  isInviteMode && !isLobbyMember && !isOpenFind;
+              final showPrivateInviteWaiting =
+                  isInviteMode && isLobbyMember && !isOpenFind;
+              final showOpenFindWaiting = isOpenFind && isLobbyMember;
               if (lobby.gameId != null) {
                 return const Center(
                   child: CircularProgressIndicator(
@@ -271,13 +276,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final shortViewport = isPhoneLandscape(context) ||
                   isTablet(context) ||
                   MediaQuery.sizeOf(context).height < 640;
+              final useScrollFriends = shortViewport &&
+                  (showOpenFindWaiting ||
+                      (showPrivateInviteWaiting && isCreator));
               return SafeArea(
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxWidth: isDesktop ? 480 : double.infinity,
                     ),
-                    child: shortViewport && showInviteWaiting && isCreator
+                    child: useScrollFriends
                         ? LayoutBuilder(
                             builder: (context, constraints) {
                               final friendCount =
@@ -296,7 +304,10 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    if (lobby.stakeBronze > 0) ...[
+                                    if (showOpenFindWaiting) ...[
+                                      _buildSearchLoaderBanner(context),
+                                      const SizedBox(height: 12),
+                                    ] else if (lobby.stakeBronze > 0) ...[
                                       _LobbyStakeChip(
                                         stakeBronze: lobby.stakeBronze,
                                       ),
@@ -337,7 +348,78 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (showInviteWaiting && isCreator) ...[
+                                if (showOpenFindWaiting) ...[
+                                  _buildSearchLoaderBanner(context),
+                                  const SizedBox(height: 12),
+                                  if (showMultiLobby) ...[
+                                    _buildMultiLobbyCard(
+                                      context,
+                                      lobby,
+                                      currentUser?.id,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  if (showMultiLobby) ...[
+                                    _buildShareInviteLinkCard(context),
+                                    const SizedBox(height: 12),
+                                    Expanded(
+                                      child: LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final friendCount = friendsAsync
+                                                  .valueOrNull
+                                                  ?.friends
+                                                  .length ??
+                                              0;
+                                          final estimated =
+                                              _estimateFriendsCardHeight(
+                                                  friendCount);
+                                          final expand = estimated >=
+                                              constraints.maxHeight;
+                                          final card = _buildFriendsCard(
+                                            context,
+                                            friendsAsync,
+                                            expand: expand,
+                                          );
+                                          if (expand) return card;
+                                          return Align(
+                                            alignment: Alignment.topCenter,
+                                            child: card,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    Expanded(
+                                      child: GradientCard(
+                                        padding: const EdgeInsets.all(24),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              context
+                                                  .l10n.lobbySearchingOpponent,
+                                              textAlign: TextAlign.center,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            _buildMatchmakeInfoCard(
+                                              context,
+                                              lobby,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ] else if (showPrivateInviteWaiting &&
+                                    isCreator) ...[
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
                                       context,
@@ -374,9 +456,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       },
                                     ),
                                   ),
-                                ] else if (showInviteWaiting && !isCreator) ...[
-                                  // Приглашённый: игроки + ссылка + правила.
-                                  // Карточки «Поиск соперника» здесь быть не должно.
+                                ] else if (showPrivateInviteWaiting &&
+                                    !isCreator) ...[
+                                  // Приглашённый в «Свою игру»: игроки + ссылка + правила.
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
                                       context,
@@ -386,46 +468,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     const SizedBox(height: 12),
                                   ],
                                   _buildShareInviteLinkCard(context),
-                                  const SizedBox(height: 16),
-                                  _buildMatchmakeInfoCard(context, lobby),
-                                ] else if (isMatchmakeMode) ...[
-                                  if (showMultiLobby) ...[
-                                    _buildMultiLobbyCard(
-                                      context,
-                                      lobby,
-                                      currentUser?.id,
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                  // Поиск + правила по высоте контента (без растягивания).
-                                  GradientCard(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(
-                                          width: 48,
-                                          height: 48,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: AppColors.accentStart,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          context.l10n.lobbySearchingOpponent,
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                   const SizedBox(height: 16),
                                   _buildMatchmakeInfoCard(context, lobby),
                                 ] else if (showInviteAccept) ...[
@@ -880,6 +922,36 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
+  Widget _buildSearchLoaderBanner(BuildContext context) {
+    return GradientCard(
+      animate: false,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              context.l10n.lobbySearchingOpponent,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMultiLobbyCard(
     BuildContext context,
     LobbyItem lobby,
@@ -905,36 +977,55 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  height: 42,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      for (var i = 0; i < players.length; i++)
-                        Positioned(
-                          left: i * 30.0,
-                          child: Tooltip(
-                            message: players[i].displayName.trim().isNotEmpty
-                                ? players[i].displayName
-                                : context.l10n.commonUser,
-                            child: GestureDetector(
-                              onTap: () => _showLobbyPlayerProfile(
-                                context,
-                                players[i],
-                              ),
-                              child: _LobbyPlayerAvatar(player: players[i]),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final player in players)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () => _showLobbyPlayerProfile(context, player),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 2,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _LobbyPlayerAvatar(player: player),
+                                const SizedBox(width: 6),
+                                ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 96),
+                                  child: Text(
+                                    player.displayName.trim().isNotEmpty
+                                        ? player.displayName
+                                        : context.l10n.commonUser,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.accentStart,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: AppColors.accentStart,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      for (var i = players.length;
-                          i < lobby.maxPlayers && i < 4;
-                          i++)
-                        Positioned(
-                          left: i * 30.0,
-                          child: const _LobbyEmptySeatAvatar(),
-                        ),
-                    ],
-                  ),
+                      ),
+                    for (var i = players.length;
+                        i < lobby.maxPlayers && i < 4;
+                        i++)
+                      const _LobbyEmptySeatAvatar(),
+                  ],
                 ),
               ],
             ),

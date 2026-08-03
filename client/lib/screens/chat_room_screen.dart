@@ -3626,10 +3626,18 @@ class _ChatInviteCard extends ConsumerWidget {
   Future<void> _acceptAndGo(BuildContext context, WidgetRef ref) async {
     final lobbyId = link.lobbyId.trim();
     if (lobbyId.isEmpty) {
-      context.go(link.appPathFromMessage(messageId));
+      if (await blockJoinIfBusyAsync(
+        context,
+        ref,
+        redirectToActive: true,
+      )) {
+        return;
+      }
+      if (context.mounted) context.go(link.appPathFromMessage(messageId));
       return;
     }
-    if (blockJoinIfBusy(
+    // Чат из партии: ?game=… — дождаться active, иначе join «проскакивает».
+    if (await blockJoinIfBusyAsync(
       context,
       ref,
       targetLobbyId: lobbyId,
@@ -3658,24 +3666,48 @@ class _ChatInviteCard extends ConsumerWidget {
       context.go(link.appPathFromMessage(messageId));
     } on GamesException catch (e) {
       if (!context.mounted) return;
-      if (isFinishCurrentGameError(e)) {
+      // 409 при активной партии — только всплывашка, без ухода в чужое лобби.
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
         final active = resolveActiveForGuard(ref, context);
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e) || hasBlockingActiveMatch(active)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+        if (active != null &&
+            (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
+          goToActiveSession(context, active);
+        }
+        return;
+      }
+      if (e.statusCode == 404) {
+        context.go(link.appPathFromMessage(messageId));
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      final active = resolveActiveForGuard(ref, context);
+      if (hasBlockingActiveMatch(active)) {
         showAppSnackBar(
           context,
           message: finishCurrentGameMessage,
           kind: AppSnackKind.error,
         );
-        if (active != null) {
-          goToActiveSession(context, active);
-        }
+        goToActiveSession(context, active!);
         return;
       }
-      // Лобби уже недоступно — открыть экран (покажет «игры нет»).
-      context.go(link.appPathFromMessage(messageId));
-    } catch (_) {
-      if (context.mounted) {
-        context.go(link.appPathFromMessage(messageId));
-      }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
     }
   }
 
