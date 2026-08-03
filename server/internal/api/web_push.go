@@ -20,11 +20,12 @@ import (
 
 // PushPayload — JSON в теле Web Push (читает service worker).
 type PushPayload struct {
-	Title string `json:"title"`
-	Body  string `json:"body"`
-	URL   string `json:"url,omitempty"`
-	Tag   string `json:"tag,omitempty"`
-	Kind  string `json:"kind,omitempty"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	URL    string `json:"url,omitempty"`
+	Tag    string `json:"tag,omitempty"`
+	Kind   string `json:"kind,omitempty"`
+	ChatID string `json:"chat_id,omitempty"` // fallback deep-link на iOS
 }
 
 // WebPushSender рассылает уведомления подписчикам.
