@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
+import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -11,7 +12,6 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
-import 'package:multigames_client/utils/relative_time.dart';
 
 /// Диалог выбора друга для подарка.
 /// Список как во вкладке «Друзья»: аватар (клик → карточка), статус,
@@ -109,23 +109,7 @@ class _GiftFriendPickerDialogState
     final query = _searchController.text.trim();
     final list =
         friends.where((f) => _matchesSearch(f.user, query)).toList();
-    list.sort((a, b) {
-      final pa = presence[a.user.id];
-      final pb = presence[b.user.id];
-      final aOnline = pa?.online ?? false;
-      final bOnline = pb?.online ?? false;
-      if (aOnline != bOnline) return bOnline ? 1 : -1;
-      if (aOnline) return 0;
-      final aTime = pa?.lastSeenAt;
-      final bTime = pb?.lastSeenAt;
-      if (aTime == null && bTime == null) return 0;
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
-      final da = DateTime.tryParse(aTime);
-      final db = DateTime.tryParse(bTime);
-      if (da == null || db == null) return 0;
-      return db.compareTo(da);
-    });
+    sortByPresenceOnlineFirst(list, (f) => f.user.id, presence);
     return list;
   }
 
@@ -240,9 +224,8 @@ class _GiftFriendPickerDialogState
   }
 
   Widget _friendTile(FriendItem item, PresenceEntry? presence) {
-    final statusText = presence == null
-        ? null
-        : (presence.online ? LocaleService.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt));
+    final statusText =
+        presence == null ? null : formatPresenceStatus(presence);
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),

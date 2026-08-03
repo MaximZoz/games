@@ -22,6 +22,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
@@ -3625,7 +3626,23 @@ class _ChatInviteCard extends ConsumerWidget {
   Future<void> _acceptAndGo(BuildContext context, WidgetRef ref) async {
     final lobbyId = link.lobbyId.trim();
     if (lobbyId.isEmpty) {
-      context.go(link.appPathFromMessage(messageId));
+      if (await blockJoinIfBusyAsync(
+        context,
+        ref,
+        redirectToActive: true,
+      )) {
+        return;
+      }
+      if (context.mounted) context.go(link.appPathFromMessage(messageId));
+      return;
+    }
+    // Чат из партии: ?game=… — дождаться active, иначе join «проскакивает».
+    if (await blockJoinIfBusyAsync(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
       return;
     }
     try {
@@ -3647,10 +3664,50 @@ class _ChatInviteCard extends ConsumerWidget {
         return;
       }
       context.go(link.appPathFromMessage(messageId));
-    } catch (_) {
-      if (context.mounted) {
-        context.go(link.appPathFromMessage(messageId));
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      // 409 при активной партии — только всплывашка, без ухода в чужое лобби.
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
+        final active = resolveActiveForGuard(ref, context);
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e) || hasBlockingActiveMatch(active)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+        if (active != null &&
+            (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
+          goToActiveSession(context, active);
+        }
+        return;
       }
+      if (e.statusCode == 404) {
+        context.go(link.appPathFromMessage(messageId));
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      final active = resolveActiveForGuard(ref, context);
+      if (hasBlockingActiveMatch(active)) {
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        goToActiveSession(context, active!);
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
     }
   }
 

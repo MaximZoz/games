@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -167,6 +168,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final lobbiesAsync = ref.watch(openLobbiesProvider);
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
+    final observation = ref.watch(observationGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
     // После «Присоединиться» не оставляем список с карточкой лобби —
     // сразу экран «Войти в игру».
@@ -176,6 +178,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           active.type != 'lobby' ||
           active.lobbyId == null ||
           active.lobbyId!.isEmpty) {
+        return;
+      }
+      // Живая партия (пин) важнее автоухода в лобби-инвайт.
+      if (ref.read(blockingGamePinProvider)?.trim().isNotEmpty ?? false) {
+        return;
+      }
+      if (hasBlockingActiveMatch(prev?.valueOrNull)) {
         return;
       }
       final path =
@@ -311,15 +320,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                       _persistSettings();
                     },
                     onCreateGame: () => _createGame(context, 'invite'),
-                    onFindGame: () => _createGame(
-                      context,
-                      configForVariant(_selectedVariant).maxPlayers > 2
-                          ? 'invite'
-                          : 'matchmake',
-                    ),
+                    // Всегда matchmake: multi схлопывается на сервере в одно лобби.
+                    onFindGame: () => _createGame(context, 'matchmake'),
                     onPlayOffline: playOffline,
                     invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,
+                    observation: observation,
                     onAcceptInvite: _acceptInvite,
                     onDeclineInvite: _declineInvite,
                     onShowCreatorInfo: _showCreatorInfo,
@@ -344,6 +350,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _createGame(BuildContext context, String mode) async {
+    // Async: после конца партии пин/кэш могли ещё держать старый gameId.
+    if (await blockJoinIfBusyAsync(context, ref)) return;
+    if (!context.mounted) return;
     setState(() {
       if (mode == 'invite') {
         _isCreating = true;
@@ -372,6 +381,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 lobbyId: result.lobbyId,
               ),
             );
+        pinBlockingGame(ref, result.gameId);
         context.push('/games/tictactoe/game/${result.gameId}');
       } else {
         ref.read(activeGameProvider.notifier).setLocal(
@@ -388,7 +398,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: formatUserError(e),
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
           kind: AppSnackKind.error,
         );
       }
@@ -403,6 +415,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
+    if (await blockJoinIfBusyAsync(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -420,9 +440,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         return;
       }
       if (result.joined && result.gameId != null) {
+        pinBlockingGame(ref, result.gameId);
         _navigateToJoinedGame(result.gameId!);
       }
-    } catch (e) {
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
+        _showInviteError(e);
+        final active = resolveActiveForGuard(ref, context);
+        if (active != null &&
+            (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
+          goToActiveSession(context, active);
+        }
+        return;
+      }
       if (_isAlreadyInLobbyError(e)) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         ref.read(activeGameProvider.notifier).setLocal(
@@ -434,6 +465,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         }
         return;
       }
+      ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+      _showInviteError(e);
+    } catch (e) {
       // Лобби уже нет — убрать «висящее» приглашение.
       ref.read(gameInvitesProvider.notifier).remove(lobbyId);
       _showInviteError(e);
@@ -453,7 +487,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     if (mounted) {
       showAppSnackBar(
         context,
-        message: formatUserError(error),
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
         kind: AppSnackKind.error,
       );
     }
@@ -553,6 +589,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _joinLobby(BuildContext context, String lobbyId) async {
+    if (await blockJoinIfBusyAsync(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -569,20 +613,36 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         return;
       }
       if (result.joined && result.gameId != null) {
+        pinBlockingGame(ref, result.gameId);
         context.push('/games/tictactoe/game/${result.gameId}');
       }
-    } catch (e) {
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        final active = resolveActiveForGuard(ref, context);
+        if (active != null) goToActiveSession(context, active);
+        return;
+      }
       if (_isAlreadyInLobbyError(e)) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
             );
         ref.invalidate(lobbyDetailProvider(lobbyId));
-        if (context.mounted) {
-          context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
-        }
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         return;
       }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
       if (context.mounted) {
         showAppSnackBar(
           context,
@@ -657,6 +717,7 @@ class _GamesPageContent extends StatelessWidget {
     required this.onPlayOffline,
     required this.invites,
     required this.activeAsync,
+    required this.observation,
     required this.onAcceptInvite,
     required this.onDeclineInvite,
     required this.onShowCreatorInfo,
@@ -682,6 +743,7 @@ class _GamesPageContent extends StatelessWidget {
   final VoidCallback onPlayOffline;
   final List<GameInvite> invites;
   final AsyncValue<ActiveGameItem?> activeAsync;
+  final ObservationItem? observation;
   final void Function(BuildContext, String) onAcceptInvite;
   final void Function(String) onDeclineInvite;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
@@ -841,67 +903,62 @@ class _GamesPageContent extends StatelessWidget {
                       },
                     ),
                   ],
-                  activeAsync.when(
-                    data: (active) {
-                      if (active == null) return const SizedBox.shrink();
-                      // Активное лобби («Войти в игру» / поиск) — без карточки
-                      // на списке: уводим в лобби (см. listen выше).
-                      if (active.type == 'lobby') {
+                  Builder(
+                    builder: (context) {
+                      final active = activeAsync.valueOrNull;
+                      final obs = observation;
+                      // Active game на списке не показываем — таб уводит в неё.
+                      // Observation — карточка, пока партия не закроется.
+                      if (obs == null || obs.gameId.trim().isEmpty) {
                         return const SizedBox.shrink();
                       }
-                      if (active.type == 'game' && active.gameId != null) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: GradientCard(
-                            padding: const EdgeInsets.all(16),
-                            child: InkWell(
-                              onTap: () => context.push(
-                                  '/games/tictactoe/game/${active.gameId}'),
-                              borderRadius: BorderRadius.circular(16),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.sports_esports_rounded,
-                                      size: 40, color: AppColors.accentStart),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          active.isEliminated
-                                              ? 'Вы выбыли'
-                                              : active.isMyTurn
-                                                  ? context.l10n.gamesMyTurn
-                                                  : context
-                                                      .l10n.gamesOpponentTurn,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                            fontSize: 16,
-                                          ),
+                      // Если эта же партия уже active (ещё играю) — карточка не нужна.
+                      if (active?.type == 'game' &&
+                          active?.gameId == obs.gameId) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: GradientCard(
+                          padding: const EdgeInsets.all(16),
+                          child: InkWell(
+                            onTap: () => context.push(
+                                '/games/tictactoe/game/${obs.gameId}'),
+                            borderRadius: BorderRadius.circular(16),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.visibility_rounded,
+                                    size: 40, color: AppColors.accentStart),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Наблюдение',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                          fontSize: 16,
                                         ),
-                                        Text(
-                                          context.l10n.gamesCurrentGame,
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppColors.textSecondary),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                      Text(
+                                        'Вы выбыли — можно смотреть',
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary),
+                                      ),
+                                    ],
                                   ),
-                                  const Icon(Icons.arrow_forward_ios_rounded,
-                                      size: 16),
-                                ],
-                              ),
+                                ),
+                                Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                              ],
                             ),
                           ),
-                        );
-                      }
-                      return const SizedBox.shrink();
+                        ),
+                      );
                     },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
                   ),
                 ],
               ),

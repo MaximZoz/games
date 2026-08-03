@@ -10,6 +10,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
+import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
@@ -1222,6 +1223,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                 }
 
                                 final list = filtered(friends);
+                                sortByPresenceOnlineFirst(
+                                  list,
+                                  (f) => f.user.id,
+                                  presence,
+                                );
                                 if (list.isEmpty) {
                                   return ListView(
                                     physics: const AlwaysScrollableScrollPhysics(
@@ -1272,6 +1278,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       );
                                     }
                                     final friend = list[index].user;
+                                    final friendPresence = presence[friend.id];
+                                    final statusText =
+                                        formatPresenceStatus(friendPresence);
                                     return Material(
                                       color: Colors.transparent,
                                       child: InkWell(
@@ -1294,19 +1303,46 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                                   gender: friend.gender,
                                                   about: friend.about,
                                                 ),
-                                                isOnline: presence[friend.id]?.online,
+                                                isOnline: friendPresence?.online,
                                               ),
                                               const SizedBox(width: 10),
                                               Expanded(
-                                                child: Text(
-                                                  _friendTitle(friend),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    color: AppColors.textPrimary,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      _friendTitle(friend),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        color: AppColors
+                                                            .textPrimary,
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    if (statusText.isNotEmpty)
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(top: 2),
+                                                        child: Text(
+                                                          statusText,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              const TextStyle(
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
                                                 ),
                                               ),
                                               const Icon(Icons.arrow_forward_ios_rounded, size: 14),
@@ -1429,7 +1465,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     if (presence == null) {
       return preview.isEmpty ? context.l10n.chatsNoMessages : preview;
     }
-    final statusText = presence.online ? context.l10n.commonOnlineCap : formatLastSeen(presence.lastSeenAt);
+    final statusText = formatPresenceStatus(presence);
     if (statusText.isEmpty) {
       return preview.isEmpty ? context.l10n.chatsNoMessages : preview;
     }

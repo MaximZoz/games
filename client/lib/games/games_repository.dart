@@ -13,9 +13,11 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
 class GamesException implements Exception {
-  GamesException(this.statusCode, this.message);
+  GamesException(this.statusCode, this.message, {this.errorKey = ''});
   final int statusCode;
   final String message;
+  /// Канонический ключ с сервера (`error` в JSON), без локали.
+  final String errorKey;
 
   @override
   String toString() => 'GamesException($statusCode): $message';
@@ -403,6 +405,8 @@ class LobbyItem {
   final String creatorName;
   final String? opponentId;
   final String status;
+  /// `matchmake` — открытый поиск («Лобби»); `invite` — «Своя игра» / реванш.
+  final String mode;
   final String? gameId;
   final String createdAt;
   final int turnTimeSec;
@@ -423,6 +427,7 @@ class LobbyItem {
     String? creatorName,
     this.opponentId,
     required this.status,
+    this.mode = '',
     this.gameId,
     required this.createdAt,
     this.turnTimeSec = 0,
@@ -459,6 +464,7 @@ class LobbyItem {
       creatorName: localizeDisplayName(json['creator_name'] as String?),
       opponentId: json['opponent_id'] as String?,
       status: json['status'] as String? ?? '',
+      mode: (json['mode'] as String?)?.trim() ?? '',
       gameId: json['game_id'] as String?,
       createdAt: json['created_at'] as String? ?? '',
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
@@ -915,21 +921,18 @@ class GameStateItem {
   }
 }
 
-/// Результат GET /api/games/tictactoe/active
+/// Результат GET /api/games/tictactoe/active — живая сессия (играю / лобби).
 class ActiveGameItem {
   final String type; // "game" | "lobby"
   final String? gameId;
   final String? lobbyId;
   final bool isMyTurn;
-  /// Выбыл из multi — вкладка «Игры» не авто-открывает доску.
-  final bool isEliminated;
 
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
-    this.isEliminated = false,
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -938,8 +941,45 @@ class ActiveGameItem {
       gameId: json['game_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       isMyTurn: json['is_my_turn'] as bool? ?? false,
-      isEliminated: json['is_eliminated'] as bool? ?? false,
     );
+  }
+}
+
+/// Наблюдение за multi-партией после выбывания (пока лобби/партия жива).
+class ObservationItem {
+  final String gameId;
+  final String? lobbyId;
+
+  const ObservationItem({required this.gameId, this.lobbyId});
+
+  factory ObservationItem.fromJson(Map<String, dynamic> json) {
+    return ObservationItem(
+      gameId: json['game_id'] as String? ?? '',
+      lobbyId: json['lobby_id'] as String?,
+    );
+  }
+}
+
+/// Ответ GetActive: active и/или observation.
+class ActiveSessionResult {
+  final ActiveGameItem? active;
+  final ObservationItem? observation;
+
+  const ActiveSessionResult({this.active, this.observation});
+
+  factory ActiveSessionResult.fromJson(Map<String, dynamic> json) {
+    ObservationItem? obs;
+    final rawObs = json['observation'];
+    if (rawObs is Map<String, dynamic>) {
+      final item = ObservationItem.fromJson(rawObs);
+      if (item.gameId.trim().isNotEmpty) obs = item;
+    }
+    final type = json['type']?.toString();
+    ActiveGameItem? active;
+    if (type == 'game' || type == 'lobby') {
+      active = ActiveGameItem.fromJson(json);
+    }
+    return ActiveSessionResult(active: active, observation: obs);
   }
 }
 
@@ -1249,33 +1289,41 @@ class GamesRepository {
 
   Never _throwForErrorResponse(http.Response response) {
     var message = response.body.trim();
+    var errorKey = '';
     try {
       final body = jsonDecode(response.body);
       if (body is Map) {
-        message = (body['message'] ?? body['error'] ?? message).toString();
+        errorKey = (body['error'] ?? body['code'] ?? '').toString().trim();
+        message =
+            (body['message'] ?? body['error'] ?? message).toString();
       }
     } catch (_) {}
 
     final l10n = LocaleService.l10n;
     if (response.statusCode == 401) {
-      throw GamesException(401, l10n.sessionExpired);
+      throw GamesException(401, l10n.sessionExpired, errorKey: errorKey);
     }
     if (response.statusCode == 402) {
       throw GamesException(
         402,
         message.trim().isEmpty ? l10n.commonInsufficientCoins : message.trim(),
+        errorKey: errorKey,
       );
     }
     if (response.statusCode == 403 && message.trim().isEmpty) {
-      throw GamesException(403, l10n.commonForbidden);
+      throw GamesException(403, l10n.commonForbidden, errorKey: errorKey);
     }
     if (response.statusCode == 404 && message.trim().isEmpty) {
-      throw GamesException(404, l10n.commonNotFound);
+      throw GamesException(404, l10n.commonNotFound, errorKey: errorKey);
     }
     if (response.statusCode == 503 && message.trim().isEmpty) {
-      throw GamesException(503, l10n.errGamesUnavailable);
+      throw GamesException(503, l10n.errGamesUnavailable, errorKey: errorKey);
     }
-    throw GamesException(response.statusCode, _messageFromBody(message));
+    throw GamesException(
+      response.statusCode,
+      _messageFromBody(message),
+      errorKey: errorKey,
+    );
   }
 
   Future<RematchResult> rematch(String gameId) async {
@@ -1452,7 +1500,7 @@ class GamesRepository {
     return GameStateItem.fromJson(body);
   }
 
-  Future<ActiveGameItem?> getActive() async {
+  Future<ActiveSessionResult> getActiveSession() async {
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/active'),
@@ -1460,12 +1508,20 @@ class GamesRepository {
         operation: 'GamesRepository.getActive',
       ),
     );
-    if (response.statusCode == 204 || response.statusCode == 404) return null;
+    if (response.statusCode == 204 || response.statusCode == 404) {
+      return const ActiveSessionResult();
+    }
     if (response.statusCode != 200) {
       _throwForErrorResponse(response);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    return ActiveGameItem.fromJson(body);
+    return ActiveSessionResult.fromJson(body);
+  }
+
+  /// Только active (игра/лобби). Observation — через [getActiveSession].
+  Future<ActiveGameItem?> getActive() async {
+    final session = await getActiveSession();
+    return session.active;
   }
 
   Future<void> forfeitGame(String gameId) async {
