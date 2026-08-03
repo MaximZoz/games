@@ -101,6 +101,12 @@ type LobbyItem struct {
 	SwapRule             bool              `json:"swap_rule,omitempty"`              // deprecated
 	FirstMoveRestriction bool              `json:"first_move_restriction,omitempty"` // deprecated
 	StakeBronze          int               `json:"stake_bronze,omitempty"`
+
+	// Общие поля по типу игры: клиент роутит и рисует правила по ним.
+	GameType string `json:"game_type,omitempty"`
+	// Durak-специфика.
+	DeckSize int    `json:"deck_size,omitempty"`
+	GameMode string `json:"game_mode,omitempty"`
 }
 
 type GameStateItem struct {
@@ -1730,6 +1736,14 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 			}
 		}
 	}
+	gameType := strings.TrimSpace(m["game_type"])
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
+	maxPlayers := cfg.MaxPlayers
+	if mp, err := strconv.Atoi(m["max_players"]); err == nil && mp >= 2 {
+		maxPlayers = mp
+	}
 	item := LobbyItem{
 		ID:           lobbyID,
 		CreatorID:    creatorID,
@@ -1740,12 +1754,28 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		TurnTimeSec:  turnTimeSec,
 		Variant:      string(variant),
 		GridSize:     gridSize,
-		MaxPlayers:   cfg.MaxPlayers,
+		MaxPlayers:   maxPlayers,
 		PlayersCount: len(playerIDs),
 		PlayerIDs:    playerIDs,
 		Players:      h.loadLobbyPlayers(ctx, playerIDs),
 		ChatID:       chatIDStr,
 		StakeBronze:  stakeBronze,
+		GameType:     gameType,
+	}
+	// Durak: правила рисуются по колоде и режиму, а не по variant/grid.
+	if gameType == durakGameType {
+		deckSize, _ := strconv.Atoi(m["deck_size"])
+		if deckSize == 0 {
+			deckSize = 36
+		}
+		gm := strings.TrimSpace(m["game_mode"])
+		if gm == "" {
+			gm = "podkidnoi"
+		}
+		item.DeckSize = deckSize
+		item.GameMode = gm
+		item.Variant = ""
+		item.GridSize = 0
 	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID

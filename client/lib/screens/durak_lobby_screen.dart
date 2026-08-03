@@ -18,7 +18,9 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 class DurakLobbyScreen extends ConsumerStatefulWidget {
@@ -157,30 +159,30 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     DurakLobbyView lobby,
     AsyncValue<FriendsSnapshot> friendsAsync,
   ) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildInfoCard(lobby),
-              const SizedBox(height: 12),
-              _buildShareLinkCard(lobby.id),
-              const SizedBox(height: 12),
-              Expanded(child: _buildFriendsCard(lobby, friendsAsync)),
-            ],
-          ),
-        ),
+    // Тот же скелет, что и в крестиках-ноликах: 2 игрока → чип ставки,
+    // 3–4 → карточка «Игроки N/M».
+    return GameLobbyWaitingLayout(
+      maxPlayers: lobby.maxPlayers,
+      stakeBronze: lobby.stakeBronze,
+      stakeLabel: context.l10n.shopStakes,
+      multiPlayersCard: _buildMultiPlayersCard(lobby),
+      shareLinkCard: LobbyShareLinkCard(
+        title: context.l10n.lobbyCopyLink,
+        hint: _linkCopied
+            ? context.l10n.lobbyLinkCopiedHint
+            : context.l10n.lobbyCopyLinkHint,
+        copied: _linkCopied,
+        onTap: () => _copyLink(lobby.id),
       ),
+      friendsCard: _buildFriendsCard(lobby, friendsAsync),
     );
   }
 
-  Widget _buildInfoCard(DurakLobbyView lobby) {
+  /// Карточка состава для 3–4 игроков (как multi-лобби крестиков-ноликов).
+  Widget _buildMultiPlayersCard(DurakLobbyView lobby) {
     return GradientCard(
       animate: false,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Row(
         children: [
           Expanded(
@@ -227,58 +229,6 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
               ],
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildShareLinkCard(String lobbyId) {
-    return GradientCard(
-      animate: false,
-      padding: EdgeInsets.zero,
-      child: InkWell(
-        onTap: () => _copyLink(lobbyId),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.link_rounded,
-                    color: AppColors.accentStart),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Отправить ссылку на игру',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      _linkCopied ? 'Ссылка скопирована' : 'Скопировать в буфер',
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                _linkCopied ? Icons.check_rounded : Icons.copy_rounded,
-                color: AppColors.accentStart,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

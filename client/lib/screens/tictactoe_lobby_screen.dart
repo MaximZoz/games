@@ -21,6 +21,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
@@ -897,67 +898,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   }
 
   Widget _buildShareInviteLinkCard(BuildContext context) {
-    return GradientCard(
-      padding: EdgeInsets.zero,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _copyInviteLink,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            child: Row(
-              children: [
-                // Левая «скрепка»/link — всегда без изменений.
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.link_rounded,
-                    color: AppColors.accentStart,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _linkCopied
-                            ? context.l10n.lobbyLinkCopied
-                            : context.l10n.lobbyCopyLink,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _linkCopied
-                            ? context.l10n.lobbyLinkCopiedHint
-                            : context.l10n.lobbyCopyLinkHint,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  _linkCopied ? Icons.check_rounded : Icons.copy_rounded,
-                  color: AppColors.accentStart,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    // Общий виджет — тот же, что в лобби Дурака.
+    return LobbyShareLinkCard(
+      title: _linkCopied
+          ? context.l10n.lobbyLinkCopied
+          : context.l10n.lobbyCopyLink,
+      hint: _linkCopied
+          ? context.l10n.lobbyLinkCopiedHint
+          : context.l10n.lobbyCopyLinkHint,
+      copied: _linkCopied,
+      onTap: _copyInviteLink,
     );
   }
 
@@ -1694,6 +1644,8 @@ class _LobbyEmptySeatAvatar extends StatelessWidget {
 }
 
 /// Ставка лобби: сумма + иконка монеты (как на карточке игры).
+/// Обёртка над общим [LobbyStakeChip] — сохраняет локальный вызов без
+/// передачи локализованной подписи в каждом месте.
 class _LobbyStakeChip extends StatelessWidget {
   const _LobbyStakeChip({required this.stakeBronze});
 
@@ -1701,45 +1653,9 @@ class _LobbyStakeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: AppColors.accentSoft.withValues(alpha: 0.9),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              context.l10n.shopStakes,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              formatStakeAmount(stakeBronze),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(width: 6),
-            CoinIcon(
-              coinType: stakeCoinType(stakeBronze),
-              size: 22,
-              showBorder: true,
-            ),
-          ],
-        ),
-      ),
+    return LobbyStakeChip(
+      stakeBronze: stakeBronze,
+      label: context.l10n.shopStakes,
     );
   }
 }
