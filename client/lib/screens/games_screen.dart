@@ -390,7 +390,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: formatUserError(e),
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
           kind: AppSnackKind.error,
         );
       }
@@ -456,7 +458,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     if (mounted) {
       showAppSnackBar(
         context,
-        message: formatUserError(error),
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
         kind: AppSnackKind.error,
       );
     }
@@ -590,7 +594,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: formatUserError(e),
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
           kind: AppSnackKind.error,
         );
       }

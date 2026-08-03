@@ -56,6 +56,47 @@ void goToActiveSession(BuildContext context, ActiveGameItem active) {
   }
 }
 
+/// gameId из пути `/games/tictactoe/game/:id` (если пользователь на экране партии).
+String? gameIdFromLocation(String? location) {
+  final path = (location ?? '').split('?').first.trim();
+  const prefix = '/games/tictactoe/game/';
+  if (!path.startsWith(prefix)) return null;
+  final id = path.substring(prefix.length).split('/').first.trim();
+  return id.isEmpty ? null : id;
+}
+
+/// Активная сессия для гарда: кэш provider + путь экрана партии (пока идёт refresh).
+ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
+  final async = ref.read(activeGameProvider);
+  final fromProvider = async.asData?.value ?? async.valueOrNull;
+  if (hasBlockingActiveMatch(fromProvider) || hasActiveLobby(fromProvider)) {
+    return fromProvider;
+  }
+  // Пока GetActive грузится после invalidate — не пропускаем join:
+  // если открыт экран партии, считаем её блокирующей (кроме выбывшего).
+  final pathGameId =
+      gameIdFromLocation(GoRouterState.of(context).uri.toString());
+  if (pathGameId != null) {
+    final same =
+        fromProvider?.type == 'game' && fromProvider?.gameId == pathGameId;
+    return ActiveGameItem(
+      type: 'game',
+      gameId: pathGameId,
+      lobbyId: fromProvider?.lobbyId,
+      isMyTurn: same ? (fromProvider?.isMyTurn ?? false) : false,
+      isEliminated: same ? (fromProvider?.isEliminated ?? false) : false,
+    );
+  }
+  return fromProvider;
+}
+
+bool isFinishCurrentGameError(Object error) {
+  if (error is! GamesException || error.statusCode != 409) return false;
+  final msg = error.message.toLowerCase();
+  return msg.contains('finish your current game') ||
+      msg.contains('завершите текущую');
+}
+
 /// Если заняты другой партией/лобби — показать всплывашку и вернуть true.
 /// При [redirectToActive] уводит обратно в текущую партию/лобби.
 bool blockJoinIfBusy(
@@ -65,7 +106,7 @@ bool blockJoinIfBusy(
   String? targetGameId,
   bool redirectToActive = false,
 }) {
-  final active = ref.read(activeGameProvider).valueOrNull;
+  final active = resolveActiveForGuard(ref, context);
   if (!isBusyWithOtherSession(
     active,
     targetLobbyId: targetLobbyId,

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -125,7 +126,30 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     _providerBindingsInitialized = true;
 
     ref.invalidate(gameStateProvider(widget.gameId));
-    ref.invalidate(activeGameProvider);
+    // Закрепить текущую партию сразу — иначе invalidate/refresh даёт null
+    // и клик по старому инвайту в чате пропускает guard.
+    final prevActive = ref.read(activeGameProvider).valueOrNull;
+    final meId = ref.read(authStateProvider).valueOrNull?.id;
+    final knownGame = ref.read(gameStateOverrideProvider(widget.gameId)) ??
+        ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+    final myMark = knownGame?.markForUser(meId);
+    final eliminatedNow = myMark != null &&
+        knownGame != null &&
+        knownGame.isEliminated(myMark);
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: widget.gameId,
+            lobbyId: prevActive?.lobbyId,
+            isMyTurn: prevActive?.gameId == widget.gameId
+                ? (prevActive?.isMyTurn ?? false)
+                : false,
+            isEliminated: eliminatedNow ||
+                (prevActive?.gameId == widget.gameId &&
+                    (prevActive?.isEliminated ?? false)),
+          ),
+        );
+    unawaited(ref.read(activeGameProvider.notifier).refresh());
     // Fallback-синк + дожим протухшего хода (сервер применяет timeout на GetGame).
     _syncStateTimer = Timer.periodic(const Duration(seconds: 12), (_) {
       if (!mounted || _waitingForBotMove) return;
@@ -141,7 +165,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             null;
       }
       ref.invalidate(gameStateProvider(widget.gameId));
-      ref.invalidate(activeGameProvider);
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) refreshChatsList(ref, force: true);
@@ -159,7 +183,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           // показывается старый AsyncValue («Ваш ход» после своего хода).
           // Listener gameStateProvider сбросит override, когда данные не хуже.
           ref.invalidate(gameStateProvider(widget.gameId));
-          ref.invalidate(activeGameProvider);
+          unawaited(ref.read(activeGameProvider.notifier).refresh());
         }
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
@@ -172,7 +196,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             );
             if (gameId != null && gameId.isNotEmpty) {
               ref.invalidate(gameStateProvider(gameId));
-              ref.invalidate(activeGameProvider);
+              unawaited(ref.read(activeGameProvider.notifier).refresh());
               context.go('/games/tictactoe/game/$gameId');
             }
           }
@@ -1144,9 +1168,76 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Future<void> _findGame(BuildContext context) async {
     setState(() => _isFindingGame = true);
     try {
+      // Снять ожидание реванша — иначе старое invite-лобби висит параллельно.
+      final rematchId = _rematchLobbyId;
+      if (rematchId != null) {
+        _rematchPollTimer?.cancel();
+        setState(() {
+          _rematchLobbyId = null;
+          _rematchRespondedIds.clear();
+        });
+        unawaited(
+          ref
+              .read(gamesRepositoryProvider)
+              .leaveLobby(rematchId)
+              .catchError((_) {}),
+        );
+      }
+
+      final game = ref.read(gameStateOverrideProvider(widget.gameId)) ??
+          ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+      final variant = game?.variant ?? variantClassic;
+      final turnTimeSec = game?.turnTimeSec ?? 0;
+      final stakeBronze = game?.stakeBronze ?? 1;
+      final cfg = configForVariant(variant);
+      final mode = cfg.maxPlayers > 2 ? 'invite' : 'matchmake';
       final repo = ref.read(gamesRepositoryProvider);
+
+      // Присоединиться к такому же открытому лобби, если уже есть.
+      try {
+        final open = await repo.listLobbies();
+        LobbyItem? match;
+        for (final lobby in open) {
+          if (lobby.variant != variant) continue;
+          if (lobby.stakeBronze != stakeBronze) continue;
+          if (lobby.turnTimeSec != turnTimeSec) continue;
+          if (lobby.playersCount >= lobby.maxPlayers) continue;
+          match = lobby;
+          break;
+        }
+        if (match != null) {
+          final joined = await repo.joinLobby(match.id);
+          if (!context.mounted) return;
+          ref.invalidate(openLobbiesProvider);
+          if (joined.joined &&
+              joined.gameId != null &&
+              joined.gameId!.isNotEmpty) {
+            ref.read(activeGameProvider.notifier).setLocal(
+                  ActiveGameItem(
+                    type: 'game',
+                    gameId: joined.gameId,
+                    lobbyId: match.id,
+                  ),
+                );
+            context.go('/games/tictactoe/game/${joined.gameId}');
+            return;
+          }
+          if (joined.joined) {
+            ref.read(activeGameProvider.notifier).setLocal(
+                  ActiveGameItem(type: 'lobby', lobbyId: match.id),
+                );
+            context.go('/games/tictactoe/lobby/${match.id}?mode=$mode');
+            return;
+          }
+        }
+      } catch (_) {}
+
       final result = await repo.createLobby(
-        mode: 'matchmake',
+        mode: mode,
+        turnTimeSec: turnTimeSec,
+        variant: variant,
+        gridSize: gridSizeForVariant(variant),
+        stakeBronze: stakeBronze,
         addBotsAfter30s: false,
       );
       if (!context.mounted) return;
@@ -1165,9 +1256,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
             );
         context.go(
-          '/games/tictactoe/lobby/${result.lobbyId}?mode=matchmake',
+          '/games/tictactoe/lobby/${result.lobbyId}?mode=$mode',
         );
       }
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      if (isFinishCurrentGameError(e)) {
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        return;
+      }
+      _redirectToGamesOnError();
     } catch (e) {
       if (context.mounted) _redirectToGamesOnError();
     } finally {

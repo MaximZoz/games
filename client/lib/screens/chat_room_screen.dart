@@ -3656,6 +3656,22 @@ class _ChatInviteCard extends ConsumerWidget {
         return;
       }
       context.go(link.appPathFromMessage(messageId));
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      if (isFinishCurrentGameError(e)) {
+        final active = resolveActiveForGuard(ref, context);
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        if (active != null) {
+          goToActiveSession(context, active);
+        }
+        return;
+      }
+      // Лобби уже недоступно — открыть экран (покажет «игры нет»).
+      context.go(link.appPathFromMessage(messageId));
     } catch (_) {
       if (context.mounted) {
         context.go(link.appPathFromMessage(messageId));

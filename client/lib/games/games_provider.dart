@@ -223,7 +223,7 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
         if (type == 'game_state' || type == 'game_started') {
-          ref.invalidate(activeGameProvider);
+          unawaited(ref.read(activeGameProvider.notifier).refresh());
           final gameId = data['game_id']?.toString();
           if (gameId != null && gameId.isNotEmpty) {
             if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
@@ -238,7 +238,7 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
           final left = data['left'] == true;
           final gameId = data['game_id']?.toString();
           if (left || (gameId != null && gameId.isNotEmpty)) {
-            ref.invalidate(activeGameProvider);
+            unawaited(ref.read(activeGameProvider.notifier).refresh());
           }
           if (gameId != null && gameId.isNotEmpty) {
             if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
@@ -252,6 +252,30 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
     if (user == null) return null;
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getActive();
+  }
+
+  /// Обновить с сервера, не обнуляя кэш на время запроса (гард join не «слепнет»).
+  Future<ActiveGameItem?> refresh() async {
+    final previous = state;
+    final previousData = state.asData?.value;
+    state = const AsyncValue<ActiveGameItem?>.loading().copyWithPrevious(previous);
+    try {
+      final user = ref.read(authStateProvider).valueOrNull;
+      if (user == null) {
+        state = const AsyncValue.data(null);
+        return null;
+      }
+      final next = await ref.read(gamesRepositoryProvider).getActive();
+      state = AsyncValue.data(next);
+      return next;
+    } catch (e, st) {
+      if (previousData != null) {
+        state = AsyncValue.data(previousData);
+        return previousData;
+      }
+      state = AsyncValue.error(e, st);
+      return null;
+    }
   }
 
   /// Мгновенно сбросить локально (выход из лобби без ожидания сети).

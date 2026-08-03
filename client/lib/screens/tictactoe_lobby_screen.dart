@@ -106,11 +106,17 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     super.initState();
     // Не инвалидируем lobbyDetail здесь: invalidate → loading без данных →
     // мигание всего экрана при каждом remount (таб «Игры», query без mode).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Deep-link / чат: если уже в другой партии — всплывашка и назад.
-      final active = ref.read(activeGameProvider).valueOrNull;
+      // Дождаться GetActive, если кэш ещё грузится после invalidate.
+      ActiveGameItem? active = resolveActiveForGuard(ref, context);
+      if (!isBusyWithOtherSession(active, targetLobbyId: widget.lobbyId)) {
+        try {
+          active = await ref.read(activeGameProvider.future);
+        } catch (_) {}
+      }
+      if (!mounted) return;
       if (isBusyWithOtherSession(active, targetLobbyId: widget.lobbyId)) {
-        if (!mounted) return;
         showAppSnackBar(
           context,
           message: finishCurrentGameMessage,
@@ -1241,6 +1247,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         try {
           await ref.read(lobbyDetailProvider(widget.lobbyId).future);
         } catch (_) {}
+        return;
+      }
+      if (isFinishCurrentGameError(e)) {
+        final active = resolveActiveForGuard(ref, context);
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        if (active != null) {
+          goToActiveSession(context, active);
+        }
         return;
       }
       final gone = e is GamesException &&

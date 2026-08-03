@@ -49,4 +49,53 @@ void main() {
       expect(hasBlockingActiveMatch(active), isFalse);
     });
   });
+
+  group('gameIdFromLocation', () {
+    test('parses game path', () {
+      expect(
+        gameIdFromLocation('/games/tictactoe/game/abc-123'),
+        'abc-123',
+      );
+      expect(
+        gameIdFromLocation('/games/tictactoe/game/abc-123?x=1'),
+        'abc-123',
+      );
+    });
+
+    test('ignores non-game paths', () {
+      expect(gameIdFromLocation('/games/tictactoe/lobby/L1'), isNull);
+      expect(gameIdFromLocation('/chats'), isNull);
+      expect(gameIdFromLocation(null), isNull);
+    });
+  });
+
+  group('isFinishCurrentGameError', () {
+    test('detects 409 finish message', () {
+      expect(
+        isFinishCurrentGameError(
+          GamesException(409, 'finish your current game first'),
+        ),
+        isTrue,
+      );
+      expect(
+        isFinishCurrentGameError(
+          GamesException(409, 'Сначала завершите текущую игру'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('ignores other conflicts', () {
+      expect(
+        isFinishCurrentGameError(
+          GamesException(409, 'game already started with another opponent'),
+        ),
+        isFalse,
+      );
+      expect(
+        isFinishCurrentGameError(GamesException(404, 'lobby not found')),
+        isFalse,
+      );
+    });
+  });
 }
