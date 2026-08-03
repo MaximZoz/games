@@ -461,14 +461,16 @@ class AppShell extends ConsumerWidget {
             final pinNow =
                 ref.read(blockingGamePinProvider)?.trim() ?? pinnedLive;
             // Живая партия на экране / в пине важнее лобби-инвайта с GetActive.
+            final livePathId = pathGameId;
             if (pathIsLive &&
+                livePathId != null &&
                 (fresh == null ||
                     fresh.type == 'lobby' ||
                     (fresh.type == 'game' && fresh.isEliminated))) {
               ref.read(activeGameProvider.notifier).setLocal(
                     ActiveGameItem(
                       type: 'game',
-                      gameId: pathGameId!,
+                      gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
                       isEliminated: false,
