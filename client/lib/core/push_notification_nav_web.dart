@@ -91,6 +91,18 @@ bool _documentIsVisible() {
   }
 }
 
+/// Снять из шторки все баннеры о сообщениях в этом чате (после прочтения).
+void clearPushNotificationsForChat(String chatId) {
+  if (!kIsWeb) return;
+  final id = chatId.trim();
+  if (id.isEmpty) return;
+  _postToPushSw({
+    'type': 'clear_notifications',
+    'tag': 'chat_$id',
+    'path': '/chats/$id',
+  });
+}
+
 /// Сообщает SW текущий маршрут и foreground — пока приложение на экране
 /// SW глушит все пуши; после сворачивания foreground=false → пуши снова идут.
 void reportPushSwActiveRoute(String path) {

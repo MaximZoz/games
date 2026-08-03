@@ -1,6 +1,7 @@
 /* Web Push service worker for Zozu Games PWA.
- * v12: пока приложение на экране (Flutter foreground) — глушим ВСЕ пуши;
- *      в фоне/свёрнутом — доставляем. Не используем Clients.visibility alone.
+ * v13: при открытии/прочтении чата снимаем все баннеры этого чата из шторки
+ *      (iOS часто копит несколько с одним tag / пустым data).
+ * v12: пока приложение на экране — глушим ВСЕ пуши; в фоне — доставляем.
  * v11: клик не затирает deep-link на iOS; chat_id fallback.
  * v10: viewer в Cache (SW убивается между push — память пустая).
  * v9: в foreground глушим ВСЕ пуши.
@@ -192,15 +193,41 @@ function pathSpecificity(path) {
   return 2;
 }
 
+function notificationMatchesChat(notification, chatId) {
+  if (!chatId) return false;
+  const id = String(chatId);
+  const t = (notification.tag && String(notification.tag)) || '';
+  if (t === `chat_${id}`) return true;
+  const data = readNotificationData(notification);
+  if (data.chat_id && String(data.chat_id) === id) return true;
+  if (data.url) {
+    try {
+      const path = appPathFromUrl(resolveTargetUrl(String(data.url)));
+      const m = path.match(/^\/chats\/([^/?#]+)/);
+      if (m && m[1] === id) return true;
+    } catch (_) {}
+  }
+  return false;
+}
+
 /**
  * На iOS одного event.notification.close() часто недостаточно —
- * баннер остаётся в Notification Center. Снимаем все с тем же tag
- * и, при необходимости, по префиксу path.
+ * баннер остаётся в Notification Center. Снимаем все с тем же tag,
+ * по path и полным сканом (iOS копит дубликаты).
  */
 async function closeShownNotifications({ tag, path } = {}) {
+  const p = path != null ? String(path) : '';
+  const exactTag = tag || tagFromPath(p) || '';
+  const chatMatch = p.match(/^\/chats\/([^/?#]+)/);
+  const chatId =
+    (chatMatch && chatMatch[1]) ||
+    (exactTag.startsWith('chat_') ? exactTag.slice('chat_'.length) : '');
+
   try {
-    if (tag) {
-      const byTag = await self.registration.getNotifications({ tag: String(tag) });
+    if (exactTag) {
+      const byTag = await self.registration.getNotifications({
+        tag: String(exactTag),
+      });
       for (const n of byTag) {
         try {
           n.close();
@@ -211,33 +238,21 @@ async function closeShownNotifications({ tag, path } = {}) {
     console.warn('[push-sw] getNotifications(tag) failed', err);
   }
 
-  const p = path != null ? String(path) : '';
-  if (!p || p === '/') return;
-
-  const exactTag = tagFromPath(p);
-  if (exactTag && exactTag !== tag) {
-    try {
-      const byPath = await self.registration.getNotifications({ tag: exactTag });
-      for (const n of byPath) {
-        try {
-          n.close();
-        } catch (_) {}
-      }
-    } catch (_) {}
-  }
-
-  // achievement_*/reward_gift_* — конкретный tag неизвестен из path.
-  if (p.startsWith('/achievements') || p.startsWith('/inventory')) {
+  // Полный скан: iOS иногда отдаёт пустой tag/data или дубли без filter.
+  if (chatId || p.startsWith('/achievements') || p.startsWith('/inventory')) {
     try {
       const all = await self.registration.getNotifications();
       for (const n of all) {
         const t = (n.tag && String(n.tag)) || '';
+        let close = false;
+        if (chatId && notificationMatchesChat(n, chatId)) close = true;
         if (p.startsWith('/achievements') && t.startsWith('achievement_')) {
-          try {
-            n.close();
-          } catch (_) {}
+          close = true;
         }
         if (p.startsWith('/inventory') && t.startsWith('reward_gift_')) {
+          close = true;
+        }
+        if (close) {
           try {
             n.close();
           } catch (_) {}
@@ -462,6 +477,20 @@ self.addEventListener('message', (event) => {
       foreground: foreground,
       at: Date.now(),
     };
+    // Открыли чат на экране — сразу убрать баннеры этого чата из шторки.
+    const chat = path.match(/^\/chats\/([^/?#]+)/);
+    if (foreground && chat && chat[1]) {
+      event.waitUntil(
+        Promise.all([
+          saveViewerState(viewer),
+          closeShownNotifications({
+            tag: `chat_${chat[1]}`,
+            path: `/chats/${chat[1]}`,
+          }),
+        ]),
+      );
+      return;
+    }
     event.waitUntil(saveViewerState(viewer));
     return;
   }
