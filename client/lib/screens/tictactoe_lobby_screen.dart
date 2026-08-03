@@ -53,13 +53,16 @@ String tictactoeLobbyAppBarTitle({
   String? status,
   String? initialMode,
   bool fromInviteLink = false,
+  bool isLobbyMember = false,
 }) {
   final l10n = LocaleService.l10n;
   if (status == 'waiting_matchmake') return l10n.lobbyMatchmake;
   if (status == 'waiting_invite') {
-    return fromInviteLink ? l10n.lobbyEnterGame : l10n.lobbyPrivateGame;
+    // Уже в составе — «Своя игра», а не «Войти в игру».
+    if (isLobbyMember || !fromInviteLink) return l10n.lobbyPrivateGame;
+    return l10n.lobbyEnterGame;
   }
-  if (fromInviteLink) return l10n.lobbyEnterGame;
+  if (fromInviteLink && !isLobbyMember) return l10n.lobbyEnterGame;
   if (initialMode == 'matchmake') return l10n.lobbyMatchmake;
   if (initialMode == 'invite') return l10n.lobbyPrivateGame;
   return '';
@@ -151,14 +154,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             ),
             title: Builder(
               builder: (context) {
+                final lobby = lobbyAsync.valueOrNull;
+                final uid = currentUser?.id;
+                final member = lobby != null &&
+                    uid != null &&
+                    (uid == lobby.creatorId ||
+                        lobby.playerIds.contains(uid) ||
+                        lobby.players.any((p) => p.id == uid) ||
+                        lobby.opponentId == uid);
                 final title = tictactoeLobbyAppBarTitle(
-                  status: lobbyAsync.valueOrNull?.status,
+                  status: lobby?.status,
                   initialMode: widget.initialMode,
                   fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
                           true ||
-                      (lobbyAsync.valueOrNull != null &&
+                      (lobby != null &&
                           currentUser != null &&
-                          lobbyAsync.valueOrNull!.creatorId != currentUser.id),
+                          lobby.creatorId != currentUser.id),
+                  isLobbyMember: member,
                 );
                 if (title.isEmpty) return const SizedBox.shrink();
                 return Row(
@@ -207,7 +219,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final isLobbyMember = uid != null &&
                   (isCreator ||
                       lobby.playerIds.contains(uid) ||
-                      lobby.players.any((p) => p.id == uid));
+                      lobby.players.any((p) => p.id == uid) ||
+                      lobby.opponentId == uid);
               final isInviteMode = lobby.status == 'waiting_invite';
               final isMatchmakeMode = lobby.status == 'waiting_matchmake';
               final showMultiLobby = lobby.maxPlayers > 2;
@@ -1158,11 +1171,15 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       if (!context.mounted) return;
       if (result.joined && result.waitingMore) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
-        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
         ref.invalidate(openLobbiesProvider);
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'lobby', lobbyId: widget.lobbyId),
             );
+        // Дождаться свежего состава — сразу видно себя в «Игроки».
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+        try {
+          await ref.read(lobbyDetailProvider(widget.lobbyId).future);
+        } catch (_) {}
         await refreshChatsList(ref, force: true).catchError((_) {});
         return;
       }
@@ -1189,19 +1206,24 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     } catch (e) {
       if (!context.mounted) return;
       // Уже в составе лобби — остаёмся в ожидании, не уходим на список игр.
+      final msg = e is GamesException ? e.message.toLowerCase() : '';
       final alreadyIn = e is GamesException &&
           e.statusCode == 400 &&
-          e.message.toLowerCase().contains('already in lobby');
+          (msg.contains('already in lobby') || msg.contains('уже в лобби'));
       if (alreadyIn) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
-        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'lobby', lobbyId: widget.lobbyId),
             );
+        // Дождаться состава — иначе кратко «не вижу себя» в «Игроки».
+        ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+        try {
+          await ref.read(lobbyDetailProvider(widget.lobbyId).future);
+        } catch (_) {}
         return;
       }
       final gone = e is GamesException &&
-          (e.statusCode == 404 || e.statusCode == 409 || e.statusCode == 400);
+          (e.statusCode == 404 || e.statusCode == 409);
       showAppSnackBar(
         context,
         message: gone

@@ -423,6 +423,17 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         _navigateToJoinedGame(result.gameId!);
       }
     } catch (e) {
+      if (_isAlreadyInLobbyError(e)) {
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        if (context.mounted) {
+          context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        }
+        return;
+      }
       // Лобби уже нет — убрать «висящее» приглашение.
       ref.read(gameInvitesProvider.notifier).remove(lobbyId);
       _showInviteError(e);
@@ -561,6 +572,17 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         context.push('/games/tictactoe/game/${result.gameId}');
       }
     } catch (e) {
+      if (_isAlreadyInLobbyError(e)) {
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        ref.invalidate(lobbyDetailProvider(lobbyId));
+        if (context.mounted) {
+          context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        }
+        return;
+      }
       if (context.mounted) {
         showAppSnackBar(
           context,
@@ -569,6 +591,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         );
       }
     }
+  }
+
+  bool _isAlreadyInLobbyError(Object e) {
+    if (e is! GamesException) return false;
+    if (e.statusCode != 400) return false;
+    final msg = e.message.toLowerCase();
+    return msg.contains('already in lobby') || msg.contains('уже в лобби');
   }
 
   void _showLobbyRulesInfo(BuildContext context, LobbyItem lobby) {

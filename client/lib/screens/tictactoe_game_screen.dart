@@ -1022,6 +1022,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.invalidate(lobbyDetailProvider(lobbyId));
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         return;
       }
@@ -1038,11 +1039,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (e.statusCode == 409) {
         ref.invalidate(activeGameProvider);
         final active = await ref.read(activeGameProvider.future);
-        if (!mounted) return;
+        if (!context.mounted) return;
         if (active != null &&
             active.type == 'game' &&
             active.gameId != null &&
             active.gameId!.isNotEmpty) {
+          // ignore: use_build_context_synchronously
           context.go('/games/tictactoe/game/${active.gameId}');
         } else {
           _redirectToGamesOnError();

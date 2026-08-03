@@ -37,7 +37,7 @@ void main() {
   });
 
   test('previewText для ссылки-приглашения в лобби', () {
-    final body =
+    const body =
         'https://multigameszozu.fly.dev/games/tictactoe/lobby/f84e367b-674a-4290-900c-a5133fa23204?mode=invite';
     expect(
       msg(body: body).previewText,
