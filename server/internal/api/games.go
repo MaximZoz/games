@@ -1899,19 +1899,37 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	if maxPlayers < 2 {
 		maxPlayers = cfg.MaxPlayers
 	}
+	// game_type берём из лобби — handler общий для всех игр (durak и др.).
+	gameType := strings.TrimSpace(m["game_type"])
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
 	inviteData := map[string]any{
 		"type":                   "game_invite",
 		"lobby_id":               lobbyID,
 		"creator_id":             userID.String(),
 		"creator_name":           creatorName,
-		"game_type":              "tictactoe",
+		"game_type":              gameType,
 		"turn_time_sec":          turnTimeSec,
-		"variant":                string(variant),
-		"grid_size":              cfg.GridSize,
 		"max_players":            maxPlayers,
-		"swap_rule":              swapRule,
-		"first_move_restriction": firstMoveRestriction,
 		"stake_bronze":           stakeBronze,
+	}
+	if gameType == durakGameType {
+		deckSize, _ := strconv.Atoi(m["deck_size"])
+		if deckSize == 0 {
+			deckSize = 36
+		}
+		gm := strings.TrimSpace(m["game_mode"])
+		if gm == "" {
+			gm = "podkidnoi"
+		}
+		inviteData["deck_size"] = deckSize
+		inviteData["game_mode"] = gm
+	} else {
+		inviteData["variant"] = string(variant)
+		inviteData["grid_size"] = cfg.GridSize
+		inviteData["swap_rule"] = swapRule
+		inviteData["first_move_restriction"] = firstMoveRestriction
 	}
 	if creatorAvatarKind != "" {
 		inviteData["creator_avatar_kind"] = creatorAvatarKind
@@ -3443,9 +3461,13 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 		name = i18n.Content(lang, "common.player")
 	}
 	lobbyID, _ := payload["lobby_id"].(string)
+	gameType, _ := payload["game_type"].(string)
+	if strings.TrimSpace(gameType) == "" {
+		gameType = "tictactoe"
+	}
 	url := "/games"
 	if lobbyID != "" {
-		url = "/games/tictactoe/lobby/" + lobbyID
+		url = "/games/" + gameType + "/lobby/" + lobbyID
 	}
 	h.Push.NotifyUsers(userIDs, store.WebPushCategoryGames, PushPayload{
 		Title: i18n.Content(lang, "push.game_invite_title"),

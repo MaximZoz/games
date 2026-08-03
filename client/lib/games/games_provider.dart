@@ -31,6 +31,8 @@ class GameInvite {
     this.creatorAvatarKind = 'letter',
     this.creatorAvatarValue,
     this.stakeBronze = 1,
+    this.deckSize = 36,
+    this.durakMode = 'podkidnoi',
   });
   final String lobbyId;
   final String creatorId;
@@ -45,6 +47,22 @@ class GameInvite {
   final String creatorAvatarKind;
   final String? creatorAvatarValue;
   final int stakeBronze;
+
+  /// Durak: размер колоды (24/36/52).
+  final int deckSize;
+
+  /// Durak: 'podkidnoi' | 'perevodnoi'.
+  final String durakMode;
+
+  bool get isDurak => gameType == 'durak';
+
+  /// Подпись режима для карточки приглашения.
+  String get modeLabel {
+    if (isDurak) {
+      return durakMode == 'perevodnoi' ? 'Переводной' : 'Подкидной';
+    }
+    return variantLabel(variant);
+  }
 }
 
 final gameInvitesProvider =
@@ -93,6 +111,8 @@ final gameInvitesProvider =
             creatorAvatarKind: creatorAvatarKind,
             creatorAvatarValue: creatorAvatarValue,
             stakeBronze: stakeBronze,
+            deckSize: (data['deck_size'] as num?)?.toInt() ?? 36,
+            durakMode: data['game_mode']?.toString() ?? 'podkidnoi',
           ));
         }
         return;

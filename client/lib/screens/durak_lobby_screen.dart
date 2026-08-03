@@ -10,10 +10,14 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
-import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/games_repository.dart'
+    show GamesException, formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -92,6 +96,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
       }
     });
 
+    final lobby = lobbyAsync.valueOrNull;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -100,8 +105,33 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: _leaving ? null : _leave,
         ),
-        title: const Text('# Своя игра — Дурак'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.style_rounded, size: 22, color: AppColors.accentStart),
+            SizedBox(width: 8),
+            Text('Своя игра'),
+          ],
+        ),
         centerTitle: true,
+        actions: [
+          if (lobby != null)
+            IconButton(
+              tooltip: 'Правила игры',
+              icon: const Icon(Icons.rule_rounded),
+              onPressed: () => showGameRulesDialog(
+                context: context,
+                title: 'Правила игры',
+                content: rulesTextLines(durakRuleLines(
+                  mode: lobby.gameMode,
+                  players: lobby.maxPlayers,
+                  deckSize: lobby.deckSize,
+                  turnTimeSec: lobby.turnTimeSec,
+                  stakeBronze: lobby.stakeBronze,
+                )),
+              ),
+            ),
+        ],
       ),
       body: GradientBackground(
         child: SafeArea(
@@ -151,22 +181,51 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     return GradientCard(
       animate: false,
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Игроки ${lobby.playerIds.length}/${lobby.maxPlayers}',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Игроки ${lobby.playerIds.length}/${lobby.maxPlayers}',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${durakModeLabel(lobby.gameMode)} · '
+                  '${durakDeckLabel(lobby.deckSize)}',
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 13),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${_modeLabel(lobby.gameMode)} · ${lobby.deckSize} карт · ${lobby.stakeBronze} 🥉',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          ),
+          if (lobby.stakeBronze > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formatStakeAmount(lobby.stakeBronze),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                CoinIcon(
+                  coinType: stakeCoinType(lobby.stakeBronze),
+                  size: 20,
+                  showBorder: true,
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -377,7 +436,4 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     ]);
   }
 
-  String _modeLabel(String mode) {
-    return mode == 'perevodnoi' ? 'Переводной' : 'Подкидной';
-  }
 }

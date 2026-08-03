@@ -7,6 +7,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -538,7 +539,17 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
+  /// Правила приглашения по game_type: инжектируем нужный набор.
   Widget _inviteRulesWidget(GameInvite inv) {
+    if (inv.isDurak) {
+      return rulesTextLines(durakRuleLines(
+        mode: inv.durakMode,
+        players: inv.maxPlayers,
+        deckSize: inv.deckSize,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+      ));
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -1445,19 +1456,9 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
     });
   }
 
-  String _modeLabel(String m) =>
-      m == 'perevodnoi' ? 'Переводной' : 'Подкидной';
+  String _modeLabel(String m) => durakModeLabel(m);
 
-  String _deckLabel(int n) {
-    switch (n) {
-      case 24:
-        return '24 карты';
-      case 52:
-        return '52 карты';
-      default:
-        return '36 карт';
-    }
-  }
+  String _deckLabel(int n) => durakDeckLabel(n);
 
   @override
   Widget build(BuildContext context) {
@@ -1540,16 +1541,14 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
     showGameRulesDialog(
       context: context,
       title: context.l10n.gamesRulesTitle,
-      content: rulesTextLines([
-        'Режим: ${_modeLabel(_gameMode)}',
-        'Игроки: $_players. Колода: ${_deckLabel(_deckSize)}.',
-        widget.isOffline
-            ? 'Игра против бота, без ставок и лимита времени.'
-            : 'Время на ход: ${formatTurnTime(_turnTimeSec)}. Ставка: $_stake бронзы.',
-        'Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.',
-        'Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.',
-        'Проигравший — у кого в конце партии остались карты, «дурак».',
-      ]),
+      content: rulesTextLines(durakRuleLines(
+        mode: _gameMode,
+        players: _players,
+        deckSize: _deckSize,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stake,
+        offlineBot: widget.isOffline,
+      )),
       closeLabel: context.l10n.commonClose,
     );
   }
@@ -2170,14 +2169,30 @@ class _InviteCard extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Tooltip(
                               message: context.l10n.gamesRulesTitle,
-                              child: Icon(Icons.extension_rounded,
-                                  size: iconSz, color: AppColors.textSecondary),
+                              child: Icon(
+                                inv.isDurak
+                                    ? Icons.swap_horiz_rounded
+                                    : Icons.extension_rounded,
+                                size: iconSz,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             Text(
-                              variantShortLabel(inv.variant),
+                              inv.modeLabel,
                               style: const TextStyle(
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
+                            if (inv.isDurak) ...[
+                              Icon(Icons.style_rounded,
+                                  size: iconSz,
+                                  color: AppColors.textSecondary),
+                              Text(
+                                '${inv.deckSize}',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
                             Icon(Icons.person_outline_rounded,
                                 size: iconSz, color: AppColors.textSecondary),
                             Text(
