@@ -48,6 +48,14 @@ void main() {
       );
       expect(hasBlockingActiveMatch(active), isFalse);
     });
+
+    test('pinned live game blocks other lobby', () {
+      final pinned = ActiveGameItem(type: 'game', gameId: 'live-1');
+      expect(
+        isBusyWithOtherSession(pinned, targetLobbyId: 'rematch-lobby'),
+        isTrue,
+      );
+    });
   });
 
   group('gameIdFromLocation', () {

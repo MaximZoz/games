@@ -2551,8 +2551,6 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	humans := humanUserIDsFromGame(m)
 
 	// Multi: таймаут = выбывание, как сдача.
-	// active_game НЕ сбрасываем до конца партии — иначе выбывший/«чей ход»
-	// пропадает из «Игры» и не может открыть доску, а у остальных UI зависает.
 	if cfg.MaxPlayers > 2 {
 		eliminated := parseEliminatedMarks(m["eliminated_marks"])
 		if !eliminated[turn] {
@@ -2594,6 +2592,12 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		}
 		h.Rdb.HSet(ctx, key, fields...)
 		h.Rdb.Expire(ctx, key, 24*time.Hour)
+		// Выбывший по таймауту свободен начинать другую игру.
+		if timedOutID := markOwnerUserID(m, turn); timedOutID != "" {
+			if u, e := uuid.Parse(timedOutID); e == nil {
+				clearUserActiveGame(ctx, h.Rdb, u)
+			}
+		}
 		payload := map[string]any{
 			"type": "game_state", "game_id": gameID,
 			"board": board, "turn": next, "status": gameStatusActive,
@@ -3191,6 +3195,9 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	// Выбывший свободен начинать другую игру: не держим active_game на этой партии.
+	// Иначе реванш/инвайт могут перетереть новую активную сессию.
+	clearUserActiveGame(ctx, h.Rdb, userID)
 	payload := map[string]any{
 		"type": "game_state", "game_id": gameID,
 		"board": board, "turn": turn, "status": gameStatusActive,

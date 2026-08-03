@@ -255,8 +255,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                   (isInviteMode && lobby.mode == 'matchmake');
               final showMultiLobby = lobby.maxPlayers > 2;
               // Уже вступили (реванш / повторный заход) — не показываем «Войти в игру».
-              final showInviteAccept =
-                  isInviteMode && !isLobbyMember && !isOpenFind;
+              final showInviteAccept = !isLobbyMember &&
+                  (isInviteMode || isMatchmakeMode);
               final showPrivateInviteWaiting =
                   isInviteMode && isLobbyMember && !isOpenFind;
               final showOpenFindWaiting = isOpenFind && isLobbyMember;

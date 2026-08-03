@@ -136,6 +136,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final eliminatedNow = myMark != null &&
         knownGame != null &&
         knownGame.isEliminated(myMark);
+    final elim = eliminatedNow ||
+        (prevActive?.gameId == widget.gameId &&
+            (prevActive?.isEliminated ?? false));
     ref.read(activeGameProvider.notifier).setLocal(
           ActiveGameItem(
             type: 'game',
@@ -144,11 +147,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             isMyTurn: prevActive?.gameId == widget.gameId
                 ? (prevActive?.isMyTurn ?? false)
                 : false,
-            isEliminated: eliminatedNow ||
-                (prevActive?.gameId == widget.gameId &&
-                    (prevActive?.isEliminated ?? false)),
+            isEliminated: elim,
           ),
         );
+    if (elim) {
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
+    } else {
+      pinBlockingGame(ref, widget.gameId);
+    }
     unawaited(ref.read(activeGameProvider.notifier).refresh());
     // Fallback-синк + дожим протухшего хода (сервер применяет timeout на GetGame).
     _syncStateTimer = Timer.periodic(const Duration(seconds: 12), (_) {
@@ -511,6 +517,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               final settledReward = iWonEarly ? netProfit : 0;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
+                clearBlockingGamePin(ref, ifGameId: widget.gameId);
                 setState(() {
                   _rematchLobbyId = null;
                   _rematchDeclined = false;
@@ -527,9 +534,15 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             } else {
               _prevGameStatus = game.status;
             }
+            final eliminatedNow =
+                myMark != null && game.isEliminated(myMark);
+            if (!isOver && !eliminatedNow) {
+              pinBlockingGame(ref, widget.gameId);
+            } else if (eliminatedNow) {
+              clearBlockingGamePin(ref, ifGameId: widget.gameId);
+            }
             // Полное состояние игры — источник истины для текущего хода.
-            final isMyTurn = game.isTurnOf(currentUser?.id) &&
-                !(myMark != null && game.isEliminated(myMark));
+            final isMyTurn = game.isTurnOf(currentUser?.id) && !eliminatedNow;
             final opponentName = opponentId.startsWith('bot:')
                 ? context.l10n.gameBot
                 : (game.xUserId == currentUser?.id
@@ -579,7 +592,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     ? 'Партия окончена'
                     : context.l10n.gameDraw;
               }
-            } else if (myMark != null && game.isEliminated(myMark)) {
+            } else if (eliminatedNow) {
               statusText = 'Вы выбыли';
               statusMark = myMark;
             } else if (isMyTurn) {
@@ -960,12 +973,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       // увидит итог сдачи.
       unawaited(() async {
         try {
+          clearBlockingGamePin(ref, ifGameId: gameId);
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
         } catch (_) {}
         if (!mounted) return;
         ref.read(gameStateOverrideProvider(gameId).notifier).state = null;
         ref.invalidate(gameStateProvider(gameId));
-        ref.invalidate(activeGameProvider);
+        unawaited(ref.read(activeGameProvider.notifier).refresh());
       }());
     });
   }
@@ -1071,13 +1085,19 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'game', gameId: gameId),
             );
+        pinBlockingGame(ref, gameId);
         ref.invalidate(gameStateProvider(gameId));
         if (!context.mounted) return;
         context.go('/games/tictactoe/game/$gameId');
       } else {
+        clearBlockingGamePin(ref);
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
             );
+        final game = ref.read(gameStateOverrideProvider(widget.gameId)) ??
+            ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+        final multiRematch = (game?.maxPlayers ?? 0) > 2 ||
+            (game?.playerUserIds.length ?? 0) > 2;
         setState(() {
           _rematchLobbyId = result.lobbyId;
           _rematchDeclined = false;
@@ -1085,6 +1105,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           _rematchRespondedIds.clear();
           _isRematching = false;
         });
+        // Multi 3/4: сразу «Своя игра» (лобби), без ожидания на доске прошлой партии.
+        if (multiRematch) {
+          if (!context.mounted) return;
+          context.go(
+            '/games/tictactoe/lobby/${result.lobbyId}?mode=invite',
+          );
+          return;
+        }
         _startRematchPoll();
       }
     } catch (e) {
@@ -1292,8 +1320,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       final rematchLobbyId = _rematchLobbyId;
       _rematchLobbyId = null;
       _rematchRespondedIds.clear();
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
       if (eliminated && !isOver) {
-        // Партия ещё идёт — оставляем «Текущая игра», чтобы вернуться смотреть.
+        // Партия ещё идёт — локально помечаем выбывшим (сервер уже снял active_game).
         final prev = ref.read(activeGameProvider).valueOrNull;
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(

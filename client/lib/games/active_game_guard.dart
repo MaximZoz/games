@@ -11,6 +11,23 @@ const finishCurrentGameMessage = 'Сначала завершите текущу
 /// Канонический ключ ошибки сервера (поле JSON `error`).
 const finishCurrentGameErrorKey = 'finish your current game first';
 
+/// Локальный пин живой партии: не сбрасывается при invalidate activeGameProvider.
+/// Нужен, когда из чата жмут инвайт, а GetActive ещё/уже пуст.
+final blockingGamePinProvider = StateProvider<String?>((ref) => null);
+
+void pinBlockingGame(WidgetRef ref, String? gameId) {
+  final id = gameId?.trim() ?? '';
+  ref.read(blockingGamePinProvider.notifier).state = id.isEmpty ? null : id;
+}
+
+void clearBlockingGamePin(WidgetRef ref, {String? ifGameId}) {
+  final cur = ref.read(blockingGamePinProvider)?.trim() ?? '';
+  if (cur.isEmpty) return;
+  final only = ifGameId?.trim() ?? '';
+  if (only.isNotEmpty && cur != only) return;
+  ref.read(blockingGamePinProvider.notifier).state = null;
+}
+
 bool hasActiveMatch(ActiveGameItem? active) {
   if (active == null || active.type != 'game') return false;
   final id = active.gameId?.trim() ?? '';
@@ -68,12 +85,16 @@ String? gameIdFromLocation(String? location) {
   return id.isEmpty ? null : id;
 }
 
-/// Активная сессия для гарда: кэш + путь партии + `?game=` при возврате из чата.
+/// Активная сессия для гарда: пин + кэш + путь партии + `?game=` из чата.
 ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
   final async = ref.read(activeGameProvider);
   final fromProvider = async.asData?.value ?? async.valueOrNull;
   if (hasBlockingActiveMatch(fromProvider) || hasActiveLobby(fromProvider)) {
     return fromProvider;
+  }
+  final pinned = ref.read(blockingGamePinProvider)?.trim() ?? '';
+  if (pinned.isNotEmpty) {
+    return ActiveGameItem(type: 'game', gameId: pinned);
   }
   Uri uri;
   try {
@@ -87,12 +108,14 @@ ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
   if (pathGameId != null) {
     final same =
         fromProvider?.type == 'game' && fromProvider?.gameId == pathGameId;
+    final eliminated = same && (fromProvider?.isEliminated ?? false);
+    if (eliminated) return fromProvider;
     return ActiveGameItem(
       type: 'game',
       gameId: pathGameId,
       lobbyId: fromProvider?.lobbyId,
       isMyTurn: same ? (fromProvider?.isMyTurn ?? false) : false,
-      isEliminated: same ? (fromProvider?.isEliminated ?? false) : false,
+      isEliminated: false,
     );
   }
   return fromProvider;

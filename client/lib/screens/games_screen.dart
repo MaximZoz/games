@@ -370,6 +370,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 lobbyId: result.lobbyId,
               ),
             );
+        pinBlockingGame(ref, result.gameId);
         context.push('/games/tictactoe/game/${result.gameId}');
       } else {
         ref.read(activeGameProvider.notifier).setLocal(
@@ -403,7 +404,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
-    if (blockJoinIfBusy(context, ref, targetLobbyId: lobbyId)) return;
+    if (await blockJoinIfBusyAsync(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -421,9 +429,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         return;
       }
       if (result.joined && result.gameId != null) {
+        pinBlockingGame(ref, result.gameId);
         _navigateToJoinedGame(result.gameId!);
       }
-    } catch (e) {
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
+        _showInviteError(e);
+        final active = resolveActiveForGuard(ref, context);
+        if (active != null &&
+            (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
+          goToActiveSession(context, active);
+        }
+        return;
+      }
       if (_isAlreadyInLobbyError(e)) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         ref.read(activeGameProvider.notifier).setLocal(
@@ -435,6 +454,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         }
         return;
       }
+      ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+      _showInviteError(e);
+    } catch (e) {
       // Лобби уже нет — убрать «висящее» приглашение.
       ref.read(gameInvitesProvider.notifier).remove(lobbyId);
       _showInviteError(e);
@@ -556,7 +578,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   Future<void> _joinLobby(BuildContext context, String lobbyId) async {
-    if (blockJoinIfBusy(context, ref, targetLobbyId: lobbyId)) return;
+    if (await blockJoinIfBusyAsync(
+      context,
+      ref,
+      targetLobbyId: lobbyId,
+      redirectToActive: true,
+    )) {
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -573,26 +602,40 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         return;
       }
       if (result.joined && result.gameId != null) {
+        pinBlockingGame(ref, result.gameId);
         context.push('/games/tictactoe/game/${result.gameId}');
       }
-    } catch (e) {
+    } on GamesException catch (e) {
+      if (!context.mounted) return;
+      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        final active = resolveActiveForGuard(ref, context);
+        if (active != null) goToActiveSession(context, active);
+        return;
+      }
       if (_isAlreadyInLobbyError(e)) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
             );
         ref.invalidate(lobbyDetailProvider(lobbyId));
-        if (context.mounted) {
-          context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
-        }
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         return;
       }
+      showAppSnackBar(
+        context,
+        message: formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+    } catch (e) {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: isFinishCurrentGameError(e)
-              ? finishCurrentGameMessage
-              : formatUserError(e),
+          message: formatUserError(e),
           kind: AppSnackKind.error,
         );
       }
