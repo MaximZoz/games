@@ -277,9 +277,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final shortViewport = isPhoneLandscape(context) ||
                   isTablet(context) ||
                   MediaQuery.sizeOf(context).height < 640;
+              // Друзья для приглашения — у всех участников «Своей игры» и поиска.
               final useScrollFriends = shortViewport &&
-                  (showOpenFindWaiting ||
-                      (showPrivateInviteWaiting && isCreator));
+                  (showOpenFindWaiting || showPrivateInviteWaiting);
               return SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -419,8 +419,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       ),
                                     ),
                                   ],
-                                ] else if (showPrivateInviteWaiting &&
-                                    isCreator) ...[
+                                ] else if (showPrivateInviteWaiting) ...[
+                                  // Создатель и уже вступившие: ссылка + друзья
+                                  // (не правила — правила у гостя до Join).
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(
                                       context,
@@ -457,20 +458,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       },
                                     ),
                                   ),
-                                ] else if (showPrivateInviteWaiting &&
-                                    !isCreator) ...[
-                                  // Приглашённый в «Свою игру»: игроки + ссылка + правила.
-                                  if (showMultiLobby) ...[
-                                    _buildMultiLobbyCard(
-                                      context,
-                                      lobby,
-                                      currentUser?.id,
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  _buildShareInviteLinkCard(context),
-                                  const SizedBox(height: 16),
-                                  _buildMatchmakeInfoCard(context, lobby),
                                 ] else if (showInviteAccept) ...[
                                   if (showMultiLobby) ...[
                                     _buildMultiLobbyCard(

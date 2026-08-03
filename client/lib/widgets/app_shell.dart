@@ -15,6 +15,7 @@ import 'package:multigames_client/core/push_notification_nav_stub.dart'
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -51,18 +52,26 @@ String? _gameIdFromPath(String path) {
 }
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
-/// При активной партии — только редирект в неё (не список с инвайтами).
-/// Выбывший может смотреть через «Текущая игра», таб открывает список.
-void _goGamesTab(BuildContext context, String currentPath, ActiveGameItem? active) {
+/// Живая партия (не выбыл) — всегда в неё, даже при инвайтах/лобби реванша.
+/// Выбывший без новой сессии — список + карточка «Текущая игра».
+void _goGamesTab(
+  BuildContext context,
+  String currentPath,
+  ActiveGameItem? active, {
+  String? pinnedLiveGameId,
+}) {
   final pathGameId = _gameIdFromPath(currentPath);
+  final pinned = pinnedLiveGameId?.trim() ?? '';
 
-  // Ещё играю — только в свою партию.
-  if (active != null &&
-      active.type == 'game' &&
-      active.gameId != null &&
-      active.gameId!.isNotEmpty &&
-      !active.isEliminated) {
-    final dest = '/games/tictactoe/game/${active.gameId}';
+  // Живая партия (пин или active) важнее лобби/инвайтов.
+  String? liveGameId;
+  if (hasBlockingActiveMatch(active)) {
+    liveGameId = active!.gameId!.trim();
+  } else if (pinned.isNotEmpty) {
+    liveGameId = pinned;
+  }
+  if (liveGameId != null && liveGameId.isNotEmpty) {
+    final dest = '/games/tictactoe/game/$liveGameId';
     if (currentPath == dest || currentPath.startsWith('$dest/')) return;
     context.go(dest);
     return;
@@ -403,8 +412,14 @@ class AppShell extends ConsumerWidget {
         final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
         final cacheUsable = _activeGameUsable(cachedActive);
+        final pinnedLive =
+            ref.read(blockingGamePinProvider)?.trim() ?? '';
         // На экране партии — закрепить active, чтобы инвайт/refresh не «съели» матч.
         final pathGameId = _gameIdFromPath(currentPath);
+        final pathIsLive = pathGameId != null &&
+            (pinnedLive == pathGameId ||
+                (cachedActive?.gameId == pathGameId &&
+                    !(cachedActive?.isEliminated ?? false)));
         if (pathGameId != null &&
             (cachedActive == null ||
                 cachedActive.type != 'game' ||
@@ -415,13 +430,22 @@ class AppShell extends ConsumerWidget {
               gameId: pathGameId,
               lobbyId: cachedActive?.lobbyId,
               isMyTurn: cachedActive?.isMyTurn ?? false,
-              isEliminated: cachedActive?.isEliminated ?? false,
+              isEliminated: pathIsLive
+                  ? false
+                  : (cachedActive?.isEliminated ?? false),
             ),
           );
         }
         final activeForNav = ref.read(activeGameProvider).valueOrNull;
         Router.neglect(context, () {
-          _goGamesTab(context, currentPath, activeForNav ?? cachedActive);
+          _goGamesTab(
+            context,
+            currentPath,
+            activeForNav ?? cachedActive,
+            pinnedLiveGameId: pinnedLive.isNotEmpty
+                ? pinnedLive
+                : (pathIsLive ? pathGameId : null),
+          );
         });
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
         // Если кэш был пуст (создали лобби и ушли в чаты) — после refresh
@@ -432,6 +456,24 @@ class AppShell extends ConsumerWidget {
             final fresh = await ref.read(activeGameProvider.future);
             if (!context.mounted) return;
             if (ref.read(activeGameProvider.notifier).epoch != epochAtTap) {
+              return;
+            }
+            final pinNow =
+                ref.read(blockingGamePinProvider)?.trim() ?? pinnedLive;
+            // Живая партия на экране / в пине важнее лобби-инвайта с GetActive.
+            if (pathIsLive &&
+                (fresh == null ||
+                    fresh.type == 'lobby' ||
+                    (fresh.type == 'game' && fresh.isEliminated))) {
+              ref.read(activeGameProvider.notifier).setLocal(
+                    ActiveGameItem(
+                      type: 'game',
+                      gameId: pathGameId!,
+                      lobbyId: cachedActive?.lobbyId,
+                      isMyTurn: cachedActive?.isMyTurn ?? false,
+                      isEliminated: false,
+                    ),
+                  );
               return;
             }
             // Партия с экрана важнее «пустого» ответа — не теряем её.
@@ -453,13 +495,19 @@ class AppShell extends ConsumerWidget {
             if (cacheUsable &&
                 fresh.type == cachedActive?.type &&
                 fresh.gameId == cachedActive?.gameId &&
-                fresh.lobbyId == cachedActive?.lobbyId) {
+                fresh.lobbyId == cachedActive?.lobbyId &&
+                fresh.isEliminated == cachedActive?.isEliminated) {
               return;
             }
             final nowPath =
                 GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
             Router.neglect(context, () {
-              _goGamesTab(context, nowPath, fresh);
+              _goGamesTab(
+                context,
+                nowPath,
+                fresh,
+                pinnedLiveGameId: pinNow.isNotEmpty ? pinNow : null,
+              );
             });
           } catch (_) {
             if (pathGameId != null && context.mounted) {

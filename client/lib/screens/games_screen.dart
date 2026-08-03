@@ -179,6 +179,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           active.lobbyId!.isEmpty) {
         return;
       }
+      // Живая партия (пин) важнее автоухода в лобби-инвайт.
+      if (ref.read(blockingGamePinProvider)?.trim().isNotEmpty ?? false) {
+        return;
+      }
+      if (hasBlockingActiveMatch(prev?.valueOrNull)) {
+        return;
+      }
       final path =
           GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
       if (path != '/games') return;
