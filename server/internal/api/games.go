@@ -2551,6 +2551,8 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	humans := humanUserIDsFromGame(m)
 
 	// Multi: таймаут = выбывание, как сдача.
+	// active_game НЕ сбрасываем до конца партии — иначе выбывший
+	// пропадает из «Игры» и не может открыть доску смотреть.
 	if cfg.MaxPlayers > 2 {
 		eliminated := parseEliminatedMarks(m["eliminated_marks"])
 		if !eliminated[turn] {
