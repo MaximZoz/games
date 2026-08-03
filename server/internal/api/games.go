@@ -3463,6 +3463,17 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
+	// Durak: участие определяется по player_ids CSV.
+	if gm["game_type"] == durakGameType {
+		players := parsePlayerIDsCSV(gm["player_ids"])
+		for _, p := range players {
+			if p == userID.String() {
+				return gid
+			}
+		}
+		clearUserActiveGame(ctx, h.Rdb, userID)
+		return ""
+	}
 	mark := markForUserID(gm, userID.String())
 	if mark == "" {
 		clearUserActiveGame(ctx, h.Rdb, userID)
@@ -3901,18 +3912,41 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
-			myMark := markForUserID(m, userID.String())
-			if myMark == "" {
-				clearUserActiveGame(ctx, h.Rdb, userID)
-			} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
-				// Миграция: выбывший больше не в active, а в observation.
-				moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+			if m["game_type"] == durakGameType {
+				// Durak: определяем участие по player_ids CSV (нет x/o marks).
+				players := parsePlayerIDsCSV(m["player_ids"])
+				inGame := false
+				for _, p := range players {
+					if p == userID.String() {
+						inGame = true
+						break
+					}
+				}
+				if !inGame {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": durakGameType,
+					}
+				}
 			} else {
-				active = map[string]any{
-					"type":       "game",
-					"game_id":    gameID,
-					"lobby_id":   m["lobby_id"],
-					"is_my_turn": m["turn"] == myMark,
+				myMark := markForUserID(m, userID.String())
+				if myMark == "" {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
+					// Миграция: выбывший больше не в active, а в observation.
+					moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+				} else {
+					active = map[string]any{
+						"type":       "game",
+						"game_id":    gameID,
+						"lobby_id":   m["lobby_id"],
+						"is_my_turn": m["turn"] == myMark,
+						"game_type":  "tictactoe",
+					}
 				}
 			}
 		} else {
@@ -3925,9 +3959,14 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		if lerr == nil && lobbyID != "" {
 			m, merr := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
 			if merr == nil && len(m) > 0 {
+				gt := m["game_type"]
+				if gt == "" {
+					gt = "tictactoe"
+				}
 				active = map[string]any{
-					"type":     "lobby",
-					"lobby_id": lobbyID,
+					"type":      "lobby",
+					"lobby_id":  lobbyID,
+					"game_type": gt,
 				}
 			} else {
 				clearUserActiveLobby(ctx, h.Rdb, userID)

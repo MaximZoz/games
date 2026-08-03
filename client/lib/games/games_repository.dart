@@ -928,11 +928,16 @@ class ActiveGameItem {
   final String? lobbyId;
   final bool isMyTurn;
 
+  /// Тип игры: 'tictactoe' | 'durak'. От него зависит роутинг обратно
+  /// в лобби/партию. Default 'tictactoe' сохраняет обратную совместимость.
+  final String gameType;
+
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
+    this.gameType = 'tictactoe',
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -941,6 +946,9 @@ class ActiveGameItem {
       gameId: json['game_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       isMyTurn: json['is_my_turn'] as bool? ?? false,
+      gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_type'] as String).trim()
+          : 'tictactoe',
     );
   }
 }
