@@ -216,6 +216,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		ok, existsErr := store.SessionExists(r.Context(), h.Pool, sid)
 		if existsErr != nil {
+			log.Printf("realtime: SessionExists failed: %v", existsErr)
 			WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
 			return
 		}

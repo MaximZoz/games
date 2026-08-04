@@ -38,14 +38,50 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _busy = false;
   bool _settled = false;
   bool _handlingAuthError = false;
+  bool _retryScheduled = false;
+
+  bool _isTransientLoadError(Object e) {
+    if (e is GamesException) {
+      if (e.statusCode == 502 || e.statusCode == 503) return true;
+      final key = e.errorKey.toLowerCase();
+      final msg = e.message.toLowerCase();
+      return key.contains('temporarily unavailable') ||
+          msg.contains('temporarily unavailable') ||
+          msg.contains('временно недоступно') ||
+          msg.contains('попробуйте позже');
+    }
+    final s = e.toString().toLowerCase();
+    return s.contains('503') ||
+        s.contains('502') ||
+        s.contains('temporarily unavailable') ||
+        s.contains('попробуйте позже') ||
+        s.contains('connection') ||
+        s.contains('socket');
+  }
 
   bool _isSessionExpired(Object e) {
     final s = e.toString().toLowerCase();
     // 503/«попробуйте позже» — временный сбой, не разлогиниваем.
-    if (s.contains('503') || s.contains('попробуйте позже')) return false;
+    if (_isTransientLoadError(e) ||
+        s.contains('503') ||
+        s.contains('попробуйте позже')) {
+      return false;
+    }
     return s.contains('401') ||
         s.contains('session expired') ||
         s.contains('сессия истекла');
+  }
+
+  void _scheduleTransientRetry() {
+    if (_retryScheduled) return;
+    _retryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future<void>.delayed(const Duration(seconds: 1), () {
+        _retryScheduled = false;
+        if (!mounted) return;
+        ref.invalidate(durakGameProvider(widget.gameId));
+      });
+    });
   }
 
   void _handleAuthError(Object e) {
@@ -241,7 +277,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   ),
                   error: (e, _) {
                     _handleAuthError(e);
-                    if (_isSessionExpired(e)) {
+                    if (_isSessionExpired(e) || _isTransientLoadError(e)) {
+                      // Как в крестиках: не залипаем на красном тексте —
+                      // крутим индикатор и перезапрашиваем партию.
+                      if (_isTransientLoadError(e)) {
+                        _scheduleTransientRetry();
+                      }
                       return const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -252,10 +293,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Text(
-                          formatUserError(e),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              formatUserError(
+                                e,
+                                fallback: context.l10n.commonTryLater,
+                              ),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () => ref.invalidate(
+                                durakGameProvider(widget.gameId),
+                              ),
+                              child: Text(context.l10n.commonTryRefresh),
+                            ),
+                          ],
                         ),
                       ),
                     );

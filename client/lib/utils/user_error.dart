@@ -9,12 +9,34 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_repository.dart';
 
+bool _looksTemporarilyUnavailable(String text) {
+  final s = text.toLowerCase();
+  return s.contains('temporarily unavailable') ||
+      s.contains('временно недоступно') ||
+      s.contains('service unavailable');
+}
+
 /// Преобразует исключение в понятное пользователю сообщение (текущая локаль).
 String formatUserError(Object? error, {String? fallback}) {
   final l10n = LocaleService.l10n;
   if (error == null) return fallback ?? l10n.commonGenericError;
-  if (error is GamesException) return error.message;
-  if (error is AuthException) return error.message;
+  if (error is GamesException) {
+    if (error.statusCode == 502 ||
+        error.statusCode == 503 ||
+        _looksTemporarilyUnavailable(error.errorKey) ||
+        _looksTemporarilyUnavailable(error.message)) {
+      return l10n.commonTryLater;
+    }
+    return error.message;
+  }
+  if (error is AuthException) {
+    if (error.statusCode == 502 ||
+        error.statusCode == 503 ||
+        _looksTemporarilyUnavailable(error.message)) {
+      return l10n.commonTryLater;
+    }
+    return error.message;
+  }
   if (error is ChatException) return error.message;
   if (error is FriendsException) return error.message;
   if (error is AdminException) return error.message;

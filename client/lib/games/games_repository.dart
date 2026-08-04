@@ -1343,6 +1343,16 @@ class GamesRepository {
     if (response.statusCode == 404 && message.trim().isEmpty) {
       throw GamesException(404, l10n.commonNotFound, errorKey: errorKey);
     }
+    final keyLower = errorKey.toLowerCase();
+    final msgLower = message.toLowerCase();
+    if (keyLower.contains('temporarily unavailable') ||
+        msgLower.contains('temporarily unavailable')) {
+      throw GamesException(
+        response.statusCode == 0 ? 503 : response.statusCode,
+        l10n.commonTryLater,
+        errorKey: errorKey.isEmpty ? 'temporarily unavailable' : errorKey,
+      );
+    }
     if (response.statusCode == 503 && message.trim().isEmpty) {
       throw GamesException(503, l10n.errGamesUnavailable, errorKey: errorKey);
     }

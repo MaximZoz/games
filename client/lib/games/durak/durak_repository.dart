@@ -393,7 +393,20 @@ class DurakRepository {
         msg = (body['message'] ?? body['error'] ?? msg).toString();
       }
     } catch (_) {}
-    if (msg.isEmpty) msg = LocaleService.l10n.commonServerErrorShort;
+    final l10n = LocaleService.l10n;
+    final keyLower = key.toLowerCase();
+    final msgLower = msg.toLowerCase();
+    if (r.statusCode == 502 ||
+        r.statusCode == 503 ||
+        keyLower.contains('temporarily unavailable') ||
+        msgLower.contains('temporarily unavailable')) {
+      throw GamesException(
+        r.statusCode == 0 ? 503 : r.statusCode,
+        l10n.commonTryLater,
+        errorKey: key.isEmpty ? 'temporarily unavailable' : key,
+      );
+    }
+    if (msg.isEmpty) msg = l10n.commonServerErrorShort;
     throw GamesException(r.statusCode, msg, errorKey: key);
   }
 

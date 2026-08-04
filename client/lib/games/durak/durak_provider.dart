@@ -2,10 +2,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
+import 'package:multigames_client/games/games_repository.dart' show GamesException;
 
 final durakRepositoryProvider = Provider<DurakRepository>((ref) {
   return DurakRepository(authRepository: ref.watch(authRepositoryProvider));
 });
+
+bool _isTransientGamesError(Object e) {
+  if (e is GamesException) {
+    if (e.statusCode == 502 || e.statusCode == 503) return true;
+    final key = e.errorKey.toLowerCase();
+    final msg = e.message.toLowerCase();
+    return key.contains('temporarily unavailable') ||
+        msg.contains('temporarily unavailable') ||
+        msg.contains('временно недоступно') ||
+        msg.contains('попробуйте позже');
+  }
+  final s = e.toString().toLowerCase();
+  return s.contains('temporarily unavailable') ||
+      s.contains('socket') ||
+      s.contains('connection');
+}
 
 /// Кэш view конкретной партии, с обновлением по WS `game_state`.
 final durakGameProvider = FutureProvider.autoDispose
@@ -24,7 +41,20 @@ final durakGameProvider = FutureProvider.autoDispose
     },
   );
   ref.onDispose(sub.close);
-  return repo.getGame(gameId);
+
+  // Деплой/краткий 503: не отдаём ошибку сразу — иначе экран залипает
+  // на красном «temporarily unavailable» у обоих игроков.
+  Object? lastError;
+  for (var attempt = 0; attempt < 4; attempt++) {
+    try {
+      return await repo.getGame(gameId);
+    } catch (e) {
+      lastError = e;
+      if (!_isTransientGamesError(e) || attempt == 3) rethrow;
+      await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+    }
+  }
+  Error.throwWithStackTrace(lastError!, StackTrace.current);
 });
 
 /// Детальный view лобби.

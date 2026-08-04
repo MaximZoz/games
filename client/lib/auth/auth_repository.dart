@@ -812,16 +812,19 @@ class AuthRepository {
     return response;
   }
 
-  /// 503/временные сбои БД при деплое — один повтор, без logout.
+  /// 503/временные сбои БД при деплое — несколько повторов, без logout.
   Future<http.Response> _withTransientRetry(
     Future<http.Response> Function() request,
   ) async {
     var response = await request();
-    if (response.statusCode != 503 && response.statusCode != 502) {
-      return response;
+    for (var attempt = 0;
+        attempt < 2 &&
+            (response.statusCode == 503 || response.statusCode == 502);
+        attempt++) {
+      await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+      response = await request();
     }
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    return request();
+    return response;
   }
 
   /// Обновляет профиль пользователя на бэкенде и сохраняет результат локально.
