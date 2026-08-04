@@ -6,21 +6,18 @@ alwaysApply: true
 # Деплой только на дев-среду
 
 После **каждого `git push`** рабочей ветки деплоим **только DEV**
-(`multigameszozu-dev` через `fly.dev.toml`). Прод (`multigameszozu` /
-`fly.toml`) этим правилом **не** трогаем.
+(`multigameszozu-dev` через `fly.dev.toml` / `./launcher/deploy_dev.sh`).
+Прод (`multigameszozu` / `fly.toml`) этим правилом **не** трогаем.
 
 ## Шаги
 
-1. Проверить `deploy.cursor.env` в корне. Если файла нет — сообщить:
-   «нет `deploy.cursor.env`, деплой невозможен» — и не деплоить.
+1. Проверить `deploy.dev.env` в корне (шаблон: `deploy.dev.env.example`).
+   Если файла нет — сообщить и не деплоить.
 
-2. В `deploy.cursor.env` для DEV должно быть:
-   - `FLY_APP_NAME=multigameszozu-dev`
-   - при необходимости `PUBLIC_BASE_URL=https://multigameszozu-dev.fly.dev`
+2. В `deploy.dev.env` обязательно:
+   - `FLY_APP_NAME=multigameszozu-dev` (скрипт откажет при `multigameszozu`)
    - `FLY_API_TOKEN`, `JWT_SECRET`, `ADMIN_INIT_SECRET`
-
-   Если `FLY_APP_NAME` указывает на прод (`multigameszozu`) —
-   **не** вызывать `deploy_cursor.sh` / `fly deploy` с `fly.toml`.
+   - `PUBLIC_BASE_URL=https://multigameszozu-dev.fly.dev`
 
 3. Задеплоить текущую рабочую ветку на DEV:
 
@@ -30,18 +27,16 @@ alwaysApply: true
 
    Windows: `.\launcher\deploy_dev.ps1`
 
-   Скрипт использует `fly.dev.toml` и отказывается деплоить в прод-имя.
-
 4. Долгая операция (Flutter Web + Go): таймаут ≥ 10 минут.
 
 5. По итогу кратко:
    - **успех** — `https://multigameszozu-dev.fly.dev`;
-   - **ошибка** — 1–2 шага (токен, секреты, приложение не создано —
+   - **ошибка** — 1–2 шага (токен, секреты; приложение:
      `./launcher/setup_fly_dev.sh`).
 
 ## Важно
 
-- Только DEV. Не вызывать `./launcher/deploy_develop.sh` и не деплоить
-  в `multigameszozu` по этому правилу.
-- `deploy.cursor.env` в `.gitignore` — не коммитить и не печатать токен.
-- Если нет `fly` / `deploy.cursor.env` — сообщить и остановиться.
+- Только DEV. Не вызывать `deploy_develop.sh` / `deploy_cursor.sh` и не
+  деплоить в `multigameszozu` по этому правилу.
+- `deploy.dev.env` в `.gitignore` — не коммитить и не печатать токен.
+- Если нет `fly` / `deploy.dev.env` — сообщить и остановиться.
