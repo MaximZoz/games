@@ -255,13 +255,16 @@ class DurakCreateLobbyResult {
     this.gameId,
     this.status = '',
   });
+
+  /// Может быть пустым, если сервер сразу подключил к чужому лобби и вернул
+  /// только `game_id` — тогда роутим в партию.
   final String lobbyId;
   final String? gameId;
   final String status;
 
   factory DurakCreateLobbyResult.fromJson(Map<String, dynamic> json) {
     return DurakCreateLobbyResult(
-      lobbyId: (json['lobby_id'] ?? '').toString(),
+      lobbyId: (json['lobby_id'] ?? '').toString().trim(),
       gameId: (json['game_id']?.toString().trim().isEmpty ?? true)
           ? null
           : json['game_id'].toString(),
@@ -274,12 +277,14 @@ class DurakJoinResult {
   DurakJoinResult({
     required this.joined,
     this.gameId,
+    this.lobbyId,
     this.waitingMore = false,
     this.playersCount = 0,
     this.maxPlayers = 0,
   });
   final bool joined;
   final String? gameId;
+  final String? lobbyId;
   final bool waitingMore;
   final int playersCount;
   final int maxPlayers;
@@ -290,6 +295,9 @@ class DurakJoinResult {
       gameId: (json['game_id']?.toString().trim().isEmpty ?? true)
           ? null
           : json['game_id'].toString(),
+      lobbyId: (json['lobby_id']?.toString().trim().isEmpty ?? true)
+          ? null
+          : json['lobby_id'].toString(),
       waitingMore: json['waiting_more'] == true,
       playersCount: (json['players_count'] as num?)?.toInt() ?? 0,
       maxPlayers: (json['max_players'] as num?)?.toInt() ?? 0,

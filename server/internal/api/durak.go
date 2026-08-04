@@ -476,6 +476,7 @@ func (h *GamesHandler) JoinDurakLobby(w http.ResponseWriter, r *http.Request, lo
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"joined":        true,
+		"lobby_id":      lobbyID,
 		"status":        status,
 		"players_count": len(players),
 		"max_players":   maxPlayers,
@@ -533,11 +534,12 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 	}
 	h.publishGameStartedTyped(players, gameID, lobbyID, durakGameType)
 
-	// В ответ — либо game_id (создателю), либо просто joined.
+	// В ответ — game_id и lobby_id: клиент роутит по ним без догадок.
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"joined":  true,
-		"game_id": gameID,
+		"joined":   true,
+		"game_id":  gameID,
+		"lobby_id": lobbyID,
 	})
 }
 

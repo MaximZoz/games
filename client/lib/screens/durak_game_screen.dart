@@ -3,15 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class DurakGameScreen extends ConsumerStatefulWidget {
   const DurakGameScreen({super.key, required this.gameId});
@@ -23,6 +30,7 @@ class DurakGameScreen extends ConsumerStatefulWidget {
 
 class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _busy = false;
+  bool _settled = false;
 
   Future<void> _act(Future<void> Function() action) async {
     if (_busy) return;
@@ -57,62 +65,129 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     await _act(() => repo.move(widget.gameId, type: 'bito'));
   }
 
+  /// Сдача/выход — общий диалог подтверждения, как в крестиках-ноликах.
   Future<void> _confirmLeave() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
-    final over = view?.isOver ?? false;
-    if (over) {
-      context.go('/games');
+    if (view?.isOver ?? false) {
+      _clearSessionAndExit();
       return;
     }
-    final leave = await showDialog<bool>(
+    final leave = await confirmGameActionDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Выйти из партии?'),
-        content: const Text('Партия засчитается как поражение.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Остаться')),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
-            child: const Text('Сдаться'),
-          ),
-        ],
-      ),
+      title: context.l10n.gameSurrenderTitle,
+      message: context.l10n.gameSurrenderConfirm,
+      cancelLabel: context.l10n.gameStay,
+      confirmLabel: context.l10n.gameSurrender,
     );
-    if (leave != true || !mounted) return;
+    if (!leave || !mounted) return;
     try {
       await ref.read(durakRepositoryProvider).forfeit(widget.gameId);
     } catch (_) {}
     if (!mounted) return;
+    _clearSessionAndExit();
+  }
+
+  void _clearSessionAndExit() {
+    clearBlockingGamePin(ref, ifGameId: widget.gameId);
+    ref.read(activeGameProvider.notifier).clearLocal();
     context.go('/games');
+  }
+
+  void _showRules(DurakGameView view) {
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.gamesRulesTitle,
+      content: rulesTextLines(durakRuleLines(
+        mode: view.mode,
+        players: view.playerIds.length,
+        deckSize: view.deckSize,
+        turnTimeSec: view.turnTimeSec,
+        stakeBronze: view.stakeBronze,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+
+  /// Начисление банка победителю с анимацией — общий сценарий.
+  void _onGameOver(DurakGameView view) {
+    if (_settled) return;
+    _settled = true;
+    final iWon = view.loserIndex != view.myIndex && view.loserIndex >= 0;
+    if (!iWon || view.stakeBronze <= 0) {
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
+      return;
+    }
+    final playersN = view.playerIds.length;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
+      unawaited(playGameSettledReward(
+        ref: ref,
+        context: context,
+        creditBronze: view.stakeBronze * playersN,
+        displayRewardBronze: view.stakeBronze * (playersN - 1),
+      ));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(durakGameProvider(widget.gameId));
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    final view = gameAsync.valueOrNull;
+    if (view != null && view.isOver) _onGameOver(view);
+    final showSurrender = view != null && !view.isOver;
+    return SwipeBackScope(
+      onBack: _confirmLeave,
+      opaqueEdge: false,
+      edgeWidth: 16,
+      triggerDistance: 44,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: _busy ? null : _confirmLeave,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leadingWidth: 48,
+          leading: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            icon: const Icon(Icons.close_rounded),
+            onPressed: _busy ? null : _confirmLeave,
+          ),
+          title: const Text('Дурак'),
+          centerTitle: true,
+          actions: view == null
+              ? const []
+              : buildGameAppBarActions(
+                  context: context,
+                  onSurrender: showSurrender ? _confirmLeave : null,
+                  surrenderTooltip: context.l10n.gameSurrender,
+                  onShowRules: () => _showRules(view),
+                  rulesTooltip: context.l10n.gamesRulesTitle,
+                ),
         ),
-        title: const Text('# Дурак'),
-        centerTitle: true,
-      ),
-      body: GradientBackground(
-        child: SafeArea(
-          child: gameAsync.when(
-            data: (view) => _buildTable(view),
-            loading: () => const Center(
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.accentStart),
-            ),
-            error: (e, _) => Center(
-              child: Text('$e', style: const TextStyle(color: Colors.red)),
+        body: GradientBackground(
+          child: SafeArea(
+            child: Stack(
+              children: [
+                gameAsync.when(
+                  skipLoadingOnReload: true,
+                  skipLoadingOnRefresh: true,
+                  data: _buildTable,
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.accentStart),
+                  ),
+                  error: (e, _) => Center(
+                    child: Text('$e',
+                        style: const TextStyle(color: Colors.red)),
+                  ),
+                ),
+                // Салют победителю — общий виджет.
+                if (view != null &&
+                    view.isOver &&
+                    view.loserIndex >= 0 &&
+                    view.loserIndex != view.myIndex)
+                  const Positioned.fill(child: GameConfettiOverlay()),
+              ],
             ),
           ),
         ),

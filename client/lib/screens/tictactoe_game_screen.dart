@@ -18,9 +18,9 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
-import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/router.dart';
@@ -899,7 +899,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ),
                 if (iWon)
                   Positioned.fill(
-                    child: _ConfettiOverlay(winnerMark: game.winner ?? 'x'),
+                    child: const GameConfettiOverlay(),
                   ),
                 // 1v1: «сдаться»/«ничья» overlay справа сверху.
                 // Multi: флаг в AppBar — иначе на мобиле налезает на чат игроков.
@@ -950,43 +950,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       return;
     }
     _balanceGainPlayed = true;
-    final fromBalance =
-        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
-    final estimatedTo = fromBalance + creditBronze;
-    // Держим тулбар на старом значении до конца анимации.
-    lockBalanceDisplay(
+    // Общий сценарий начисления — тот же, что у Дурака.
+    await playGameSettledReward(
       ref: ref,
-      fromBronze: fromBalance,
-      toBronze: estimatedTo,
-      rewardBronze:
-          displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
+      context: context,
+      creditBronze: creditBronze,
+      displayRewardBronze: displayRewardBronze,
+      sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
     );
-    try {
-      await ref.read(authStateProvider.notifier).refresh();
-      if (!mounted) return;
-      final toBalance =
-          ref.read(authStateProvider).valueOrNull?.balanceBronze ?? fromBalance;
-      if (toBalance <= fromBalance) return;
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-      if (!mounted) return;
-      await playBalanceGain(
-        ref: ref,
-        context: context,
-        newBalanceBronze: toBalance,
-        fromBronze: fromBalance,
-        rewardBronze:
-            displayRewardBronze > 0 ? displayRewardBronze : creditBronze,
-        sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
-        skipApply: true,
-      );
-    } finally {
-      // Если анимация не сняла лок — всё равно показать актуальный баланс.
-      if (ref.read(balanceGainProvider).active) {
-        ref.read(balanceGainProvider.notifier).end();
-      }
-    }
   }
 
   void _confirmSurrender(BuildContext context) {
@@ -3093,171 +3064,6 @@ class _GameActionsOverlayState extends State<_GameActionsOverlay>
       ],
     );
   }
-}
-
-class _ConfettiOverlay extends StatefulWidget {
-  const _ConfettiOverlay({required this.winnerMark});
-
-  final String winnerMark;
-
-  @override
-  State<_ConfettiOverlay> createState() => _ConfettiOverlayState();
-}
-
-class _ConfettiOverlayState extends State<_ConfettiOverlay>
-    with SingleTickerProviderStateMixin {
-  static const _particleCount = 150;
-  late AnimationController _controller;
-  final List<_ConfettiParticle> _particles = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000),
-    )..forward();
-
-    final r = math.Random();
-    final colors = [
-      AppColors.accentStart,
-      AppColors.accentEnd,
-      const Color(0xFFEC4899),
-      const Color(0xFFF59E0B),
-      const Color(0xFF10B981),
-    ];
-    for (var i = 0; i < _particleCount; i++) {
-      final angle = r.nextDouble() * 2 * math.pi;
-      final speed = 350 + r.nextDouble() * 450;
-      _particles.add(_ConfettiParticle(
-        startX: 0.5,
-        startY: 0.9,
-        angle: angle,
-        speed: speed,
-        color: colors[r.nextInt(colors.length)],
-        size: 4 + r.nextDouble() * 6,
-        rotationSpeed: (r.nextDouble() * 2 - 1) * 8,
-        gravity: 280 + r.nextDouble() * 120,
-      ));
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          return CustomPaint(
-            painter: _ConfettiPainter(
-              particles: _particles,
-              progress: _controller.value,
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ConfettiParticle {
-  _ConfettiParticle({
-    required this.startX,
-    required this.startY,
-    required this.angle,
-    required this.speed,
-    required this.color,
-    required this.size,
-    required this.rotationSpeed,
-    required this.gravity,
-  });
-
-  final double startX;
-  final double startY;
-  final double angle;
-  final double speed;
-  final Color color;
-  final double size;
-  final double rotationSpeed;
-  final double gravity;
-}
-
-class _ConfettiPainter extends CustomPainter {
-  _ConfettiPainter({
-    required this.particles,
-    required this.progress,
-  });
-
-  final List<_ConfettiParticle> particles;
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final centerX = size.width * 0.5;
-    final centerY = size.height * 0.35;
-    const burstT = 0.12;
-    const fadeStart = 0.55;
-    final minDim = math.min(size.width, size.height);
-    final scale = minDim / 400;
-
-    for (final p in particles) {
-      double t = progress;
-      if (t < burstT) {
-        t = t / burstT;
-        final x = centerX + math.cos(p.angle) * p.speed * t * scale;
-        final y = centerY + math.sin(p.angle) * p.speed * t * scale;
-        const alpha = 1.0;
-        _drawParticle(canvas, x, y, p, t * 2 * math.pi, alpha);
-      } else {
-        final fallT = (progress - burstT) / (1 - burstT);
-        final burstX = centerX + math.cos(p.angle) * p.speed * scale;
-        final burstY = centerY + math.sin(p.angle) * p.speed * scale;
-        final x = burstX + math.sin(fallT * 2) * 20;
-        final y = burstY + p.gravity * fallT * fallT * scale * 1.5;
-        final rot = fallT * p.rotationSpeed * math.pi;
-        final alpha =
-            1.0 - ((progress - fadeStart) / (1 - fadeStart)).clamp(0.0, 1.0);
-        if (alpha > 0.01) {
-          _drawParticle(canvas, x, y, p, rot, alpha);
-        }
-      }
-    }
-  }
-
-  void _drawParticle(
-    Canvas canvas,
-    double x,
-    double y,
-    _ConfettiParticle p,
-    double rotation,
-    double alpha,
-  ) {
-    final paint = Paint()
-      ..color = p.color.withValues(alpha: alpha)
-      ..style = PaintingStyle.fill;
-    canvas.save();
-    canvas.translate(x, y);
-    canvas.rotate(rotation);
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: p.size,
-        height: p.size * 0.6,
-      ),
-      paint,
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConfettiPainter old) =>
-      old.progress != progress;
 }
 
 class _GridPainter extends CustomPainter {

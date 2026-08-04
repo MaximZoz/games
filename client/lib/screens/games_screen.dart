@@ -1428,12 +1428,19 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
               ActiveGameItem(
                 type: 'game',
                 gameId: gameId,
-                lobbyId: lobbyId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
                 gameType: 'durak',
               ),
             );
         pinBlockingGame(ref, gameId);
         context.push('/games/durak/game/$gameId');
+      } else if (lobbyId.isEmpty) {
+        // Сервер не вернул ни лобби, ни партию — не строим битый роут.
+        showAppSnackBar(
+          context,
+          message: context.l10n.commonTryLater,
+          kind: AppSnackKind.error,
+        );
       } else {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
