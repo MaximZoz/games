@@ -8,6 +8,7 @@ import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
+import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
@@ -224,7 +225,11 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Колода слева + открытый козырь.
-          _buildDeck(cardSize, openTrump),
+          DurakDeckPile(
+            deckCount: _game.deck.length,
+            trumpCard: openTrump ?? PlayingCard(Rank.ace, _game.trump),
+            cardSize: cardSize,
+          ),
           const SizedBox(width: 20),
           Expanded(
             child: Center(
@@ -264,108 +269,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
             ),
           ),
           const SizedBox(width: 20),
-          _buildBito(cardSize),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeck(Size cardSize, PlayingCard? openTrump) {
-    // Открытый козырь горизонтально под колодой, слегка выступает.
-    final n = _game.deck.length;
-    if (n == 0 && openTrump == null) {
-      return SizedBox(width: cardSize.width, height: cardSize.height);
-    }
-    return SizedBox(
-      width: cardSize.width + 40,
-      height: cardSize.height + 40,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (openTrump != null && n > 0)
-            Positioned(
-              left: 0,
-              child: Transform.rotate(
-                angle: 1.5708,
-                child: PlayingCardWidget(card: openTrump, size: cardSize),
-              ),
-            ),
-          if (n > 0)
-            Positioned(
-              right: 0,
-              child: Stack(
-                children: [
-                  for (int i = 0; i < (n < 4 ? n : 4); i++)
-                    Positioned(
-                      left: i * 1.0,
-                      top: i * 1.0,
-                      child: CardBackWidget(size: cardSize),
-                    ),
-                ],
-              ),
-            ),
-          Positioned(
-            bottom: 2,
-            right: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '$n',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBito(Size cardSize) {
-    if (_game.bito.isEmpty) {
-      return SizedBox(width: cardSize.width, height: cardSize.height);
-    }
-    return SizedBox(
-      width: cardSize.width + 16,
-      height: cardSize.height + 16,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          for (int i = 0; i < (_game.bito.length < 4 ? _game.bito.length : 4); i++)
-            Positioned(
-              left: i * 1.2,
-              top: i * 1.2,
-              child: Transform.rotate(
-                angle: 0.08 * (i % 2 == 0 ? 1 : -1),
-                child: CardBackWidget(size: cardSize),
-              ),
-            ),
-          Positioned(
-            bottom: 2,
-            right: 6,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${_game.bito.length}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
+          DurakBitoPile(count: _game.bito.length, cardSize: cardSize),
         ],
       ),
     );

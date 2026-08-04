@@ -633,10 +633,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     );
   }
 
-  Future<void> _declineInvite(String lobbyId) async {
+  Future<void> _declineInvite(String lobbyId, {String gameType = 'tictactoe'}) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
-      await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
+      if (gameType == 'durak') {
+        await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
+      } else {
+        await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
+      }
     } catch (_) {
       // Карточка уже скрыта локально; сервер мог уже закрыть лобби.
     }
@@ -849,7 +853,7 @@ class _GamesPageContent extends StatelessWidget {
   final AsyncValue<ActiveGameItem?> activeAsync;
   final ObservationItem? observation;
   final void Function(BuildContext, GameInvite) onAcceptInvite;
-  final void Function(String) onDeclineInvite;
+  final void Function(String, {String gameType}) onDeclineInvite;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
@@ -2137,7 +2141,7 @@ class _InviteCard extends ConsumerWidget {
   final GameInvite inv;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
-  final void Function(String) onDeclineInvite;
+  final void Function(String, {String gameType}) onDeclineInvite;
   final void Function(BuildContext, GameInvite) onAcceptInvite;
 
   @override
@@ -2279,7 +2283,8 @@ class _InviteCard extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: () => onDeclineInvite(inv.lobbyId),
+                  onPressed: () =>
+                      onDeclineInvite(inv.lobbyId, gameType: inv.gameType),
                   icon: const Icon(Icons.close_rounded),
                   tooltip: context.l10n.commonDecline,
                   style: IconButton.styleFrom(foregroundColor: Colors.red),

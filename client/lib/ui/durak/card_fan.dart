@@ -5,7 +5,7 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Веер карт игрока. При наведении/касании карта под пальцем «раздвигает»
-/// соседние и приподнимается — удобно выбирать в большом веере.
+/// соседние и приподнимается; при вертикальном драге следует за пальцем.
 class CardFan extends StatefulWidget {
   const CardFan({
     super.key,
@@ -36,22 +36,26 @@ class CardFan extends StatefulWidget {
 
 class _CardFanState extends State<CardFan> {
   int? _hoverIndex;
+  int? _dragIndex;
+  double _dragDy = 0;
 
   @override
   Widget build(BuildContext context) {
     if (widget.cards.isEmpty) {
-      return SizedBox(width: widget.cardSize.width, height: widget.cardSize.height);
+      return SizedBox(
+          width: widget.cardSize.width, height: widget.cardSize.height);
     }
     final n = widget.cards.length;
     final baseSpacing = widget.spacing ??
         (n == 1 ? 0 : widget.cardSize.width * (n > 8 ? 0.32 : 0.55));
     final totalW = widget.cardSize.width + baseSpacing * (n - 1);
-    final height = widget.cardSize.height * 1.15;
+    final height = widget.cardSize.height * 1.45;
 
     return SizedBox(
       height: height,
       width: totalW + 32,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
           for (int i = 0; i < n; i++) _positioned(i, n, baseSpacing),
@@ -68,16 +72,22 @@ class _CardFanState extends State<CardFan> {
     var extraX = 0.0;
     var extraY = 0.0;
     var scale = 1.0;
-    final hovered = _hoverIndex != null && i == _hoverIndex;
-    if (_hoverIndex != null && !hovered) {
-      // Соседи раздвигаются, чтобы hovered карта была видна.
-      final dir = i > _hoverIndex! ? 1 : -1;
-      final distance = (i - _hoverIndex!).abs();
-      extraX = dir * widget.cardSize.width * (0.35 / distance);
+    final activeIndex = _dragIndex ?? _hoverIndex;
+    final active = activeIndex != null && i == activeIndex;
+    if (activeIndex != null && !active) {
+      final dir = i > activeIndex ? 1 : -1;
+      final distance = (i - activeIndex).abs();
+      extraX = dir * widget.cardSize.width * (0.38 / distance);
     }
-    if (hovered) {
-      extraY = -widget.cardSize.height * 0.18;
-      scale = 1.05;
+    if (active) {
+      if (_dragIndex == i) {
+        extraY =
+            -_dragDy.clamp(0.0, widget.cardSize.height * 1.1).toDouble();
+        scale = 1.08;
+      } else {
+        extraY = -widget.cardSize.height * 0.2;
+        scale = 1.06;
+      }
     }
 
     final card = widget.cards[i];
@@ -85,22 +95,22 @@ class _CardFanState extends State<CardFan> {
     final isLegalContext = widget.legalCards != null;
 
     Widget child = widget.faceDown
-        ? CardBackWidget(size: widget.cardSize, elevated: hovered)
+        ? CardBackWidget(size: widget.cardSize, elevated: active)
         : PlayingCardWidget(
             card: card,
             size: widget.cardSize,
-            highlighted: hovered && (!isLegalContext || legal),
+            highlighted: active && (!isLegalContext || legal),
             dimmed: isLegalContext && !legal,
-            elevated: hovered,
+            elevated: active,
           );
 
     child = MouseRegion(
       onEnter: (_) {
-        if (!widget.enabled) return;
+        if (!widget.enabled || _dragIndex != null) return;
         setState(() => _hoverIndex = i);
       },
       onExit: (_) {
-        if (!widget.enabled) return;
+        if (!widget.enabled || _dragIndex != null) return;
         setState(() {
           if (_hoverIndex == i) _hoverIndex = null;
         });
@@ -123,24 +133,64 @@ class _CardFanState extends State<CardFan> {
         onTap: !widget.enabled || widget.faceDown
             ? null
             : () {
-                setState(() => _hoverIndex = null);
+                setState(() {
+                  _hoverIndex = null;
+                  _dragIndex = null;
+                  _dragDy = 0;
+                });
                 if (legal) widget.onTap?.call(card);
+              },
+        onVerticalDragStart: !widget.enabled || widget.faceDown || !legal
+            ? null
+            : (_) {
+                setState(() {
+                  _dragIndex = i;
+                  _hoverIndex = i;
+                  _dragDy = 0;
+                });
+              },
+        onVerticalDragUpdate: !widget.enabled || widget.faceDown || !legal
+            ? null
+            : (details) {
+                setState(() {
+                  // Тянем вверх — отрицательный delta.dy.
+                  _dragDy = (_dragDy - details.delta.dy)
+                      .clamp(0.0, widget.cardSize.height * 1.2)
+                      .toDouble();
+                });
               },
         onVerticalDragEnd: !widget.enabled || widget.faceDown
             ? null
             : (details) {
-                if (legal) widget.onDrag?.call(card, details);
+                final played = legal &&
+                    _dragDy > widget.cardSize.height * 0.35 &&
+                    widget.onDrag != null;
+                final draggedCard = card;
                 setState(() {
-                  if (_hoverIndex == i) _hoverIndex = null;
+                  _dragIndex = null;
+                  _hoverIndex = null;
+                  _dragDy = 0;
                 });
+                if (played) {
+                  widget.onDrag!(draggedCard, details);
+                }
               },
+        onVerticalDragCancel: () {
+          setState(() {
+            _dragIndex = null;
+            _hoverIndex = null;
+            _dragDy = 0;
+          });
+        },
         child: child,
       ),
     );
 
     return AnimatedPositioned(
       key: ValueKey('fan-$i-${card.toString()}-${widget.faceDown}'),
-      duration: const Duration(milliseconds: 180),
+      duration: _dragIndex == i
+          ? Duration.zero
+          : const Duration(milliseconds: 200),
       curve: Curves.easeOutCubic,
       left: totalWidth(n, baseSpacing) / 2 + offsetX + extraX,
       bottom: extraY,
@@ -149,7 +199,7 @@ class _CardFanState extends State<CardFan> {
         duration: const Duration(milliseconds: 160),
         curve: Curves.easeOutBack,
         child: Transform.rotate(
-          angle: angle,
+          angle: active && _dragIndex == i ? 0 : angle,
           child: child,
         ),
       ),

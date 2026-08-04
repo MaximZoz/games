@@ -1,20 +1,20 @@
 ---
-description: После ответа с кодом — ссылка на ветку и команда git pull для деплоя
+description: После ответа с кодом — ссылка на ветку и команда git pull для дев-деплоя
 alwaysApply: true
 ---
 
-# Ветка для деплоя в конце ответа
+# Ветка для деплоя на дев в конце ответа
 
 Если в ходе ответа были **коммиты и push** в рабочую ветку (или пользователь явно ждёт деплой правок):
 
 1. В **конце** ответа (после сути) отдельным коротким блоком укажи:
    - ссылку на ветку на GitHub;
-   - команду `git pull` этой ветки.
+   - команду `git pull` этой ветки **для дев-среды**.
 
 2. Формат (подставь актуальную ветку сессии):
 
 ```text
-Деплой:
+Деплой на дев:
 https://github.com/MaximZoz/games/tree/<branch>
 git pull origin <branch>
 ```
@@ -22,11 +22,13 @@ git pull origin <branch>
 Пример:
 
 ```text
-Деплой:
-https://github.com/MaximZoz/games/tree/cursor/chats-swipe-one-open-27ec
-git pull origin cursor/chats-swipe-one-open-27ec
+Деплой на дев:
+https://github.com/MaximZoz/games/tree/cursor/durak-game-27ec
+git pull origin cursor/durak-game-27ec
 ```
 
 3. Не дублируй длинный walkthrough — только ветка + команда.
 4. Если правок в git не было (только вопрос/объяснение) — блок деплоя **не** добавляй.
 5. Имя владельца/репо бери из `origin` текущего workspace (`MaximZoz/games` или как в remote).
+6. Автодеплой feature-ветки на Fly **не** запускать — см. `auto-deploy-on-push.mdc`
+   (только дев через `develop`).

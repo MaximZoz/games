@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
@@ -14,6 +15,7 @@ import 'package:multigames_client/games/games_repository.dart' show GamesExcepti
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
+import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
@@ -169,6 +171,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final view = gameAsync.valueOrNull;
     if (view != null && view.isOver) _onGameOver(view);
     final showSurrender = view != null && !view.isOver;
+    final isMulti = (view?.playerIds.length ?? 0) > 2;
+    final topPad = MediaQuery.paddingOf(context).top;
+    // Как в крестиках: 1×1 — сдаться/ничья overlay справа; multi — флаг в AppBar.
     return SwipeBackScope(
       onBack: _confirmLeave,
       opaqueEdge: false,
@@ -178,6 +183,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          toolbarHeight: kToolbarHeight,
           leadingWidth: 48,
           leading: IconButton(
             padding: EdgeInsets.zero,
@@ -186,29 +192,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             onPressed: _busy ? null : _confirmLeave,
           ),
           title: const Text('Дурак'),
-          centerTitle: true,
           actions: view == null
               ? const []
               : buildGameAppBarActions(
                   context: context,
-                  onSurrender: showSurrender ? _confirmLeave : null,
+                  onSurrender: showSurrender && isMulti ? _confirmLeave : null,
                   surrenderTooltip: context.l10n.gameSurrender,
-                  // Ничья только 1×1 и пока нет своего предложения.
-                  onOfferDraw: showSurrender &&
-                          view.playerIds.length == 2 &&
-                          !_iOfferedDraw(view)
-                      ? () => _offerDraw(view)
-                      : null,
-                  drawTooltip: context.l10n.gameOfferDrawTitle,
+                  onOfferDraw: null,
                   onShowRules: () => _showRules(view),
                   rulesTooltip: context.l10n.gamesRulesTitle,
                 ),
         ),
         body: GradientBackground(
-          child: SafeArea(
-            child: Stack(
-              children: [
-                gameAsync.when(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              SafeArea(
+                child: gameAsync.when(
                   skipLoadingOnReload: true,
                   skipLoadingOnRefresh: true,
                   data: _buildTable,
@@ -221,14 +221,35 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                         style: const TextStyle(color: Colors.red)),
                   ),
                 ),
-                // Салют победителю — общий виджет.
-                if (view != null &&
-                    view.isOver &&
-                    view.loserIndex >= 0 &&
-                    view.loserIndex != view.myIndex)
-                  const Positioned.fill(child: GameConfettiOverlay()),
-              ],
-            ),
+              ),
+              if (view != null &&
+                  view.isOver &&
+                  view.loserIndex >= 0 &&
+                  view.loserIndex != view.myIndex)
+                const Positioned.fill(child: GameConfettiOverlay()),
+              if (showSurrender && !isMulti)
+                Positioned(
+                  right: 4,
+                  top: topPad + 4,
+                  child: GameActionsOverlay(
+                    canDraw: view.playerIds.length == 2,
+                    iOfferedDraw: _iOfferedDraw(view),
+                    opponentOfferedDraw: _opponentOfferedDraw(view),
+                    onSurrender: _confirmLeave,
+                    onDraw: () {
+                      if (_opponentOfferedDraw(view)) {
+                        unawaited(_acceptDraw());
+                      } else {
+                        unawaited(_offerDraw(view));
+                      }
+                    },
+                    surrenderTooltip: context.l10n.gameSurrender,
+                    drawTooltip: context.l10n.gameOfferDraw,
+                    acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
+                    drawOfferedTooltip: context.l10n.gameDrawOffered,
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -333,7 +354,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// Шапка с соперником (1×1) — та же карточка, что в крестиках-ноликах.
+  /// Шапка с соперником (1×1) — тот же виджет, что в крестиках-ноликах.
   Widget _opponentsHeader(DurakGameView view) {
     if (view.playerIds.length != 2 || view.myIndex < 0) {
       return const SizedBox.shrink();
@@ -341,37 +362,80 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final oppIndex = view.myIndex == 0 ? 1 : 0;
     if (view.playerIds.length <= oppIndex) return const SizedBox.shrink();
     final oppId = view.playerIds[oppIndex];
+    final isBot = oppId.startsWith('bot:');
+    final meta = view.playerMeta(oppId);
+    var name = isBot
+        ? context.l10n.gameBot
+        : (meta?.displayName?.trim().isNotEmpty == true
+            ? meta!.displayName!.trim()
+            : context.l10n.gameOpponent);
+    var avatarKind = meta?.avatarKind ?? 'letter';
+    var avatarValue = meta?.avatarValue;
+    var frameCode = meta?.frameCode;
+    var frameColor = meta?.frameColor;
+
+    // Дополняем из чатов, если сервер ещё не отдал метаданные.
     final chats = ref.watch(chatsListProvider).valueOrNull;
-    var name = context.l10n.gameOpponent;
-    String avatarKind = 'letter';
-    String? avatarValue;
-    String? frameCode;
-    String? frameColor;
     var unread = 0;
     if (chats != null) {
       for (final c in chats) {
         if (c.user.id == oppId) {
           final dn = c.user.displayName?.trim();
-          if (dn != null && dn.isNotEmpty) name = dn;
-          avatarKind = c.user.avatarKind;
-          avatarValue = c.user.avatarValue;
-          frameCode = c.user.frameCode;
-          frameColor = c.user.frameColor;
+          if (name == context.l10n.gameOpponent &&
+              dn != null &&
+              dn.isNotEmpty) {
+            name = dn;
+          }
+          if (avatarValue == null || avatarValue.isEmpty) {
+            avatarKind = c.user.avatarKind;
+            avatarValue = c.user.avatarValue;
+          }
+          frameCode ??= c.user.frameCode;
+          frameColor ??= c.user.frameColor;
           unread += c.unreadCount;
         }
       }
     }
+
+    final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
+    final isFriend =
+        friends?.friends.any((f) => f.user.id == oppId) == true;
+    final outgoing = friends?.outgoing
+            .where((r) => r.user.id == oppId)
+            .toList() ??
+        const [];
+    final incoming = friends?.incoming
+            .where((r) => r.user.id == oppId)
+            .toList() ??
+        const [];
+    final hasOutgoing = outgoing.isNotEmpty;
+    final hasIncoming = incoming.isNotEmpty;
+    final incomingRequestId = hasIncoming ? incoming.first.requestId : null;
+
     return GameOpponentCard(
       displayName: name,
       avatarKind: avatarKind,
       avatarValue: avatarValue,
       frameCode: frameCode,
       frameColor: frameColor,
-      isBot: oppId.startsWith('bot:'),
+      isBot: isBot,
       messageUnread: view.isOver ? 0 : unread,
       infoTooltip: context.l10n.userInfoTitle,
       messageTooltip: context.l10n.gameWriteMessage,
       compact: MediaQuery.sizeOf(context).width < 420,
+      showAddFriend: !isBot && !isFriend,
+      addFriendEnabled: !hasOutgoing,
+      addFriendBadge: hasIncoming ? 1 : 0,
+      addFriendTooltip: hasIncoming
+          ? context.l10n.friendsAcceptRequest
+          : (hasOutgoing
+              ? context.l10n.friendsRequestSent
+              : context.l10n.friendsAdd),
+      onAddFriendTap: () => unawaited(_addFriend(
+            oppId,
+            name,
+            requestId: hasIncoming ? incomingRequestId : null,
+          )),
       onInfoTap: () => unawaited(showUserProfileDialog(
         context: context,
         ref: ref,
@@ -386,21 +450,75 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       )),
       onMessageTap: view.isOver
           ? null
-          : () => context.push(
-                Uri(
-                  path: '/chats',
-                  queryParameters: {
-                    'peer': oppId,
-                    'game': '/games/durak/game/${widget.gameId}',
-                  },
-                ).toString(),
-              ),
+          : () => unawaited(_openChat(oppId, name)),
     );
+  }
+
+  Future<void> _addFriend(
+    String userId,
+    String displayName, {
+    String? requestId,
+  }) async {
+    try {
+      final repo = ref.read(friendsRepositoryProvider);
+      if (requestId != null && requestId.isNotEmpty) {
+        await repo.acceptRequest(requestId);
+        if (!mounted) return;
+        ref.invalidate(friendsSnapshotProvider);
+        showAppSnackBar(
+          context,
+          message: context.l10n.friendsRequestAccepted,
+          kind: AppSnackKind.success,
+        );
+      } else {
+        await repo.sendRequest(userId);
+        if (!mounted) return;
+        ref.invalidate(friendsSnapshotProvider);
+        showAppSnackBar(
+          context,
+          message: context.l10n.friendsRequestSent,
+          kind: AppSnackKind.success,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _openChat(String userId, String displayName) async {
+    try {
+      final chatId =
+          await ref.read(chatsRepositoryProvider).startChat(userId);
+      if (!mounted || chatId.isEmpty) return;
+      final uri = Uri(
+        path: '/chats/$chatId',
+        queryParameters: {
+          'name': displayName,
+          'from': 'games',
+          'game': '/games/durak/game/${widget.gameId}',
+        },
+      );
+      context.push(uri.toString());
+    } catch (_) {
+      if (!mounted) return;
+      context.push(
+        Uri(
+          path: '/chats',
+          queryParameters: {
+            'peer': userId,
+            'game': '/games/durak/game/${widget.gameId}',
+          },
+        ).toString(),
+      );
+    }
   }
 
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
-    final playerId = view.playerIds.length > idx ? view.playerIds[idx] : '';
+    final meta = view.playerIds.length > idx
+        ? view.playerMeta(view.playerIds[idx])
+        : null;
+    final name = meta?.displayName?.trim().isNotEmpty == true
+        ? meta!.displayName!.trim()
+        : _roleLabel(idx, view);
     final fake = List<PlayingCard>.generate(
       count.clamp(0, 8),
       (i) => PlayingCard(Rank.six, Suit.spades),
@@ -408,17 +526,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return Column(
       children: [
         Text(
-          _playerLabel(playerId, idx, view),
+          name,
           style: const TextStyle(
               color: AppColors.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 4),
-        CardFan(
-          cards: fake,
-          cardSize:
-              Size(cardSize.width * 0.6, cardSize.height * 0.6),
-          faceDown: true,
-          enabled: false,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 280),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          child: CardFan(
+            key: ValueKey('opp-$idx-$count'),
+            cards: fake,
+            cardSize:
+                Size(cardSize.width * 0.6, cardSize.height * 0.6),
+            faceDown: true,
+            enabled: false,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -439,134 +563,36 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _deckArea(view, cardSize, trumpCard),
-          const SizedBox(width: 20),
+          DurakDeckPile(
+            deckCount: view.deckCount,
+            trumpCard: trumpCard,
+            cardSize: cardSize,
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  for (final pair in view.table)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: SizedBox(
-                        width: cardSize.width + 10,
-                        height: cardSize.height + 14,
-                        child: Stack(children: [
-                          PlayingCardWidget(
-                            card: pair.attack.toPlayingCard(),
-                            size: cardSize,
-                          ),
-                          if (pair.defense != null)
-                            Positioned(
-                              left: 10,
-                              top: 14,
-                              child: PlayingCardWidget(
-                                card: pair.defense!.toPlayingCard(),
-                                size: cardSize,
-                              ),
-                            ),
-                        ]),
+                  for (var i = 0; i < view.table.length; i++)
+                    _AnimatedTablePair(
+                      key: ValueKey(
+                        'pair-$i-${view.table[i].attack.rank}'
+                        '${view.table[i].attack.suit}-'
+                        '${view.table[i].defense?.rank ?? 0}'
+                        '${view.table[i].defense?.suit ?? ''}',
                       ),
+                      pair: view.table[i],
+                      cardSize: cardSize,
                     ),
                 ],
               ),
             ),
           ),
-          const SizedBox(width: 20),
-          _bitoStack(view.bitoCount, cardSize),
+          const SizedBox(width: 16),
+          DurakBitoPile(count: view.bitoCount, cardSize: cardSize),
         ],
       ),
-    );
-  }
-
-  Widget _deckArea(DurakGameView view, Size cardSize, PlayingCard trumpCard) {
-    if (view.deckCount == 0) {
-      return SizedBox(width: cardSize.width, height: cardSize.height);
-    }
-    return SizedBox(
-      width: cardSize.width + 40,
-      height: cardSize.height + 40,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            left: 0,
-            child: Transform.rotate(
-              angle: 1.5708,
-              child: PlayingCardWidget(card: trumpCard, size: cardSize),
-            ),
-          ),
-          Positioned(
-            right: 0,
-            child: Stack(children: [
-              for (int i = 0; i < (view.deckCount < 4 ? view.deckCount : 4); i++)
-                Positioned(
-                  left: i * 1.0,
-                  top: i * 1.0,
-                  child: CardBackWidget(size: cardSize),
-                ),
-            ]),
-          ),
-          Positioned(
-            bottom: 2,
-            right: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${view.deckCount}',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _bitoStack(int count, Size cardSize) {
-    if (count == 0) {
-      return SizedBox(width: cardSize.width, height: cardSize.height);
-    }
-    return SizedBox(
-      width: cardSize.width + 16,
-      height: cardSize.height + 16,
-      child: Stack(alignment: Alignment.center, children: [
-        for (int i = 0; i < (count < 4 ? count : 4); i++)
-          Positioned(
-            left: i * 1.2,
-            top: i * 1.2,
-            child: Transform.rotate(
-              angle: 0.08 * (i % 2 == 0 ? 1 : -1),
-              child: CardBackWidget(size: cardSize),
-            ),
-          ),
-        Positioned(
-          bottom: 2,
-          right: 6,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '$count',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
-      ]),
     );
   }
 
@@ -627,27 +653,41 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
+  /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог.
   String _turnHint(DurakGameView view) {
     if (view.isOver) {
-      if (view.loserIndex == view.myIndex) return 'Вы проиграли — вы дурак';
-      return 'Партия окончена';
+      if (view.isDraw) return context.l10n.gameDraw;
+      if (view.loserIndex == view.myIndex) {
+        return context.l10n.gameOpponentWon(_opponentName(view));
+      }
+      return context.l10n.gameYouWon;
     }
-    if (view.phase == 'defend') {
-      return view.defenderIndex == view.myIndex
-          ? 'Отбивайтесь'
-          : 'Соперник отбивается';
-    }
-    if (view.phase == 'attack_follow') {
-      return view.attackerIndex == view.myIndex
-          ? 'Подкиньте или скажите «Бито»'
-          : 'Соперник подкидывает';
-    }
-    return view.attackerIndex == view.myIndex
-        ? 'Ваш ход — атакуйте'
-        : 'Атакует соперник';
+    if (view.isMyTurn) return context.l10n.gamesMyTurn;
+    final turnIdx = view.phase == 'defend'
+        ? view.defenderIndex
+        : view.attackerIndex;
+    final turnId = (turnIdx >= 0 && turnIdx < view.playerIds.length)
+        ? view.playerIds[turnIdx]
+        : '';
+    final meta = view.playerMeta(turnId);
+    final fromMeta = meta?.displayName?.trim() ?? '';
+    if (fromMeta.isNotEmpty) return 'Ход $fromMeta';
+    return context.l10n.gamesOpponentTurn;
   }
 
-  String _playerLabel(String id, int idx, DurakGameView view) {
+  String _opponentName(DurakGameView view) {
+    if (view.playerIds.length != 2 || view.myIndex < 0) {
+      return context.l10n.gameOpponent;
+    }
+    final oppIndex = view.myIndex == 0 ? 1 : 0;
+    final oppId = view.playerIds[oppIndex];
+    if (oppId.startsWith('bot:')) return context.l10n.gameBot;
+    final meta = view.playerMeta(oppId);
+    final n = meta?.displayName?.trim() ?? '';
+    return n.isNotEmpty ? n : context.l10n.gameOpponent;
+  }
+
+  String _roleLabel(int idx, DurakGameView view) {
     if (idx == view.attackerIndex) return 'Атакует';
     if (idx == view.defenderIndex) return 'Защищается';
     return 'Игрок';
@@ -655,5 +695,63 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   List<PlayingCard> _apiCardsToPlaying(List<DurakApiCard> apis) {
     return apis.map((c) => c.toPlayingCard()).toList();
+  }
+}
+
+/// Пара на столе с появлением scale/fade.
+class _AnimatedTablePair extends StatelessWidget {
+  const _AnimatedTablePair({
+    super.key,
+    required this.pair,
+    required this.cardSize,
+  });
+
+  final DurakTablePairApi pair;
+  final Size cardSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.86, end: 1),
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutBack,
+        builder: (context, scale, child) => Opacity(
+          opacity: scale.clamp(0.0, 1.0),
+          child: Transform.scale(scale: scale, child: child),
+        ),
+        child: SizedBox(
+          width: cardSize.width + 10,
+          height: cardSize.height + 14,
+          child: Stack(
+            children: [
+              PlayingCardWidget(
+                card: pair.attack.toPlayingCard(),
+                size: cardSize,
+                elevated: true,
+              ),
+              if (pair.defense != null)
+                Positioned(
+                  left: 10,
+                  top: 14,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.8, end: 1),
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutBack,
+                    builder: (context, s, child) =>
+                        Transform.scale(scale: s, child: child),
+                    child: PlayingCardWidget(
+                      card: pair.defense!.toPlayingCard(),
+                      size: cardSize,
+                      elevated: true,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

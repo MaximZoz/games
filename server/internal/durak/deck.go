@@ -34,16 +34,43 @@ func (s Suit) String() string {
 	return "?"
 }
 
+// MarshalJSON — масть как "H"/"D"/"C"/"S" (клиент ждёт буквы, не 0..3).
+func (s Suit) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.String())
+}
+
+// UnmarshalJSON принимает букву или legacy-число 0..3 (старые state в Redis).
+func (s *Suit) UnmarshalJSON(b []byte) error {
+	var str string
+	if err := json.Unmarshal(b, &str); err == nil {
+		parsed, err := ParseSuit(str)
+		if err != nil {
+			return err
+		}
+		*s = parsed
+		return nil
+	}
+	var n int
+	if err := json.Unmarshal(b, &n); err != nil {
+		return fmt.Errorf("bad suit json %s", string(b))
+	}
+	if n < 0 || n > 3 {
+		return fmt.Errorf("bad suit %d", n)
+	}
+	*s = Suit(n)
+	return nil
+}
+
 // ParseSuit разбирает символ масти.
 func ParseSuit(s string) (Suit, error) {
 	switch strings.ToUpper(strings.TrimSpace(s)) {
-	case "H":
+	case "H", "0":
 		return Hearts, nil
-	case "D":
+	case "D", "1":
 		return Diamonds, nil
-	case "C":
+	case "C", "2":
 		return Clubs, nil
-	case "S":
+	case "S", "3":
 		return Spades, nil
 	}
 	return 0, fmt.Errorf("bad suit %q", s)

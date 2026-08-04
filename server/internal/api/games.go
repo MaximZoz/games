@@ -2582,34 +2582,44 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		maxPlayers = 2
 	}
 
-	// Multi: один отказ не убивает реванш — убираем отказавшегося из invited.
-	// Лобби закрываем, только если оставшихся приглашённых уже не хватает на состав.
-	if maxPlayers > 2 {
-		h.Rdb.SRem(ctx, invitedKey, userID.String())
-		remaining, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
-		players := parsePlayerIDsCSV(m["player_ids"])
-		if len(players) == 0 {
-			players = []string{creatorID}
-		}
-		canFill := len(players)+len(remaining) >= maxPlayers
-		if canFill {
-			// Частичный отказ: лобби живо, но инициатор реванша должен видеть,
-			// кто уже ответил (зачёркивание в шапке игроков).
-			h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
-				"type":     "invite_declined",
-				"lobby_id": lobbyID,
-				"closed":   false,
-				"user_id":  userID.String(),
-			})
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"declined": true,
-				"closed":   false,
-			})
-			return
-		}
+	h.Rdb.SRem(ctx, invitedKey, userID.String())
+	if m["invite_target_id"] == userID.String() {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	remaining, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{creatorID}
 	}
 
+	// Не убиваем лобби, если состав ещё можно добрать:
+	// — multi (3–4): создатель пригласит другого;
+	// — 1×1, но в invited ещё кто-то есть (пригласили двоих).
+	// Иначе второй приглашённый получает «Лобби не найдено».
+	keepLobby := maxPlayers > 2 || len(remaining) > 0
+	if keepLobby {
+		notify := []uuid.UUID{creatorUUID}
+		for _, pid := range players {
+			if u, err := uuid.Parse(pid); err == nil && u != creatorUUID {
+				notify = append(notify, u)
+			}
+		}
+		h.broadcast(notify, map[string]any{
+			"type":     "invite_declined",
+			"lobby_id": lobbyID,
+			"closed":   false,
+			"user_id":  userID.String(),
+		})
+		clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"declined": true,
+			"closed":   false,
+		})
+		return
+	}
+
+	// 1×1: отказ единственного приглашённого закрывает лобби.
 	h.Rdb.Del(ctx, key)
 	h.Rdb.Del(ctx, invitedKey)
 	// Не трогаем active_game и чужие лобби — отказ от инвайта не должен
@@ -2619,7 +2629,14 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 	_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 
-	h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
+	notify := []uuid.UUID{creatorUUID}
+	for _, rid := range remaining {
+		if u, err := uuid.Parse(rid); err == nil {
+			notify = append(notify, u)
+			clearUserActiveLobbyIfMatch(ctx, h.Rdb, u, lobbyID)
+		}
+	}
+	h.broadcast(notify, map[string]any{
 		"type":     "invite_declined",
 		"lobby_id": lobbyID,
 		"closed":   true,

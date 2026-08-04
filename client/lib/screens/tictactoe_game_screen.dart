@@ -912,7 +912,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   Positioned(
                     right: 4,
                     top: topPad + 4,
-                    child: _GameActionsOverlay(
+                    child: GameActionsOverlay(
                       canDraw: showDrawButton,
                       iOfferedDraw: iOfferedDraw,
                       opponentOfferedDraw: opponentOfferedDraw,
@@ -920,6 +920,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       onDraw: () => opponentOfferedDraw
                           ? _confirmAcceptDraw(context)
                           : _confirmOfferDraw(context),
+                      surrenderTooltip: context.l10n.gameSurrender,
+                      drawTooltip: context.l10n.gameOfferDraw,
+                      acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
+                      drawOfferedTooltip: context.l10n.gameDrawOffered,
                     ),
                   ),
               ],
@@ -2953,116 +2957,6 @@ class _GameRewardChip extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Overlay «сдаться» и «ничья» справа сверху под кнопкой «правила».
-/// Кнопки идут вертикально. Когда соперник предложил ничью, иконка ничьи
-/// у принимающего мигает фиолетовый↔чёрный (анимация ColorTween).
-class _GameActionsOverlay extends StatefulWidget {
-  const _GameActionsOverlay({
-    required this.canDraw,
-    required this.iOfferedDraw,
-    required this.opponentOfferedDraw,
-    required this.onSurrender,
-    required this.onDraw,
-  });
-
-  final bool canDraw;
-  final bool iOfferedDraw;
-  final bool opponentOfferedDraw;
-  final VoidCallback onSurrender;
-  final VoidCallback onDraw;
-
-  @override
-  State<_GameActionsOverlay> createState() => _GameActionsOverlayState();
-}
-
-class _GameActionsOverlayState extends State<_GameActionsOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _blink;
-  late final Animation<Color?> _color;
-
-  @override
-  void initState() {
-    super.initState();
-    _blink = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _color = ColorTween(
-      begin: AppColors.accentStart,
-      end: AppColors.textPrimary,
-    ).animate(_blink);
-    _applyBlink();
-  }
-
-  @override
-  void didUpdateWidget(covariant _GameActionsOverlay oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.opponentOfferedDraw != widget.opponentOfferedDraw) {
-      _applyBlink();
-    }
-  }
-
-  void _applyBlink() {
-    if (widget.opponentOfferedDraw) {
-      _blink.repeat(reverse: true);
-    } else {
-      _blink.stop();
-      _blink.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _blink.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          iconSize: 22,
-          icon: const Icon(Icons.flag_outlined),
-          tooltip: context.l10n.gameSurrender,
-          onPressed: widget.onSurrender,
-        ),
-        if (widget.canDraw) ...[
-          const SizedBox(height: 4),
-          AnimatedBuilder(
-            animation: _color,
-            builder: (_, child) => child!,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              iconSize: 22,
-              icon: Icon(
-                widget.opponentOfferedDraw
-                    ? Icons.handshake_rounded
-                    : Icons.handshake_outlined,
-                color: widget.opponentOfferedDraw
-                    ? _color.value
-                    : (widget.iOfferedDraw
-                        ? AppColors.accentStart.withValues(alpha: 0.45)
-                        : null),
-              ),
-              tooltip: widget.opponentOfferedDraw
-                  ? context.l10n.gameAcceptDrawTitle
-                  : (widget.iOfferedDraw
-                      ? context.l10n.gameDrawOffered
-                      : context.l10n.gameOfferDraw),
-              onPressed: widget.iOfferedDraw ? null : widget.onDraw,
-            ),
-          ),
-        ],
-      ],
     );
   }
 }

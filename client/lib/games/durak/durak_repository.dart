@@ -23,12 +23,13 @@ class DurakApiCard {
       );
 
   PlayingCard toPlayingCard() {
-    final s = switch (suit.toUpperCase()) {
-      'H' => Suit.hearts,
-      'D' => Suit.diamonds,
-      'C' => Suit.clubs,
-      'S' => Suit.spades,
-      _ => Suit.hearts,
+    // Сервер шлёт "H"/"D"/"C"/"S"; legacy мог слать "0".."3".
+    final s = switch (suit.toUpperCase().trim()) {
+      'H' || '0' => Suit.hearts,
+      'D' || '1' => Suit.diamonds,
+      'C' || '2' => Suit.clubs,
+      'S' || '3' => Suit.spades,
+      _ => Suit.spades, // не маскируем ошибку под все ♥
     };
     return PlayingCard(Rank(rank), s);
   }
@@ -82,6 +83,38 @@ class DurakHandView {
   }
 }
 
+/// Метаданные игрока в партии (имя, аватар, рамка).
+class DurakPlayerMeta {
+  const DurakPlayerMeta({
+    required this.id,
+    this.displayName,
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.frameCode,
+    this.frameColor,
+  });
+
+  final String id;
+  final String? displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameCode;
+  final String? frameColor;
+
+  factory DurakPlayerMeta.fromJson(Map<String, dynamic> json) {
+    return DurakPlayerMeta(
+      id: (json['id'] ?? '').toString(),
+      displayName: (json['display_name'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['display_name'] as String).trim(),
+      avatarKind: (json['avatar_kind'] ?? 'letter').toString(),
+      avatarValue: json['avatar_value']?.toString(),
+      frameCode: json['frame_code']?.toString(),
+      frameColor: json['frame_color']?.toString(),
+    );
+  }
+}
+
 /// Полный view одного игрока — то что возвращает GET /api/games/durak/game/:id.
 class DurakGameView {
   const DurakGameView({
@@ -92,6 +125,7 @@ class DurakGameView {
     required this.mode,
     required this.deckSize,
     required this.playerIds,
+    required this.players,
     required this.hands,
     required this.deckCount,
     required this.trumpSuit,
@@ -120,6 +154,7 @@ class DurakGameView {
   final String mode;
   final int deckSize;
   final List<String> playerIds;
+  final List<DurakPlayerMeta> players;
   final List<DurakHandView> hands;
   final int deckCount;
   final String trumpSuit;
@@ -151,10 +186,26 @@ class DurakGameView {
     return attackerIndex == myIndex;
   }
 
+  DurakPlayerMeta? playerMeta(String id) {
+    for (final p in players) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
   factory DurakGameView.fromJson(Map<String, dynamic> json) {
     List<T> pList<T>(dynamic v, T Function(Map<String, dynamic>) fn) {
       if (v is! List) return const [];
       return v.whereType<Map>().map((e) => fn(e.cast<String, dynamic>())).toList();
+    }
+
+    final playerIds = (json['player_ids'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const <String>[];
+    var players = pList<DurakPlayerMeta>(json['players'], DurakPlayerMeta.fromJson);
+    if (players.isEmpty && playerIds.isNotEmpty) {
+      players = playerIds.map((id) => DurakPlayerMeta(id: id)).toList();
     }
 
     return DurakGameView(
@@ -166,10 +217,8 @@ class DurakGameView {
           : json['chat_id'].toString(),
       mode: (json['mode'] ?? 'podkidnoi').toString(),
       deckSize: (json['deck_size'] as num?)?.toInt() ?? 36,
-      playerIds: (json['player_ids'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
+      playerIds: playerIds,
+      players: players,
       hands: pList<DurakHandView>(json['hands'], DurakHandView.fromJson),
       deckCount: (json['deck_count'] as num?)?.toInt() ?? 0,
       trumpSuit: (json['trump'] ?? 'H').toString(),

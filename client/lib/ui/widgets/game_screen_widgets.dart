@@ -313,8 +313,8 @@ class GameIconWithBadge extends StatelessWidget {
   }
 }
 
-/// Рамка с соперником: аватар (тап — профиль), имя и кнопка чата
-/// со счётчиком непрочитанных. Общая для всех игр 1×1.
+/// Рамка с соперником: аватар (тап — профиль), имя, чат и «в друзья».
+/// Общая для всех игр 1×1 (крестики-нолики, дурак, …).
 class GameOpponentCard extends StatelessWidget {
   const GameOpponentCard({
     super.key,
@@ -329,6 +329,11 @@ class GameOpponentCard extends StatelessWidget {
     this.onMessageTap,
     this.infoTooltip = '',
     this.messageTooltip = '',
+    this.showAddFriend = false,
+    this.addFriendEnabled = true,
+    this.addFriendBadge = 0,
+    this.addFriendTooltip = '',
+    this.onAddFriendTap,
     this.trailing = const <Widget>[],
     this.compact = false,
     this.maxWidth = 400,
@@ -346,7 +351,14 @@ class GameOpponentCard extends StatelessWidget {
   final String infoTooltip;
   final String messageTooltip;
 
-  /// Доп. кнопки справа (например «добавить в друзья»).
+  /// Кнопка «добавить в друзья» (как в крестиках-ноликах).
+  final bool showAddFriend;
+  final bool addFriendEnabled;
+  final int addFriendBadge;
+  final String addFriendTooltip;
+  final VoidCallback? onAddFriendTap;
+
+  /// Доп. кнопки справа.
   final List<Widget> trailing;
   final bool compact;
   final double maxWidth;
@@ -401,6 +413,13 @@ class GameOpponentCard extends StatelessWidget {
               tooltip: messageTooltip,
               onPressed: onMessageTap,
             ),
+          if (!isBot && showAddFriend)
+            GameIconWithBadge(
+              icon: Icons.person_add_alt_1_rounded,
+              badge: addFriendBadge,
+              tooltip: addFriendTooltip,
+              onPressed: addFriendEnabled ? onAddFriendTap : null,
+            ),
           ...trailing,
         ],
       ),
@@ -410,6 +429,124 @@ class GameOpponentCard extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: card,
       ),
+    );
+  }
+}
+
+/// Overlay «сдаться» / «ничья» справа сверху под кнопкой правил.
+/// Общий для 1×1 партий (крестики-нолики, дурак).
+class GameActionsOverlay extends StatefulWidget {
+  const GameActionsOverlay({
+    super.key,
+    required this.canDraw,
+    required this.iOfferedDraw,
+    required this.opponentOfferedDraw,
+    required this.onSurrender,
+    required this.onDraw,
+    required this.surrenderTooltip,
+    required this.drawTooltip,
+    required this.acceptDrawTooltip,
+    required this.drawOfferedTooltip,
+  });
+
+  final bool canDraw;
+  final bool iOfferedDraw;
+  final bool opponentOfferedDraw;
+  final VoidCallback onSurrender;
+  final VoidCallback onDraw;
+  final String surrenderTooltip;
+  final String drawTooltip;
+  final String acceptDrawTooltip;
+  final String drawOfferedTooltip;
+
+  @override
+  State<GameActionsOverlay> createState() => _GameActionsOverlayState();
+}
+
+class _GameActionsOverlayState extends State<GameActionsOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink;
+  late final Animation<Color?> _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _blink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _color = ColorTween(
+      begin: AppColors.accentStart,
+      end: AppColors.textPrimary,
+    ).animate(_blink);
+    _applyBlink();
+  }
+
+  @override
+  void didUpdateWidget(covariant GameActionsOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.opponentOfferedDraw != widget.opponentOfferedDraw) {
+      _applyBlink();
+    }
+  }
+
+  void _applyBlink() {
+    if (widget.opponentOfferedDraw) {
+      _blink.repeat(reverse: true);
+    } else {
+      _blink.stop();
+      _blink.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          iconSize: 22,
+          icon: const Icon(Icons.flag_outlined),
+          tooltip: widget.surrenderTooltip,
+          onPressed: widget.onSurrender,
+        ),
+        if (widget.canDraw) ...[
+          const SizedBox(height: 4),
+          AnimatedBuilder(
+            animation: _color,
+            builder: (_, child) => child!,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              iconSize: 22,
+              icon: Icon(
+                widget.opponentOfferedDraw
+                    ? Icons.handshake_rounded
+                    : Icons.handshake_outlined,
+                color: widget.opponentOfferedDraw
+                    ? _color.value
+                    : (widget.iOfferedDraw
+                        ? AppColors.accentStart.withValues(alpha: 0.45)
+                        : null),
+              ),
+              tooltip: widget.opponentOfferedDraw
+                  ? widget.acceptDrawTooltip
+                  : (widget.iOfferedDraw
+                      ? widget.drawOfferedTooltip
+                      : widget.drawTooltip),
+              onPressed: widget.iOfferedDraw ? null : widget.onDraw,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -577,8 +577,56 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 	// Скрываем чужие руки — оставляем длину.
 	viewer := userID.String()
 	view := durakViewFor(state, viewer, m, gameID)
+	h.enrichDurakPlayersMeta(ctx, view, state.PlayerIDs)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(view)
+}
+
+// enrichDurakPlayersMeta — имена/аватары/рамки игроков (как x_/o_ в крестиках).
+func (h *GamesHandler) enrichDurakPlayersMeta(ctx context.Context, view map[string]any, playerIDs []string) {
+	players := make([]map[string]any, 0, len(playerIDs))
+	ids := make([]uuid.UUID, 0, len(playerIDs))
+	for _, pid := range playerIDs {
+		entry := map[string]any{"id": pid}
+		if isBot(pid) {
+			entry["display_name"] = "Бот"
+			players = append(players, entry)
+			continue
+		}
+		uid, err := uuid.Parse(pid)
+		if err != nil {
+			players = append(players, entry)
+			continue
+		}
+		ids = append(ids, uid)
+		user, err := store.GetUserByID(ctx, h.Pool, uid)
+		if err == nil && user != nil {
+			if user.DisplayName != nil && *user.DisplayName != "" {
+				entry["display_name"] = *user.DisplayName
+			}
+			if user.AvatarKind != "" {
+				entry["avatar_kind"] = user.AvatarKind
+			}
+			if user.AvatarValue != nil {
+				entry["avatar_value"] = *user.AvatarValue
+			}
+		}
+		players = append(players, entry)
+	}
+	if frames, err := store.EquippedFramesMap(ctx, h.Pool, ids); err == nil {
+		for _, entry := range players {
+			pid, _ := entry["id"].(string)
+			uid, err := uuid.Parse(pid)
+			if err != nil {
+				continue
+			}
+			if f, ok := frames[uid]; ok {
+				entry["frame_code"] = f.Code
+				entry["frame_color"] = f.Color
+			}
+		}
+	}
+	view["players"] = players
 }
 
 // ---- DurakMove ----
