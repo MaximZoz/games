@@ -5,8 +5,9 @@
 FROM ghcr.io/cirruslabs/flutter:stable AS flutter_build
 WORKDIR /app
 
-# Кэш pub get: слой пересобирается только при изменении pubspec
-COPY client/pubspec.yaml client/pubspec.lock ./
+# Кэш pub get: слой пересобирается только при изменении pubspec.
+# pubspec.* — не падать, если lock локально отсутствует.
+COPY client/pubspec.* ./
 RUN flutter pub get
 
 # Остальной код — build web
