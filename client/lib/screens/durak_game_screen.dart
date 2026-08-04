@@ -50,8 +50,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   final List<PlayingCard> _optimisticAttacks = [];
   /// Оптимистичная защита: индекс пары → карта.
   final Map<int, PlayingCard> _optimisticDefends = {};
-  /// Стол скрыт на время полёта в биту.
+  /// Стол скрыт на время полёта в биту / при взятии.
   bool _hidingTable = false;
+  /// Не запускать повторный FX биты после локального смахивания.
+  bool _suppressRemoteBitoFx = false;
+  /// Заморозить визуальный счётчик биты на время полёта (без «вспышки» новых карт).
+  int? _bitoCountFreeze;
   Timer? _timeoutRetryTimer;
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
@@ -513,8 +517,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ),
       );
     }
-    // Плавное уменьшение к размеру стола, без дуги и без «доводки».
+    // Плавное уменьшение к размеру стола; лёгкий поворот к горизонтали цели.
     final shrink = _tableCardSize.width / _handCardSize.width;
+    final beginAngles = <double>[
+      for (var i = 0; i < cards.length; i++)
+        (i.isEven ? -1 : 1) * (0.12 + i * 0.03),
+    ];
+    final endAngles = <double>[
+      for (var i = 0; i < cards.length; i++)
+        doDefend ? (i.isEven ? 0.08 : -0.06) : 0.0,
+    ];
     List<CardFlyTicket> tickets = const [];
     await playCardsFlyAnimation(
       context: context,
@@ -527,6 +539,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       curve: Curves.easeInOutCubic,
       beginScale: beginScale,
       endScale: shrink,
+      beginAngles: beginAngles,
+      endAngles: endAngles,
       arcLift: 0,
       keepAtEnd: true,
       onTickets: (t) => tickets = t,
@@ -602,17 +616,32 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (view == null || !_canTake(view)) return;
     final snapshot = List<DurakTablePairApi>.of(view.table);
     _prevTable = const [];
+    final froms = _tableCardGlobalRects(snapshot);
     if (snapshot.isNotEmpty) {
-      setState(() => _hidingTable = true);
-      await _animateTableToFan(snapshot);
+      setState(() {
+        _hidingTable = true;
+        _busy = true;
+      });
+      await _animateTableToFan(snapshot, fromOverrides: froms);
     }
     if (!mounted) return;
     try {
-      await _act(
-        () => ref.read(durakRepositoryProvider).move(widget.gameId, type: 'take'),
-      );
+      await ref.read(durakRepositoryProvider).move(widget.gameId, type: 'take');
+      ref.invalidate(durakGameProvider(widget.gameId));
+      try {
+        await ref.read(durakGameProvider(widget.gameId).future);
+      } catch (_) {}
+    } on GamesException catch (e) {
+      if (mounted) {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
     } finally {
-      if (mounted) setState(() => _hidingTable = false);
+      if (mounted) {
+        setState(() {
+          _hidingTable = false;
+          _busy = false;
+        });
+      }
     }
   }
 
@@ -623,69 +652,150 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevTable.isNotEmpty ? _prevTable : view.table,
     );
     _prevTable = const [];
+    final froms = _tableCardGlobalRects(snapshot);
+    final freezeCount = view.bitoCount;
     if (snapshot.isNotEmpty) {
-      setState(() => _hidingTable = true);
-      await _animateTableToBito(snapshot);
+      setState(() {
+        _hidingTable = true;
+        _busy = true;
+        _suppressRemoteBitoFx = true;
+        _bitoCountFreeze = freezeCount;
+      });
+      await _animateTableToBito(snapshot, fromOverrides: froms);
     }
     if (!mounted) return;
     try {
-      await _act(
-        () =>
-            ref.read(durakRepositoryProvider).move(widget.gameId, type: 'bito'),
-      );
+      await ref
+          .read(durakRepositoryProvider)
+          .move(widget.gameId, type: 'bito');
+      ref.invalidate(durakGameProvider(widget.gameId));
+      try {
+        await ref.read(durakGameProvider(widget.gameId).future);
+      } catch (_) {}
+    } on GamesException catch (e) {
+      if (mounted) {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
     } finally {
-      if (mounted) setState(() => _hidingTable = false);
+      if (mounted) {
+        setState(() {
+          _hidingTable = false;
+          _busy = false;
+          _bitoCountFreeze = null;
+        });
+        Future<void>.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) _suppressRemoteBitoFx = false;
+        });
+      }
     }
   }
 
-  Future<void> _animateTableToFan(List<DurakTablePairApi> table) async {
+  List<PlayingCard> _flattenTableCards(List<DurakTablePairApi> table) {
+    final cards = <PlayingCard>[];
+    for (final p in table) {
+      cards.add(p.attack.toPlayingCard());
+      if (p.defense != null) cards.add(p.defense!.toPlayingCard());
+    }
+    return cards;
+  }
+
+  /// Реальные (или близкие) позиции карт стола до скрытия — без «новых» карт.
+  List<Rect> _tableCardGlobalRects(List<DurakTablePairApi> table) {
+    final cards = _flattenTableCards(table);
+    final n = cards.length;
+    if (n == 0) return const [];
+    final tableRect = globalRectOf(_tableKey);
+    final screen = MediaQuery.sizeOf(context);
+    final center = tableRect?.center ??
+        Offset(screen.width / 2, screen.height * 0.42);
+    final pairW = _tableCardSize.width + 18;
+    final out = <Rect>[];
+    var i = 0;
+    for (final p in table) {
+      final col = i % 3;
+      final row = i ~/ 3;
+      final cx = center.dx + (col - 1) * pairW * 0.55;
+      final cy = center.dy + (row - 0.3) * (_tableCardSize.height * 0.55);
+      out.add(Rect.fromCenter(
+        center: Offset(cx, cy),
+        width: _tableCardSize.width,
+        height: _tableCardSize.height,
+      ));
+      i++;
+      if (p.defense != null) {
+        out.add(Rect.fromCenter(
+          center: Offset(cx + 10, cy + 14),
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
+        ));
+      }
+    }
+    return out;
+  }
+
+  Future<void> _animateTableToFan(
+    List<DurakTablePairApi> table, {
+    List<Rect>? fromOverrides,
+  }) async {
     if (table.isEmpty || !mounted) return;
+    final cards = _flattenTableCards(table);
     final to = cardFanApproxOrigin(
           _fanKey.currentContext ?? context,
-          _cardSize,
+          _handCardSize,
         ) ??
         Rect.fromCenter(
           center: Offset(
             MediaQuery.sizeOf(context).width / 2,
             MediaQuery.sizeOf(context).height * 0.85,
           ),
-          width: _cardSize.width,
-          height: _cardSize.height,
+          width: _handCardSize.width,
+          height: _handCardSize.height,
         );
-    final cards = <PlayingCard>[];
     final froms = <Rect>[];
     final tos = <Rect>[];
-    final center = MediaQuery.sizeOf(context).center(Offset.zero);
-    var i = 0;
-    for (final p in table) {
-      cards.add(p.attack.toPlayingCard());
-      froms.add(Rect.fromCenter(
-        center: center.translate((i - table.length / 2) * 40, -20),
-        width: _cardSize.width,
-        height: _cardSize.height,
-      ));
-      tos.add(to.shift(Offset((i - table.length) * 10.0, 0)));
-      i++;
-      if (p.defense != null) {
-        cards.add(p.defense!.toPlayingCard());
-        froms.add(Rect.fromCenter(
-          center: center.translate((i - table.length / 2) * 40, 0),
-          width: _cardSize.width,
-          height: _cardSize.height,
-        ));
-        tos.add(to.shift(Offset((i - table.length) * 10.0, 0)));
-        i++;
-      }
+    final beginAngles = <double>[];
+    final endAngles = <double>[];
+    final n = cards.length;
+    for (var i = 0; i < n; i++) {
+      froms.add(
+        fromOverrides != null && i < fromOverrides.length
+            ? fromOverrides[i]
+            : Rect.fromCenter(
+                center: MediaQuery.sizeOf(context).center(Offset.zero).translate(
+                      (i - n / 2) * 36,
+                      -10,
+                    ),
+                width: _tableCardSize.width,
+                height: _tableCardSize.height,
+              ),
+      );
+      // Каждая карта мягко встаёт в свой слот веера — видно по отдельности.
+      final slotX = (i - (n - 1) / 2) * (_handCardSize.width * 0.28);
+      tos.add(
+        Rect.fromCenter(
+          center: to.center.translate(slotX, -i * 3.0),
+          width: _handCardSize.width,
+          height: _handCardSize.height,
+        ),
+      );
+      beginAngles.add((i.isEven ? 1 : -1) * 0.08);
+      endAngles.add((i - (n - 1) / 2) * 0.04);
     }
+    final grow = _handCardSize.width / _tableCardSize.width;
     await playCardsFlyAnimation(
       context: context,
       cards: cards,
-      cardSize: _cardSize,
+      cardSize: _tableCardSize,
       froms: froms,
       tos: tos,
-      duration: const Duration(milliseconds: 420),
-      stagger: const Duration(milliseconds: 40),
-      arcLift: 28,
+      duration: const Duration(milliseconds: 520),
+      stagger: const Duration(milliseconds: 90),
+      curve: Curves.easeOutCubic,
+      beginScale: 1.0,
+      endScale: grow,
+      beginAngles: beginAngles,
+      endAngles: endAngles,
+      arcLift: 18,
     );
   }
 
@@ -713,66 +823,92 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     await playCardsFlyAnimation(
       context: context,
       cards: List.generate(n, (_) => dummy),
-      cardSize: _cardSize,
-      froms: List.generate(n, (i) => from.shift(Offset(i * 2.0, i * 2.0))),
-      tos: List.generate(n, (i) => to.shift(Offset((i - n / 2) * 12, 0))),
+      cardSize: _handCardSize,
+      froms: List.generate(
+        n,
+        (i) => Rect.fromCenter(
+          center: from.center.translate(i * 2.0, i * 2.0),
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
+        ),
+      ),
+      tos: List.generate(
+        n,
+        (i) => Rect.fromCenter(
+          center: to.center.translate((i - n / 2) * (_handCardSize.width * 0.26), -i * 2.0),
+          width: _handCardSize.width,
+          height: _handCardSize.height,
+        ),
+      ),
       faceDown: true,
-      duration: const Duration(milliseconds: 420),
-      stagger: const Duration(milliseconds: 70),
-      arcLift: 24,
+      duration: const Duration(milliseconds: 480),
+      stagger: const Duration(milliseconds: 85),
+      curve: Curves.easeOutCubic,
+      beginScale: _tableCardSize.width / _handCardSize.width,
+      endScale: 1.0,
+      arcLift: 16,
     );
   }
 
-  Future<void> _animateTableToBito(List<DurakTablePairApi> table) async {
+  Future<void> _animateTableToBito(
+    List<DurakTablePairApi> table, {
+    List<Rect>? fromOverrides,
+  }) async {
     if (table.isEmpty || !mounted) return;
+    final cards = _flattenTableCards(table);
     final bitoRect = globalRectOf(_bitoKey) ??
         Rect.fromCenter(
           center: Offset(
-            MediaQuery.sizeOf(context).width * 0.85,
-            MediaQuery.sizeOf(context).height * 0.45,
+            MediaQuery.sizeOf(context).width * 0.88,
+            MediaQuery.sizeOf(context).height * 0.32,
           ),
-          width: _cardSize.width,
-          height: _cardSize.height,
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
         );
-    final cards = <PlayingCard>[];
     final froms = <Rect>[];
     final tos = <Rect>[];
-    final angles = <double>[];
-    final center = MediaQuery.sizeOf(context).center(Offset.zero);
-    var i = 0;
-    for (final p in table) {
-      cards.add(p.attack.toPlayingCard());
-      froms.add(Rect.fromCenter(
-        center: center.translate((i - table.length / 2) * 40, -20),
-        width: _cardSize.width,
-        height: _cardSize.height,
-      ));
-      tos.add(rectJitter(bitoRect, _cardSize, _prevBitoCount + 1, i));
-      angles.add((i.isEven ? 1 : -1) * (0.25 + i * 0.08));
-      i++;
-      if (p.defense != null) {
-        cards.add(p.defense!.toPlayingCard());
-        froms.add(Rect.fromCenter(
-          center: center.translate((i - table.length / 2) * 40, 0),
-          width: _cardSize.width,
-          height: _cardSize.height,
-        ));
-        tos.add(rectJitter(bitoRect, _cardSize, _prevBitoCount + 1, i));
-        angles.add((i.isEven ? 1 : -1) * (0.3 + i * 0.07));
-        i++;
-      }
+    final beginAngles = <double>[];
+    final endAngles = <double>[];
+    final n = cards.length;
+    for (var i = 0; i < n; i++) {
+      froms.add(
+        fromOverrides != null && i < fromOverrides.length
+            ? fromOverrides[i]
+            : Rect.fromCenter(
+                center: MediaQuery.sizeOf(context).center(Offset.zero).translate(
+                      (i - n / 2) * 36,
+                      -8,
+                    ),
+                width: _tableCardSize.width,
+                height: _tableCardSize.height,
+              ),
+      );
+      tos.add(rectJitter(bitoRect, _tableCardSize, _prevBitoCount + 1, i));
+      beginAngles.add((i.isEven ? -1 : 1) * 0.06);
+      endAngles.add((i.isEven ? 1 : -1) * (0.35 + i * 0.07));
     }
+    List<CardFlyTicket> tickets = const [];
     await playCardsFlyAnimation(
       context: context,
       cards: cards,
-      cardSize: _cardSize,
+      cardSize: _tableCardSize,
       froms: froms,
       tos: tos,
-      endAngles: angles,
-      duration: const Duration(milliseconds: 450),
-      stagger: const Duration(milliseconds: 40),
-      arcLift: 22,
+      beginAngles: beginAngles,
+      endAngles: endAngles,
+      duration: const Duration(milliseconds: 560),
+      stagger: const Duration(milliseconds: 55),
+      curve: Curves.easeInOutCubic,
+      beginScale: 1.0,
+      endScale: 0.88,
+      arcLift: 12,
+      keepAtEnd: true,
+      onTickets: (t) => tickets = t,
     );
+    if (mounted) await WidgetsBinding.instance.endOfFrame;
+    for (final t in tickets) {
+      t.dismiss();
+    }
   }
 
   void _maybeRunTableFx(DurakGameView view) {
@@ -795,7 +931,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     final dealt = handLen - _prevHandLen;
     final deckDropped = _prevDeckCount - deck;
-    final bitoGrew = bito > _prevBitoCount && _prevTable.isNotEmpty;
+    final prevBito = _prevBitoCount;
+    final bitoGrew = bito > prevBito && _prevTable.isNotEmpty;
     final tableSnapshot = List<DurakTablePairApi>.of(_prevTable);
 
     _prevDeckCount = deck;
@@ -809,16 +946,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         await _animateDealToFan(dealt.clamp(1, 6));
         if (mounted) _fxScheduled = false;
       });
-    } else if (bitoGrew && !_busy && !_hidingTable) {
-      // Бито от соперника / уже применённое состояние.
+    } else if (bitoGrew &&
+        !_busy &&
+        !_hidingTable &&
+        !_suppressRemoteBitoFx) {
+      // Бито от соперника — те же карты стола плавно улетают в отбой.
       _fxScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
-        setState(() => _hidingTable = true);
-        await _animateTableToBito(tableSnapshot);
+        final froms = _tableCardGlobalRects(tableSnapshot);
+        setState(() {
+          _hidingTable = true;
+          _bitoCountFreeze = prevBito;
+        });
+        await _animateTableToBito(tableSnapshot, fromOverrides: froms);
         if (mounted) {
-          setState(() => _hidingTable = false);
-          _fxScheduled = false;
+          setState(() {
+            _hidingTable = false;
+            _bitoCountFreeze = null;
+            _fxScheduled = false;
+          });
         }
       });
     }
@@ -1228,19 +1375,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final topPad = MediaQuery.paddingOf(context).top;
     // Как в крестиках: 1×1 — сдаться/ничья overlay справа; multi — флаг в AppBar.
     final myTurnFrame = view != null && !view.isOver && view.isMyTurn;
-    return SwipeBackScope(
-      onBack: _confirmLeave,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
-      child: TurnTimerAppFrame(
-        key: ValueKey('app-frame-${view?.turnDeadline ?? 0}'),
-        active: myTurnFrame,
-        turnDeadline: view?.turnDeadline ?? 0,
-        turnTimeSec: view?.turnTimeSec ?? 0,
-        borderWidth: 3.2,
-        radius: 20,
-        onExpired: _onTurnTimeExpired,
+    // Рамка по границе всего приложения (поверх Scaffold), не блока стола.
+    return TurnTimerAppFrame(
+      key: ValueKey('app-frame-${view?.turnDeadline ?? 0}'),
+      active: myTurnFrame,
+      turnDeadline: view?.turnDeadline ?? 0,
+      turnTimeSec: view?.turnTimeSec ?? 0,
+      borderWidth: 3.5,
+      radius: 26,
+      onExpired: _onTurnTimeExpired,
+      child: SwipeBackScope(
+        onBack: _confirmLeave,
+        opaqueEdge: false,
+        edgeWidth: 16,
+        triggerDistance: 44,
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
@@ -1448,6 +1596,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           Expanded(
             child: _buildBoard(view, tableSize, trumpCard),
           ),
+          // Между колодой/столом и моим веером.
+          _buildActionButton(view),
           SizedBox(
             height: fanZoneH,
             child: Stack(
@@ -1708,12 +1858,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       count.clamp(0, 8),
       (i) => PlayingCard(Rank.six, Suit.spades),
     );
-    // Карты под панелью — без переворота (раньше rotationZ перекрывал имя).
+    // Веер «в его сторону»: ось сверху, дуга от игрока.
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 320),
-        switchInCurve: Curves.easeOutBack,
+        switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, anim) => FadeTransition(
           opacity: anim,
@@ -1722,11 +1872,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         child: CardFan(
           key: ValueKey('opp-$idx-$count'),
           cards: fake,
-          cardSize: Size(cardSize.width * 0.4, cardSize.height * 0.4),
+          cardSize: Size(cardSize.width * 0.42, cardSize.height * 0.42),
           faceDown: true,
+          invertFan: true,
           enabled: false,
-          arc: 0.28,
-          spacing: cardSize.width * 0.16,
+          arc: 0.36,
+          spacing: cardSize.width * 0.15,
         ),
       ),
     );
@@ -1769,9 +1920,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final bitoPeek = KeyedSubtree(
       key: _bitoKey,
       child: Transform.translate(
-        offset: Offset(cardSize.width * 0.28, 0),
+        offset: Offset(cardSize.width * 0.22, 0),
         child: DurakBitoPile(
-          count: view.bitoCount,
+          count: _bitoCountFreeze ?? view.bitoCount,
           cardSize: cardSize,
           peek: true,
         ),
@@ -1819,11 +1970,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tableMaxW = constraints.maxWidth * 0.62;
+        // Уже — чтобы не касаться колоды/биты; всегда по центру.
+        final sideReserve = cardSize.width * 0.95;
+        final tableMaxW =
+            (constraints.maxWidth - sideReserve * 2).clamp(120.0, constraints.maxWidth * 0.52);
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // Мягкий фиолетовый градиент в центре → плавно в фон.
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -1842,7 +1995,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               ),
             ),
-            // Жесты стола: вниз к себе = взять, вправо = бито.
             Positioned.fill(
               child: Listener(
                 behavior: HitTestBehavior.translucent,
@@ -1859,12 +2011,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   final dx = _tablePanAccum.dx;
                   final dy = _tablePanAccum.dy;
                   _tablePanAccum = Offset.zero;
-                  // Взять: смахивание карт к себе (вниз).
                   if (dy > 70 && dy.abs() > dx.abs() * 1.1 && _canTake(view)) {
                     unawaited(_take());
                     return;
                   }
-                  // Бито: смахивание вправо к отбою.
                   if (dx > 70 && dx.abs() > dy.abs() * 1.1 && _canBito(view)) {
                     unawaited(_bito());
                   }
@@ -1878,7 +2028,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutCubic,
                   child: AnimatedScale(
-                    scale: tableApproach ? 1.14 : 1.0,
+                    scale: tableApproach ? 1.12 : 1.0,
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeOutCubic,
                     child: KeyedSubtree(
@@ -1896,12 +2046,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               ),
             ),
+            // Колода чуть выше центра — зазор от карт стола.
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: const Alignment(-1.0, -0.12),
               child: deckPeek,
             ),
+            // Бита выше, чтобы не касалась карт стола.
             Align(
-              alignment: Alignment.centerRight,
+              alignment: const Alignment(1.0, -0.38),
               child: bitoPeek,
             ),
           ],
@@ -1910,15 +2062,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// До 3 сверху + 3 снизу; если не влезает — 2 / 2 / 2.
+  /// До 3 сверху + 3 снизу; если не влезает — 2 / 2 / 2. Зазоры — без касаний.
   Widget _buildTableRows({
     required List<Widget> items,
     required Size cardSize,
     required double maxWidth,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
-    final pairW = cardSize.width + 14;
-    final canFit3 = maxWidth >= pairW * 3;
+    const gap = 12.0;
+    final pairW = cardSize.width + 18;
+    final canFit3 = maxWidth >= pairW * 3 + gap * 2;
     final n = items.length;
 
     List<List<Widget>> rows;
@@ -1939,18 +2092,34 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var r = 0; r < rows.length; r++) ...[
-          if (r > 0) const SizedBox(height: 10),
+          if (r > 0) SizedBox(height: gap + 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               for (var i = 0; i < rows[r].length; i++) ...[
-                if (i > 0) const SizedBox(width: 6),
+                if (i > 0) SizedBox(width: gap),
                 rows[r][i],
               ],
             ],
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildActionButton(DurakGameView view) {
+    final take = _canTake(view);
+    final bito = _canBito(view);
+    if (!take && !bito) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 6),
+      child: Center(
+        child: _PulsingActionButton(
+          label: take ? 'Взять' : 'Бито',
+          icon: take ? Icons.south_rounded : Icons.check_rounded,
+          onPressed: take ? _take : _bito,
+        ),
+      ),
     );
   }
 
@@ -2026,6 +2195,101 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   List<PlayingCard> _apiCardsToPlaying(List<DurakApiCard> apis) {
     return apis.map((c) => c.toPlayingCard()).toList();
+  }
+}
+
+/// Плавное мигание кнопки «Взять» / «Бито» между колодой и веером.
+class _PulsingActionButton extends StatefulWidget {
+  const _PulsingActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final Future<void> Function() onPressed;
+
+  @override
+  State<_PulsingActionButton> createState() => _PulsingActionButtonState();
+}
+
+class _PulsingActionButtonState extends State<_PulsingActionButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  bool _pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_ctrl.value);
+        final scale = 1.0 + 0.04 * t;
+        final glow = 0.22 + 0.28 * t;
+        return Transform.scale(
+          scale: scale,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accentStart.withValues(alpha: glow),
+                  blurRadius: 14 + 8 * t,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: FilledButton.icon(
+        onPressed: _pressed
+            ? null
+            : () async {
+                setState(() => _pressed = true);
+                try {
+                  await widget.onPressed();
+                } finally {
+                  if (mounted) setState(() => _pressed = false);
+                }
+              },
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accentStart,
+          disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.55),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        icon: Icon(widget.icon, size: 20),
+        label: Text(
+          widget.label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+    );
   }
 }
 

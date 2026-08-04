@@ -230,6 +230,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                       cards: botHand,
                       cardSize: Size(cardSize.width * 0.85, cardSize.height * 0.85),
                       faceDown: true,
+                      invertFan: true,
                       enabled: false,
                     ),
                   ),

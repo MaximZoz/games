@@ -29,6 +29,7 @@ class CardFan extends StatefulWidget {
     this.onActiveChanged,
     this.onDragPosition,
     this.faceDown = false,
+    this.invertFan = false,
     this.arc,
     this.spacing,
   });
@@ -55,6 +56,9 @@ class CardFan extends StatefulWidget {
   final ValueChanged<PlayingCard?>? onActiveChanged;
   final ValueChanged<Offset?>? onDragPosition;
   final bool faceDown;
+
+  /// Веер «от» соперника: ось сверху, дуга в его сторону.
+  final bool invertFan;
   final double? arc;
   final double? spacing;
 
@@ -71,6 +75,8 @@ class _CardFanState extends State<CardFan> {
   PlayingCard? _liftedCard;
   Offset? _liftGlobalCenter;
   double _liftScale = 1.0;
+  /// Насколько вверх утащили карту после подъёма (для быстрого флика).
+  double _liftUpTravel = 0;
   OverlayEntry? _overlay;
   bool _pointerDown = false;
 
@@ -233,6 +239,7 @@ class _CardFanState extends State<CardFan> {
       _liftedCard = null;
       _liftGlobalCenter = null;
       _liftScale = 1.0;
+      _liftUpTravel = 0;
       _panAccum = Offset.zero;
       _dropBusy = false;
       _docking = false;
@@ -380,6 +387,7 @@ class _CardFanState extends State<CardFan> {
     });
     // С нуля после подъёма — чтобы жест «вниз = сложить» был отзывчивым.
     _panAccum = Offset.zero;
+    _liftUpTravel = 0;
     _emitActiveCard(_isLegal(card) ? card : null);
     widget.onDragPosition?.call(global);
     _updateLiftVisual(global);
@@ -399,19 +407,23 @@ class _CardFanState extends State<CardFan> {
       width: widget.cardSize.width,
       height: widget.cardSize.height,
     );
+    final canPlay =
+        widget.enabled && !widget.faceDown && _isLegal(card);
+    // Быстрый флик вверх — к цели на столе, даже над веером и далеко от слота.
+    final flickedUp = _liftUpTravel > 14 || _panAccum.dy < -12;
+    final foldDown = _globalOverFan(global) &&
+        !flickedUp &&
+        _liftUpTravel < 20 &&
+        _panAccum.dy >= -6;
     var accepted = false;
     try {
-      // Отпустили над веером — аккуратно сложить и отсортировать.
-      if (_globalOverFan(global)) {
+      if (foldDown || (!canPlay && _globalOverFan(global))) {
         await _foldIntoFan(global, baseSpacing, totalW);
         return;
       }
-      final canPlay =
-          widget.enabled && !widget.faceDown && _isLegal(card);
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
         _removeOverlay();
-        // Передаём from уже с учётом текущего масштаба перетаскивания.
         final scaledFrom = Rect.fromCenter(
           center: from.center,
           width: widget.cardSize.width * dragScale,
@@ -421,7 +433,6 @@ class _CardFanState extends State<CardFan> {
         if (!mounted) return;
         if (accepted) return;
       }
-      // Нелегальная / отказ стола — вернуть в веер и отсортировать.
       _liftGlobalCenter = from.center;
       _liftScale = dragScale;
       await _foldIntoFan(global, baseSpacing, totalW);
@@ -462,7 +473,8 @@ class _CardFanState extends State<CardFan> {
       width: totalW + 32,
       child: Stack(
         clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
+        alignment:
+            widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
         children: [
           for (int i = 0; i < layoutCards.length; i++)
             _positioned(
@@ -499,9 +511,15 @@ class _CardFanState extends State<CardFan> {
                       _panAccum += e.delta;
 
                       if (_liftedCard != null) {
+                        if (e.delta.dy < 0) {
+                          _liftUpTravel += -e.delta.dy;
+                        }
                         // Тянем вниз над веером — аккуратно складываем.
+                        // Не складываем, если уже явно тянули вверх (флик).
                         final pullDown = e.delta.dy > 1.0 || _panAccum.dy > 14;
-                        if (_globalOverFan(e.position) && pullDown) {
+                        if (_globalOverFan(e.position) &&
+                            pullDown &&
+                            _liftUpTravel < 36) {
                           unawaited(
                             _foldIntoFan(
                               e.position,
@@ -532,10 +550,10 @@ class _CardFanState extends State<CardFan> {
                         );
                         _setHover(idx);
                       }
-                      // Вытащить: явный жест вверх после остановки на карте.
-                      final pullUp = _panAccum.dy < -14;
+                      // Вытащить: явный жест вверх (в т.ч. быстрый короткий флик).
+                      final pullUp = _panAccum.dy < -8;
                       final pullOut =
-                          _panAccum.distance > 26 && _panAccum.dy < -8;
+                          _panAccum.distance > 16 && _panAccum.dy < -5;
                       final live = _visible;
                       if ((pullUp || pullOut) &&
                           _hoverIndex != null &&
@@ -596,7 +614,9 @@ class _CardFanState extends State<CardFan> {
   ) {
     final center = (n - 1) / 2;
     final offsetX = (i - center) * baseSpacing;
-    final angle = n == 1 ? 0.0 : (i - center) * (arc / max(n - 1, 1));
+    // У соперника дуга и угол в его сторону (к верху экрана).
+    final signedArc = widget.invertFan ? -arc : arc;
+    final angle = n == 1 ? 0.0 : (i - center) * (signedArc / max(n - 1, 1));
     final curveY = (i - center) * (i - center) * widget.cardSize.height * 0.012;
 
     var extraX = 0.0;
@@ -639,19 +659,24 @@ class _CardFanState extends State<CardFan> {
       child: child,
     );
 
+    // invertFan: края ниже, середина выше — веер «от» соперника.
+    final edgeLift = widget.invertFan ? curveY : -curveY;
+
     return AnimatedPositioned(
       key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       left: totalW / 2 + offsetX + extraX + 16,
-      bottom: extraY - curveY,
+      top: widget.invertFan ? extraY + edgeLift : null,
+      bottom: widget.invertFan ? null : extraY + edgeLift,
       child: AnimatedScale(
         scale: scale,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
         child: Transform.rotate(
           angle: angle,
-          alignment: Alignment.bottomCenter,
+          alignment:
+              widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
           child: child,
         ),
       ),

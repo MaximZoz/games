@@ -859,10 +859,10 @@ class _ShrinkingBorderPainter extends CustomPainter {
       old.baseColors != baseColors;
 }
 
-/// Рамка на весь экран: остаток времени «съедается» сверху вниз симметрично.
+/// Рамка по границе всего приложения: время «съедается» сверху вниз симметрично.
 ///
-/// При [fraction]=1 — полный контур; по мере убывания верх пропадает, левая и
-/// правая стороны укорачиваются одинаково сверху, остаётся нижняя U-образная часть.
+/// Рисуется поверх [child] (обычно весь экран). При [fraction]=1 — полный контур;
+/// по мере убывания верх пропадает, стороны укорачиваются сверху одинаково.
 class TurnTimerAppFrame extends StatefulWidget {
   const TurnTimerAppFrame({
     super.key,
@@ -871,7 +871,7 @@ class TurnTimerAppFrame extends StatefulWidget {
     this.turnDeadline = 0,
     this.turnTimeSec = 0,
     this.borderWidth = 3.0,
-    this.radius = 18,
+    this.radius = 28,
     this.onExpired,
   });
 
@@ -937,23 +937,33 @@ class _TurnTimerAppFrameState extends State<TurnTimerAppFrame> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.active) return widget.child;
+    // Всегда Stack на весь экран — рамка по краю приложения, не блока игры.
     final colors = TurnTimerStyle.colorsFor(
       hasTimer: _hasTimer,
       fraction: _hasTimer ? _fraction : 1,
     );
-    return CustomPaint(
-      foregroundPainter: _TopDownFramePainter(
-        fraction: _hasTimer ? _fraction : 1,
-        colors: colors,
-        strokeWidth: widget.borderWidth,
-        radius: widget.radius,
-        baseColors: const [
-          AppColors.accentStart,
-          AppColors.accentEnd,
-        ],
-      ),
-      child: widget.child,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        if (widget.active)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _TopDownFramePainter(
+                  fraction: _hasTimer ? _fraction : 1,
+                  colors: colors,
+                  strokeWidth: widget.borderWidth,
+                  radius: widget.radius,
+                  baseColors: const [
+                    AppColors.accentStart,
+                    AppColors.accentEnd,
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -1033,12 +1043,13 @@ class _TopDownFramePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final inset = strokeWidth / 2 + 1;
+    // По самому краю экрана приложения.
+    final inset = strokeWidth / 2;
     final rect = Rect.fromLTWH(
       inset,
       inset,
-      size.width - strokeWidth - 2,
-      size.height - strokeWidth - 2,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
     );
     final f = fraction.clamp(0.0, 1.0);
     if (f <= 0.001) return;
