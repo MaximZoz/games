@@ -63,3 +63,4 @@ Thumbs.db
 .env.*
 !.env.example
 deploy.cursor.env
+deploy.dev.env
