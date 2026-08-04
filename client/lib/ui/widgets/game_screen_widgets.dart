@@ -780,10 +780,16 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
     );
     return CustomPaint(
       foregroundPainter: _ShrinkingBorderPainter(
+        // Без лимита — полный «таймерный» цвет; с лимитом — укорачивается,
+        // а под ним всегда базовая фиолетовая рамка на том же месте.
         fraction: _hasTimer ? _fraction : 1,
         colors: colors,
         strokeWidth: widget.borderWidth,
         radius: widget.radius,
+        baseColors: const [
+          AppColors.accentStart,
+          AppColors.accentEnd,
+        ],
       ),
       child: Padding(
         padding: EdgeInsets.all(widget.borderWidth),
@@ -799,6 +805,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
     required this.colors,
     required this.strokeWidth,
     required this.radius,
+    this.baseColors = const [AppColors.accentStart, AppColors.accentEnd],
   });
 
   final double fraction;
@@ -806,9 +813,11 @@ class _ShrinkingBorderPainter extends CustomPainter {
   final double strokeWidth;
   final double radius;
 
+  /// Полная фиолетовая рамка — остаётся, когда таймер исчезает.
+  final List<Color> baseColors;
+
   @override
   void paint(Canvas canvas, Size size) {
-    if (fraction <= 0.001) return;
     final inset = strokeWidth / 2;
     final rect = Rect.fromLTWH(
       inset,
@@ -818,16 +827,26 @@ class _ShrinkingBorderPainter extends CustomPainter {
     );
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
     final path = Path()..addRRect(rrect);
+
+    // 1) Базовая фиолетовая рамка на всём периметре.
+    final basePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..shader = LinearGradient(colors: baseColors).createShader(rect);
+    canvas.drawRRect(rrect, basePaint);
+
+    // 2) Поверх — укорачивающийся таймер (зелёный→оранжевый→красный).
+    final f = fraction.clamp(0.0, 1.0);
+    if (f <= 0.001) return;
     for (final metric in path.computeMetrics()) {
-      final len = metric.length * fraction.clamp(0.0, 1.0);
+      final len = metric.length * f;
       final extract = metric.extractPath(0, len);
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
-        ..shader = LinearGradient(
-          colors: colors,
-        ).createShader(rect);
+        ..shader = LinearGradient(colors: colors).createShader(rect);
       canvas.drawPath(extract, paint);
     }
   }
@@ -836,7 +855,8 @@ class _ShrinkingBorderPainter extends CustomPainter {
   bool shouldRepaint(covariant _ShrinkingBorderPainter old) =>
       old.fraction != fraction ||
       old.strokeWidth != strokeWidth ||
-      old.colors != colors;
+      old.colors != colors ||
+      old.baseColors != baseColors;
 }
 
 /// Тонкая горизонтальная линия-прогресс внизу: укорачивается со временем.
