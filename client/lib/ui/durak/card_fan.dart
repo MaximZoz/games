@@ -23,6 +23,7 @@ class CardFan extends StatefulWidget {
     this.onLongPress,
     this.onDrop,
     this.onActiveChanged,
+    this.onDragPosition,
     this.faceDown = false,
     this.arc,
     this.spacing,
@@ -45,6 +46,9 @@ class CardFan extends StatefulWidget {
     Rect from,
   )? onDrop;
   final ValueChanged<PlayingCard?>? onActiveChanged;
+
+  /// Глобальная позиция пальца во время драга (для выбора цели защиты).
+  final ValueChanged<Offset?>? onDragPosition;
   final bool faceDown;
   final double? arc;
   final double? spacing;
@@ -222,6 +226,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
       if (!keepHover) _hoverIndex = null;
     });
     if (!keepHover) widget.onActiveChanged?.call(null);
+    widget.onDragPosition?.call(null);
   }
 
   double _spacingFor(int n) {
@@ -311,6 +316,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
       _liftedCard = card;
     });
     _emitActiveCard(card);
+    widget.onDragPosition?.call(global);
     _showOverlayAt(global);
   }
 
@@ -412,6 +418,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
                       _panAccum += e.delta;
                       if (_liftedCard != null) {
                         _showOverlayAt(e.position);
+                        widget.onDragPosition?.call(e.position);
                         return;
                       }
                       final box = context.findRenderObject() as RenderBox?;
@@ -502,12 +509,9 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
       final distance = (i - _hoverIndex!).abs();
       extraX = dir * widget.cardSize.width * (0.28 / max(distance, 1));
     }
+    // Подъём только у выбранных (long-press мульти); свайп — без подъёма.
     if (selected) {
-      extraY = widget.cardSize.height * 0.18;
-      scale = 1.05;
-    }
-    if (active) {
-      extraY = widget.cardSize.height * 0.22;
+      extraY = widget.cardSize.height * 0.2;
       scale = 1.06;
     }
 
@@ -515,13 +519,13 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     final isLegalContext = widget.legalCards != null;
 
     Widget child = widget.faceDown
-        ? CardBackWidget(size: widget.cardSize, elevated: active || selected)
+        ? CardBackWidget(size: widget.cardSize, elevated: selected)
         : PlayingCardWidget(
             card: card,
             size: widget.cardSize,
             highlighted: (active || selected) && (!isLegalContext || legal),
             dimmed: isLegalContext && !legal,
-            elevated: active || selected,
+            elevated: selected,
           );
 
     // Long-press через GestureDetector без конфликта с Listener.

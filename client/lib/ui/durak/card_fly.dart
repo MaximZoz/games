@@ -6,6 +6,7 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Плавный полёт карты из [from] в [to] поверх всего UI.
+/// [flipToFace] — переворот рубашка→лицо к концу полёта (добор в руку).
 Future<void> playCardFlyAnimation({
   required BuildContext context,
   required PlayingCard card,
@@ -14,8 +15,10 @@ Future<void> playCardFlyAnimation({
   required Rect to,
   Duration duration = const Duration(milliseconds: 380),
   bool faceDown = false,
+  bool flipToFace = false,
   double beginAngle = 0,
   double endAngle = 0,
+  bool keepAtEnd = false,
 }) async {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return;
@@ -30,7 +33,7 @@ Future<void> playCardFlyAnimation({
           duration: duration,
           curve: Curves.easeInOutCubic,
           onEnd: () {
-            entry.remove();
+            if (!keepAtEnd) entry.remove();
             if (!completer.isCompleted) completer.complete();
           },
           builder: (context, t, _) {
@@ -38,8 +41,36 @@ Future<void> playCardFlyAnimation({
             final top = from.top + (to.top - from.top) * t;
             final scale = 1.08 - 0.08 * t;
             final angle = beginAngle + (endAngle - beginAngle) * t;
-            // Лёгкая дуга траектории.
             final midLift = -40.0 * math.sin(math.pi * t);
+            Widget face;
+            if (flipToFace) {
+              // 0..0.5 рубашка, 0.5..1 лицо.
+              final flipT = t < 0.5 ? t * 2 : (1 - t) * 2;
+              final showBack = t < 0.5;
+              face = Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY(flipT * math.pi / 2),
+                child: showBack || faceDown
+                    ? CardBackWidget(size: cardSize, elevated: true)
+                    : PlayingCardWidget(
+                        card: card,
+                        size: cardSize,
+                        elevated: true,
+                        highlighted: true,
+                      ),
+              );
+            } else {
+              face = faceDown
+                  ? CardBackWidget(size: cardSize, elevated: true)
+                  : PlayingCardWidget(
+                      card: card,
+                      size: cardSize,
+                      elevated: true,
+                      highlighted: true,
+                    );
+            }
             return Stack(
               children: [
                 Positioned(
@@ -47,17 +78,7 @@ Future<void> playCardFlyAnimation({
                   top: top + midLift,
                   child: Transform.rotate(
                     angle: angle,
-                    child: Transform.scale(
-                      scale: scale,
-                      child: faceDown
-                          ? CardBackWidget(size: cardSize, elevated: true)
-                          : PlayingCardWidget(
-                              card: card,
-                              size: cardSize,
-                              elevated: true,
-                              highlighted: true,
-                            ),
-                    ),
+                    child: Transform.scale(scale: scale, child: face),
                   ),
                 ),
               ],
@@ -68,8 +89,14 @@ Future<void> playCardFlyAnimation({
     },
   );
   overlay.insert(entry);
-  return completer.future;
+  await completer.future;
+  if (keepAtEnd) {
+    // Оставить «приземлённую» карту до явного remove — вызывающий снимет.
+    return;
+  }
 }
+
+/// Убрать все overlay-полёты нельзя глобально — keepAtEnd снимает вызывающий.
 
 /// Несколько карт летят с небольшим сдвигом по времени.
 Future<void> playCardsFlyAnimation({
@@ -100,6 +127,7 @@ Future<void> playCardsFlyAnimation({
         to: to,
         duration: duration,
         faceDown: faceDown,
+        flipToFace: faceDown,
         endAngle: endA,
       );
     }));
