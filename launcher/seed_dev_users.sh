@@ -42,10 +42,54 @@ SQL_FILE="$(mktemp)"
 cleanup() { rm -f "$SQL_FILE"; }
 trap cleanup EXIT
 
-(
-  cd "$ROOT_DIR/server"
-  go run ./cmd/seed_dev_users >"$SQL_FILE"
-)
+resolve_go() {
+  if command -v go >/dev/null 2>&1; then
+    command -v go
+    return 0
+  fi
+  for candidate in \
+    /usr/local/go/bin/go \
+    "$HOME/go/bin/go" \
+    /usr/lib/go-1.24/bin/go \
+    /usr/lib/go/bin/go; do
+    if [[ -x "$candidate" ]]; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+generate_sql() {
+  local go_bin=""
+  if go_bin="$(resolve_go)"; then
+    echo "Использую Go: $go_bin"
+    (
+      cd "$ROOT_DIR/server"
+      "$go_bin" run ./cmd/seed_dev_users
+    ) >"$SQL_FILE"
+    return 0
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    echo "Go не найден локально — генерирую SQL через Docker (golang:1.24-alpine)..."
+    docker run --rm \
+      -v "$ROOT_DIR/server:/app" \
+      -w /app \
+      golang:1.24-alpine \
+      go run ./cmd/seed_dev_users >"$SQL_FILE"
+    return 0
+  fi
+
+  echo "Не найден Go и Docker."
+  echo "Установи Go: https://go.dev/dl/  или Docker, затем повтори."
+  echo "Быстрый вариант в WSL:"
+  echo "  sudo apt-get update && sudo apt-get install -y golang-go"
+  echo "  ./launcher/seed_dev_users.sh"
+  return 1
+}
+
+generate_sql
 
 echo "Применяю к Postgres DEV: $FLY_DEV_DB_NAME / db=$FLY_DEV_DB_DATABASE"
 echo "App: $FLY_APP_NAME"
