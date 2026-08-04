@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
@@ -19,6 +20,7 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
 class DurakGameScreen extends ConsumerStatefulWidget {
   const DurakGameScreen({super.key, required this.gameId});
@@ -93,6 +95,37 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     context.go('/games');
   }
 
+  bool _iOfferedDraw(DurakGameView view) {
+    final me = view.myIndex >= 0 && view.playerIds.length > view.myIndex
+        ? view.playerIds[view.myIndex]
+        : '';
+    return view.drawOfferBy.isNotEmpty && view.drawOfferBy == me;
+  }
+
+  bool _opponentOfferedDraw(DurakGameView view) {
+    final me = view.myIndex >= 0 && view.playerIds.length > view.myIndex
+        ? view.playerIds[view.myIndex]
+        : '';
+    return view.drawOfferBy.isNotEmpty && view.drawOfferBy != me;
+  }
+
+  Future<void> _offerDraw(DurakGameView view) async {
+    final ok = await confirmGameActionDialog(
+      context: context,
+      title: context.l10n.gameOfferDrawTitle,
+      message: context.l10n.gameOfferDrawConfirm,
+      cancelLabel: context.l10n.commonCancel,
+      confirmLabel: context.l10n.gameOfferDrawTitle,
+    );
+    if (!ok || !mounted) return;
+    await _act(() => ref.read(durakRepositoryProvider).offerDraw(widget.gameId));
+  }
+
+  Future<void> _acceptDraw() async {
+    await _act(
+        () => ref.read(durakRepositoryProvider).acceptDraw(widget.gameId));
+  }
+
   void _showRules(DurakGameView view) {
     showGameRulesDialog(
       context: context,
@@ -160,6 +193,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   context: context,
                   onSurrender: showSurrender ? _confirmLeave : null,
                   surrenderTooltip: context.l10n.gameSurrender,
+                  // Ничья только 1×1 и пока нет своего предложения.
+                  onOfferDraw: showSurrender &&
+                          view.playerIds.length == 2 &&
+                          !_iOfferedDraw(view)
+                      ? () => _offerDraw(view)
+                      : null,
+                  drawTooltip: context.l10n.gameOfferDrawTitle,
                   onShowRules: () => _showRules(view),
                   rulesTooltip: context.l10n.gamesRulesTitle,
                 ),
@@ -218,6 +258,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [
+          // Рамка соперника с чатом — общий виджет из крестиков-ноликов.
+          _opponentsHeader(view),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 20,
             runSpacing: 12,
@@ -227,13 +270,50 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            _turnHint(view),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
+          GameStatusLine(
+            text: _turnHint(view),
+            highlight: !view.isOver && view.isMyTurn,
           ),
+          // Таймер хода — общий виджет.
+          if (!view.isOver && view.turnTimeSec > 0 && view.turnDeadline > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: GameTurnCountdown(
+                key: ValueKey('${view.phase}_${view.turnDeadline}'),
+                turnDeadline: view.turnDeadline,
+                isMyTurn: view.isMyTurn,
+                onExpired: () =>
+                    ref.invalidate(durakGameProvider(widget.gameId)),
+                labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
+              ),
+            ),
+          // Соперник предложил ничью — принять/отклонить.
+          if (!view.isOver && _opponentOfferedDraw(view))
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.gameDrawOffered,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    onPressed: _busy ? null : _acceptDraw,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentStart,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(context.l10n.commonAccept),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 10),
           Expanded(child: _buildBoard(view, cardSize, trumpCard)),
           const SizedBox(height: 12),
@@ -250,6 +330,71 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           const SizedBox(height: 6),
         ],
       ),
+    );
+  }
+
+  /// Шапка с соперником (1×1) — та же карточка, что в крестиках-ноликах.
+  Widget _opponentsHeader(DurakGameView view) {
+    if (view.playerIds.length != 2 || view.myIndex < 0) {
+      return const SizedBox.shrink();
+    }
+    final oppIndex = view.myIndex == 0 ? 1 : 0;
+    if (view.playerIds.length <= oppIndex) return const SizedBox.shrink();
+    final oppId = view.playerIds[oppIndex];
+    final chats = ref.watch(chatsListProvider).valueOrNull;
+    var name = context.l10n.gameOpponent;
+    String avatarKind = 'letter';
+    String? avatarValue;
+    String? frameCode;
+    String? frameColor;
+    var unread = 0;
+    if (chats != null) {
+      for (final c in chats) {
+        if (c.user.id == oppId) {
+          final dn = c.user.displayName?.trim();
+          if (dn != null && dn.isNotEmpty) name = dn;
+          avatarKind = c.user.avatarKind;
+          avatarValue = c.user.avatarValue;
+          frameCode = c.user.frameCode;
+          frameColor = c.user.frameColor;
+          unread += c.unreadCount;
+        }
+      }
+    }
+    return GameOpponentCard(
+      displayName: name,
+      avatarKind: avatarKind,
+      avatarValue: avatarValue,
+      frameCode: frameCode,
+      frameColor: frameColor,
+      isBot: oppId.startsWith('bot:'),
+      messageUnread: view.isOver ? 0 : unread,
+      infoTooltip: context.l10n.userInfoTitle,
+      messageTooltip: context.l10n.gameWriteMessage,
+      compact: MediaQuery.sizeOf(context).width < 420,
+      onInfoTap: () => unawaited(showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: oppId,
+        displayName: name,
+        avatarKind: avatarKind,
+        avatarValue: avatarValue,
+        frameCode: frameCode,
+        frameColor: frameColor,
+        messageFrom: 'games',
+        messageReturnPath: '/games/durak/game/${widget.gameId}',
+      )),
+      onMessageTap: view.isOver
+          ? null
+          : () => context.push(
+                Uri(
+                  path: '/chats',
+                  queryParameters: {
+                    'peer': oppId,
+                    'game': '/games/durak/game/${widget.gameId}',
+                  },
+                ).toString(),
+              ),
     );
   }
 

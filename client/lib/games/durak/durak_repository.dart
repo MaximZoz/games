@@ -109,6 +109,8 @@ class DurakGameView {
     required this.turnTimeSec,
     required this.turnDeadline,
     required this.stakeBronze,
+    this.isDraw = false,
+    this.drawOfferBy = '',
   });
 
   final String id;
@@ -135,6 +137,12 @@ class DurakGameView {
   final int turnTimeSec;
   final int turnDeadline;
   final int stakeBronze;
+
+  /// Партия завершена соглашением на ничью.
+  final bool isDraw;
+
+  /// user_id того, кто предложил ничью (пусто — предложения нет).
+  final String drawOfferBy;
 
   bool get isOver => status != 'active';
   bool get isMyTurn {
@@ -191,6 +199,8 @@ class DurakGameView {
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      isDraw: json['draw'] == true,
+      drawOfferBy: (json['draw_offer_by'] ?? '').toString(),
     );
   }
 }
@@ -460,6 +470,24 @@ class DurakRepository {
           },
           body: jsonEncode(body),
           operation: 'DurakRepository.move',
+        ));
+    if (r.statusCode != 200) _fail(r);
+  }
+
+  Future<void> offerDraw(String gameId) async {
+    final r = await _sendAuth((token) => ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/games/durak/game/$gameId/draw-offer'),
+          headers: {'Authorization': 'Bearer $token'},
+          operation: 'DurakRepository.offerDraw',
+        ));
+    if (r.statusCode != 200) _fail(r);
+  }
+
+  Future<void> acceptDraw(String gameId) async {
+    final r = await _sendAuth((token) => ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/games/durak/game/$gameId/draw-accept'),
+          headers: {'Authorization': 'Bearer $token'},
+          operation: 'DurakRepository.acceptDraw',
         ));
     if (r.statusCode != 200) _fail(r);
   }

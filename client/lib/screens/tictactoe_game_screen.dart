@@ -793,13 +793,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         game.turnDeadline != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: _TurnCountdown(
+                        child: GameTurnCountdown(
                           key: ValueKey(
                             '${game.turn}_${game.turnDeadline}',
                           ),
                           turnDeadline: game.turnDeadline!,
                           isMyTurn: isMyTurn,
                           onExpired: _onTurnTimeExpired,
+                          labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
                         ),
                       ),
                     if (isOver) ...[
@@ -3104,94 +3105,6 @@ class _GridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _GridPainter old) =>
       old.gridSize != gridSize || old.ultimate != ultimate;
-}
-
-class _TurnCountdown extends StatefulWidget {
-  const _TurnCountdown({
-    super.key,
-    required this.turnDeadline,
-    required this.isMyTurn,
-    required this.onExpired,
-  });
-
-  final int turnDeadline; // Unix sec
-  final bool isMyTurn;
-  final VoidCallback onExpired;
-
-  @override
-  State<_TurnCountdown> createState() => _TurnCountdownState();
-}
-
-class _TurnCountdownState extends State<_TurnCountdown> {
-  Timer? _timer;
-  int _remaining = 0;
-  bool _expiredFired = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _updateRemaining();
-    _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(covariant _TurnCountdown oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.turnDeadline != widget.turnDeadline) {
-      _expiredFired = false;
-      _timer?.cancel();
-      _updateRemaining();
-      _startTimer();
-    }
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _updateRemaining();
-      if (_remaining <= 0 && !_expiredFired) {
-        _expiredFired = true;
-        widget.onExpired();
-      }
-    });
-  }
-
-  void _updateRemaining() {
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-    final r = widget.turnDeadline - now;
-    if (r != _remaining && mounted) {
-      setState(() => _remaining = r.clamp(0, 999));
-    } else if (r <= 0 && _remaining != 0 && mounted) {
-      setState(() => _remaining = 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _remaining <= 5 && widget.isMyTurn
-        ? Colors.red
-        : AppColors.textSecondary;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.timer_outlined, size: 18, color: color),
-        const SizedBox(width: 6),
-        Text(
-          context.l10n.gameSecondsLeft(_remaining),
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-      ],
-    );
-  }
 }
 
 class _AnimatedGameCell extends StatelessWidget {

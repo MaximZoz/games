@@ -2462,13 +2462,22 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 
 	clearUserActiveLobby(ctx, h.Rdb, userID)
 
-	// Создатель ушёл или остался один — закрываем лобби и групповой чат.
-	dissolve := creatorID == userID.String()
 	remaining := make([]string, 0, len(players))
 	for _, p := range players {
 		if p != userID.String() {
 			remaining = append(remaining, p)
 		}
+	}
+	// Открытый поиск (matchmake) на 3-4 продолжает ждать игроков: если ушёл
+	// создатель, передаём лобби следующему, а не закрываем — иначе у
+	// оставшихся «Лобби не найдено» вместо «1/3» и продолжения поиска.
+	isOpenFind := m["mode"] == "matchmake"
+	dissolve := creatorID == userID.String()
+	if dissolve && isOpenFind && len(remaining) > 0 {
+		newCreator := remaining[0]
+		h.Rdb.HSet(ctx, key, "creator_id", newCreator)
+		creatorID = newCreator
+		dissolve = false
 	}
 	if !dissolve && len(remaining) == 0 {
 		dissolve = true

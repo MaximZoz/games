@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
 /// Салют при победе — общий для всех игр.
 class GameConfettiOverlay extends StatefulWidget {
@@ -160,6 +163,350 @@ class _ConfettiPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ConfettiPainter old) =>
       old.progress != progress;
+}
+
+const _presetAvatarIcons = <IconData>[
+  Icons.face_rounded,
+  Icons.face_2_rounded,
+  Icons.face_3_rounded,
+  Icons.face_4_rounded,
+  Icons.face_5_rounded,
+  Icons.face_6_rounded,
+  Icons.sports_esports_rounded,
+  Icons.pets_rounded,
+  Icons.rocket_launch_rounded,
+  Icons.emoji_emotions_rounded,
+];
+
+/// Аватар игрока в рамке — общий для экранов партий.
+class GamePlayerAvatar extends StatelessWidget {
+  const GamePlayerAvatar({
+    super.key,
+    required this.displayName,
+    required this.avatarKind,
+    required this.avatarValue,
+    this.frameCode,
+    this.frameColor,
+    this.compact = false,
+  });
+
+  final String displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameCode;
+  final String? frameColor;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = compact ? 18.0 : 22.0;
+    Widget avatar;
+    if (avatarKind == 'file' &&
+        avatarValue != null &&
+        avatarValue!.trim().isNotEmpty) {
+      final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
+      avatar = img != null
+          ? CircleAvatar(radius: r, backgroundImage: img)
+          : _letter(r);
+    } else if (avatarKind == 'preset' && avatarValue != null) {
+      final idx = int.tryParse(avatarValue!);
+      avatar = (idx != null && idx >= 0 && idx < _presetAvatarIcons.length)
+          ? CircleAvatar(
+              radius: r,
+              backgroundColor: AppColors.accentSoft,
+              child:
+                  Icon(_presetAvatarIcons[idx], color: AppColors.accentStart),
+            )
+          : _letter(r);
+    } else {
+      avatar = _letter(r);
+    }
+    return FramedAvatar(
+      size: r * 2,
+      borderWidth: compact ? 2.4 : 3.0,
+      frameCode: frameCode,
+      frameColor: frameColor,
+      animate: false,
+      child: avatar,
+    );
+  }
+
+  Widget _letter(double r) {
+    final letter =
+        displayName.trim().isEmpty ? '?' : displayName[0].toUpperCase();
+    return CircleAvatar(
+      radius: r,
+      backgroundColor: AppColors.accentSoft,
+      child: Text(
+        letter,
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w700,
+          fontSize: compact ? 14 : 16,
+        ),
+      ),
+    );
+  }
+}
+
+/// Иконка-кнопка со счётчиком непрочитанного.
+class GameIconWithBadge extends StatelessWidget {
+  const GameIconWithBadge({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.badge = 0,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final int badge;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 40.0;
+    final btn = IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 22),
+      tooltip: tooltip,
+      style: IconButton.styleFrom(
+        foregroundColor: AppColors.accentStart,
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.all(8),
+        minimumSize: const Size(size, size),
+        fixedSize: const Size(size, size),
+      ),
+    );
+    if (badge <= 0) return SizedBox(width: size, height: size, child: btn);
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          btn,
+          Positioned(
+            right: 2,
+            top: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: Colors.red.shade600,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                badge > 99 ? '99+' : '$badge',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Рамка с соперником: аватар (тап — профиль), имя и кнопка чата
+/// со счётчиком непрочитанных. Общая для всех игр 1×1.
+class GameOpponentCard extends StatelessWidget {
+  const GameOpponentCard({
+    super.key,
+    required this.displayName,
+    required this.avatarKind,
+    required this.avatarValue,
+    this.frameCode,
+    this.frameColor,
+    this.isBot = false,
+    this.messageUnread = 0,
+    required this.onInfoTap,
+    this.onMessageTap,
+    this.infoTooltip = '',
+    this.messageTooltip = '',
+    this.trailing = const <Widget>[],
+    this.compact = false,
+    this.maxWidth = 400,
+  });
+
+  final String displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameCode;
+  final String? frameColor;
+  final bool isBot;
+  final int messageUnread;
+  final VoidCallback onInfoTap;
+  final VoidCallback? onMessageTap;
+  final String infoTooltip;
+  final String messageTooltip;
+
+  /// Доп. кнопки справа (например «добавить в друзья»).
+  final List<Widget> trailing;
+  final bool compact;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = GradientCard(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 12 : 16,
+        vertical: compact ? 8 : 12,
+      ),
+      margin: EdgeInsets.zero,
+      animate: false,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Tooltip(
+            message: infoTooltip,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onInfoTap,
+                behavior: HitTestBehavior.opaque,
+                child: GamePlayerAvatar(
+                  displayName: displayName,
+                  avatarKind: avatarKind,
+                  avatarValue: avatarValue,
+                  frameCode: frameCode,
+                  frameColor: frameColor,
+                  compact: compact,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: compact ? 10 : 14),
+          Flexible(
+            child: Text(
+              displayName,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: compact ? 14 : 16,
+                color: AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (!isBot && onMessageTap != null)
+            GameIconWithBadge(
+              icon: Icons.chat_bubble_outline_rounded,
+              badge: messageUnread,
+              tooltip: messageTooltip,
+              onPressed: onMessageTap,
+            ),
+          ...trailing,
+        ],
+      ),
+    );
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: card,
+      ),
+    );
+  }
+}
+
+/// Обратный отсчёт до конца хода — общий для всех игр.
+/// [onExpired] вызывается один раз, когда время вышло.
+class GameTurnCountdown extends StatefulWidget {
+  const GameTurnCountdown({
+    super.key,
+    required this.turnDeadline,
+    required this.isMyTurn,
+    required this.onExpired,
+    required this.labelBuilder,
+  });
+
+  /// Unix-время (сек) окончания хода.
+  final int turnDeadline;
+  final bool isMyTurn;
+  final VoidCallback onExpired;
+
+  /// Локализованная подпись, например `(s) => l10n.gameSecondsLeft(s)`.
+  final String Function(int secondsLeft) labelBuilder;
+
+  @override
+  State<GameTurnCountdown> createState() => _GameTurnCountdownState();
+}
+
+class _GameTurnCountdownState extends State<GameTurnCountdown> {
+  Timer? _timer;
+  int _remaining = 0;
+  bool _expiredFired = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateRemaining();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant GameTurnCountdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.turnDeadline != widget.turnDeadline) {
+      _expiredFired = false;
+      _timer?.cancel();
+      _updateRemaining();
+      _startTimer();
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateRemaining();
+      if (_remaining <= 0 && !_expiredFired) {
+        _expiredFired = true;
+        widget.onExpired();
+      }
+    });
+  }
+
+  void _updateRemaining() {
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    final r = widget.turnDeadline - now;
+    if (r != _remaining && mounted) {
+      setState(() => _remaining = r.clamp(0, 999));
+    } else if (r <= 0 && _remaining != 0 && mounted) {
+      setState(() => _remaining = 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _remaining <= 5 && widget.isMyTurn
+        ? Colors.red
+        : AppColors.textSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.timer_outlined, size: 18, color: color),
+        const SizedBox(width: 6),
+        Text(
+          widget.labelBuilder(_remaining),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Строка статуса партии («Ваш ход», «Ход X», «Вы выиграли») со значком.

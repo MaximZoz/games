@@ -71,6 +71,10 @@ func (h *GamesHandler) serveDurak(w http.ResponseWriter, r *http.Request) {
 			h.DurakMove(w, r, gameID)
 		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
 			h.ForfeitDurakGame(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+			h.DurakOfferDraw(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+			h.DurakAcceptDraw(w, r, gameID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
@@ -738,6 +742,93 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
+// ---- Ничья (только 1×1) ----
+
+// DurakOfferDraw — предложить ничью сопернику.
+func (h *GamesHandler) DurakOfferDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+	if err != nil || len(m) == 0 || m["game_type"] != durakGameType {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is not active")
+		return
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) != 2 {
+		WriteErr(w, r, http.StatusBadRequest, "draw only in 1v1")
+		return
+	}
+	inGame := false
+	for _, p := range players {
+		if p == userID.String() {
+			inGame = true
+		}
+	}
+	if !inGame {
+		WriteErr(w, r, http.StatusForbidden, "not a player")
+		return
+	}
+	h.Rdb.HSet(ctx, "game:"+gameID, "draw_offer_by", userID.String())
+	h.broadcast(durakHumans(m), map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"offered": true})
+}
+
+// DurakAcceptDraw — принять ничью: партия завершается без «дурака».
+func (h *GamesHandler) DurakAcceptDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+	if err != nil || len(m) == 0 || m["game_type"] != durakGameType {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	offeredBy := strings.TrimSpace(m["draw_offer_by"])
+	if offeredBy == "" || offeredBy == userID.String() {
+		WriteErr(w, r, http.StatusBadRequest, "no draw offer")
+		return
+	}
+	state, err := durak.Decode(m["state"])
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "bad state")
+		return
+	}
+	state.Status = durak.StatusOver
+	state.LoserIndex = -1 // ничья: «дурака» нет
+	encoded, _ := durak.Encode(state)
+	h.Rdb.HSet(ctx, "game:"+gameID,
+		"state", encoded,
+		"status", durakStatusOver,
+		"draw", "1",
+	)
+	h.Rdb.HDel(ctx, "game:"+gameID, "draw_offer_by")
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	h.onDurakGameFinished(ctx, gameID, m, state)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"draw": true})
+}
+
 // ---- Rematch (создать новое лобби из завершённой партии) ----
 
 func (h *GamesHandler) DurakRematch(w http.ResponseWriter, r *http.Request) {
@@ -909,6 +1000,8 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"id":             gameID,
 		"game_type":      durakGameType,
 		"status":         m["status"],
+		"draw":           m["draw"] == "1",
+		"draw_offer_by":  strings.TrimSpace(m["draw_offer_by"]),
 		"lobby_id":       m["lobby_id"],
 		"chat_id":        m["chat_id"],
 		"mode":           string(s.Mode),
