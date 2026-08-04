@@ -19,13 +19,20 @@ fi
 
 set -a
 # shellcheck disable=SC1090
-source "$ENV_FILE"
+if ! source "$ENV_FILE"; then
+  echo "Не удалось прочитать $ENV_FILE"
+  echo 'FLY_API_TOKEN должен быть в кавычках: FLY_API_TOKEN="FlyV1 fm2_....="'
+  exit 1
+fi
 set +a
 
 required_vars=("FLY_API_TOKEN" "FLY_APP_NAME" "JWT_SECRET" "ADMIN_INIT_SECRET")
 for var_name in "${required_vars[@]}"; do
   if [[ -z "${!var_name:-}" ]]; then
     echo "Не задана обязательная переменная: $var_name"
+    if [[ "$var_name" == "FLY_API_TOKEN" ]]; then
+      echo 'Пример: FLY_API_TOKEN="FlyV1 fm2_....="'
+    fi
     exit 1
   fi
 done

@@ -21,8 +21,9 @@ cp deploy.dev.env.example deploy.dev.env
 ```
 
 Заполни:
-- `FLY_API_TOKEN`
-- `JWT_SECRET` / `ADMIN_INIT_SECRET` — **новые**, не копируй с прода
+- `FLY_API_TOKEN` — **в кавычках**, одной строкой  
+  (`FLY_API_TOKEN="FlyV1 fm2_....="` — иначе bash ломается на пробеле)
+- `JWT_SECRET` / `ADMIN_INIT_SECRET` — **новые**, не копируй с прода (тоже лучше в кавычках)
 - при необходимости `REDIS_URL`, почту (`RESEND_API_KEY`, `MAIL_FROM`)
 
 Токен:
