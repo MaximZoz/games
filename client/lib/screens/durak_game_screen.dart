@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
@@ -12,7 +13,8 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/games_provider.dart';
-import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/games/games_repository.dart'
+    show ActiveGameItem, GamesException;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
@@ -37,7 +39,6 @@ class DurakGameScreen extends ConsumerStatefulWidget {
 
 class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _busy = false;
-  bool _settled = false;
   bool _handlingAuthError = false;
   bool _retryScheduled = false;
   PlayingCard? _activeCard;
@@ -52,6 +53,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Стол скрыт на время полёта в биту.
   bool _hidingTable = false;
   Timer? _timeoutRetryTimer;
+  Timer? _rematchPollTimer;
+  ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
+  bool _providerBindingsInitialized = false;
+  bool _isRematching = false;
+  bool _isAcceptingRematch = false;
+  String? _rematchLobbyId;
+  bool _rematchDeclined = false;
+  bool _iDeclinedRematch = false;
+  final Set<String> _rematchRespondedIds = <String>{};
+  bool _isFindingGame = false;
+  String? _prevGameStatus;
+  bool _balanceGainPlayed = false;
+  final GlobalKey _winRewardKey = GlobalKey();
   final GlobalKey _fanKey = GlobalKey();
   final GlobalKey _defendTargetKey = GlobalKey();
   final GlobalKey _attackSlotKey = GlobalKey();
@@ -68,8 +82,110 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   static const Size _cardSize = Size(64, 92);
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeProviderBindings();
+  }
+
+  @override
+  void didUpdateWidget(covariant DurakGameScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId != widget.gameId) {
+      _rematchPollTimer?.cancel();
+      _prevGameStatus = null;
+      _balanceGainPlayed = false;
+      setState(() {
+        _rematchLobbyId = null;
+        _rematchDeclined = false;
+        _iDeclinedRematch = false;
+        _rematchRespondedIds.clear();
+        _isRematching = false;
+        _isAcceptingRematch = false;
+        _isFindingGame = false;
+      });
+    }
+  }
+
+  void _initializeProviderBindings() {
+    if (_providerBindingsInitialized) return;
+    _providerBindingsInitialized = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      pinBlockingGame(ref, widget.gameId);
+      final prev = ref.read(activeGameProvider).valueOrNull;
+      if (prev?.gameId != widget.gameId) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'game', gameId: widget.gameId),
+            );
+      }
+    });
+    _realtimeSubscription = ref.listenManual<AsyncValue<Map<String, dynamic>>>(
+      realtimeEventsProvider,
+      (_, next) {
+        final type = next.valueOrNull?['type']?.toString() ?? '';
+        if (type == 'lobby_updated' && _rematchLobbyId != null) {
+          final lobbyId = next.valueOrNull?['lobby_id']?.toString();
+          final gameId = next.valueOrNull?['game_id']?.toString();
+          if (lobbyId == _rematchLobbyId && mounted) {
+            if (gameId != null && gameId.isNotEmpty) {
+              ref.invalidate(durakGameProvider(gameId));
+              unawaited(ref.read(activeGameProvider.notifier).refresh());
+              context.go('/games/durak/game/$gameId');
+            }
+          }
+        }
+        if (type == 'invite_declined') {
+          final lobbyId = next.valueOrNull?['lobby_id']?.toString();
+          final closed = next.valueOrNull?['closed'] != false;
+          if (lobbyId == _rematchLobbyId && mounted && closed) {
+            _rematchPollTimer?.cancel();
+            setState(() {
+              _rematchLobbyId = null;
+              _rematchDeclined = true;
+              _rematchRespondedIds.clear();
+            });
+          }
+        }
+        if (type == 'chat_message' || type == 'chat_list_changed') {
+          if (mounted) refreshChatsList(ref, force: true);
+        }
+      },
+    );
+  }
+
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby =
+            await ref.read(durakRepositoryProvider).getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        if (lobby.gameId != null && lobby.gameId!.isNotEmpty) {
+          _rematchPollTimer?.cancel();
+          final gameId = lobby.gameId!;
+          ref.invalidate(durakGameProvider(gameId));
+          context.go('/games/durak/game/$gameId');
+        }
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchRespondedIds.clear();
+          });
+        }
+      } catch (_) {}
+    });
+  }
+
+  @override
   void dispose() {
     _timeoutRetryTimer?.cancel();
+    _rematchPollTimer?.cancel();
+    _realtimeSubscription?.close();
     super.dispose();
   }
 
@@ -529,11 +645,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  /// Сдача/выход — общий диалог подтверждения, как в крестиках-ноликах.
+  /// Сдача — остаёмся на экране итога (как в крестиках). Закрытие — выход.
   Future<void> _confirmLeave() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view?.isOver ?? false) {
-      _clearSessionAndExit();
+      _handleClose();
       return;
     }
     final leave = await confirmGameActionDialog(
@@ -544,17 +660,41 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       confirmLabel: context.l10n.gameSurrender,
     );
     if (!leave || !mounted) return;
-    try {
-      await ref.read(durakRepositoryProvider).forfeit(widget.gameId);
-    } catch (_) {}
-    if (!mounted) return;
-    _clearSessionAndExit();
+    // Не выходим: после forfeit покажем итог + «Повторить» / «Другой соперник».
+    unawaited(() async {
+      try {
+        clearBlockingGamePin(ref, ifGameId: widget.gameId);
+        await ref.read(durakRepositoryProvider).forfeit(widget.gameId);
+      } catch (_) {}
+      if (!mounted) return;
+      ref.invalidate(durakGameProvider(widget.gameId));
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
+    }());
   }
 
-  void _clearSessionAndExit() {
+  void _clearSessionForFinishedGame() {
     clearBlockingGamePin(ref, ifGameId: widget.gameId);
-    ref.read(activeGameProvider.notifier).clearLocal();
+    final prev = ref.read(activeGameProvider).valueOrNull;
+    if (prev?.gameId == widget.gameId) {
+      ref.read(activeGameProvider.notifier).clearLocal();
+    }
+  }
+
+  void _handleClose() {
+    final rematchLobbyId = _rematchLobbyId;
+    _rematchLobbyId = null;
+    _rematchRespondedIds.clear();
+    _rematchPollTimer?.cancel();
+    _clearSessionForFinishedGame();
     context.go('/games');
+    if (rematchLobbyId != null) {
+      unawaited(
+        ref
+            .read(durakRepositoryProvider)
+            .leaveLobby(rematchLobbyId)
+            .catchError((_) {}),
+      );
+    }
   }
 
   bool _iOfferedDraw(DurakGameView view) {
@@ -577,13 +717,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       title: context.l10n.gameOfferDrawTitle,
       message: context.l10n.gameOfferDrawConfirm,
       cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameOfferDrawTitle,
+      confirmLabel: context.l10n.gameOfferDraw,
     );
     if (!ok || !mounted) return;
     await _act(() => ref.read(durakRepositoryProvider).offerDraw(widget.gameId));
   }
 
   Future<void> _acceptDraw() async {
+    final ok = await confirmGameActionDialog(
+      context: context,
+      title: context.l10n.gameAcceptDrawTitle,
+      message: context.l10n.gameAcceptDrawConfirm,
+      cancelLabel: context.l10n.commonCancel,
+      confirmLabel: context.l10n.gameDraw,
+    );
+    if (!ok || !mounted) return;
     await _act(
         () => ref.read(durakRepositoryProvider).acceptDraw(widget.gameId));
   }
@@ -603,33 +751,299 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// Начисление банка победителю с анимацией — общий сценарий.
-  void _onGameOver(DurakGameView view) {
-    if (_settled) return;
-    _settled = true;
-    final iWon = view.loserIndex != view.myIndex && view.loserIndex >= 0;
-    if (!iWon || view.stakeBronze <= 0) {
-      unawaited(ref.read(activeGameProvider.notifier).refresh());
+  List<String> _peerIds(DurakGameView view) {
+    final me = view.myIndex >= 0 && view.myIndex < view.playerIds.length
+        ? view.playerIds[view.myIndex]
+        : '';
+    return view.playerIds
+        .where((id) => id.isNotEmpty && id != me && !id.startsWith('bot:'))
+        .toList();
+  }
+
+  /// Начисление банка победителю с анимацией — как в крестиках.
+  Future<void> _onGameSettled({
+    required int creditBronze,
+    required int displayRewardBronze,
+  }) async {
+    if (_balanceGainPlayed) {
+      unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
-    final playersN = view.playerIds.length;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _balanceGainPlayed = true;
+    await playGameSettledReward(
+      ref: ref,
+      context: context,
+      creditBronze: creditBronze,
+      displayRewardBronze: displayRewardBronze,
+      sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
+    );
+  }
+
+  void _maybeSettleGame(DurakGameView view) {
+    if (!view.isOver) {
+      _prevGameStatus = view.status;
+      return;
+    }
+    if (_prevGameStatus == 'active' || _prevGameStatus == null) {
+      _rematchPollTimer?.cancel();
+      _prevGameStatus = view.status;
+      for (final peerId in _peerIds(view)) {
+        ref.read(gameInvitesProvider.notifier).removeByCreatorId(peerId);
+      }
+      final iWon = !view.isDraw &&
+          view.loserIndex >= 0 &&
+          view.loserIndex != view.myIndex;
+      final playersN = view.playerIds.length >= 2 ? view.playerIds.length : 2;
+      final winnersN = (playersN - 1).clamp(1, playersN);
+      // 1×1: банк stake*2 / чистый stake; multi: возврат + доля ставки дурака.
+      final netProfit = view.isDraw
+          ? 0
+          : (iWon
+              ? (playersN == 2
+                  ? view.stakeBronze
+                  : view.stakeBronze ~/ winnersN)
+              : 0);
+      final credit = view.isDraw
+          ? view.stakeBronze
+          : (iWon
+              ? (playersN == 2
+                  ? view.stakeBronze * 2
+                  : view.stakeBronze + netProfit)
+              : 0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _clearSessionForFinishedGame();
+        setState(() {
+          _rematchLobbyId = null;
+          _rematchDeclined = false;
+          _iDeclinedRematch = false;
+          _rematchRespondedIds.clear();
+          _isRematching = false;
+          _isFindingGame = false;
+        });
+        unawaited(_onGameSettled(
+          creditBronze: credit,
+          displayRewardBronze: netProfit,
+        ));
+      });
+    } else {
+      _prevGameStatus = view.status;
+    }
+  }
+
+  Future<void> _rematch() async {
+    setState(() => _isRematching = true);
+    try {
+      final lobbyId =
+          await ref.read(durakRepositoryProvider).rematch(widget.gameId);
       if (!mounted) return;
-      clearBlockingGamePin(ref, ifGameId: widget.gameId);
-      unawaited(playGameSettledReward(
-        ref: ref,
-        context: context,
-        creditBronze: view.stakeBronze * playersN,
-        displayRewardBronze: view.stakeBronze * (playersN - 1),
-      ));
+      ref.invalidate(durakOpenLobbiesProvider);
+      clearBlockingGamePin(ref);
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+          );
+      final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+      final multiRematch = (view?.playerIds.length ?? 0) > 2;
+      setState(() {
+        _rematchLobbyId = lobbyId;
+        _rematchDeclined = false;
+        _iDeclinedRematch = false;
+        _rematchRespondedIds.clear();
+        _isRematching = false;
+      });
+      if (multiRematch) {
+        if (!mounted) return;
+        context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      _startRematchPoll();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isRematching = false);
+        context.go('/games');
+      }
+    }
+  }
+
+  Future<void> _acceptRematch(String lobbyId) async {
+    if (_isAcceptingRematch) return;
+    setState(() => _isAcceptingRematch = true);
+    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+    try {
+      final result =
+          await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
+      if (!mounted) return;
+      if (result.joined && result.waitingMore) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      if (result.joined && result.gameId != null) {
+        final gameId = result.gameId!;
+        ref.invalidate(durakGameProvider(gameId));
+        context.go('/games/durak/game/$gameId');
+      }
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      if (e.statusCode == 409) {
+        ref.invalidate(activeGameProvider);
+        final active = await ref.read(activeGameProvider.future);
+        if (!mounted) return;
+        if (active != null &&
+            active.type == 'game' &&
+            active.gameId != null &&
+            active.gameId!.isNotEmpty) {
+          context.go('/games/durak/game/${active.gameId}');
+        } else {
+          context.go('/games');
+        }
+      } else {
+        context.go('/games');
+      }
+    } catch (_) {
+      if (mounted) context.go('/games');
+    } finally {
+      if (mounted) setState(() => _isAcceptingRematch = false);
+    }
+  }
+
+  Future<void> _declineRematch(String lobbyId) async {
+    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    try {
+      await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
+    } catch (_) {}
+    if (mounted) setState(() => _iDeclinedRematch = true);
+  }
+
+  Future<void> _cancelRematchWait() async {
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer?.cancel();
+    final lobbyId = _rematchLobbyId!;
+    setState(() {
+      _rematchLobbyId = null;
+      _rematchRespondedIds.clear();
     });
+    try {
+      await ref.read(durakRepositoryProvider).leaveLobby(lobbyId);
+    } catch (_) {}
+  }
+
+  Future<void> _findGame() async {
+    setState(() => _isFindingGame = true);
+    try {
+      final rematchId = _rematchLobbyId;
+      if (rematchId != null) {
+        _rematchPollTimer?.cancel();
+        setState(() {
+          _rematchLobbyId = null;
+          _rematchRespondedIds.clear();
+        });
+        unawaited(
+          ref
+              .read(durakRepositoryProvider)
+              .leaveLobby(rematchId)
+              .catchError((_) {}),
+        );
+      }
+
+      final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+      final turnTimeSec = view?.turnTimeSec ?? 0;
+      final stakeBronze = view?.stakeBronze ?? 1;
+      final deckSize = view?.deckSize ?? 36;
+      final gameMode = view?.mode ?? 'podkidnoi';
+      final maxPlayers = view?.playerIds.length ?? 2;
+      final repo = ref.read(durakRepositoryProvider);
+
+      try {
+        final open = await repo.listLobbies();
+        DurakLobbyView? match;
+        for (final lobby in open) {
+          if (lobby.gameMode != gameMode) continue;
+          if (lobby.deckSize != deckSize) continue;
+          if (lobby.stakeBronze != stakeBronze) continue;
+          if (lobby.turnTimeSec != turnTimeSec) continue;
+          if (lobby.maxPlayers != maxPlayers) continue;
+          if (lobby.playerIds.length >= lobby.maxPlayers) continue;
+          match = lobby;
+          break;
+        }
+        if (match != null) {
+          final joined = await repo.joinLobby(match.id);
+          if (!mounted) return;
+          ref.invalidate(durakOpenLobbiesProvider);
+          if (joined.joined &&
+              joined.gameId != null &&
+              joined.gameId!.isNotEmpty) {
+            ref.read(activeGameProvider.notifier).setLocal(
+                  ActiveGameItem(
+                    type: 'game',
+                    gameId: joined.gameId,
+                    lobbyId: match.id,
+                  ),
+                );
+            context.go('/games/durak/game/${joined.gameId}');
+            return;
+          }
+          if (joined.joined) {
+            ref.read(activeGameProvider.notifier).setLocal(
+                  ActiveGameItem(type: 'lobby', lobbyId: match.id),
+                );
+            context.go('/games/durak/lobby/${match.id}?mode=matchmake');
+            return;
+          }
+        }
+      } catch (_) {}
+
+      final result = await repo.createLobby(
+        mode: 'matchmake',
+        maxPlayers: maxPlayers.clamp(2, 4),
+        deckSize: deckSize,
+        gameMode: gameMode,
+        turnTimeSec: turnTimeSec,
+        stakeBronze: stakeBronze,
+      );
+      if (!mounted) return;
+      ref.invalidate(durakOpenLobbiesProvider);
+      if (result.gameId != null && result.gameId!.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: result.gameId,
+                lobbyId: result.lobbyId,
+              ),
+            );
+        context.go('/games/durak/game/${result.gameId}');
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: result.lobbyId),
+            );
+        context.go('/games/durak/lobby/${result.lobbyId}?mode=matchmake');
+      }
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      if (isFinishCurrentGameError(e)) {
+        showAppSnackBar(
+          context,
+          message: finishCurrentGameMessage,
+          kind: AppSnackKind.error,
+        );
+        return;
+      }
+      context.go('/games');
+    } catch (_) {
+      if (mounted) context.go('/games');
+    } finally {
+      if (mounted) setState(() => _isFindingGame = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(durakGameProvider(widget.gameId));
     final view = gameAsync.valueOrNull;
-    if (view != null && view.isOver) _onGameOver(view);
+    if (view != null) _maybeSettleGame(view);
     final showSurrender = view != null && !view.isOver;
     final isMulti = (view?.playerIds.length ?? 0) > 2;
     final topPad = MediaQuery.paddingOf(context).top;
@@ -735,6 +1149,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               if (view != null &&
                   view.isOver &&
+                  !view.isDraw &&
                   view.loserIndex >= 0 &&
                   view.loserIndex != view.myIndex)
                 const Positioned.fill(child: GameConfettiOverlay()),
@@ -822,40 +1237,35 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
             ],
           ),
-          if (!view.isOver && _opponentOfferedDraw(view))
+          if (view.isOver) ...[
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.l10n.gameDrawOffered,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton(
-                    onPressed: _busy ? null : _acceptDraw,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    child: Text(context.l10n.commonAccept),
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: GameStatusWithReward(
+                statusText: _turnHint(view),
+                showReward: _showRewardChip(view),
+                rewardBronze: _rewardBronze(view),
+                rewardKey: _winRewardKey,
+                fontSize: MediaQuery.sizeOf(context).width < 420 ? 15 : null,
               ),
             ),
-          if (view.isOver)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: GameStatusLine(
-                text: _turnHint(view),
-                highlight: true,
-              ),
+            const SizedBox(height: 10),
+            GameRematchSection(
+              rematchLobbyId: _rematchLobbyId,
+              rematchDeclined: _rematchDeclined,
+              iDeclinedRematch: _iDeclinedRematch,
+              isRematching: _isRematching,
+              isAcceptingRematch: _isAcceptingRematch,
+              isFindingGame: _isFindingGame,
+              peerIds: _peerIds(view),
+              invites: ref.watch(gameInvitesProvider),
+              onRematch: _rematch,
+              onAccept: _acceptRematch,
+              onDecline: _declineRematch,
+              onCancelWait: _cancelRematchWait,
+              onFindGame: _findGame,
+              compact: true,
             ),
+          ],
           Expanded(
             child: _buildBoard(view, cardSize, trumpCard),
           ),
@@ -1011,7 +1421,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       frameCode: frameCode,
       frameColor: frameColor,
       isBot: isBot,
-      messageUnread: view.isOver ? 0 : unread,
+      // Сообщение на карточке профиля не пропадает после конца партии.
+      messageUnread: unread,
       infoTooltip: context.l10n.userInfoTitle,
       messageTooltip: context.l10n.gameWriteMessage,
       compact: MediaQuery.sizeOf(context).width < 420,
@@ -1043,9 +1454,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         messageFrom: 'games',
         messageReturnPath: '/games/durak/game/${widget.gameId}',
       )),
-      onMessageTap: view.isOver
-          ? null
-          : () => unawaited(_openChat(oppId, name)),
+      onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
     );
     if (!oppTurn) return card;
     return TurnTimerBorder(
@@ -1321,14 +1730,50 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог.
+  bool _iWon(DurakGameView view) =>
+      !view.isDraw &&
+      view.loserIndex >= 0 &&
+      view.loserIndex != view.myIndex;
+
+  bool _showRewardChip(DurakGameView view) =>
+      view.isOver && _iWon(view) && view.stakeBronze > 0;
+
+  int _rewardBronze(DurakGameView view) {
+    final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
+    if (n == 2) return view.stakeBronze;
+    final winnersN = (n - 1).clamp(1, n);
+    return view.stakeBronze ~/ winnersN;
+  }
+
+  /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог со сдачей/таймаутом.
   String _turnHint(DurakGameView view) {
     if (view.isOver) {
       if (view.isDraw) return context.l10n.gameDraw;
-      if (view.loserIndex == view.myIndex) {
-        return context.l10n.gameOpponentWon(_opponentName(view));
+      final isMulti = view.playerIds.length > 2;
+      final iWon = _iWon(view);
+      if (isMulti) {
+        if (iWon) return context.l10n.gameYouWon;
+        final loserId = view.loserIndex >= 0 &&
+                view.loserIndex < view.playerIds.length
+            ? view.playerIds[view.loserIndex]
+            : '';
+        // В дураке «дурак» проиграл — победитель не один; для чужого итога
+        // показываем имя соперника из 1×1-логики / первого не-себя.
+        final winnerName = _opponentName(view);
+        if (loserId.isNotEmpty && view.loserIndex == view.myIndex) {
+          return context.l10n.gameOpponentWon(winnerName);
+        }
+        return context.l10n.gameOpponentWon(winnerName);
       }
-      return context.l10n.gameYouWon;
+      final opp = _opponentName(view);
+      if (iWon) {
+        if (view.isForfeit) return context.l10n.gameYouWonOpponentForfeit;
+        if (view.isTimeout) return context.l10n.gameYouWonOpponentTimeout;
+        return context.l10n.gameYouWon;
+      }
+      if (view.isForfeit) return context.l10n.gameYouForfeitOpponentWon(opp);
+      if (view.isTimeout) return context.l10n.gameOpponentWonTimeout(opp);
+      return context.l10n.gameOpponentWon(opp);
     }
     if (view.isMyTurn) return context.l10n.gamesMyTurn;
     final turnIdx = view.phase == 'defend'

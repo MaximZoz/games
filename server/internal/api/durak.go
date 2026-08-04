@@ -503,6 +503,30 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		WriteErr(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
+	// Списываем ставку у людей — как в крестиках-ноликах.
+	if stakeBronze > 0 {
+		humans := make([]uuid.UUID, 0, len(players))
+		for _, u := range players {
+			ok, e := store.UserMayStake(ctx, h.Pool, u, stakeBronze)
+			if e != nil {
+				WriteErr(w, r, http.StatusInternalServerError, "server error")
+				return
+			}
+			if !ok {
+				WriteErr(w, r, http.StatusBadRequest, "stake not allowed")
+				return
+			}
+			humans = append(humans, u)
+		}
+		if err := store.DeductCoinsMany(ctx, h.Pool, humans, stakeBronze); err != nil {
+			if err == store.ErrInsufficientFunds {
+				WriteErr(w, r, http.StatusPaymentRequired, "insufficient funds")
+				return
+			}
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+	}
 	encoded, _ := durak.Encode(state)
 	gameID := uuid.New().String()
 	gkey := "game:" + gameID
@@ -1086,6 +1110,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"status":         m["status"],
 		"draw":           m["draw"] == "1",
 		"draw_offer_by":  strings.TrimSpace(m["draw_offer_by"]),
+		"forfeit":        m["forfeit"] == "1",
 		"timeout":        m["timeout"] == "1",
 		"lobby_id":       m["lobby_id"],
 		"chat_id":        m["chat_id"],
@@ -1185,9 +1210,168 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 			h.broadcast(humans, map[string]any{"type": "chat_list_changed"})
 		}
 	}
-	// Записать в game_results (пока без начисления монет — MVP).
-	if len(state.PlayerIDs) >= 2 && state.Status == durak.StatusOver {
-		// TODO: интеграция со ставками и монетами — следующая итерация.
-		_ = state
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	finishReason := "normal"
+	if m["forfeit"] == "1" {
+		finishReason = "forfeit"
+	} else if m["timeout"] == "1" {
+		finishReason = "timeout"
+	} else if m["draw"] == "1" {
+		finishReason = "draw_agreement"
 	}
+	h.settleDurakCoins(ctx, gameID, m, state, stakeBronze)
+	for _, uid := range humans {
+		_ = store.IncrementGamesFinished(ctx, h.Pool, uid)
+		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
+		notifyAchievementUnlocks(h.Push, uid, unlocked)
+	}
+	if m["draw"] != "1" && state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
+		for i, pid := range state.PlayerIDs {
+			if i == state.LoserIndex || isBot(pid) {
+				continue
+			}
+			if u, err := uuid.Parse(pid); err == nil {
+				_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
+				unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
+				notifyAchievementUnlocks(h.Push, u, unlocked)
+			}
+		}
+	}
+	h.recordDurakGameResult(ctx, gameID, m, state, stakeBronze, finishReason)
+}
+
+// settleDurakCoins — банк как в крестиках: 1×1 победитель получает 2*stake,
+// ничья — возврат; multi — ставка дурака делится между остальными (+возврат своей).
+func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int) {
+	if stakeBronze <= 0 || h.Pool == nil || h.Rdb == nil {
+		return
+	}
+	// Идемпотентность: GetGame/timeout/forfeit не должны начислить дважды.
+	ok, err := h.Rdb.HSetNX(ctx, "game:"+gameID, "coins_settled", "1").Result()
+	if err != nil || !ok {
+		return
+	}
+	ids := state.PlayerIDs
+	if len(ids) == 0 {
+		ids = parsePlayerIDsCSV(m["player_ids"])
+	}
+	if len(ids) < 2 {
+		return
+	}
+	if m["draw"] == "1" {
+		for _, pid := range ids {
+			if isBot(pid) {
+				continue
+			}
+			if u, e := uuid.Parse(pid); e == nil {
+				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
+			}
+		}
+		return
+	}
+	if state.LoserIndex < 0 || state.LoserIndex >= len(ids) {
+		// Нет дурака — возвращаем ставки.
+		for _, pid := range ids {
+			if isBot(pid) {
+				continue
+			}
+			if u, e := uuid.Parse(pid); e == nil {
+				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
+			}
+		}
+		return
+	}
+	if len(ids) == 2 {
+		winner := ids[0]
+		if state.LoserIndex == 0 {
+			winner = ids[1]
+		}
+		loser := ids[state.LoserIndex]
+		if isBot(winner) {
+			// Человек проиграл боту — ничего не возвращаем.
+			return
+		}
+		if isBot(loser) {
+			// Победа над ботом: возврат + выигрыш = 2*stake.
+			if u, e := uuid.Parse(winner); e == nil {
+				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze*2)
+			}
+			return
+		}
+		wUUID, we := uuid.Parse(winner)
+		lUUID, le := uuid.Parse(loser)
+		if we != nil || le != nil {
+			return
+		}
+		// SettleGameCoins ждёт метку x/o — победитель как "x".
+		_ = store.SettleGameCoins(ctx, h.Pool, wUUID, lUUID, stakeBronze, "x")
+		return
+	}
+	// Multi: каждому не-дураку — своя ставка обратно + доля ставки дурака.
+	winners := make([]uuid.UUID, 0, len(ids)-1)
+	for i, pid := range ids {
+		if i == state.LoserIndex || isBot(pid) {
+			continue
+		}
+		if u, e := uuid.Parse(pid); e == nil {
+			winners = append(winners, u)
+		}
+	}
+	if len(winners) == 0 {
+		return
+	}
+	share := stakeBronze / len(winners)
+	rem := stakeBronze % len(winners)
+	for i, u := range winners {
+		extra := share
+		if i < rem {
+			extra++
+		}
+		_ = store.AddCoins(ctx, h.Pool, u, stakeBronze+extra)
+	}
+}
+
+func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {
+	ids := state.PlayerIDs
+	if len(ids) < 2 {
+		return
+	}
+	xID, oID := ids[0], ids[1]
+	var winnerID string
+	result := "draw"
+	if m["draw"] == "1" {
+		result = "draw"
+	} else if state.LoserIndex >= 0 && state.LoserIndex < len(ids) && len(ids) == 2 {
+		// 1×1: как крестики — x_won / o_won по слотам player_ids[0]/[1].
+		if state.LoserIndex == 0 {
+			winnerID = ids[1]
+			result = "o_won"
+		} else {
+			winnerID = ids[0]
+			result = "x_won"
+		}
+	}
+	gr := store.GameResult{
+		GameID:       gameID,
+		GameType:     durakGameType,
+		Result:       result,
+		FinishReason: finishReason,
+		StakeBronze:  stakeBronze,
+		AgainstBot:   isBot(xID) || isBot(oID),
+	}
+	if u, err := uuid.Parse(xID); err == nil {
+		gr.XUserID = u
+	}
+	if u, err := uuid.Parse(oID); err == nil {
+		gr.OUserID = u
+	}
+	if winnerID != "" && !isBot(winnerID) {
+		if w, err := uuid.Parse(winnerID); err == nil {
+			gr.WinnerUserID = &w
+		}
+	}
+	if t, ok := parseGameStartedAt(m["started_at"]); ok {
+		gr.DurationSec = clampNonNegative(int(time.Since(t).Seconds()))
+	}
+	_ = store.RecordGameResult(ctx, h.Pool, gr)
 }

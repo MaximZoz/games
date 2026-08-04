@@ -144,6 +144,8 @@ class DurakGameView {
     required this.turnDeadline,
     required this.stakeBronze,
     this.isDraw = false,
+    this.isForfeit = false,
+    this.isTimeout = false,
     this.drawOfferBy = '',
   });
 
@@ -175,6 +177,12 @@ class DurakGameView {
 
   /// Партия завершена соглашением на ничью.
   final bool isDraw;
+
+  /// Партия завершена сдачей.
+  final bool isForfeit;
+
+  /// Партия завершена по таймауту хода.
+  final bool isTimeout;
 
   /// user_id того, кто предложил ничью (пусто — предложения нет).
   final String drawOfferBy;
@@ -260,6 +268,8 @@ class DurakGameView {
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
       isDraw: json['draw'] == true,
+      isForfeit: json['forfeit'] == true,
+      isTimeout: json['timeout'] == true,
       drawOfferBy: (json['draw_offer_by'] ?? '').toString(),
     );
   }

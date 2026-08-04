@@ -4,9 +4,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/games/games_provider.dart' show GameInvite;
+import 'package:multigames_client/games/games_repository.dart'
+    show formatStakeAmount, stakeCoinType;
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
@@ -1099,5 +1104,298 @@ Future<bool> playGameSettledReward({
     if (ref.read(balanceGainProvider).active) {
       ref.read(balanceGainProvider.notifier).end();
     }
+  }
+}
+
+/// Статус партии и чип награды «+N» в одной строке (крестики / дурак).
+class GameStatusWithReward extends StatelessWidget {
+  const GameStatusWithReward({
+    super.key,
+    required this.statusText,
+    required this.showReward,
+    required this.rewardBronze,
+    required this.rewardKey,
+    this.fontSize,
+  });
+
+  final String statusText;
+  final bool showReward;
+  final int rewardBronze;
+  final GlobalKey rewardKey;
+  final double? fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w400,
+          color: AppColors.textPrimary,
+          fontSize: fontSize,
+        );
+    if (!showReward) {
+      return Text(
+        statusText,
+        textAlign: TextAlign.center,
+        style: style,
+      );
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text(
+            statusText,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        const SizedBox(width: 8),
+        GameRewardChip(
+          key: rewardKey,
+          rewardBronze: rewardBronze,
+        ),
+      ],
+    );
+  }
+}
+
+/// Чип чистого выигрыша — источник полёта монеты в баланс.
+class GameRewardChip extends StatelessWidget {
+  const GameRewardChip({
+    super.key,
+    required this.rewardBronze,
+  });
+
+  final int rewardBronze;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.accentSoft.withValues(alpha: 0.9),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '+${formatStakeAmount(rewardBronze)}',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 5),
+          CoinIcon(
+            coinType: stakeCoinType(rewardBronze),
+            size: 20,
+            showBorder: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Блок «Повторить» / «Другой соперник» и принятие реванша — общий для игр.
+class GameRematchSection extends StatelessWidget {
+  const GameRematchSection({
+    super.key,
+    required this.rematchLobbyId,
+    required this.rematchDeclined,
+    required this.iDeclinedRematch,
+    required this.isRematching,
+    required this.isAcceptingRematch,
+    required this.isFindingGame,
+    required this.peerIds,
+    required this.invites,
+    required this.onRematch,
+    required this.onAccept,
+    required this.onDecline,
+    required this.onCancelWait,
+    required this.onFindGame,
+    this.compact = false,
+  });
+
+  final String? rematchLobbyId;
+  final bool rematchDeclined;
+  final bool iDeclinedRematch;
+  final bool isRematching;
+  final bool isAcceptingRematch;
+  final bool isFindingGame;
+  final List<String> peerIds;
+  final List<GameInvite> invites;
+  final VoidCallback onRematch;
+  final void Function(String lobbyId) onAccept;
+  final void Function(String lobbyId) onDecline;
+  final VoidCallback? onCancelWait;
+  final VoidCallback onFindGame;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final peerSet = peerIds.toSet();
+    final rematchOffer =
+        invites.where((i) => peerSet.contains(i.creatorId)).firstOrNull;
+
+    if (isAcceptingRematch) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.hourglass_empty_rounded,
+              size: 20, color: AppColors.accentStart),
+          const SizedBox(width: 8),
+          Text(
+            context.l10n.gameConnecting,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+    if (rematchOffer != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.l10n.gameRematchOffer,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: compact ? 13 : 14,
+            ),
+          ),
+          SizedBox(height: compact ? 8 : 12),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: () => onDecline(rematchOffer.lobbyId),
+                child: Text(context.l10n.commonDecline),
+              ),
+              SizedBox(width: compact ? 8 : 12),
+              FilledButton(
+                onPressed: () => onAccept(rematchOffer.lobbyId),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accentStart,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(context.l10n.commonAccept),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+    if (iDeclinedRematch) {
+      return _buildRematchButtons(context);
+    }
+    if (rematchDeclined) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.l10n.gameRematchDeclined,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: compact ? 13 : 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: compact ? 8 : 12),
+          _buildRematchButtons(context),
+        ],
+      );
+    }
+    if (rematchLobbyId != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.hourglass_empty_rounded,
+                  size: compact ? 18 : 20, color: AppColors.accentStart),
+              SizedBox(width: compact ? 6 : 8),
+              Text(
+                context.l10n.gameWaitingOpponent,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: compact ? 14 : 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          if (onCancelWait != null) ...[
+            SizedBox(height: compact ? 8 : 12),
+            TextButton(
+              onPressed: onCancelWait,
+              child: Text(context.l10n.commonCancel),
+            ),
+          ],
+        ],
+      );
+    }
+    return _buildRematchButtons(context);
+  }
+
+  Widget _buildRematchButtons(BuildContext context) {
+    final btnPadding = compact
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+        : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: compact ? 8 : 12,
+      runSpacing: compact ? 6 : 8,
+      children: [
+        FilledButton.icon(
+          onPressed: isRematching ? null : onRematch,
+          icon: isRematching
+              ? SizedBox(
+                  width: compact ? 16 : 18,
+                  height: compact ? 16 : 18,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
+          label: Text(isRematching
+              ? context.l10n.commonCreating
+              : context.l10n.gameRematch),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.accentStart,
+            foregroundColor: Colors.white,
+            padding: btnPadding,
+          ),
+        ),
+        OutlinedButton.icon(
+          onPressed: isFindingGame ? null : onFindGame,
+          icon: isFindingGame
+              ? SizedBox(
+                  width: compact ? 16 : 18,
+                  height: compact ? 16 : 18,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(Icons.search_rounded, size: compact ? 18 : 20),
+          label: Text(isFindingGame
+              ? context.l10n.commonSearching
+              : context.l10n.gameOtherOpponent),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.accentStart,
+            side: const BorderSide(color: AppColors.accentStart),
+            padding: btnPadding,
+          ),
+        ),
+      ],
+    );
   }
 }
