@@ -533,9 +533,13 @@ class DurakRepository {
     String gameId, {
     required String type,
     PlayingCard? card,
+    List<PlayingCard>? cards,
   }) async {
     final body = <String, dynamic>{'type': type};
-    if (card != null) {
+    if (cards != null && cards.isNotEmpty) {
+      body['cards'] =
+          cards.map((c) => DurakApiCard.fromCard(c).toJson()).toList();
+    } else if (card != null) {
       body['card'] = DurakApiCard.fromCard(card).toJson();
     }
     final r = await _sendAuth((token) => ApiClient.post(

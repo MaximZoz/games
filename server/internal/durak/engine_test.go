@@ -75,6 +75,34 @@ func TestAttackDefendBito(t *testing.T) {
 	}
 }
 
+func TestAttackManySameRank(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{9, Hearts}, {9, Spades}, {10, Clubs}},
+			{{6, Hearts}, {7, Hearts}, {8, Hearts}, {9, Clubs}, {10, Hearts}, {11, Hearts}},
+		},
+		Trump:         Diamonds,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.AttackMany(0, []Card{{9, Hearts}, {9, Spades}}); err != nil {
+		t.Fatalf("attack many: %v", err)
+	}
+	if len(st.Table) != 2 {
+		t.Fatalf("table = %d, want 2", len(st.Table))
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase = %v", st.Phase)
+	}
+	if err := st.AttackMany(0, []Card{{10, Clubs}}); err == nil {
+		t.Fatalf("expected error attacking during defend")
+	}
+}
+
 func TestTakeAndFinish(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},

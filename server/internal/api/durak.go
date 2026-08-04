@@ -634,8 +634,35 @@ func (h *GamesHandler) enrichDurakPlayersMeta(ctx context.Context, view map[stri
 // ---- DurakMove ----
 
 type durakMoveBody struct {
-	Type string          `json:"type"`
-	Card json.RawMessage `json:"card,omitempty"`
+	Type  string          `json:"type"`
+	Card  json.RawMessage `json:"card,omitempty"`
+	Cards json.RawMessage `json:"cards,omitempty"` // несколько карт атаки/подкида
+}
+
+func parseDurakAttackCards(body durakMoveBody) ([]durak.Card, error) {
+	if len(body.Cards) > 0 && string(body.Cards) != "null" {
+		var raws []json.RawMessage
+		if err := json.Unmarshal(body.Cards, &raws); err != nil {
+			return nil, err
+		}
+		if len(raws) == 0 {
+			return nil, fmt.Errorf("empty cards")
+		}
+		out := make([]durak.Card, 0, len(raws))
+		for _, raw := range raws {
+			c, err := durak.ParseCard(raw)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, c)
+		}
+		return out, nil
+	}
+	c, err := durak.ParseCard(body.Card)
+	if err != nil {
+		return nil, err
+	}
+	return []durak.Card{c}, nil
 }
 
 func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID string) {
@@ -678,12 +705,12 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	}
 	switch body.Type {
 	case "attack":
-		card, err := durak.ParseCard(body.Card)
+		cards, err := parseDurakAttackCards(body)
 		if err != nil {
 			WriteErr(w, r, http.StatusBadRequest, "bad card")
 			return
 		}
-		if err := state.Attack(idx, card); err != nil {
+		if err := state.AttackMany(idx, cards); err != nil {
 			WriteErr(w, r, http.StatusBadRequest, err.Error())
 			return
 		}

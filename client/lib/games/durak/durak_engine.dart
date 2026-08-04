@@ -183,12 +183,43 @@ class DurakGame {
 
   /// Положить атаку/подкидывание [card].
   void attack(PlayingCard card, {int? playerIndex}) {
+    attackMany([card], playerIndex: playerIndex);
+  }
+
+  /// Положить сразу несколько карт атаки/подкида.
+  /// Пустой стол — все одного ранга; иначе каждый ранг уже на столе.
+  void attackMany(List<PlayingCard> cards, {int? playerIndex}) {
     final pIndex = playerIndex ?? attackerIndex;
-    if (!canAttackWith(card, pIndex)) {
+    if (cards.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
-    hands[pIndex].remove(card);
-    table.add(TablePair(card));
+    if (turn != DurakTurn.attacker && turn != DurakTurn.attackerFollowUp) {
+      throw const DurakRuleError('нельзя атаковать этой картой');
+    }
+    if (table.length + cards.length > maxAttacksThisRound) {
+      throw const DurakRuleError('нельзя атаковать этой картой');
+    }
+    for (final c in cards) {
+      if (!hands[pIndex].contains(c)) {
+        throw const DurakRuleError('нельзя атаковать этой картой');
+      }
+    }
+    if (table.isEmpty) {
+      final rank = cards.first.rank;
+      if (cards.any((c) => c.rank != rank)) {
+        throw const DurakRuleError('нельзя атаковать этой картой');
+      }
+    } else {
+      for (final c in cards) {
+        if (!tableRanks.contains(c.rank.value)) {
+          throw const DurakRuleError('нельзя атаковать этой картой');
+        }
+      }
+    }
+    for (final c in cards) {
+      hands[pIndex].remove(c);
+      table.add(TablePair(c));
+    }
     turn = DurakTurn.defender;
   }
 

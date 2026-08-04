@@ -96,7 +96,7 @@ class DurakDeckPile extends StatelessWidget {
   }
 }
 
-/// Отбой: веер рубашек со счётчиком.
+/// Отбой: хаотичная куча рубашек без счётчика. Чем больше карт — тем больше куча.
 class DurakBitoPile extends StatelessWidget {
   const DurakBitoPile({
     super.key,
@@ -110,33 +110,58 @@ class DurakBitoPile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (count <= 0) {
-      return SizedBox(width: cardSize.width, height: cardSize.height);
+      return SizedBox(
+        width: cardSize.width * 1.4,
+        height: cardSize.height * 1.25,
+      );
     }
-    final stackN = math.min(count, 4);
+
+    // Показываем до 18 «слоёв» — куча растёт визуально с числом карт.
+    final shown = math.min(count, 18);
+    final spread = 0.35 + 0.55 * (shown / 18);
+    final areaW = cardSize.width * (1.35 + spread * 0.9);
+    final areaH = cardSize.height * (1.2 + spread * 0.7);
+
     return SizedBox(
-      width: cardSize.width + 16,
-      height: cardSize.height + 16,
+      width: areaW,
+      height: areaH,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          for (var i = 0; i < stackN; i++)
-            Positioned(
-              left: i * 1.4,
-              top: i * 1.2,
-              child: Transform.rotate(
-                angle: 0.1 * (i.isEven ? 1 : -1),
-                child: CardBackWidget(
-                  size: cardSize,
-                  elevated: i == stackN - 1,
-                ),
-              ),
+          for (var i = 0; i < shown; i++)
+            _scatteredCard(
+              index: i,
+              shown: shown,
+              areaW: areaW,
+              areaH: areaH,
             ),
-          Positioned(
-            bottom: 0,
-            right: 2,
-            child: _CountBadge(count: count),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _scatteredCard({
+    required int index,
+    required int shown,
+    required double areaW,
+    required double areaH,
+  }) {
+    // Стабильный seed на индекс — при росте кучи старые карты не прыгают.
+    final rng = math.Random(9001 + index * 9973);
+    final angle = (rng.nextDouble() - 0.5) * 1.35;
+    final dx = (rng.nextDouble() - 0.5) * (areaW - cardSize.width) * 0.85;
+    final dy = (rng.nextDouble() - 0.5) * (areaH - cardSize.height) * 0.75;
+    final lift = index / math.max(shown, 1);
+    return Positioned(
+      left: areaW / 2 - cardSize.width / 2 + dx,
+      top: areaH / 2 - cardSize.height / 2 + dy - lift * 4,
+      child: Transform.rotate(
+        angle: angle,
+        child: CardBackWidget(
+          size: cardSize,
+          elevated: index == shown - 1,
+        ),
       ),
     );
   }

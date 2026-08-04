@@ -217,25 +217,61 @@ func (s *State) PlayerIndex(userID string) int {
 
 // Attack — положить карту атаки/подкидывания.
 func (s *State) Attack(playerIdx int, card Card) error {
+	return s.AttackMany(playerIdx, []Card{card})
+}
+
+// AttackMany — положить сразу несколько карт атаки/подкидывания.
+// Пустой стол: все карты одного ранга. Иначе каждая — ранг со стола.
+func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
+	}
+	if len(cards) == 0 {
+		return ErrBadAttack
 	}
 	if playerIdx != s.AttackerIndex {
 		return ErrNotYourTurn
 	}
-	if !s.handContains(playerIdx, card) {
-		return ErrCardNotInHand
+	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow {
+		return ErrNotYourTurn
 	}
-	if len(s.Table) >= s.MaxAttacksThisRound() {
+	if len(s.Table)+len(cards) > s.MaxAttacksThisRound() {
 		return ErrBadAttack
 	}
-	if len(s.Table) > 0 {
-		if !s.TableRanks()[card.Rank] {
-			return ErrBadAttack
+	// Все карты должны быть в руке (без повторов сверх наличия).
+	handCopy := append([]Card(nil), s.Hands[playerIdx]...)
+	for _, c := range cards {
+		found := false
+		for i, h := range handCopy {
+			if h == c {
+				handCopy = append(handCopy[:i], handCopy[i+1:]...)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return ErrCardNotInHand
 		}
 	}
-	s.removeFromHand(playerIdx, card)
-	s.Table = append(s.Table, Pair{Attack: card})
+	if len(s.Table) == 0 {
+		rank := cards[0].Rank
+		for _, c := range cards[1:] {
+			if c.Rank != rank {
+				return ErrBadAttack
+			}
+		}
+	} else {
+		ranks := s.TableRanks()
+		for _, c := range cards {
+			if !ranks[c.Rank] {
+				return ErrBadAttack
+			}
+		}
+	}
+	for _, c := range cards {
+		s.removeFromHand(playerIdx, c)
+		s.Table = append(s.Table, Pair{Attack: c})
+	}
 	s.Phase = PhaseDefend
 	return nil
 }

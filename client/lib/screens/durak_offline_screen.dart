@@ -8,6 +8,7 @@ import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
+import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
@@ -31,6 +32,9 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   Timer? _botTimer;
   String? _statusMessage;
   PlayingCard? _activeCard;
+  final Set<PlayingCard> _selected = {};
+  final GlobalKey _attackSlotKey = GlobalKey();
+  final GlobalKey _defendTargetKey = GlobalKey();
 
   @override
   void initState() {
@@ -84,8 +88,13 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
       if (_game.turn == DurakTurn.defender &&
           _game.defenderIndex == _mePlayer) {
         _game.defend(card, playerIndex: _mePlayer);
+        _selected.clear();
       } else if (_game.attackerIndex == _mePlayer) {
-        _game.attack(card, playerIndex: _mePlayer);
+        final batch = _selected.length > 1 && _selected.contains(card)
+            ? _selected.toList()
+            : [card];
+        _game.attackMany(batch, playerIndex: _mePlayer);
+        _selected.clear();
       } else {
         return;
       }
@@ -94,6 +103,46 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     } on DurakRuleError catch (e) {
       setState(() => _statusMessage = e.message);
     }
+  }
+
+  void _toggleSelect(PlayingCard card) {
+    if (_game.isOver || _game.attackerIndex != _mePlayer) return;
+    if (!_game.canAttackWith(card, _mePlayer)) return;
+    setState(() {
+      if (_selected.contains(card)) {
+        _selected.remove(card);
+      } else if (_selected.isEmpty || _selected.first.rank == card.rank) {
+        _selected.add(card);
+      } else {
+        _selected
+          ..clear()
+          ..add(card);
+      }
+      _activeCard = _selected.isEmpty ? null : card;
+    });
+  }
+
+  Future<bool> _onDrop(PlayingCard card, Offset global, Rect from) async {
+    if (_game.isOver) return false;
+    final canDefend = _game.turn == DurakTurn.defender &&
+        _game.defenderIndex == _mePlayer &&
+        _game.canDefendWith(card, _mePlayer);
+    final canAttack = _game.attackerIndex == _mePlayer &&
+        _game.canAttackWith(card, _mePlayer);
+    if (!canDefend && !canAttack) return false;
+
+    final attackRect = globalRectOf(_attackSlotKey);
+    final defendRect = globalRectOf(_defendTargetKey);
+    final over = (canAttack &&
+            attackRect != null &&
+            attackRect.inflate(28).contains(global)) ||
+        (canDefend &&
+            defendRect != null &&
+            defendRect.inflate(28).contains(global)) ||
+        from.center.dy < MediaQuery.sizeOf(context).height * 0.55;
+    if (!over) return false;
+    _onMyCardTap(card);
+    return true;
   }
 
   void _onTake() {
@@ -198,13 +247,15 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                     cards: myHand,
                     cardSize: cardSize,
                     legalCards: legal,
+                    selectedCards: _selected,
                     enabled: !_game.isOver && _myTurn,
                     onActiveChanged: (c) {
                       if (_activeCard == c) return;
                       setState(() => _activeCard = c);
                     },
                     onTap: _onMyCardTap,
-                    onDrag: (card, _) => _onMyCardTap(card),
+                    onLongPress: _toggleSelect,
+                    onDrop: _onDrop,
                   ),
                   const SizedBox(height: 6),
                   if (status != null)
@@ -272,6 +323,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                           child: Stack(
                             children: [
                               PlayingCardWidget(
+                                key: i == defendIdx ? _defendTargetKey : null,
                                 card: _game.table[i].attack,
                                 size: cardSize,
                                 dropTarget: i == defendIdx,
@@ -296,6 +348,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                         (_game.turn == DurakTurn.attacker ||
                             _game.turn == DurakTurn.attackerFollowUp))
                       Padding(
+                        key: _attackSlotKey,
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         child: DurakDropSlot(
                           size: cardSize,
