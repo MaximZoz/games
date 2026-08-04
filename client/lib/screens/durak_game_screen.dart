@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -23,6 +24,7 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
+import 'package:multigames_client/utils/user_error.dart';
 
 class DurakGameScreen extends ConsumerStatefulWidget {
   const DurakGameScreen({super.key, required this.gameId});
@@ -35,6 +37,25 @@ class DurakGameScreen extends ConsumerStatefulWidget {
 class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _busy = false;
   bool _settled = false;
+  bool _handlingAuthError = false;
+
+  bool _isSessionExpired(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('401') ||
+        s.contains('session expired') ||
+        s.contains('сессия истекла');
+  }
+
+  void _handleAuthError(Object e) {
+    if (_handlingAuthError || !_isSessionExpired(e)) return;
+    _handlingAuthError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await ref.read(authStateProvider.notifier).logout();
+      if (!mounted) return;
+      context.go('/login');
+    });
+  }
 
   Future<void> _act(Future<void> Function() action) async {
     if (_busy) return;
@@ -216,10 +237,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: AppColors.accentStart),
                   ),
-                  error: (e, _) => Center(
-                    child: Text('$e',
-                        style: const TextStyle(color: Colors.red)),
-                  ),
+                  error: (e, _) {
+                    _handleAuthError(e);
+                    if (_isSessionExpired(e)) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentStart,
+                        ),
+                      );
+                    }
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          formatUserError(e),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               if (view != null &&

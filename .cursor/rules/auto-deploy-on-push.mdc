@@ -22,13 +22,16 @@ push → deploy в том же ходе.
    - `FLY_API_TOKEN`, `JWT_SECRET`, `ADMIN_INIT_SECRET`
    - `PUBLIC_BASE_URL=https://multigameszozu-dev.fly.dev`
 
-3. Задеплоить текущую рабочую ветку на DEV:
+3. Задеплоить текущую рабочую ветку на DEV **без** перезаписи секретов
+   (иначе `JWT_SECRET` сбрасывает все сессии):
 
    ```bash
    ./launcher/deploy_dev.sh
    ```
 
    Windows: `.\launcher\deploy_dev.ps1`
+
+   `UPDATE_SECRETS=1` — только при первом сетапе / явной смене секретов.
 
 4. Долгая операция (Flutter Web + Go): таймаут ≥ 10 минут.
 

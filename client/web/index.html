@@ -253,35 +253,20 @@
         }
         function start() {
           try {
-            // auto_select: false — иначе One Tap тихо перелогинивает и
-            // сбрасывает единственную активную сессию (session_replaced).
+            // Не вызываем prompt()/One Tap: даже с auto_select:false FedCM
+            // может вернуть credential и сбросить единственную сессию
+            // (session_replaced → «Сессия истекла»). Только явная кнопка.
             google.accounts.id.initialize({
               client_id: clientId,
               callback: onCred,
               auto_select: false,
               cancel_on_tap_outside: true,
-              use_fedcm_for_prompt: true,
+              use_fedcm_for_prompt: false,
               itp_support: true
             });
-            google.accounts.id.prompt(function (notification) {
-              try {
-                if (notification.isDismissedMoment && notification.isDismissedMoment()) {
-                  var reason = '';
-                  try { reason = notification.getDismissedReason() || ''; } catch (e) {}
-                  if (reason === 'credential_returned') return;
-                  fail('cancelled');
-                  return;
-                }
-                if (
-                  (notification.isNotDisplayed && notification.isNotDisplayed()) ||
-                  (notification.isSkippedMoment && notification.isSkippedMoment())
-                ) {
-                  showInlineButton();
-                }
-              } catch (e) {
-                showInlineButton();
-              }
-            });
+            try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+            try { google.accounts.id.cancel(); } catch (e) {}
+            showInlineButton();
           } catch (e) {
             fail(String(e));
           }
