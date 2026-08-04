@@ -435,10 +435,13 @@ class GameOpponentCard extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: card,
     );
-    if (align == null) {
-      return Center(child: boxed);
-    }
-    return Align(alignment: align!, child: boxed);
+    // widthFactor/heightFactor — не растягивать Align на всю ширину родителя.
+    return Align(
+      alignment: align ?? Alignment.center,
+      widthFactor: 1,
+      heightFactor: 1,
+      child: boxed,
+    );
   }
 }
 
@@ -691,7 +694,7 @@ class TurnTimerStyle {
   }
 }
 
-/// Мягкий градиентный бордер вокруг [child] по таймеру хода.
+/// Мягкий бордер-прогресс вокруг [child]: линия по периметру укорачивается.
 class TurnTimerBorder extends StatefulWidget {
   const TurnTimerBorder({
     super.key,
@@ -718,7 +721,7 @@ class TurnTimerBorder extends StatefulWidget {
 
 class _TurnTimerBorderState extends State<TurnTimerBorder> {
   Timer? _timer;
-  int _remaining = 0;
+  double _fraction = 1;
   bool _expiredFired = false;
 
   bool get _hasTimer => widget.turnTimeSec > 0 && widget.turnDeadline > 0;
@@ -727,7 +730,7 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
   void initState() {
     super.initState();
     _tick();
-    _timer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) => _tick());
   }
 
   @override
@@ -746,14 +749,18 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
   }
 
   void _tick() {
+    if (!widget.active) return;
     if (!_hasTimer) {
-      if (_remaining != 0 && mounted) setState(() => _remaining = 0);
+      if (_fraction != 1 && mounted) setState(() => _fraction = 1);
       return;
     }
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-    final r = (widget.turnDeadline - now).clamp(0, 999999);
-    if (r != _remaining && mounted) setState(() => _remaining = r);
-    if (r <= 0 && !_expiredFired && widget.active) {
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final leftMs = widget.turnDeadline * 1000 - nowMs;
+    final f = (leftMs / (widget.turnTimeSec * 1000)).clamp(0.0, 1.0);
+    if ((f - _fraction).abs() > 0.002 && mounted) {
+      setState(() => _fraction = f);
+    }
+    if (leftMs <= 0 && !_expiredFired) {
       _expiredFired = true;
       widget.onExpired?.call();
     }
@@ -762,64 +769,95 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
   @override
   Widget build(BuildContext context) {
     if (!widget.active) return widget.child;
-    final fraction = _hasTimer
-        ? (_remaining / widget.turnTimeSec).clamp(0.0, 1.0)
-        : 1.0;
     final colors = TurnTimerStyle.colorsFor(
       hasTimer: _hasTimer,
-      fraction: fraction,
+      fraction: _fraction,
     );
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
-      padding: EdgeInsets.all(widget.borderWidth),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(widget.radius),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.first.withValues(alpha: 0.35),
-            blurRadius: 10,
-            spreadRadius: 0.5,
-          ),
-        ],
+    return CustomPaint(
+      foregroundPainter: _ShrinkingBorderPainter(
+        fraction: _hasTimer ? _fraction : 1,
+        colors: colors,
+        strokeWidth: widget.borderWidth,
+        radius: widget.radius,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(widget.radius - widget.borderWidth),
+      child: Padding(
+        padding: EdgeInsets.all(widget.borderWidth),
         child: widget.child,
       ),
     );
   }
 }
 
-/// Тонкая вертикальная линия-прогресс у края (бордер бокового меню).
-class TurnTimerSideRail extends StatefulWidget {
-  const TurnTimerSideRail({
+class _ShrinkingBorderPainter extends CustomPainter {
+  _ShrinkingBorderPainter({
+    required this.fraction,
+    required this.colors,
+    required this.strokeWidth,
+    required this.radius,
+  });
+
+  final double fraction;
+  final List<Color> colors;
+  final double strokeWidth;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (fraction <= 0.001) return;
+    final inset = strokeWidth / 2;
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final path = Path()..addRRect(rrect);
+    for (final metric in path.computeMetrics()) {
+      final len = metric.length * fraction.clamp(0.0, 1.0);
+      final extract = metric.extractPath(0, len);
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..shader = LinearGradient(
+          colors: colors,
+        ).createShader(rect);
+      canvas.drawPath(extract, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShrinkingBorderPainter old) =>
+      old.fraction != fraction ||
+      old.strokeWidth != strokeWidth ||
+      old.colors != colors;
+}
+
+/// Тонкая горизонтальная линия-прогресс внизу: укорачивается со временем.
+class TurnTimerBottomBar extends StatefulWidget {
+  const TurnTimerBottomBar({
     super.key,
     required this.active,
     this.turnDeadline = 0,
     this.turnTimeSec = 0,
     this.onExpired,
-    this.width = 3,
+    this.height = 3,
   });
 
   final bool active;
   final int turnDeadline;
   final int turnTimeSec;
   final VoidCallback? onExpired;
-  final double width;
+  final double height;
 
   @override
-  State<TurnTimerSideRail> createState() => _TurnTimerSideRailState();
+  State<TurnTimerBottomBar> createState() => _TurnTimerBottomBarState();
 }
 
-class _TurnTimerSideRailState extends State<TurnTimerSideRail> {
+class _TurnTimerBottomBarState extends State<TurnTimerBottomBar> {
   Timer? _timer;
-  int _remaining = 0;
+  double _fraction = 1;
   bool _expiredFired = false;
 
   bool get _hasTimer => widget.turnTimeSec > 0 && widget.turnDeadline > 0;
@@ -828,11 +866,11 @@ class _TurnTimerSideRailState extends State<TurnTimerSideRail> {
   void initState() {
     super.initState();
     _tick();
-    _timer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) => _tick());
   }
 
   @override
-  void didUpdateWidget(covariant TurnTimerSideRail oldWidget) {
+  void didUpdateWidget(covariant TurnTimerBottomBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.turnDeadline != widget.turnDeadline ||
         oldWidget.active != widget.active) {
@@ -850,13 +888,16 @@ class _TurnTimerSideRailState extends State<TurnTimerSideRail> {
   void _tick() {
     if (!widget.active) return;
     if (!_hasTimer) {
-      if (_remaining != 0 && mounted) setState(() => _remaining = 0);
+      if (_fraction != 1 && mounted) setState(() => _fraction = 1);
       return;
     }
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-    final r = (widget.turnDeadline - now).clamp(0, 999999);
-    if (r != _remaining && mounted) setState(() => _remaining = r);
-    if (r <= 0 && !_expiredFired) {
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final leftMs = widget.turnDeadline * 1000 - nowMs;
+    final f = (leftMs / (widget.turnTimeSec * 1000)).clamp(0.0, 1.0);
+    if ((f - _fraction).abs() > 0.002 && mounted) {
+      setState(() => _fraction = f);
+    }
+    if (leftMs <= 0 && !_expiredFired) {
       _expiredFired = true;
       widget.onExpired?.call();
     }
@@ -865,42 +906,35 @@ class _TurnTimerSideRailState extends State<TurnTimerSideRail> {
   @override
   Widget build(BuildContext context) {
     if (!widget.active) return const SizedBox.shrink();
-    final fraction = _hasTimer
-        ? (_remaining / widget.turnTimeSec).clamp(0.0, 1.0)
-        : 1.0;
     final colors = TurnTimerStyle.colorsFor(
       hasTimer: _hasTimer,
-      fraction: fraction,
+      fraction: _hasTimer ? _fraction : 1,
     );
     return IgnorePointer(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          width: widget.width,
-          margin: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                colors.first.withValues(alpha: 0.25),
-                colors.first,
-                colors.last,
-                colors.last.withValues(alpha: 0.25),
-              ],
-              stops: const [0.0, 0.2, 0.8, 1.0],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colors.first.withValues(alpha: 0.45),
-                blurRadius: 8,
-                spreadRadius: 0.5,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth * (_hasTimer ? _fraction : 1);
+          return Align(
+            alignment: Alignment.center,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.linear,
+              width: w.clamp(0.0, constraints.maxWidth),
+              height: widget.height,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                gradient: LinearGradient(colors: colors),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.first.withValues(alpha: 0.4),
+                    blurRadius: 6,
+                    spreadRadius: 0.2,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

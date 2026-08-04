@@ -8,9 +8,8 @@ import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 /// Веер карт игрока.
 ///
 /// - Водить пальцем по вееру — подсвечивается карта под пальцем.
-/// - Тянуть вверх/в сторону — карта вытягивается и следует за пальцем.
-/// - Отпускание: [onDrop] или возврат в веер.
-/// - Чем больше карт, тем плотнее и сильнее дуга.
+/// - Тянуть вверх — карта фиксируется и следует за пальцем (overlay).
+/// - Отпускание на стол: [onDrop]; на веер / мимо — красивый возврат.
 class CardFan extends StatefulWidget {
   const CardFan({
     super.key,
@@ -34,12 +33,12 @@ class CardFan extends StatefulWidget {
   final bool enabled;
   final Set<PlayingCard>? legalCards;
   final Set<PlayingCard>? selectedCards;
-
-  /// Карты, которые сейчас летят (не рисуем в веере — без «двойника»).
   final Set<PlayingCard>? hiddenCards;
-
   final ValueChanged<PlayingCard>? onTap;
   final ValueChanged<PlayingCard>? onLongPress;
+
+  /// `true` — карта принята столом (больше не в веере).
+  /// `false` — вернуть в веер с анимацией.
   final Future<bool> Function(
     PlayingCard card,
     Offset globalPosition,
@@ -56,18 +55,23 @@ class CardFan extends StatefulWidget {
 
 class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   int? _hoverIndex;
-  int? _dragIndex;
-  Offset _dragOffset = Offset.zero;
-  bool _lifted = false;
-  bool _dropBusy = false;
   Offset _panAccum = Offset.zero;
+  bool _dropBusy = false;
+
+  /// Зафиксированная карта на время драга (не меняется при свайпе).
+  PlayingCard? _liftedCard;
+  Offset? _liftGlobalCenter;
+  OverlayEntry? _overlay;
+  bool _pointerDown = false;
 
   late final AnimationController _returnCtrl;
-  Offset _returnFrom = Offset.zero;
 
   List<PlayingCard> get _visible {
-    final hidden = widget.hiddenCards;
-    if (hidden == null || hidden.isEmpty) return widget.cards;
+    final hidden = <PlayingCard>{
+      ...?widget.hiddenCards,
+      if (_liftedCard != null) _liftedCard!,
+    };
+    if (hidden.isEmpty) return widget.cards;
     return widget.cards.where((c) => !hidden.contains(c)).toList();
   }
 
@@ -77,25 +81,17 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     _returnCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 280),
-    )..addListener(() {
-        final t = Curves.easeOutCubic.transform(_returnCtrl.value);
-        setState(() {
-          _dragOffset = Offset.lerp(_returnFrom, Offset.zero, t)!;
-        });
-      });
+    );
   }
 
   @override
   void dispose() {
+    _removeOverlay();
     _returnCtrl.dispose();
     super.dispose();
   }
 
-  void _emitActive(int? index) {
-    final cards = _visible;
-    final card = index == null || index < 0 || index >= cards.length
-        ? null
-        : cards[index];
+  void _emitActiveCard(PlayingCard? card) {
     final legal = card == null
         ? null
         : (widget.legalCards == null || widget.legalCards!.contains(card)
@@ -107,26 +103,125 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   void _setHover(int? index) {
     if (_hoverIndex == index) return;
     setState(() => _hoverIndex = index);
-    if (!_lifted) _emitActive(index);
+    if (_liftedCard == null) {
+      final cards = _visible;
+      final card = index == null || index < 0 || index >= cards.length
+          ? null
+          : cards[index];
+      _emitActiveCard(card);
+    }
   }
 
-  void _clearInteraction() {
+  void _removeOverlay() {
+    _overlay?.remove();
+    _overlay = null;
+  }
+
+  void _showOverlayAt(Offset globalCenter) {
+    _liftGlobalCenter = globalCenter;
+    _overlay?.markNeedsBuild();
+    if (_overlay != null) return;
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+    _overlay = OverlayEntry(
+      builder: (ctx) {
+        final card = _liftedCard;
+        final center = _liftGlobalCenter;
+        if (card == null || center == null) return const SizedBox.shrink();
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: center.dx - widget.cardSize.width / 2,
+                top: center.dy - widget.cardSize.height / 2,
+                child: Transform.scale(
+                  scale: 1.12,
+                  child: widget.faceDown
+                      ? CardBackWidget(size: widget.cardSize, elevated: true)
+                      : PlayingCardWidget(
+                          card: card,
+                          size: widget.cardSize,
+                          elevated: true,
+                          highlighted: true,
+                        ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    overlay.insert(_overlay!);
+  }
+
+  Future<void> _animateOverlayTo(Rect to) async {
+    final fromCenter = _liftGlobalCenter;
+    final card = _liftedCard;
+    if (fromCenter == null || card == null) return;
+    final from = Rect.fromCenter(
+      center: fromCenter,
+      width: widget.cardSize.width,
+      height: widget.cardSize.height,
+    );
+    _removeOverlay();
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+    final completer = Completer<void>();
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (ctx) {
+        return IgnorePointer(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            onEnd: () {
+              entry.remove();
+              if (!completer.isCompleted) completer.complete();
+            },
+            builder: (context, t, _) {
+              final left = from.left + (to.left - from.left) * t;
+              final top = from.top + (to.top - from.top) * t;
+              final scale = 1.12 - 0.12 * t;
+              return Stack(
+                children: [
+                  Positioned(
+                    left: left,
+                    top: top,
+                    child: Transform.scale(
+                      scale: scale,
+                      child: widget.faceDown
+                          ? CardBackWidget(size: widget.cardSize, elevated: true)
+                          : PlayingCardWidget(
+                              card: card,
+                              size: widget.cardSize,
+                              elevated: true,
+                              highlighted: t < 0.85,
+                            ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+    overlay.insert(entry);
+    await completer.future;
+  }
+
+  void _clearLift({bool keepHover = false}) {
+    _removeOverlay();
     setState(() {
-      _dragIndex = null;
-      _lifted = false;
-      _dragOffset = Offset.zero;
+      _liftedCard = null;
+      _liftGlobalCenter = null;
       _panAccum = Offset.zero;
-      _hoverIndex = null;
       _dropBusy = false;
+      _pointerDown = false;
+      if (!keepHover) _hoverIndex = null;
     });
-    widget.onActiveChanged?.call(null);
-  }
-
-  Future<void> _animateReturn() async {
-    _returnFrom = _dragOffset;
-    await _returnCtrl.forward(from: 0);
-    if (!mounted) return;
-    _clearInteraction();
+    if (!keepHover) widget.onActiveChanged?.call(null);
   }
 
   double _spacingFor(int n) {
@@ -176,19 +271,30 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     return best;
   }
 
-  Rect _cardGlobalRect(int i, double baseSpacing, double totalW) {
+  Rect _slotGlobalRect(PlayingCard card, double baseSpacing, double totalW) {
     final box = context.findRenderObject() as RenderBox?;
-    final cards = _visible;
-    if (box == null || !box.hasSize || i < 0 || i >= cards.length) {
+    final cards = widget.cards
+        .where((c) => widget.hiddenCards?.contains(c) != true)
+        .toList();
+    final i = cards.indexOf(card);
+    if (box == null || !box.hasSize) {
       return Rect.fromLTWH(0, 0, widget.cardSize.width, widget.cardSize.height);
+    }
+    if (i < 0) {
+      final o = box.localToGlobal(Offset.zero);
+      return Rect.fromLTWH(
+        o.dx + box.size.width / 2 - widget.cardSize.width / 2,
+        o.dy + box.size.height - widget.cardSize.height,
+        widget.cardSize.width,
+        widget.cardSize.height,
+      );
     }
     final n = cards.length;
     final center = (n - 1) / 2;
     final offsetX = (i - center) * baseSpacing;
     final curveY = (i - center) * (i - center) * widget.cardSize.height * 0.012;
-    final left = totalW / 2 + offsetX + 16 + _dragOffset.dx;
-    final top =
-        box.size.height - widget.cardSize.height - curveY + _dragOffset.dy;
+    final left = totalW / 2 + offsetX + 16;
+    final top = box.size.height - widget.cardSize.height - curveY;
     final origin = box.localToGlobal(Offset(left, top));
     return Rect.fromLTWH(
       origin.dx,
@@ -198,46 +304,70 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     );
   }
 
-  void _finishDrop(
-    int i,
-    PlayingCard card,
+  void _tryLift(PlayingCard card, Offset global) {
+    if (_liftedCard != null) return;
+    if (!_isLegal(card) && widget.legalCards != null) return;
+    setState(() {
+      _liftedCard = card;
+    });
+    _emitActiveCard(card);
+    _showOverlayAt(global);
+  }
+
+  Future<void> _finishDrop(
     Offset global,
     double baseSpacing,
     double totalW,
-    bool canPlay,
-  ) {
-    if (_dropBusy) return;
+  ) async {
+    final card = _liftedCard;
+    if (card == null || _dropBusy) return;
     _dropBusy = true;
-    final from = _cardGlobalRect(i, baseSpacing, totalW);
+    final from = Rect.fromCenter(
+      center: _liftGlobalCenter ?? global,
+      width: widget.cardSize.width,
+      height: widget.cardSize.height,
+    );
+    // Снять overlay сразу — иначе дубль с fly-анимацией стола.
+    _removeOverlay();
+    final canPlay =
+        widget.enabled && !widget.faceDown && _isLegal(card);
     final drop = widget.onDrop;
     if (drop != null && canPlay) {
-      unawaited(drop(card, global, from).then((accepted) async {
-        if (!mounted) return;
-        if (accepted) {
-          _clearInteraction();
-        } else {
-          await _animateReturn();
-        }
-      }));
-    } else {
-      unawaited(_animateReturn());
+      final accepted = await drop(card, global, from);
+      if (!mounted) return;
+      if (accepted) {
+        _clearLift();
+        return;
+      }
     }
+    // Возврат в веер.
+    final to = _slotGlobalRect(card, baseSpacing, totalW);
+    _liftGlobalCenter = from.center;
+    await _animateOverlayTo(to);
+    if (!mounted) return;
+    _clearLift();
   }
 
   @override
   Widget build(BuildContext context) {
     final cards = _visible;
-    if (cards.isEmpty) {
+    final allForLayout = widget.cards
+        .where((c) => widget.hiddenCards?.contains(c) != true)
+        .toList();
+    // Для ширины веера считаем все не-hidden (включая lifted-слот-пустоту —
+    // лучше сжимать веер без lifted карты).
+    final layoutCards = cards;
+    if (layoutCards.isEmpty && allForLayout.isEmpty) {
       return SizedBox(
         width: widget.cardSize.width,
         height: widget.cardSize.height,
       );
     }
-    final n = cards.length;
-    final baseSpacing = _spacingFor(n);
-    final totalW = widget.cardSize.width + baseSpacing * (n - 1);
+    final baseSpacing = _spacingFor(max(layoutCards.length, 1));
+    final totalW = widget.cardSize.width +
+        baseSpacing * max(layoutCards.length - 1, 0);
     final height = widget.cardSize.height * 1.7;
-    final arc = _arcFor(n);
+    final arc = _arcFor(max(layoutCards.length, 1));
 
     return SizedBox(
       height: height,
@@ -246,8 +376,102 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
         clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
-          for (int i = 0; i < n; i++)
-            _positioned(i, n, cards, baseSpacing, totalW, arc),
+          for (int i = 0; i < layoutCards.length; i++)
+            _positioned(
+              i,
+              layoutCards.length,
+              layoutCards,
+              baseSpacing,
+              totalW,
+              arc,
+            ),
+          // Поверх — жесты на весь веер (свайп + lift).
+          Positioned.fill(
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: !widget.enabled || widget.faceDown
+                  ? null
+                  : (e) {
+                      _pointerDown = true;
+                      _panAccum = Offset.zero;
+                      final box = context.findRenderObject() as RenderBox?;
+                      if (box == null) return;
+                      final local = box.globalToLocal(e.position);
+                      final idx = _indexAtLocalX(
+                        local.dx,
+                        layoutCards.length,
+                        baseSpacing,
+                        totalW,
+                      );
+                      _setHover(idx);
+                    },
+              onPointerMove: !widget.enabled || widget.faceDown
+                  ? null
+                  : (e) {
+                      if (!_pointerDown) return;
+                      _panAccum += e.delta;
+                      if (_liftedCard != null) {
+                        _showOverlayAt(e.position);
+                        return;
+                      }
+                      final box = context.findRenderObject() as RenderBox?;
+                      if (box != null && layoutCards.isNotEmpty) {
+                        final local = box.globalToLocal(e.position);
+                        final idx = _indexAtLocalX(
+                          local.dx,
+                          layoutCards.length,
+                          baseSpacing,
+                          totalW,
+                        );
+                        _setHover(idx);
+                      }
+                      final pullUp = _panAccum.dy < -16;
+                      final pullOut =
+                          _panAccum.distance > 28 && _panAccum.dy < -6;
+                      if ((pullUp || pullOut) &&
+                          _hoverIndex != null &&
+                          _hoverIndex! >= 0 &&
+                          _hoverIndex! < layoutCards.length) {
+                        final card = layoutCards[_hoverIndex!];
+                        if (widget.legalCards == null || _isLegal(card)) {
+                          _tryLift(card, e.position);
+                        }
+                      }
+                    },
+              onPointerUp: !widget.enabled || widget.faceDown
+                  ? null
+                  : (e) {
+                      _pointerDown = false;
+                      if (_liftedCard != null) {
+                        unawaited(
+                          _finishDrop(e.position, baseSpacing, totalW),
+                        );
+                        return;
+                      }
+                      // Короткий тап.
+                      if (_panAccum.distance < 12 &&
+                          _hoverIndex != null &&
+                          _hoverIndex! >= 0 &&
+                          _hoverIndex! < layoutCards.length) {
+                        final card = layoutCards[_hoverIndex!];
+                        if (_isLegal(card) || widget.legalCards == null) {
+                          widget.onTap?.call(card);
+                        }
+                      }
+                      _panAccum = Offset.zero;
+                    },
+              onPointerCancel: (_) {
+                _pointerDown = false;
+                if (_liftedCard != null) {
+                  unawaited(_finishDrop(
+                    _liftGlobalCenter ?? Offset.zero,
+                    baseSpacing,
+                    totalW,
+                  ));
+                }
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -271,31 +495,24 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     var scale = 1.0;
     final card = cards[i];
     final selected = _isSelected(card);
-    final activeIndex = _dragIndex ?? _hoverIndex;
-    final active = activeIndex != null && i == activeIndex;
+    final active = _hoverIndex == i && _liftedCard == null;
 
-    if (activeIndex != null && !active) {
-      final dir = i > activeIndex ? 1 : -1;
-      final distance = (i - activeIndex).abs();
+    if (_hoverIndex != null && !active && _liftedCard == null) {
+      final dir = i > _hoverIndex! ? 1 : -1;
+      final distance = (i - _hoverIndex!).abs();
       extraX = dir * widget.cardSize.width * (0.28 / max(distance, 1));
     }
-    if (selected && !active) {
+    if (selected) {
       extraY = widget.cardSize.height * 0.18;
       scale = 1.05;
     }
     if (active) {
-      if (_lifted && _dragIndex == i) {
-        extraY = 0;
-        scale = 1.12;
-      } else {
-        extraY = widget.cardSize.height * 0.22;
-        scale = 1.06;
-      }
+      extraY = widget.cardSize.height * 0.22;
+      scale = 1.06;
     }
 
     final legal = _isLegal(card);
     final isLegalContext = widget.legalCards != null;
-    final canPlay = widget.enabled && !widget.faceDown && legal;
 
     Widget child = widget.faceDown
         ? CardBackWidget(size: widget.cardSize, elevated: active || selected)
@@ -307,142 +524,26 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
             elevated: active || selected,
           );
 
-    child = MouseRegion(
-      onEnter: (_) {
-        if (!widget.enabled || _lifted) return;
-        _setHover(i);
-      },
-      onExit: (_) {
-        if (!widget.enabled || _lifted) return;
-        if (_hoverIndex == i) _setHover(null);
-      },
-      cursor: canPlay ? SystemMouseCursors.grab : SystemMouseCursors.basic,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: !canPlay
-            ? null
-            : () {
-                if (_lifted || _dropBusy) return;
-                widget.onTap?.call(card);
-              },
-        onLongPress: !canPlay
-            ? null
-            : () {
-                if (_lifted || _dropBusy) return;
-                widget.onLongPress?.call(card);
-              },
-        onPanStart: !widget.enabled || widget.faceDown
-            ? null
-            : (_) {
-                _returnCtrl.stop();
-                setState(() {
-                  _dragIndex = i;
-                  _hoverIndex = i;
-                  _dragOffset = Offset.zero;
-                  _panAccum = Offset.zero;
-                  _lifted = false;
-                  _dropBusy = false;
-                });
-                _emitActive(i);
-              },
-        onPanUpdate: !widget.enabled || widget.faceDown
-            ? null
-            : (details) {
-                if (_dragIndex == null && _hoverIndex == null) return;
-                _panAccum += details.delta;
-
-                if (!_lifted) {
-                  // Свайп по вееру — выбираем карту под пальцем.
-                  final box = context.findRenderObject() as RenderBox?;
-                  if (box != null) {
-                    final local = box.globalToLocal(details.globalPosition);
-                    final idx = _indexAtLocalX(
-                      local.dx,
-                      n,
-                      baseSpacing,
-                      totalW,
-                    );
-                    if (idx != _hoverIndex || idx != _dragIndex) {
-                      setState(() {
-                        _hoverIndex = idx;
-                        _dragIndex = idx;
-                      });
-                      _emitActive(idx);
-                    }
-                  }
-                  // Тянем вверх/наружу — фиксируем карту и свободный драг.
-                  final pullUp = _panAccum.dy < -18;
-                  final pullOut = _panAccum.distance > 36 &&
-                      _panAccum.dy < -8;
-                  if (pullUp || pullOut) {
-                    setState(() {
-                      _lifted = true;
-                      _dragOffset = _panAccum;
-                    });
-                  }
-                  return;
-                }
-
-                setState(() {
-                  _dragOffset += details.delta;
-                });
-              },
-        onPanEnd: !widget.enabled || widget.faceDown
-            ? null
-            : (details) {
-                final idx = _dragIndex ?? _hoverIndex;
-                if (idx == null || idx < 0 || idx >= cards.length) {
-                  _clearInteraction();
-                  return;
-                }
-                final dragged = cards[idx];
-                final can = widget.enabled &&
-                    !widget.faceDown &&
-                    _isLegal(dragged);
-
-                if (!_lifted || _dragOffset.distance < 14) {
-                  final tapped = dragged;
-                  _clearInteraction();
-                  if (can) widget.onTap?.call(tapped);
-                  return;
-                }
-                _finishDrop(
-                  idx,
-                  dragged,
-                  details.globalPosition,
-                  baseSpacing,
-                  totalW,
-                  can,
-                );
-              },
-        onPanCancel: () {
-          if (_lifted) {
-            unawaited(_animateReturn());
-          } else {
-            _clearInteraction();
-          }
-        },
-        child: child,
-      ),
+    // Long-press через GestureDetector без конфликта с Listener.
+    child = GestureDetector(
+      onLongPress: !widget.enabled || widget.faceDown || !legal
+          ? null
+          : () => widget.onLongPress?.call(card),
+      child: child,
     );
 
-    final dragDx = (_lifted && _dragIndex == i) ? _dragOffset.dx : 0.0;
-    final dragDy = (_lifted && _dragIndex == i) ? _dragOffset.dy : 0.0;
-
     return AnimatedPositioned(
-      key: ValueKey('fan-$i-${card.rank.value}-${card.suit.name}'),
-      duration: (_lifted && _dragIndex == i)
-          ? Duration.zero
-          : const Duration(milliseconds: 220),
+      key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
+      duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
-      left: totalW / 2 + offsetX + extraX + 16 + dragDx,
-      bottom: extraY - curveY - dragDy,
+      left: totalW / 2 + offsetX + extraX + 16,
+      bottom: extraY - curveY,
       child: AnimatedScale(
         scale: scale,
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutBack,
         child: Transform.rotate(
-          angle: active && _lifted ? 0 : angle,
+          angle: angle,
           alignment: Alignment.bottomCenter,
           child: child,
         ),
