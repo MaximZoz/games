@@ -41,6 +41,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   bool _isSessionExpired(Object e) {
     final s = e.toString().toLowerCase();
+    // 503/«попробуйте позже» — временный сбой, не разлогиниваем.
+    if (s.contains('503') || s.contains('попробуйте позже')) return false;
     return s.contains('401') ||
         s.contains('session expired') ||
         s.contains('сессия истекла');

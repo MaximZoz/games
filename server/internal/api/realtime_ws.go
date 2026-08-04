@@ -215,7 +215,11 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ok, existsErr := store.SessionExists(r.Context(), h.Pool, sid)
-		if existsErr != nil || !ok {
+		if existsErr != nil {
+			WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
+			return
+		}
+		if !ok {
 			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 			return
 		}
