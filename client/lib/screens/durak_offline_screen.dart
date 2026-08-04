@@ -59,15 +59,24 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   bool get _myTurn {
     if (_game.isOver) return false;
     if (_game.turn == DurakTurn.defender) {
-      return _game.defenderIndex == _mePlayer;
+      // Можно бить или подкидывать, пока защитник бьёт.
+      return _game.defenderIndex == _mePlayer ||
+          _game.attackerIndex == _mePlayer;
     }
     return _game.attackerIndex == _mePlayer;
   }
 
+  bool get _botShouldAct {
+    if (_game.isOver) return false;
+    if (_game.turn == DurakTurn.defender) {
+      return _game.defenderIndex == _botPlayer;
+    }
+    return _game.attackerIndex == _botPlayer;
+  }
+
   void _scheduleBot() {
     _botTimer?.cancel();
-    if (_game.isOver) return;
-    if (_myTurn) return;
+    if (!_botShouldAct) return;
     _botTimer = Timer(const Duration(milliseconds: 650), () {
       if (!mounted) return;
       final acted = _bot.step(_game);

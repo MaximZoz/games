@@ -96,33 +96,33 @@ class DurakDeckPile extends StatelessWidget {
   }
 }
 
-/// Отбой: хаотичная куча рубашек без счётчика. Чем больше карт — тем больше куча.
+/// Отбой: едва виднеется справа — компактная хаотичная куча без счётчика.
 class DurakBitoPile extends StatelessWidget {
   const DurakBitoPile({
     super.key,
     required this.count,
     required this.cardSize,
+    this.peek = true,
   });
 
   final int count;
   final Size cardSize;
 
+  /// Если true — куча почти за краем, занимает мало места за столом.
+  final bool peek;
+
   @override
   Widget build(BuildContext context) {
+    final peekW = peek ? cardSize.width * 0.38 : cardSize.width * 1.35;
+    final areaH = cardSize.height * (peek ? 1.05 : 1.25);
     if (count <= 0) {
-      return SizedBox(
-        width: cardSize.width * 1.4,
-        height: cardSize.height * 1.25,
-      );
+      return SizedBox(width: peekW, height: areaH);
     }
 
-    // Показываем до 18 «слоёв» — куча растёт визуально с числом карт.
-    final shown = math.min(count, 18);
-    final spread = 0.35 + 0.55 * (shown / 18);
-    final areaW = cardSize.width * (1.35 + spread * 0.9);
-    final areaH = cardSize.height * (1.2 + spread * 0.7);
+    final shown = math.min(count, 14);
+    final areaW = cardSize.width * (1.15 + 0.4 * (shown / 14));
 
-    return SizedBox(
+    final pile = SizedBox(
       width: areaW,
       height: areaH,
       child: Stack(
@@ -139,6 +139,21 @@ class DurakBitoPile extends StatelessWidget {
         ],
       ),
     );
+
+    if (!peek) return pile;
+
+    // Виден только левый край кучи.
+    return SizedBox(
+      width: peekW,
+      height: areaH,
+      child: ClipRect(
+        child: OverflowBox(
+          alignment: Alignment.centerLeft,
+          maxWidth: areaW,
+          child: pile,
+        ),
+      ),
+    );
   }
 
   Widget _scatteredCard({
@@ -147,20 +162,22 @@ class DurakBitoPile extends StatelessWidget {
     required double areaW,
     required double areaH,
   }) {
-    // Стабильный seed на индекс — при росте кучи старые карты не прыгают.
     final rng = math.Random(9001 + index * 9973);
-    final angle = (rng.nextDouble() - 0.5) * 1.35;
-    final dx = (rng.nextDouble() - 0.5) * (areaW - cardSize.width) * 0.85;
-    final dy = (rng.nextDouble() - 0.5) * (areaH - cardSize.height) * 0.75;
+    final angle = (rng.nextDouble() - 0.5) * 1.2;
+    final dx = (rng.nextDouble() - 0.5) * (areaW - cardSize.width) * 0.7;
+    final dy = (rng.nextDouble() - 0.5) * (areaH - cardSize.height) * 0.65;
     final lift = index / math.max(shown, 1);
     return Positioned(
       left: areaW / 2 - cardSize.width / 2 + dx,
-      top: areaH / 2 - cardSize.height / 2 + dy - lift * 4,
+      top: areaH / 2 - cardSize.height / 2 + dy - lift * 3,
       child: Transform.rotate(
         angle: angle,
-        child: CardBackWidget(
-          size: cardSize,
-          elevated: index == shown - 1,
+        child: Opacity(
+          opacity: 0.92,
+          child: CardBackWidget(
+            size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+            elevated: index == shown - 1,
+          ),
         ),
       ),
     );

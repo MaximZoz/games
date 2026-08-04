@@ -156,6 +156,14 @@ class DurakGame {
     if (playerIndex != attackerIndex) return false;
     if (!hands[playerIndex].contains(card)) return false;
     if (table.length >= maxAttacksThisRound) return false;
+    // Пока защитник бьёт — только подкид рангов со стола.
+    if (turn == DurakTurn.defender) {
+      if (table.isEmpty) return false;
+      return tableRanks.contains(card.rank.value);
+    }
+    if (turn != DurakTurn.attacker && turn != DurakTurn.attackerFollowUp) {
+      return false;
+    }
     if (table.isEmpty) return true;
     return tableRanks.contains(card.rank.value);
   }
@@ -193,7 +201,13 @@ class DurakGame {
     if (cards.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
-    if (turn != DurakTurn.attacker && turn != DurakTurn.attackerFollowUp) {
+    // Подкид разрешён и пока защитник бьёт (классический подкидной).
+    if (turn != DurakTurn.attacker &&
+        turn != DurakTurn.attackerFollowUp &&
+        turn != DurakTurn.defender) {
+      throw const DurakRuleError('нельзя атаковать этой картой');
+    }
+    if (turn == DurakTurn.defender && table.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
     if (table.length + cards.length > maxAttacksThisRound) {

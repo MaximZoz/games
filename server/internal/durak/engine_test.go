@@ -98,8 +98,17 @@ func TestAttackManySameRank(t *testing.T) {
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase = %v", st.Phase)
 	}
+	// Во время защиты можно подкинуть карту того же ранга.
+	st.Hands[0] = append(st.Hands[0], Card{9, Diamonds})
+	if err := st.AttackMany(0, []Card{{9, Diamonds}}); err != nil {
+		t.Fatalf("throw-in during defend: %v", err)
+	}
+	if len(st.Table) != 3 {
+		t.Fatalf("table after throw-in = %d, want 3", len(st.Table))
+	}
+	// Чужой ранг — нельзя.
 	if err := st.AttackMany(0, []Card{{10, Clubs}}); err == nil {
-		t.Fatalf("expected error attacking during defend")
+		t.Fatalf("expected error for wrong rank during defend")
 	}
 }
 

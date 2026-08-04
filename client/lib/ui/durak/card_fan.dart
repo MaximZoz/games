@@ -7,8 +7,9 @@ import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Веер карт игрока.
 ///
-/// - Тап: выбор / снятие выбора (для мульти-подкида одного ранга).
-/// - Свободный драг в любую сторону; при отпускании — [onDrop] или возврат в веер.
+/// - Водить пальцем по вееру — подсвечивается карта под пальцем.
+/// - Тянуть вверх/в сторону — карта вытягивается и следует за пальцем.
+/// - Отпускание: [onDrop] или возврат в веер.
 /// - Чем больше карт, тем плотнее и сильнее дуга.
 class CardFan extends StatefulWidget {
   const CardFan({
@@ -18,6 +19,7 @@ class CardFan extends StatefulWidget {
     this.enabled = true,
     this.legalCards,
     this.selectedCards,
+    this.hiddenCards,
     this.onTap,
     this.onLongPress,
     this.onDrop,
@@ -31,30 +33,20 @@ class CardFan extends StatefulWidget {
   final Size cardSize;
   final bool enabled;
   final Set<PlayingCard>? legalCards;
-
-  /// Выбранные для мульти-подкида карты.
   final Set<PlayingCard>? selectedCards;
 
-  /// Короткий тап по карте.
+  /// Карты, которые сейчас летят (не рисуем в веере — без «двойника»).
+  final Set<PlayingCard>? hiddenCards;
+
   final ValueChanged<PlayingCard>? onTap;
-
-  /// Долгое нажатие — мульти-выбор для подкида.
   final ValueChanged<PlayingCard>? onLongPress;
-
-  /// Отпускание после драга. Вернуть `true`, если карта принята (улетела на стол).
-  /// [from] — глобальный rect карты в момент отпускания.
   final Future<bool> Function(
     PlayingCard card,
     Offset globalPosition,
     Rect from,
   )? onDrop;
-
-  /// Какая карта сейчас под пальцем / наведена (для подсветки целей на столе).
   final ValueChanged<PlayingCard?>? onActiveChanged;
-
   final bool faceDown;
-
-  /// Угол дуги веера (рад на весь веер). Null — подобрать по числу карт.
   final double? arc;
   final double? spacing;
 
@@ -66,11 +58,18 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   int? _hoverIndex;
   int? _dragIndex;
   Offset _dragOffset = Offset.zero;
-  bool _dragging = false;
+  bool _lifted = false;
   bool _dropBusy = false;
+  Offset _panAccum = Offset.zero;
 
   late final AnimationController _returnCtrl;
   Offset _returnFrom = Offset.zero;
+
+  List<PlayingCard> get _visible {
+    final hidden = widget.hiddenCards;
+    if (hidden == null || hidden.isEmpty) return widget.cards;
+    return widget.cards.where((c) => !hidden.contains(c)).toList();
+  }
 
   @override
   void initState() {
@@ -93,9 +92,10 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   }
 
   void _emitActive(int? index) {
-    final card = index == null || index < 0 || index >= widget.cards.length
+    final cards = _visible;
+    final card = index == null || index < 0 || index >= cards.length
         ? null
-        : widget.cards[index];
+        : cards[index];
     final legal = card == null
         ? null
         : (widget.legalCards == null || widget.legalCards!.contains(card)
@@ -107,14 +107,15 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   void _setHover(int? index) {
     if (_hoverIndex == index) return;
     setState(() => _hoverIndex = index);
-    if (_dragIndex == null) _emitActive(index);
+    if (!_lifted) _emitActive(index);
   }
 
   void _clearInteraction() {
     setState(() {
       _dragIndex = null;
-      _dragging = false;
+      _lifted = false;
       _dragOffset = Offset.zero;
+      _panAccum = Offset.zero;
       _hoverIndex = null;
       _dropBusy = false;
     });
@@ -158,12 +159,30 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   bool _isSelected(PlayingCard card) =>
       widget.selectedCards?.contains(card) == true;
 
-  Rect _cardGlobalRect(int i, double baseSpacing, double totalW, double arc) {
+  int _indexAtLocalX(double localX, int n, double baseSpacing, double totalW) {
+    if (n <= 0) return 0;
+    final center = (n - 1) / 2.0;
+    var best = 0;
+    var bestDist = double.infinity;
+    for (var i = 0; i < n; i++) {
+      final left = totalW / 2 + (i - center) * baseSpacing + 16;
+      final cx = left + widget.cardSize.width / 2;
+      final d = (localX - cx).abs();
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  Rect _cardGlobalRect(int i, double baseSpacing, double totalW) {
     final box = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) {
+    final cards = _visible;
+    if (box == null || !box.hasSize || i < 0 || i >= cards.length) {
       return Rect.fromLTWH(0, 0, widget.cardSize.width, widget.cardSize.height);
     }
-    final n = widget.cards.length;
+    final n = cards.length;
     final center = (n - 1) / 2;
     final offsetX = (i - center) * baseSpacing;
     final curveY = (i - center) * (i - center) * widget.cardSize.height * 0.012;
@@ -185,12 +204,11 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     Offset global,
     double baseSpacing,
     double totalW,
-    double arc,
     bool canPlay,
   ) {
     if (_dropBusy) return;
     _dropBusy = true;
-    final from = _cardGlobalRect(i, baseSpacing, totalW, arc);
+    final from = _cardGlobalRect(i, baseSpacing, totalW);
     final drop = widget.onDrop;
     if (drop != null && canPlay) {
       unawaited(drop(card, global, from).then((accepted) async {
@@ -208,13 +226,14 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.cards.isEmpty) {
+    final cards = _visible;
+    if (cards.isEmpty) {
       return SizedBox(
         width: widget.cardSize.width,
         height: widget.cardSize.height,
       );
     }
-    final n = widget.cards.length;
+    final n = cards.length;
     final baseSpacing = _spacingFor(n);
     final totalW = widget.cardSize.width + baseSpacing * (n - 1);
     final height = widget.cardSize.height * 1.7;
@@ -228,7 +247,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
         alignment: Alignment.bottomCenter,
         children: [
           for (int i = 0; i < n; i++)
-            _positioned(i, n, baseSpacing, totalW, arc),
+            _positioned(i, n, cards, baseSpacing, totalW, arc),
         ],
       ),
     );
@@ -237,6 +256,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
   Widget _positioned(
     int i,
     int n,
+    List<PlayingCard> cards,
     double baseSpacing,
     double totalW,
     double arc,
@@ -249,7 +269,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     var extraX = 0.0;
     var extraY = 0.0;
     var scale = 1.0;
-    final card = widget.cards[i];
+    final card = cards[i];
     final selected = _isSelected(card);
     final activeIndex = _dragIndex ?? _hoverIndex;
     final active = activeIndex != null && i == activeIndex;
@@ -264,7 +284,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
       scale = 1.05;
     }
     if (active) {
-      if (_dragIndex == i && _dragging) {
+      if (_lifted && _dragIndex == i) {
         extraY = 0;
         scale = 1.12;
       } else {
@@ -289,11 +309,11 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
 
     child = MouseRegion(
       onEnter: (_) {
-        if (!widget.enabled || _dragging) return;
+        if (!widget.enabled || _lifted) return;
         _setHover(i);
       },
       onExit: (_) {
-        if (!widget.enabled || _dragging) return;
+        if (!widget.enabled || _lifted) return;
         if (_hoverIndex == i) _setHover(null);
       },
       cursor: canPlay ? SystemMouseCursors.grab : SystemMouseCursors.basic,
@@ -302,16 +322,16 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
         onTap: !canPlay
             ? null
             : () {
-                if (_dragging || _dropBusy) return;
+                if (_lifted || _dropBusy) return;
                 widget.onTap?.call(card);
               },
         onLongPress: !canPlay
             ? null
             : () {
-                if (_dragging || _dropBusy) return;
+                if (_lifted || _dropBusy) return;
                 widget.onLongPress?.call(card);
               },
-        onPanStart: !canPlay
+        onPanStart: !widget.enabled || widget.faceDown
             ? null
             : (_) {
                 _returnCtrl.stop();
@@ -319,15 +339,50 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
                   _dragIndex = i;
                   _hoverIndex = i;
                   _dragOffset = Offset.zero;
-                  _dragging = true;
+                  _panAccum = Offset.zero;
+                  _lifted = false;
                   _dropBusy = false;
                 });
                 _emitActive(i);
               },
-        onPanUpdate: !canPlay
+        onPanUpdate: !widget.enabled || widget.faceDown
             ? null
             : (details) {
-                if (_dragIndex != i) return;
+                if (_dragIndex == null && _hoverIndex == null) return;
+                _panAccum += details.delta;
+
+                if (!_lifted) {
+                  // Свайп по вееру — выбираем карту под пальцем.
+                  final box = context.findRenderObject() as RenderBox?;
+                  if (box != null) {
+                    final local = box.globalToLocal(details.globalPosition);
+                    final idx = _indexAtLocalX(
+                      local.dx,
+                      n,
+                      baseSpacing,
+                      totalW,
+                    );
+                    if (idx != _hoverIndex || idx != _dragIndex) {
+                      setState(() {
+                        _hoverIndex = idx;
+                        _dragIndex = idx;
+                      });
+                      _emitActive(idx);
+                    }
+                  }
+                  // Тянем вверх/наружу — фиксируем карту и свободный драг.
+                  final pullUp = _panAccum.dy < -18;
+                  final pullOut = _panAccum.distance > 36 &&
+                      _panAccum.dy < -8;
+                  if (pullUp || pullOut) {
+                    setState(() {
+                      _lifted = true;
+                      _dragOffset = _panAccum;
+                    });
+                  }
+                  return;
+                }
+
                 setState(() {
                   _dragOffset += details.delta;
                 });
@@ -335,39 +390,48 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
         onPanEnd: !widget.enabled || widget.faceDown
             ? null
             : (details) {
-                if (_dragIndex != i) return;
-                // Короткое движение — как тап (иначе pan «съедает» onTap).
-                if (_dragOffset.distance < 14) {
-                  final tapped = card;
+                final idx = _dragIndex ?? _hoverIndex;
+                if (idx == null || idx < 0 || idx >= cards.length) {
                   _clearInteraction();
-                  if (canPlay) widget.onTap?.call(tapped);
+                  return;
+                }
+                final dragged = cards[idx];
+                final can = widget.enabled &&
+                    !widget.faceDown &&
+                    _isLegal(dragged);
+
+                if (!_lifted || _dragOffset.distance < 14) {
+                  final tapped = dragged;
+                  _clearInteraction();
+                  if (can) widget.onTap?.call(tapped);
                   return;
                 }
                 _finishDrop(
-                  i,
-                  card,
+                  idx,
+                  dragged,
                   details.globalPosition,
                   baseSpacing,
                   totalW,
-                  arc,
-                  canPlay,
+                  can,
                 );
               },
         onPanCancel: () {
-          if (_dragIndex == i) {
+          if (_lifted) {
             unawaited(_animateReturn());
+          } else {
+            _clearInteraction();
           }
         },
         child: child,
       ),
     );
 
-    final dragDx = (_dragIndex == i) ? _dragOffset.dx : 0.0;
-    final dragDy = (_dragIndex == i) ? _dragOffset.dy : 0.0;
+    final dragDx = (_lifted && _dragIndex == i) ? _dragOffset.dx : 0.0;
+    final dragDy = (_lifted && _dragIndex == i) ? _dragOffset.dy : 0.0;
 
     return AnimatedPositioned(
       key: ValueKey('fan-$i-${card.rank.value}-${card.suit.name}'),
-      duration: _dragIndex == i
+      duration: (_lifted && _dragIndex == i)
           ? Duration.zero
           : const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
@@ -378,7 +442,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutBack,
         child: Transform.rotate(
-          angle: active && _dragging ? 0 : angle,
+          angle: active && _lifted ? 0 : angle,
           alignment: Alignment.bottomCenter,
           child: child,
         ),

@@ -180,9 +180,20 @@ class DurakGameView {
   final String drawOfferBy;
 
   bool get isOver => status != 'active';
+
+  /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт).
   bool get isMyTurn {
     if (isOver) return false;
     if (phase == 'defend') return defenderIndex == myIndex;
+    return attackerIndex == myIndex;
+  }
+
+  /// Можно ли трогать веер: свой ход или подкид, пока защитник бьёт.
+  bool get canAct {
+    if (isOver) return false;
+    if (phase == 'defend') {
+      return defenderIndex == myIndex || attackerIndex == myIndex;
+    }
     return attackerIndex == myIndex;
   }
 

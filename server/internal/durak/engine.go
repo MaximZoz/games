@@ -232,8 +232,12 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if playerIdx != s.AttackerIndex {
 		return ErrNotYourTurn
 	}
-	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow {
+	// Подкид разрешён и во время защиты (пока защитник бьёт) — классический подкидной.
+	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow && s.Phase != PhaseDefend {
 		return ErrNotYourTurn
+	}
+	if s.Phase == PhaseDefend && len(s.Table) == 0 {
+		return ErrBadAttack
 	}
 	if len(s.Table)+len(cards) > s.MaxAttacksThisRound() {
 		return ErrBadAttack
@@ -495,11 +499,17 @@ func (s *State) LegalAttackCards(idx int) []Card {
 	if s.Status != StatusActive || idx != s.AttackerIndex {
 		return nil
 	}
+	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow && s.Phase != PhaseDefend {
+		return nil
+	}
 	if len(s.Table) >= s.MaxAttacksThisRound() {
 		return nil
 	}
 	out := []Card{}
 	if len(s.Table) == 0 {
+		if s.Phase == PhaseDefend {
+			return nil
+		}
 		out = append(out, s.Hands[idx]...)
 		return out
 	}

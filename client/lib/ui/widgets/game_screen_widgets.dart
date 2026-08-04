@@ -337,6 +337,8 @@ class GameOpponentCard extends StatelessWidget {
     this.trailing = const <Widget>[],
     this.compact = false,
     this.maxWidth = 400,
+    this.align,
+    this.borderWidth = 2,
   });
 
   final String displayName;
@@ -363,6 +365,10 @@ class GameOpponentCard extends StatelessWidget {
   final bool compact;
   final double maxWidth;
 
+  /// Если null — карточка по центру (как раньше). Иначе — Align.
+  final Alignment? align;
+  final double borderWidth;
+
   @override
   Widget build(BuildContext context) {
     final card = GradientCard(
@@ -372,6 +378,7 @@ class GameOpponentCard extends StatelessWidget {
       ),
       margin: EdgeInsets.zero,
       animate: false,
+      borderWidth: borderWidth,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -424,12 +431,14 @@ class GameOpponentCard extends StatelessWidget {
         ],
       ),
     );
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: card,
-      ),
+    final boxed = ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: card,
     );
+    if (align == null) {
+      return Center(child: boxed);
+    }
+    return Align(alignment: align!, child: boxed);
   }
 }
 
@@ -642,6 +651,257 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
               ),
         ),
       ],
+    );
+  }
+}
+
+/// Цвет/градиент таймера хода: много времени — зелёный, мало — красный;
+/// без лимита — мягкий фиолетовый.
+class TurnTimerStyle {
+  TurnTimerStyle._();
+
+  static const Color noTimerA = Color(0xFF8B5CF6);
+  static const Color noTimerB = Color(0xFFA78BFA);
+  static const Color green = Color(0xFF34D399);
+  static const Color orange = Color(0xFFFBBF24);
+  static const Color red = Color(0xFFF87171);
+
+  /// [fraction] = оставшаяся доля времени 0..1.
+  static List<Color> colorsFor({
+    required bool hasTimer,
+    required double fraction,
+  }) {
+    if (!hasTimer) return const [noTimerA, noTimerB];
+    final t = fraction.clamp(0.0, 1.0);
+    if (t > 0.45) {
+      final k = ((t - 0.45) / 0.55).clamp(0.0, 1.0);
+      return [
+        Color.lerp(orange, green, k)!,
+        Color.lerp(orange.withValues(alpha: 0.75), green.withValues(alpha: 0.85), k)!,
+      ];
+    }
+    if (t > 0.18) {
+      final k = ((t - 0.18) / 0.27).clamp(0.0, 1.0);
+      return [
+        Color.lerp(red, orange, k)!,
+        Color.lerp(red.withValues(alpha: 0.8), orange.withValues(alpha: 0.75), k)!,
+      ];
+    }
+    return [red, red.withValues(alpha: 0.7)];
+  }
+}
+
+/// Мягкий градиентный бордер вокруг [child] по таймеру хода.
+class TurnTimerBorder extends StatefulWidget {
+  const TurnTimerBorder({
+    super.key,
+    required this.child,
+    required this.active,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.borderWidth = 2.5,
+    this.radius = 22,
+    this.onExpired,
+  });
+
+  final Widget child;
+  final bool active;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final double borderWidth;
+  final double radius;
+  final VoidCallback? onExpired;
+
+  @override
+  State<TurnTimerBorder> createState() => _TurnTimerBorderState();
+}
+
+class _TurnTimerBorderState extends State<TurnTimerBorder> {
+  Timer? _timer;
+  int _remaining = 0;
+  bool _expiredFired = false;
+
+  bool get _hasTimer => widget.turnTimeSec > 0 && widget.turnDeadline > 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick();
+    _timer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
+  }
+
+  @override
+  void didUpdateWidget(covariant TurnTimerBorder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.turnDeadline != widget.turnDeadline) {
+      _expiredFired = false;
+      _tick();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _tick() {
+    if (!_hasTimer) {
+      if (_remaining != 0 && mounted) setState(() => _remaining = 0);
+      return;
+    }
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    final r = (widget.turnDeadline - now).clamp(0, 999999);
+    if (r != _remaining && mounted) setState(() => _remaining = r);
+    if (r <= 0 && !_expiredFired && widget.active) {
+      _expiredFired = true;
+      widget.onExpired?.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) return widget.child;
+    final fraction = _hasTimer
+        ? (_remaining / widget.turnTimeSec).clamp(0.0, 1.0)
+        : 1.0;
+    final colors = TurnTimerStyle.colorsFor(
+      hasTimer: _hasTimer,
+      fraction: fraction,
+    );
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.all(widget.borderWidth),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(widget.radius),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withValues(alpha: 0.35),
+            blurRadius: 10,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(widget.radius - widget.borderWidth),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Тонкая вертикальная линия-прогресс у края (бордер бокового меню).
+class TurnTimerSideRail extends StatefulWidget {
+  const TurnTimerSideRail({
+    super.key,
+    required this.active,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.onExpired,
+    this.width = 3,
+  });
+
+  final bool active;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final VoidCallback? onExpired;
+  final double width;
+
+  @override
+  State<TurnTimerSideRail> createState() => _TurnTimerSideRailState();
+}
+
+class _TurnTimerSideRailState extends State<TurnTimerSideRail> {
+  Timer? _timer;
+  int _remaining = 0;
+  bool _expiredFired = false;
+
+  bool get _hasTimer => widget.turnTimeSec > 0 && widget.turnDeadline > 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick();
+    _timer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
+  }
+
+  @override
+  void didUpdateWidget(covariant TurnTimerSideRail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.turnDeadline != widget.turnDeadline ||
+        oldWidget.active != widget.active) {
+      _expiredFired = false;
+      _tick();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _tick() {
+    if (!widget.active) return;
+    if (!_hasTimer) {
+      if (_remaining != 0 && mounted) setState(() => _remaining = 0);
+      return;
+    }
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    final r = (widget.turnDeadline - now).clamp(0, 999999);
+    if (r != _remaining && mounted) setState(() => _remaining = r);
+    if (r <= 0 && !_expiredFired) {
+      _expiredFired = true;
+      widget.onExpired?.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) return const SizedBox.shrink();
+    final fraction = _hasTimer
+        ? (_remaining / widget.turnTimeSec).clamp(0.0, 1.0)
+        : 1.0;
+    final colors = TurnTimerStyle.colorsFor(
+      hasTimer: _hasTimer,
+      fraction: fraction,
+    );
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 350),
+          width: widget.width,
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colors.first.withValues(alpha: 0.25),
+                colors.first,
+                colors.last,
+                colors.last.withValues(alpha: 0.25),
+              ],
+              stops: const [0.0, 0.2, 0.8, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colors.first.withValues(alpha: 0.45),
+                blurRadius: 8,
+                spreadRadius: 0.5,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
