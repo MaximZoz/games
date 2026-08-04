@@ -440,6 +440,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesTicTacToe => '틱택토';
 
   @override
+  String get gamesDurak => '두락';
+
+  @override
+  String get gamesInDevelopment => '개발 중';
+
+  @override
   String get gamesRules => '규칙';
 
   @override

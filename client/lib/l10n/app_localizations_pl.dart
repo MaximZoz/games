@@ -440,6 +440,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesTicTacToe => 'Kółko i krzyżyk';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'W trakcie tworzenia';
+
+  @override
   String get gamesRules => 'Zasady';
 
   @override

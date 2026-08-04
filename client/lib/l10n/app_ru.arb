@@ -198,6 +198,8 @@
   "gamesWaiting": "Ожидание",
   "gamesLobbyTab": "Лобби",
   "gamesTicTacToe": "Крестики-нолики",
+  "gamesDurak": "Дурак",
+  "gamesInDevelopment": "В разработке",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",
   "gamesCreate": "Создать игру",

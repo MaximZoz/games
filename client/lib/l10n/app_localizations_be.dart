@@ -440,6 +440,12 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesTicTacToe => 'Крыжыкі-нулікі';
 
   @override
+  String get gamesDurak => 'Дурак';
+
+  @override
+  String get gamesInDevelopment => 'У распрацоўцы';
+
+  @override
   String get gamesRules => 'Правілы';
 
   @override

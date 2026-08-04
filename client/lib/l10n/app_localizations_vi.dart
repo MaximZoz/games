@@ -440,6 +440,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesTicTacToe => 'Cờ caro';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Đang phát triển';
+
+  @override
   String get gamesRules => 'Luật';
 
   @override

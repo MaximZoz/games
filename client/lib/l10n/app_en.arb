@@ -198,6 +198,8 @@
   "gamesWaiting": "Waiting",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Tic-tac-toe",
+  "gamesDurak": "Durak",
+  "gamesInDevelopment": "In development",
   "gamesRules": "Rules",
   "gamesRulesTitle": "Game rules",
   "gamesCreate": "Create game",

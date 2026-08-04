@@ -440,6 +440,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesTicTacToe => '三目並べ';
 
   @override
+  String get gamesDurak => 'ドゥラック';
+
+  @override
+  String get gamesInDevelopment => '開発中';
+
+  @override
   String get gamesRules => 'ルール';
 
   @override

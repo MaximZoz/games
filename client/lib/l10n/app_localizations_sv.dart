@@ -440,6 +440,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesTicTacToe => 'Luffarschack';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Under utveckling';
+
+  @override
   String get gamesRules => 'Regler';
 
   @override

@@ -440,6 +440,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesTicTacToe => 'टिक-टैक-टो';
 
   @override
+  String get gamesDurak => 'डुरक';
+
+  @override
+  String get gamesInDevelopment => 'विकास में';
+
+  @override
   String get gamesRules => 'नियम';
 
   @override

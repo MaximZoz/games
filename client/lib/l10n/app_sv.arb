@@ -162,6 +162,8 @@
   "gamesWaiting": "Väntar",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Luffarschack",
+  "gamesDurak": "Durak",
+  "gamesInDevelopment": "Under utveckling",
   "gamesRules": "Regler",
   "gamesRulesTitle": "Spelregler",
   "gamesCreate": "Skapa spel",

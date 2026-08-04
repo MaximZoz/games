@@ -983,6 +983,18 @@ abstract class AppLocalizations {
   /// **'Крестики-нолики'**
   String get gamesTicTacToe;
 
+  /// No description provided for @gamesDurak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дурак'**
+  String get gamesDurak;
+
+  /// No description provided for @gamesInDevelopment.
+  ///
+  /// In ru, this message translates to:
+  /// **'В разработке'**
+  String get gamesInDevelopment;
+
   /// No description provided for @gamesRules.
   ///
   /// In ru, this message translates to:

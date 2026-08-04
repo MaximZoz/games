@@ -440,6 +440,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesTicTacToe => 'X-O';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Ishlab chiqilmoqda';
+
+  @override
   String get gamesRules => 'Qoidalar';
 
   @override

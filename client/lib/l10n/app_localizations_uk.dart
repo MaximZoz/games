@@ -440,6 +440,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesTicTacToe => 'Хрестики-нулики';
 
   @override
+  String get gamesDurak => 'Дурень';
+
+  @override
+  String get gamesInDevelopment => 'В розробці';
+
+  @override
   String get gamesRules => 'Правила';
 
   @override

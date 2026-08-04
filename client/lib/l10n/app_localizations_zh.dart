@@ -440,6 +440,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesTicTacToe => '井字棋';
 
   @override
+  String get gamesDurak => '杜拉克';
+
+  @override
+  String get gamesInDevelopment => '开发中';
+
+  @override
   String get gamesRules => '规则';
 
   @override

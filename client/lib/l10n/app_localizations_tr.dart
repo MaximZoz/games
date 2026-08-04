@@ -440,6 +440,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesTicTacToe => 'XOX';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Geliştiriliyor';
+
+  @override
   String get gamesRules => 'Kurallar';
 
   @override

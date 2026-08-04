@@ -800,43 +800,57 @@ class _GamesPageContent extends StatelessWidget {
                             alignment: Alignment.topCenter,
                             child: SizedBox(
                               width: cardWidth,
-                              child: _TictactoeGameCard(
-                                isCreating: isCreating,
-                                isFinding: isFinding,
-                                isOffline: isOffline,
-                                turnTimeSec: turnTimeSec,
-                                onTurnTimeChanged: onTurnTimeChanged,
-                                variant: variant,
-                                playersControlActive: playersControlActive,
-                                onPlayersChipTap: onPlayersChipTap,
-                                onModeChipTap: onModeChipTap,
-                                stakeBronze: stakeBronze,
-                                stakeOptionsList: stakeOptionsList,
-                                onStakeChanged: onStakeChanged,
-                                onCreateGame: onCreateGame,
-                                onFindGame: onFindGame,
-                                onPlayOffline: onPlayOffline,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _TictactoeGameCard(
+                                    isCreating: isCreating,
+                                    isFinding: isFinding,
+                                    isOffline: isOffline,
+                                    turnTimeSec: turnTimeSec,
+                                    onTurnTimeChanged: onTurnTimeChanged,
+                                    variant: variant,
+                                    playersControlActive: playersControlActive,
+                                    onPlayersChipTap: onPlayersChipTap,
+                                    onModeChipTap: onModeChipTap,
+                                    stakeBronze: stakeBronze,
+                                    stakeOptionsList: stakeOptionsList,
+                                    onStakeChanged: onStakeChanged,
+                                    onCreateGame: onCreateGame,
+                                    onFindGame: onFindGame,
+                                    onPlayOffline: onPlayOffline,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const _DurakComingSoonCard(),
+                                ],
                               ),
                             ),
                           ),
                         );
                       }
-                      return _TictactoeGameCard(
-                        isCreating: isCreating,
-                        isFinding: isFinding,
-                        isOffline: isOffline,
-                        turnTimeSec: turnTimeSec,
-                        onTurnTimeChanged: onTurnTimeChanged,
-                        variant: variant,
-                        playersControlActive: playersControlActive,
-                        onPlayersChipTap: onPlayersChipTap,
-                        onModeChipTap: onModeChipTap,
-                        stakeBronze: stakeBronze,
-                        stakeOptionsList: stakeOptionsList,
-                        onStakeChanged: onStakeChanged,
-                        onCreateGame: onCreateGame,
-                        onFindGame: onFindGame,
-                        onPlayOffline: onPlayOffline,
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _TictactoeGameCard(
+                            isCreating: isCreating,
+                            isFinding: isFinding,
+                            isOffline: isOffline,
+                            turnTimeSec: turnTimeSec,
+                            onTurnTimeChanged: onTurnTimeChanged,
+                            variant: variant,
+                            playersControlActive: playersControlActive,
+                            onPlayersChipTap: onPlayersChipTap,
+                            onModeChipTap: onModeChipTap,
+                            stakeBronze: stakeBronze,
+                            stakeOptionsList: stakeOptionsList,
+                            onStakeChanged: onStakeChanged,
+                            onCreateGame: onCreateGame,
+                            onFindGame: onFindGame,
+                            onPlayOffline: onPlayOffline,
+                          ),
+                          const SizedBox(height: 16),
+                          const _DurakComingSoonCard(),
+                        ],
                       );
                     },
                   ),
@@ -1250,6 +1264,276 @@ class _LobbiesPageContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Карточка «Дурак» (превью): как на ветке durak-game, но без кнопок
+/// «Создать/Найти» — красивый бейдж «В разработке».
+class _DurakComingSoonCard extends StatelessWidget {
+  const _DurakComingSoonCard();
+
+  Widget _chip({
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required double padV,
+    required double padH,
+    required double iconSz,
+    required double fontSz,
+    required TextTheme? theme,
+  }) {
+    final color = selected ? AppColors.accentStart : AppColors.textSecondary;
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
+      decoration: BoxDecoration(
+        color: selected
+            ? AppColors.accentSoft.withValues(alpha: 0.6)
+            : AppColors.textSecondary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: selected
+              ? AppColors.accentStart.withValues(alpha: 0.3)
+              : AppColors.textSecondary.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: iconSz, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme?.bodyMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: fontSz,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final theme = Theme.of(context);
+    final compact = width < 400;
+    final padV = compact ? 4.0 : 6.0;
+    final padH = compact ? 6.0 : 10.0;
+    final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
+    final fontSz =
+        compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+    final textTheme = theme.textTheme;
+
+    return GradientCard(
+      animate: false,
+      padding: EdgeInsets.symmetric(
+        horizontal: isMedium ? 18 : (isDesktop ? 24 : 20),
+        vertical: isMedium ? 16 : (isDesktop ? 22 : 20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: isDesktop ? 52 : 44,
+                height: isDesktop ? 52 : 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.accentStart, AppColors.accentEnd],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.style_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              SizedBox(width: isDesktop ? 20 : 12),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.l10n.gamesDurak,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
+                          letterSpacing: -0.3,
+                          height: 1.15,
+                        ),
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: isMedium || isTablet(context) ? 2 : 1,
+                      ),
+                    ),
+                    SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '1',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const CoinIcon(
+                          coinType: CoinType.bronze,
+                          size: 20,
+                          showBorder: true,
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(context.l10n.gamesRulesTitle),
+                            content: Text(
+                              context.l10n.gamesInDevelopment,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(),
+                                child: Text(context.l10n.commonClose),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.info_outline_rounded,
+                        size: 22,
+                        color: AppColors.textSecondary,
+                      ),
+                      tooltip: context.l10n.gamesRulesTitle,
+                      style: IconButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size(32, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.all(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Wrap(
+              spacing: width < 400 ? 6 : 10,
+              runSpacing: 6,
+              alignment: WrapAlignment.start,
+              children: [
+                _chip(
+                  icon: Icons.groups_rounded,
+                  label: '2',
+                  selected: false,
+                  padV: padV,
+                  padH: padH,
+                  iconSz: iconSz,
+                  fontSz: fontSz,
+                  theme: textTheme,
+                ),
+                _chip(
+                  icon: Icons.timer_outlined,
+                  label: '1 мин',
+                  selected: true,
+                  padV: padV,
+                  padH: padH,
+                  iconSz: iconSz,
+                  fontSz: fontSz,
+                  theme: textTheme,
+                ),
+                _chip(
+                  icon: Icons.swap_horiz_rounded,
+                  label: 'Подкидной',
+                  selected: true,
+                  padV: padV,
+                  padH: padH,
+                  iconSz: iconSz,
+                  fontSz: fontSz,
+                  theme: textTheme,
+                ),
+                _chip(
+                  icon: Icons.style_rounded,
+                  label: '36 карт',
+                  selected: true,
+                  padV: padV,
+                  padH: padH,
+                  iconSz: iconSz,
+                  fontSz: fontSz,
+                  theme: textTheme,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
+          Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.symmetric(
+              vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+              horizontal: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.accentStart.withValues(alpha: 0.12),
+                  AppColors.accentEnd.withValues(alpha: 0.18),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.construction_rounded,
+                  size: 20,
+                  color: AppColors.accentStart.withValues(alpha: 0.95),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.gamesInDevelopment,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.accentStart,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

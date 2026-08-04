@@ -440,6 +440,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesTicTacToe => 'Piškvorky';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Ve vývoji';
+
+  @override
   String get gamesRules => 'Pravidla';
 
   @override
