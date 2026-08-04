@@ -6,7 +6,7 @@ import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Веер карт игрока.
 ///
-/// - Тап / удержание: карта плавно выезжает **вверх** из веера.
+/// - Тап / наведение: карта плавно выезжает **вверх** из веера.
 /// - Свайп по вееру: под пальцем поднимается текущая карта.
 /// - Вертикальный драг вверх + отпускание: карта «сыграна».
 class CardFan extends StatefulWidget {
@@ -48,23 +48,8 @@ class _CardFanState extends State<CardFan> {
   int? _hoverIndex;
   int? _dragIndex;
   double _dragDy = 0;
-  int? _pointer;
-  double _pointerUpAccum = 0;
-  final Map<int, GlobalKey> _cardKeys = {};
 
-  GlobalKey _keyFor(int i) => _cardKeys.putIfAbsent(i, GlobalKey.new);
-
-  @override
-  void didUpdateWidget(covariant CardFan oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.cards.length != widget.cards.length) {
-      _cardKeys.clear();
-    }
-  }
-
-  void _setActive(int? index) {
-    if (_hoverIndex == index && _dragIndex == null) return;
-    setState(() => _hoverIndex = index);
+  void _emitActive(int? index) {
     final card = index == null || index < 0 || index >= widget.cards.length
         ? null
         : widget.cards[index];
@@ -76,12 +61,17 @@ class _CardFanState extends State<CardFan> {
     widget.onActiveChanged?.call(legal);
   }
 
-  void _clearDrag() {
+  void _setHover(int? index) {
+    if (_hoverIndex == index) return;
+    setState(() => _hoverIndex = index);
+    if (_dragIndex == null) _emitActive(index);
+  }
+
+  void _clearInteraction() {
     setState(() {
       _dragIndex = null;
       _hoverIndex = null;
       _dragDy = 0;
-      _pointerUpAccum = 0;
     });
     widget.onActiveChanged?.call(null);
   }
@@ -107,23 +97,6 @@ class _CardFanState extends State<CardFan> {
     return 0.22;
   }
 
-  int _indexAtLocalX(double localX, int n, double baseSpacing, double totalW) {
-    if (n <= 0) return 0;
-    final center = (n - 1) / 2.0;
-    var best = 0;
-    var bestDist = double.infinity;
-    for (var i = 0; i < n; i++) {
-      final left = totalW / 2 + (i - center) * baseSpacing;
-      final cx = left + widget.cardSize.width / 2;
-      final d = (localX - cx).abs();
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    }
-    return best;
-  }
-
   bool _isLegal(PlayingCard card) =>
       widget.legalCards == null || widget.legalCards!.contains(card);
 
@@ -138,110 +111,18 @@ class _CardFanState extends State<CardFan> {
     final n = widget.cards.length;
     final baseSpacing = _spacingFor(n);
     final totalW = widget.cardSize.width + baseSpacing * (n - 1);
-    // Запас сверху: карта выезжает вверх из веера.
     final height = widget.cardSize.height * 1.55;
 
     return SizedBox(
       height: height,
       width: totalW + 32,
-      child: Listener(
-        onPointerDown: !widget.enabled
-            ? null
-            : (e) {
-                _pointer = e.pointer;
-                _pointerUpAccum = 0;
-                final idx = _indexAtLocalX(
-                  e.localPosition.dx,
-                  n,
-                  baseSpacing,
-                  totalW,
-                );
-                _setActive(idx);
-              },
-        onPointerMove: !widget.enabled
-            ? null
-            : (e) {
-                if (_pointer != e.pointer) return;
-                if (_dragIndex != null) {
-                  setState(() {
-                    _dragDy = (_dragDy - e.delta.dy)
-                        .clamp(0.0, widget.cardSize.height * 1.25)
-                        .toDouble();
-                  });
-                  return;
-                }
-                // Свайп по вееру — поднимаем карту под пальцем.
-                if (e.delta.dy.abs() <= e.delta.dx.abs() + 0.5) {
-                  final idx = _indexAtLocalX(
-                    e.localPosition.dx,
-                    n,
-                    baseSpacing,
-                    totalW,
-                  );
-                  _setActive(idx);
-                }
-                _pointerUpAccum += -e.delta.dy;
-                // Набрали достаточно «вверх» — вытягиваем карту из веера.
-                if (_pointerUpAccum > widget.cardSize.height * 0.12 &&
-                    _hoverIndex != null) {
-                  final card = widget.cards[_hoverIndex!];
-                  if (_isLegal(card) && !widget.faceDown) {
-                    setState(() {
-                      _dragIndex = _hoverIndex;
-                      _dragDy = _pointerUpAccum
-                          .clamp(0.0, widget.cardSize.height * 1.25)
-                          .toDouble();
-                    });
-                  }
-                }
-              },
-        onPointerUp: !widget.enabled
-            ? null
-            : (e) {
-                if (_pointer != e.pointer) return;
-                _pointer = null;
-                final dragIdx = _dragIndex;
-                final hoverIdx = _hoverIndex;
-                final dy = _dragDy;
-                final playedByDrag = dragIdx != null &&
-                    !widget.faceDown &&
-                    dy > widget.cardSize.height * 0.28 &&
-                    _isLegal(widget.cards[dragIdx]);
-
-                if (playedByDrag) {
-                  final card = widget.cards[dragIdx];
-                  _clearDrag();
-                  widget.onDrag?.call(card, DragEndDetails());
-                  return;
-                }
-
-                // Короткий тап по легальной карте.
-                final tapIdx = dragIdx ?? hoverIdx;
-                final wasTap = tapIdx != null &&
-                    !widget.faceDown &&
-                    dy < widget.cardSize.height * 0.2 &&
-                    _pointerUpAccum < widget.cardSize.height * 0.2 &&
-                    _isLegal(widget.cards[tapIdx]);
-                if (wasTap) {
-                  final card = widget.cards[tapIdx];
-                  _clearDrag();
-                  widget.onTap?.call(card);
-                  return;
-                }
-                _clearDrag();
-              },
-        onPointerCancel: (_) {
-          _pointer = null;
-          _clearDrag();
-        },
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
-          children: [
-            for (int i = 0; i < n; i++)
-              _positioned(i, n, baseSpacing, totalW, _arcFor(n)),
-          ],
-        ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          for (int i = 0; i < n; i++)
+            _positioned(i, n, baseSpacing, totalW, _arcFor(n)),
+        ],
       ),
     );
   }
@@ -281,11 +162,11 @@ class _CardFanState extends State<CardFan> {
     final card = widget.cards[i];
     final legal = _isLegal(card);
     final isLegalContext = widget.legalCards != null;
+    final canPlay = widget.enabled && !widget.faceDown && legal;
 
     Widget child = widget.faceDown
         ? CardBackWidget(size: widget.cardSize, elevated: active)
         : PlayingCardWidget(
-            key: _keyFor(i),
             card: card,
             size: widget.cardSize,
             highlighted: active && (!isLegalContext || legal),
@@ -293,8 +174,84 @@ class _CardFanState extends State<CardFan> {
             elevated: active,
           );
 
-    // Карты в веере не ловят жесты сами — Listener на Stack.
-    child = IgnorePointer(child: child);
+    child = MouseRegion(
+      onEnter: (_) {
+        if (!widget.enabled || _dragIndex != null) return;
+        _setHover(i);
+      },
+      onExit: (_) {
+        if (!widget.enabled || _dragIndex != null) return;
+        if (_hoverIndex == i) _setHover(null);
+      },
+      cursor: canPlay ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: widget.enabled
+            ? (_) => _setHover(i)
+            : null,
+        onTapCancel: widget.enabled
+            ? () {
+                if (_hoverIndex == i && _dragIndex == null) _setHover(null);
+              }
+            : null,
+        onTap: !canPlay
+            ? null
+            : () {
+                _clearInteraction();
+                widget.onTap?.call(card);
+              },
+        onVerticalDragStart: !canPlay
+            ? null
+            : (_) {
+                setState(() {
+                  _dragIndex = i;
+                  _hoverIndex = i;
+                  _dragDy = 0;
+                });
+                _emitActive(i);
+              },
+        onVerticalDragUpdate: !canPlay
+            ? null
+            : (details) {
+                setState(() {
+                  // Палец вверх → карта выше (положительный bottom).
+                  _dragDy = (_dragDy - details.delta.dy)
+                      .clamp(0.0, widget.cardSize.height * 1.25)
+                      .toDouble();
+                });
+              },
+        onVerticalDragEnd: !widget.enabled || widget.faceDown
+            ? null
+            : (details) {
+                final played = canPlay &&
+                    _dragDy > widget.cardSize.height * 0.28 &&
+                    widget.onDrag != null;
+                final dragged = card;
+                _clearInteraction();
+                if (played) widget.onDrag!(dragged, details);
+              },
+        onVerticalDragCancel: () {
+          _clearInteraction();
+        },
+        // Горизонтальный свайп по вееру — переключаем «поднятую» карту.
+        onHorizontalDragUpdate: !widget.enabled || widget.faceDown
+            ? null
+            : (details) {
+                if (_dragIndex != null) return;
+                final box = context.findRenderObject() as RenderBox?;
+                if (box == null) return;
+                final local = box.globalToLocal(details.globalPosition);
+                final idx = _indexAtLocalX(
+                  local.dx,
+                  n,
+                  baseSpacing,
+                  totalW,
+                );
+                _setHover(idx);
+              },
+        child: child,
+      ),
+    );
 
     return AnimatedPositioned(
       key: ValueKey('fan-$i-${card.rank.value}-${card.suit.name}'),
@@ -316,6 +273,23 @@ class _CardFanState extends State<CardFan> {
       ),
     );
   }
+
+  int _indexAtLocalX(double localX, int n, double baseSpacing, double totalW) {
+    if (n <= 0) return 0;
+    final center = (n - 1) / 2.0;
+    var best = 0;
+    var bestDist = double.infinity;
+    for (var i = 0; i < n; i++) {
+      final left = totalW / 2 + (i - center) * baseSpacing;
+      final cx = left + widget.cardSize.width / 2;
+      final d = (localX - cx).abs();
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return best;
+  }
 }
 
 /// Глобальный rect активной/первой карты веера — для анимации полёта.
@@ -323,7 +297,6 @@ Rect? cardFanApproxOrigin(BuildContext fanContext, Size cardSize) {
   final box = fanContext.findRenderObject() as RenderBox?;
   if (box == null || !box.hasSize) return null;
   final origin = box.localToGlobal(Offset.zero);
-  // Центр нижней зоны веера.
   return Rect.fromLTWH(
     origin.dx + box.size.width / 2 - cardSize.width / 2,
     origin.dy + box.size.height - cardSize.height - cardSize.height * 0.22,

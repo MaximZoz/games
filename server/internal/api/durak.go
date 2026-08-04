@@ -648,7 +648,14 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
-	if m["game_type"] != durakGameType || m["status"] != gameStatusActive {
+	if m["game_type"] != durakGameType {
+		WriteErr(w, r, http.StatusBadRequest, "wrong game type or state")
+		return
+	}
+	// Дожать протухший ход до принятия нового.
+	h.applyDurakTurnTimeout(ctx, gameID, m)
+	m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+	if m["status"] != gameStatusActive {
 		WriteErr(w, r, http.StatusBadRequest, "wrong game type or state")
 		return
 	}
@@ -1050,6 +1057,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"status":         m["status"],
 		"draw":           m["draw"] == "1",
 		"draw_offer_by":  strings.TrimSpace(m["draw_offer_by"]),
+		"timeout":        m["timeout"] == "1",
 		"lobby_id":       m["lobby_id"],
 		"chat_id":        m["chat_id"],
 		"mode":           string(s.Mode),
@@ -1075,7 +1083,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 	}
 }
 
-// applyDurakTurnTimeout — если истёк ход, атакующий/защитник форфейтит (упрощение).
+// applyDurakTurnTimeout — если истёк ход, игрок, чей был ход, проигрывает (форфейт).
 func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string, m map[string]string) {
 	if m["status"] != gameStatusActive {
 		return
@@ -1084,6 +1092,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if err != nil || turnDeadline <= 0 {
 		return
 	}
+	// now == deadline уже считается истечением (клиент показывает 0 с).
 	if time.Now().UTC().Unix() < turnDeadline {
 		return
 	}
@@ -1091,23 +1100,41 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if err != nil {
 		return
 	}
-	// Кто не успел: если защита — take + пропуск; если атака — bito (если можно), иначе forfeit.
+	if state.Status != durak.StatusActive {
+		return
+	}
+	timedOutIdx := state.AttackerIndex
 	if state.Phase == durak.PhaseDefend {
-		def := state.DefenderIndex()
-		_ = state.Take(def)
-	} else if state.Phase == durak.PhaseAttackFollow {
-		_ = state.SayBito(state.AttackerIndex)
+		timedOutIdx = state.DefenderIndex()
 	}
-	encoded, _ := durak.Encode(state)
-	fields := []any{"state", encoded}
-	turnT, _ := strconv.Atoi(m["turn_time_sec"])
-	if state.Status == durak.StatusActive && turnT > 0 {
-		fields = append(fields, "turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10))
+	if timedOutIdx < 0 || timedOutIdx >= len(state.PlayerIDs) {
+		return
 	}
-	if state.Status == durak.StatusOver {
-		fields = append(fields, "status", durakStatusOver, "loser", state.PlayerIDs[state.LoserIndex])
+	state.Forfeit(timedOutIdx)
+	encoded, err := durak.Encode(state)
+	if err != nil {
+		return
+	}
+	fields := []any{
+		"state", encoded,
+		"status", durakStatusOver,
+		"timeout", "1",
+	}
+	if state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
+		fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+		"timeout":   true,
+		"status":    durakStatusOver,
+	})
+	h.onDurakGameFinished(ctx, gameID, m, state)
 }
 
 // onDurakGameFinished — очистка active/observation, ставки, статистика.

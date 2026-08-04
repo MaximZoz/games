@@ -41,9 +41,37 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _handlingAuthError = false;
   bool _retryScheduled = false;
   PlayingCard? _activeCard;
+  Timer? _timeoutRetryTimer;
   final GlobalKey _fanKey = GlobalKey();
   final GlobalKey _defendTargetKey = GlobalKey();
   final GlobalKey _attackSlotKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _timeoutRetryTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Сервер применяет timeout на GetGame — дожимаем несколько раз.
+  void _onTurnTimeExpired() {
+    _timeoutRetryTimer?.cancel();
+    var attempt = 0;
+    void doRefresh() {
+      if (!mounted) return;
+      ref.invalidate(durakGameProvider(widget.gameId));
+      ref.invalidate(activeGameProvider);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => doRefresh());
+    _timeoutRetryTimer = Timer.periodic(const Duration(milliseconds: 800), (t) {
+      attempt++;
+      doRefresh();
+      if (attempt >= 10) {
+        t.cancel();
+        _timeoutRetryTimer = null;
+      }
+    });
+  }
 
   bool _isTransientLoadError(Object e) {
     if (e is GamesException) {
@@ -438,42 +466,39 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
-          // Рамка соперника с чатом — общий виджет из крестиков-ноликов.
+          // Рамка соперника; карты — сразу под ней (без дубля логина).
           _opponentsHeader(view),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Wrap(
             spacing: 20,
-            runSpacing: 12,
+            runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
               for (final oi in opponents) _opponentFan(view, oi, cardSize),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           GameStatusLine(
             text: _turnHint(view),
             highlight: !view.isOver && view.isMyTurn,
           ),
-          // Таймер хода — общий виджет.
           if (!view.isOver && view.turnTimeSec > 0 && view.turnDeadline > 0)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: 4),
               child: GameTurnCountdown(
                 key: ValueKey('${view.phase}_${view.turnDeadline}'),
                 turnDeadline: view.turnDeadline,
                 isMyTurn: view.isMyTurn,
-                onExpired: () =>
-                    ref.invalidate(durakGameProvider(widget.gameId)),
+                onExpired: _onTurnTimeExpired,
                 labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
               ),
             ),
-          // Соперник предложил ничью — принять/отклонить.
           if (!view.isOver && _opponentOfferedDraw(view))
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
@@ -497,10 +522,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ],
               ),
             ),
-          const SizedBox(height: 10),
-          Expanded(child: _buildBoard(view, cardSize, trumpCard)),
+          const SizedBox(height: 6),
+          // Колода/стол — сверху Expanded, не по центру экрана.
+          Expanded(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: _buildBoard(view, cardSize, trumpCard),
+            ),
+          ),
           const SizedBox(height: 4),
-          // Одна кнопка (Взять / Бито) — слева, ниже колоды, выше веера.
           Align(
             alignment: Alignment.centerLeft,
             child: _sideActionButton(view),
@@ -712,24 +742,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
-    final meta = view.playerIds.length > idx
-        ? view.playerMeta(view.playerIds[idx])
-        : null;
-    final name = meta?.displayName?.trim().isNotEmpty == true
-        ? meta!.displayName!.trim()
-        : _roleLabel(idx, view);
     final fake = List<PlayingCard>.generate(
       count.clamp(0, 8),
       (i) => PlayingCard(Rank.six, Suit.spades),
     );
+    // Имя уже в овальной рамке сверху — здесь только веер + счётчик.
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          name,
-          style: const TextStyle(
-              color: AppColors.textSecondary, fontSize: 12),
-        ),
-        const SizedBox(height: 4),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 280),
           switchInCurve: Curves.easeOutBack,
@@ -737,13 +757,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           child: CardFan(
             key: ValueKey('opp-$idx-$count'),
             cards: fake,
-            cardSize:
-                Size(cardSize.width * 0.6, cardSize.height * 0.6),
+            cardSize: Size(cardSize.width * 0.55, cardSize.height * 0.55),
             faceDown: true,
             enabled: false,
+            arc: 0.18,
           ),
         ),
-        const SizedBox(height: 2),
         Text(
           'Карт: $count',
           style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
@@ -902,12 +921,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final meta = view.playerMeta(oppId);
     final n = meta?.displayName?.trim() ?? '';
     return n.isNotEmpty ? n : context.l10n.gameOpponent;
-  }
-
-  String _roleLabel(int idx, DurakGameView view) {
-    if (idx == view.attackerIndex) return 'Атакует';
-    if (idx == view.defenderIndex) return 'Защищается';
-    return 'Игрок';
   }
 
   List<PlayingCard> _apiCardsToPlaying(List<DurakApiCard> apis) {
