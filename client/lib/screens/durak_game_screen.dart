@@ -290,6 +290,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         );
     final toKey = doDefend ? _defendTargetKey : _attackSlotKey;
     final to = globalRectOf(toKey) ??
+        globalRectOf(_tableKey) ??
         Rect.fromCenter(
           center: MediaQuery.sizeOf(context).center(Offset.zero),
           width: _cardSize.width,
