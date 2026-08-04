@@ -6,7 +6,7 @@ client/.packages
 client/build/
 client/.flutter-plugins
 client/.flutter-plugins-dependencies
-client/pubspec.lock
+# pubspec.lock нужен в git: Dockerfile копирует его при сборке на Fly/CI.
 client/*.iml
 client/.idea/
 client/.metadata
