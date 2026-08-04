@@ -40,9 +40,9 @@ class DurakDeckPile extends StatelessWidget {
     }
 
     final stackN = math.min(deckCount, 5);
-    // Ширина с запасом под повёрнутый козырь (визуально ~height карты).
-    final w = cardSize.width + cardSize.height * 0.55;
-    final h = math.max(cardSize.height + 16, cardSize.width + 20);
+    // Ширина: рубашки + почти вся повёрнутая козырная карта.
+    final w = cardSize.width + cardSize.height * 0.72;
+    final h = math.max(cardSize.height + 12, cardSize.width + 16);
 
     return SizedBox(
       width: w,
@@ -51,9 +51,9 @@ class DurakDeckPile extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          // Козырь справа, целиком виден из-под колоды.
+          // Козырь справа — большая часть лица видна.
           Positioned(
-            left: cardSize.width * 0.55,
+            left: cardSize.width * 0.42,
             top: (h - cardSize.width) / 2,
             child: Transform.rotate(
               angle: -math.pi / 2,

@@ -78,6 +78,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   int _prevHandLen = -1;
   List<DurakTablePairApi> _prevTable = const [];
   bool _fxScheduled = false;
+  Offset _tablePanAccum = Offset.zero;
 
   static const Size _cardSize = Size(64, 92);
 
@@ -375,17 +376,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return false;
     }
 
-    // Вернуть в веер: отпустили над веером или в нижней зоне экрана.
-    final fan = globalRectOf(_fanKey);
-    final screenH = MediaQuery.sizeOf(context).height;
-    final overFan = fan != null && fan.inflate(48).contains(global);
-    final lowRelease = global.dy > screenH * 0.62;
-    if (overFan || lowRelease) {
-      _clearHandSelection();
-      return false;
-    }
-
-    // Иначе летим на стол — только если ход реально стартовал.
+    // Отпустили вне веера — сразу летим к подсвеченной цели (без «зоны»).
     final cards = _cardsToPlay(view, card);
     final started = await _playCards(
       view,
@@ -514,18 +505,45 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return true;
   }
 
+  bool _canTake(DurakGameView view) =>
+      !view.isOver &&
+      !_busy &&
+      view.defenderIndex == view.myIndex &&
+      view.phase == 'defend' &&
+      view.table.isNotEmpty;
+
+  bool _canBito(DurakGameView view) =>
+      !view.isOver &&
+      !_busy &&
+      view.attackerIndex == view.myIndex &&
+      view.phase == 'attack_follow' &&
+      view.table.isNotEmpty &&
+      view.table.every((p) => p.defense != null);
+
   Future<void> _take() async {
-    final repo = ref.read(durakRepositoryProvider);
-    await _act(() => repo.move(widget.gameId, type: 'take'));
+    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    if (view == null || !_canTake(view)) return;
+    final snapshot = List<DurakTablePairApi>.of(view.table);
+    _prevTable = const [];
+    if (snapshot.isNotEmpty) {
+      setState(() => _hidingTable = true);
+      await _animateTableToFan(snapshot);
+    }
+    if (!mounted) return;
+    try {
+      await _act(
+        () => ref.read(durakRepositoryProvider).move(widget.gameId, type: 'take'),
+      );
+    } finally {
+      if (mounted) setState(() => _hidingTable = false);
+    }
   }
 
   Future<void> _bito() async {
-    // Сначала анимация стола → бита, потом ход на сервер.
+    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    if (view == null || !_canBito(view)) return;
     final snapshot = List<DurakTablePairApi>.of(
-      _prevTable.isNotEmpty
-          ? _prevTable
-          : (ref.read(durakGameProvider(widget.gameId)).valueOrNull?.table ??
-              const []),
+      _prevTable.isNotEmpty ? _prevTable : view.table,
     );
     _prevTable = const [];
     if (snapshot.isNotEmpty) {
@@ -533,12 +551,64 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       await _animateTableToBito(snapshot);
     }
     if (!mounted) return;
-    final repo = ref.read(durakRepositoryProvider);
     try {
-      await _act(() => repo.move(widget.gameId, type: 'bito'));
+      await _act(
+        () =>
+            ref.read(durakRepositoryProvider).move(widget.gameId, type: 'bito'),
+      );
     } finally {
       if (mounted) setState(() => _hidingTable = false);
     }
+  }
+
+  Future<void> _animateTableToFan(List<DurakTablePairApi> table) async {
+    if (table.isEmpty || !mounted) return;
+    final to = cardFanApproxOrigin(
+          _fanKey.currentContext ?? context,
+          _cardSize,
+        ) ??
+        Rect.fromCenter(
+          center: Offset(
+            MediaQuery.sizeOf(context).width / 2,
+            MediaQuery.sizeOf(context).height * 0.85,
+          ),
+          width: _cardSize.width,
+          height: _cardSize.height,
+        );
+    final cards = <PlayingCard>[];
+    final froms = <Rect>[];
+    final tos = <Rect>[];
+    final center = MediaQuery.sizeOf(context).center(Offset.zero);
+    var i = 0;
+    for (final p in table) {
+      cards.add(p.attack.toPlayingCard());
+      froms.add(Rect.fromCenter(
+        center: center.translate((i - table.length / 2) * 40, -20),
+        width: _cardSize.width,
+        height: _cardSize.height,
+      ));
+      tos.add(to.shift(Offset((i - table.length) * 10.0, 0)));
+      i++;
+      if (p.defense != null) {
+        cards.add(p.defense!.toPlayingCard());
+        froms.add(Rect.fromCenter(
+          center: center.translate((i - table.length / 2) * 40, 0),
+          width: _cardSize.width,
+          height: _cardSize.height,
+        ));
+        tos.add(to.shift(Offset((i - table.length) * 10.0, 0)));
+        i++;
+      }
+    }
+    await playCardsFlyAnimation(
+      context: context,
+      cards: cards,
+      cardSize: _cardSize,
+      froms: froms,
+      tos: tos,
+      duration: const Duration(milliseconds: 420),
+      stagger: const Duration(milliseconds: 40),
+    );
   }
 
   Future<void> _animateDealToFan(int n) async {
@@ -1361,11 +1431,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     },
                   ),
                 ),
-                Positioned(
-                  left: 8,
-                  bottom: 4,
-                  child: _sideActionButton(view),
-                ),
               ],
             ),
           ),
@@ -1590,11 +1655,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             view.phase == 'attack_follow' ||
             view.phase == 'defend');
 
-    // Колода слева: сдвигаем в край, без ClipRect — козырь не обрезается.
+    // Колода слева — козырь целиком в кадре.
     final deckPeek = KeyedSubtree(
       key: _deckKey,
       child: Transform.translate(
-        offset: Offset(-cardSize.width * 0.28, 0),
+        offset: Offset(-cardSize.width * 0.12, 0),
         child: DurakDeckPile(
           deckCount: view.deckCount,
           trumpCard: trumpCard,
@@ -1604,11 +1669,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       ),
     );
 
-    // Бита справа: виден край кучи, без жёсткой обрезки карт.
     final bitoPeek = KeyedSubtree(
       key: _bitoKey,
       child: Transform.translate(
-        offset: Offset(cardSize.width * 0.42, 0),
+        offset: Offset(cardSize.width * 0.28, 0),
         child: DurakBitoPile(
           count: view.bitoCount,
           cardSize: cardSize,
@@ -1617,7 +1681,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       ),
     );
 
-    final tablePairs = <Widget>[
+    final tableItems = <Widget>[
       if (!_hidingTable) ...[
         for (var i = 0; i < view.table.length; i++)
           _AnimatedTablePair(
@@ -1658,47 +1722,68 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final tableMaxW = constraints.maxWidth * 0.62;
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // Мягкое «сукно» стола — атмосфера без карточек-дашборда.
+            // Мягкий фиолетовый градиент в центре → плавно в фон.
             Positioned.fill(
               child: IgnorePointer(
-                child: Center(
-                  child: Container(
-                    width: constraints.maxWidth * 0.92,
-                    height: constraints.maxHeight * 0.78,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(36),
-                      gradient: RadialGradient(
-                        center: const Alignment(0, -0.15),
-                        radius: 0.95,
-                        colors: [
-                          AppColors.accentSoft.withValues(alpha: 0.55),
-                          AppColors.accentStart.withValues(alpha: 0.07),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.55, 1.0],
-                      ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.08),
+                      radius: 1.2,
+                      colors: [
+                        const Color(0xFFC7D2FE).withValues(alpha: 0.42),
+                        AppColors.accentSoft.withValues(alpha: 0.22),
+                        AppColors.surfaceUnified.withValues(alpha: 0.0),
+                      ],
+                      stops: const [0.0, 0.45, 1.0],
                     ),
                   ),
                 ),
               ),
             ),
-            // Стол по центру.
+            // Жесты стола: вниз к себе = взять, вправо = бито.
+            Positioned.fill(
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (_) => _tablePanAccum = Offset.zero,
+                onPointerMove: (e) {
+                  if (_busy || _activeCard != null) return;
+                  _tablePanAccum += e.delta;
+                },
+                onPointerUp: (_) {
+                  if (_busy || _activeCard != null) {
+                    _tablePanAccum = Offset.zero;
+                    return;
+                  }
+                  final dx = _tablePanAccum.dx;
+                  final dy = _tablePanAccum.dy;
+                  _tablePanAccum = Offset.zero;
+                  // Взять: смахивание карт к себе (вниз).
+                  if (dy > 70 && dy.abs() > dx.abs() * 1.1 && _canTake(view)) {
+                    unawaited(_take());
+                    return;
+                  }
+                  // Бито: смахивание вправо к отбою.
+                  if (dx > 70 && dx.abs() > dy.abs() * 1.1 && _canBito(view)) {
+                    unawaited(_bito());
+                  }
+                },
+              ),
+            ),
             Positioned.fill(
               child: Center(
                 child: KeyedSubtree(
                   key: _tableKey,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: constraints.maxWidth * 0.72,
-                    ),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 6,
-                      runSpacing: 8,
-                      children: tablePairs,
+                  child: SizedBox(
+                    width: tableMaxW,
+                    child: _buildTableRows(
+                      items: tableItems,
+                      cardSize: cardSize,
+                      maxWidth: tableMaxW,
                     ),
                   ),
                 ),
@@ -1718,55 +1803,47 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// «Взять» / «Бито» — левый нижний угол.
-  Widget _sideActionButton(DurakGameView view) {
-    final iAmDefender =
-        view.defenderIndex == view.myIndex && view.phase == 'defend';
-    final iAmAttacker =
-        view.attackerIndex == view.myIndex && view.phase == 'attack_follow';
-    final canTake =
-        !view.isOver && iAmDefender && view.table.isNotEmpty && !_busy;
-    final canBito = !view.isOver &&
-        iAmAttacker &&
-        view.table.isNotEmpty &&
-        view.table.every((p) => p.defense != null) &&
-        !_busy;
+  /// До 3 сверху + 3 снизу; если не влезает — 2 / 2 / 2.
+  Widget _buildTableRows({
+    required List<Widget> items,
+    required Size cardSize,
+    required double maxWidth,
+  }) {
+    if (items.isEmpty) return const SizedBox.shrink();
+    final pairW = cardSize.width + 14;
+    final canFit3 = maxWidth >= pairW * 3;
+    final n = items.length;
 
-    if (!canTake && !canBito) {
-      return const SizedBox.shrink();
+    List<List<Widget>> rows;
+    if (!canFit3 && n >= 5) {
+      rows = [
+        items.take(2).toList(),
+        items.skip(2).take(2).toList(),
+        items.skip(4).take(2).toList(),
+      ].where((r) => r.isNotEmpty).toList();
+    } else {
+      rows = [
+        items.take(3).toList(),
+        if (n > 3) items.skip(3).take(3).toList(),
+      ].where((r) => r.isNotEmpty).toList();
     }
 
-    final take = canTake;
-    return Material(
-      elevation: 2,
-      borderRadius: BorderRadius.circular(14),
-      color: AppColors.accentStart,
-      child: InkWell(
-        onTap: take ? _take : _bito,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var r = 0; r < rows.length; r++) ...[
+          if (r > 0) const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                take ? Icons.file_download_rounded : Icons.check_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                take ? 'Взять' : 'Бито',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
+              for (var i = 0; i < rows[r].length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                rows[r][i],
+              ],
             ],
           ),
-        ),
-      ),
+        ],
+      ],
     );
   }
 
