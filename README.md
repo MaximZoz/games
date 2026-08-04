@@ -329,6 +329,14 @@ cp deploy.cursor.env.example deploy.cursor.env
 ./launcher/deploy_develop.sh
 ```
 
+**Отдельный DEV на Fly** (копия стека, своя БД; прод не трогает):
+
+```bash
+cp deploy.dev.env.example deploy.dev.env
+./launcher/setup_fly_dev.sh
+./launcher/deploy_dev.sh
+```
+
 Windows:
 
 ```powershell
@@ -337,6 +345,12 @@ Windows:
 
 ```powershell
 .\launcher\deploy_develop.ps1
+```
+
+```powershell
+Copy-Item deploy.dev.env.example deploy.dev.env
+.\launcher\setup_fly_dev.ps1
+.\launcher\deploy_dev.ps1
 ```
 
 В чате Cursor доступна slash-команда проекта:
@@ -351,8 +365,7 @@ Windows:
 fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 ```
 
-Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)
-
+Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md), [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md)
 ---
 
 ## 🎯 Актуальные задачи (roadmap)
@@ -373,6 +386,7 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 - [x] Web Push-уведомления (PWA)
 - [x] Локализация интерфейса (27+ языков)
 - [x] Базовый деплой на Fly.io
+- [x] Скрипты отдельного Fly DEV (`multigameszozu-dev`)
 
 ### Ближайшие задачи
 
@@ -380,7 +394,6 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 - [ ] Расширить покрытие Flutter widget-тестами ключевых экранов
 - [ ] Реализовать дополнительные игровые режимы (сейчас только крестики-нолики)
 - [ ] Подготовить релизный чек-лист для production (monitoring, alerts, backup policy)
-
 ---
 
 ## 🔗 Документация
@@ -390,4 +403,5 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 - [Базы данных](docs/DATABASE.md)
 - [DEPLOY](DEPLOY.md)
 - [Fly.io deployment guide](docs/DEPLOY_FLY.md)
+- [Fly.io DEV environment](docs/DEPLOY_FLY_DEV.md)
 - [Launcher scripts](launcher/README.md)

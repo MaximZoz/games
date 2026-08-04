@@ -49,6 +49,25 @@ cp deploy.cursor.env.example deploy.cursor.env
 .\launcher\deploy_develop.ps1
 ```
 
+**Отдельное DEV-окружение на Fly** (копия прод-стека, другая БД/секреты):
+
+```bash
+cp deploy.dev.env.example deploy.dev.env
+# заполни FLY_API_TOKEN, JWT_SECRET, ADMIN_INIT_SECRET
+./launcher/setup_fly_dev.sh
+./launcher/deploy_dev.sh
+```
+
+```powershell
+Copy-Item deploy.dev.env.example deploy.dev.env
+# заполни FLY_API_TOKEN, JWT_SECRET, ADMIN_INIT_SECRET
+.\launcher\setup_fly_dev.ps1
+.\launcher\deploy_dev.ps1
+```
+
+Подробно: [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md).  
+Прод: `multigameszozu` (`fly.toml`). DEV: `multigameszozu-dev` (`fly.dev.toml`).
+
 **Прямо в чате Cursor (slash-команда проекта):**
 
 ```
@@ -195,3 +214,4 @@ curl -X POST "https://<имя-приложения>.fly.dev/api/admin/init" \
 
 - **Сайт не открывается** — см. [docs/DEPLOY_FLY_TROUBLESHOOTING.md](docs/DEPLOY_FLY_TROUBLESHOOTING.md) (статус, логи, доступ из РФ, редиректы).
 - **Полная пошаговая инструкция** — [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md).
+- **Отдельный DEV на Fly** — [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md).
