@@ -440,6 +440,12 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesTicTacToe => 'Kryds og bolle';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Under udvikling';
+
+  @override
   String get gamesRules => 'Regler';
 
   @override

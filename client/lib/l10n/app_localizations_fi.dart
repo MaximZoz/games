@@ -440,6 +440,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesTicTacToe => 'Ristinolla';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Kehityksessä';
+
+  @override
   String get gamesRules => 'Säännöt';
 
   @override

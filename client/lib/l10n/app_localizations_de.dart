@@ -440,6 +440,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesTicTacToe => 'Tic-Tac-Toe';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'In Entwicklung';
+
+  @override
   String get gamesRules => 'Regeln';
 
   @override

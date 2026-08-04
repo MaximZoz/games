@@ -440,6 +440,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesTicTacToe => 'Крестики-нолики';
 
   @override
+  String get gamesDurak => 'Дурак';
+
+  @override
+  String get gamesInDevelopment => 'Әзірленуде';
+
+  @override
   String get gamesRules => 'Ережелер';
 
   @override

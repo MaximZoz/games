@@ -440,6 +440,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesTicTacToe => 'โอเอกซ์';
 
   @override
+  String get gamesDurak => 'ดูรัก';
+
+  @override
+  String get gamesInDevelopment => 'กำลังพัฒนา';
+
+  @override
   String get gamesRules => 'กติกา';
 
   @override

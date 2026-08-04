@@ -162,6 +162,8 @@
   "gamesWaiting": "Kutilmoqda",
   "gamesLobbyTab": "Lobi",
   "gamesTicTacToe": "X-O",
+  "gamesDurak": "Durak",
+  "gamesInDevelopment": "Ishlab chiqilmoqda",
   "gamesRules": "Qoidalar",
   "gamesRulesTitle": "O‘yin qoidalari",
   "gamesCreate": "O‘yin yaratish",

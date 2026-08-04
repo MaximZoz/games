@@ -440,6 +440,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesTicTacToe => 'إكس-أو';
 
   @override
+  String get gamesDurak => 'دوراك';
+
+  @override
+  String get gamesInDevelopment => 'قيد التطوير';
+
+  @override
   String get gamesRules => 'القواعد';
 
   @override

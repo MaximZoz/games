@@ -162,6 +162,8 @@
   "gamesWaiting": "Aguardando",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Jogo da velha",
+  "gamesDurak": "Durak",
+  "gamesInDevelopment": "Em desenvolvimento",
   "gamesRules": "Regras",
   "gamesRulesTitle": "Regras do jogo",
   "gamesCreate": "Criar jogo",

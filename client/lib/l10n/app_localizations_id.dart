@@ -440,6 +440,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesTicTacToe => 'XOX';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'Dalam pengembangan';
+
+  @override
   String get gamesRules => 'Aturan';
 
   @override

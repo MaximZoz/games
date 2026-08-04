@@ -162,6 +162,8 @@
   "gamesWaiting": "Odottaa",
   "gamesLobbyTab": "Aula",
   "gamesTicTacToe": "Ristinolla",
+  "gamesDurak": "Durak",
+  "gamesInDevelopment": "Kehityksessä",
   "gamesRules": "Säännöt",
   "gamesRulesTitle": "Pelin säännöt",
   "gamesCreate": "Luo peli",

@@ -440,6 +440,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesTicTacToe => 'Boter-kaas-eieren';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesInDevelopment => 'In ontwikkeling';
+
+  @override
   String get gamesRules => 'Regels';
 
   @override
