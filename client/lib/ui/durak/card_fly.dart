@@ -7,6 +7,8 @@ import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Плавный полёт карты из [from] в [to] поверх всего UI.
 /// [flipToFace] — переворот рубашка→лицо к концу полёта (добор в руку).
+/// [beginScale]/[endScale] — размер относительно [cardSize] (из веера крупнее →
+/// на стол мельче).
 Future<void> playCardFlyAnimation({
   required BuildContext context,
   required PlayingCard card,
@@ -18,6 +20,8 @@ Future<void> playCardFlyAnimation({
   bool flipToFace = false,
   double beginAngle = 0,
   double endAngle = 0,
+  double beginScale = 1.08,
+  double endScale = 1.0,
   bool keepAtEnd = false,
 }) async {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
@@ -37,9 +41,12 @@ Future<void> playCardFlyAnimation({
             if (!completer.isCompleted) completer.complete();
           },
           builder: (context, t, _) {
-            final left = from.left + (to.left - from.left) * t;
-            final top = from.top + (to.top - from.top) * t;
-            final scale = 1.08 - 0.08 * t;
+            // Центрируем уменьшающуюся карту в точке полёта.
+            final scale = beginScale + (endScale - beginScale) * t;
+            final w = cardSize.width * scale;
+            final h = cardSize.height * scale;
+            final cx = from.center.dx + (to.center.dx - from.center.dx) * t;
+            final cy = from.center.dy + (to.center.dy - from.center.dy) * t;
             final angle = beginAngle + (endAngle - beginAngle) * t;
             final midLift = -40.0 * math.sin(math.pi * t);
             Widget face;
@@ -74,11 +81,13 @@ Future<void> playCardFlyAnimation({
             return Stack(
               children: [
                 Positioned(
-                  left: left,
-                  top: top + midLift,
+                  left: cx - w / 2,
+                  top: cy - h / 2 + midLift,
+                  width: w,
+                  height: h,
                   child: Transform.rotate(
                     angle: angle,
-                    child: Transform.scale(scale: scale, child: face),
+                    child: FittedBox(fit: BoxFit.fill, child: face),
                   ),
                 ),
               ],
@@ -109,6 +118,8 @@ Future<void> playCardsFlyAnimation({
   Duration stagger = const Duration(milliseconds: 55),
   bool faceDown = false,
   List<double>? endAngles,
+  double beginScale = 1.08,
+  double endScale = 1.0,
 }) async {
   if (cards.isEmpty) return;
   final futures = <Future<void>>[];
@@ -129,6 +140,8 @@ Future<void> playCardsFlyAnimation({
         faceDown: faceDown,
         flipToFace: faceDown,
         endAngle: endA,
+        beginScale: beginScale,
+        endScale: endScale,
       );
     }));
   }
