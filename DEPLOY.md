@@ -215,3 +215,4 @@ curl -X POST "https://<имя-приложения>.fly.dev/api/admin/init" \
 - **Сайт не открывается** — см. [docs/DEPLOY_FLY_TROUBLESHOOTING.md](docs/DEPLOY_FLY_TROUBLESHOOTING.md) (статус, логи, доступ из РФ, редиректы).
 - **Полная пошаговая инструкция** — [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md).
 - **Отдельный DEV на Fly** — [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md).
+- **Автодеплой веток** — `develop` → DEV, `main` → прод (`.github/workflows/deploy.yml`, secret `FLY_API_TOKEN`).

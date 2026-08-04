@@ -127,9 +127,37 @@ fly secrets list --app multigameszozu-dev
 fly apps restart multigameszozu-dev
 ```
 
-Прод при этом деплоится как раньше:
+## Автодеплой из GitHub Actions
+
+Workflow `.github/workflows/deploy.yml`:
+
+| Ветка | Fly app | Конфиг |
+|---|---|---|
+| `develop` | `multigameszozu-dev` | `fly.dev.toml` |
+| `main` | `multigameszozu` | `fly.toml` |
+
+Нужен один GitHub secret:
+
+```text
+Settings → Secrets and variables → Actions → FLY_API_TOKEN
+```
+
+Токен:
 
 ```bash
-./launcher/deploy_cursor.sh          # текущая ветка → multigameszozu
-./launcher/deploy_develop.sh         # origin/develop → multigameszozu
+fly tokens create org -x 2160h -n github-actions
+# или deploy-токен с доступом к обоим app
+```
+
+После настройки:
+- любой push/merge в `develop` → деплой на https://multigameszozu-dev.fly.dev
+- любой push/merge в `main` → деплой на https://multigameszozu.fly.dev
+
+Ручной запуск: Actions → **Deploy Fly** → Run workflow → выбрать `dev` или `prod`.
+
+Локально по-прежнему можно:
+
+```bash
+./launcher/deploy_dev.sh             # → DEV
+./launcher/deploy_cursor.sh          # → прод (текущая ветка)
 ```

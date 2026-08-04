@@ -1,0 +1,113 @@
+# Автодеплой на Fly.io:
+#   push в develop → multigameszozu-dev (fly.dev.toml)
+#   push в main    → multigameszozu     (fly.toml)
+#
+# Нужен GitHub secret: FLY_API_TOKEN
+# (токен с правом деплоя в оба приложения, либо org deploy token)
+#
+# Секреты приложения (JWT_SECRET, DATABASE_URL, …) уже должны быть
+# выставлены на Fly (`fly secrets` / setup_fly_dev). CI только деплоит образ.
+
+name: Deploy Fly
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Куда деплоить'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+concurrency:
+  group: fly-deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Resolve target
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TARGET="${{ inputs.target }}"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            TARGET="prod"
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            TARGET="dev"
+          else
+            echo "Неизвестная ветка для деплоя: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+          if [[ "$TARGET" == "prod" ]]; then
+            APP="multigameszozu"
+            CONFIG="fly.toml"
+            URL="https://multigameszozu.fly.dev"
+          else
+            APP="multigameszozu-dev"
+            CONFIG="fly.dev.toml"
+            URL="https://multigameszozu-dev.fly.dev"
+          fi
+
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "app=$APP" >> "$GITHUB_OUTPUT"
+          echo "config=$CONFIG" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Деплой: branch=${{ github.ref_name }} → $TARGET ($APP)"
+
+      - uses: actions/checkout@v4
+
+      - name: Check Fly config exists
+        shell: bash
+        run: |
+          test -f "${{ steps.target.outputs.config }}"
+
+      - uses: superfly/flyctl-actions/setup-flyctl@v1
+
+      - name: Deploy to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${FLY_API_TOKEN:-}" ]]; then
+            echo "Не задан GitHub secret FLY_API_TOKEN"
+            echo "Создай: fly tokens create deploy -x 2160h -n github-actions"
+            echo "и добавь в Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          flyctl deploy \
+            --config "${{ steps.target.outputs.config }}" \
+            --app "${{ steps.target.outputs.app }}" \
+            --remote-only \
+            --yes
+
+      - name: Smoke check /api/start
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="${{ steps.target.outputs.url }}/api/start"
+          echo "Проверяю $URL"
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if body="$(curl -fsS --max-time 20 "$URL")"; then
+              echo "Ответ: $body"
+              if [[ "$body" == *"go start"* ]]; then
+                exit 0
+              fi
+            fi
+            echo "Попытка $i не удалась, жду 15с..."
+            sleep 15
+          done
+          echo "Smoke check не прошёл: $URL"
+          exit 1

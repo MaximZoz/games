@@ -337,6 +337,13 @@ cp deploy.dev.env.example deploy.dev.env
 ./launcher/deploy_dev.sh
 ```
 
+**Автодеплой GitHub Actions** (нужен secret `FLY_API_TOKEN`):
+
+| Ветка | Куда |
+|---|---|
+| `develop` | `https://multigameszozu-dev.fly.dev` |
+| `main` | `https://multigameszozu.fly.dev` |
+
 Windows:
 
 ```powershell
