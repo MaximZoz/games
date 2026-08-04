@@ -145,9 +145,10 @@ class DurakGame {
       table.where((p) => p.defense == null).length;
 
   int get maxAttacksThisRound {
-    final defHand = hands[defenderIndex].length + undefendedCount;
-    final base = table.isEmpty ? maxAttacks : maxAttacks;
-    return base < defHand ? base : defHand;
+    // Как на сервере: рука защитника + уже лежащие атаки.
+    final lim = hands[defenderIndex].length + table.length;
+    final capped = lim < 1 ? 1 : lim;
+    return maxAttacks > 0 && maxAttacks < capped ? maxAttacks : capped;
   }
 
   /// Можно ли [card] использовать как первую атаку (или подкидывание).

@@ -112,6 +112,36 @@ func TestAttackManySameRank(t *testing.T) {
 	}
 }
 
+// После нескольких отбитых пар подкид того же ранга всё ещё должен быть
+// возможен, пока не упёрлись в MaxAttacks (а не в «только размер руки»).
+func TestThrowInAfterBeatenPairs(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{12, Clubs}, {12, Spades}}, // дамы для подкида
+			{{14, Hearts}, {6, Clubs}, {7, Clubs}}, // 3 карты у защитника
+		},
+		Trump:         Hearts,
+		AttackerIndex: 0,
+		Phase:         PhaseAttackFollow,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		Table: []Pair{
+			{Attack: Card{10, Clubs}, Defense: &Card{13, Clubs}},
+			{Attack: Card{10, Spades}, Defense: &Card{13, Spades}},
+			{Attack: Card{13, Hearts}, Defense: &Card{12, Hearts}},
+		},
+	}
+	legal := st.LegalAttackCards(0)
+	if len(legal) != 2 {
+		t.Fatalf("legal throw-in queens = %v, want 2", legal)
+	}
+	if err := st.AttackMany(0, []Card{{12, Clubs}}); err != nil {
+		t.Fatalf("throw-in queen after beaten pairs: %v", err)
+	}
+}
+
 func TestTakeAndFinish(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},

@@ -40,8 +40,9 @@ class DurakDeckPile extends StatelessWidget {
     }
 
     final stackN = math.min(deckCount, 5);
-    final w = cardSize.width + 40;
-    final h = cardSize.height + 28;
+    // Ширина с запасом под повёрнутый козырь (визуально ~height карты).
+    final w = cardSize.width + cardSize.height * 0.55;
+    final h = math.max(cardSize.height + 16, cardSize.width + 20);
 
     return SizedBox(
       width: w,
@@ -50,9 +51,9 @@ class DurakDeckPile extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          // Козырь справа, лицом вправо (peek из-под колоды).
+          // Козырь справа, целиком виден из-под колоды.
           Positioned(
-            right: 0,
+            left: cardSize.width * 0.55,
             top: (h - cardSize.width) / 2,
             child: Transform.rotate(
               angle: -math.pi / 2,
@@ -65,8 +66,8 @@ class DurakDeckPile extends StatelessWidget {
           ),
           // Стопка рубашек слева поверх козыря.
           Positioned(
-            left: 4,
-            top: 4,
+            left: 0,
+            top: (h - cardSize.height) / 2,
             child: SizedBox(
               width: cardSize.width + stackN * 1.6,
               height: cardSize.height + stackN * 1.6,
@@ -87,7 +88,7 @@ class DurakDeckPile extends StatelessWidget {
           ),
           Positioned(
             bottom: 0,
-            left: 0,
+            left: 4,
             child: _CountBadge(count: deckCount),
           ),
         ],
@@ -113,8 +114,8 @@ class DurakBitoPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final peekW = peek ? cardSize.width * 0.38 : cardSize.width * 1.35;
-    final areaH = cardSize.height * (peek ? 1.05 : 1.25);
+    final peekW = peek ? cardSize.width * 0.62 : cardSize.width * 1.35;
+    final areaH = cardSize.height * (peek ? 1.12 : 1.25);
     if (count <= 0) {
       return SizedBox(width: peekW, height: areaH);
     }
@@ -142,16 +143,14 @@ class DurakBitoPile extends StatelessWidget {
 
     if (!peek) return pile;
 
-    // Виден только левый край кучи.
+    // Левый край кучи без жёсткого ClipRect — карты не «резаные».
     return SizedBox(
       width: peekW,
       height: areaH,
-      child: ClipRect(
-        child: OverflowBox(
-          alignment: Alignment.centerLeft,
-          maxWidth: areaW,
-          child: pile,
-        ),
+      child: OverflowBox(
+        alignment: Alignment.centerLeft,
+        maxWidth: areaW,
+        child: pile,
       ),
     );
   }

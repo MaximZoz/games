@@ -180,14 +180,21 @@ func (s *State) UndefendedIndex() int {
 }
 
 // MaxAttacksThisRound — сколько всего пар можно положить на стол.
+// Лимит = карты в руке защитника + уже лежащие атаки (классика подкидного):
+// после 3 отбитых пар при 3 картах в руке можно подкинуть ещё до MaxAttacks.
 func (s *State) MaxAttacksThisRound() int {
 	def := s.DefenderIndex()
-	handAndTable := len(s.Hands[def])
-	// Максимум лимитирован рукой защитника + количеством уже неотбитых.
-	if s.MaxAttacks < handAndTable {
+	if def < 0 || def >= len(s.Hands) {
 		return s.MaxAttacks
 	}
-	return handAndTable
+	lim := len(s.Hands[def]) + len(s.Table)
+	if lim < 1 {
+		lim = 1
+	}
+	if s.MaxAttacks > 0 && s.MaxAttacks < lim {
+		return s.MaxAttacks
+	}
+	return lim
 }
 
 // ---- Ошибки правил ----

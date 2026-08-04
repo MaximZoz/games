@@ -227,7 +227,7 @@ class CardBackWidget extends StatelessWidget {
 }
 
 /// Пустой слот на столе — куда можно подкинуть карту.
-class DurakDropSlot extends StatelessWidget {
+class DurakDropSlot extends StatefulWidget {
   const DurakDropSlot({
     super.key,
     required this.size,
@@ -238,31 +238,76 @@ class DurakDropSlot extends StatelessWidget {
   final bool active;
 
   @override
+  State<DurakDropSlot> createState() => _DurakDropSlotState();
+}
+
+class _DurakDropSlotState extends State<DurakDropSlot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    if (widget.active) _pulse.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant DurakDropSlot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    } else if (!widget.active && _pulse.isAnimating) {
+      _pulse
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     const color = AppColors.accentStart;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      width: size.width,
-      height: size.height,
-      decoration: BoxDecoration(
-        color: active
-            ? color.withValues(alpha: 0.18)
-            : color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(size.width * 0.15),
-        border: Border.all(
-          color: active ? color : color.withValues(alpha: 0.35),
-          width: active ? 2.5 : 1.5,
-        ),
-        boxShadow: active
-            ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.4),
-                  blurRadius: 16,
-                  spreadRadius: 1,
+    final radius = widget.size.width * 0.15;
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, _) {
+        final t = widget.active ? _pulse.value : 0.0;
+        return Transform.scale(
+          scale: widget.active ? 1 + 0.04 * t : 1,
+          child: Container(
+            width: widget.size.width,
+            height: widget.size.height,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: widget.active ? 0.14 + 0.1 * t : 0.06),
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(
+                color: color.withValues(
+                  alpha: widget.active ? 0.75 + 0.25 * t : 0.35,
                 ),
-              ]
-            : null,
-      ),
+                width: widget.active ? 2.5 : 1.5,
+              ),
+              boxShadow: widget.active
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.28 + 0.28 * t),
+                        blurRadius: 12 + 10 * t,
+                        spreadRadius: 0.5 + t,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        );
+      },
     );
   }
 }

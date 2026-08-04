@@ -158,7 +158,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
     overlay.insert(_overlay!);
   }
 
-  Future<void> _animateOverlayTo(Rect to) async {
+  Future<void> _animateOverlayTo(Rect to, {bool arc = false}) async {
     final fromCenter = _liftGlobalCenter;
     final card = _liftedCard;
     if (fromCenter == null || card == null) return;
@@ -177,7 +177,7 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
         return IgnorePointer(
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 280),
+            duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
             onEnd: () {
               entry.remove();
@@ -185,23 +185,29 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
             },
             builder: (context, t, _) {
               final left = from.left + (to.left - from.left) * t;
-              final top = from.top + (to.top - from.top) * t;
+              final lift = arc ? -36 * sin(pi * t) : 0.0;
+              final top = from.top + (to.top - from.top) * t + lift;
               final scale = 1.12 - 0.12 * t;
+              final rot = arc ? (1 - t) * 0.12 : 0.0;
               return Stack(
                 children: [
                   Positioned(
                     left: left,
                     top: top,
-                    child: Transform.scale(
-                      scale: scale,
-                      child: widget.faceDown
-                          ? CardBackWidget(size: widget.cardSize, elevated: true)
-                          : PlayingCardWidget(
-                              card: card,
-                              size: widget.cardSize,
-                              elevated: true,
-                              highlighted: t < 0.85,
-                            ),
+                    child: Transform.rotate(
+                      angle: rot,
+                      child: Transform.scale(
+                        scale: scale,
+                        child: widget.faceDown
+                            ? CardBackWidget(
+                                size: widget.cardSize, elevated: true)
+                            : PlayingCardWidget(
+                                card: card,
+                                size: widget.cardSize,
+                                elevated: true,
+                                highlighted: t < 0.85,
+                              ),
+                      ),
                     ),
                   ),
                 ],
@@ -333,25 +339,32 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
       width: widget.cardSize.width,
       height: widget.cardSize.height,
     );
-    // Снять overlay сразу — иначе дубль с fly-анимацией стола.
-    _removeOverlay();
-    final canPlay =
-        widget.enabled && !widget.faceDown && _isLegal(card);
-    final drop = widget.onDrop;
-    if (drop != null && canPlay) {
-      final accepted = await drop(card, global, from);
-      if (!mounted) return;
-      if (accepted) {
+    var accepted = false;
+    try {
+      // Снять drag-overlay — дальше либо fly на стол, либо анимация возврата.
+      _removeOverlay();
+      final canPlay =
+          widget.enabled && !widget.faceDown && _isLegal(card);
+      final drop = widget.onDrop;
+      if (drop != null && canPlay) {
+        accepted = await drop(card, global, from);
+        if (!mounted) return;
+        if (accepted) return;
+      }
+      // Возврат в веер с лёгкой дугой.
+      final to = _slotGlobalRect(card, baseSpacing, totalW);
+      _liftGlobalCenter = from.center;
+      await _animateOverlayTo(to, arc: true);
+    } finally {
+      if (mounted) {
         _clearLift();
-        return;
+      } else {
+        _dropBusy = false;
+        _removeOverlay();
+        _liftedCard = null;
+        _liftGlobalCenter = null;
       }
     }
-    // Возврат в веер.
-    final to = _slotGlobalRect(card, baseSpacing, totalW);
-    _liftGlobalCenter = from.center;
-    await _animateOverlayTo(to);
-    if (!mounted) return;
-    _clearLift();
   }
 
   @override
@@ -509,23 +522,27 @@ class _CardFanState extends State<CardFan> with SingleTickerProviderStateMixin {
       final distance = (i - _hoverIndex!).abs();
       extraX = dir * widget.cardSize.width * (0.28 / max(distance, 1));
     }
-    // Подъём только у выбранных (long-press мульти); свайп — без подъёма.
+    // Подъём только у выбранных; свайп — без подъёма.
     if (selected) {
-      extraY = widget.cardSize.height * 0.2;
-      scale = 1.06;
+      extraY = widget.cardSize.height * 0.22;
+      scale = 1.08;
     }
 
     final legal = _isLegal(card);
     final isLegalContext = widget.legalCards != null;
+    // Легальные карты чуть «живые» — мягкая подсветка, нелегальные приглушены.
+    final showLegalGlow =
+        isLegalContext && legal && !selected && !active && widget.enabled;
 
     Widget child = widget.faceDown
         ? CardBackWidget(size: widget.cardSize, elevated: selected)
         : PlayingCardWidget(
             card: card,
             size: widget.cardSize,
-            highlighted: (active || selected) && (!isLegalContext || legal),
+            highlighted:
+                showLegalGlow || ((active || selected) && (!isLegalContext || legal)),
             dimmed: isLegalContext && !legal,
-            elevated: selected,
+            elevated: selected || active,
           );
 
     // Long-press через GestureDetector без конфликта с Listener.
