@@ -119,6 +119,19 @@ curl -X POST "https://multigameszozu-dev.fly.dev/api/admin/init" \
 
 ---
 
+## Тестовые пользователи на DEV
+
+```bash
+./launcher/seed_dev_users.sh
+```
+
+Скрипт:
+- делает `max591018@gmail.com` админом (если нет — создаёт)
+- создаёт `player1` … `player20`  
+  email `playerN@player.com`, пароль `playerN`
+
+Только для `multigameszozu-dev-db`, прод не трогает.
+
 ## Полезные команды
 
 ```bash
