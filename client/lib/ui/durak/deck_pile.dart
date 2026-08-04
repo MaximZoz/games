@@ -4,38 +4,43 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
-/// Колода: козырь боком + стопка рубашек со счётчиком.
-/// Общий виджет для онлайн- и офлайн-экрана Дурака.
+/// Колода: стопка рубашек + козырь боком, смотрящий вправо.
+/// Когда колода пуста — остаётся только значок козырной масти.
 class DurakDeckPile extends StatelessWidget {
   const DurakDeckPile({
     super.key,
     required this.deckCount,
     required this.trumpCard,
     required this.cardSize,
+    this.trumpSuit,
   });
 
   final int deckCount;
   final PlayingCard trumpCard;
   final Size cardSize;
 
+  /// Явная масть козыря (если колода пуста и карта уже ушла в руку).
+  final Suit? trumpSuit;
+
+  Suit get _suit => trumpSuit ?? trumpCard.suit;
+
   @override
   Widget build(BuildContext context) {
     if (deckCount <= 0) {
-      // Козырь остаётся лицом вверх, когда колода кончилась.
       return SizedBox(
         width: cardSize.width + 8,
         height: cardSize.height + 8,
         child: Center(
-          child: PlayingCardWidget(
-            card: trumpCard,
-            size: Size(cardSize.width * 0.85, cardSize.height * 0.85),
+          child: DurakTrumpSuitBadge(
+            suit: _suit,
+            size: math.min(cardSize.width, cardSize.height) * 0.72,
           ),
         ),
       );
     }
 
     final stackN = math.min(deckCount, 5);
-    final w = cardSize.width + 36;
+    final w = cardSize.width + 40;
     final h = cardSize.height + 28;
 
     return SizedBox(
@@ -45,12 +50,12 @@ class DurakDeckPile extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          // Козырь лежит боком под колодой (peek).
+          // Козырь справа, лицом вправо (peek из-под колоды).
           Positioned(
-            left: 0,
+            right: 0,
             top: (h - cardSize.width) / 2,
             child: Transform.rotate(
-              angle: math.pi / 2,
+              angle: -math.pi / 2,
               child: PlayingCardWidget(
                 card: trumpCard,
                 size: cardSize,
@@ -58,9 +63,9 @@ class DurakDeckPile extends StatelessWidget {
               ),
             ),
           ),
-          // Стопка рубашек со смещением — объём колоды.
+          // Стопка рубашек слева поверх козыря.
           Positioned(
-            right: 4,
+            left: 4,
             top: 4,
             child: SizedBox(
               width: cardSize.width + stackN * 1.6,
@@ -82,7 +87,7 @@ class DurakDeckPile extends StatelessWidget {
           ),
           Positioned(
             bottom: 0,
-            right: 0,
+            left: 0,
             child: _CountBadge(count: deckCount),
           ),
         ],

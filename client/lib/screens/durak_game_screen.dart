@@ -16,6 +16,7 @@ import 'package:multigames_client/games/games_repository.dart' show GamesExcepti
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
+import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
@@ -39,6 +40,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _settled = false;
   bool _handlingAuthError = false;
   bool _retryScheduled = false;
+  PlayingCard? _activeCard;
+  final GlobalKey _fanKey = GlobalKey();
+  final GlobalKey _defendTargetKey = GlobalKey();
+  final GlobalKey _attackSlotKey = GlobalKey();
 
   bool _isTransientLoadError(Object e) {
     if (e is GamesException) {
@@ -109,11 +114,72 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
+  Suit _suitFromApi(String raw) {
+    return switch (raw.toUpperCase().trim()) {
+      'H' || '0' || 'HEARTS' => Suit.hearts,
+      'D' || '1' || 'DIAMONDS' => Suit.diamonds,
+      'C' || '2' || 'CLUBS' => Suit.clubs,
+      'S' || '3' || 'SPADES' => Suit.spades,
+      _ => Suit.spades,
+    };
+  }
+
+  bool _highlightDefendTargets(DurakGameView view) {
+    if (_activeCard == null || _busy || view.isOver) return false;
+    if (view.phase != 'defend' || view.defenderIndex != view.myIndex) {
+      return false;
+    }
+    return view.legalDefend
+        .any((c) => c.toPlayingCard() == _activeCard);
+  }
+
+  bool _highlightAttackSlot(DurakGameView view) {
+    if (_activeCard == null || _busy || view.isOver) return false;
+    if (view.attackerIndex != view.myIndex) return false;
+    if (view.phase != 'attack' && view.phase != 'attack_follow') return false;
+    return view.legalAttack
+        .any((c) => c.toPlayingCard() == _activeCard);
+  }
+
   Future<void> _playMyCard(DurakGameView view, PlayingCard card) async {
+    if (_busy || view.isOver) return;
+    final isDefend =
+        view.phase == 'defend' && view.defenderIndex == view.myIndex;
+    final isAttack = view.attackerIndex == view.myIndex &&
+        (view.phase == 'attack' || view.phase == 'attack_follow');
+    if (!isDefend && !isAttack) return;
+
+    final from = cardFanApproxOrigin(
+          _fanKey.currentContext ?? context,
+          const Size(64, 92),
+        ) ??
+        Rect.fromCenter(
+          center: MediaQuery.sizeOf(context).center(Offset.zero),
+          width: 64,
+          height: 92,
+        );
+    final toKey = isDefend ? _defendTargetKey : _attackSlotKey;
+    final to = globalRectOf(toKey) ??
+        Rect.fromCenter(
+          center: MediaQuery.sizeOf(context).center(Offset.zero),
+          width: 64,
+          height: 92,
+        );
+
+    setState(() => _activeCard = null);
+    await playCardFlyAnimation(
+      context: context,
+      card: card,
+      cardSize: const Size(64, 92),
+      from: from,
+      to: to,
+    );
+    if (!mounted) return;
+
     final repo = ref.read(durakRepositoryProvider);
-    if (view.phase == 'defend' && view.defenderIndex == view.myIndex) {
+    if (isDefend) {
       await _act(() => repo.move(widget.gameId, type: 'defend', card: card));
-    } else if (view.attackerIndex == view.myIndex) {
+    } else {
       await _act(() => repo.move(widget.gameId, type: 'attack', card: card));
     }
   }
@@ -433,16 +499,53 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           const SizedBox(height: 10),
           Expanded(child: _buildBoard(view, cardSize, trumpCard)),
-          const SizedBox(height: 12),
-          _actionsRow(view),
-          const SizedBox(height: 8),
-          CardFan(
-            cards: myHand,
-            cardSize: cardSize,
-            legalCards: legal,
-            enabled: !view.isOver && view.isMyTurn && !_busy,
-            onTap: (c) => _playMyCard(view, c),
-            onDrag: (c, _) => _playMyCard(view, c),
+          const SizedBox(height: 4),
+          // Одна кнопка (Взять / Бито) — слева, ниже колоды, выше веера.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _sideActionButton(view),
+          ),
+          const SizedBox(height: 4),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final n = myHand.length;
+              final spacing = n <= 1
+                  ? 0.0
+                  : cardSize.width *
+                      (n > 24
+                          ? 0.16
+                          : n > 18
+                              ? 0.2
+                              : n > 14
+                                  ? 0.24
+                                  : n > 10
+                                      ? 0.3
+                                      : n > 7
+                                          ? 0.38
+                                          : 0.52);
+              final fanW = cardSize.width + spacing * (n - 1) + 32;
+              final scale = fanW > constraints.maxWidth
+                  ? (constraints.maxWidth / fanW).clamp(0.55, 1.0)
+                  : 1.0;
+              final fan = CardFan(
+                key: _fanKey,
+                cards: myHand,
+                cardSize: cardSize,
+                legalCards: legal,
+                enabled: !view.isOver && view.isMyTurn && !_busy,
+                onActiveChanged: (c) {
+                  if (_activeCard == c) return;
+                  setState(() => _activeCard = c);
+                },
+                onTap: (c) => unawaited(_playMyCard(view, c)),
+                onDrag: (c, _) => unawaited(_playMyCard(view, c)),
+              );
+              return Center(
+                child: scale < 1
+                    ? Transform.scale(scale: scale, child: fan)
+                    : fan,
+              );
+            },
           ),
           const SizedBox(height: 6),
         ],
@@ -654,6 +757,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     Size cardSize,
     PlayingCard trumpCard,
   ) {
+    final highlightDefend = _highlightDefendTargets(view);
+    final highlightAttack = _highlightAttackSlot(view);
+    // Первая неотбитая пара — цель защиты.
+    var defendPairIndex = -1;
+    if (highlightDefend) {
+      for (var i = 0; i < view.table.length; i++) {
+        if (view.table[i].defense == null) {
+          defendPairIndex = i;
+          break;
+        }
+      }
+    }
+
     return Center(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -662,9 +778,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           DurakDeckPile(
             deckCount: view.deckCount,
             trumpCard: trumpCard,
+            trumpSuit: _suitFromApi(view.trumpSuit),
             cardSize: cardSize,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -680,71 +797,75 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       ),
                       pair: view.table[i],
                       cardSize: cardSize,
+                      highlightAttack: i == defendPairIndex,
+                      defendTargetKey:
+                          i == defendPairIndex ? _defendTargetKey : null,
+                    ),
+                  if (!view.isOver &&
+                      view.attackerIndex == view.myIndex &&
+                      (view.phase == 'attack' || view.phase == 'attack_follow'))
+                    Padding(
+                      key: _attackSlotKey,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: DurakDropSlot(
+                        size: cardSize,
+                        active: highlightAttack,
+                      ),
                     ),
                 ],
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           DurakBitoPile(count: view.bitoCount, cardSize: cardSize),
         ],
       ),
     );
   }
 
-  Widget _actionsRow(DurakGameView view) {
+  /// Одна кнопка: «Взять» или «Бито» — в левом углу под колодой.
+  Widget _sideActionButton(DurakGameView view) {
     final iAmDefender =
         view.defenderIndex == view.myIndex && view.phase == 'defend';
     final iAmAttacker =
         view.attackerIndex == view.myIndex && view.phase == 'attack_follow';
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _btn(
-          label: 'Взять',
-          icon: Icons.file_download_rounded,
-          enabled: !view.isOver && iAmDefender && view.table.isNotEmpty && !_busy,
-          onPressed: _take,
-        ),
-        const SizedBox(width: 16),
-        _btn(
-          label: 'Бито',
-          icon: Icons.check_rounded,
-          enabled: !view.isOver &&
-              iAmAttacker &&
-              view.table.isNotEmpty &&
-              view.table.every((p) => p.defense != null) &&
-              !_busy,
-          onPressed: _bito,
-        ),
-      ],
-    );
-  }
+    final canTake =
+        !view.isOver && iAmDefender && view.table.isNotEmpty && !_busy;
+    final canBito = !view.isOver &&
+        iAmAttacker &&
+        view.table.isNotEmpty &&
+        view.table.every((p) => p.defense != null) &&
+        !_busy;
 
-  Widget _btn({
-    required String label,
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback onPressed,
-  }) {
+    if (!canTake && !canBito) {
+      return const SizedBox(height: 40);
+    }
+
+    final take = canTake;
     return SizedBox(
-      height: 44,
+      height: 40,
       child: FilledButton.icon(
-        onPressed: enabled ? onPressed : null,
+        onPressed: take ? _take : _bito,
         style: FilledButton.styleFrom(
-          backgroundColor: enabled
-              ? AppColors.accentStart
-              : AppColors.accentStart.withValues(alpha: 0.3),
-          disabledBackgroundColor:
-              AppColors.accentStart.withValues(alpha: 0.25),
-          disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          backgroundColor: AppColors.accentStart,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          visualDensity: VisualDensity.compact,
         ),
-        icon: Icon(icon, color: Colors.white),
-        label: Text(label,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700)),
+        icon: Icon(
+          take ? Icons.file_download_rounded : Icons.check_rounded,
+          color: Colors.white,
+          size: 20,
+        ),
+        label: Text(
+          take ? 'Взять' : 'Бито',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }
@@ -800,10 +921,14 @@ class _AnimatedTablePair extends StatelessWidget {
     super.key,
     required this.pair,
     required this.cardSize,
+    this.highlightAttack = false,
+    this.defendTargetKey,
   });
 
   final DurakTablePairApi pair;
   final Size cardSize;
+  final bool highlightAttack;
+  final GlobalKey? defendTargetKey;
 
   @override
   Widget build(BuildContext context) {
@@ -821,11 +946,14 @@ class _AnimatedTablePair extends StatelessWidget {
           width: cardSize.width + 10,
           height: cardSize.height + 14,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               PlayingCardWidget(
+                key: defendTargetKey,
                 card: pair.attack.toPlayingCard(),
                 size: cardSize,
                 elevated: true,
+                dropTarget: highlightAttack && pair.defense == null,
               ),
               if (pair.defense != null)
                 Positioned(

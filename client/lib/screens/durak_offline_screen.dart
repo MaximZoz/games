@@ -30,6 +30,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   late DurakBot _bot;
   Timer? _botTimer;
   String? _statusMessage;
+  PlayingCard? _activeCard;
 
   @override
   void initState() {
@@ -186,15 +187,22 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                   Expanded(
                     child: _buildTable(cardSize, openTrump),
                   ),
-                  const SizedBox(height: 12),
-                  _buildActionsBar(context),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildSideAction(),
+                  ),
+                  const SizedBox(height: 4),
                   // Мой веер.
                   CardFan(
                     cards: myHand,
                     cardSize: cardSize,
                     legalCards: legal,
                     enabled: !_game.isOver && _myTurn,
+                    onActiveChanged: (c) {
+                      if (_activeCard == c) return;
+                      setState(() => _activeCard = c);
+                    },
                     onTap: _onMyCardTap,
                     onDrag: (card, _) => _onMyCardTap(card),
                   ),
@@ -219,18 +227,35 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   }
 
   Widget _buildTable(Size cardSize, PlayingCard? openTrump) {
+    final canDefend = _activeCard != null &&
+        _game.turn == DurakTurn.defender &&
+        _game.defenderIndex == _mePlayer &&
+        _game.canDefendWith(_activeCard!, _mePlayer);
+    final canAttack = _activeCard != null &&
+        _game.attackerIndex == _mePlayer &&
+        _game.canAttackWith(_activeCard!, _mePlayer);
+    var defendIdx = -1;
+    if (canDefend) {
+      for (var i = 0; i < _game.table.length; i++) {
+        if (_game.table[i].defense == null) {
+          defendIdx = i;
+          break;
+        }
+      }
+    }
+
     return Center(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Колода слева + открытый козырь.
           DurakDeckPile(
             deckCount: _game.deck.length,
             trumpCard: openTrump ?? PlayingCard(Rank.ace, _game.trump),
+            trumpSuit: _game.trump,
             cardSize: cardSize,
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 16),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -249,6 +274,8 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                               PlayingCardWidget(
                                 card: _game.table[i].attack,
                                 size: cardSize,
+                                dropTarget: i == defendIdx,
+                                elevated: true,
                               ),
                               if (_game.table[i].defense != null)
                                 Positioned(
@@ -257,10 +284,22 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                                   child: PlayingCardWidget(
                                     card: _game.table[i].defense!,
                                     size: cardSize,
+                                    elevated: true,
                                   ),
                                 ),
                             ],
                           ),
+                        ),
+                      ),
+                    if (!_game.isOver &&
+                        _game.attackerIndex == _mePlayer &&
+                        (_game.turn == DurakTurn.attacker ||
+                            _game.turn == DurakTurn.attackerFollowUp))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: DurakDropSlot(
+                          size: cardSize,
+                          active: canAttack,
                         ),
                       ),
                   ],
@@ -268,14 +307,14 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 16),
           DurakBitoPile(count: _game.bito.length, cardSize: cardSize),
         ],
       ),
     );
   }
 
-  Widget _buildActionsBar(BuildContext context) {
+  Widget _buildSideAction() {
     final canTake = !_game.isOver &&
         _game.turn == DurakTurn.defender &&
         _game.defenderIndex == _mePlayer &&
@@ -284,23 +323,33 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
         _game.turn == DurakTurn.attackerFollowUp &&
         _game.attackerIndex == _mePlayer &&
         _game.canAttackerSayBito;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _ActionButton(
-          label: 'Взять',
-          icon: Icons.file_download_rounded,
-          enabled: canTake,
-          onPressed: _onTake,
+    if (!canTake && !canBito) return const SizedBox(height: 40);
+    final take = canTake;
+    return SizedBox(
+      height: 40,
+      child: FilledButton.icon(
+        onPressed: take ? _onTake : _onBito,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accentStart,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          visualDensity: VisualDensity.compact,
         ),
-        const SizedBox(width: 16),
-        _ActionButton(
-          label: 'Бито',
-          icon: Icons.check_rounded,
-          enabled: canBito,
-          onPressed: _onBito,
+        icon: Icon(
+          take ? Icons.file_download_rounded : Icons.check_rounded,
+          color: Colors.white,
+          size: 20,
         ),
-      ],
+        label: Text(
+          take ? 'Взять' : 'Бито',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 
@@ -332,45 +381,3 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.enabled,
-    required this.onPressed,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: FilledButton.icon(
-        onPressed: enabled ? onPressed : null,
-        style: FilledButton.styleFrom(
-          backgroundColor: enabled
-              ? AppColors.accentStart
-              : AppColors.accentStart.withValues(alpha: 0.3),
-          disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.25),
-          disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-        ),
-        icon: Icon(icon, color: Colors.white),
-        label: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
