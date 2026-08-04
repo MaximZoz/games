@@ -859,6 +859,216 @@ class _ShrinkingBorderPainter extends CustomPainter {
       old.baseColors != baseColors;
 }
 
+/// Рамка на весь экран: остаток времени «съедается» сверху вниз симметрично.
+///
+/// При [fraction]=1 — полный контур; по мере убывания верх пропадает, левая и
+/// правая стороны укорачиваются одинаково сверху, остаётся нижняя U-образная часть.
+class TurnTimerAppFrame extends StatefulWidget {
+  const TurnTimerAppFrame({
+    super.key,
+    required this.child,
+    required this.active,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.borderWidth = 3.0,
+    this.radius = 18,
+    this.onExpired,
+  });
+
+  final Widget child;
+  final bool active;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final double borderWidth;
+  final double radius;
+  final VoidCallback? onExpired;
+
+  @override
+  State<TurnTimerAppFrame> createState() => _TurnTimerAppFrameState();
+}
+
+class _TurnTimerAppFrameState extends State<TurnTimerAppFrame> {
+  Timer? _timer;
+  double _fraction = 1;
+  bool _expiredFired = false;
+
+  bool get _hasTimer => widget.turnTimeSec > 0 && widget.turnDeadline > 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick();
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) => _tick());
+  }
+
+  @override
+  void didUpdateWidget(covariant TurnTimerAppFrame oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.turnDeadline != widget.turnDeadline ||
+        oldWidget.active != widget.active) {
+      _expiredFired = false;
+      _tick();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _tick() {
+    if (!widget.active) return;
+    if (!_hasTimer) {
+      if (_fraction != 1 && mounted) setState(() => _fraction = 1);
+      return;
+    }
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final leftMs = widget.turnDeadline * 1000 - nowMs;
+    final f = (leftMs / (widget.turnTimeSec * 1000)).clamp(0.0, 1.0);
+    if ((f - _fraction).abs() > 0.002 && mounted) {
+      setState(() => _fraction = f);
+    }
+    if (leftMs <= 0 && !_expiredFired) {
+      _expiredFired = true;
+      widget.onExpired?.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) return widget.child;
+    final colors = TurnTimerStyle.colorsFor(
+      hasTimer: _hasTimer,
+      fraction: _hasTimer ? _fraction : 1,
+    );
+    return CustomPaint(
+      foregroundPainter: _TopDownFramePainter(
+        fraction: _hasTimer ? _fraction : 1,
+        colors: colors,
+        strokeWidth: widget.borderWidth,
+        radius: widget.radius,
+        baseColors: const [
+          AppColors.accentStart,
+          AppColors.accentEnd,
+        ],
+      ),
+      child: widget.child,
+    );
+  }
+}
+
+class _TopDownFramePainter extends CustomPainter {
+  _TopDownFramePainter({
+    required this.fraction,
+    required this.colors,
+    required this.strokeWidth,
+    required this.radius,
+    this.baseColors = const [AppColors.accentStart, AppColors.accentEnd],
+  });
+
+  final double fraction;
+  final List<Color> colors;
+  final double strokeWidth;
+  final double radius;
+  final List<Color> baseColors;
+
+  void _strokeFrame(Canvas canvas, Rect rect, double f, Paint paint) {
+    final left = rect.left;
+    final right = rect.right;
+    final top = rect.top;
+    final bottom = rect.bottom;
+    final h = rect.height;
+    final w = rect.width;
+    final rad = radius.clamp(0.0, math.min(w, h) / 2);
+
+    if (f >= 0.995) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(rad)),
+        paint,
+      );
+      return;
+    }
+
+    // Симметрия: обе стороны укорачиваются сверху одинаково.
+    final yCut = top + h * (1.0 - f);
+
+    final u = Path();
+    if (yCut < bottom - rad) {
+      u.moveTo(left, yCut);
+      u.lineTo(left, bottom - rad);
+      u.arcToPoint(
+        Offset(left + rad, bottom),
+        radius: Radius.circular(rad),
+        clockwise: false,
+      );
+      u.lineTo(right - rad, bottom);
+      u.arcToPoint(
+        Offset(right, bottom - rad),
+        radius: Radius.circular(rad),
+        clockwise: false,
+      );
+      u.lineTo(right, yCut);
+    } else if (yCut < bottom) {
+      // Почти только нижняя грань.
+      final t = ((bottom - yCut) / rad).clamp(0.0, 1.0);
+      final insetX = rad * (1 - t);
+      u.moveTo(left + insetX, bottom);
+      u.lineTo(right - insetX, bottom);
+    }
+    canvas.drawPath(u, paint);
+
+    // Верх: сужается от краёв к центру в конце полного цикла (f → 1).
+    if (f > 0.78) {
+      final topT = ((f - 0.78) / 0.22).clamp(0.0, 1.0);
+      final half = (w / 2 - rad) * topT + rad * topT;
+      final mid = (left + right) / 2;
+      canvas.drawLine(
+        Offset(mid - half, top),
+        Offset(mid + half, top),
+        paint,
+      );
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final inset = strokeWidth / 2 + 1;
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      size.width - strokeWidth - 2,
+      size.height - strokeWidth - 2,
+    );
+    final f = fraction.clamp(0.0, 1.0);
+    if (f <= 0.001) return;
+
+    final basePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth * 0.85
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = LinearGradient(colors: baseColors).createShader(rect);
+    _strokeFrame(canvas, rect, f, basePaint);
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = LinearGradient(colors: colors).createShader(rect);
+    _strokeFrame(canvas, rect, f, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TopDownFramePainter old) =>
+      old.fraction != fraction ||
+      old.strokeWidth != strokeWidth ||
+      old.colors != colors ||
+      old.baseColors != baseColors ||
+      old.radius != radius;
+}
+
 /// Тонкая горизонтальная линия-прогресс внизу: укорачивается со временем.
 class TurnTimerBottomBar extends StatefulWidget {
   const TurnTimerBottomBar({
