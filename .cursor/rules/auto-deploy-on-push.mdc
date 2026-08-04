@@ -5,8 +5,11 @@ alwaysApply: true
 
 # Деплой только на дев-среду
 
-После **каждого `git push`** рабочей ветки деплоим **только DEV**
-(`multigameszozu-dev` через `fly.dev.toml` / `./launcher/deploy_dev.sh`).
+После **каждого коммита и `git push`** рабочей ветки сразу деплоим
+**только DEV** (`multigameszozu-dev` через `fly.dev.toml` /
+`./launcher/deploy_dev.sh`). Не откладывать деплой на конец сессии —
+push → deploy в том же ходе.
+
 Прод (`multigameszozu` / `fly.toml`) этим правилом **не** трогаем.
 
 ## Шаги

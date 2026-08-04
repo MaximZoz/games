@@ -253,10 +253,12 @@
         }
         function start() {
           try {
+            // auto_select: false — иначе One Tap тихо перелогинивает и
+            // сбрасывает единственную активную сессию (session_replaced).
             google.accounts.id.initialize({
               client_id: clientId,
               callback: onCred,
-              auto_select: true,
+              auto_select: false,
               cancel_on_tap_outside: true,
               use_fedcm_for_prompt: true,
               itp_support: true
