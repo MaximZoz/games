@@ -74,13 +74,13 @@ try { & $flyBin status --app $env:FLY_DEV_DB_NAME | Out-Null } catch { $dbExists
 
 if (-not $dbExists) {
     Write-Host "Создаю Postgres $($env:FLY_DEV_DB_NAME) (это займёт несколько минут)..."
+    # У fly postgres create нет флага --yes.
     & $flyBin postgres create `
         --name $env:FLY_DEV_DB_NAME `
         --region $env:FLY_REGION `
         --initial-cluster-size 1 `
         --vm-size shared-cpu-1x `
-        --volume-size 1 `
-        --yes
+        --volume-size 1
 } else {
     Write-Host "Postgres $($env:FLY_DEV_DB_NAME) уже есть — пропускаю create."
 }

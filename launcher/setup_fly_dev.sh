@@ -85,13 +85,13 @@ fi
 
 if [[ "$db_exists" -eq 0 ]]; then
   echo "Создаю Postgres $FLY_DEV_DB_NAME (это займёт несколько минут)..."
+  # У fly postgres create нет флага --yes; при полных флагах идёт без лишних вопросов.
   "$FLY_BIN" postgres create \
     --name "$FLY_DEV_DB_NAME" \
     --region "$FLY_REGION" \
     --initial-cluster-size 1 \
     --vm-size shared-cpu-1x \
-    --volume-size 1 \
-    --yes
+    --volume-size 1
 else
   echo "Postgres $FLY_DEV_DB_NAME уже есть — пропускаю create."
 fi
