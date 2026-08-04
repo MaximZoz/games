@@ -55,6 +55,8 @@ func (h *GamesHandler) serveDurak(w http.ResponseWriter, r *http.Request) {
 			h.LeaveLobby(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
+		case len(parts) == 3 && parts[2] == "cancel-invite" && r.Method == http.MethodPost:
+			h.CancelInvite(w, r, lobbyID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}

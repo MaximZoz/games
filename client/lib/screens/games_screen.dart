@@ -289,6 +289,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     child: _GamesTabSwitcher(
                       selectedTab: _selectedTab,
                       onTabChanged: _onTabChanged,
+                      lobbyBadgeCount: invites.length,
                     ),
                   ),
                 ),
@@ -327,21 +328,21 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     // Всегда matchmake: multi схлопывается на сервере в одно лобби.
                     onFindGame: () => _createGame(context, 'matchmake'),
                     onPlayOffline: playOffline,
-                    invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,
                     observation: observation,
-                    onAcceptInvite: _acceptInvite,
-                    onDeclineInvite: _declineInvite,
-                    onShowCreatorInfo: _showCreatorInfo,
-                    onShowInviteRules: _showInviteRules,
                     contentPadding: contentPadding,
                   ),
                   _LobbiesPageContent(
                     lobbiesAsync: lobbiesAsync,
+                    invites: isOffline ? const [] : invites,
                     isDesktop: isDesktop,
                     onJoinLobby: _joinLobby,
                     onShowLobbyRules: _showLobbyRulesInfo,
                     onRefresh: () => ref.invalidate(openLobbiesProvider),
+                    onAcceptInvite: _acceptInvite,
+                    onDeclineInvite: _declineInvite,
+                    onShowCreatorInfo: _showCreatorInfo,
+                    onShowInviteRules: _showInviteRules,
                     contentPadding: contentPadding,
                   ),
                 ],
@@ -823,13 +824,8 @@ class _GamesPageContent extends StatelessWidget {
     required this.onCreateGame,
     required this.onFindGame,
     required this.onPlayOffline,
-    required this.invites,
     required this.activeAsync,
     required this.observation,
-    required this.onAcceptInvite,
-    required this.onDeclineInvite,
-    required this.onShowCreatorInfo,
-    required this.onShowInviteRules,
     required this.contentPadding,
   });
 
@@ -849,13 +845,8 @@ class _GamesPageContent extends StatelessWidget {
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
   final VoidCallback onPlayOffline;
-  final List<GameInvite> invites;
   final AsyncValue<ActiveGameItem?> activeAsync;
   final ObservationItem? observation;
-  final void Function(BuildContext, GameInvite) onAcceptInvite;
-  final void Function(String, {String gameType}) onDeclineInvite;
-  final void Function(BuildContext, GameInvite) onShowCreatorInfo;
-  final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
 
   @override
@@ -864,9 +855,7 @@ class _GamesPageContent extends StatelessWidget {
       builder: (context, constraints) {
         return SingleChildScrollView(
           primary: false,
-          physics: (isDesktop || isPhoneLandscape(context) || isTablet(context))
-              ? const ClampingScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
             contentPadding,
             0,
@@ -962,69 +951,6 @@ class _GamesPageContent extends StatelessWidget {
                       );
                     },
                   ),
-                  if (invites.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Text(
-                        context.l10n.gamesInvitedYou,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final inviteContent = invites.map(
-                          (inv) => _InviteCard(
-                            inv: inv,
-                            onShowCreatorInfo: onShowCreatorInfo,
-                            onShowInviteRules: onShowInviteRules,
-                            onDeclineInvite: onDeclineInvite,
-                            onAcceptInvite: onAcceptInvite,
-                          ),
-                        );
-                        if (isDesktop) {
-                          final width = constraints.maxWidth;
-                          const minCardWidth = 360.0;
-                          const gap = 16.0;
-                          final crossAxisCount = (width / (minCardWidth + gap))
-                              .floor()
-                              .clamp(1, 4);
-                          final itemWidth =
-                              (width - gap * (crossAxisCount - 1)) /
-                                  crossAxisCount;
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: width),
-                              child: Wrap(
-                                spacing: gap,
-                                runSpacing: gap,
-                                alignment: WrapAlignment.center,
-                                children: inviteContent
-                                    .map((w) => SizedBox(
-                                          width: itemWidth,
-                                          child: w,
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                          );
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: inviteContent
-                              .map((w) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: w,
-                                  ))
-                              .toList(),
-                        );
-                      },
-                    ),
-                  ],
                   Builder(
                     builder: (context) {
                       final active = activeAsync.valueOrNull;
@@ -1095,19 +1021,85 @@ class _GamesPageContent extends StatelessWidget {
 class _LobbiesPageContent extends StatelessWidget {
   const _LobbiesPageContent({
     required this.lobbiesAsync,
+    required this.invites,
     required this.isDesktop,
     required this.onJoinLobby,
     required this.onShowLobbyRules,
     required this.onRefresh,
+    required this.onAcceptInvite,
+    required this.onDeclineInvite,
+    required this.onShowCreatorInfo,
+    required this.onShowInviteRules,
     required this.contentPadding,
   });
 
   final AsyncValue<List<LobbyItem>> lobbiesAsync;
+  final List<GameInvite> invites;
   final bool isDesktop;
   final void Function(BuildContext, String, {String gameType}) onJoinLobby;
   final void Function(BuildContext, LobbyItem) onShowLobbyRules;
   final VoidCallback onRefresh;
+  final void Function(BuildContext, GameInvite) onAcceptInvite;
+  final void Function(String, {String gameType}) onDeclineInvite;
+  final void Function(BuildContext, GameInvite) onShowCreatorInfo;
+  final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
+
+  Widget _invitesSection(BuildContext context) {
+    if (invites.isEmpty) return const SizedBox.shrink();
+    final inviteContent = invites.map(
+      (inv) => _InviteCard(
+        inv: inv,
+        onShowCreatorInfo: onShowCreatorInfo,
+        onShowInviteRules: onShowInviteRules,
+        onDeclineInvite: onDeclineInvite,
+        onAcceptInvite: onAcceptInvite,
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: Text(
+            context.l10n.gamesInvitedYou,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (isDesktop)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              const minCardWidth = 360.0;
+              const gap = 16.0;
+              final crossAxisCount =
+                  (width / (minCardWidth + gap)).floor().clamp(1, 4);
+              final itemWidth =
+                  (width - gap * (crossAxisCount - 1)) / crossAxisCount;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                alignment: WrapAlignment.center,
+                children: inviteContent
+                    .map((w) => SizedBox(width: itemWidth, child: w))
+                    .toList(),
+              );
+            },
+          )
+        else
+          ...inviteContent.map(
+            (w) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: w,
+            ),
+          ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1116,6 +1108,7 @@ class _LobbiesPageContent extends StatelessWidget {
         final minH =
             constraints.maxHeight.isFinite ? constraints.maxHeight : 400.0;
         return SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
           child: Align(
             alignment: Alignment.topLeft,
@@ -1126,9 +1119,10 @@ class _LobbiesPageContent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _invitesSection(context),
                   lobbiesAsync.when(
                     data: (lobbies) {
-                      if (lobbies.isEmpty) {
+                      if (lobbies.isEmpty && invites.isEmpty) {
                         return Padding(
                           padding: EdgeInsets.symmetric(
                             vertical: isDesktop ? 48 : 36,
@@ -1161,6 +1155,13 @@ class _LobbiesPageContent extends StatelessWidget {
                               ),
                             ],
                           ),
+                        );
+                      }
+                      if (lobbies.isEmpty) {
+                        return TextButton.icon(
+                          onPressed: onRefresh,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: Text(context.l10n.commonTryRefresh),
                         );
                       }
                       final lobbyCards = lobbies
@@ -2011,10 +2012,12 @@ class _GamesTabSwitcher extends StatelessWidget {
   const _GamesTabSwitcher({
     required this.selectedTab,
     required this.onTabChanged,
+    this.lobbyBadgeCount = 0,
   });
 
   final _GamesTab selectedTab;
   final void Function(_GamesTab) onTabChanged;
+  final int lobbyBadgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -2046,6 +2049,7 @@ class _GamesTabSwitcher extends StatelessWidget {
               isSelected: selectedTab == _GamesTab.lobbies,
               onTap: () => onTabChanged(_GamesTab.lobbies),
               isDesktop: isDesktop,
+              badgeCount: lobbyBadgeCount,
             ),
           ],
         ),
@@ -2061,6 +2065,7 @@ class _TabSegment extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.isDesktop,
+    this.badgeCount = 0,
   });
 
   final String label;
@@ -2068,6 +2073,7 @@ class _TabSegment extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final bool isDesktop;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -2083,7 +2089,7 @@ class _TabSegment extends StatelessWidget {
           child: Semantics(
             button: true,
             selected: isSelected,
-            label: label,
+            label: badgeCount > 0 ? '$label, $badgeCount' : label,
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 44),
               child: Padding(
@@ -2103,17 +2109,63 @@ class _TabSegment extends StatelessWidget {
                     ),
                     SizedBox(width: isDesktop ? 10 : 8),
                     Flexible(
-                      child: Text(
-                        label,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
-                          fontSize: isDesktop ? 15 : 14,
-                          color: isSelected
-                              ? AppColors.accentStart
-                              : AppColors.textSecondary,
-                        ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Padding(
+                            // Место под бейдж справа сверху от текста.
+                            padding: EdgeInsets.only(
+                              right: badgeCount > 0 ? 14 : 0,
+                              top: badgeCount > 0 ? 2 : 0,
+                            ),
+                            child: Text(
+                              label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                fontSize: isDesktop ? 15 : 14,
+                                color: isSelected
+                                    ? AppColors.accentStart
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (badgeCount > 0)
+                            Positioned(
+                              right: -2,
+                              top: -8,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade600,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  badgeCount > 99 ? '99+' : '$badgeCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],

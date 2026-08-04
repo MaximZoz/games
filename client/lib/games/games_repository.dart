@@ -1473,6 +1473,24 @@ class GamesRepository {
     }
   }
 
+  Future<void> cancelLobbyInvite(String lobbyId, String friendUserId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse(
+            '$apiBaseUrl/api/games/tictactoe/lobby/$lobbyId/cancel-invite'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'friend_user_id': friendUserId}),
+        operation: 'GamesRepository.cancelLobbyInvite',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+  }
+
   Future<JoinLobbyResult> joinLobby(String lobbyId) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(

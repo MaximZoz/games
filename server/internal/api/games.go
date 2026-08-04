@@ -334,6 +334,8 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.LeaveLobby(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
+		case len(parts) == 3 && parts[2] == "cancel-invite" && r.Method == http.MethodPost:
+			h.CancelInvite(w, r, lobbyID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
@@ -2564,7 +2566,8 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		return
 	}
 
-	if m["status"] != lobbyStatusWaitingInvite {
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
 		WriteErr(w, r, http.StatusBadRequest, "lobby invite expired")
 		return
 	}
@@ -2645,6 +2648,83 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"declined": true, "closed": true})
+}
+
+// CancelInvite — создатель/участник отзывает своё приглашение другу.
+// Лобби остаётся; приглашённый получает invite_cancelled и карточка пропадает.
+func (h *GamesHandler) CancelInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var body InviteBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	friendID, err := uuid.Parse(strings.TrimSpace(body.FriendUserID))
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid friend_user_id")
+		return
+	}
+
+	ctx := r.Context()
+	key := "lobby:" + lobbyID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
+		return
+	}
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
+		WriteErr(w, r, http.StatusBadRequest, "lobby not in invite mode")
+		return
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{m["creator_id"]}
+	}
+	isMember := false
+	for _, p := range players {
+		if p == userID.String() {
+			isMember = true
+			break
+		}
+	}
+	if !isMember && m["creator_id"] != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+
+	invitedKey := key + ":invited"
+	h.Rdb.SRem(ctx, invitedKey, friendID.String())
+	if m["invite_target_id"] == friendID.String() {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	clearUserActiveLobbyIfMatch(ctx, h.Rdb, friendID, lobbyID)
+
+	h.broadcast([]uuid.UUID{friendID}, map[string]any{
+		"type":     "invite_cancelled",
+		"lobby_id": lobbyID,
+		"user_id":  userID.String(),
+	})
+	// Участникам лобби — чтобы UI мог вернуть кнопку «Пригласить».
+	notify := []uuid.UUID{userID}
+	for _, pid := range players {
+		if u, e := uuid.Parse(pid); e == nil {
+			notify = append(notify, u)
+		}
+	}
+	h.broadcast(notify, map[string]any{
+		"type":      "lobby_updated",
+		"lobby_id":  lobbyID,
+		"cancelled": true,
+		"user_id":   friendID.String(),
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"cancelled": true})
 }
 
 // applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.

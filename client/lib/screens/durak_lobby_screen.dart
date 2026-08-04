@@ -11,6 +11,7 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException, formatStakeAmount, stakeCoinType;
@@ -35,8 +36,12 @@ class DurakLobbyScreen extends ConsumerStatefulWidget {
 }
 
 class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
+  /// Приглашение отправлено — кнопка «Отмена».
   final Set<String> _invited = {};
+  /// Друг отказался — «Отправлено» disabled.
+  final Set<String> _declined = {};
   final Set<String> _inviting = {};
+  final Set<String> _cancelling = {};
   bool _leaving = false;
   bool _linkCopied = false;
   Timer? _linkTimer;
@@ -80,7 +85,11 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
   }
 
   Future<void> _invite(String friendId) async {
-    if (_inviting.contains(friendId) || _invited.contains(friendId)) return;
+    if (_inviting.contains(friendId) ||
+        _invited.contains(friendId) ||
+        _declined.contains(friendId)) {
+      return;
+    }
     setState(() => _inviting.add(friendId));
     try {
       await ref
@@ -95,6 +104,30 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
       if (!mounted) return;
       setState(() => _inviting.remove(friendId));
       showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    }
+  }
+
+  Future<void> _cancelInvite(String friendId) async {
+    if (_cancelling.contains(friendId) || !_invited.contains(friendId)) return;
+    setState(() => _cancelling.add(friendId));
+    try {
+      await ref
+          .read(durakRepositoryProvider)
+          .cancelInvite(widget.lobbyId, friendId);
+      if (!mounted) return;
+      setState(() {
+        _invited.remove(friendId);
+        _cancelling.remove(friendId);
+      });
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      setState(() => _cancelling.remove(friendId));
+      final gone = e.statusCode == 404 || e.statusCode == 400;
+      if (gone) {
+        setState(() => _invited.remove(friendId));
+      } else {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
     }
   }
 
@@ -113,6 +146,19 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
   Widget build(BuildContext context) {
     final lobbyAsync = ref.watch(durakLobbyProvider(widget.lobbyId));
     final friendsAsync = ref.watch(friendsSnapshotProvider);
+
+    ref.listen(realtimeEventsProvider, (_, next) {
+      final data = next.valueOrNull;
+      if (data == null) return;
+      if (data['type']?.toString() != 'invite_declined') return;
+      final lobbyId = data['lobby_id']?.toString() ?? '';
+      final userId = data['user_id']?.toString() ?? '';
+      if (lobbyId != widget.lobbyId || userId.isEmpty) return;
+      setState(() {
+        _invited.remove(userId);
+        _declined.add(userId);
+      });
+    });
 
     // Автоматический переход в партию когда сервер стартовал игру.
     ref.listen(durakLobbyProvider(widget.lobbyId), (_, next) {
@@ -321,6 +367,8 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
               final f = list[i];
               final id = f.user.id;
               final invited = _invited.contains(id);
+              final declined = _declined.contains(id);
+              final cancelling = _cancelling.contains(id);
               final inviting = _inviting.contains(id);
               final p = presence[id];
               return Padding(
@@ -353,7 +401,11 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: invited || inviting ? null : () => _invite(id),
+                      onPressed: inviting || cancelling || declined
+                          ? null
+                          : invited
+                              ? () => unawaited(_cancelInvite(id))
+                              : () => unawaited(_invite(id)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.accentStart,
                         side: BorderSide(
@@ -363,7 +415,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 8),
                       ),
-                      child: inviting
+                      child: (inviting || cancelling)
                           ? const SizedBox(
                               width: 18,
                               height: 18,
@@ -372,7 +424,13 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
                                 color: AppColors.accentStart,
                               ),
                             )
-                          : Text(invited ? 'Отправлено' : 'Пригласить'),
+                          : Text(
+                              declined
+                                  ? context.l10n.lobbyInviteSentShort
+                                  : invited
+                                      ? context.l10n.commonCancel
+                                      : context.l10n.lobbyInvite,
+                            ),
                     ),
                   ],
                 ),

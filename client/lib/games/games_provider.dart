@@ -117,6 +117,14 @@ final gameInvitesProvider =
         }
         return;
       }
+      // Создатель отозвал приглашение — карточка должна исчезнуть.
+      if (type == 'invite_cancelled') {
+        final lobbyId = data['lobby_id']?.toString();
+        if (lobbyId != null && lobbyId.isNotEmpty) {
+          notifier.remove(lobbyId);
+        }
+        return;
+      }
       // Приглашение больше не актуально: лобби закрыто, игра началась, или
       // создатель/соперник ушёл.
       if (type == 'lobby_updated' || type == 'game_started') {

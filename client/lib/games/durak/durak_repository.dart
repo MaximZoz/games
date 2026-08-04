@@ -505,6 +505,20 @@ class DurakRepository {
     if (r.statusCode != 200) _fail(r);
   }
 
+  Future<void> cancelInvite(String lobbyId, String friendUserId) async {
+    final r = await _sendAuth((token) => ApiClient.post(
+          Uri.parse(
+              '$apiBaseUrl/api/games/durak/lobby/$lobbyId/cancel-invite'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'friend_user_id': friendUserId}),
+          operation: 'DurakRepository.cancelInvite',
+        ));
+    if (r.statusCode != 200) _fail(r);
+  }
+
   Future<DurakGameView> getGame(String gameId) async {
     final r = await _sendAuth((token) => ApiClient.get(
           Uri.parse('$apiBaseUrl/api/games/durak/game/$gameId'),

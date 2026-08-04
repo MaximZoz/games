@@ -99,8 +99,12 @@ const List<IconData> _presetAvatarIcons = [
 ];
 
 class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
+  /// Приглашение отправлено — кнопка «Отмена».
   final Set<String> _invitedFriendIds = {};
+  /// Друг отказался — кнопка «Отправлено» disabled.
+  final Set<String> _declinedFriendIds = {};
   final Set<String> _invitingFriendIds = {};
+  final Set<String> _cancellingFriendIds = {};
   final Set<String> _friendRequestInFlight = {};
   bool _isLeaving = false;
   bool _isJoining = false;
@@ -157,6 +161,16 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         // lobby_updated меняет состав — чаты не трогаем (badge обновится по chat_*).
         if (type == 'chat_message' || type == 'chat_list_changed') {
           refreshChatsList(ref, force: true).catchError((_) {});
+        }
+        if (type == 'invite_declined') {
+          final lobbyId = event['lobby_id']?.toString() ?? '';
+          final userId = event['user_id']?.toString() ?? '';
+          if (lobbyId == widget.lobbyId && userId.isNotEmpty && mounted) {
+            setState(() {
+              _invitedFriendIds.remove(userId);
+              _declinedFriendIds.add(userId);
+            });
+          }
         }
       },
       child: SwipeBackScope(
@@ -754,7 +768,9 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               final friendPresence = presence[friendId];
               final statusText = formatPresenceStatus(friendPresence);
               final isInvited = _invitedFriendIds.contains(friendId);
+              final isDeclined = _declinedFriendIds.contains(friendId);
               final isInviting = _invitingFriendIds.contains(friendId);
+              final isCancelling = _cancellingFriendIds.contains(friendId);
               return Padding(
                 key: ValueKey('lobby-invite-$friendId'),
                 padding: const EdgeInsets.only(bottom: 8),
@@ -807,9 +823,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: isInviting || isInvited
+                      onPressed: isInviting || isCancelling || isDeclined
                           ? null
-                          : () => _inviteFriend(context, friendId),
+                          : isInvited
+                              ? () => unawaited(
+                                    _cancelInviteFriend(context, friendId),
+                                  )
+                              : () => _inviteFriend(context, friendId),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.accentStart,
                         side: BorderSide(
@@ -823,7 +843,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                           vertical: 8,
                         ),
                       ),
-                      child: isInviting
+                      child: (isInviting || isCancelling)
                           ? const SizedBox(
                               width: 18,
                               height: 18,
@@ -833,9 +853,11 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                               ),
                             )
                           : Text(
-                              isInvited
+                              isDeclined
                                   ? context.l10n.lobbyInviteSentShort
-                                  : context.l10n.lobbyInvite,
+                                  : isInvited
+                                      ? context.l10n.commonCancel
+                                      : context.l10n.lobbyInvite,
                             ),
                     ),
                   ],
@@ -1346,7 +1368,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
   Future<void> _inviteFriend(BuildContext context, String friendUserId) async {
     if (_invitingFriendIds.contains(friendUserId) ||
-        _invitedFriendIds.contains(friendUserId)) {
+        _invitedFriendIds.contains(friendUserId) ||
+        _declinedFriendIds.contains(friendUserId)) {
       return;
     }
     final fallbackError = context.l10n.commonTryLater;
@@ -1355,7 +1378,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       final repo = ref.read(gamesRepositoryProvider);
       await repo.inviteToLobby(widget.lobbyId, friendUserId);
       if (!mounted) return;
-      // Без всплывашки: кнопка → «Отправлено». Не уходим с экрана.
+      // Кнопка → «Отмена»: можно отозвать и пригласить снова.
       setState(() {
         _invitedFriendIds.add(friendUserId);
         _invitingFriendIds.remove(friendUserId);
@@ -1369,6 +1392,45 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         message: formatUserError(e, fallback: fallbackError),
         kind: AppSnackKind.error,
       );
+    }
+  }
+
+  Future<void> _cancelInviteFriend(
+    BuildContext context,
+    String friendUserId,
+  ) async {
+    if (_cancellingFriendIds.contains(friendUserId) ||
+        !_invitedFriendIds.contains(friendUserId)) {
+      return;
+    }
+    final fallbackError = context.l10n.commonTryLater;
+    setState(() => _cancellingFriendIds.add(friendUserId));
+    try {
+      await ref
+          .read(gamesRepositoryProvider)
+          .cancelLobbyInvite(widget.lobbyId, friendUserId);
+      if (!mounted) return;
+      setState(() {
+        _invitedFriendIds.remove(friendUserId);
+        _cancellingFriendIds.remove(friendUserId);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _cancellingFriendIds.remove(friendUserId));
+      // Лобби уже нет — приглашение всё равно снимаем локально.
+      final gone = e is GamesException &&
+          (e.statusCode == 404 || e.statusCode == 400);
+      if (gone) {
+        setState(() => _invitedFriendIds.remove(friendUserId));
+      }
+      if (!context.mounted) return;
+      if (!gone) {
+        showAppSnackBar(
+          context,
+          message: formatUserError(e, fallback: fallbackError),
+          kind: AppSnackKind.error,
+        );
+      }
     }
   }
 
