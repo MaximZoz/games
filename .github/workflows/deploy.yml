@@ -87,10 +87,12 @@ jobs:
             echo "и добавь в Settings → Secrets and variables → Actions"
             exit 1
           fi
+          # --depot=false снижает риск deadline_exceeded на тяжёлой Flutter+Go сборке.
           flyctl deploy \
             --config "${{ steps.target.outputs.config }}" \
             --app "${{ steps.target.outputs.app }}" \
             --remote-only \
+            --depot=false \
             --yes
 
       - name: Smoke check /api/start

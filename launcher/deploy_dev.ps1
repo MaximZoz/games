@@ -83,7 +83,12 @@ foreach ($varName in $optionalVars) {
 Write-Host "Запускаю деплой DEV..."
 Push-Location $RootDir
 try {
-    & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --yes
+    # --depot=false: обход частых deadline_exceeded у Depot builder.
+    & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --depot=false --yes
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Повтор деплоя без --depot=false..."
+        & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --yes
+    }
 } finally {
     Pop-Location
 }

@@ -92,7 +92,11 @@ done
 echo "Запускаю деплой DEV..."
 (
   cd "$ROOT_DIR"
-  "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --yes
+  # --depot=false: обход частых deadline_exceeded у Depot builder на тяжёлой сборке Flutter+Go.
+  if ! "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --depot=false --yes; then
+    echo "Повтор деплоя без --depot=false..."
+    "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --yes
+  fi
 )
 
 echo "DEV деплой завершен: https://$FLY_APP_NAME.fly.dev"
