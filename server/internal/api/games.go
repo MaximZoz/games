@@ -2475,12 +2475,11 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 			remaining = append(remaining, p)
 		}
 	}
-	// Открытый поиск (matchmake) на 3-4 продолжает ждать игроков: если ушёл
-	// создатель, передаём лобби следующему, а не закрываем — иначе у
-	// оставшихся «Лобби не найдено» вместо «1/3» и продолжения поиска.
-	isOpenFind := m["mode"] == "matchmake"
+	// Если ушёл создатель, но в лобби ещё есть игроки — не закрываем:
+	// передаём creator следующему (и «Своя игра» invite, и matchmake).
+	// Иначе у оставшихся «Лобби не найдено» вместо продолжения приглашений.
 	dissolve := creatorID == userID.String()
-	if dissolve && isOpenFind && len(remaining) > 0 {
+	if dissolve && len(remaining) > 0 {
 		newCreator := remaining[0]
 		h.Rdb.HSet(ctx, key, "creator_id", newCreator)
 		creatorID = newCreator
@@ -2549,15 +2548,24 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	h.broadcast(rest, map[string]any{
 		"type":          "lobby_updated",
 		"lobby_id":      lobbyID,
+		"creator_id":    creatorID,
 		"player_ids":    remaining,
 		"players_count": len(remaining),
 		"players":       h.loadLobbyPlayers(ctx, remaining),
 		"left_user_id":  userID.String(),
 	})
 	h.broadcast(rest, map[string]any{"type": "chat_list_changed"})
+	// Состав публичного поиска изменился — обновить вкладку «Лобби».
+	if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
+		h.notifyPublicLobbiesChanged()
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": false})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"left":       true,
+		"closed":     false,
+		"creator_id": creatorID,
+	})
 }
 
 func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {

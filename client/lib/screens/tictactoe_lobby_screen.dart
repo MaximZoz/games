@@ -20,6 +20,7 @@ import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -641,70 +642,23 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     await refreshChatsList(ref, force: true).catchError((_) {});
   }
 
-  /// Общая всплывашка с правилами (как в экране игры).
+  /// Общий диалог правил — ставка из лобби, как на карточке создания.
   void _showRules(BuildContext context, LobbyItem lobby) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 700;
-    showDialog<void>(
+    showGameRulesDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 80 : 14,
-          vertical: isDesktop ? 40 : 20,
-        ),
-        backgroundColor: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isDesktop ? 380 : double.infinity,
-          ),
-          child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        context.l10n.gamesRulesTitle,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.commonClose,
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: buildTictactoeRulesTextWidget(
-                      variant: lobby.variant,
-                      gridSize: lobby.gridSize,
-                      turnTimeSec: lobby.turnTimeSec,
-                      swapRule: lobby.swapRule,
-                      firstMoveRestriction: lobby.firstMoveRestriction,
-                      // В «Своя игра» ставок нет — не показываем строку ставки.
-                      stakeBronze: 0,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+      title: context.l10n.gamesRulesTitle,
+      closeLabel: context.l10n.commonClose,
+      content: buildTictactoeRulesTextWidget(
+        variant: lobby.variant,
+        gridSize: lobby.gridSize,
+        turnTimeSec: lobby.turnTimeSec,
+        swapRule: lobby.swapRule,
+        firstMoveRestriction: lobby.firstMoveRestriction,
+        stakeBronze: lobby.stakeBronze,
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          height: 1.35,
         ),
       ),
     );
@@ -1461,27 +1415,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   Future<void> _confirmLeaveLobby(BuildContext context) async {
     if (_isLeaving) return;
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
+    final ok = await confirmLeaveLobbyDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.lobbyLeaveTitle),
-        content: Text(l10n.lobbyLeaveConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
-            child: Text(l10n.lobbyLeave),
-          ),
-        ],
-      ),
+      title: l10n.lobbyLeaveTitle,
+      message: l10n.lobbyLeaveConfirm,
+      cancelLabel: l10n.commonCancel,
+      leaveLabel: l10n.lobbyLeave,
     );
-    if (ok == true && context.mounted) {
+    if (ok && context.mounted) {
       _leaveLobby(context);
     }
   }

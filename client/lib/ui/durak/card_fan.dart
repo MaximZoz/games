@@ -162,7 +162,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                         : n <= 20
                             ? 0.9
                             : 0.84;
-    if (extracting) s *= 1.07;
+    // Только размер при вытаскивании — жесты не трогаем.
+    if (extracting) s *= 1.1;
     return s;
   }
 
@@ -173,16 +174,17 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final cardW = base.width * scale;
 
     if (widget.spacing != null && widget.maxWidth == null) {
-      return widget.spacing! * (extracting ? 1.1 : 1.0);
+      return widget.spacing! * (extracting ? 1.14 : 1.0);
     }
 
     final maxW = widget.maxWidth;
     if (maxW != null && maxW > 40) {
-      const pad = 20.0;
+      const pad = 12.0;
       final avail = max(0.0, maxW - pad - cardW);
       var s = avail / (n - 1);
       final minS = cardW * (n > 16 ? 0.16 : n > 10 ? 0.22 : n > 6 ? 0.3 : 0.4);
-      final maxS = cardW * (extracting ? 0.95 : 0.82);
+      // Вытащили карту — растянуть веер на всю ширину экрана.
+      final maxS = cardW * (extracting ? 1.35 : 0.78);
       s = s.clamp(minS, maxS);
       return s;
     }
@@ -207,7 +209,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     } else {
       s = w * 0.7;
     }
-    if (extracting) s *= 1.12;
+    if (extracting) s *= 1.18;
     return s;
   }
 

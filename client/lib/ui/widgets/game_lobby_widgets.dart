@@ -5,6 +5,9 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
+/// Общие виджеты лобби (крестики / дурак).
+/// См. также `games/shared_lobby.dart` — общая сессия и leave/creator.
+///
 /// Чип «Ставки N 🥉» — общий для лобби всех игр (2 игрока).
 class LobbyStakeChip extends StatelessWidget {
   const LobbyStakeChip({

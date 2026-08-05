@@ -16,6 +16,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException, formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -115,7 +116,10 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
             );
         await repo.inviteFriend(lobbyId, friendId);
         if (!mounted) return;
-        context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        context.go(
+          '${LobbyGameKind.lobbyPath(lobbyId, gameType: LobbyGameKind.durak)}'
+          '?mode=invite',
+        );
         return;
       }
       if (!mounted) return;
