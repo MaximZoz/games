@@ -174,29 +174,26 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final activeAsync = ref.watch(activeGameProvider);
     final observation = ref.watch(observationGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
-    // После «Присоединиться» не оставляем список с карточкой лобби —
-    // сразу экран «Войти в игру».
+    // После GetActive / join — сразу в активную партию или «Войти в игру».
     ref.listen<AsyncValue<ActiveGameItem?>>(activeGameProvider, (prev, next) {
       final active = next.valueOrNull;
-      if (active == null ||
-          active.type != 'lobby' ||
-          active.lobbyId == null ||
-          active.lobbyId!.isEmpty) {
+      if (active == null) return;
+      final path =
+          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+      if (path != '/games') return;
+      if (hasBlockingActiveMatch(active)) {
+        goToActiveSession(context, active);
         return;
       }
+      if (!hasActiveLobby(active)) return;
       // Живая партия (пин) важнее автоухода в лобби-инвайт.
-      if (ref.read(blockingGamePinProvider)?.trim().isNotEmpty ?? false) {
+      if (ref.read(blockingGamePinProvider)?.gameId.isNotEmpty ?? false) {
         return;
       }
       if (hasBlockingActiveMatch(prev?.valueOrNull)) {
         return;
       }
-      final path =
-          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
-      if (path != '/games') return;
-      // Ветвим по gameType — иначе durak-лобби уводило в tictactoe.
-      final gt = active.gameType.isEmpty ? 'tictactoe' : active.gameType;
-      context.go('/games/$gt/lobby/${active.lobbyId}?mode=invite');
+      goToActiveSession(context, active);
     });
     // Подхватываем конфиг из БД, когда он лениво догрузится.
     ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider,
@@ -235,13 +232,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         if (mounted) setState(() => _selectedTab = _GamesTab.games);
       });
     }
-    // Уже есть активное лобби при открытии списка — уйти в «Войти в игру».
-    final activeLobby = activeAsync.valueOrNull;
+    // Уже есть активная партия/лобби при открытии списка — сразу туда.
+    final activeSession = activeAsync.valueOrNull;
     if (!isOffline &&
-        activeLobby != null &&
-        activeLobby.type == 'lobby' &&
-        activeLobby.lobbyId != null &&
-        activeLobby.lobbyId!.isNotEmpty) {
+        activeSession != null &&
+        (hasBlockingActiveMatch(activeSession) ||
+            hasActiveLobby(activeSession))) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final path = GoRouter.of(context)
@@ -250,10 +246,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             .uri
             .path;
         if (path != '/games') return;
-        final gt = activeLobby.gameType.isEmpty
-            ? 'tictactoe'
-            : activeLobby.gameType;
-        context.go('/games/$gt/lobby/${activeLobby.lobbyId}?mode=invite');
+        goToActiveSession(context, activeSession);
       });
     }
 
@@ -357,7 +350,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   Future<void> _createGame(BuildContext context, String mode) async {
     // Async: после конца партии пин/кэш могли ещё держать старый gameId.
-    if (await blockJoinIfBusyAsync(context, ref)) return;
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
     if (!context.mounted) return;
     setState(() {
       if (mode == 'invite') {
@@ -409,6 +404,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
               : formatUserError(e),
           kind: AppSnackKind.error,
         );
+        if (isFinishCurrentGameError(e)) {
+          try {
+            final active =
+                await ref.read(activeGameProvider.notifier).refresh();
+            if (context.mounted && active != null) {
+              goToActiveSession(context, active);
+            }
+          } catch (_) {}
+        }
       }
     } finally {
       if (mounted) {
@@ -445,7 +449,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                   gameType: 'durak',
                 ),
               );
-          pinBlockingGame(ref, res.gameId);
+          pinBlockingGame(ref, res.gameId, gameType: 'durak');
           if (context.mounted) {
             context.go('/games/durak/game/${res.gameId}');
           }
@@ -677,7 +681,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                   gameType: 'durak',
                 ),
               );
-          pinBlockingGame(ref, res.gameId);
+          pinBlockingGame(ref, res.gameId, gameType: 'durak');
           context.go('/games/durak/game/${res.gameId}');
           return;
         }
@@ -1412,7 +1416,9 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   bool _finding = false;
 
   Future<void> _create(String mode) async {
-    if (await blockJoinIfBusyAsync(context, ref)) return;
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
     if (!context.mounted) return;
     setState(() {
       _creating = mode == 'invite';
@@ -1440,7 +1446,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
                 gameType: 'durak',
               ),
             );
-        pinBlockingGame(ref, gameId);
+        pinBlockingGame(ref, gameId, gameType: 'durak');
         context.push('/games/durak/game/$gameId');
       } else if (lobbyId.isEmpty) {
         // Сервер не вернул ни лобби, ни партию — не строим битый роут.
@@ -1468,6 +1474,15 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
             : formatUserError(e),
         kind: AppSnackKind.error,
       );
+      // Сервер видит активную партию, а кэш мог отстать — увести в неё.
+      if (isFinishCurrentGameError(e)) {
+        try {
+          final active =
+              await ref.read(activeGameProvider.notifier).refresh();
+          if (!mounted) return;
+          if (active != null) goToActiveSession(context, active);
+        } catch (_) {}
+      }
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(context,

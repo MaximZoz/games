@@ -122,7 +122,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _providerBindingsInitialized = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      pinBlockingGame(ref, widget.gameId);
+      pinBlockingGame(ref, widget.gameId, gameType: 'durak');
       final prev = ref.read(activeGameProvider).valueOrNull;
       if (prev?.gameId != widget.gameId) {
         ref.read(activeGameProvider.notifier).setLocal(

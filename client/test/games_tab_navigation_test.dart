@@ -11,6 +11,10 @@ void main() {
         ),
         'abc-123',
       );
+      expect(
+        gameIdFromPathForTest('/games/durak/game/d-99'),
+        'd-99',
+      );
       expect(gameIdFromPathForTest('/games'), isNull);
       expect(gameIdFromPathForTest('/games/tictactoe/lobby/x'), isNull);
     });

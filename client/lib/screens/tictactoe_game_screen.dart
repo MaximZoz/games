@@ -555,7 +555,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             // Пин/observation — только после кадра (не в build).
             if (!isOver && !eliminatedNow) {
               final alreadyPinned =
-                  ref.read(blockingGamePinProvider) == widget.gameId;
+                  ref.read(blockingGamePinProvider)?.gameId == widget.gameId;
               if (!alreadyPinned) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;

@@ -44,12 +44,7 @@ bool _activeGameUsable(ActiveGameItem? active) {
   return false;
 }
 
-String? _gameIdFromPath(String path) {
-  const prefix = '/games/tictactoe/game/';
-  if (!path.startsWith(prefix)) return null;
-  final id = path.substring(prefix.length).split('/').first.trim();
-  return id.isEmpty ? null : id;
-}
+String? _gameIdFromPath(String path) => gameIdFromGamePath(path);
 
 /// Для unit-тестов навигации таба «Игры».
 bool activeGameUsableForTest(ActiveGameItem? active) => _activeGameUsable(active);
@@ -64,21 +59,27 @@ void _goGamesTab(
   String currentPath,
   ActiveGameItem? active, {
   String? pinnedLiveGameId,
+  String? pinnedLiveGameType,
   String? observingGameId,
 }) {
   final pathGameId = _gameIdFromPath(currentPath);
   final pinned = pinnedLiveGameId?.trim() ?? '';
   final observing = observingGameId?.trim() ?? '';
 
-  // Активная партия (пин или active) — всегда в неё.
+  // Активная партия (пин или active) — всегда в неё (с учётом gameType).
   String? liveGameId;
+  var liveGameType = 'tictactoe';
   if (hasBlockingActiveMatch(active)) {
     liveGameId = active!.gameId!.trim();
+    liveGameType = normalizeGameType(active.gameType);
   } else if (pinned.isNotEmpty) {
     liveGameId = pinned;
+    liveGameType = normalizeGameType(
+      pinnedLiveGameType ?? gameTypeFromGamePath(currentPath),
+    );
   }
   if (liveGameId != null && liveGameId.isNotEmpty) {
-    final dest = '/games/tictactoe/game/$liveGameId';
+    final dest = gamePathFor(liveGameId, gameType: liveGameType);
     if (currentPath == dest || currentPath.startsWith('$dest/')) return;
     context.go(dest);
     return;
@@ -101,14 +102,19 @@ void _goGamesTab(
       active.type == 'lobby' &&
       active.lobbyId != null &&
       active.lobbyId!.isNotEmpty) {
-    final dest = '/games/tictactoe/lobby/${active.lobbyId}';
+    final dest = lobbyPathFor(
+      active.lobbyId!,
+      gameType: normalizeGameType(active.gameType),
+    );
     // Уже в этом лобби (с ?mode=… или без) — не уходим на список игр.
     if (currentPath == dest || currentPath.startsWith(dest)) return;
     context.go('$dest?mode=invite');
     return;
   }
   // Пока active подгружается после lobby_updated — не сбрасывать экран лобби.
-  if (active == null && currentPath.startsWith('/games/tictactoe/lobby/')) {
+  if (active == null &&
+      (currentPath.startsWith('/games/tictactoe/lobby/') ||
+          currentPath.startsWith('/games/durak/lobby/'))) {
     return;
   }
   if (currentPath != '/games') {
@@ -425,17 +431,18 @@ class AppShell extends ConsumerWidget {
         final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
         final cacheUsable = _activeGameUsable(cachedActive);
-        final pinnedLive =
-            ref.read(blockingGamePinProvider)?.trim() ?? '';
+        final pinnedLive = ref.read(blockingGamePinProvider);
+        final pinnedLiveId = pinnedLive?.gameId.trim() ?? '';
         final observingId =
             ref.read(observationGameProvider)?.gameId.trim() ?? '';
         // На экране живой партии — закрепить active, чтобы refresh не «съел» матч.
         final pathGameId = _gameIdFromPath(currentPath);
+        final pathGameType = gameTypeFromGamePath(currentPath);
         final pathIsObserving =
             pathGameId != null && observingId.isNotEmpty && pathGameId == observingId;
         final pathIsLive = pathGameId != null &&
             !pathIsObserving &&
-            (pinnedLive == pathGameId || cachedActive?.gameId == pathGameId);
+            (pinnedLiveId == pathGameId || cachedActive?.gameId == pathGameId);
         final livePathForPin = pathGameId;
         if (pathIsLive &&
             livePathForPin != null &&
@@ -448,6 +455,8 @@ class AppShell extends ConsumerWidget {
               gameId: livePathForPin,
               lobbyId: cachedActive?.lobbyId,
               isMyTurn: cachedActive?.isMyTurn ?? false,
+              gameType: pathGameType ??
+                  normalizeGameType(cachedActive?.gameType),
             ),
           );
         }
@@ -457,9 +466,13 @@ class AppShell extends ConsumerWidget {
             context,
             currentPath,
             activeForNav ?? cachedActive,
-            pinnedLiveGameId: pinnedLive.isNotEmpty
-                ? pinnedLive
+            pinnedLiveGameId: pinnedLiveId.isNotEmpty
+                ? pinnedLiveId
                 : (pathIsLive ? pathGameId : null),
+            pinnedLiveGameType: pinnedLive?.gameType ??
+                pathGameType ??
+                activeForNav?.gameType ??
+                cachedActive?.gameType,
             observingGameId: observingId.isNotEmpty ? observingId : null,
           );
         });
@@ -474,8 +487,11 @@ class AppShell extends ConsumerWidget {
             if (ref.read(activeGameProvider.notifier).epoch != epochAtTap) {
               return;
             }
-            final pinNow =
-                ref.read(blockingGamePinProvider)?.trim() ?? pinnedLive;
+            final pinNowItem = ref.read(blockingGamePinProvider);
+            final pinNow = pinNowItem?.gameId.trim() ?? pinnedLiveId;
+            final pinNowType = pinNowItem?.gameType ??
+                pinnedLive?.gameType ??
+                pathGameType;
             final obsNow =
                 ref.read(observationGameProvider)?.gameId.trim() ?? observingId;
             // Живая партия на экране / в пине важнее лобби-инвайта с GetActive.
@@ -489,6 +505,8 @@ class AppShell extends ConsumerWidget {
                       gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
+                      gameType: pathGameType ??
+                          normalizeGameType(cachedActive?.gameType),
                     ),
                   );
               return;
@@ -503,6 +521,8 @@ class AppShell extends ConsumerWidget {
                       gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
+                      gameType: pathGameType ??
+                          normalizeGameType(cachedActive?.gameType),
                     ),
                   );
               return;
@@ -530,7 +550,8 @@ class AppShell extends ConsumerWidget {
             if (cacheUsable &&
                 fresh.type == cachedActive?.type &&
                 fresh.gameId == cachedActive?.gameId &&
-                fresh.lobbyId == cachedActive?.lobbyId) {
+                fresh.lobbyId == cachedActive?.lobbyId &&
+                fresh.gameType == cachedActive?.gameType) {
               return;
             }
             final nowPath =
@@ -541,6 +562,7 @@ class AppShell extends ConsumerWidget {
                 nowPath,
                 fresh,
                 pinnedLiveGameId: pinNow.isNotEmpty ? pinNow : null,
+                pinnedLiveGameType: pinNowType,
                 observingGameId: obsNow.isNotEmpty ? obsNow : null,
               );
             });
@@ -552,6 +574,8 @@ class AppShell extends ConsumerWidget {
                       gameId: livePathForPin,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
+                      gameType: pathGameType ??
+                          normalizeGameType(cachedActive?.gameType),
                     ),
                   );
             }

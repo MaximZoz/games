@@ -21,6 +21,43 @@ String lobbyPathPrefixFor(String gameType) {
   return _lobbyPathPrefixes[gameType] ?? _lobbyPathPrefixes['tictactoe']!;
 }
 
+/// Нормализованный game_type ('tictactoe' | 'durak').
+String normalizeGameType(String? gameType) {
+  final gt = gameType?.trim() ?? '';
+  if (gt.isEmpty) return 'tictactoe';
+  return _gamePathPrefixes.containsKey(gt) ? gt : 'tictactoe';
+}
+
+/// Путь к партии: `/games/<type>/game/<id>`.
+String gamePathFor(String gameId, {String gameType = 'tictactoe'}) {
+  return '${gamePathPrefixFor(normalizeGameType(gameType))}${gameId.trim()}';
+}
+
+/// Путь к лобби: `/games/<type>/lobby/<id>`.
+String lobbyPathFor(String lobbyId, {String gameType = 'tictactoe'}) {
+  return '${lobbyPathPrefixFor(normalizeGameType(gameType))}${lobbyId.trim()}';
+}
+
+/// gameId из `/games/<type>/game/:id` (tictactoe / durak).
+String? gameIdFromGamePath(String? location) {
+  final path = (location ?? '').split('?').first.trim();
+  for (final prefix in _gamePathPrefixes.values) {
+    if (!path.startsWith(prefix)) continue;
+    final id = path.substring(prefix.length).split('/').first.trim();
+    if (id.isNotEmpty) return id;
+  }
+  return null;
+}
+
+/// game_type из пути партии, иначе null.
+String? gameTypeFromGamePath(String? location) {
+  final path = (location ?? '').split('?').first.trim();
+  for (final entry in _gamePathPrefixes.entries) {
+    if (path.startsWith(entry.value)) return entry.key;
+  }
+  return null;
+}
+
 /// Совместимая константа для legacy-кода. Новый код — используйте
 /// [gamePathPrefixFor].
 const tictactoeGamePathPrefix = '/games/tictactoe/game/';

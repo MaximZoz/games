@@ -15,6 +15,20 @@ void main() {
       expect(lobbyPathPrefixFor('durak'), '/games/durak/lobby/');
       expect(lobbyPathPrefixFor('tictactoe'), '/games/tictactoe/lobby/');
     });
+
+    test('gamePathFor / lobbyPathFor учитывают тип', () {
+      expect(gamePathFor('g1', gameType: 'durak'), '/games/durak/game/g1');
+      expect(
+        lobbyPathFor('l1', gameType: 'durak'),
+        '/games/durak/lobby/l1',
+      );
+    });
+
+    test('gameIdFromGamePath / gameTypeFromGamePath', () {
+      expect(gameIdFromGamePath('/games/durak/game/abc'), 'abc');
+      expect(gameTypeFromGamePath('/games/durak/game/abc'), 'durak');
+      expect(gameTypeFromGamePath('/games/tictactoe/game/x'), 'tictactoe');
+    });
   });
 
   group('GameNavigationCoordinator', () {
