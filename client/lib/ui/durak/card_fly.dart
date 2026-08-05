@@ -127,6 +127,7 @@ Future<void> playCardsFlyAnimation({
   Duration stagger = const Duration(milliseconds: 45),
   Curve curve = Curves.easeInOutCubic,
   bool faceDown = false,
+  List<double>? beginAngles,
   List<double>? endAngles,
   double beginScale = 1.0,
   double endScale = 1.0,
@@ -143,6 +144,8 @@ Future<void> playCardsFlyAnimation({
       if (!context.mounted) return;
       final from = froms[i.clamp(0, froms.length - 1)];
       final to = tos[i.clamp(0, tos.length - 1)];
+      final beginA =
+          beginAngles != null && i < beginAngles.length ? beginAngles[i] : 0.0;
       final endA = endAngles != null && i < endAngles.length ? endAngles[i] : 0.0;
       final ticket = await playCardFlyAnimation(
         context: context,
@@ -154,6 +157,7 @@ Future<void> playCardsFlyAnimation({
         curve: curve,
         faceDown: faceDown,
         flipToFace: faceDown,
+        beginAngle: beginA,
         endAngle: endA,
         beginScale: beginScale,
         endScale: endScale,

@@ -14,7 +14,7 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, formatStakeAmount, stakeCoinType;
+    show ActiveGameItem, GamesException, formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -92,9 +92,31 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     }
     setState(() => _inviting.add(friendId));
     try {
-      await ref
-          .read(durakRepositoryProvider)
-          .inviteFriend(widget.lobbyId, friendId);
+      final repo = ref.read(durakRepositoryProvider);
+      var lobbyId = widget.lobbyId;
+      try {
+        await repo.inviteFriend(lobbyId, friendId);
+      } on GamesException catch (e) {
+        // Лобби закрыли после отказа другого — пересоздаём и зовём снова.
+        if (e.statusCode != 404) rethrow;
+        final lobby = ref.read(durakLobbyProvider(widget.lobbyId)).valueOrNull;
+        final created = await repo.createLobby(
+          mode: 'invite',
+          maxPlayers: lobby?.maxPlayers ?? 2,
+          deckSize: lobby?.deckSize ?? 36,
+          gameMode: lobby?.gameMode ?? 'podkidnoi',
+          turnTimeSec: lobby?.turnTimeSec ?? 0,
+          stakeBronze: lobby?.stakeBronze ?? 1,
+        );
+        lobbyId = created.lobbyId;
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        await repo.inviteFriend(lobbyId, friendId);
+        if (!mounted) return;
+        context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _invited.add(friendId);
