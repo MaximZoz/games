@@ -10,75 +10,6 @@ import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
-/// Всплывашка со статистикой игрока (из попапа профиля).
-Future<void> showGameStatsDialog(
-  BuildContext context, {
-  String? userId,
-  String? displayName,
-}) {
-  final l10n = context.l10n;
-  final isOwn = userId == null || userId.isEmpty;
-  final title = isOwn
-      ? l10n.statsTitle
-      : (displayName?.trim().isNotEmpty == true
-          ? displayName!.trim()
-          : l10n.commonPlayer);
-  return showDialog<void>(
-    context: context,
-    builder: (dialogContext) {
-      final maxH = MediaQuery.sizeOf(dialogContext).height * 0.85;
-      return Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-        backgroundColor: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 420, maxHeight: maxH),
-          child: GradientCard(
-            animate: false,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.zero,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 4, 4, 0),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: dialogContext.l10n.commonClose,
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.of(dialogContext).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  child: GameStatsBody(
-                    userId: userId,
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
-
 /// Полный экран статистики игрока: победы/ничьи/поражения, win-rate,
 /// время в игре, топ соперников (больше всего выиграл / проиграл).
 ///
@@ -136,7 +67,7 @@ class GameStatsScreen extends ConsumerWidget {
   }
 }
 
-/// Содержимое статистики — для экрана и всплывашки.
+/// Содержимое статистики.
 class GameStatsBody extends ConsumerWidget {
   const GameStatsBody({
     super.key,
