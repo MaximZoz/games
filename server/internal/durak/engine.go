@@ -287,8 +287,8 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	return nil
 }
 
-// Defend — отбить первую неотбитую пару.
-func (s *State) Defend(playerIdx int, card Card) error {
+// Defend — отбить неотбитую пару. pairIndex < 0 — первая, которую карта реально бьёт.
+func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
 	}
@@ -298,12 +298,22 @@ func (s *State) Defend(playerIdx int, card Card) error {
 	if !s.handContains(playerIdx, card) {
 		return ErrCardNotInHand
 	}
-	idx := s.UndefendedIndex()
-	if idx < 0 {
-		return ErrBadDefend
-	}
-	if !card.Beats(s.Table[idx].Attack, s.Trump) {
-		return ErrBadDefend
+	idx := pairIndex
+	if idx >= 0 && idx < len(s.Table) && s.Table[idx].Defense == nil {
+		if !card.Beats(s.Table[idx].Attack, s.Trump) {
+			return ErrBadDefend
+		}
+	} else {
+		idx = -1
+		for i, p := range s.Table {
+			if p.Defense == nil && card.Beats(p.Attack, s.Trump) {
+				idx = i
+				break
+			}
+		}
+		if idx < 0 {
+			return ErrBadDefend
+		}
 	}
 	s.removeFromHand(playerIdx, card)
 	s.Table[idx].Defense = &card
@@ -529,7 +539,7 @@ func (s *State) LegalAttackCards(idx int) []Card {
 	return out
 }
 
-// LegalDefendCards — какие карты игрока [idx] могут бить текущую атаку.
+// LegalDefendCards — карты, которыми можно отбить хотя бы одну неотбитую атаку.
 func (s *State) LegalDefendCards(idx int) []Card {
 	if s.Status != StatusActive {
 		return nil
@@ -537,14 +547,13 @@ func (s *State) LegalDefendCards(idx int) []Card {
 	if idx != s.DefenderIndex() {
 		return nil
 	}
-	i := s.UndefendedIndex()
-	if i < 0 {
-		return nil
-	}
 	out := []Card{}
 	for _, c := range s.Hands[idx] {
-		if c.Beats(s.Table[i].Attack, s.Trump) {
-			out = append(out, c)
+		for _, p := range s.Table {
+			if p.Defense == nil && c.Beats(p.Attack, s.Trump) {
+				out = append(out, c)
+				break
+			}
 		}
 	}
 	return out

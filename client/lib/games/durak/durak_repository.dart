@@ -574,6 +574,7 @@ class DurakRepository {
     required String type,
     PlayingCard? card,
     List<PlayingCard>? cards,
+    int? pairIndex,
   }) async {
     final body = <String, dynamic>{'type': type};
     if (cards != null && cards.isNotEmpty) {
@@ -581,6 +582,9 @@ class DurakRepository {
           cards.map((c) => DurakApiCard.fromCard(c).toJson()).toList();
     } else if (card != null) {
       body['card'] = DurakApiCard.fromCard(card).toJson();
+    }
+    if (pairIndex != null) {
+      body['pair_index'] = pairIndex;
     }
     final r = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/durak/game/$gameId/move'),

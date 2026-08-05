@@ -87,7 +87,7 @@ class DurakBot {
       }
     }
     if (best != null) {
-      game.defend(best, playerIndex: index);
+      game.defend(best, playerIndex: index, pairIndex: undefendedIndex);
       return true;
     }
     if (game.canDefenderTake) {

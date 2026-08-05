@@ -58,7 +58,7 @@ func TestAttackDefendBito(t *testing.T) {
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase = %v", st.Phase)
 	}
-	if err := st.Defend(1, Card{7, Hearts}); err != nil {
+	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
 	if st.Phase != PhaseAttackFollow {
@@ -198,5 +198,47 @@ func TestTransferInPerevodnoi(t *testing.T) {
 	}
 	if st.DefenderIndex() != 0 {
 		t.Fatalf("defender = %d", st.DefenderIndex())
+	}
+}
+
+// Можно бить любую неотбитую атаку (не только первую), в т.ч. некозырем.
+func TestDefendAnyUndefendedPair(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{},
+			{{8, Clubs}, {10, Hearts}},
+		},
+		Table: []Pair{
+			{Attack: Card{6, Diamonds}},
+			{Attack: Card{6, Clubs}},
+		},
+		Trump:         Hearts,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	legal := st.LegalDefendCards(1)
+	hasEight := false
+	for _, c := range legal {
+		if c == (Card{8, Clubs}) {
+			hasEight = true
+			break
+		}
+	}
+	if !hasEight {
+		t.Fatalf("8♣ should be legal vs 6♣, got %v", legal)
+	}
+	// 8♣ не бьёт первую (6♦) — но бьёт вторую по pair_index.
+	if err := st.Defend(1, Card{8, Clubs}, 1); err != nil {
+		t.Fatalf("defend pair 1: %v", err)
+	}
+	if st.Table[1].Defense == nil || *st.Table[1].Defense != (Card{8, Clubs}) {
+		t.Fatalf("defense on pair 1 = %+v", st.Table[1].Defense)
+	}
+	if st.Table[0].Defense != nil {
+		t.Fatalf("pair 0 should stay undefended")
 	}
 }

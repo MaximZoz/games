@@ -661,9 +661,10 @@ func (h *GamesHandler) enrichDurakPlayersMeta(ctx context.Context, view map[stri
 // ---- DurakMove ----
 
 type durakMoveBody struct {
-	Type  string          `json:"type"`
-	Card  json.RawMessage `json:"card,omitempty"`
-	Cards json.RawMessage `json:"cards,omitempty"` // несколько карт атаки/подкида
+	Type      string          `json:"type"`
+	Card      json.RawMessage `json:"card,omitempty"`
+	Cards     json.RawMessage `json:"cards,omitempty"` // несколько карт атаки/подкида
+	PairIndex *int            `json:"pair_index,omitempty"` // индекс пары для defend
 }
 
 func parseDurakAttackCards(body durakMoveBody) ([]durak.Card, error) {
@@ -747,7 +748,11 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			WriteErr(w, r, http.StatusBadRequest, "bad card")
 			return
 		}
-		if err := state.Defend(idx, card); err != nil {
+		pairIdx := -1
+		if body.PairIndex != nil {
+			pairIdx = *body.PairIndex
+		}
+		if err := state.Defend(idx, card, pairIdx); err != nil {
 			WriteErr(w, r, http.StatusBadRequest, err.Error())
 			return
 		}

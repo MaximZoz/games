@@ -169,17 +169,20 @@ class DurakGame {
     return tableRanks.contains(card.rank.value);
   }
 
-  /// Можно ли [card] бить последнюю (первую неотбитую) карту атаки.
-  bool canDefendWith(PlayingCard card, int playerIndex) {
+  /// Можно ли [card] бить неотбитую атаку ([pairIndex] или любую).
+  bool canDefendWith(PlayingCard card, int playerIndex, {int? pairIndex}) {
     if (isOver) return false;
     if (playerIndex != defenderIndex) return false;
     if (!hands[playerIndex].contains(card)) return false;
-    final pair = table.cast<TablePair?>().firstWhere(
-          (p) => p!.defense == null,
-          orElse: () => null,
-        );
-    if (pair == null) return false;
-    return card.beats(pair.attack, trump);
+    if (pairIndex != null) {
+      if (pairIndex < 0 || pairIndex >= table.length) return false;
+      final pair = table[pairIndex];
+      if (pair.defense != null) return false;
+      return card.beats(pair.attack, trump);
+    }
+    return table.any(
+      (p) => p.defense == null && card.beats(p.attack, trump),
+    );
   }
 
   bool get canDefenderTake => turn == DurakTurn.defender && table.isNotEmpty;
@@ -238,14 +241,20 @@ class DurakGame {
     turn = DurakTurn.defender;
   }
 
-  /// Бить [pairIndex]-ю пару картой [card]. Если pairIndex не задан — первая
-  /// неотбитая.
-  void defend(PlayingCard card, {int? playerIndex}) {
+  /// Бить пару [pairIndex] картой [card]. Если индекс не задан — первая, которую
+  /// карта реально бьёт.
+  void defend(PlayingCard card, {int? playerIndex, int? pairIndex}) {
     final pIndex = playerIndex ?? defenderIndex;
-    if (!canDefendWith(card, pIndex)) {
+    if (!canDefendWith(card, pIndex, pairIndex: pairIndex)) {
       throw const DurakRuleError('нельзя отбить этой картой');
     }
-    final idx = table.indexWhere((p) => p.defense == null);
+    final idx = pairIndex ??
+        table.indexWhere(
+          (p) => p.defense == null && card.beats(p.attack, trump),
+        );
+    if (idx < 0) {
+      throw const DurakRuleError('нельзя отбить этой картой');
+    }
     hands[pIndex].remove(card);
     table[idx] = table[idx].withDefense(card);
     // Если все побиты — ждём подкидывания или «бито».

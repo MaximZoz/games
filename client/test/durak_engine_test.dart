@@ -156,6 +156,33 @@ void main() {
       expect(game.attackerIndex, 1);
     });
 
+    test('defend can beat any undefended pair, not only the first', () {
+      final game = DurakGame(
+        hands: [
+          <PlayingCard>[],
+          [
+            PlayingCard(Rank.eight, Suit.clubs),
+            PlayingCard(Rank.ten, Suit.hearts),
+          ],
+        ],
+        deck: Deck([]),
+        trump: Suit.hearts,
+        attackerIndex: 0,
+        turn: DurakTurn.defender,
+        table: [
+          TablePair(PlayingCard(Rank.six, Suit.diamonds)),
+          TablePair(PlayingCard(Rank.six, Suit.clubs)),
+        ],
+      );
+      final eight = PlayingCard(Rank.eight, Suit.clubs);
+      expect(game.canDefendWith(eight, 1), isTrue);
+      expect(game.canDefendWith(eight, 1, pairIndex: 0), isFalse);
+      expect(game.canDefendWith(eight, 1, pairIndex: 1), isTrue);
+      game.defend(eight, playerIndex: 1, pairIndex: 1);
+      expect(game.table[1].defense, eight);
+      expect(game.table[0].defense, isNull);
+    });
+
     test('take: defender collects all cards and loses turn', () {
       final game = DurakGame(
         hands: [
