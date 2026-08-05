@@ -577,12 +577,16 @@ class GameTurnCountdown extends StatefulWidget {
     required this.isMyTurn,
     required this.onExpired,
     required this.labelBuilder,
+    this.turnTimeSec = 0,
   });
 
   /// Unix-время (сек) окончания хода.
   final int turnDeadline;
   final bool isMyTurn;
   final VoidCallback onExpired;
+
+  /// Полная длительность хода (сек) — для зелёный→оранжевый→красный.
+  final int turnTimeSec;
 
   /// Локализованная подпись, например `(s) => l10n.gameSecondsLeft(s)`.
   final String Function(int secondsLeft) labelBuilder;
@@ -643,8 +647,10 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _remaining <= 5 && widget.isMyTurn
-        ? Colors.red
+    final total = widget.turnTimeSec > 0 ? widget.turnTimeSec : 60;
+    final fraction = (_remaining / total).clamp(0.0, 1.0);
+    final color = widget.isMyTurn
+        ? TurnTimerStyle.colorsFor(hasTimer: true, fraction: fraction).first
         : AppColors.textSecondary;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -655,7 +661,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
           widget.labelBuilder(_remaining),
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: color,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
         ),
       ],

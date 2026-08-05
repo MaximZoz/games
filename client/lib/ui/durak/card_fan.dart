@@ -891,8 +891,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
   ) {
     final center = (n - 1) / 2;
     final offsetX = (i - center) * baseSpacing;
-    final signedArc = widget.invertFan ? -arc : arc;
-    final angle = n == 1 ? 0.0 : (i - center) * (signedArc / max(n - 1, 1));
+    // Одинаковый знак угла: у соперника (topCenter) края веера «к нему».
+    final angle = n == 1 ? 0.0 : (i - center) * (arc / max(n - 1, 1));
     final curveY = (i - center) * (i - center) * widget.cardSize.height * 0.012;
 
     var extraX = 0.0;
@@ -954,7 +954,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       child: child,
     );
 
-    final edgeLift = widget.invertFan ? curveY : -curveY;
+    // Края веера поднимаются «от стола»: у себя вверх, у соперника к верху экрана.
+    final edgeLift = -curveY;
 
     // Peek — без duration; перестановка после сортировки — плавная.
     final animMs = peeking ? 0 : 380;

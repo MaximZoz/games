@@ -358,27 +358,35 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Подгонка веера под ширину экрана: сильнее сжатие + уменьшение карт.
   ({Size cardSize, double spacing}) _fitHandFan(int n, double maxWidth) {
     var size = _handCardSize;
+    // При многих картах сразу стартуем компактнее.
+    if (n > 20) {
+      size = Size(_handCardSize.width * 0.62, _handCardSize.height * 0.62);
+    } else if (n > 14) {
+      size = Size(_handCardSize.width * 0.72, _handCardSize.height * 0.72);
+    } else if (n > 10) {
+      size = Size(_handCardSize.width * 0.84, _handCardSize.height * 0.84);
+    }
     double spacingOf(Size s) {
       if (n <= 1) return 0;
       final w = s.width;
-      if (n > 28) return w * 0.09;
-      if (n > 22) return w * 0.11;
-      if (n > 18) return w * 0.13;
-      if (n > 14) return w * 0.16;
-      if (n > 10) return w * 0.22;
-      if (n > 7) return w * 0.30;
-      if (n > 5) return w * 0.40;
-      return w * 0.50;
+      if (n > 30) return w * 0.07;
+      if (n > 24) return w * 0.08;
+      if (n > 18) return w * 0.10;
+      if (n > 14) return w * 0.13;
+      if (n > 10) return w * 0.18;
+      if (n > 7) return w * 0.26;
+      if (n > 5) return w * 0.36;
+      return w * 0.48;
     }
 
-    for (var step = 0; step < 14; step++) {
+    for (var step = 0; step < 18; step++) {
       final sp = spacingOf(size);
       // +32 — тот же запас, что в CardFan.
       final fanW = size.width + sp * math.max(n - 1, 0) + 32;
-      if (fanW <= maxWidth || size.width <= 44) {
+      if (fanW <= maxWidth || size.width <= 34) {
         return (cardSize: size, spacing: sp);
       }
-      final scale = (maxWidth / fanW).clamp(0.42, 0.97);
+      final scale = (maxWidth / fanW).clamp(0.38, 0.96);
       size = Size(size.width * scale, size.height * scale);
     }
     final sp = spacingOf(size);
@@ -1970,7 +1978,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   Widget _buildTable(DurakGameView view) {
-    const handSize = _handCardSize;
     const tableSize = _tableCardSize;
     _maybeRunTableFx(view);
     // Сбросить выбор, если карты уже не в руке / нелегальны.
@@ -2012,8 +2019,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         .toList(growable: false);
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final fanZoneH = handSize.height * 1.55 + 40;
-    final tuckUnderNav = 36.0 + bottomInset * 0.35;
+    final screenW = MediaQuery.sizeOf(context).width - 4;
+    final fanLayout = _fitHandFan(handForFan.length, screenW);
+    // Зона по реальному размеру карт; веер выше над навбаром.
+    final fanZoneH = fanLayout.cardSize.height * 1.45 + 28;
+    final tuckUnderNav = 6.0 + bottomInset * 0.12;
 
     final showTimer = !view.isOver &&
         view.isMyTurn &&
@@ -2088,44 +2098,39 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       left: 0,
                       right: 0,
                       bottom: -tuckUnderNav,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final n = handForFan.length;
-                          final layout = _fitHandFan(n, constraints.maxWidth);
-                          final fan = CardFan(
-                            key: _fanKey,
-                            cards: handForFan,
-                            cardSize: layout.cardSize,
-                            spacing: layout.spacing,
-                            legalCards: legal,
-                            selectedCards: _selected,
-                            hiddenCards: _flyingFromHand,
-                            enabled: !view.isOver && !_busy,
-                            onActiveChanged: (c) {
-                              if (_activeCard == c) return;
-                              setState(() {
-                                _activeCard = c;
-                                if (c == null) _dragGlobal = null;
-                              });
-                            },
-                            onDragPosition: (p) {
-                              if (_dragGlobal == p) return;
-                              setState(() => _dragGlobal = p);
-                            },
-                            onTap: (_) {
-                              if (_selected.isNotEmpty ||
-                                  _activeCard != null ||
-                                  _dragGlobal != null) {
-                                _clearHandSelection();
-                              }
-                            },
-                            onLongPress: (c) => _toggleSelect(view, c),
-                            onReturnToFan: _onCardReturnedToFan,
-                            onDrop: (c, global, from) =>
-                                _onCardDrop(view, c, global, from),
-                          );
-                          return Center(child: fan);
-                        },
+                      child: Center(
+                        child: CardFan(
+                          key: _fanKey,
+                          cards: handForFan,
+                          cardSize: fanLayout.cardSize,
+                          spacing: fanLayout.spacing,
+                          legalCards: legal,
+                          selectedCards: _selected,
+                          hiddenCards: _flyingFromHand,
+                          enabled: !view.isOver && !_busy,
+                          onActiveChanged: (c) {
+                            if (_activeCard == c) return;
+                            setState(() {
+                              _activeCard = c;
+                              if (c == null) _dragGlobal = null;
+                            });
+                          },
+                          onDragPosition: (p) {
+                            if (_dragGlobal == p) return;
+                            setState(() => _dragGlobal = p);
+                          },
+                          onTap: (_) {
+                            if (_selected.isNotEmpty ||
+                                _activeCard != null ||
+                                _dragGlobal != null) {
+                              _clearHandSelection();
+                            }
+                          },
+                          onLongPress: (c) => _toggleSelect(view, c),
+                          onReturnToFan: _onCardReturnedToFan,
+                          onDrop: (c, global, from) =>
+                              _onCardDrop(view, c, global, from),
+                        ),
                       ),
                     ),
                   ],
@@ -2327,12 +2332,28 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
-    // Столько карт, сколько реально у соперника (без clamp).
     final fake = List<PlayingCard>.generate(
       count.clamp(0, 52),
       (i) => PlayingCard(Rank.six, Suit.spades),
     );
-    // Веер «в его сторону»: ось сверху, дуга от игрока.
+    final maxW = MediaQuery.sizeOf(context).width - 24;
+    // Компактный веер «к сопернику» (invertFan + дуга вверх).
+    var oppSize = Size(cardSize.width * 0.38, cardSize.height * 0.38);
+    var spacing = oppSize.width * (count > 14
+        ? 0.12
+        : count > 10
+            ? 0.16
+            : count > 6
+                ? 0.22
+                : 0.28);
+    if (count > 1) {
+      var fanW = oppSize.width + spacing * (count - 1) + 32;
+      if (fanW > maxW) {
+        final s = (maxW / fanW).clamp(0.4, 1.0);
+        oppSize = Size(oppSize.width * s, oppSize.height * s);
+        spacing *= s;
+      }
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: KeyedSubtree(
@@ -2345,15 +2366,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             opacity: anim,
             child: ScaleTransition(scale: anim, child: child),
           ),
-          child: CardFan(
-            key: ValueKey('opp-$idx-$count'),
-            cards: fake,
-            cardSize: Size(cardSize.width * 0.42, cardSize.height * 0.42),
-            faceDown: true,
-            invertFan: true,
-            enabled: false,
-            arc: 0.36,
-            spacing: cardSize.width * 0.15,
+          child: Center(
+            child: CardFan(
+              key: ValueKey('opp-$idx-$count'),
+              cards: fake,
+              cardSize: oppSize,
+              faceDown: true,
+              invertFan: true,
+              enabled: false,
+              arc: count > 12 ? 0.22 : 0.30,
+              spacing: spacing,
+            ),
           ),
         ),
       ),
@@ -2438,26 +2461,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           ),
       ],
-      // Слот только при подъёме/полёте. Без AnimatedSize — иначе дёргает стол.
-      if (showAttackSlot)
-        Padding(
-          key: _attackSlotKey,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: DurakDropSlot(
-            size: cardSize,
-            active: highlightAttack || _flightLockTable,
-          ),
-        ),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Слева колода наполовину спрятана — меньше резерв; справа бита.
-        final leftReserve = cardSize.width * 0.42;
-        final rightReserve = cardSize.width * 0.95;
+        // Колода за краем — стол шире, меньше пустоты слева.
+        final leftReserve = cardSize.width * 0.28;
+        final rightReserve = cardSize.width * 0.85;
         final tableMaxW =
             (constraints.maxWidth - leftReserve - rightReserve)
-                .clamp(120.0, constraints.maxWidth * 0.58);
+                .clamp(140.0, constraints.maxWidth * 0.72);
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -2520,6 +2533,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               ),
             ),
+            // Подсказка атаки/подкида — оверлей, не двигает карты стола.
+            if (showAttackSlot)
+              Center(
+                child: Transform.translate(
+                  offset: Offset(
+                    (view.table.length + _optimisticAttacks.length) *
+                        cardSize.width *
+                        0.22,
+                    8,
+                  ),
+                  child: KeyedSubtree(
+                    key: _attackSlotKey,
+                    child: IgnorePointer(
+                      child: DurakDropSlot(
+                        size: cardSize,
+                        active: true,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             // Колода чуть выше центра — зазор от карт стола.
             Align(
               alignment: const Alignment(-1.0, -0.12),
@@ -2557,6 +2591,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                           child: GameTurnCountdown(
                             key: ValueKey('my-turn-${view.turnDeadline}'),
                             turnDeadline: view.turnDeadline,
+                            turnTimeSec: view.turnTimeSec,
                             isMyTurn: true,
                             onExpired: _onTurnTimeExpired,
                             labelBuilder: (s) =>
