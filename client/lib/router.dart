@@ -58,6 +58,7 @@ const _authRequiredPaths = <String>{
   '/inventory',
   '/achievements',
   '/shop',
+  '/stats',
   '/settings',
   '/coins',
   '/admin',
@@ -278,6 +279,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         _noTransitionPage(state, const InventoryScreen()),
                   ),
                   GoRoute(
+                    path: 'stats',
+                    pageBuilder: (_, state) {
+                      final uid = state.uri.queryParameters['user_id'];
+                      final name = state.uri.queryParameters['name'];
+                      return _noTransitionPage(
+                        state,
+                        GameStatsScreen(
+                          userId: (uid == null || uid.isEmpty) ? null : uid,
+                          displayName: name,
+                        ),
+                      );
+                    },
+                  ),
+                  GoRoute(
                     path: 'coins',
                     pageBuilder: (_, state) =>
                         _noTransitionPage(state, const CoinsScreen()),
@@ -305,18 +320,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const ProfileScreen()),
                 routes: [
+                  // Совместимость со старыми ссылками → главная статистика.
                   GoRoute(
                     path: 'stats',
-                    pageBuilder: (_, state) {
-                      final uid = state.uri.queryParameters['user_id'];
-                      final name = state.uri.queryParameters['name'];
-                      return _noTransitionPage(
-                        state,
-                        GameStatsScreen(
-                          userId: (uid == null || uid.isEmpty) ? null : uid,
-                          displayName: name,
-                        ),
-                      );
+                    redirect: (context, state) {
+                      final q = state.uri.query;
+                      return q.isEmpty ? '/stats' : '/stats?$q';
                     },
                   ),
                 ],

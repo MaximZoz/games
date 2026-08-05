@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Секция счёта head-to-head в попапе профиля при клике на игрока.
@@ -39,11 +39,16 @@ class HeadToHeadSection extends ConsumerWidget {
           return _HeadToHeadBody(
             games: games,
             showStats: showStats,
-            onTapStats: () => showGameStatsDialog(
-              context,
-              userId: opponentId,
-              displayName: opponentName ?? h2h.displayName,
-            ),
+            onTapStats: () {
+              final name = (opponentName ?? h2h.displayName).trim();
+              final q = <String, String>{
+                'user_id': opponentId,
+                if (name.isNotEmpty) 'name': name,
+              };
+              context.push(
+                Uri(path: '/stats', queryParameters: q).toString(),
+              );
+            },
           );
         },
       ),

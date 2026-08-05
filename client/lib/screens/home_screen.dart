@@ -77,6 +77,14 @@ class HomeScreen extends ConsumerWidget {
       ),
       SizedBox(height: phoneLandscape ? 8 : 12),
       HomeActionCard(
+        icon: Icons.bar_chart_rounded,
+        title: l10n.statsTitle,
+        subtitle: l10n.statsAllGames,
+        onTap: () => context.push('/stats'),
+        dense: phoneLandscape,
+      ),
+      SizedBox(height: phoneLandscape ? 8 : 12),
+      HomeActionCard(
         icon: Icons.storefront_rounded,
         title: l10n.homeShop,
         subtitle: l10n.homeShopSubtitle,
