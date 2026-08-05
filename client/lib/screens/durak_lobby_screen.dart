@@ -74,6 +74,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     // иначе список игр редиректит обратно в уже удалённое лобби
     // («Лобби не найдено»).
     ref.read(activeGameProvider.notifier).clearLocal();
+    ref.read(openLobbiesProvider.notifier).removeLocal(widget.lobbyId);
     ref.invalidate(openLobbiesProvider);
     context.go('/games');
     unawaited(

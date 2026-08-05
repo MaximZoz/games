@@ -14,6 +14,7 @@ const gamesBroadcastChannel = "games:broadcast"
 // gamesBroadcastMsg is the message format for Redis Pub/Sub.
 type gamesBroadcastMsg struct {
 	UserIDs []string       `json:"user_ids"`
+	All     bool           `json:"all,omitempty"`
 	Payload map[string]any `json:"payload"`
 }
 
@@ -46,6 +47,24 @@ func (b *GamesBroadcaster) Publish(userIDs []uuid.UUID, payload any) {
 	}
 }
 
+// PublishAll — всем онлайн-клиентам на всех инстансах (список лобби и т.п.).
+func (b *GamesBroadcaster) PublishAll(payload any) {
+	if b == nil || b.Rdb == nil {
+		return
+	}
+	payloadMap, ok := payload.(map[string]any)
+	if !ok {
+		return
+	}
+	raw, err := json.Marshal(gamesBroadcastMsg{All: true, Payload: payloadMap})
+	if err != nil {
+		return
+	}
+	if err := b.Rdb.Publish(context.Background(), gamesBroadcastChannel, raw).Err(); err != nil {
+		log.Printf("games broadcast publish all: %v", err)
+	}
+}
+
 // Start subscribes to games broadcast channel and forwards to local Hub.
 // Call from main in a goroutine when Redis is available.
 func (b *GamesBroadcaster) Start(ctx context.Context) {
@@ -68,6 +87,13 @@ func (b *GamesBroadcaster) Start(ctx context.Context) {
 			if err := json.Unmarshal([]byte(msg.Payload), &m); err != nil {
 				continue
 			}
+			if m.Payload == nil {
+				continue
+			}
+			if m.All {
+				b.Hub.PublishToAll(m.Payload)
+				continue
+			}
 			userIDs := make([]uuid.UUID, 0, len(m.UserIDs))
 			for _, s := range m.UserIDs {
 				id, err := uuid.Parse(s)
@@ -76,7 +102,7 @@ func (b *GamesBroadcaster) Start(ctx context.Context) {
 				}
 				userIDs = append(userIDs, id)
 			}
-			if len(userIDs) > 0 && m.Payload != nil {
+			if len(userIDs) > 0 {
 				b.Hub.PublishToUsers(userIDs, m.Payload)
 			}
 		}

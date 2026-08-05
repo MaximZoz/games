@@ -143,8 +143,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   void _startLobbyPoll() {
     _lobbyRefreshTimer?.cancel();
+    // Чаще: отмена/старт должны быстро убирать карточку, даже без WS.
     _lobbyRefreshTimer = Timer.periodic(
-      const Duration(seconds: 10),
+      const Duration(seconds: 3),
       (_) => ref.invalidate(openLobbiesProvider),
     );
   }
@@ -663,6 +664,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     // Durak — свой стек API и роутов.
     if (gameType == 'durak') {
       try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
         final res =
             await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
         if (!context.mounted) return;
@@ -707,6 +709,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       return;
     }
     try {
+      ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
       if (!context.mounted) return;

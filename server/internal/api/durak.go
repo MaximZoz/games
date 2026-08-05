@@ -203,6 +203,9 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 			h.broadcast([]uuid.UUID{userID}, map[string]any{"type": "chat_list_changed"})
 		}
 	}
+	if mode == "matchmake" {
+		h.notifyPublicLobbiesChanged()
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{

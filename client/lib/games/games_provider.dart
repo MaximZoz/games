@@ -197,13 +197,26 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
       realtimeEventsProvider,
       (_, next) {
         final type = next.valueOrNull?['type']?.toString() ?? '';
-        if (type == 'lobby_updated' || type == 'game_started') {
+        // lobbies_changed — всем онлайн: отмена/старт публичного лобби.
+        if (type == 'lobby_updated' ||
+            type == 'game_started' ||
+            type == 'lobbies_changed') {
           ref.invalidate(openLobbiesProvider);
         }
       },
     );
 
     return lobbies;
+  }
+
+  /// Сразу убрать карточку (вход / отмена / старт), не дожидаясь refetch.
+  void removeLocal(String lobbyId) {
+    final cur = state.valueOrNull;
+    if (cur == null || cur.isEmpty) return;
+    final next = cur.where((l) => l.id != lobbyId).toList(growable: false);
+    if (next.length != cur.length) {
+      state = AsyncData(next);
+    }
   }
 }
 

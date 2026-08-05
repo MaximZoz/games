@@ -71,6 +71,8 @@ class _CardFanState extends State<CardFan> {
   Offset _panAccum = Offset.zero;
   bool _dropBusy = false;
   bool _docking = false;
+  /// Инвалидирует незавершённый fold/drop при новом жесте.
+  int _gestureGen = 0;
 
   PlayingCard? _liftedCard;
   Offset? _liftGlobalCenter;
@@ -264,7 +266,7 @@ class _CardFanState extends State<CardFan> {
     return rect.contains(global);
   }
 
-  /// Аккуратно сложить карту в веер (тянули вниз / отпустили над веером).
+  /// Аккуратно сложить карту в веер (отпустили над веером).
   Future<void> _foldIntoFan(
     Offset global,
     double baseSpacing,
@@ -272,12 +274,16 @@ class _CardFanState extends State<CardFan> {
     bool keepPointer = false,
   }) async {
     final card = _liftedCard;
-    if (card == null || _docking || _dropBusy) return;
+    if (card == null || _docking) return;
     _docking = true;
+    final gen = _gestureGen;
     final beginScale = _liftScale;
     final to = _slotGlobalRect(card, baseSpacing, totalW);
     await _animateOverlayTo(to, soft: true, beginScale: beginScale);
-    if (!mounted) return;
+    if (!mounted || gen != _gestureGen) {
+      _docking = false;
+      return;
+    }
     widget.onReturnToFan?.call(card);
     _clearLift(keepPointer: keepPointer, keepHover: keepPointer);
     if (keepPointer) {
@@ -380,7 +386,11 @@ class _CardFanState extends State<CardFan> {
   }
 
   void _tryLift(PlayingCard card, Offset global) {
-    if (_liftedCard != null || _docking || _dropBusy) return;
+    if (_liftedCard != null || _dropBusy) return;
+    // Прерываем незавершённый dock — иначе карта «застревает» и не поднимается.
+    _gestureGen++;
+    _docking = false;
+    _removeOverlay();
     // Любую карту можно вытащить для просмотра/сортировки.
     setState(() {
       _liftedCard = card;
@@ -491,8 +501,16 @@ class _CardFanState extends State<CardFan> {
               onPointerDown: !widget.enabled || widget.faceDown
                   ? null
                   : (e) {
+                      // Сброс залипшего dock/drop — можно сразу тянуть следующую.
+                      if (_liftedCard == null && (_docking || _dropBusy)) {
+                        _gestureGen++;
+                        _docking = false;
+                        _dropBusy = false;
+                        _removeOverlay();
+                      }
                       _pointerDown = true;
                       _panAccum = Offset.zero;
+                      _liftUpTravel = 0;
                       final box = context.findRenderObject() as RenderBox?;
                       if (box == null) return;
                       final local = box.globalToLocal(e.position);
@@ -507,29 +525,20 @@ class _CardFanState extends State<CardFan> {
               onPointerMove: !widget.enabled || widget.faceDown
                   ? null
                   : (e) {
-                      if (!_pointerDown || _docking || _dropBusy) return;
+                      if (!_pointerDown || _dropBusy) return;
+                      // Во время dock без поднятой карты — не блокируем новый жест.
+                      if (_docking && _liftedCard == null) {
+                        _docking = false;
+                      }
+                      if (_docking) return;
                       _panAccum += e.delta;
 
                       if (_liftedCard != null) {
                         if (e.delta.dy < 0) {
                           _liftUpTravel += -e.delta.dy;
                         }
-                        // Тянем вниз над веером — аккуратно складываем.
-                        // Не складываем, если уже явно тянули вверх (флик).
-                        final pullDown = e.delta.dy > 1.0 || _panAccum.dy > 14;
-                        if (_globalOverFan(e.position) &&
-                            pullDown &&
-                            _liftUpTravel < 36) {
-                          unawaited(
-                            _foldIntoFan(
-                              e.position,
-                              baseSpacing,
-                              totalW,
-                              keepPointer: true,
-                            ),
-                          );
-                          return;
-                        }
+                        // Складываем только при отпускании — иначе быстрый
+                        // вылет «застревает» от дрожи пальца вниз.
                         _updateLiftVisual(e.position);
                         widget.onDragPosition?.call(e.position);
                         return;
@@ -550,10 +559,10 @@ class _CardFanState extends State<CardFan> {
                         );
                         _setHover(idx);
                       }
-                      // Вытащить: явный жест вверх (в т.ч. быстрый короткий флик).
-                      final pullUp = _panAccum.dy < -8;
+                      // Лёгкий порог — любая карта вытаскивается быстро.
+                      final pullUp = _panAccum.dy < -4;
                       final pullOut =
-                          _panAccum.distance > 16 && _panAccum.dy < -5;
+                          _panAccum.distance > 10 && _panAccum.dy < -2;
                       final live = _visible;
                       if ((pullUp || pullOut) &&
                           _hoverIndex != null &&
@@ -565,11 +574,11 @@ class _CardFanState extends State<CardFan> {
               onPointerUp: !widget.enabled || widget.faceDown
                   ? null
                   : (e) {
-                      if (_docking) {
-                        _pointerDown = false;
+                      _pointerDown = false;
+                      if (_docking && _liftedCard == null) {
+                        _panAccum = Offset.zero;
                         return;
                       }
-                      _pointerDown = false;
                       if (_liftedCard != null) {
                         unawaited(
                           _finishDrop(e.position, baseSpacing, totalW),
@@ -595,6 +604,9 @@ class _CardFanState extends State<CardFan> {
                     baseSpacing,
                     totalW,
                   ));
+                } else if (_docking && _liftedCard == null) {
+                  _docking = false;
+                  _dropBusy = false;
                 }
               },
             ),
@@ -664,7 +676,7 @@ class _CardFanState extends State<CardFan> {
 
     return AnimatedPositioned(
       key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
-      duration: const Duration(milliseconds: 280),
+      duration: const Duration(milliseconds: 160),
       curve: Curves.easeOutCubic,
       left: totalW / 2 + offsetX + extraX + 16,
       top: widget.invertFan ? extraY + edgeLift : null,

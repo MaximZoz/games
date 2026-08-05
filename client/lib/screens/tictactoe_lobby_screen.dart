@@ -1497,6 +1497,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     // Сразу уходим с экрана — не ждём сеть и не трогаем lobbyDetail
     // (invalidate после leave давал AsyncError → спиннер → мигание карточек).
     ref.read(activeGameProvider.notifier).clearLocal();
+    ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
     ref.invalidate(openLobbiesProvider);
     // Из сообщения чата — обратно к списку чатов, иначе к играм.
     context.go(fromChat ? '/chats' : '/games');

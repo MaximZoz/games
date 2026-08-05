@@ -1373,18 +1373,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final showSurrender = view != null && !view.isOver;
     final isMulti = (view?.playerIds.length ?? 0) > 2;
     final topPad = MediaQuery.paddingOf(context).top;
-    // Как в крестиках: 1×1 — сдаться/ничья overlay справа; multi — флаг в AppBar.
-    final myTurnFrame = view != null && !view.isOver && view.isMyTurn;
-    // Рамка по границе всего приложения (поверх Scaffold), не блока стола.
-    return TurnTimerAppFrame(
-      key: ValueKey('app-frame-${view?.turnDeadline ?? 0}'),
-      active: myTurnFrame,
-      turnDeadline: view?.turnDeadline ?? 0,
-      turnTimeSec: view?.turnTimeSec ?? 0,
-      borderWidth: 3.5,
-      radius: 26,
-      onExpired: _onTurnTimeExpired,
-      child: SwipeBackScope(
+    // Мой ход — часики (без рамки экрана); ход соперника — рамка на его карточке.
+    return SwipeBackScope(
         onBack: _confirmLeave,
         opaqueEdge: false,
         edgeWidth: 16,
@@ -1504,7 +1494,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -1564,6 +1553,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               for (final oi in opponents) _opponentFan(view, oi, tableSize),
             ],
           ),
+          // Часики только на моём ходе (как в крестиках); у соперника — рамка.
+          if (!view.isOver &&
+              view.isMyTurn &&
+              view.turnTimeSec > 0 &&
+              view.turnDeadline > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: GameTurnCountdown(
+                key: ValueKey('my-turn-${view.turnDeadline}'),
+                turnDeadline: view.turnDeadline,
+                isMyTurn: true,
+                onExpired: _onTurnTimeExpired,
+                labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
+              ),
+            ),
           if (view.isOver) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -1903,11 +1907,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         !_busy &&
         (_activeCard != null || _dragGlobal != null);
 
-    // Колода слева — козырь целиком в кадре.
+    // Колода слева: видна примерно половина — больше места столу.
     final deckPeek = KeyedSubtree(
       key: _deckKey,
       child: Transform.translate(
-        offset: Offset(-cardSize.width * 0.12, 0),
+        offset: Offset(-cardSize.width * 0.55, 0),
         child: DurakDeckPile(
           deckCount: view.deckCount,
           trumpCard: trumpCard,
@@ -1970,10 +1974,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Уже — чтобы не касаться колоды/биты; всегда по центру.
-        final sideReserve = cardSize.width * 0.95;
+        // Слева колода наполовину спрятана — меньше резерв; справа бита.
+        final leftReserve = cardSize.width * 0.42;
+        final rightReserve = cardSize.width * 0.95;
         final tableMaxW =
-            (constraints.maxWidth - sideReserve * 2).clamp(120.0, constraints.maxWidth * 0.52);
+            (constraints.maxWidth - leftReserve - rightReserve)
+                .clamp(120.0, constraints.maxWidth * 0.58);
         return Stack(
           clipBehavior: Clip.none,
           children: [

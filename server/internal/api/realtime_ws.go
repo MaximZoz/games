@@ -112,6 +112,28 @@ func (h *RealtimeHub) DisconnectUser(userID uuid.UUID, payload any) {
 	}
 }
 
+// ConnectedUserIDs — id всех пользователей с активным WS на этом инстансе.
+func (h *RealtimeHub) ConnectedUserIDs() []uuid.UUID {
+	if h == nil {
+		return nil
+	}
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	ids := make([]uuid.UUID, 0, len(h.clients))
+	for id := range h.clients {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// PublishToAll — рассылка всем подключённым на этом инстансе.
+func (h *RealtimeHub) PublishToAll(payload any) {
+	if h == nil {
+		return
+	}
+	h.PublishToUsers(h.ConnectedUserIDs(), payload)
+}
+
 func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 	if h == nil || len(userIDs) == 0 {
 		return

@@ -550,6 +550,11 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Публичный поиск появляется во вкладке «Лобби».
+	if mode == "matchmake" || openMultiFind {
+		h.notifyPublicLobbiesChanged()
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
 		"lobby_id":   lobbyID,
@@ -2508,6 +2513,10 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 			"closed":   true,
 		})
 		h.broadcast(notifyIDs, map[string]any{"type": "chat_list_changed"})
+		// Публичный поиск пропал из списка — обновить вкладку «Лобби» у всех.
+		if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
+			h.notifyPublicLobbiesChanged()
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": true})
 		return
@@ -3536,6 +3545,21 @@ func (h *GamesHandler) publishGameStartedTyped(userIDs []uuid.UUID, gameID, lobb
 		"lobby_id":  lobbyID,
 		"game_type": gameType,
 	})
+	// Зрители вкладки «Лобби» не в составе партии — обновить список у всех.
+	h.notifyPublicLobbiesChanged()
+}
+
+// notifyPublicLobbiesChanged — сигнал всем онлайн обновить открытые лобби
+// (создание / отмена / старт публичного поиска).
+func (h *GamesHandler) notifyPublicLobbiesChanged() {
+	payload := map[string]any{"type": "lobbies_changed"}
+	if h.Broadcaster != nil && h.Broadcaster.Rdb != nil {
+		h.Broadcaster.PublishAll(payload)
+		return
+	}
+	if h.Hub != nil {
+		h.Hub.PublishToAll(payload)
+	}
 }
 
 func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
