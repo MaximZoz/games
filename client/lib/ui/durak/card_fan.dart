@@ -384,8 +384,11 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final finger = _lastPointerGlobal ?? global;
     if (resume && _pointerDown) {
       _resumeBrowseAt(finger);
-    } else if (idx >= 0) {
-      _setHover(idx);
+    } else {
+      // Карта снова в веере — без hover/подсказок на столе.
+      _setHover(null);
+      _emitActiveCard(null);
+      widget.onDragPosition?.call(null);
     }
   }
 
@@ -587,11 +590,10 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (resume && _pointerDown) {
       _resumeBrowseAt(finger);
     } else {
-      _hoverFromGlobal(
-        finger,
-        _spacingFor(max(_fanCards.length, 1)),
-        _totalWFor(_spacingFor(max(_fanCards.length, 1))),
-      );
+      // Отпустили палец — убрать подсказки слота/отбоя.
+      _setHover(null);
+      _emitActiveCard(null);
+      widget.onDragPosition?.call(null);
     }
   }
 

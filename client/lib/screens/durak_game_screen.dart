@@ -42,6 +42,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _busy = false;
   /// Во время полёта держим подсказку/слот как в момент броска (без скачка layout).
   bool _flightLockTable = false;
+  /// Цель отбоя на время полёта (подсветка не мигает).
+  int? _flightDefendIdx;
   bool _handlingAuthError = false;
   bool _retryScheduled = false;
   PlayingCard? _activeCard;
@@ -571,7 +573,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   void _clearHandSelection() {
-    if (_selected.isEmpty && _activeCard == null && _dragGlobal == null) {
+    if (_selected.isEmpty &&
+        _activeCard == null &&
+        _dragGlobal == null &&
+        !_flightLockTable) {
       return;
     }
     setState(() {
@@ -579,6 +584,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _activeCard = null;
       _dragGlobal = null;
     });
+  }
+
+  /// Карта вернулась в веер — убрать слот/glow подсказок.
+  void _onCardReturnedToFan(PlayingCard _) {
+    _clearHandSelection();
   }
 
   /// `true` — карта ушла в полёт/на стол; `false` — ход не начался.
@@ -662,6 +672,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _busy = true;
       // Держим слот/подсветку в том же layout, куда летим.
       _flightLockTable = true;
+      _flightDefendIdx = doDefend && defendIdx >= 0 ? defendIdx : null;
       if (_handOrder != null) {
         _handOrder = _handOrder!.where((c) => !cards.contains(c)).toList();
       }
@@ -718,19 +729,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return true;
     }
 
-    // Приземление: optimistic ровно под overlay, слот убираем в том же кадре.
+    // Приземление: сначала optimistic под overlay (layout уже финальный), потом dismiss.
     setState(() {
       if (doDefend && defendIdx >= 0) {
         _optimisticDefends[defendIdx] = cards.first;
       } else {
         _optimisticAttacks.addAll(cards);
       }
-      _flightLockTable = false;
+      // Слот оставляем заблокированным до dismiss, чтобы не дёрнуть layout.
     });
     await WidgetsBinding.instance.endOfFrame;
-    if (mounted) await Future<void>.delayed(const Duration(milliseconds: 16));
+    if (mounted) await Future<void>.delayed(const Duration(milliseconds: 20));
     for (final t in tickets) {
       t.dismiss();
+    }
+    if (mounted) {
+      setState(() {
+        _flightLockTable = false;
+        _flightDefendIdx = null;
+      });
     }
 
     final repo = ref.read(durakRepositoryProvider);
@@ -761,6 +778,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _optimisticDefends.clear();
           _busy = false;
           _flightLockTable = false;
+          _flightDefendIdx = null;
           _dragGlobal = null;
         });
       }
@@ -2001,6 +2019,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         view.isMyTurn &&
         view.turnTimeSec > 0 &&
         view.turnDeadline > 0;
+    final showTake = _canTake(view);
+    final showBito = _canBito(view);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
@@ -2009,135 +2029,123 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         children: [
           Column(
             children: [
-          // Панель соперника по центру; карты — под панелью.
-          SizedBox(
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _opponentsHeader(view),
-                for (final oi in opponents) _opponentFan(view, oi, tableSize),
-              ],
-            ),
-          ),
-          if (view.isOver) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: GameStatusWithReward(
-                statusText: _turnHint(view),
-                showReward: _showRewardChip(view),
-                rewardBronze: _rewardBronze(view),
-                rewardKey: _winRewardKey,
-                fontSize: MediaQuery.sizeOf(context).width < 420 ? 15 : null,
+              // Панель соперника по центру; карты — под панелью.
+              SizedBox(
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _opponentsHeader(view),
+                    for (final oi in opponents) _opponentFan(view, oi, tableSize),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            GameRematchSection(
-              rematchLobbyId: _rematchLobbyId,
-              rematchDeclined: _rematchDeclined,
-              iDeclinedRematch: _iDeclinedRematch,
-              isRematching: _isRematching,
-              isAcceptingRematch: _isAcceptingRematch,
-              isFindingGame: _isFindingGame,
-              peerIds: _peerIds(view),
-              invites: ref.watch(gameInvitesProvider),
-              onRematch: _rematch,
-              onAccept: _acceptRematch,
-              onDecline: _declineRematch,
-              onCancelWait: _cancelRematchWait,
-              onFindGame: _findGame,
-              compact: true,
-            ),
-          ],
-          Expanded(
-            child: _buildBoard(view, tableSize, trumpCard),
-          ),
-          // Между колодой/столом и моим веером.
-          _buildActionButton(view),
-          SizedBox(
-            height: fanZoneH,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Веер ниже и чуть прячется под нижнюю панель.
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: -tuckUnderNav,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final n = handForFan.length;
-                      final layout = _fitHandFan(n, constraints.maxWidth);
-                      final fan = CardFan(
-                        key: _fanKey,
-                        cards: handForFan,
-                        cardSize: layout.cardSize,
-                        spacing: layout.spacing,
-                        legalCards: legal,
-                        selectedCards: _selected,
-                        hiddenCards: _flyingFromHand,
-                        enabled: !view.isOver && !_busy,
-                        onActiveChanged: (c) {
-                          if (_activeCard == c) return;
-                          setState(() => _activeCard = c);
-                        },
-                        onDragPosition: (p) {
-                          if (_dragGlobal == p) return;
-                          setState(() => _dragGlobal = p);
-                        },
-                        // Тап не поднимает карту — выбор жестом (палец / long-press).
-                        onTap: (_) {
-                          if (_selected.isNotEmpty) _clearHandSelection();
-                        },
-                        onLongPress: (c) => _toggleSelect(view, c),
-                        // Сортировка — при доборе/взятии, не при листании пальцем.
-                        onDrop: (c, global, from) =>
-                            _onCardDrop(view, c, global, from),
-                      );
-                      return Center(child: fan);
-                    },
+              if (view.isOver) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: GameStatusWithReward(
+                    statusText: _turnHint(view),
+                    showReward: _showRewardChip(view),
+                    rewardBronze: _rewardBronze(view),
+                    rewardKey: _winRewardKey,
+                    fontSize: MediaQuery.sizeOf(context).width < 420 ? 15 : null,
                   ),
                 ),
+                const SizedBox(height: 10),
+                GameRematchSection(
+                  rematchLobbyId: _rematchLobbyId,
+                  rematchDeclined: _rematchDeclined,
+                  iDeclinedRematch: _iDeclinedRematch,
+                  isRematching: _isRematching,
+                  isAcceptingRematch: _isAcceptingRematch,
+                  isFindingGame: _isFindingGame,
+                  peerIds: _peerIds(view),
+                  invites: ref.watch(gameInvitesProvider),
+                  onRematch: _rematch,
+                  onAccept: _acceptRematch,
+                  onDecline: _declineRematch,
+                  onCancelWait: _cancelRematchWait,
+                  onFindGame: _findGame,
+                  compact: true,
+                ),
               ],
-            ),
-          ),
+              Expanded(
+                child: _buildBoard(
+                  view,
+                  tableSize,
+                  trumpCard,
+                  showTimer: showTimer,
+                ),
+              ),
+              // Место под веер; кнопки — оверлеем, без сдвига layout.
+              SizedBox(
+                height: fanZoneH,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: -tuckUnderNav,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final n = handForFan.length;
+                          final layout = _fitHandFan(n, constraints.maxWidth);
+                          final fan = CardFan(
+                            key: _fanKey,
+                            cards: handForFan,
+                            cardSize: layout.cardSize,
+                            spacing: layout.spacing,
+                            legalCards: legal,
+                            selectedCards: _selected,
+                            hiddenCards: _flyingFromHand,
+                            enabled: !view.isOver && !_busy,
+                            onActiveChanged: (c) {
+                              if (_activeCard == c) return;
+                              setState(() {
+                                _activeCard = c;
+                                if (c == null) _dragGlobal = null;
+                              });
+                            },
+                            onDragPosition: (p) {
+                              if (_dragGlobal == p) return;
+                              setState(() => _dragGlobal = p);
+                            },
+                            onTap: (_) {
+                              if (_selected.isNotEmpty ||
+                                  _activeCard != null ||
+                                  _dragGlobal != null) {
+                                _clearHandSelection();
+                              }
+                            },
+                            onLongPress: (c) => _toggleSelect(view, c),
+                            onReturnToFan: _onCardReturnedToFan,
+                            onDrop: (c, global, from) =>
+                                _onCardDrop(view, c, global, from),
+                          );
+                          return Center(child: fan);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          // Таймер поверх layout — не сдвигает стол/веер при появлении.
-          if (showTimer)
+          // «Взять» / «Бито» поверх — чуть выше веера, без перестройки Column.
+          if (showTake || showBito)
             Positioned(
-              top: 4,
               left: 0,
               right: 0,
-              child: IgnorePointer(
-                child: Center(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceUnified.withValues(alpha: 0.88),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      child: GameTurnCountdown(
-                        key: ValueKey('my-turn-${view.turnDeadline}'),
-                        turnDeadline: view.turnDeadline,
-                        isMyTurn: true,
-                        onExpired: _onTurnTimeExpired,
-                        labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-                      ),
-                    ),
-                  ),
+              bottom: fanZoneH - 10,
+              child: Center(
+                child: _PulsingActionButton(
+                  label: showTake ? 'Взять' : 'Бито',
+                  icon: showTake
+                      ? Icons.south_rounded
+                      : Icons.check_rounded,
+                  onPressed: showTake ? _take : _bito,
                 ),
               ),
             ),
@@ -2355,20 +2363,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Widget _buildBoard(
     DurakGameView view,
     Size cardSize,
-    PlayingCard trumpCard,
-  ) {
+    PlayingCard trumpCard, {
+    bool showTimer = false,
+  }) {
     final focus = _activeCard ??
         (_selected.isNotEmpty ? _selected.first : null);
-    final holdingCard = _flightLockTable ||
-        (!_busy &&
-            (_activeCard != null ||
-                _dragGlobal != null ||
-                _selected.isNotEmpty));
-    final highlightAttack = holdingCard && _highlightAttackSlot(view);
-    final defendTargets =
-        holdingCard ? _defendTargetIndexes(view, focus) : const <int>{};
-    final defendPairIndex =
-        holdingCard ? _defendTargetIndex(view, focus) : -1;
+    // Подсказки только пока карта реально вытащена / летит — не от selected.
+    final lifting = _flightLockTable ||
+        (!_busy && (_activeCard != null || _dragGlobal != null));
+    final highlightAttack = lifting && _highlightAttackSlot(view);
+    final defendTargets = _flightDefendIdx != null
+        ? {_flightDefendIdx!}
+        : (lifting ? _defendTargetIndexes(view, focus) : const <int>{});
+    final defendPairIndex = _flightDefendIdx ??
+        (lifting ? _defendTargetIndex(view, focus) : -1);
     // Слот подкида — только когда взяли карту (или во время полёта в него).
     final canShowAttackSlot = !view.isOver &&
         view.attackerIndex == view.myIndex &&
@@ -2430,23 +2438,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           ),
       ],
-      // Слот появляется/исчезает плавно только когда взяли карту.
-      AnimatedSize(
-        key: const ValueKey('attack-slot-anim'),
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        alignment: Alignment.center,
-        child: showAttackSlot
-            ? Padding(
-                key: _attackSlotKey,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: DurakDropSlot(
-                  size: cardSize,
-                  active: highlightAttack || _flightLockTable,
-                ),
-              )
-            : const SizedBox.shrink(),
-      ),
+      // Слот только при подъёме/полёте. Без AnimatedSize — иначе дёргает стол.
+      if (showAttackSlot)
+        Padding(
+          key: _attackSlotKey,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: DurakDropSlot(
+            size: cardSize,
+            active: highlightAttack || _flightLockTable,
+          ),
+        ),
     ];
 
     return LayoutBuilder(
@@ -2524,10 +2525,49 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               alignment: const Alignment(-1.0, -0.12),
               child: deckPeek,
             ),
-            // Бита выше, чтобы не касалась карт стола.
+            // Бита + таймер сразу под ней (оверлей, без сдвига стола).
             Align(
               alignment: const Alignment(1.0, -0.38),
-              child: bitoPeek,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  bitoPeek,
+                  if (showTimer) ...[
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: EdgeInsets.only(right: cardSize.width * 0.12),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceUnified.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          child: GameTurnCountdown(
+                            key: ValueKey('my-turn-${view.turnDeadline}'),
+                            turnDeadline: view.turnDeadline,
+                            isMyTurn: true,
+                            onExpired: _onTurnTimeExpired,
+                            labelBuilder: (s) =>
+                                context.l10n.gameSecondsLeft(s),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
         );
@@ -2586,28 +2626,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       ],
     );
 
-    return AnimatedScale(
+    // Без анимации scale — иначе при появлении слота/пары стол дёргается.
+    if ((scale - 1.0).abs() < 0.001) return column;
+    return Transform.scale(
       scale: scale,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeInOutCubic,
       alignment: Alignment.center,
       child: column,
-    );
-  }
-
-  Widget _buildActionButton(DurakGameView view) {
-    final take = _canTake(view);
-    final bito = _canBito(view);
-    if (!take && !bito) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(top: 2, bottom: 6),
-      child: Center(
-        child: _PulsingActionButton(
-          label: take ? 'Взять' : 'Бито',
-          icon: take ? Icons.south_rounded : Icons.check_rounded,
-          onPressed: take ? _take : _bito,
-        ),
-      ),
     );
   }
 
@@ -2848,25 +2872,10 @@ class _AnimatedTablePair extends StatelessWidget {
         ],
       ),
     );
-    // Защита уже на месте (полёт / сервер) — без scale/fade, иначе скачок.
-    if (defense != null || optimisticDefense != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: pairChild,
-      );
-    }
+    // Без pop/scale — карта уже прилетела в финальную позицию.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.92, end: 1),
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        builder: (context, scale, child) => Opacity(
-          opacity: ((scale - 0.92) / 0.08).clamp(0.0, 1.0),
-          child: Transform.scale(scale: scale, child: child),
-        ),
-        child: pairChild,
-      ),
+      child: pairChild,
     );
   }
 }
