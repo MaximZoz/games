@@ -779,28 +779,42 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.active) return widget.child;
+    // Один и тот же padding всегда — рамка только рисуется, layout не прыгает.
+    final padded = Padding(
+      padding: EdgeInsets.all(widget.borderWidth),
+      child: widget.child,
+    );
+    if (!widget.active) {
+      // Та же геометрия, статичная рамка — без тиков и перекраски.
+      return CustomPaint(
+        foregroundPainter: _ShrinkingBorderPainter(
+          fraction: 1,
+          colors: const [AppColors.accentStart, AppColors.accentEnd],
+          strokeWidth: widget.borderWidth,
+          radius: widget.radius,
+          paintTimer: false,
+        ),
+        child: padded,
+      );
+    }
     final colors = TurnTimerStyle.colorsFor(
       hasTimer: _hasTimer,
       fraction: _fraction,
     );
+    final fraction = _hasTimer ? _fraction : 1.0;
     return CustomPaint(
       foregroundPainter: _ShrinkingBorderPainter(
-        // Без лимита — полный «таймерный» цвет; с лимитом — укорачивается,
-        // а под ним всегда базовая фиолетовая рамка на том же месте.
-        fraction: _hasTimer ? _fraction : 1,
+        fraction: fraction,
         colors: colors,
         strokeWidth: widget.borderWidth,
         radius: widget.radius,
+        paintTimer: true,
         baseColors: const [
           AppColors.accentStart,
           AppColors.accentEnd,
         ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(widget.borderWidth),
-        child: widget.child,
-      ),
+      child: padded,
     );
   }
 }
@@ -811,6 +825,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
     required this.colors,
     required this.strokeWidth,
     required this.radius,
+    this.paintTimer = true,
     this.baseColors = const [AppColors.accentStart, AppColors.accentEnd],
   });
 
@@ -818,6 +833,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
   final List<Color> colors;
   final double strokeWidth;
   final double radius;
+  final bool paintTimer;
 
   /// Полная фиолетовая рамка — остаётся, когда таймер исчезает.
   final List<Color> baseColors;
@@ -842,6 +858,8 @@ class _ShrinkingBorderPainter extends CustomPainter {
       ..shader = LinearGradient(colors: baseColors).createShader(rect);
     canvas.drawRRect(rrect, basePaint);
 
+    if (!paintTimer) return;
+
     // 2) Поверх — укорачивающийся таймер (зелёный→оранжевый→красный).
     final f = fraction.clamp(0.0, 1.0);
     if (f <= 0.001) return;
@@ -861,6 +879,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
   bool shouldRepaint(covariant _ShrinkingBorderPainter old) =>
       old.fraction != fraction ||
       old.strokeWidth != strokeWidth ||
+      old.paintTimer != paintTimer ||
       old.colors != colors ||
       old.baseColors != baseColors;
 }

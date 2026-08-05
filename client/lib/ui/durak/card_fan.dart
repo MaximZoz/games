@@ -31,6 +31,7 @@ class CardFan extends StatefulWidget {
     this.invertFan = false,
     this.arc,
     this.spacing,
+    this.animateLayout = true,
   });
 
   final List<PlayingCard> cards;
@@ -60,6 +61,9 @@ class CardFan extends StatefulWidget {
   final bool invertFan;
   final double? arc;
   final double? spacing;
+
+  /// Плавная перестановка слотов (сортировка). Выкл. — без «плывущего» веера после хода.
+  final bool animateLayout;
 
   @override
   State<CardFan> createState() => _CardFanState();
@@ -958,26 +962,41 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final edgeLift = -curveY;
 
     // Peek — без duration; перестановка после сортировки — плавная.
-    final animMs = peeking ? 0 : 380;
+    final animMs =
+        peeking || !widget.animateLayout ? 0 : 380;
+    final left = totalW / 2 + offsetX + extraX + 16;
+    final top = widget.invertFan ? extraY + edgeLift : null;
+    final bottom = widget.invertFan ? null : extraY + edgeLift;
+    final scaled = AnimatedScale(
+      scale: scale,
+      duration: Duration(milliseconds: peeking || !widget.animateLayout ? 0 : 280),
+      curve: Curves.easeInOutCubic,
+      child: Transform.rotate(
+        angle: angle,
+        alignment:
+            widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
+        child: child,
+      ),
+    );
+
+    if (!widget.animateLayout || peeking) {
+      return Positioned(
+        key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
+        left: left,
+        top: top,
+        bottom: bottom,
+        child: scaled,
+      );
+    }
 
     return AnimatedPositioned(
       key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
       duration: Duration(milliseconds: animMs),
       curve: Curves.easeInOutCubic,
-      left: totalW / 2 + offsetX + extraX + 16,
-      top: widget.invertFan ? extraY + edgeLift : null,
-      bottom: widget.invertFan ? null : extraY + edgeLift,
-      child: AnimatedScale(
-        scale: scale,
-        duration: Duration(milliseconds: peeking ? 0 : 280),
-        curve: Curves.easeInOutCubic,
-        child: Transform.rotate(
-          angle: angle,
-          alignment:
-              widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
-          child: child,
-        ),
-      ),
+      left: left,
+      top: top,
+      bottom: bottom,
+      child: scaled,
     );
   }
 }
