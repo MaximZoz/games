@@ -415,52 +415,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return (cardSize: size, spacing: spacing);
   }
 
-  /// Мало карт — компактный веер по центру; много — сильнее сжимаем на ширину.
+  /// Всегда на всю ширину: мало карт — широко, много — сильнее сжаты.
   ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
     int n,
     double maxWidth,
   ) {
     if (n <= 0) {
+      return (cardSize: _handCardSize, spacing: 0, fillWidth: true);
+    }
+    // Одна карта — по центру; 2+ — растянуть от края до края.
+    if (n == 1) {
       return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
     }
-    if (n <= 7) {
-      var size = n >= 6
-          ? Size(_handCardSize.width * 0.90, _handCardSize.height * 0.90)
-          : _handCardSize;
-      var spacing = n <= 1
-          ? 0.0
-          : size.width * (n <= 2 ? 0.62 : n <= 4 ? 0.50 : 0.40);
-      const pad = 32.0;
-      final need = size.width + spacing * math.max(n - 1, 0) + pad;
-      if (need > maxWidth && n > 1) {
-        spacing = ((maxWidth - pad - size.width) / (n - 1))
-            .clamp(size.width * 0.22, spacing);
-      }
-      return (cardSize: size, spacing: spacing, fillWidth: false);
-    }
     final fitted = _fitHandFan(n, maxWidth);
-    // При очень большой руке можно сжимать почти «в полоски».
-    final minSp = fitted.cardSize.width * (n > 28
-        ? 0.04
-        : n > 22
-            ? 0.055
-            : n > 16
-                ? 0.07
-                : 0.08);
-    final spacing = n <= 1
-        ? 0.0
-        : ((maxWidth - 14 - fitted.cardSize.width) / (n - 1)).clamp(
-            minSp,
-            fitted.cardSize.width * 0.96,
-          );
     return (
       cardSize: fitted.cardSize,
-      spacing: spacing,
+      spacing: fitted.spacing,
       fillWidth: true,
     );
   }
 
-  /// Сколько ещё атак/подкидов можно положить (как MaxAttacksThisRound на сервере).
+  /// Сколько ещё атак/подкидов можно положить (учитывает оптимистичные).
   int _attackRoom(DurakGameView view) {
     final def = view.defenderIndex;
     final defCount = (def >= 0 && def < view.hands.length)
@@ -470,7 +445,33 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final capped = lim < 1 ? 1 : lim;
     const maxAttacks = 6;
     final maxPairs = maxAttacks < capped ? maxAttacks : capped;
-    return (maxPairs - view.table.length).clamp(0, 52);
+    final pending = _pendingAttackPlaceholders(view).length;
+    return (maxPairs - view.table.length - pending).clamp(0, 52);
+  }
+
+  /// Легальные атаки с учётом уже брошенных (ещё не подтверждённых) карт.
+  Set<PlayingCard> _legalAttackNow(DurakGameView view) {
+    if (!_isAttackPhase(view) || _attackRoom(view) <= 0) return {};
+    final pendingSet = {
+      ..._optimisticAttacks,
+      ..._flyingFromHand,
+    };
+    final pendingPlaceholders = _pendingAttackPlaceholders(view);
+    final ranks = <Rank>{
+      for (final p in view.table) p.attack.toPlayingCard().rank,
+      for (final c in pendingPlaceholders) c.rank,
+    };
+    final hand = _apiCardsToPlaying(
+      view.hands.length > view.myIndex && view.myIndex >= 0
+          ? (view.hands[view.myIndex].cards ?? const [])
+          : const [],
+    );
+    return {
+      for (final c in hand)
+        if (!pendingSet.contains(c) &&
+            (ranks.isEmpty || ranks.contains(c.rank)))
+          c,
+    };
   }
 
   /// Оптимистичные атаки, которых ещё нет на серверном столе (слоты посадки).
@@ -567,8 +568,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (focus == null || _busy || view.isOver) return false;
     if (!_isAttackPhase(view)) return false;
     // Подкид — без подсветки слота; только первая атака на пустой стол.
-    if (view.table.isNotEmpty) return false;
-    return view.legalAttack.any((c) => c.toPlayingCard() == focus);
+    if (view.table.isNotEmpty || _optimisticAttacks.isNotEmpty) return false;
+    return _legalAttackNow(view).contains(focus);
   }
 
   /// Неотбитые атаки на столе (индексы).
@@ -689,26 +690,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   List<PlayingCard> _cardsToPlay(DurakGameView view, PlayingCard card) {
     if (_isDefendPhase(view)) return [card];
     if (!_isAttackPhase(view)) return [card];
+    // Мультивыбор long-press — несколько сразу; иначе строго по одной.
     if (_selected.contains(card) && _selected.length > 1) {
       return _selected.toList();
     }
-    final legal = _apiCardsToPlaying(view.legalAttack);
-    if (!legal.contains(card)) return [card];
-    final room = _attackRoom(view);
-    if (room <= 0) return [card];
-    // Первая атака — все карты того же ранга; подкид — все легальные сразу.
-    final batch = view.table.isEmpty
-        ? [
-            for (final c in legal)
-              if (c.rank == card.rank) c,
-          ]
-        : List<PlayingCard>.from(legal);
-    if (batch.isEmpty) return [card];
-    final ordered = <PlayingCard>[card];
-    for (final c in batch) {
-      if (c != card) ordered.add(c);
-    }
-    return ordered.take(room).toList();
+    return [card];
   }
 
   void _toggleSelect(DurakGameView view, PlayingCard card) {
@@ -836,22 +822,31 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           )
         : const <PlayingCard>{};
-    // Перевод — если карта не бьёт, но подходит по рангу (или выбран перевод).
     final doTransfer = isDefend &&
         !doDefend &&
         transferLegal.contains(cards.first);
     final doAttack = !doDefend &&
         !doTransfer &&
         isAttack &&
-        view.legalAttack.any((c) => c.toPlayingCard() == cards.first);
+        _legalAttackNow(view).contains(cards.first);
     if (!doDefend && !doAttack && !doTransfer) return false;
+
+    // Атака/подкид — по одной, без блокировки веера: сразу можно кинуть ещё.
+    if (doAttack) {
+      if (_attackRoom(view) < cards.length) return false;
+      return _playAttackChain(
+        view,
+        cards,
+        fromOverride: fromOverride,
+        pointer: pointer,
+      );
+    }
 
     final screen = MediaQuery.sizeOf(context);
     final defendIdx = doDefend
         ? _defendTargetIndex(view, cards.first, pointer: pointer)
         : -1;
 
-    // Цель отбоя — сразу финальный оффсет на атаке.
     const defendOffset = Offset(10, 14);
     final attackKey = defendIdx >= 0
         ? _tableAttackKeys.putIfAbsent(defendIdx, GlobalKey.new)
@@ -881,7 +876,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ? dragScaleTowardCenter(pointer, screen)
             : 1.0);
 
-    // Число карт в веере до хода — spacing замораживаем, чтобы соседние не плыли.
     final nBefore = (_handOrder?.length ?? 0) > 0
         ? _handOrder!.length
         : cards.length;
@@ -893,11 +887,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _busy = true;
       _flightLockTable = true;
       _flightDefendIdx = doDefend && defendIdx >= 0 ? defendIdx : null;
-      // Подкид/перевод: сразу резервируем место в раскладке стола — летим туда.
-      if (doAttack || doTransfer) {
-        _optimisticAttacks
-          ..clear()
-          ..addAll(cards);
+      if (doTransfer) {
+        _optimisticAttacks.addAll(cards);
       }
       if (_handOrder != null) {
         _handOrder = _handOrder!.where((c) => !cards.contains(c)).toList();
@@ -912,7 +903,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _suppressFanLayoutAnim = true;
     });
 
-    // Дождаться раскладки с плейсхолдером — цель полёта = финальная клетка.
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return true;
 
@@ -987,8 +977,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return true;
     }
 
-    // Отбой: optimistic под overlay в той же паре, затем dismiss.
-    // Атака: плейсхолдер уже в раскладке (невидим); overlay до ответа сервера.
     if (doDefend && defendIdx >= 0) {
       setState(() {
         _optimisticDefends[defendIdx] = cards.first;
@@ -1016,26 +1004,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           card: cards.first,
           pairIndex: defendIdx >= 0 ? defendIdx : null,
         );
-      } else if (doTransfer) {
+      } else {
         await repo.move(
           widget.gameId,
           type: 'transfer',
           card: cards.first,
         );
-      } else {
-        await repo.move(widget.gameId, type: 'attack', cards: cards);
       }
       ref.invalidate(durakGameProvider(widget.gameId));
       try {
         await ref.read(durakGameProvider(widget.gameId).future);
       } catch (_) {}
-      // Сервер уже содержит карты — один кадр: убрать fly/optimistic.
       if (mounted) {
         for (final t in tickets) {
           t.dismiss();
         }
         tickets = const [];
-        // Синхронизируем prev, чтобы remote-FX не проиграл атаку ещё раз.
         final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
         if (v != null) {
           _prevTable = List.of(v.table);
@@ -1044,7 +1028,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
         setState(() {
           _flyingFromHand.removeAll(cards);
-          _optimisticAttacks.clear();
+          for (final c in cards) {
+            _optimisticAttacks.remove(c);
+          }
           _optimisticDefends.clear();
           _flightLockTable = false;
           _flightDefendIdx = null;
@@ -1058,10 +1044,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
         setState(() {
           _flyingFromHand.removeAll(cards);
-          _optimisticAttacks.clear();
+          for (final c in cards) {
+            _optimisticAttacks.remove(c);
+          }
           _optimisticDefends.clear();
           _flightLockTable = false;
           _flightDefendIdx = null;
+          if (_handOrder != null) {
+            _handOrder = [..._handOrder!, ...cards];
+          }
         });
         _releaseFanLayoutSnap();
       }
@@ -1073,12 +1064,159 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         setState(() {
           _busy = false;
           _dragGlobal = null;
-          // Freeze не снимаем: оставшиеся карты остаются на местах до добора.
           _suppressFanLayoutAnim = false;
         });
       }
     }
     return true;
+  }
+
+  /// Подкид/атака без `_busy`: карта уходит в полёт, веер сразу снова доступен.
+  Future<bool> _playAttackChain(
+    DurakGameView view,
+    List<PlayingCard> cards, {
+    Rect? fromOverride,
+    Offset? pointer,
+  }) async {
+    final screen = MediaQuery.sizeOf(context);
+    final fallback = cardFanApproxOrigin(
+          _fanKey.currentContext ?? context,
+          _handCardSize,
+        ) ??
+        Rect.fromCenter(
+          center: screen.center(Offset.zero),
+          width: _handCardSize.width,
+          height: _handCardSize.height,
+        );
+    final fromCenter = fromOverride?.center ?? fallback.center;
+    final beginScale = fromOverride != null
+        ? (fromOverride.width / _handCardSize.width).clamp(0.9, 1.2)
+        : (pointer != null
+            ? dragScaleTowardCenter(pointer, screen)
+            : 1.0);
+
+    final nBefore = (_handOrder?.length ?? 0) > 0
+        ? _handOrder!.length
+        : cards.length;
+    setState(() {
+      _activeCard = null;
+      _selected.clear();
+      _dragGlobal = null;
+      _optimisticAttacks.addAll(cards);
+      if (_handOrder != null) {
+        _handOrder = _handOrder!.where((c) => !cards.contains(c)).toList();
+      }
+      if (_frozenFanCardSize == null && nBefore > 0) {
+        final lay = _handFanVisualLayout(
+          nBefore.clamp(1, 52),
+          MediaQuery.sizeOf(context).width,
+        );
+        _freezeFanLayout(lay.cardSize, lay.spacing, nBefore);
+      }
+      _suppressFanLayoutAnim = true;
+    });
+
+    // Один кадр — плейсхолдер на столе; веер уже без карты и доступен.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return true;
+    final to = globalRectOf(_pendingAttackLandKey) ??
+        globalRectOf(_attackSlotKey) ??
+        globalRectOf(_tableKey) ??
+        Rect.fromCenter(
+          center: Offset(screen.width / 2, screen.height * 0.42),
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
+        );
+    if (mounted) {
+      setState(() => _suppressFanLayoutAnim = false);
+    }
+
+    final landSize = Size(_tableCardSize.width, _tableCardSize.height);
+    final shrink = landSize.width / _handCardSize.width;
+    final froms = <Rect>[
+      for (var i = 0; i < cards.length; i++)
+        Rect.fromCenter(
+          center: fromCenter.translate(i * 10.0, i * -6.0),
+          width: _handCardSize.width,
+          height: _handCardSize.height,
+        ),
+    ];
+    final tos = <Rect>[
+      for (var i = 0; i < cards.length; i++)
+        Rect.fromCenter(
+          center: to.center.translate(i * 14.0, 0),
+          width: landSize.width,
+          height: landSize.height,
+        ),
+    ];
+
+    // Полёт и ответ сервера — в фоне; следующий подкид не ждёт.
+    unawaited(() async {
+      List<CardFlyTicket> tickets = const [];
+      await playCardsFlyAnimation(
+        context: context,
+        cards: cards,
+        cardSize: _handCardSize,
+        froms: froms,
+        tos: tos,
+        duration: const Duration(milliseconds: 380),
+        stagger: const Duration(milliseconds: 35),
+        curve: Curves.easeInOutCubic,
+        beginScale: beginScale,
+        endScale: shrink,
+        beginAngles: [
+          for (var i = 0; i < cards.length; i++)
+            (i.isEven ? -1 : 1) * (0.12 + i * 0.03),
+        ],
+        endAngles: [for (var i = 0; i < cards.length; i++) 0.0],
+        arcLift: 0,
+        keepAtEnd: true,
+        onTickets: (t) => tickets = t,
+      );
+      if (mounted) await WidgetsBinding.instance.endOfFrame;
+      for (final t in tickets) {
+        t.dismiss();
+      }
+      await _commitAttackMove(cards);
+    }());
+    return true;
+  }
+
+  Future<void> _commitAttackMove(List<PlayingCard> cards) async {
+    final repo = ref.read(durakRepositoryProvider);
+    try {
+      await repo.move(widget.gameId, type: 'attack', cards: cards);
+      ref.invalidate(durakGameProvider(widget.gameId));
+      try {
+        await ref.read(durakGameProvider(widget.gameId).future);
+      } catch (_) {}
+      if (!mounted) return;
+      final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+      if (v != null) {
+        _prevTable = List.of(v.table);
+        _prevDeckCount = v.deckCount;
+        _prevBitoCount = v.bitoCount;
+      }
+      setState(() {
+        for (final c in cards) {
+          _optimisticAttacks.remove(c);
+        }
+        _flyingFromHand.removeAll(cards);
+      });
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      setState(() {
+        for (final c in cards) {
+          _optimisticAttacks.remove(c);
+        }
+        _flyingFromHand.removeAll(cards);
+        if (_handOrder != null) {
+          _handOrder = [..._handOrder!, ...cards];
+        }
+      });
+      _releaseFanLayoutSnap();
+    }
   }
 
   bool _canTake(DurakGameView view) =>
@@ -2326,7 +2464,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final myHand = _orderedHand(serverHand, trump);
     // Легальность для жестов — полный набор; подсветка веера — только при выборе.
     final legal = <PlayingCard>{
-      ..._apiCardsToPlaying(view.legalAttack),
+      ..._legalAttackNow(view),
       if (_isDefendPhase(view)) ...[
         ..._defendLegalFanCards(view, myHand),
         ..._transferLegalFanCards(view, myHand),
@@ -2734,7 +2872,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
     if (count <= 0) return const SizedBox.shrink();
     final maxW = MediaQuery.sizeOf(context).width - 48;
-    // Показываем до 16 плиток; при большем числе — плотнее (счётчик — у колоды).
+    // Показываем до 16 плиток; при большем числе — плотнее, без бейджа.
     final shown = count > 16 ? 16 : count;
     var tile = Size(
       (cardSize.width * 0.44).clamp(30.0, 52.0),
@@ -2888,7 +3026,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             key: ValueKey('opt-atk-$i-${pendingAttacks[i]}'),
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: KeyedSubtree(
-              key: i == 0
+              // Цель полёта — последний плейсхолдер (следующий подкид).
+              key: i == pendingAttacks.length - 1
                   ? _pendingAttackLandKey
                   : ValueKey('opt-land-$i-${pendingAttacks[i]}'),
               child: Opacity(
