@@ -4,6 +4,8 @@ import 'package:multigames_client/ui/app_theme.dart';
 
 /// Отрисовка одной игральной карты.
 /// Углы через [Stack] + [ClipRRect] — без overflow перевёрнутых рангов снизу.
+///
+/// Рамок нет: подсказка — только фиолетовая тень ([highlighted] / [dropTarget]).
 class PlayingCardWidget extends StatelessWidget {
   const PlayingCardWidget({
     super.key,
@@ -21,7 +23,7 @@ class PlayingCardWidget extends StatelessWidget {
   final bool dimmed;
   final bool elevated;
 
-  /// Фиолетовая подсветка места, куда можно положить карту.
+  /// Фиолетовая тень места, куда можно положить карту.
   final bool dropTarget;
 
   @override
@@ -30,15 +32,10 @@ class PlayingCardWidget extends StatelessWidget {
         ? const Color(0xFFD84A4A)
         : const Color(0xFF1B1B24);
     final radius = size.width * 0.15;
-    final borderColor = dropTarget
-        ? AppColors.accentStart
-        : highlighted
-            ? AppColors.accentStart
-            : Colors.black.withValues(alpha: 0.08);
-    final borderWidth = dropTarget || highlighted ? 2.5 : 1.0;
     final corner = size.height * 0.155;
     final padH = size.width * 0.1;
     final padV = size.height * 0.055;
+    final hint = dropTarget || highlighted;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
@@ -48,13 +45,12 @@ class PlayingCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: [
-          if (dropTarget)
+          if (hint)
             BoxShadow(
-              color: AppColors.accentStart.withValues(alpha: 0.45),
-              blurRadius: 14,
-              spreadRadius: 1,
+              color: AppColors.accentStart.withValues(alpha: dropTarget ? 0.5 : 0.38),
+              blurRadius: dropTarget ? 16 : 12,
+              spreadRadius: dropTarget ? 1.5 : 0.8,
             ),
           if (elevated)
             BoxShadow(
@@ -63,7 +59,7 @@ class PlayingCardWidget extends StatelessWidget {
               spreadRadius: 1,
               offset: const Offset(0, 6),
             )
-          else
+          else if (!hint)
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 4,
@@ -78,23 +74,10 @@ class PlayingCardWidget extends StatelessWidget {
             )
           : null,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius - 0.5),
+        borderRadius: BorderRadius.circular(radius),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (dropTarget)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.accentStart.withValues(alpha: 0.12),
-                      AppColors.accentEnd.withValues(alpha: 0.08),
-                    ],
-                  ),
-                ),
-              ),
             Positioned(
               left: padH,
               top: padV,
@@ -204,7 +187,6 @@ class CardBackWidget extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(size.width * 0.15),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.55), width: 1),
         boxShadow: elevated
             ? [
                 BoxShadow(
@@ -226,7 +208,7 @@ class CardBackWidget extends StatelessWidget {
   }
 }
 
-/// Пустой слот на столе — куда можно подкинуть карту.
+/// Пустой слот на столе — куда можно подкинуть карту (только тень, без рамки).
 class DurakDropSlot extends StatefulWidget {
   const DurakDropSlot({
     super.key,
@@ -282,25 +264,19 @@ class _DurakDropSlotState extends State<DurakDropSlot>
       builder: (context, _) {
         final t = widget.active ? _pulse.value : 0.0;
         return Transform.scale(
-          scale: widget.active ? 1 + 0.04 * t : 1,
+          scale: widget.active ? 1 + 0.03 * t : 1,
           child: Container(
             width: widget.size.width,
             height: widget.size.height,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: widget.active ? 0.14 + 0.1 * t : 0.06),
+              color: color.withValues(alpha: widget.active ? 0.1 + 0.08 * t : 0.04),
               borderRadius: BorderRadius.circular(radius),
-              border: Border.all(
-                color: color.withValues(
-                  alpha: widget.active ? 0.75 + 0.25 * t : 0.35,
-                ),
-                width: widget.active ? 2.5 : 1.5,
-              ),
               boxShadow: widget.active
                   ? [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.28 + 0.28 * t),
-                        blurRadius: 12 + 10 * t,
-                        spreadRadius: 0.5 + t,
+                        color: color.withValues(alpha: 0.32 + 0.28 * t),
+                        blurRadius: 14 + 10 * t,
+                        spreadRadius: 1 + t,
                       ),
                     ]
                   : null,
@@ -332,14 +308,15 @@ class DurakTrumpSuitBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.accentStart.withValues(alpha: 0.55),
-          width: 2,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
+            color: AppColors.accentStart.withValues(alpha: 0.28),
+            blurRadius: 10,
+            spreadRadius: 0.5,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],

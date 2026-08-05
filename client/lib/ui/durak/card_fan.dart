@@ -926,12 +926,9 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     final legal = _isLegal(card);
     final isLegalContext = widget.legalCards != null;
-    final showLegalGlow = !isLiftedAway &&
-        isLegalContext &&
-        legal &&
-        !selected &&
-        !active &&
-        widget.enabled;
+    // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
+    final showHintShadow = !isLiftedAway &&
+        ((active || selected) && (!isLegalContext || legal));
 
     Widget child = isLiftedAway
         ? SizedBox(
@@ -944,10 +941,9 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
             : PlayingCardWidget(
                 card: card,
                 size: widget.cardSize,
-                highlighted: showLegalGlow ||
-                    ((active || selected) && (!isLegalContext || legal)),
+                highlighted: showHintShadow,
                 dimmed: isLegalContext && !legal,
-                // Selected — только подсветка (мультивыбор long-press), без подъёма.
+                // Selected — только тень (мультивыбор long-press), без подъёма.
                 elevated: active || peeking || selected,
               );
 

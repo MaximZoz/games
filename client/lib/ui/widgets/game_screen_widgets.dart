@@ -595,16 +595,23 @@ class GameTurnCountdown extends StatefulWidget {
   State<GameTurnCountdown> createState() => _GameTurnCountdownState();
 }
 
-class _GameTurnCountdownState extends State<GameTurnCountdown> {
+class _GameTurnCountdownState extends State<GameTurnCountdown>
+    with SingleTickerProviderStateMixin {
   Timer? _timer;
   int _remaining = 0;
   bool _expiredFired = false;
+  AnimationController? _blink;
 
   @override
   void initState() {
     super.initState();
+    _blink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
     _updateRemaining();
     _startTimer();
+    _syncBlink();
   }
 
   @override
@@ -616,12 +623,32 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
       _updateRemaining();
       _startTimer();
     }
+    _syncBlink();
+  }
+
+  bool get _isRedZone {
+    final total = widget.turnTimeSec > 0 ? widget.turnTimeSec : 60;
+    final fraction = (_remaining / total).clamp(0.0, 1.0);
+    return widget.isMyTurn && fraction <= 0.18;
+  }
+
+  void _syncBlink() {
+    final c = _blink;
+    if (c == null) return;
+    if (_isRedZone) {
+      if (!c.isAnimating) c.repeat(reverse: true);
+    } else if (c.isAnimating) {
+      c
+        ..stop()
+        ..value = 1;
+    }
   }
 
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _updateRemaining();
+      _syncBlink();
       if (_remaining <= 0 && !_expiredFired) {
         _expiredFired = true;
         widget.onExpired();
@@ -642,6 +669,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
   @override
   void dispose() {
     _timer?.cancel();
+    _blink?.dispose();
     super.dispose();
   }
 
@@ -652,7 +680,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
     final color = widget.isMyTurn
         ? TurnTimerStyle.colorsFor(hasTimer: true, fraction: fraction).first
         : AppColors.textSecondary;
-    return Row(
+    final row = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.timer_outlined, size: 18, color: color),
@@ -665,6 +693,22 @@ class _GameTurnCountdownState extends State<GameTurnCountdown> {
               ),
         ),
       ],
+    );
+    final blink = _blink;
+    if (blink == null || !_isRedZone) return row;
+    return AnimatedBuilder(
+      animation: blink,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(blink.value);
+        return Opacity(
+          opacity: 0.35 + 0.65 * t,
+          child: Transform.scale(
+            scale: 1.0 + 0.06 * t,
+            child: child,
+          ),
+        );
+      },
+      child: row,
     );
   }
 }

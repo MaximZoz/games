@@ -649,18 +649,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     });
   }
 
-  /// Оптимистичные атаки, которых ещё нет на серверном столе.
-  List<PlayingCard> _pendingOptimisticAttacks(DurakGameView view) {
-    if (_optimisticAttacks.isEmpty) return const [];
-    final onTable = {
-      for (final p in view.table) p.attack.toPlayingCard(),
-    };
-    return [
-      for (final c in _optimisticAttacks)
-        if (!onTable.contains(c)) c,
-    ];
-  }
-
   /// `true` — карта ушла в полёт/на стол; `false` — ход не начался.
   Future<bool> _playCards(
     DurakGameView view,
@@ -811,25 +799,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return true;
     }
 
-    // Приземление: сначала optimistic под overlay (layout уже финальный), потом dismiss.
-    setState(() {
-      if (doDefend && defendIdx >= 0) {
-        _optimisticDefends[defendIdx] = cards.first;
-      } else {
-        _optimisticAttacks.addAll(cards);
-      }
-      // Слот оставляем заблокированным до dismiss, чтобы не дёрнуть layout.
-    });
-    await WidgetsBinding.instance.endOfFrame;
-    if (mounted) await Future<void>.delayed(const Duration(milliseconds: 20));
-    for (final t in tickets) {
-      t.dismiss();
-    }
-    if (mounted) {
+    // Отбой: optimistic под overlay в той же паре, затем dismiss.
+    // Атака: overlay остаётся до ответа сервера — иначе карта рисуется дважды
+    // (fly + optimistic, потом ещё раз server pair с другим key).
+    if (doDefend && defendIdx >= 0) {
       setState(() {
-        _flightLockTable = false;
-        _flightDefendIdx = null;
+        _optimisticDefends[defendIdx] = cards.first;
       });
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) await Future<void>.delayed(const Duration(milliseconds: 16));
+      for (final t in tickets) {
+        t.dismiss();
+      }
+      tickets = const [];
+      if (mounted) {
+        setState(() {
+          _flightLockTable = false;
+          _flightDefendIdx = null;
+        });
+      }
     }
 
     final repo = ref.read(durakRepositoryProvider);
@@ -848,8 +836,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       try {
         await ref.read(durakGameProvider(widget.gameId).future);
       } catch (_) {}
-      // Сервер уже содержит карты — сразу убрать optimistic, без двойного кадра.
+      // Сервер уже содержит карты — один кадр: убрать fly/optimistic.
       if (mounted) {
+        for (final t in tickets) {
+          t.dismiss();
+        }
+        tickets = const [];
+        // Синхронизируем prev, чтобы remote-FX не проиграл атаку ещё раз.
+        final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+        if (v != null) {
+          _prevTable = List.of(v.table);
+          _prevDeckCount = v.deckCount;
+          _prevBitoCount = v.bitoCount;
+        }
         setState(() {
           _flyingFromHand.removeAll(cards);
           _optimisticAttacks.clear();
@@ -860,6 +859,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     } on GamesException catch (e) {
       if (mounted) {
+        for (final t in tickets) {
+          t.dismiss();
+        }
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
         setState(() {
           _flyingFromHand.removeAll(cards);
@@ -872,6 +874,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     } finally {
       if (mounted) {
+        for (final t in tickets) {
+          t.dismiss();
+        }
         setState(() {
           _busy = false;
           _dragGlobal = null;
@@ -2512,16 +2517,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         : (lifting ? _defendTargetIndexes(view, focus) : const <int>{});
     final defendPairIndex = _flightDefendIdx ??
         (lifting ? _defendTargetIndex(view, focus) : -1);
-    final pendingAttacks = _pendingOptimisticAttacks(view);
-    // Слот подкида — оверлей, только когда взяли карту (или во время полёта).
+    // Слот подкида — только пока карта в руке/поднята; во время полёта скрыт
+    // (цель уже посчитана, иначе слот «мерцает» под overlay).
     final canShowAttackSlot = !view.isOver &&
         view.attackerIndex == view.myIndex &&
         (view.phase == 'attack' ||
             view.phase == 'attack_follow' ||
             view.phase == 'defend') &&
-        pendingAttacks.isEmpty;
-    final showAttackSlot =
-        canShowAttackSlot && (highlightAttack || _flightLockTable);
+        !_busy &&
+        !_flightLockTable;
+    final showAttackSlot = canShowAttackSlot && highlightAttack;
 
     // Колода слева: рубашки наполовину за краем, козырь всегда виден.
     final deckPeek = KeyedSubtree(
@@ -2562,17 +2567,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               defendTargetKey: i == defendPairIndex ? _defendTargetKey : null,
               optimisticDefense: _visibleOptimisticDefense(i),
             ),
-        for (var i = 0; i < pendingAttacks.length; i++)
-          Padding(
-            key: ValueKey('opt-atk-$i-${pendingAttacks[i]}'),
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: PlayingCardWidget(
-              card: pendingAttacks[i],
-              size: cardSize,
-              elevated: true,
-              highlighted: true,
-            ),
-          ),
+        // Optimistic-атаки больше не рисуем отдельным виджетом — только fly-overlay
+        // до ответа сервера (иначе двойная отрисовка).
       ],
     ];
 
@@ -2651,9 +2647,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               Center(
                 child: Transform.translate(
                   offset: Offset(
-                    (view.table.length + pendingAttacks.length) *
-                        cardSize.width *
-                        0.22,
+                    view.table.length * cardSize.width * 0.22,
                     8,
                   ),
                   child: KeyedSubtree(
@@ -2672,20 +2666,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               alignment: const Alignment(-1.0, -0.12),
               child: deckPeek,
             ),
-            // Бита + слот таймера фиксированной высоты — Align не двигает биту.
+            // Таймер НАД битой; слот фиксированной высоты — бита не прыгает.
             Align(
-              alignment: const Alignment(1.0, -0.38),
+              alignment: const Alignment(1.0, -0.42),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  RepaintBoundary(child: bitoPeek),
                   SizedBox(
                     height: 42,
                     child: showTimer
                         ? Padding(
                             padding: EdgeInsets.only(
-                              top: 6,
+                              bottom: 6,
                               right: cardSize.width * 0.12,
                             ),
                             child: DecoratedBox(
@@ -2727,6 +2720,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                           )
                         : null,
                   ),
+                  RepaintBoundary(child: bitoPeek),
                 ],
               ),
             ),
@@ -2736,7 +2730,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// До 3 сверху + 3 снизу; если не влезает — мягко сжимаем + 2/2/2.
+  /// Всегда 2 в ряд; если не влезает — пары наезжают друг на друга.
   Widget _buildTableRows({
     required List<Widget> items,
     required Size cardSize,
@@ -2744,55 +2738,40 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
     final n = items.length;
-    // Чем больше пар — тем плотнее, чтобы новая карта легла на стол.
-    final gap = n >= 5 ? 6.0 : n >= 3 ? 8.0 : 12.0;
     final pairW = cardSize.width + 18;
-    final canFit3 = maxWidth >= pairW * 3 + gap * 2;
+    const baseGap = 10.0;
 
-    List<List<Widget>> rows;
-    if ((!canFit3 && n >= 4) || n >= 5) {
-      rows = [
-        items.take(2).toList(),
-        items.skip(2).take(2).toList(),
-        items.skip(4).take(2).toList(),
-      ].where((r) => r.isNotEmpty).toList();
-    } else {
-      rows = [
-        items.take(3).toList(),
-        if (n > 3) items.skip(3).take(3).toList(),
-      ].where((r) => r.isNotEmpty).toList();
-    }
+    final rows = <List<Widget>>[
+      for (var i = 0; i < n; i += 2)
+        items.skip(i).take(2).toList(),
+    ];
 
     final maxRowLen = rows.fold<int>(0, (m, r) => r.length > m ? r.length : m);
-    final neededW = maxRowLen * pairW + (maxRowLen - 1) * gap;
-    final scale = neededW <= maxWidth
-        ? 1.0
-        : (maxWidth / neededW).clamp(0.62, 1.0);
+    // Нужная ширина с нормальным зазором.
+    final neededW = maxRowLen * pairW + (maxRowLen - 1) * baseGap;
+    // Если не влезает — отрицательный gap (одна пара на другую), без scale-прыжка.
+    double gap = baseGap;
+    if (neededW > maxWidth && maxRowLen > 1) {
+      gap = ((maxWidth - maxRowLen * pairW) / (maxRowLen - 1))
+          .clamp(-(pairW * 0.55), baseGap);
+    }
 
-    final column = Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var r = 0; r < rows.length; r++) ...[
-          if (r > 0) SizedBox(height: gap * scale + 2),
+          if (r > 0) SizedBox(height: gap.abs() < 4 ? 8 : 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               for (var i = 0; i < rows[r].length; i++) ...[
-                if (i > 0) SizedBox(width: gap * scale),
+                if (i > 0) SizedBox(width: gap),
                 rows[r][i],
               ],
             ],
           ),
         ],
       ],
-    );
-
-    // Без анимации scale — иначе при появлении слота/пары стол дёргается.
-    if ((scale - 1.0).abs() < 0.001) return column;
-    return Transform.scale(
-      scale: scale,
-      alignment: Alignment.center,
-      child: column,
     );
   }
 

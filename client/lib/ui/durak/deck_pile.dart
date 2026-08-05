@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
-/// Колода: половина рубашек за левым краем + козырь лицом вправо (всегда виден).
+/// Колода: половина рубашек за левым краем + козырь лицом вправо.
 ///
-/// При 0–1 карте — только козырь лицом, без рубашки и без «призрака».
+/// - `deckCount >= 2` — рубашки + козырь
+/// - `deckCount == 1` — только козырь лицом
+/// - `deckCount == 0` — только значок масти (карта уже ушла в руку)
 class DurakDeckPile extends StatelessWidget {
   const DurakDeckPile({
     super.key,
@@ -31,9 +33,11 @@ class DurakDeckPile extends StatelessWidget {
     final hide = cardSize.width * 0.48;
     // Стек рубашек только когда в колоде ещё есть карты сверх открытого козыря.
     final stackN = deckCount <= 1 ? 0 : math.min(deckCount, 5);
+    final showTrumpFace = deckCount >= 1;
     // Место в лейауте: видимая половина рубашки + почти весь козырь.
     final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
+    final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
 
     return SizedBox(
       width: layoutW,
@@ -41,19 +45,29 @@ class DurakDeckPile extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Козырь справа — лицо всегда видно.
-          Positioned(
-            left: cardSize.width * 0.22,
-            top: (h - cardSize.width) / 2,
-            child: Transform.rotate(
-              angle: -math.pi / 2,
-              child: PlayingCardWidget(
-                card: trumpCard,
-                size: cardSize,
-                elevated: true,
+          // Козырь лицом — пока карта ещё в колоде.
+          if (showTrumpFace)
+            Positioned(
+              left: cardSize.width * 0.22,
+              top: (h - cardSize.width) / 2,
+              child: Transform.rotate(
+                angle: -math.pi / 2,
+                child: PlayingCardWidget(
+                  card: trumpCard,
+                  size: cardSize,
+                  elevated: true,
+                ),
+              ),
+            )
+          else
+            Positioned(
+              left: cardSize.width * 0.18,
+              top: (h - badgeSize) / 2,
+              child: DurakTrumpSuitBadge(
+                suit: _suit,
+                size: badgeSize,
               ),
             ),
-          ),
           // Стопка рубашек: только при deckCount >= 2.
           if (stackN > 0)
             Positioned(
@@ -82,15 +96,6 @@ class DurakDeckPile extends StatelessWidget {
               bottom: 2,
               left: cardSize.width * 0.08,
               child: _CountBadge(count: deckCount),
-            )
-          else if (deckCount <= 0)
-            Positioned(
-              bottom: 2,
-              left: cardSize.width * 0.12,
-              child: DurakTrumpSuitBadge(
-                suit: _suit,
-                size: math.min(cardSize.width, cardSize.height) * 0.34,
-              ),
             ),
         ],
       ),
