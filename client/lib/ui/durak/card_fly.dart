@@ -39,6 +39,10 @@ Future<CardFlyTicket> playCardFlyAnimation({
   double arcLift = 0,
   bool keepAtEnd = false,
 }) async {
+  // Не играть поверх чатов/других вкладок shell.
+  if (!context.mounted || !TickerMode.of(context)) {
+    return CardFlyTicket._(null);
+  }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null);
 

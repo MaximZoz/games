@@ -5,6 +5,8 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Колода: половина рубашек за левым краем + козырь лицом вправо (всегда виден).
+///
+/// При 0–1 карте — только козырь лицом, без рубашки и без «призрака».
 class DurakDeckPile extends StatelessWidget {
   const DurakDeckPile({
     super.key,
@@ -27,7 +29,8 @@ class DurakDeckPile extends StatelessWidget {
   Widget build(BuildContext context) {
     // Рубашки уезжают влево за край; козырь остаётся в кадре.
     final hide = cardSize.width * 0.48;
-    final stackN = deckCount <= 0 ? 0 : math.min(deckCount, 5);
+    // Стек рубашек только когда в колоде ещё есть карты сверх открытого козыря.
+    final stackN = deckCount <= 1 ? 0 : math.min(deckCount, 5);
     // Место в лейауте: видимая половина рубашки + почти весь козырь.
     final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
@@ -51,7 +54,7 @@ class DurakDeckPile extends StatelessWidget {
               ),
             ),
           ),
-          // Стопка рубашек: левая половина за краем виджета/экрана.
+          // Стопка рубашек: только при deckCount >= 2.
           if (stackN > 0)
             Positioned(
               left: -hide,
@@ -73,23 +76,14 @@ class DurakDeckPile extends StatelessWidget {
                   ],
                 ),
               ),
-            )
-          else
-            Positioned(
-              left: -hide * 0.35,
-              top: (h - cardSize.height) / 2,
-              child: Opacity(
-                opacity: 0.28,
-                child: CardBackWidget(size: cardSize),
-              ),
             ),
-          if (deckCount > 0)
+          if (deckCount > 1)
             Positioned(
               bottom: 2,
               left: cardSize.width * 0.08,
               child: _CountBadge(count: deckCount),
             )
-          else
+          else if (deckCount <= 0)
             Positioned(
               bottom: 2,
               left: cardSize.width * 0.12,
@@ -125,6 +119,32 @@ class DurakBitoPile extends StatelessWidget {
     final areaH = cardSize.height * (peek ? 1.12 : 1.25);
     if (count <= 0) {
       return SizedBox(width: peekW, height: areaH);
+    }
+
+    // Одна карта в отбое — просто лежит, без «кучи».
+    if (count == 1) {
+      final card = Transform.rotate(
+        angle: 0.18,
+        child: CardBackWidget(
+          size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+          elevated: true,
+        ),
+      );
+      if (!peek) {
+        return SizedBox(
+          width: peekW,
+          height: areaH,
+          child: Center(child: card),
+        );
+      }
+      return SizedBox(
+        width: peekW,
+        height: areaH,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: card,
+        ),
+      );
     }
 
     final shown = math.min(count, 14);
