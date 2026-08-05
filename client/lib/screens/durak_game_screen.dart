@@ -49,9 +49,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   PlayingCard? _activeCard;
   /// Только для выбора цели отбоя в момент drop — без setState на каждый move.
   Offset? _dragGlobal;
-  /// Заморозка spacing/размера веера после хода — карты не «плывут» к новому шагу.
+  /// Заморозка размера карт веера после хода (spacing всегда на всю ширину).
   Size? _frozenFanCardSize;
-  double? _frozenFanSpacing;
   int? _frozenFanHandCount;
   /// Кратко выключить AnimatedPositioned после хода/добора.
   bool _suppressFanLayoutAnim = false;
@@ -644,13 +643,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   void _freezeFanLayout(Size cardSize, double spacing, int handCount) {
     _frozenFanCardSize = cardSize;
-    _frozenFanSpacing = spacing;
     _frozenFanHandCount = handCount;
   }
 
   void _unfreezeFanLayout() {
     _frozenFanCardSize = null;
-    _frozenFanSpacing = null;
     _frozenFanHandCount = null;
   }
 
