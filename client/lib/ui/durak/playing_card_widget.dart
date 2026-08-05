@@ -167,13 +167,18 @@ class CardBackWidget extends StatelessWidget {
     super.key,
     this.size = const Size(60, 88),
     this.elevated = false,
+    this.outlined = false,
   });
 
   final Size size;
   final bool elevated;
 
+  /// Светлая кромка — плитки в ряду не сливаются в одну полосу.
+  final bool outlined;
+
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(size.width * 0.15);
     return Container(
       width: size.width,
       height: size.height,
@@ -186,7 +191,13 @@ class CardBackWidget extends StatelessWidget {
             AppColors.accentEnd,
           ],
         ),
-        borderRadius: BorderRadius.circular(size.width * 0.15),
+        borderRadius: radius,
+        border: outlined
+            ? Border.all(
+                color: Colors.white.withValues(alpha: 0.42),
+                width: 1.2,
+              )
+            : null,
         boxShadow: elevated
             ? [
                 BoxShadow(
@@ -195,7 +206,15 @@ class CardBackWidget extends StatelessWidget {
                   offset: const Offset(0, 5),
                 ),
               ]
-            : const [],
+            : outlined
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.14),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : const [],
       ),
       child: Center(
         child: Icon(

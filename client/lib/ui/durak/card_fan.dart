@@ -106,14 +106,14 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
-  List<PlayingCard> get _layoutCards {
-    final hidden = widget.hiddenCards;
-    if (hidden == null || hidden.isEmpty) return widget.cards;
-    return widget.cards.where((c) => !hidden.contains(c)).toList();
-  }
+  /// Полный список слотов — скрытые карты оставляют «дырку», веер не схлопывается.
+  List<PlayingCard> get _layoutCards => widget.cards;
 
-  /// Карты слотов веера (поднятая остаётся «дыркой», чтобы соседние не прыгали).
+  /// Карты слотов веера (поднятая/летящая остаётся дыркой).
   List<PlayingCard> get _fanCards => _layoutCards;
+
+  bool _isHidden(PlayingCard card) =>
+      widget.hiddenCards?.contains(card) == true;
 
   @override
   void dispose() {
@@ -946,11 +946,13 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     final legal = _isLegal(card);
     final isLegalContext = widget.legalCards != null;
+    final hidden = _isHidden(card);
     // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
     final showHintShadow = !isLiftedAway &&
+        !hidden &&
         ((active || selected) && (!isLegalContext || legal));
 
-    Widget child = isLiftedAway
+    Widget child = isLiftedAway || hidden
         ? SizedBox(
             width: widget.cardSize.width,
             height: widget.cardSize.height,

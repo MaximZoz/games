@@ -448,13 +448,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     List<PlayingCard> hand,
     Suit trump, {
     bool animate = true,
+    bool keepFreeze = false,
   }) {
     final sorted = List<PlayingCard>.from(hand)
       ..sort((a, b) => _compareHandCards(a, b, trump));
-    _unfreezeFanLayout();
+    if (!keepFreeze) _unfreezeFanLayout();
     setState(() {
       _handOrder = sorted;
       _suppressFanLayoutAnim = !animate;
+      if (keepFreeze && _frozenFanCardSize != null) {
+        final lay = _fitHandFan(
+          sorted.length.clamp(1, 52),
+          MediaQuery.sizeOf(context).width,
+        );
+        _frozenFanCardSize = lay.cardSize;
+        _frozenFanHandCount = sorted.length;
+      }
     });
     if (!animate) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -464,6 +473,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       });
     }
+  }
+
+  /// После взятия: добрать новые карты в порядок без «исчезли → появились».
+  void _mergeHandAfterTake(List<PlayingCard> hand, Suit trump) {
+    final sorted = List<PlayingCard>.from(hand)
+      ..sort((a, b) => _compareHandCards(a, b, trump));
+    setState(() {
+      _handOrder = sorted;
+      _suppressFanLayoutAnim = true;
+      final lay = _fitHandFan(
+        sorted.length.clamp(1, 52),
+        MediaQuery.sizeOf(context).width,
+      );
+      _frozenFanCardSize = lay.cardSize;
+      _frozenFanHandCount = sorted.length;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _releaseFanLayoutSnap();
+    });
   }
 
   bool _highlightAttackSlot(DurakGameView view) {
@@ -954,7 +983,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       try {
         await ref.read(durakGameProvider(widget.gameId).future);
       } catch (_) {}
-      // Карты уже в веере в слотах сортировки — только добрать новые без мигания.
+      // Карты стола уже в веере; добор из колоды — вставить без мигания.
       if (mounted) {
         final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
         if (v != null) {
@@ -964,8 +993,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ? (v.hands[v.myIndex].cards ?? const [])
                 : const [],
           );
-          // Плавная доводка порядка (добор), без «исчезли → появились».
-          _sortHandInFan(hand, trump, animate: true);
+          _prevDeckCount = v.deckCount;
+          _prevBitoCount = v.bitoCount;
+          _prevHandLen = hand.length;
+          _prevTable = List.of(v.table);
+          _mergeHandAfterTake(hand, trump);
         }
       }
     } on GamesException catch (e) {
@@ -1372,8 +1404,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _prevTable = List.of(view.table);
 
     if (dealt > 0 && deckDropped > 0) {
-      if (_suppressNextDealFx) {
-        // Взятие: добор из колоды без полёта — сортировка уже в _animateTableToFan.
+      if (_suppressNextDealFx || _busy) {
+        // Взятие: добор без полёта — порядок правит _take / _mergeHandAfterTake.
         _suppressNextDealFx = false;
       } else {
         _fxScheduled = true;
@@ -1392,17 +1424,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         });
       }
     } else if (dealt > 0 && deckDropped == 0) {
-      _suppressNextDealFx = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final trump = _suitFromApi(view.trumpSuit);
-        final hand = _apiCardsToPlaying(
-          view.hands.length > view.myIndex && view.myIndex >= 0
-              ? (view.hands[view.myIndex].cards ?? const [])
-              : const [],
-        );
-        _sortHandInFan(hand, trump);
-      });
+      if (_suppressNextDealFx || _busy) {
+        _suppressNextDealFx = false;
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          final trump = _suitFromApi(view.trumpSuit);
+          final hand = _apiCardsToPlaying(
+            view.hands.length > view.myIndex && view.myIndex >= 0
+                ? (view.hands[view.myIndex].cards ?? const [])
+                : const [],
+          );
+          _sortHandInFan(hand, trump);
+        });
+      }
     } else if (bitoGrew &&
         !_busy &&
         !_hidingTable &&
@@ -2177,11 +2212,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (i != view.myIndex) opponents.add(i);
     }
 
-    final handForFan = myHand
-        .where((c) => !_flyingFromHand.contains(c))
-        .toList(growable: false);
+    // Полный веер: летящие карты — дырки слотов (hiddenCards), без схлопывания.
+    final handForFan = myHand;
 
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     final useFrozenFanSize = _frozenFanCardSize != null &&
         handForFan.length <= (_frozenFanHandCount ?? 0);
     if (!useFrozenFanSize && _frozenFanCardSize != null) {
@@ -2191,7 +2224,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
     final animateFanLayout =
         !_suppressFanLayoutAnim && !_busy && !_flightLockTable;
-    // Высота зоны: при большом веере выше, чтобы края карт были видны.
+    // Высота зоны: веер приподнят — карты не уходят под нижнее меню.
     final fanProbe = _fitHandFan(
       handForFan.length,
       MediaQuery.sizeOf(context).width,
@@ -2200,18 +2233,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ? _frozenFanCardSize!.height
         : fanProbe.cardSize.height;
     final nFan = handForFan.length;
-    final fanLift = nFan > 16
-        ? 52.0
+    // Сильный подъём при большом веере — видна почти вся карта, не только индекс.
+    final seatLift = nFan > 16
+        ? fanCardH * 0.62
         : nFan > 12
-            ? 36.0
+            ? fanCardH * 0.48
             : nFan > 8
-                ? 22.0
-                : 10.0;
-    final fanZoneH = fanCardH * 1.65 + fanLift + 28;
-    // Меньше «прячем» под навбар при большом веере.
-    final tuckUnderNav = nFan > 12
-        ? 0.0
-        : (4.0 + bottomInset * 0.08);
+                ? fanCardH * 0.34
+                : nFan > 4
+                    ? fanCardH * 0.20
+                    : fanCardH * 0.10;
+    // CardFan ≈ 1.7h + peek; + seatLift над низом; запас под поворот краёв.
+    final fanZoneH = fanCardH * 2.05 + seatLift + 20;
 
     final showTimer = !view.isOver &&
         view.isMyTurn &&
@@ -2287,7 +2320,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       // Небольшой отступ слева — крайняя карта читается.
                       left: 2,
                       right: -4,
-                      bottom: -tuckUnderNav,
+                      // Поднять над низом — низ карт не прячется под меню shell.
+                      bottom: seatLift,
                       child: LayoutBuilder(
                         builder: (context, c) {
                           final fitted =
@@ -2549,52 +2583,80 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  /// Карты соперника «плиточкой» — каждая видна отдельно, можно посчитать.
+  /// Карты соперника дугой с кромкой — не сплошная линия, видно каждую.
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
     if (count <= 0) return const SizedBox.shrink();
-    final maxW = MediaQuery.sizeOf(context).width - 48;
-    var tile = Size(cardSize.width * 0.36, cardSize.height * 0.36);
-    // Видимая полоска каждой плитки — не сплошная линия.
-    var step = tile.width * (count > 20
-        ? 0.30
-        : count > 14
-            ? 0.34
-            : count > 8
-                ? 0.40
-                : 0.48);
-    var totalW = tile.width + step * (count - 1);
-    if (totalW > maxW && count > 1) {
-      step = ((maxW - tile.width) / (count - 1)).clamp(9.0, step);
-      totalW = tile.width + step * (count - 1);
+    final maxW = MediaQuery.sizeOf(context).width - 56;
+    // Показываем до 16 плиток; при большем числе — плотнее + бейдж с точным count.
+    final shown = count > 16 ? 16 : count;
+    var tile = Size(
+      (cardSize.width * 0.44).clamp(30.0, 52.0),
+      (cardSize.height * 0.44).clamp(44.0, 76.0),
+    );
+    // Минимальная видимая полоска — карты не сливаются.
+    var step = tile.width * (shown > 12
+        ? 0.42
+        : shown > 8
+            ? 0.50
+            : shown > 4
+                ? 0.58
+                : 0.70);
+    var totalW = tile.width + step * math.max(shown - 1, 0);
+    if (totalW > maxW && shown > 1) {
+      step = ((maxW - tile.width) / (shown - 1)).clamp(15.0, step);
+      totalW = tile.width + step * (shown - 1);
       if (totalW > maxW) {
-        final s = (maxW / totalW).clamp(0.5, 1.0);
+        final s = (maxW / totalW).clamp(0.55, 1.0);
         tile = Size(tile.width * s, tile.height * s);
         step *= s;
-        totalW = tile.width + step * (count - 1);
+        totalW = tile.width + step * (shown - 1);
       }
     }
+    final arcH = tile.height * 0.28;
+    final fanH = tile.height + arcH + 6;
     return Padding(
-      padding: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.only(top: 4, bottom: 2),
       child: KeyedSubtree(
         key: _oppFanKeys.putIfAbsent(idx, GlobalKey.new),
         child: Center(
           child: SizedBox(
             key: ValueKey('opp-$idx-$count'),
-            width: totalW,
-            height: tile.height + 4,
+            width: totalW + 28,
+            height: fanH,
             child: Stack(
               clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
               children: [
-                for (var i = 0; i < count; i++)
-                  Positioned(
-                    left: i * step,
-                    top: 0,
-                    child: CardBackWidget(
-                      size: tile,
-                      elevated: i == count - 1,
-                    ),
+                for (var i = 0; i < shown; i++)
+                  Builder(
+                    builder: (_) {
+                      final t = shown <= 1
+                          ? 0.0
+                          : (i / (shown - 1)) * 2 - 1; // -1..1
+                      // Середина ниже (к столу), края выше — читаемая дуга.
+                      final y = (1 - t * t) * arcH;
+                      final angle = t * 0.22;
+                      return Positioned(
+                        left: i * step,
+                        top: y,
+                        child: Transform.rotate(
+                          angle: angle,
+                          alignment: Alignment.topCenter,
+                          child: CardBackWidget(
+                            size: tile,
+                            elevated: i == shown - 1,
+                            outlined: true,
+                          ),
+                        ),
+                      );
+                    },
                   ),
+                Positioned(
+                  right: 0,
+                  top: arcH * 0.35,
+                  child: _OpponentCountBadge(count: count),
+                ),
               ],
             ),
           ),
@@ -2981,6 +3043,44 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 }
 
 /// Плавное мигание кнопки «Взять» / «Бито» между колодой и веером.
+class _OpponentCountBadge extends StatelessWidget {
+  const _OpponentCountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 22),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceUnified.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.accentStart.withValues(alpha: 0.35),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Text(
+        '$count',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: AppColors.accentStart,
+          height: 1.1,
+        ),
+      ),
+    );
+  }
+}
+
 class _PulsingActionButton extends StatefulWidget {
   const _PulsingActionButton({
     required this.label,
