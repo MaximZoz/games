@@ -452,7 +452,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   double _cardLeft(int i, int n, double baseSpacing, double totalW) {
     if (widget.fillWidth) {
-      return i * baseSpacing;
+      // Небольшой отступ слева — крайняя карта не обрезается краем экрана.
+      return 10 + i * baseSpacing;
     }
     final center = (n - 1) / 2.0;
     return totalW / 2 + (i - center) * baseSpacing + 16;
@@ -711,8 +712,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     // Запас по высоте под приподнятую карту.
     final height = widget.cardSize.height * 1.7 + _peekRaiseY;
     final arc = _arcFor(max(fanCards.length, 1));
-    // fillWidth — ровно по картам от левого края; иначе запас по бокам.
-    final boxW = widget.fillWidth ? totalW : totalW + 32;
+    // fillWidth — карты + отступ слева 10; иначе запас по бокам.
+    final boxW = widget.fillWidth ? totalW + 10 : totalW + 32;
 
     return SizedBox(
       height: height,

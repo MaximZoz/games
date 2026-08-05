@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
-/// Колода «плиточкой»: рубашки со сдвигом, уголки выглядывают; козырь лицом вправо.
+/// Колода: рубашки наполовину за левым краем + козырь лицом вправо.
 ///
-/// - `deckCount >= 2` — стопка рубашек + козырь
+/// - `deckCount >= 2` — компактная стопка + козырь
 /// - `deckCount == 1` — только козырь лицом
 /// - `deckCount == 0` — только значок масти
 class DurakDeckPile extends StatelessWidget {
@@ -29,22 +29,13 @@ class DurakDeckPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Половина рубашки за краем — колода не «длинная».
+    final hide = cardSize.width * 0.48;
+    final stackN = deckCount <= 1 ? 0 : math.min(deckCount, 5);
     final showTrumpFace = deckCount >= 1;
-    // Сколько «плиток» показать (уголки должны читаться).
-    final stackN = deckCount <= 1 ? 0 : math.min(deckCount, 6);
-    final stepX = cardSize.width * 0.085;
-    final stepY = cardSize.height * 0.055;
+    final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
+    final h = math.max(cardSize.height + 12, cardSize.width + 16);
     final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
-
-    // Ширина: стопка + выглядывающий козырь.
-    final stackW = cardSize.width + stepX * math.max(stackN - 1, 0);
-    final layoutW = showTrumpFace
-        ? stackW * 0.72 + cardSize.height * 0.78
-        : math.max(stackW, badgeSize + 12);
-    final h = math.max(
-      cardSize.height + stepY * math.max(stackN - 1, 0) + 16,
-      cardSize.width + 20,
-    );
 
     return SizedBox(
       width: layoutW,
@@ -52,11 +43,10 @@ class DurakDeckPile extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Козырь под стопкой, повёрнут — выглядывает вправо уголком/лицом.
           if (showTrumpFace)
             Positioned(
-              left: stackW * 0.42,
-              top: (h - cardSize.width) / 2 + 2,
+              left: cardSize.width * 0.22,
+              top: (h - cardSize.width) / 2,
               child: Transform.rotate(
                 angle: -math.pi / 2,
                 child: PlayingCardWidget(
@@ -68,35 +58,29 @@ class DurakDeckPile extends StatelessWidget {
             )
           else
             Positioned(
-              left: 8,
+              left: cardSize.width * 0.12,
               top: (h - badgeSize) / 2,
               child: DurakTrumpSuitBadge(
                 suit: _suit,
                 size: badgeSize,
               ),
             ),
-          // Плитки рубашек: диагональный сдвиг + лёгкий поворот — видны уголки.
           if (stackN > 0)
             Positioned(
-              left: 0,
-              top: (h - cardSize.height - stepY * (stackN - 1)) / 2,
+              left: -hide,
+              top: (h - cardSize.height) / 2,
               child: SizedBox(
-                width: stackW + 8,
-                height: cardSize.height + stepY * (stackN - 1) + 8,
+                width: cardSize.width + stackN * 2.2,
+                height: cardSize.height + stackN * 2.2,
                 child: Stack(
-                  clipBehavior: Clip.none,
                   children: [
                     for (var i = 0; i < stackN; i++)
                       Positioned(
-                        left: i * stepX,
-                        top: i * stepY,
-                        child: Transform.rotate(
-                          angle: -0.10 + i * 0.02,
-                          alignment: Alignment.bottomLeft,
-                          child: CardBackWidget(
-                            size: cardSize,
-                            elevated: i == stackN - 1,
-                          ),
+                        left: i * 2.2,
+                        top: i * 2.2,
+                        child: CardBackWidget(
+                          size: cardSize,
+                          elevated: i == stackN - 1,
                         ),
                       ),
                   ],
@@ -105,8 +89,8 @@ class DurakDeckPile extends StatelessWidget {
             ),
           if (deckCount > 1)
             Positioned(
-              bottom: 0,
-              left: stackW * 0.18,
+              bottom: 2,
+              left: cardSize.width * 0.08,
               child: _CountBadge(count: deckCount),
             ),
         ],
@@ -138,7 +122,6 @@ class DurakBitoPile extends StatelessWidget {
       return SizedBox(width: peekW, height: areaH);
     }
 
-    // Одна карта в отбое — просто лежит, без «кучи».
     if (count == 1) {
       final card = Transform.rotate(
         angle: 0.18,
