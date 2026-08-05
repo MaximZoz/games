@@ -1537,7 +1537,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         .toList(growable: false);
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final fanZoneH = handSize.height * 1.35 + 28;
+    final fanZoneH = handSize.height * 1.55 + 40;
     final tuckUnderNav = 36.0 + bottomInset * 0.35;
 
     return Padding(
@@ -1545,13 +1545,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       child: Column(
         children: [
           // Панель соперника по центру; карты — под панелью.
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _opponentsHeader(view),
-              for (final oi in opponents) _opponentFan(view, oi, tableSize),
-            ],
+          SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _opponentsHeader(view),
+                for (final oi in opponents) _opponentFan(view, oi, tableSize),
+              ],
+            ),
           ),
           // Часики только на моём ходе (как в крестиках); у соперника — рамка.
           if (!view.isOver &&
@@ -1614,29 +1617,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   bottom: -tuckUnderNav,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final n = handForFan.length;
-                      final spacing = n <= 1
-                          ? 0.0
-                          : handSize.width *
-                              (n > 24
-                                  ? 0.14
-                                  : n > 18
-                                      ? 0.18
-                                      : n > 14
-                                          ? 0.22
-                                          : n > 10
-                                              ? 0.28
-                                              : n > 7
-                                                  ? 0.34
-                                                  : 0.46);
-                      final fanW = handSize.width + spacing * (n - 1) + 32;
-                      final scale = fanW > constraints.maxWidth
-                          ? (constraints.maxWidth / fanW).clamp(0.5, 1.0)
-                          : 1.0;
+                      final maxW = constraints.maxWidth;
                       final fan = CardFan(
                         key: _fanKey,
                         cards: handForFan,
                         cardSize: handSize,
+                        maxWidth: maxW,
                         legalCards: legal,
                         selectedCards: _selected,
                         hiddenCards: _flyingFromHand,
@@ -1669,8 +1655,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                         onDrop: (c, global, from) =>
                             _onCardDrop(view, c, global, from),
                       );
-                      return Transform.scale(
-                        scale: scale,
+                      return Align(
                         alignment: Alignment.bottomCenter,
                         child: fan,
                       );
@@ -1858,31 +1843,42 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
+    // Столько карт, сколько реально у соперника (без clamp).
     final fake = List<PlayingCard>.generate(
-      count.clamp(0, 8),
+      count.clamp(0, 52),
       (i) => PlayingCard(Rank.six, Suit.spades),
     );
-    // Веер «в его сторону»: ось сверху, дуга от игрока.
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 320),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeIn,
-        transitionBuilder: (child, anim) => FadeTransition(
-          opacity: anim,
-          child: ScaleTransition(scale: anim, child: child),
-        ),
-        child: CardFan(
-          key: ValueKey('opp-$idx-$count'),
-          cards: fake,
-          cardSize: Size(cardSize.width * 0.42, cardSize.height * 0.42),
-          faceDown: true,
-          invertFan: true,
-          enabled: false,
-          arc: 0.36,
-          spacing: cardSize.width * 0.15,
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxW = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
+          final oppSize = Size(
+            cardSize.width * 0.5,
+            cardSize.height * 0.5,
+          );
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 320),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: ScaleTransition(scale: anim, child: child),
+            ),
+            child: CardFan(
+              key: ValueKey('opp-$idx-$count'),
+              cards: fake,
+              cardSize: oppSize,
+              faceDown: true,
+              invertFan: true,
+              enabled: false,
+              arc: 0.32,
+              maxWidth: maxW,
+            ),
+          );
+        },
       ),
     );
   }
@@ -1907,17 +1903,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         !_busy &&
         (_activeCard != null || _dragGlobal != null);
 
-    // Колода слева: видна примерно половина — больше места столу.
+    // Колода слева: рубашки наполовину за краем, козырь всегда виден.
     final deckPeek = KeyedSubtree(
       key: _deckKey,
-      child: Transform.translate(
-        offset: Offset(-cardSize.width * 0.48, 0),
-        child: DurakDeckPile(
-          deckCount: view.deckCount,
-          trumpCard: trumpCard,
-          trumpSuit: _suitFromApi(view.trumpSuit),
-          cardSize: cardSize,
-        ),
+      child: DurakDeckPile(
+        deckCount: view.deckCount,
+        trumpCard: trumpCard,
+        trumpSuit: _suitFromApi(view.trumpSuit),
+        cardSize: cardSize,
       ),
     );
 

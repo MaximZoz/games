@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
-/// Колода: стопка рубашек + козырь боком, смотрящий вправо.
-/// Когда колода пуста — остаётся только значок козырной масти.
+/// Колода: половина рубашек за левым краем + козырь лицом вправо (всегда виден).
 class DurakDeckPile extends StatelessWidget {
   const DurakDeckPile({
     super.key,
@@ -26,34 +25,22 @@ class DurakDeckPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (deckCount <= 0) {
-      return SizedBox(
-        width: cardSize.width + 8,
-        height: cardSize.height + 8,
-        child: Center(
-          child: DurakTrumpSuitBadge(
-            suit: _suit,
-            size: math.min(cardSize.width, cardSize.height) * 0.72,
-          ),
-        ),
-      );
-    }
-
-    final stackN = math.min(deckCount, 5);
-    // Ширина: рубашки + почти вся повёрнутая козырная карта.
-    final w = cardSize.width + cardSize.height * 0.72;
+    // Рубашки уезжают влево за край; козырь остаётся в кадре.
+    final hide = cardSize.width * 0.48;
+    final stackN = deckCount <= 0 ? 0 : math.min(deckCount, 5);
+    // Место в лейауте: видимая половина рубашки + почти весь козырь.
+    final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
 
     return SizedBox(
-      width: w,
+      width: layoutW,
       height: h,
       child: Stack(
         clipBehavior: Clip.none,
-        alignment: Alignment.center,
         children: [
-          // Козырь справа — большая часть лица видна.
+          // Козырь справа — лицо всегда видно.
           Positioned(
-            left: cardSize.width * 0.42,
+            left: cardSize.width * 0.22,
             top: (h - cardSize.width) / 2,
             child: Transform.rotate(
               angle: -math.pi / 2,
@@ -64,34 +51,53 @@ class DurakDeckPile extends StatelessWidget {
               ),
             ),
           ),
-          // Стопка рубашек слева поверх козыря.
-          Positioned(
-            left: 0,
-            top: (h - cardSize.height) / 2,
-            child: SizedBox(
-              width: cardSize.width + stackN * 1.6,
-              height: cardSize.height + stackN * 1.6,
-              child: Stack(
-                children: [
-                  for (var i = 0; i < stackN; i++)
-                    Positioned(
-                      left: i * 1.6,
-                      top: i * 1.6,
-                      child: CardBackWidget(
-                        size: cardSize,
-                        elevated: i == stackN - 1,
+          // Стопка рубашек: левая половина за краем виджета/экрана.
+          if (stackN > 0)
+            Positioned(
+              left: -hide,
+              top: (h - cardSize.height) / 2,
+              child: SizedBox(
+                width: cardSize.width + stackN * 1.6,
+                height: cardSize.height + stackN * 1.6,
+                child: Stack(
+                  children: [
+                    for (var i = 0; i < stackN; i++)
+                      Positioned(
+                        left: i * 1.6,
+                        top: i * 1.6,
+                        child: CardBackWidget(
+                          size: cardSize,
+                          elevated: i == stackN - 1,
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
+              ),
+            )
+          else
+            Positioned(
+              left: -hide * 0.35,
+              top: (h - cardSize.height) / 2,
+              child: Opacity(
+                opacity: 0.28,
+                child: CardBackWidget(size: cardSize),
               ),
             ),
-          ),
-          // На видимой половине стопки (колода частично за левым краем).
-          Positioned(
-            bottom: 2,
-            left: cardSize.width * 0.62,
-            child: _CountBadge(count: deckCount),
-          ),
+          if (deckCount > 0)
+            Positioned(
+              bottom: 2,
+              left: cardSize.width * 0.08,
+              child: _CountBadge(count: deckCount),
+            )
+          else
+            Positioned(
+              bottom: 2,
+              left: cardSize.width * 0.12,
+              child: DurakTrumpSuitBadge(
+                suit: _suit,
+                size: math.min(cardSize.width, cardSize.height) * 0.34,
+              ),
+            ),
         ],
       ),
     );
@@ -144,7 +150,6 @@ class DurakBitoPile extends StatelessWidget {
 
     if (!peek) return pile;
 
-    // Левый край кучи без жёсткого ClipRect — карты не «резаные».
     return SizedBox(
       width: peekW,
       height: areaH,
