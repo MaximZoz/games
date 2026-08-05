@@ -376,8 +376,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       size = Size(_handCardSize.width * 0.84, _handCardSize.height * 0.84);
     }
 
-    // CardFan: width = card + spacing*(n-1) + 32.
-    const fanPad = 32.0;
+    // fillWidth: width = card + spacing*(n-1), без боковых полей.
+    const fanPad = 4.0;
     final usable = (maxWidth - fanPad).clamp(72.0, maxWidth);
 
     double minSpacing(Size s) {
@@ -2144,24 +2144,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         .toList(growable: false);
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final useFrozenFan = _frozenFanCardSize != null &&
-        _frozenFanSpacing != null &&
+    final useFrozenFanSize = _frozenFanCardSize != null &&
         handForFan.length <= (_frozenFanHandCount ?? 0);
-    if (!useFrozenFan && _frozenFanCardSize != null) {
+    if (!useFrozenFanSize && _frozenFanCardSize != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _frozenFanCardSize != null) _releaseFanLayoutSnap();
       });
     }
     final animateFanLayout =
-        !_suppressFanLayoutAnim && !useFrozenFan && !_busy && !_flightLockTable;
-    // Высота зоны по типичному размеру; точный fit — в LayoutBuilder веера.
-    final fanProbe = useFrozenFan
-        ? (cardSize: _frozenFanCardSize!, spacing: _frozenFanSpacing!)
-        : _fitHandFan(
-            handForFan.length,
-            MediaQuery.sizeOf(context).width,
-          );
-    final fanZoneH = fanProbe.cardSize.height * 1.55 + 36;
+        !_suppressFanLayoutAnim && !_busy && !_flightLockTable;
+    // Высота зоны по типичному размеру; spacing всегда на всю ширину.
+    final fanProbe = _fitHandFan(
+      handForFan.length,
+      MediaQuery.sizeOf(context).width,
+    );
+    final fanZoneH = (useFrozenFanSize
+                ? _frozenFanCardSize!.height
+                : fanProbe.cardSize.height) *
+            1.55 +
+        36;
     final tuckUnderNav = 6.0 + bottomInset * 0.12;
 
     final showTimer = !view.isOver &&
@@ -2240,19 +2241,30 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       bottom: -tuckUnderNav,
                       child: LayoutBuilder(
                         builder: (context, c) {
-                          final lay = useFrozenFan
-                              ? (
-                                  cardSize: _frozenFanCardSize!,
-                                  spacing: _frozenFanSpacing!,
-                                )
-                              : _fitHandFan(handForFan.length, c.maxWidth);
+                          // Spacing всегда на всю ширину — иначе после хода
+                          // freeze оставлял пустоту слева.
+                          final fitted =
+                              _fitHandFan(handForFan.length, c.maxWidth);
+                          final cardSize = useFrozenFanSize
+                              ? _frozenFanCardSize!
+                              : fitted.cardSize;
+                          // При замороженном размере пересчитать шаг под ширину.
+                          final spacing = handForFan.length <= 1
+                              ? 0.0
+                              : ((c.maxWidth - 4 - cardSize.width) /
+                                      (handForFan.length - 1))
+                                  .clamp(
+                                    cardSize.width * 0.08,
+                                    cardSize.width * 0.96,
+                                  );
                           return Align(
-                            alignment: Alignment.bottomCenter,
+                            alignment: Alignment.bottomLeft,
                             child: CardFan(
                               key: _fanKey,
                               cards: handForFan,
-                              cardSize: lay.cardSize,
-                              spacing: lay.spacing,
+                              cardSize: cardSize,
+                              spacing: spacing,
+                              fillWidth: true,
                               animateLayout: animateFanLayout,
                               legalCards: legal,
                               selectedCards: _selected,

@@ -32,6 +32,7 @@ class CardFan extends StatefulWidget {
     this.arc,
     this.spacing,
     this.animateLayout = true,
+    this.fillWidth = false,
   });
 
   final List<PlayingCard> cards;
@@ -64,6 +65,9 @@ class CardFan extends StatefulWidget {
 
   /// Плавная перестановка слотов (сортировка). Выкл. — без «плывущего» веера после хода.
   final bool animateLayout;
+
+  /// Карты от левого края на всю ширину (без пустоты слева под крестиком).
+  final bool fillWidth;
 
   @override
   State<CardFan> createState() => _CardFanState();
@@ -446,13 +450,20 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
   bool _isSelected(PlayingCard card) =>
       widget.selectedCards?.contains(card) == true;
 
+  double _cardLeft(int i, int n, double baseSpacing, double totalW) {
+    if (widget.fillWidth) {
+      return i * baseSpacing;
+    }
+    final center = (n - 1) / 2.0;
+    return totalW / 2 + (i - center) * baseSpacing + 16;
+  }
+
   int _indexAtLocalX(double localX, int n, double baseSpacing, double totalW) {
     if (n <= 0) return 0;
-    final center = (n - 1) / 2.0;
     var best = 0;
     var bestDist = double.infinity;
     for (var i = 0; i < n; i++) {
-      final left = totalW / 2 + (i - center) * baseSpacing + 16;
+      final left = _cardLeft(i, n, baseSpacing, totalW);
       final cx = left + widget.cardSize.width / 2;
       final d = (localX - cx).abs();
       if (d < bestDist) {
@@ -481,9 +492,10 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     }
     final n = cards.length;
     final center = (n - 1) / 2;
-    final offsetX = (i - center) * baseSpacing;
-    final curveY = (i - center) * (i - center) * widget.cardSize.height * 0.012;
-    final left = totalW / 2 + offsetX + 16;
+    final curveY = widget.arc == 0
+        ? 0.0
+        : (i - center) * (i - center) * widget.cardSize.height * 0.012;
+    final left = _cardLeft(i, n, baseSpacing, totalW);
     final top = box.size.height - widget.cardSize.height - curveY;
     final origin = box.localToGlobal(Offset(left, top));
     return Rect.fromLTWH(
@@ -699,10 +711,12 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     // Запас по высоте под приподнятую карту.
     final height = widget.cardSize.height * 1.7 + _peekRaiseY;
     final arc = _arcFor(max(fanCards.length, 1));
+    // fillWidth — ровно по картам от левого края; иначе запас по бокам.
+    final boxW = widget.fillWidth ? totalW : totalW + 32;
 
     return SizedBox(
       height: height,
-      width: totalW + 32,
+      width: boxW,
       child: Stack(
         clipBehavior: Clip.none,
         alignment:
@@ -895,7 +909,6 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     double arc,
   ) {
     final center = (n - 1) / 2;
-    final offsetX = (i - center) * baseSpacing;
     // Одинаковый знак угла: у соперника (topCenter) края веера «к нему».
     final angle = n == 1 || arc == 0
         ? 0.0
@@ -966,7 +979,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     // Peek — без duration; перестановка после сортировки — плавная.
     final animMs =
         peeking || !widget.animateLayout ? 0 : 380;
-    final left = totalW / 2 + offsetX + extraX + 16;
+    final left = _cardLeft(i, n, baseSpacing, totalW) + extraX;
     final top = widget.invertFan ? extraY + edgeLift : null;
     final bottom = widget.invertFan ? null : extraY + edgeLift;
     final scaled = AnimatedScale(
