@@ -367,12 +367,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   ({Size cardSize, double spacing}) _fitHandFan(int n, double maxWidth) {
     if (n <= 0) return (cardSize: _handCardSize, spacing: 0);
     var size = _handCardSize;
-    if (n > 20) {
-      size = Size(_handCardSize.width * 0.62, _handCardSize.height * 0.62);
-    } else if (n > 14) {
-      size = Size(_handCardSize.width * 0.72, _handCardSize.height * 0.72);
+    // Чем больше карт — тем сильнее сжимаем (можно до «полосок»).
+    if (n > 30) {
+      size = Size(_handCardSize.width * 0.42, _handCardSize.height * 0.42);
+    } else if (n > 24) {
+      size = Size(_handCardSize.width * 0.50, _handCardSize.height * 0.50);
+    } else if (n > 20) {
+      size = Size(_handCardSize.width * 0.58, _handCardSize.height * 0.58);
+    } else if (n > 16) {
+      size = Size(_handCardSize.width * 0.68, _handCardSize.height * 0.68);
+    } else if (n > 12) {
+      size = Size(_handCardSize.width * 0.78, _handCardSize.height * 0.78);
     } else if (n > 10) {
-      size = Size(_handCardSize.width * 0.84, _handCardSize.height * 0.84);
+      size = Size(_handCardSize.width * 0.86, _handCardSize.height * 0.86);
     }
 
     // fillWidth: width = card + spacing*(n-1), без боковых полей.
@@ -382,20 +389,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     double minSpacing(Size s) {
       if (n <= 1) return 0;
       final w = s.width;
-      if (n > 30) return w * 0.07;
-      if (n > 24) return w * 0.08;
-      if (n > 18) return w * 0.10;
-      if (n > 14) return w * 0.13;
-      if (n > 10) return w * 0.18;
+      if (n > 30) return w * 0.035;
+      if (n > 24) return w * 0.045;
+      if (n > 20) return w * 0.06;
+      if (n > 16) return w * 0.08;
+      if (n > 12) return w * 0.12;
+      if (n > 10) return w * 0.16;
       if (n > 7) return w * 0.26;
       if (n > 5) return w * 0.36;
       return w * 0.48;
     }
 
-    for (var step = 0; step < 20; step++) {
+    for (var step = 0; step < 24; step++) {
       final need = size.width + minSpacing(size) * (n - 1);
-      if (need <= usable || size.width <= 34) break;
-      final scale = (usable / need).clamp(0.38, 0.96);
+      if (need <= usable || size.width <= 18) break;
+      final scale = (usable / need).clamp(0.28, 0.96);
       size = Size(size.width * scale, size.height * scale);
     }
 
@@ -407,7 +415,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return (cardSize: size, spacing: spacing);
   }
 
-  /// Мало карт — компактный веер по центру; много — на всю ширину.
+  /// Мало карт — компактный веер по центру; много — сильнее сжимаем на ширину.
   ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
     int n,
     double maxWidth,
@@ -431,10 +439,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return (cardSize: size, spacing: spacing, fillWidth: false);
     }
     final fitted = _fitHandFan(n, maxWidth);
+    // При очень большой руке можно сжимать почти «в полоски».
+    final minSp = fitted.cardSize.width * (n > 28
+        ? 0.04
+        : n > 22
+            ? 0.055
+            : n > 16
+                ? 0.07
+                : 0.08);
     final spacing = n <= 1
         ? 0.0
         : ((maxWidth - 14 - fitted.cardSize.width) / (n - 1)).clamp(
-            fitted.cardSize.width * 0.08,
+            minSp,
             fitted.cardSize.width * 0.96,
           );
     return (
@@ -2358,18 +2374,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ? _frozenFanCardSize!.height
         : fanProbe.cardSize.height;
     final nFan = handForFan.length;
-    // Подъём над меню: даже при 1–2 картах низ не обрезается.
-    final seatLift = nFan > 16
-        ? fanCardH * 0.62
-        : nFan > 12
-            ? fanCardH * 0.48
-            : nFan > 8
-                ? fanCardH * 0.36
-                : nFan > 4
-                    ? fanCardH * 0.30
-                    : fanCardH * 0.26;
-    // CardFan ≈ 1.7h + peek; + seatLift над низом; запас под поворот краёв.
-    final fanZoneH = fanCardH * 2.05 + seatLift + 20;
+    // Мало карт — опускаем (~1/3 скрыта снизу); много — поднимаем весь веер в кадр.
+    // seatLift > 0 — подъём; < 0 — уход под нижний край зоны.
+    final seatLift = nFan <= 3
+        ? -fanCardH * 0.33
+        : nFan <= 6
+            ? -fanCardH * 0.22
+            : nFan <= 9
+                ? -fanCardH * 0.06
+                : nFan <= 12
+                    ? fanCardH * 0.14
+                    : nFan <= 16
+                        ? fanCardH * 0.32
+                        : nFan <= 22
+                            ? fanCardH * 0.48
+                            : fanCardH * 0.60;
+    final raise = seatLift > 0 ? seatLift : 0.0;
+    // CardFan ≈ 1.7h + peek; при подъёме зона выше, при tuck — overflow вниз.
+    final fanZoneH = fanCardH * 2.05 + raise + 16;
 
     final showTimer = !view.isOver &&
         view.isMyTurn &&
@@ -2711,8 +2733,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final count = view.hands.length > idx ? view.hands[idx].count : 0;
     if (count <= 0) return const SizedBox.shrink();
-    final maxW = MediaQuery.sizeOf(context).width - 56;
-    // Показываем до 16 плиток; при большем числе — плотнее + бейдж с точным count.
+    final maxW = MediaQuery.sizeOf(context).width - 48;
+    // Показываем до 16 плиток; при большем числе — плотнее (счётчик — у колоды).
     final shown = count > 16 ? 16 : count;
     var tile = Size(
       (cardSize.width * 0.44).clamp(30.0, 52.0),
@@ -2746,7 +2768,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         child: Center(
           child: SizedBox(
             key: ValueKey('opp-$idx-$count'),
-            width: totalW + 28,
+            width: totalW,
             height: fanH,
             child: Stack(
               clipBehavior: Clip.none,
@@ -2776,11 +2798,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       );
                     },
                   ),
-                Positioned(
-                  right: 0,
-                  top: arcH * 0.35,
-                  child: _OpponentCountBadge(count: count),
-                ),
               ],
             ),
           ),
@@ -3167,44 +3184,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 }
 
 /// Плавное мигание кнопки «Взять» / «Бито» между колодой и веером.
-class _OpponentCountBadge extends StatelessWidget {
-  const _OpponentCountBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 22),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceUnified.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: AppColors.accentStart.withValues(alpha: 0.35),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Text(
-        '$count',
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          color: AppColors.accentStart,
-          height: 1.1,
-        ),
-      ),
-    );
-  }
-}
-
 class _PulsingActionButton extends StatefulWidget {
   const _PulsingActionButton({
     required this.label,

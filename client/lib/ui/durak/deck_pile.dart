@@ -37,9 +37,11 @@ class DurakDeckPile extends StatelessWidget {
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
     final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
 
+    // Запас снизу под круглый бейдж счётчика.
+    final countBadge = math.max(20.0, cardSize.width * 0.30);
     return SizedBox(
       width: layoutW,
-      height: h,
+      height: h + (deckCount > 0 ? countBadge * 0.55 : 0),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -87,11 +89,16 @@ class DurakDeckPile extends StatelessWidget {
                 ),
               ),
             ),
-          if (deckCount > 1)
+          if (deckCount > 0)
             Positioned(
-              bottom: 2,
-              left: cardSize.width * 0.08,
-              child: _CountBadge(count: deckCount),
+              // Под стопкой рубашек / козырем — тёмный круглый бейдж.
+              left: stackN > 0
+                  ? cardSize.width * 0.02
+                  : cardSize.width * 0.18,
+              top: (h - cardSize.height) / 2 +
+                  cardSize.height -
+                  countBadge * 0.35,
+              child: _CountBadge(count: deckCount, size: countBadge),
             ),
         ],
       ),
@@ -209,24 +216,42 @@ class DurakBitoPile extends StatelessWidget {
   }
 }
 
+/// Тёмный круглый счётчик карт в колоде (как бейдж на рубашке).
 class _CountBadge extends StatelessWidget {
-  const _CountBadge({required this.count});
+  const _CountBadge({required this.count, this.size = 22});
   final int count;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
+    final fontSize = (size * 0.48).clamp(10.0, 14.0);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      width: size,
+      height: size,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(10),
+        color: const Color(0xE6121218),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.18),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Text(
         '$count',
-        style: const TextStyle(
+        textAlign: TextAlign.center,
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w800,
+          height: 1,
         ),
       ),
     );
