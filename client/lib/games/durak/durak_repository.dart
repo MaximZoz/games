@@ -7,7 +7,8 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/durak/card.dart';
-import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/games/games_repository.dart'
+    show GamesException, LobbyPlayer;
 
 /// Модель карты в JSON API. Ранг [2..14], масть — одна буква H/D/C/S.
 class DurakApiCard {
@@ -287,6 +288,7 @@ class DurakLobbyView {
     required this.turnTimeSec,
     required this.stakeBronze,
     required this.playerIds,
+    required this.players,
     required this.chatId,
     this.gameId,
   });
@@ -301,10 +303,29 @@ class DurakLobbyView {
   final int turnTimeSec;
   final int stakeBronze;
   final List<String> playerIds;
+
+  /// Мета участников (аватар/имя) — как в крестиках-ноликах.
+  final List<LobbyPlayer> players;
   final String? chatId;
   final String? gameId;
 
   factory DurakLobbyView.fromJson(Map<String, dynamic> json) {
+    final ids = (json['player_ids'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const <String>[];
+    final parsedPlayers = (json['players'] as List?)
+            ?.whereType<Map>()
+            .map((e) => LobbyPlayer.fromJson(Map<String, dynamic>.from(e)))
+            .toList() ??
+        const <LobbyPlayer>[];
+    // Fallback: только id, если сервер не прислал metas.
+    final players = parsedPlayers.isNotEmpty
+        ? parsedPlayers
+        : [
+            for (final id in ids)
+              LobbyPlayer(id: id, displayName: 'Игрок'),
+          ];
     return DurakLobbyView(
       id: (json['id'] ?? json['lobby_id'] ?? '').toString(),
       creatorId: (json['creator_id'] ?? '').toString(),
@@ -315,10 +336,8 @@ class DurakLobbyView {
       gameMode: (json['game_mode'] ?? 'podkidnoi').toString(),
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
-      playerIds: (json['player_ids'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
+      playerIds: ids,
+      players: players,
       chatId: (json['chat_id']?.toString().trim().isEmpty ?? true)
           ? null
           : json['chat_id'].toString(),

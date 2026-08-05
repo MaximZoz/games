@@ -93,6 +93,9 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
   OverlayEntry? _overlay;
   bool _pointerDown = false;
 
+  /// Последняя позиция пальца — чтобы после возврата/сортировки продолжить жест.
+  Offset? _lastPointerGlobal;
+
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
   List<PlayingCard> get _layoutCards {
@@ -324,8 +327,10 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final card = _liftedCard;
     if (card == null || _docking) return;
     _docking = true;
+    _upTravel = 0;
     final gen = _gestureGen;
     final beginScale = _liftScale;
+    final resume = keepPointer || _pointerDown;
     final slot = _slotGlobalRect(card, baseSpacing, totalW);
     final peekRect = Rect.fromCenter(
       center: Offset(slot.center.dx, slot.center.dy - _peekRaiseY),
@@ -338,7 +343,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       peekRect,
       soft: true,
       beginScale: beginScale,
-      ms: 300,
+      ms: 280,
     );
     if (!mounted || gen != _gestureGen) {
       _docking = false;
@@ -360,7 +365,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     _emitActiveCard(_isLegal(card) ? card : null);
     widget.onDragPosition?.call(null);
 
-    await _animatePeekTTo(0, ms: 300);
+    await _animatePeekTTo(0, ms: 220);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;
@@ -372,10 +377,13 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _upTravel = 0;
       _panAccum = Offset.zero;
       _docking = false;
-      if (!keepPointer) _pointerDown = false;
+      if (!resume) _pointerDown = false;
     });
-    if (keepPointer) {
-      _hoverFromGlobal(global, baseSpacing, totalW);
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || gen != _gestureGen) return;
+    final finger = _lastPointerGlobal ?? global;
+    if (resume && _pointerDown) {
+      _resumeBrowseAt(finger);
     } else if (idx >= 0) {
       _setHover(idx);
     }
@@ -554,30 +562,59 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final card = _peekCard;
     if (card == null || _docking) return;
     _docking = true;
+    _upTravel = 0;
     final gen = _gestureGen;
-    await _animatePeekTTo(0, ms: 280);
+    // Палец ещё на экране — после въезда продолжаем листание тем же касанием.
+    final resume = _pointerDown;
+    await _animatePeekTTo(0, ms: 220);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;
     }
     widget.onReturnToFan?.call(card);
-    final idx = _fanCards.indexOf(card);
     setState(() {
       _peekCard = null;
       _peekT = 0;
       _upTravel = 0;
       _panAccum = Offset.zero;
       _docking = false;
-      _pointerDown = false;
-      if (idx >= 0) _hoverIndex = idx;
+      if (!resume) _pointerDown = false;
     });
-    if (idx >= 0) {
-      _setHover(idx);
+    // Кадр после сортировки руки — слоты уже на новых местах.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || gen != _gestureGen) return;
+    final finger = _lastPointerGlobal ?? global;
+    if (resume && _pointerDown) {
+      _resumeBrowseAt(finger);
     } else {
-      _hoverFromGlobal(global, _spacingFor(max(_fanCards.length, 1)),
-          widget.cardSize.width +
-              _spacingFor(max(_fanCards.length, 1)) *
-                  max(_fanCards.length - 1, 0));
+      _hoverFromGlobal(
+        finger,
+        _spacingFor(max(_fanCards.length, 1)),
+        _totalWFor(_spacingFor(max(_fanCards.length, 1))),
+      );
+    }
+  }
+
+  double _totalWFor(double spacing) {
+    final n = max(_fanCards.length, 1);
+    return widget.cardSize.width + spacing * max(n - 1, 0);
+  }
+
+  /// После возврата карты в веер — акцент под пальцем, можно сразу листать/тянуть.
+  void _resumeBrowseAt(Offset global) {
+    final spacing = _spacingFor(max(_fanCards.length, 1));
+    final totalW = _totalWFor(spacing);
+    _hoverFromGlobal(global, spacing, totalW);
+    _panAccum = Offset.zero;
+    final t = (_upTravel / _extractPx).clamp(0.0, 1.0);
+    if (t <= 0.02) return;
+    final cards = _fanCards;
+    final idx = _hoverIndex;
+    if (idx == null || idx < 0 || idx >= cards.length) return;
+    _ensurePeek(cards[idx]);
+    _setPeekT(t);
+    if (t >= 1.0) {
+      _promotePeekToFree(global, spacing, totalW);
     }
   }
 
@@ -679,6 +716,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
               onPointerDown: !widget.enabled || widget.faceDown
                   ? null
                   : (e) {
+                      _lastPointerGlobal = e.position;
                       if (_liftedCard == null && (_docking || _dropBusy)) {
                         _gestureGen++;
                         _docking = false;
@@ -688,8 +726,14 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                       _pointerDown = true;
                       _panAccum = Offset.zero;
                       _upTravel = 0;
-                      _peekT = 0;
-                      _peekCard = null;
+                      // Не сбрасываем peek мгновенно при новом касании во время
+                      // settle — _gestureGen выше уже отменит анимацию.
+                      if (_peekCard != null && !_docking) {
+                        setState(() {
+                          _peekCard = null;
+                          _peekT = 0;
+                        });
+                      }
                       final box = context.findRenderObject() as RenderBox?;
                       if (box == null) return;
                       final local = box.globalToLocal(e.position);
@@ -699,16 +743,23 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                         baseSpacing,
                         totalW,
                       );
+                      // Только акцент под пальцем — без «выезда» по клику.
                       _setHover(idx);
                     },
               onPointerMove: !widget.enabled || widget.faceDown
                   ? null
                   : (e) {
+                      _lastPointerGlobal = e.position;
                       if (!_pointerDown || _dropBusy) return;
-                      if (_docking && _liftedCard == null) {
-                        _docking = false;
+                      // Во время въезда/сортировки копим жест — продолжим после settle.
+                      if (_docking) {
+                        if (e.delta.dy < 0) {
+                          _upTravel += -e.delta.dy;
+                        } else if (e.delta.dy > 0) {
+                          _upTravel = max(0.0, _upTravel - e.delta.dy);
+                        }
+                        return;
                       }
-                      if (_docking) return;
                       _panAccum += e.delta;
 
                       // ——— Свободный drag ———
@@ -747,7 +798,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                       }
                       final card = live[_hoverIndex!];
 
-                      // Горизонталь без подъёма — только листание.
+                      // Горизонталь без подъёма — только листание (акцент).
                       final pullingUp = _upTravel > 2 || _panAccum.dy < -2;
                       if (!pullingUp && _peekCard == null) return;
 
@@ -777,6 +828,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
               onPointerUp: !widget.enabled || widget.faceDown
                   ? null
                   : (e) {
+                      _lastPointerGlobal = e.position;
                       _pointerDown = false;
                       if (_docking && _liftedCard == null && _peekCard == null) {
                         _panAccum = Offset.zero;
@@ -788,6 +840,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                         );
                         return;
                       }
+                      // Короткий тап — без выбора/выезда карты (только long-press
+                      // для мультивыбора атаки). onTap оставляем для совместимости.
                       if (_panAccum.distance < 12 &&
                           _hoverIndex != null &&
                           _hoverIndex! >= 0 &&
@@ -798,6 +852,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                         }
                       }
                       _panAccum = Offset.zero;
+                      // Снять акцент после отпускания.
+                      _setHover(null);
                     },
               onPointerCancel: (_) {
                 _pointerDown = false;
@@ -808,7 +864,9 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                     totalW,
                   ));
                 } else if (_peekCard != null) {
-                  unawaited(_finishPeekSettle(Offset.zero));
+                  unawaited(_finishPeekSettle(
+                    _lastPointerGlobal ?? Offset.zero,
+                  ));
                 } else if (_docking) {
                   _docking = false;
                   _dropBusy = false;
@@ -852,18 +910,12 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
         !isLiftedAway) {
       final dir = i > _hoverIndex! ? 1 : -1;
       final distance = (i - _hoverIndex!).abs();
-      extraX = dir * widget.cardSize.width * (0.28 / max(distance, 1));
+      extraX = dir * widget.cardSize.width * (0.22 / max(distance, 1));
     }
-    if (selected && !isLiftedAway) {
-      extraY = widget.cardSize.height * 0.22;
-      scale = 1.08;
-    }
-    // Плавный подъём «чуть выше» — без AnimatedPositioned-лага на этой оси.
+    // Выезд только при жесте peek/тяги вверх — не по клику/hover/selected.
     if (peeking) {
       extraY = max(extraY, _peekRaiseY * _peekT);
       scale = max(scale, 1.0 + 0.04 * _peekT);
-    } else if (active && !selected) {
-      extraY = max(extraY, widget.cardSize.height * 0.08);
     }
 
     final legal = _isLegal(card);
@@ -882,14 +934,15 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
           )
         : widget.faceDown
             ? CardBackWidget(
-                size: widget.cardSize, elevated: selected || peeking)
+                size: widget.cardSize, elevated: peeking || active)
             : PlayingCardWidget(
                 card: card,
                 size: widget.cardSize,
                 highlighted: showLegalGlow ||
                     ((active || selected) && (!isLegalContext || legal)),
                 dimmed: isLegalContext && !legal,
-                elevated: selected || active || peeking,
+                // Selected — только подсветка (мультивыбор long-press), без подъёма.
+                elevated: active || peeking || selected,
               );
 
     child = GestureDetector(
@@ -901,20 +954,20 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     final edgeLift = widget.invertFan ? curveY : -curveY;
 
-    // Peek двигаем без duration — иначе ступор при вытаскивании.
-    final animMs = peeking ? 0 : 140;
+    // Peek — без duration; перестановка после сортировки — плавная.
+    final animMs = peeking ? 0 : 380;
 
     return AnimatedPositioned(
       key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
       duration: Duration(milliseconds: animMs),
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeInOutCubic,
       left: totalW / 2 + offsetX + extraX + 16,
       top: widget.invertFan ? extraY + edgeLift : null,
       bottom: widget.invertFan ? null : extraY + edgeLift,
       child: AnimatedScale(
         scale: scale,
-        duration: Duration(milliseconds: peeking ? 0 : 120),
-        curve: Curves.easeOutCubic,
+        duration: Duration(milliseconds: peeking ? 0 : 280),
+        curve: Curves.easeInOutCubic,
         child: Transform.rotate(
           angle: angle,
           alignment:

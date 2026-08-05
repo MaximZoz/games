@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show formatStakeAmount, stakeCoinType;
+    show LobbyPlayer, formatStakeAmount, stakeCoinType; // stake — LobbyStakeChip
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+
+const List<IconData> kLobbyPresetAvatarIcons = [
+  Icons.face_rounded,
+  Icons.face_2_rounded,
+  Icons.face_3_rounded,
+  Icons.face_4_rounded,
+  Icons.face_5_rounded,
+  Icons.face_6_rounded,
+  Icons.man_rounded,
+  Icons.woman_rounded,
+  Icons.person_rounded,
+];
 
 /// Общие виджеты лобби (крестики / дурак).
 /// См. также `games/shared_lobby.dart` — общая сессия и leave/creator.
@@ -189,30 +204,40 @@ class LobbySearchBanner extends StatelessWidget {
   }
 }
 
-/// Карточка «Игроки N/M» для своей игры на 3–4 игрока.
+/// Карточка «Игроки N/M» для своей игры на 3–4 — слоты с аватарами + чат.
 ///
-/// Общий вид для крестиков и дурака: заголовок, опциональный подзаголовок
-/// (режим · колода / вариант · поле) и ставка справа.
+/// Общий вид крестиков и дурака: участники, пустые места, чат группы
+/// и «добавить в друзья».
 class LobbyMultiPlayersCard extends StatelessWidget {
   const LobbyMultiPlayersCard({
     super.key,
-    required this.playersCount,
+    required this.players,
     required this.maxPlayers,
-    this.subtitle,
-    this.stakeBronze = 0,
+    this.playersCount,
+    this.currentUserId,
+    this.chatUnread = 0,
+    this.canOpenChat = false,
+    this.canAddFriend = false,
+    this.onOpenChat,
+    this.onAddFriend,
+    this.onPlayerTap,
   });
 
-  final int playersCount;
+  final List<LobbyPlayer> players;
   final int maxPlayers;
-
-  /// Например «Подкидной · 36 карт» или «Классика · 3×3».
-  final String? subtitle;
-
-  final int stakeBronze;
+  final int? playersCount;
+  final String? currentUserId;
+  final int chatUnread;
+  final bool canOpenChat;
+  final bool canAddFriend;
+  final VoidCallback? onOpenChat;
+  final VoidCallback? onAddFriend;
+  final ValueChanged<LobbyPlayer>? onPlayerTap;
 
   @override
   Widget build(BuildContext context) {
-    final sub = subtitle?.trim();
+    final count = playersCount ?? players.length;
+    final seats = maxPlayers.clamp(2, 4);
     return GradientCard(
       animate: false,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -224,47 +249,179 @@ class LobbyMultiPlayersCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Игроки $playersCount/$maxPlayers',
+                  'Игроки $count/$maxPlayers',
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                   ),
                 ),
-                if (sub != null && sub.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    sub,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final player in players)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: onPlayerTap == null
+                              ? null
+                              : () => onPlayerTap!(player),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 2,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                LobbyPlayerAvatar(player: player),
+                                const SizedBox(width: 6),
+                                ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 96),
+                                  child: Text(
+                                    player.displayName.trim().isNotEmpty
+                                        ? player.displayName
+                                        : context.l10n.commonUser,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.accentStart,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: AppColors.accentStart,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    for (var i = players.length; i < seats; i++)
+                      const LobbyEmptySeatAvatar(),
+                  ],
+                ),
               ],
             ),
           ),
-          if (stakeBronze > 0)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  formatStakeAmount(stakeBronze),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                CoinIcon(
-                  coinType: stakeCoinType(stakeBronze),
-                  size: 20,
-                  showBorder: true,
-                ),
-              ],
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: 'Чат группы',
+            onPressed: canOpenChat ? onOpenChat : null,
+            icon: Badge(
+              isLabelVisible: chatUnread > 0,
+              label: Text(
+                chatUnread > 99 ? '99+' : '$chatUnread',
+                style: const TextStyle(fontSize: 10, color: Colors.white),
+              ),
+              backgroundColor: Colors.redAccent,
+              child: const Icon(Icons.forum_rounded),
+            ),
+            color: AppColors.accentStart,
+          ),
+          if (canAddFriend)
+            IconButton(
+              tooltip: context.l10n.friendsAdd,
+              onPressed: onAddFriend,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              color: AppColors.accentStart,
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Аватар участника лобби (общий для крестиков и дурака).
+class LobbyPlayerAvatar extends StatelessWidget {
+  const LobbyPlayerAvatar({super.key, required this.player});
+
+  final LobbyPlayer player;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 40.0;
+    const radius = size / 2;
+    Widget avatar;
+    if (player.avatarKind == 'file' &&
+        player.avatarValue != null &&
+        player.avatarValue!.trim().isNotEmpty) {
+      final img = AvatarMemoryCache.fromAvatarValue(player.avatarValue!);
+      avatar = img == null
+          ? _letterAvatar(radius)
+          : CircleAvatar(radius: radius, backgroundImage: img);
+    } else if (player.avatarKind == 'preset' && player.avatarValue != null) {
+      final idx = int.tryParse(player.avatarValue!);
+      avatar = idx != null &&
+              idx >= 0 &&
+              idx < kLobbyPresetAvatarIcons.length
+          ? CircleAvatar(
+              radius: radius,
+              backgroundColor: AppColors.accentSoft,
+              child: Icon(
+                kLobbyPresetAvatarIcons[idx],
+                color: AppColors.accentStart,
+                size: radius,
+              ),
+            )
+          : _letterAvatar(radius);
+    } else {
+      avatar = _letterAvatar(radius);
+    }
+    return FramedAvatar(
+      size: size,
+      borderWidth: 2.6,
+      frameCode: player.frameCode,
+      frameColor: player.frameColor,
+      animate: false,
+      child: avatar,
+    );
+  }
+
+  Widget _letterAvatar(double radius) {
+    final name = player.displayName.trim();
+    final letter = name.isEmpty ? '?' : name[0].toUpperCase();
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: AppColors.accentSoft,
+      child: Text(
+        letter,
+        style: const TextStyle(
+          color: AppColors.accentStart,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// Пустое место в multi-лобби.
+class LobbyEmptySeatAvatar extends StatelessWidget {
+  const LobbyEmptySeatAvatar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.surfaceCard,
+        border: Border.all(
+          color: AppColors.accentSoft.withValues(alpha: 0.9),
+          width: 2,
+        ),
+      ),
+      child: const Icon(
+        Icons.person_outline_rounded,
+        color: AppColors.textSecondary,
+        size: 20,
       ),
     );
   }

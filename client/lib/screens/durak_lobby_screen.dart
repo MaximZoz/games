@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -14,7 +16,7 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show ActiveGameItem, GamesException;
+    show ActiveGameItem, GamesException, LobbyPlayer;
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -23,6 +25,7 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -42,6 +45,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
   final Set<String> _declined = {};
   final Set<String> _inviting = {};
   final Set<String> _cancelling = {};
+  final Set<String> _friendRequestInFlight = {};
   bool _leaving = false;
   bool _linkCopied = false;
   Timer? _linkTimer;
@@ -296,14 +300,230 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     );
   }
 
-  /// Карточка состава для 3–4 — общий [LobbyMultiPlayersCard].
+  /// Карточка состава для 3–4 — общий [LobbyMultiPlayersCard] (как в крестиках).
   Widget _buildMultiPlayersCard(DurakLobbyView lobby) {
+    final currentUserId = ref.watch(authStateProvider).valueOrNull?.id;
+    final players = lobby.players;
+    final chatId = (lobby.chatId ?? '').trim();
+    final isMember = currentUserId != null &&
+        (lobby.playerIds.contains(currentUserId) ||
+            players.any((p) => p.id == currentUserId));
+    final canOpen = chatId.isNotEmpty && isMember;
+    final unread = !canOpen
+        ? 0
+        : ref.watch(chatsListProvider.select((async) {
+            final list = async.valueOrNull;
+            if (list == null) return 0;
+            for (final c in list) {
+              if (c.chatID == chatId) return c.unreadCount;
+            }
+            return 0;
+          }));
+    final snapshot = ref.watch(friendsSnapshotProvider).valueOrNull;
+    final alreadyFriendIds = <String>{
+      for (final f in snapshot?.friends ?? const [])
+        if (f.user.id.isNotEmpty) f.user.id,
+    };
+    final outgoingIds = <String>{
+      for (final r in snapshot?.outgoing ?? const [])
+        if (r.user.id.isNotEmpty) r.user.id,
+    };
+    final canAdd = players.any(
+      (p) =>
+          p.id.isNotEmpty &&
+          p.id != currentUserId &&
+          !alreadyFriendIds.contains(p.id) &&
+          !outgoingIds.contains(p.id),
+    );
     return LobbyMultiPlayersCard(
-      playersCount: lobby.playerIds.length,
+      players: players,
       maxPlayers: lobby.maxPlayers,
-      subtitle: '${durakModeLabel(lobby.gameMode)} · '
-          '${durakDeckLabel(lobby.deckSize)}',
-      stakeBronze: lobby.stakeBronze,
+      playersCount: lobby.playerIds.length,
+      currentUserId: currentUserId,
+      chatUnread: unread,
+      canOpenChat: canOpen,
+      canAddFriend: canAdd,
+      onOpenChat: () => _openGroupChat(lobby),
+      onAddFriend: () => _showLobbyPlayersFriendSheet(lobby, currentUserId),
+      onPlayerTap: (p) => _showLobbyPlayerProfile(p),
+    );
+  }
+
+  Future<void> _openGroupChat(DurakLobbyView lobby) async {
+    ref.invalidate(durakLobbyProvider(lobby.id));
+    DurakLobbyView fresh = lobby;
+    try {
+      fresh = await ref.read(durakLobbyProvider(lobby.id).future);
+    } catch (_) {}
+    final chatId = (fresh.chatId ?? lobby.chatId ?? '').trim();
+    if (chatId.isEmpty) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          message: 'Чат лобби ещё не создан',
+          kind: AppSnackKind.error,
+        );
+      }
+      return;
+    }
+    unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+    if (!mounted) return;
+    final returnPath = Uri(
+      path: '/games/durak/lobby/${lobby.id}',
+      queryParameters: widget.initialMode == null
+          ? null
+          : {'mode': widget.initialMode!},
+    ).toString();
+    final route = Uri(
+      path: '/chats/$chatId',
+      queryParameters: {
+        'from': 'games',
+        'game': returnPath,
+        'name': 'Лобби ${durakModeLabel(fresh.gameMode)}',
+      },
+    ).toString();
+    context.push(route);
+  }
+
+  Future<void> _showLobbyPlayersFriendSheet(
+    DurakLobbyView lobby,
+    String? currentUserId,
+  ) async {
+    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+    final alreadyFriendIds = <String>{
+      for (final f in snapshot?.friends ?? const [])
+        if (f.user.id.isNotEmpty) f.user.id,
+    };
+    final outgoingIds = <String>{
+      for (final r in snapshot?.outgoing ?? const [])
+        if (r.user.id.isNotEmpty) r.user.id,
+    };
+    final players = lobby.players
+        .where(
+          (p) =>
+              p.id.isNotEmpty &&
+              p.id != currentUserId &&
+              !alreadyFriendIds.contains(p.id) &&
+              !outgoingIds.contains(p.id),
+        )
+        .toList(growable: false);
+    if (players.isEmpty) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.friendsAlreadyFriends,
+          kind: AppSnackKind.info,
+        );
+      }
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.friendsAdd,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  for (final player in players)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: LobbyPlayerAvatar(player: player),
+                        title: Text(
+                          player.displayName.trim().isNotEmpty
+                              ? player.displayName
+                              : context.l10n.commonUser,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: _friendRequestInFlight.contains(player.id)
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.accentStart,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.person_add_alt_1_rounded,
+                                color: AppColors.accentStart,
+                              ),
+                        onTap: _friendRequestInFlight.contains(player.id)
+                            ? null
+                            : () => _sendLobbyFriendRequest(
+                                  sheetContext,
+                                  player.id,
+                                ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _sendLobbyFriendRequest(
+    BuildContext sheetContext,
+    String userId,
+  ) async {
+    setState(() => _friendRequestInFlight.add(userId));
+    try {
+      await ref.read(friendsRepositoryProvider).sendRequest(userId);
+      await refreshFriendsSnapshot(ref);
+      if (!mounted) return;
+      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+      showAppSnackBar(
+        context,
+        message: context.l10n.friendsRequestSent,
+        kind: AppSnackKind.success,
+      );
+    } on FriendsException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: e.message,
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) setState(() => _friendRequestInFlight.remove(userId));
+    }
+  }
+
+  void _showLobbyPlayerProfile(LobbyPlayer player) {
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: player.id,
+        displayName: player.displayName,
+        avatarKind: player.avatarKind,
+        avatarValue: player.avatarValue,
+        frameCode: player.frameCode,
+        frameColor: player.frameColor,
+        messageFrom: 'games',
+        messageReturnPath: '/games/durak/lobby/${widget.lobbyId}?mode=invite',
+      ),
     );
   }
 

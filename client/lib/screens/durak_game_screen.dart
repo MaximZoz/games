@@ -1652,21 +1652,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                           if (_dragGlobal == p) return;
                           setState(() => _dragGlobal = p);
                         },
-                        onTap: (c) {
-                          if (!view.canAct) return;
-                          if (_selected.contains(c) && _selected.length == 1) {
-                            _clearHandSelection();
-                            return;
-                          }
-                          setState(() {
-                            _selected
-                              ..clear()
-                              ..add(c);
-                            _activeCard = c;
-                          });
+                        // Тап не поднимает карту — выбор жестом (палец / long-press).
+                        onTap: (_) {
+                          if (_selected.isNotEmpty) _clearHandSelection();
                         },
                         onLongPress: (c) => _toggleSelect(view, c),
                         onReturnToFan: (_) {
+                          // Сортировка с анимацией перестановки слотов в веере.
                           _sortHandInFan(handForFan, trump);
                         },
                         onDrop: (c, global, from) =>
