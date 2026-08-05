@@ -144,7 +144,7 @@ Future<void> playCardsFlyAnimation({
   final futures = <Future<void>>[];
   for (var i = 0; i < cards.length; i++) {
     final delay = stagger * i;
-    futures.add(Future<void>.delayed(delay, () async {
+    Future<void> launch() async {
       if (!context.mounted) return;
       final from = froms[i.clamp(0, froms.length - 1)];
       final to = tos[i.clamp(0, tos.length - 1)];
@@ -169,7 +169,10 @@ Future<void> playCardsFlyAnimation({
         keepAtEnd: keepAtEnd,
       );
       tickets.add(ticket);
-    }));
+    }
+
+    // Первая карта — сразу (без delayed), иначе кадр без карты после drop.
+    futures.add(delay == Duration.zero ? launch() : Future<void>.delayed(delay, launch));
   }
   await Future.wait(futures);
   onTickets?.call(tickets);

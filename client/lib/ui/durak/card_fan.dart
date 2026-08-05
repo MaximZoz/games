@@ -671,6 +671,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       }
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
+        // Снимаем overlay, но _liftedCard остаётся — дырка в веере до ответа.
         _removeOverlay();
         final scaledFrom = Rect.fromCenter(
           center: from.center,
