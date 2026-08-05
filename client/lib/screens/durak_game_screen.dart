@@ -1617,12 +1617,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   bottom: -tuckUnderNav,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final maxW = constraints.maxWidth;
+                      final n = handForFan.length;
+                      final spacing = n <= 1
+                          ? 0.0
+                          : handSize.width *
+                              (n > 24
+                                  ? 0.14
+                                  : n > 18
+                                      ? 0.18
+                                      : n > 14
+                                          ? 0.22
+                                          : n > 10
+                                              ? 0.28
+                                              : n > 7
+                                                  ? 0.34
+                                                  : 0.46);
+                      final fanW = handSize.width + spacing * (n - 1) + 32;
+                      final scale = fanW > constraints.maxWidth
+                          ? (constraints.maxWidth / fanW).clamp(0.5, 1.0)
+                          : 1.0;
                       final fan = CardFan(
                         key: _fanKey,
                         cards: handForFan,
                         cardSize: handSize,
-                        maxWidth: maxW,
                         legalCards: legal,
                         selectedCards: _selected,
                         hiddenCards: _flyingFromHand,
@@ -1655,7 +1672,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                         onDrop: (c, global, from) =>
                             _onCardDrop(view, c, global, from),
                       );
-                      return Align(
+                      return Transform.scale(
+                        scale: scale,
                         alignment: Alignment.bottomCenter,
                         child: fan,
                       );
@@ -1848,37 +1866,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       count.clamp(0, 52),
       (i) => PlayingCard(Rank.six, Suit.spades),
     );
+    // Веер «в его сторону»: ось сверху, дуга от игрока.
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final maxW = constraints.maxWidth.isFinite
-              ? constraints.maxWidth
-              : MediaQuery.sizeOf(context).width;
-          final oppSize = Size(
-            cardSize.width * 0.5,
-            cardSize.height * 0.5,
-          );
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 320),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeIn,
-            transitionBuilder: (child, anim) => FadeTransition(
-              opacity: anim,
-              child: ScaleTransition(scale: anim, child: child),
-            ),
-            child: CardFan(
-              key: ValueKey('opp-$idx-$count'),
-              cards: fake,
-              cardSize: oppSize,
-              faceDown: true,
-              invertFan: true,
-              enabled: false,
-              arc: 0.32,
-              maxWidth: maxW,
-            ),
-          );
-        },
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 320),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(scale: anim, child: child),
+        ),
+        child: CardFan(
+          key: ValueKey('opp-$idx-$count'),
+          cards: fake,
+          cardSize: Size(cardSize.width * 0.42, cardSize.height * 0.42),
+          faceDown: true,
+          invertFan: true,
+          enabled: false,
+          arc: 0.36,
+          spacing: cardSize.width * 0.15,
+        ),
       ),
     );
   }
