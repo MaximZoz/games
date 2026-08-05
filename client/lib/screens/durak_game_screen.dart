@@ -362,42 +362,52 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return opt;
   }
 
-  /// Подгонка веера под ширину экрана: сильнее сжатие + уменьшение карт.
+  /// Веер на всю [maxWidth]: сначала уменьшаем карты, затем растягиваем spacing.
   ({Size cardSize, double spacing}) _fitHandFan(int n, double maxWidth) {
+    if (n <= 0) return (cardSize: _handCardSize, spacing: 0);
     var size = _handCardSize;
     // При многих картах сразу стартуем компактнее.
     if (n > 20) {
-      size = Size(_handCardSize.width * 0.62, _handCardSize.height * 0.62);
+      size = Size(_handCardSize.width * 0.58, _handCardSize.height * 0.58);
     } else if (n > 14) {
-      size = Size(_handCardSize.width * 0.72, _handCardSize.height * 0.72);
+      size = Size(_handCardSize.width * 0.68, _handCardSize.height * 0.68);
     } else if (n > 10) {
-      size = Size(_handCardSize.width * 0.84, _handCardSize.height * 0.84);
-    }
-    double spacingOf(Size s) {
-      if (n <= 1) return 0;
-      final w = s.width;
-      if (n > 30) return w * 0.07;
-      if (n > 24) return w * 0.08;
-      if (n > 18) return w * 0.10;
-      if (n > 14) return w * 0.13;
-      if (n > 10) return w * 0.18;
-      if (n > 7) return w * 0.26;
-      if (n > 5) return w * 0.36;
-      return w * 0.48;
+      size = Size(_handCardSize.width * 0.80, _handCardSize.height * 0.80);
+    } else if (n > 7) {
+      size = Size(_handCardSize.width * 0.90, _handCardSize.height * 0.90);
     }
 
-    for (var step = 0; step < 18; step++) {
-      final sp = spacingOf(size);
-      // +32 — тот же запас, что в CardFan.
-      final fanW = size.width + sp * math.max(n - 1, 0) + 32;
-      if (fanW <= maxWidth || size.width <= 34) {
-        return (cardSize: size, spacing: sp);
-      }
-      final scale = (maxWidth / fanW).clamp(0.38, 0.96);
+    // CardFan добавляет +32 к ширине контейнера.
+    const fanPad = 32.0;
+    final usable = (maxWidth - fanPad).clamp(72.0, maxWidth);
+
+    double minSpacing(Size s) {
+      if (n <= 1) return 0;
+      final w = s.width;
+      if (n > 30) return w * 0.055;
+      if (n > 24) return w * 0.07;
+      if (n > 18) return w * 0.09;
+      if (n > 14) return w * 0.11;
+      if (n > 10) return w * 0.16;
+      if (n > 7) return w * 0.24;
+      if (n > 5) return w * 0.34;
+      return w * 0.42;
+    }
+
+    // Сжимаем карты, пока минимальный шаг не влезет в ширину окна.
+    for (var step = 0; step < 20; step++) {
+      final need = size.width + minSpacing(size) * (n - 1);
+      if (need <= usable || size.width <= 30) break;
+      final scale = (usable / need).clamp(0.34, 0.97);
       size = Size(size.width * scale, size.height * scale);
     }
-    final sp = spacingOf(size);
-    return (cardSize: size, spacing: sp);
+
+    // Растягиваем шаг — веер занимает всю ширину (в т.ч. зону под крестиком).
+    final spacing = n <= 1
+        ? 0.0
+        : ((usable - size.width) / (n - 1))
+            .clamp(minSpacing(size), size.width * 0.96);
+    return (cardSize: size, spacing: spacing);
   }
 
   int _compareHandCards(PlayingCard a, PlayingCard b, Suit trump) {
@@ -741,7 +751,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (_frozenFanCardSize == null && nBefore > 0) {
         final lay = _fitHandFan(
           nBefore.clamp(1, 52),
-          MediaQuery.sizeOf(context).width - 4,
+          MediaQuery.sizeOf(context).width,
         );
         _freezeFanLayout(lay.cardSize, lay.spacing, nBefore);
       }
@@ -1077,7 +1087,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         : (<PlayingCard>[...currentHand, ...cards]
           ..sort((a, b) => _compareHandCards(a, b, trump)));
     final nAll = merged.length;
-    final maxFanW = MediaQuery.sizeOf(context).width - 16;
+    final maxFanW = MediaQuery.sizeOf(context).width;
     final fanLayout = _fitHandFan(nAll, maxFanW);
     final slotSize = fanLayout.cardSize;
     final spacing = fanLayout.spacing;
@@ -1535,12 +1545,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       keepAtEnd: true,
       onTickets: (t) => tickets = t,
     );
+    // Сначала карта на столе под overlay, затем dismiss — без «пустого» кадра
+    // и без долгого двойного силуэта.
     if (mounted) {
       setState(() => _remoteFlyingCardIds.remove(id));
       await WidgetsBinding.instance.endOfFrame;
-      if (mounted) {
-        await Future<void>.delayed(const Duration(milliseconds: 16));
-      }
     }
     for (final t in tickets) {
       t.dismiss();
@@ -2115,7 +2124,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         .toList(growable: false);
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final screenW = MediaQuery.sizeOf(context).width - 4;
+    // Полная ширина окна — веер заходит и под зону крестика слева.
+    final screenW = MediaQuery.sizeOf(context).width;
     final fitted = _fitHandFan(handForFan.length, screenW);
     // Пока рука не выросла (добор) — держим прежний шаг веера.
     final useFrozenFan = _frozenFanCardSize != null &&
@@ -2200,14 +2210,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               ),
               // Место под веер; кнопки — оверлеем, без сдвига layout.
+              // left/right -8 компенсируют Padding родителя — на всю ширину окна.
               SizedBox(
                 height: fanZoneH,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Positioned(
-                      left: 0,
-                      right: 0,
+                      left: -8,
+                      right: -8,
                       bottom: -tuckUnderNav,
                       child: Center(
                         child: CardFan(
@@ -2453,47 +2464,47 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       count.clamp(0, 52),
       (i) => PlayingCard(Rank.six, Suit.spades),
     );
-    final maxW = MediaQuery.sizeOf(context).width - 24;
-    // Компактный веер «к сопернику» (invertFan + дуга вверх).
-    var oppSize = Size(cardSize.width * 0.38, cardSize.height * 0.38);
-    var spacing = oppSize.width * (count > 14
-        ? 0.12
-        : count > 10
-            ? 0.16
-            : count > 6
-                ? 0.22
-                : 0.28);
+    final maxW = MediaQuery.sizeOf(context).width - 32;
+    // Прямой горизонтальный ряд рубашек — без дуги и «хвоста».
+    var oppSize = Size(cardSize.width * 0.42, cardSize.height * 0.42);
+    var spacing = oppSize.width * (count > 16
+        ? 0.18
+        : count > 12
+            ? 0.24
+            : count > 8
+                ? 0.32
+                : count > 4
+                    ? 0.40
+                    : 0.48);
     if (count > 1) {
       var fanW = oppSize.width + spacing * (count - 1) + 32;
       if (fanW > maxW) {
-        final s = (maxW / fanW).clamp(0.4, 1.0);
-        oppSize = Size(oppSize.width * s, oppSize.height * s);
-        spacing *= s;
+        // Сначала сжимаем шаг, потом размер — ряд остаётся ровным.
+        spacing = ((maxW - 32 - oppSize.width) / (count - 1))
+            .clamp(oppSize.width * 0.12, spacing);
+        fanW = oppSize.width + spacing * (count - 1) + 32;
+        if (fanW > maxW) {
+          final s = (maxW / fanW).clamp(0.45, 1.0);
+          oppSize = Size(oppSize.width * s, oppSize.height * s);
+          spacing *= s;
+        }
       }
     }
     return Padding(
-      padding: const EdgeInsets.only(top: 2),
+      padding: const EdgeInsets.only(top: 4),
       child: KeyedSubtree(
         key: _oppFanKeys.putIfAbsent(idx, GlobalKey.new),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 320),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: ScaleTransition(scale: anim, child: child),
-          ),
-          child: Center(
-            child: CardFan(
-              key: ValueKey('opp-$idx-$count'),
-              cards: fake,
-              cardSize: oppSize,
-              faceDown: true,
-              invertFan: true,
-              enabled: false,
-              arc: count > 12 ? 0.22 : 0.30,
-              spacing: spacing,
-            ),
+        child: Center(
+          child: CardFan(
+            key: ValueKey('opp-$idx-$count'),
+            cards: fake,
+            cardSize: oppSize,
+            faceDown: true,
+            invertFan: true,
+            enabled: false,
+            animateLayout: false,
+            arc: 0,
+            spacing: spacing,
           ),
         ),
       ),
