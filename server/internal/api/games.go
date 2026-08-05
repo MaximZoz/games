@@ -2492,57 +2492,38 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
-	maxPlayers, _ := strconv.Atoi(m["max_players"])
-	if maxPlayers < 1 {
-		maxPlayers = 2
+
+	h.Rdb.SRem(ctx, invitedKey, userID.String())
+	if m["invite_target_id"] == userID.String() {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{creatorID}
 	}
 
-	// Multi: один отказ не убивает реванш — убираем отказавшегося из invited.
-	// Лобби закрываем, только если оставшихся приглашённых уже не хватает на состав.
-	if maxPlayers > 2 {
-		h.Rdb.SRem(ctx, invitedKey, userID.String())
-		remaining, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
-		players := parsePlayerIDsCSV(m["player_ids"])
-		if len(players) == 0 {
-			players = []string{creatorID}
-		}
-		canFill := len(players)+len(remaining) >= maxPlayers
-		if canFill {
-			// Частичный отказ: лобби живо, но инициатор реванша должен видеть,
-			// кто уже ответил (зачёркивание в шапке игроков).
-			h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
-				"type":     "invite_declined",
-				"lobby_id": lobbyID,
-				"closed":   false,
-				"user_id":  userID.String(),
-			})
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"declined": true,
-				"closed":   false,
-			})
-			return
+	// Отказ НЕ закрывает лобби (в т.ч. 1×1): создатель может пригласить
+	// другого друга или ждать по той же ссылке. Раньше 1×1 удалял лобби
+	// после первого отказа → «Лобби не найдено» при следующем Invite.
+	notify := []uuid.UUID{creatorUUID}
+	for _, pid := range players {
+		if u, err := uuid.Parse(pid); err == nil && u != creatorUUID {
+			notify = append(notify, u)
 		}
 	}
-
-	h.Rdb.Del(ctx, key)
-	h.Rdb.Del(ctx, invitedKey)
-	// Не трогаем active_game и чужие лобби — отказ от инвайта не должен
-	// сбрасывать текущую партию отказавшегося.
-	clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
-	clearUserActiveLobbyIfMatch(ctx, h.Rdb, creatorUUID, lobbyID)
-	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
-	_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
-
-	h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
+	h.broadcast(notify, map[string]any{
 		"type":     "invite_declined",
 		"lobby_id": lobbyID,
-		"closed":   true,
+		"closed":   false,
 		"user_id":  userID.String(),
 	})
-
+	// Только у отказавшегося сбрасываем active_lobby; создателя не трогаем.
+	clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"declined": true, "closed": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"declined": true,
+		"closed":   false,
+	})
 }
 
 // applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.

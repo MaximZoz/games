@@ -1429,9 +1429,32 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     setState(() => _invitingFriendIds.add(friendUserId));
     try {
       final repo = ref.read(gamesRepositoryProvider);
-      await repo.inviteToLobby(widget.lobbyId, friendUserId);
+      var lobbyId = widget.lobbyId;
+      try {
+        await repo.inviteToLobby(lobbyId, friendUserId);
+      } on GamesException catch (e) {
+        // Лобби успели закрыть после отказа другого друга — пересоздаём и
+        // сразу зовём этого. Иначе «Лобби не найдено».
+        if (e.statusCode != 404) rethrow;
+        final lobby = ref.read(lobbyDetailProvider(widget.lobbyId)).valueOrNull;
+        final created = await repo.createLobby(
+          mode: 'invite',
+          turnTimeSec: lobby?.turnTimeSec ?? 0,
+          variant: lobby?.variant ?? 'classic',
+          gridSize: lobby?.gridSize ?? 3,
+          stakeBronze: lobby?.stakeBronze ?? 1,
+        );
+        lobbyId = created.lobbyId;
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+            );
+        await repo.inviteToLobby(lobbyId, friendUserId);
+        if (!mounted) return;
+        if (!context.mounted) return;
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
       if (!mounted) return;
-      // Без всплывашки: кнопка → «Отправлено». Не уходим с экрана.
       setState(() {
         _invitedFriendIds.add(friendUserId);
         _invitingFriendIds.remove(friendUserId);
