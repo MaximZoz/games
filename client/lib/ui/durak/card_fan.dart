@@ -412,14 +412,14 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (widget.spacing != null) return widget.spacing!;
     if (n <= 1) return 0;
     final w = widget.cardSize.width;
-    if (n > 28) return w * 0.12;
-    if (n > 22) return w * 0.15;
-    if (n > 16) return w * 0.2;
-    if (n > 12) return w * 0.26;
-    if (n > 9) return w * 0.32;
-    if (n > 7) return w * 0.4;
-    if (n > 5) return w * 0.48;
-    return w * 0.56;
+    if (n > 28) return w * 0.09;
+    if (n > 22) return w * 0.11;
+    if (n > 16) return w * 0.14;
+    if (n > 12) return w * 0.18;
+    if (n > 9) return w * 0.24;
+    if (n > 7) return w * 0.32;
+    if (n > 5) return w * 0.42;
+    return w * 0.52;
   }
 
   double _arcFor(int n) {
