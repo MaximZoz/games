@@ -459,15 +459,17 @@ class _CardFanState extends State<CardFan> {
     if (card == null) return;
     final t = (_upTravel / _extractPx).clamp(0.0, 1.0);
     _removeOverlay();
+    final idx = _fanCards.indexOf(card);
     setState(() {
       _liftedCard = null;
       _liftGlobalCenter = null;
       _liftScale = 1.0;
       _peekCard = card;
       _peekT = t;
+      if (idx >= 0) _hoverIndex = idx;
     });
     widget.onDragPosition?.call(null);
-    _hoverFromGlobal(global, baseSpacing, totalW);
+    _emitActiveCard(_isLegal(card) ? card : null);
     if (t <= 0.02) {
       _settlePeekIntoFan(global, baseSpacing, totalW);
     }
