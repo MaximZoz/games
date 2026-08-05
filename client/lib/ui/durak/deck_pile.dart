@@ -29,8 +29,8 @@ class DurakDeckPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Рубашки уезжают влево за край; козырь остаётся в кадре.
-    final hide = cardSize.width * 0.48;
+    // Рубашки чуть за краем; козырь и стопка остаются в кадре (не под панелью).
+    final hide = cardSize.width * 0.22;
     // Стек рубашек только когда в колоде ещё есть карты сверх открытого козыря.
     final stackN = deckCount <= 1 ? 0 : math.min(deckCount, 5);
     final showTrumpFace = deckCount >= 1;

@@ -432,11 +432,12 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
   double _arcFor(int n) {
     if (widget.arc != null) return widget.arc!;
     if (n <= 1) return 0;
-    // Широкий веер — лёгкий изгиб; сильную «лодочку» не делаем.
-    if (n > 16) return 0.22;
-    if (n > 10) return 0.30;
-    if (n > 6) return 0.34;
-    return 0.26;
+    // Как раньше: заметная дуга, не плоская линия.
+    if (n > 20) return 0.85;
+    if (n > 14) return 0.68;
+    if (n > 10) return 0.52;
+    if (n > 6) return 0.4;
+    return 0.28;
   }
 
   bool _isLegal(PlayingCard card) =>
@@ -899,10 +900,10 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final angle = n == 1 || arc == 0
         ? 0.0
         : (i - center) * (arc / max(n - 1, 1));
-    // arc == 0 — ровный ряд (соперник); иначе лёгкая парабола краёв.
+    // arc == 0 — ровный ряд (соперник); иначе парабола краёв как раньше.
     final curveY = arc == 0
         ? 0.0
-        : (i - center) * (i - center) * widget.cardSize.height * 0.008;
+        : (i - center) * (i - center) * widget.cardSize.height * 0.012;
 
     var extraX = 0.0;
     var extraY = 0.0;
