@@ -86,9 +86,10 @@ class DurakDeckPile extends StatelessWidget {
               ),
             ),
           ),
+          // На видимой половине стопки (колода частично за левым краем).
           Positioned(
-            bottom: 0,
-            left: 4,
+            bottom: 2,
+            left: cardSize.width * 0.62,
             child: _CountBadge(count: deckCount),
           ),
         ],

@@ -1911,7 +1911,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final deckPeek = KeyedSubtree(
       key: _deckKey,
       child: Transform.translate(
-        offset: Offset(-cardSize.width * 0.55, 0),
+        offset: Offset(-cardSize.width * 0.48, 0),
         child: DurakDeckPile(
           deckCount: view.deckCount,
           trumpCard: trumpCard,
