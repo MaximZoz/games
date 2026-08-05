@@ -407,6 +407,56 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return (cardSize: size, spacing: spacing);
   }
 
+  /// Мало карт — компактный веер по центру; много — на всю ширину.
+  ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
+    int n,
+    double maxWidth,
+  ) {
+    if (n <= 0) {
+      return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
+    }
+    if (n <= 7) {
+      var size = n >= 6
+          ? Size(_handCardSize.width * 0.90, _handCardSize.height * 0.90)
+          : _handCardSize;
+      var spacing = n <= 1
+          ? 0.0
+          : size.width * (n <= 2 ? 0.62 : n <= 4 ? 0.50 : 0.40);
+      const pad = 32.0;
+      final need = size.width + spacing * math.max(n - 1, 0) + pad;
+      if (need > maxWidth && n > 1) {
+        spacing = ((maxWidth - pad - size.width) / (n - 1))
+            .clamp(size.width * 0.22, spacing);
+      }
+      return (cardSize: size, spacing: spacing, fillWidth: false);
+    }
+    final fitted = _fitHandFan(n, maxWidth);
+    final spacing = n <= 1
+        ? 0.0
+        : ((maxWidth - 14 - fitted.cardSize.width) / (n - 1)).clamp(
+            fitted.cardSize.width * 0.08,
+            fitted.cardSize.width * 0.96,
+          );
+    return (
+      cardSize: fitted.cardSize,
+      spacing: spacing,
+      fillWidth: true,
+    );
+  }
+
+  /// Сколько ещё атак/подкидов можно положить (как MaxAttacksThisRound на сервере).
+  int _attackRoom(DurakGameView view) {
+    final def = view.defenderIndex;
+    final defCount = (def >= 0 && def < view.hands.length)
+        ? view.hands[def].count
+        : 6;
+    final lim = defCount + view.table.length;
+    final capped = lim < 1 ? 1 : lim;
+    const maxAttacks = 6;
+    final maxPairs = maxAttacks < capped ? maxAttacks : capped;
+    return (maxPairs - view.table.length).clamp(0, 52);
+  }
+
   /// Оптимистичные атаки, которых ещё нет на серверном столе (слоты посадки).
   List<PlayingCard> _pendingAttackPlaceholders(DurakGameView view) {
     if (_optimisticAttacks.isEmpty) return const [];
@@ -500,6 +550,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         (_selected.isNotEmpty ? _selected.first : null);
     if (focus == null || _busy || view.isOver) return false;
     if (!_isAttackPhase(view)) return false;
+    // Подкид — без подсветки слота; только первая атака на пустой стол.
+    if (view.table.isNotEmpty) return false;
     return view.legalAttack.any((c) => c.toPlayingCard() == focus);
   }
 
@@ -576,6 +628,39 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     };
   }
 
+  /// Карты, которыми можно перевести (переводной режим).
+  Set<PlayingCard> _transferLegalFanCards(
+    DurakGameView view,
+    List<PlayingCard> hand,
+  ) {
+    if (view.mode != 'perevodnoi') return {};
+    if (!_isDefendPhase(view)) return {};
+    if (view.table.isEmpty) return {};
+    if (view.table.any((p) => p.defense != null)) return {};
+    if (_optimisticDefends.isNotEmpty) return {};
+    final rank = view.table.first.attack.toPlayingCard().rank;
+    if (view.table.length + 1 > 6) return {};
+    return {
+      for (final c in hand)
+        if (c.rank == rank) c,
+    };
+  }
+
+  /// Подсветка руки только при выборе: чем бить / бить или перевести.
+  Set<PlayingCard>? _fanHighlightLegal(
+    DurakGameView view,
+    List<PlayingCard> hand,
+  ) {
+    if (!_isDefendPhase(view)) return null;
+    final beat = _defendLegalFanCards(view, hand);
+    final transfer = _transferLegalFanCards(view, hand);
+    final needsChoice = beat.length > 1 ||
+        transfer.length > 1 ||
+        (beat.isNotEmpty && transfer.isNotEmpty);
+    if (!needsChoice) return null;
+    return {...beat, ...transfer};
+  }
+
   bool _isAttackPhase(DurakGameView view) =>
       view.attackerIndex == view.myIndex &&
       (view.phase == 'attack' ||
@@ -591,7 +676,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (_selected.contains(card) && _selected.length > 1) {
       return _selected.toList();
     }
-    return [card];
+    final legal = _apiCardsToPlaying(view.legalAttack);
+    if (!legal.contains(card)) return [card];
+    final room = _attackRoom(view);
+    if (room <= 0) return [card];
+    // Первая атака — все карты того же ранга; подкид — все легальные сразу.
+    final batch = view.table.isEmpty
+        ? [
+            for (final c in legal)
+              if (c.rank == card.rank) c,
+          ]
+        : List<PlayingCard>.from(legal);
+    if (batch.isEmpty) return [card];
+    final ordered = <PlayingCard>[card];
+    for (final c in batch) {
+      if (c != card) ordered.add(c);
+    }
+    return ordered.take(room).toList();
   }
 
   void _toggleSelect(DurakGameView view, PlayingCard card) {
@@ -709,10 +810,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     final defendTargets = _defendTargetIndexes(view, cards.first);
     final doDefend = isDefend && defendTargets.isNotEmpty;
+    final transferLegal = isDefend
+        ? _transferLegalFanCards(
+            view,
+            _apiCardsToPlaying(
+              view.hands.length > view.myIndex && view.myIndex >= 0
+                  ? (view.hands[view.myIndex].cards ?? const [])
+                  : const [],
+            ),
+          )
+        : const <PlayingCard>{};
+    // Перевод — если карта не бьёт, но подходит по рангу (или выбран перевод).
+    final doTransfer = isDefend &&
+        !doDefend &&
+        transferLegal.contains(cards.first);
     final doAttack = !doDefend &&
+        !doTransfer &&
         isAttack &&
         view.legalAttack.any((c) => c.toPlayingCard() == cards.first);
-    if (!doDefend && !doAttack) return false;
+    if (!doDefend && !doAttack && !doTransfer) return false;
 
     final screen = MediaQuery.sizeOf(context);
     final defendIdx = doDefend
@@ -761,9 +877,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _busy = true;
       _flightLockTable = true;
       _flightDefendIdx = doDefend && defendIdx >= 0 ? defendIdx : null;
-      // Подкид: сразу резервируем место в раскладке стола — летим туда, без
-      // «упал на карты → сдвинулся в сторону».
-      if (doAttack) {
+      // Подкид/перевод: сразу резервируем место в раскладке стола — летим туда.
+      if (doAttack || doTransfer) {
         _optimisticAttacks
           ..clear()
           ..addAll(cards);
@@ -884,6 +999,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           type: 'defend',
           card: cards.first,
           pairIndex: defendIdx >= 0 ? defendIdx : null,
+        );
+      } else if (doTransfer) {
+        await repo.move(
+          widget.gameId,
+          type: 'transfer',
+          card: cards.first,
         );
       } else {
         await repo.move(widget.gameId, type: 'attack', cards: cards);
@@ -1145,7 +1266,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 : const [],
           )
         : <PlayingCard>[];
-    // Цели — финальные слоты отсортированного веера (fillWidth: от левого края).
+    // Цели — финальные слоты отсортированного веера (центр / fillWidth).
     final handSet = currentHand.toSet();
     final merged = currentHand.isNotEmpty && cards.every(handSet.contains)
         ? (List<PlayingCard>.from(currentHand)
@@ -1154,12 +1275,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           ..sort((a, b) => _compareHandCards(a, b, trump)));
     final nAll = merged.length;
     final maxFanW = MediaQuery.sizeOf(context).width;
-    final fanLayout = _fitHandFan(nAll, maxFanW);
+    final fanLayout = _handFanVisualLayout(nAll, maxFanW);
     final slotSize = fanLayout.cardSize;
-    final spacing = nAll <= 1
-        ? 0.0
-        : ((maxFanW - 14 - slotSize.width) / (nAll - 1))
-            .clamp(slotSize.width * 0.08, slotSize.width * 0.96);
+    final spacing = fanLayout.spacing;
+    final fillWidth = fanLayout.fillWidth;
     // Веер сразу в финальном порядке; летающие скрыты до приземления.
     if (mounted) {
       setState(() {
@@ -1178,6 +1297,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             12,
             MediaQuery.sizeOf(context).height * 0.78,
           );
+    final totalW = slotSize.width + spacing * math.max(nAll - 1, 0);
 
     final froms = <Rect>[];
     final tos = <Rect>[];
@@ -1198,8 +1318,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
       );
       final idx = merged.indexOf(cards[i]).clamp(0, math.max(nAll - 1, 0));
-      // Совпадает с CardFan fillWidth: left = 10 + idx * spacing.
-      final left = 10 + idx * spacing;
+      // Как CardFan: fillWidth left=10+i*sp; иначе центр коробки.
+      final left = fillWidth
+          ? 10 + idx * spacing
+          : totalW / 2 + (idx - (nAll - 1) / 2.0) * spacing + 16;
       final center = (nAll - 1) / 2.0;
       final curveY = nAll <= 1
           ? 0.0
@@ -2186,13 +2308,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           : const [],
     );
     final myHand = _orderedHand(serverHand, trump);
+    // Легальность для жестов — полный набор; подсветка веера — только при выборе.
     final legal = <PlayingCard>{
       ..._apiCardsToPlaying(view.legalAttack),
-      if (_isDefendPhase(view))
-        ..._defendLegalFanCards(view, myHand)
-      else
+      if (_isDefendPhase(view)) ...[
+        ..._defendLegalFanCards(view, myHand),
+        ..._transferLegalFanCards(view, myHand),
+      ] else
         ..._apiCardsToPlaying(view.legalDefend),
     };
+    final fanHighlight = _fanHighlightLegal(view, myHand);
     if (_selected.isNotEmpty) {
       final stale = _selected
           .where((c) => !myHand.contains(c) || !legal.contains(c))
@@ -2225,7 +2350,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final animateFanLayout =
         !_suppressFanLayoutAnim && !_busy && !_flightLockTable;
     // Высота зоны: веер приподнят — карты не уходят под нижнее меню.
-    final fanProbe = _fitHandFan(
+    final fanProbe = _handFanVisualLayout(
       handForFan.length,
       MediaQuery.sizeOf(context).width,
     );
@@ -2233,16 +2358,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ? _frozenFanCardSize!.height
         : fanProbe.cardSize.height;
     final nFan = handForFan.length;
-    // Сильный подъём при большом веере — видна почти вся карта, не только индекс.
+    // Подъём над меню: даже при 1–2 картах низ не обрезается.
     final seatLift = nFan > 16
         ? fanCardH * 0.62
         : nFan > 12
             ? fanCardH * 0.48
             : nFan > 8
-                ? fanCardH * 0.34
+                ? fanCardH * 0.36
                 : nFan > 4
-                    ? fanCardH * 0.20
-                    : fanCardH * 0.10;
+                    ? fanCardH * 0.30
+                    : fanCardH * 0.26;
     // CardFan ≈ 1.7h + peek; + seatLift над низом; запас под поворот краёв.
     final fanZoneH = fanCardH * 2.05 + seatLift + 20;
 
@@ -2324,30 +2449,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       bottom: seatLift,
                       child: LayoutBuilder(
                         builder: (context, c) {
-                          final fitted =
-                              _fitHandFan(handForFan.length, c.maxWidth);
+                          final fitted = _handFanVisualLayout(
+                            handForFan.length,
+                            c.maxWidth,
+                          );
                           final cardSize = useFrozenFanSize
                               ? _frozenFanCardSize!
                               : fitted.cardSize;
-                          // -14: отступ fillWidth (10) + запас справа.
-                          final spacing = handForFan.length <= 1
-                              ? 0.0
-                              : ((c.maxWidth - 14 - cardSize.width) /
-                                      (handForFan.length - 1))
-                                  .clamp(
-                                    cardSize.width * 0.08,
-                                    cardSize.width * 0.96,
-                                  );
+                          final spacing = fitted.spacing;
+                          final fillWidth = fitted.fillWidth;
                           return Align(
-                            alignment: Alignment.bottomLeft,
+                            alignment: fillWidth
+                                ? Alignment.bottomLeft
+                                : Alignment.bottomCenter,
                             child: CardFan(
                               key: _fanKey,
                               cards: handForFan,
                               cardSize: cardSize,
                               spacing: spacing,
-                              fillWidth: true,
+                              fillWidth: fillWidth,
                               animateLayout: animateFanLayout,
-                              legalCards: legal,
+                              // Ход ограничен legal; визуальный акцент — только при выборе.
+                              legalCards: legal.isEmpty ? null : legal,
+                              emphasizeLegal: fanHighlight != null,
                               selectedCards: _selected,
                               hiddenCards: _flyingFromHand,
                               enabled: !view.isOver && !_busy,

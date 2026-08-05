@@ -19,6 +19,7 @@ class CardFan extends StatefulWidget {
     required this.cardSize,
     this.enabled = true,
     this.legalCards,
+    this.emphasizeLegal = true,
     this.selectedCards,
     this.hiddenCards,
     this.onTap,
@@ -39,6 +40,9 @@ class CardFan extends StatefulWidget {
   final Size cardSize;
   final bool enabled;
   final Set<PlayingCard>? legalCards;
+
+  /// Подсветка/dim по [legalCards]. Выкл. — ограничение хода без визуального акцента.
+  final bool emphasizeLegal;
   final Set<PlayingCard>? selectedCards;
   final Set<PlayingCard>? hiddenCards;
   final ValueChanged<PlayingCard>? onTap;
@@ -945,12 +949,12 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     }
 
     final legal = _isLegal(card);
-    final isLegalContext = widget.legalCards != null;
+    final hintLegal = widget.emphasizeLegal && widget.legalCards != null;
     final hidden = _isHidden(card);
     // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
     final showHintShadow = !isLiftedAway &&
         !hidden &&
-        ((active || selected) && (!isLegalContext || legal));
+        ((active || selected) && (!hintLegal || legal));
 
     Widget child = isLiftedAway || hidden
         ? SizedBox(
@@ -964,7 +968,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                 card: card,
                 size: widget.cardSize,
                 highlighted: showHintShadow,
-                dimmed: isLegalContext && !legal,
+                dimmed: hintLegal && !legal,
                 // Selected — только тень (мультивыбор long-press), без подъёма.
                 elevated: active || peeking || selected,
               );
