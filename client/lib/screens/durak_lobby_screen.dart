@@ -14,10 +14,9 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show ActiveGameItem, GamesException, formatStakeAmount, stakeCoinType;
+    show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
-import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
@@ -297,58 +296,14 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     );
   }
 
-  /// Карточка состава для 3–4 игроков (как multi-лобби крестиков-ноликов).
+  /// Карточка состава для 3–4 — общий [LobbyMultiPlayersCard].
   Widget _buildMultiPlayersCard(DurakLobbyView lobby) {
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Игроки ${lobby.playerIds.length}/${lobby.maxPlayers}',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${durakModeLabel(lobby.gameMode)} · '
-                  '${durakDeckLabel(lobby.deckSize)}',
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          if (lobby.stakeBronze > 0)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  formatStakeAmount(lobby.stakeBronze),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                CoinIcon(
-                  coinType: stakeCoinType(lobby.stakeBronze),
-                  size: 20,
-                  showBorder: true,
-                ),
-              ],
-            ),
-        ],
-      ),
+    return LobbyMultiPlayersCard(
+      playersCount: lobby.playerIds.length,
+      maxPlayers: lobby.maxPlayers,
+      subtitle: '${durakModeLabel(lobby.gameMode)} · '
+          '${durakDeckLabel(lobby.deckSize)}',
+      stakeBronze: lobby.stakeBronze,
     );
   }
 

@@ -189,6 +189,87 @@ class LobbySearchBanner extends StatelessWidget {
   }
 }
 
+/// Карточка «Игроки N/M» для своей игры на 3–4 игрока.
+///
+/// Общий вид для крестиков и дурака: заголовок, опциональный подзаголовок
+/// (режим · колода / вариант · поле) и ставка справа.
+class LobbyMultiPlayersCard extends StatelessWidget {
+  const LobbyMultiPlayersCard({
+    super.key,
+    required this.playersCount,
+    required this.maxPlayers,
+    this.subtitle,
+    this.stakeBronze = 0,
+  });
+
+  final int playersCount;
+  final int maxPlayers;
+
+  /// Например «Подкидной · 36 карт» или «Классика · 3×3».
+  final String? subtitle;
+
+  final int stakeBronze;
+
+  @override
+  Widget build(BuildContext context) {
+    final sub = subtitle?.trim();
+    return GradientCard(
+      animate: false,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Игроки $playersCount/$maxPlayers',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                if (sub != null && sub.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    sub,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (stakeBronze > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formatStakeAmount(stakeBronze),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                CoinIcon(
+                  coinType: stakeCoinType(stakeBronze),
+                  size: 20,
+                  showBorder: true,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Диалог подтверждения выхода из лобби — общий для всех игр.
 /// Возвращает true, если пользователь подтвердил.
 Future<bool> confirmLeaveLobbyDialog({

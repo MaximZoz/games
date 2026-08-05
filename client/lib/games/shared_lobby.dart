@@ -4,10 +4,9 @@
 /// игроки, `creator_id` передаётся следующему (invite и matchmake).
 /// Приглашать может любой участник лобби.
 ///
-/// **UI-скелет ожидания:** [GameLobbyWaitingLayout] в
-/// `ui/widgets/game_lobby_widgets.dart` — чип ставки / карточка «Игроки N/M»,
-/// ссылка, друзья. Дурак уже на нём; крестики подключают те же виджеты
-/// (stake chip, share link, leave dialog, rules dialog).
+/// **UI-скелет ожидания:** [GameLobbyWaitingLayout] + [LobbyMultiPlayersCard]
+/// в `ui/widgets/game_lobby_widgets.dart` — чип ставки / карточка «Игроки N/M»,
+/// ссылка, друзья. Крестики и дурак инжектят свои данные в один скелет.
 ///
 /// **Правила:** [showGameRulesDialog] + `stakeBronze` из лобби/карточки создания.
 library;

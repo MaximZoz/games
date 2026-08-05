@@ -19,7 +19,6 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
-import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -81,12 +80,6 @@ String tictactoeLobbyAppBarTitle({
 /// Иконка крестиков-ноликов в AppBar лобби / своей игры.
 const IconData tictactoeLobbyAppBarIcon = Icons.grid_3x3_rounded;
 
-/// Оценка высоты карточки друзей (паддинг + строки ~56px).
-double _estimateFriendsCardHeight(int friendCount) {
-  if (friendCount <= 0) return 88;
-  return 24 + friendCount * 56.0;
-}
-
 const List<IconData> _presetAvatarIcons = [
   Icons.face_rounded,
   Icons.face_2_rounded,
@@ -106,7 +99,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   final Set<String> _declinedFriendIds = {};
   final Set<String> _invitingFriendIds = {};
   final Set<String> _cancellingFriendIds = {};
-  final Set<String> _friendRequestInFlight = {};
   bool _isLeaving = false;
   bool _isJoining = false;
   bool _linkCopied = false;
@@ -294,292 +286,155 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
 
               final isDesktop = isWide(context);
               final pad = isDesktop ? 32.0 : 24.0;
-              // Планшет / phone landscape / низкий экран: страница скроллится,
-              // иначе карточка приглашения обрезается.
-              final shortViewport = isPhoneLandscape(context) ||
-                  isTablet(context) ||
-                  MediaQuery.sizeOf(context).height < 640;
-              // Друзья для приглашения — у всех участников «Своей игры» и поиска.
-              final useScrollFriends = shortViewport &&
-                  (showOpenFindWaiting || showPrivateInviteWaiting);
+              final friendCount = friendsAsync.valueOrNull?.friends
+                      .where((f) => !lobbyMemberIds.contains(f.user.id))
+                      .length ??
+                  0;
+
+              // Своя игра / multi-поиск — тот же скелет, что у Дурака.
+              if (showPrivateInviteWaiting ||
+                  (showOpenFindWaiting && showMultiLobby)) {
+                return GameLobbyWaitingLayout(
+                  maxPlayers: lobby.maxPlayers,
+                  stakeBronze: lobby.stakeBronze,
+                  stakeLabel: context.l10n.shopStakes,
+                  friendsCount: friendCount,
+                  padding: EdgeInsets.all(pad),
+                  maxWidth: isDesktop ? 480 : 480,
+                  searchBanner: showOpenFindWaiting
+                      ? LobbySearchBanner(
+                          label: context.l10n.lobbySearchingOpponent,
+                        )
+                      : null,
+                  multiPlayersCard: showMultiLobby
+                      ? _buildMultiLobbyCard(lobby)
+                      : null,
+                  shareLinkCard: _buildShareInviteLinkCard(context),
+                  friendsCardBuilder: (expand) => _buildFriendsCard(
+                    context,
+                    friendsAsync,
+                    expand: expand,
+                    excludeUserIds: lobbyMemberIds,
+                  ),
+                );
+              }
+
               return SafeArea(
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxWidth: isDesktop ? 480 : double.infinity,
                     ),
-                    child: useScrollFriends
-                        ? LayoutBuilder(
-                            builder: (context, constraints) {
-                              final friendCount = friendsAsync
-                                      .valueOrNull?.friends
-                                      .where((f) =>
-                                          !lobbyMemberIds.contains(f.user.id))
-                                      .length ??
-                                  0;
-                              final estimated =
-                                  _estimateFriendsCardHeight(friendCount);
-                              final maxFriendsH = (constraints.maxHeight * 0.55)
-                                  .clamp(180.0, 360.0);
-                              final expandFriends = estimated > maxFriendsH;
-                              return SingleChildScrollView(
-                                padding: EdgeInsets.all(pad),
-                                physics: const AlwaysScrollableScrollPhysics(
-                                  parent: ClampingScrollPhysics(),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    if (showOpenFindWaiting) ...[
-                                      _buildSearchLoaderBanner(context),
-                                      const SizedBox(height: 12),
-                                    ] else if (lobby.stakeBronze > 0) ...[
-                                      _LobbyStakeChip(
-                                        stakeBronze: lobby.stakeBronze,
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                    if (showMultiLobby) ...[
-                                      _buildMultiLobbyCard(
-                                        context,
-                                        lobby,
-                                        currentUser?.id,
-                                      ),
-                                      const SizedBox(height: 12),
-                                    ],
-                                    _buildShareInviteLinkCard(context),
-                                    const SizedBox(height: 12),
-                                    if (expandFriends)
-                                      SizedBox(
-                                        height: maxFriendsH,
-                                        child: _buildFriendsCard(
-                                          context,
-                                          friendsAsync,
-                                          expand: true,
-                                          excludeUserIds: lobbyMemberIds,
-                                        ),
-                                      )
-                                    else
-                                      _buildFriendsCard(
-                                        context,
-                                        friendsAsync,
-                                        expand: false,
-                                        excludeUserIds: lobbyMemberIds,
-                                      ),
-                                  ],
-                                ),
-                              );
-                            },
-                          )
-                        : Padding(
-                            padding: EdgeInsets.all(pad),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (showOpenFindWaiting) ...[
-                                  _buildSearchLoaderBanner(context),
-                                  const SizedBox(height: 12),
-                                  if (showMultiLobby) ...[
-                                    _buildMultiLobbyCard(
-                                      context,
-                                      lobby,
-                                      currentUser?.id,
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  if (showMultiLobby) ...[
-                                    _buildShareInviteLinkCard(context),
-                                    const SizedBox(height: 12),
-                                    Expanded(
-                                      child: LayoutBuilder(
-                                        builder: (context, constraints) {
-                                          final friendCount = friendsAsync
-                                                  .valueOrNull
-                                                  ?.friends
-                                                  .where((f) => !lobbyMemberIds
-                                                      .contains(f.user.id))
-                                                  .length ??
-                                              0;
-                                          final estimated =
-                                              _estimateFriendsCardHeight(
-                                                  friendCount);
-                                          final expand = estimated >=
-                                              constraints.maxHeight;
-                                          final card = _buildFriendsCard(
-                                            context,
-                                            friendsAsync,
-                                            expand: expand,
-                                            excludeUserIds: lobbyMemberIds,
-                                          );
-                                          if (expand) return card;
-                                          return Align(
-                                            alignment: Alignment.topCenter,
-                                            child: card,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ] else ...[
-                                    Expanded(
-                                      child: GradientCard(
-                                        padding: const EdgeInsets.all(24),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              context
-                                                  .l10n.lobbySearchingOpponent,
-                                              textAlign: TextAlign.center,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    color:
-                                                        AppColors.textPrimary,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 16),
-                                            _buildMatchmakeInfoCard(
-                                              context,
-                                              lobby,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ] else if (showPrivateInviteWaiting) ...[
-                                  // Создатель и уже вступившие: ссылка + друзья
-                                  // (не правила — правила у гостя до Join).
-                                  if (showMultiLobby) ...[
-                                    _buildMultiLobbyCard(
-                                      context,
-                                      lobby,
-                                      currentUser?.id,
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  // Ссылка — максимально высоко (заголовок уже в AppBar).
-                                  _buildShareInviteLinkCard(context),
-                                  const SizedBox(height: 12),
-                                  // Мало друзей — карточка по контенту; много — растягиваем.
-                                  Expanded(
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final friendCount = friendsAsync
-                                                .valueOrNull?.friends
-                                                .where((f) => !lobbyMemberIds
-                                                    .contains(f.user.id))
-                                                .length ??
-                                            0;
-                                        final estimated =
-                                            _estimateFriendsCardHeight(
-                                                friendCount);
-                                        final expand =
-                                            estimated >= constraints.maxHeight;
-                                        final card = _buildFriendsCard(
-                                          context,
-                                          friendsAsync,
-                                          expand: expand,
-                                          excludeUserIds: lobbyMemberIds,
-                                        );
-                                        if (expand) return card;
-                                        return Align(
-                                          alignment: Alignment.topCenter,
-                                          child: card,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ] else if (showInviteAccept) ...[
-                                  if (showMultiLobby) ...[
-                                    _buildMultiLobbyCard(
-                                      context,
-                                      lobby,
-                                      currentUser?.id,
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  Expanded(
-                                    child: GradientCard(
-                                      padding: const EdgeInsets.all(24),
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            context.l10n.lobbyInviteTitle,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColors.textPrimary,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            lobby.creatorName.trim().isNotEmpty
-                                                ? context.l10n
-                                                    .lobbyCreatorInvites(
-                                                        lobby.creatorName)
-                                                : context
-                                                    .l10n.lobbyInvitedToPlay,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          buildTictactoeRulesTextWidget(
-                                            variant: lobby.variant,
-                                            gridSize: lobby.gridSize,
-                                            turnTimeSec: lobby.turnTimeSec,
-                                            swapRule: lobby.swapRule,
-                                            firstMoveRestriction:
-                                                lobby.firstMoveRestriction,
-                                            stakeBronze: lobby.stakeBronze,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 13,
-                                              height: 1.35,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          FilledButton(
-                                            onPressed: _isJoining
-                                                ? null
-                                                : () => _joinViaLink(context),
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor:
-                                                  AppColors.accentStart,
-                                              foregroundColor: Colors.white,
-                                              minimumSize:
-                                                  const Size.fromHeight(48),
-                                            ),
-                                            child: _isJoining
-                                                ? const SizedBox(
-                                                    width: 22,
-                                                    height: 22,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: Colors.white,
-                                                    ),
-                                                  )
-                                                : Text(context
-                                                    .l10n.lobbyEnterGame),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
+                    child: Padding(
+                      padding: EdgeInsets.all(pad),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (showOpenFindWaiting) ...[
+                            LobbySearchBanner(
+                              label: context.l10n.lobbySearchingOpponent,
                             ),
-                          ),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              child: GradientCard(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      context.l10n.lobbySearchingOpponent,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildMatchmakeInfoCard(context, lobby),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ] else if (showInviteAccept) ...[
+                            if (showMultiLobby) ...[
+                              _buildMultiLobbyCard(lobby),
+                              const SizedBox(height: 12),
+                            ],
+                            Expanded(
+                              child: GradientCard(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      context.l10n.lobbyInviteTitle,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      lobby.creatorName.trim().isNotEmpty
+                                          ? context.l10n.lobbyCreatorInvites(
+                                              lobby.creatorName)
+                                          : context.l10n.lobbyInvitedToPlay,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    buildTictactoeRulesTextWidget(
+                                      variant: lobby.variant,
+                                      gridSize: lobby.gridSize,
+                                      turnTimeSec: lobby.turnTimeSec,
+                                      swapRule: lobby.swapRule,
+                                      firstMoveRestriction:
+                                          lobby.firstMoveRestriction,
+                                      stakeBronze: lobby.stakeBronze,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    FilledButton(
+                                      onPressed: _isJoining
+                                          ? null
+                                          : () => _joinViaLink(context),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.accentStart,
+                                        foregroundColor: Colors.white,
+                                        minimumSize: const Size.fromHeight(48),
+                                      ),
+                                      child: _isJoining
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : Text(context.l10n.lobbyEnterGame),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -886,323 +741,14 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  Widget _buildSearchLoaderBanner(BuildContext context) {
-    // Общий виджет — тот же, что в лобби Дурака.
-    return LobbySearchBanner(label: context.l10n.lobbySearchingOpponent);
-  }
-
-  Widget _buildMultiLobbyCard(
-    BuildContext context,
-    LobbyItem lobby,
-    String? currentUserId,
-  ) {
-    final players = lobby.players;
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Игроки ${lobby.playersCount}/${lobby.maxPlayers}',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    for (final player in players)
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () => _showLobbyPlayerProfile(context, player),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 2,
-                              vertical: 2,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _LobbyPlayerAvatar(player: player),
-                                const SizedBox(width: 6),
-                                ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 96),
-                                  child: Text(
-                                    player.displayName.trim().isNotEmpty
-                                        ? player.displayName
-                                        : context.l10n.commonUser,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.accentStart,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: AppColors.accentStart,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    for (var i = players.length;
-                        i < lobby.maxPlayers && i < 4;
-                        i++)
-                      const _LobbyEmptySeatAvatar(),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Builder(
-            builder: (context) {
-              final chatId = (lobby.chatId ?? '').trim();
-              final isMember = currentUserId != null &&
-                  players.any((p) => p.id == currentUserId);
-              final canOpen = chatId.isNotEmpty && isMember;
-              final unread = !canOpen
-                  ? 0
-                  : ref.watch(chatsListProvider.select((async) {
-                      final list = async.valueOrNull;
-                      if (list == null) return 0;
-                      for (final c in list) {
-                        if (c.chatID == chatId) return c.unreadCount;
-                      }
-                      return 0;
-                    }));
-              return IconButton(
-                tooltip: 'Чат группы',
-                // Чат только для уже вступивших — иначе «Доступ запрещён».
-                onPressed: canOpen ? () => _openGroupChat(context, lobby) : null,
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text(
-                    unread > 99 ? '99+' : '$unread',
-                    style: const TextStyle(fontSize: 10, color: Colors.white),
-                  ),
-                  backgroundColor: Colors.redAccent,
-                  child: const Icon(Icons.forum_rounded),
-                ),
-                color: AppColors.accentStart,
-              );
-            },
-          ),
-          Builder(
-            builder: (context) {
-              final snapshot =
-                  ref.watch(friendsSnapshotProvider).valueOrNull;
-              final alreadyFriendIds = <String>{
-                for (final f in snapshot?.friends ?? const [])
-                  if (f.user.id.isNotEmpty) f.user.id,
-              };
-              final outgoingIds = <String>{
-                for (final r in snapshot?.outgoing ?? const [])
-                  if (r.user.id.isNotEmpty) r.user.id,
-              };
-              final canAdd = players.any(
-                (p) =>
-                    p.id.isNotEmpty &&
-                    p.id != currentUserId &&
-                    !alreadyFriendIds.contains(p.id) &&
-                    !outgoingIds.contains(p.id),
-              );
-              if (!canAdd) return const SizedBox.shrink();
-              return IconButton(
-                tooltip: context.l10n.friendsAdd,
-                onPressed: () => _showLobbyPlayersFriendSheet(
-                  context,
-                  lobby,
-                  currentUserId,
-                ),
-                icon: const Icon(Icons.person_add_alt_1_rounded),
-                color: AppColors.accentStart,
-              );
-            },
-          ),
-        ],
-      ),
+  Widget _buildMultiLobbyCard(LobbyItem lobby) {
+    return LobbyMultiPlayersCard(
+      playersCount: lobby.playersCount,
+      maxPlayers: lobby.maxPlayers,
+      subtitle: '${variantLabel(lobby.variant)} · '
+          '${lobby.gridSize}×${lobby.gridSize}',
+      stakeBronze: lobby.stakeBronze,
     );
-  }
-
-  Future<void> _openGroupChat(BuildContext context, LobbyItem lobby) async {
-    // GetLobby синхронизирует chat_members — иначе после реванша бывает «Доступ запрещён».
-    ref.invalidate(lobbyDetailProvider(lobby.id));
-    LobbyItem fresh = lobby;
-    try {
-      fresh = await ref.read(lobbyDetailProvider(lobby.id).future);
-    } catch (_) {}
-    final chatId = (fresh.chatId ?? lobby.chatId ?? '').trim();
-    if (chatId.isEmpty) {
-      if (context.mounted) {
-        showAppSnackBar(
-          context,
-          message: 'Чат лобби ещё не создан',
-          kind: AppSnackKind.error,
-        );
-      }
-      return;
-    }
-    unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-    if (!context.mounted) return;
-    final returnPath = Uri(
-      path: '/games/tictactoe/lobby/${lobby.id}',
-      queryParameters: widget.initialMode == null
-          ? null
-          : {'mode': widget.initialMode!},
-    ).toString();
-    final route = Uri(
-      path: '/chats/$chatId',
-      queryParameters: {
-        'from': 'games',
-        'game': returnPath,
-        'name': 'Лобби ${variantLabel(fresh.variant)}',
-      },
-    ).toString();
-    context.push(route);
-  }
-
-  Future<void> _showLobbyPlayersFriendSheet(
-    BuildContext context,
-    LobbyItem lobby,
-    String? currentUserId,
-  ) async {
-    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
-    final alreadyFriendIds = <String>{
-      for (final f in snapshot?.friends ?? const [])
-        if (f.user.id.isNotEmpty) f.user.id,
-    };
-    final outgoingIds = <String>{
-      for (final r in snapshot?.outgoing ?? const [])
-        if (r.user.id.isNotEmpty) r.user.id,
-    };
-    // Уже в друзьях / исходящая заявка — не показываем в «Добавить в друзья».
-    final players = lobby.players
-        .where(
-          (p) =>
-              p.id.isNotEmpty &&
-              p.id != currentUserId &&
-              !alreadyFriendIds.contains(p.id) &&
-              !outgoingIds.contains(p.id),
-        )
-        .toList(growable: false);
-    if (players.isEmpty) {
-      if (context.mounted) {
-        showAppSnackBar(
-          context,
-          message: context.l10n.friendsAlreadyFriends,
-          kind: AppSnackKind.info,
-        );
-      }
-      return;
-    }
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: GradientCard(
-              animate: false,
-              margin: EdgeInsets.zero,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.friendsAdd,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  for (final player in players)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: _LobbyPlayerAvatar(player: player),
-                        title: Text(
-                          player.displayName.trim().isNotEmpty
-                              ? player.displayName
-                              : context.l10n.commonUser,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing:
-                            _friendRequestInFlight.contains(player.id)
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.accentStart,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.person_add_alt_1_rounded,
-                                    color: AppColors.accentStart,
-                                  ),
-                        onTap: _friendRequestInFlight.contains(player.id)
-                            ? null
-                            : () => _sendLobbyFriendRequest(
-                                  sheetContext,
-                                  player.id,
-                                ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _sendLobbyFriendRequest(
-    BuildContext sheetContext,
-    String userId,
-  ) async {
-    setState(() => _friendRequestInFlight.add(userId));
-    try {
-      await ref.read(friendsRepositoryProvider).sendRequest(userId);
-      await refreshFriendsSnapshot(ref);
-      if (!mounted) return;
-      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-      showAppSnackBar(
-        context,
-        message: context.l10n.friendsRequestSent,
-        kind: AppSnackKind.success,
-      );
-    } on FriendsException catch (e) {
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: e.message,
-        kind: AppSnackKind.error,
-      );
-    } finally {
-      if (mounted) setState(() => _friendRequestInFlight.remove(userId));
-    }
   }
 
   Future<void> _copyInviteLink() async {
@@ -1541,123 +1087,4 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  void _showLobbyPlayerProfile(BuildContext context, LobbyPlayer player) {
-    unawaited(
-      showUserProfileDialog(
-        context: context,
-        ref: ref,
-        userId: player.id,
-        displayName: player.displayName,
-        avatarKind: player.avatarKind,
-        avatarValue: player.avatarValue,
-        frameCode: player.frameCode,
-        frameColor: player.frameColor,
-        messageFrom: 'games',
-        messageReturnPath: '/games/tictactoe/lobby/${widget.lobbyId}?mode=invite',
-      ),
-    );
-  }
-
-}
-
-class _LobbyPlayerAvatar extends StatelessWidget {
-  const _LobbyPlayerAvatar({required this.player});
-
-  final LobbyPlayer player;
-
-  @override
-  Widget build(BuildContext context) {
-    const size = 40.0;
-    const radius = size / 2;
-    Widget avatar;
-    if (player.avatarKind == 'file' &&
-        player.avatarValue != null &&
-        player.avatarValue!.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(player.avatarValue!);
-      avatar = img == null
-          ? _letterAvatar(radius)
-          : CircleAvatar(radius: radius, backgroundImage: img);
-    } else if (player.avatarKind == 'preset' && player.avatarValue != null) {
-      final idx = int.tryParse(player.avatarValue!);
-      avatar = idx != null && idx >= 0 && idx < _presetAvatarIcons.length
-          ? CircleAvatar(
-              radius: radius,
-              backgroundColor: AppColors.accentSoft,
-              child: Icon(
-                _presetAvatarIcons[idx],
-                color: AppColors.accentStart,
-                size: radius,
-              ),
-            )
-          : _letterAvatar(radius);
-    } else {
-      avatar = _letterAvatar(radius);
-    }
-    return FramedAvatar(
-      size: size,
-      borderWidth: 2.6,
-      frameCode: player.frameCode,
-      frameColor: player.frameColor,
-      animate: false,
-      child: avatar,
-    );
-  }
-
-  Widget _letterAvatar(double radius) {
-    final name = player.displayName.trim();
-    final letter = name.isEmpty ? '?' : name[0].toUpperCase();
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: AppColors.accentSoft,
-      child: Text(
-        letter,
-        style: const TextStyle(
-          color: AppColors.accentStart,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _LobbyEmptySeatAvatar extends StatelessWidget {
-  const _LobbyEmptySeatAvatar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.surfaceCard,
-        border: Border.all(
-          color: AppColors.accentSoft.withValues(alpha: 0.9),
-          width: 2,
-        ),
-      ),
-      child: const Icon(
-        Icons.person_outline_rounded,
-        color: AppColors.textSecondary,
-        size: 20,
-      ),
-    );
-  }
-}
-
-/// Ставка лобби: сумма + иконка монеты (как на карточке игры).
-/// Обёртка над общим [LobbyStakeChip] — сохраняет локальный вызов без
-/// передачи локализованной подписи в каждом месте.
-class _LobbyStakeChip extends StatelessWidget {
-  const _LobbyStakeChip({required this.stakeBronze});
-
-  final int stakeBronze;
-
-  @override
-  Widget build(BuildContext context) {
-    return LobbyStakeChip(
-      stakeBronze: stakeBronze,
-      label: context.l10n.shopStakes,
-    );
-  }
 }
