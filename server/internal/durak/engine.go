@@ -317,10 +317,13 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	}
 	s.removeFromHand(playerIdx, card)
 	s.Table[idx].Defense = &card
+	// Рука пуста: отбитое — в биту, неотбитое — обратно атакующему.
+	if len(s.Hands[playerIdx]) == 0 {
+		s.resolveDefenderEmpty()
+		return nil
+	}
 	if s.UndefendedIndex() < 0 {
 		s.Phase = PhaseAttackFollow
-		// Защитник отбил всё и карт не осталось — подкинуть нельзя, сразу бито.
-		s.tryAutoBito()
 	}
 	return nil
 }
@@ -378,6 +381,11 @@ func (s *State) Take(playerIdx int) error {
 	if len(s.Table) == 0 {
 		return ErrCannotTake
 	}
+	// Рука пуста: это не «взять», а закрытие раунда (бита + возврат неотбитых).
+	if len(s.Hands[playerIdx]) == 0 {
+		s.resolveDefenderEmpty()
+		return nil
+	}
 	// В подкидном разрешаем «взять» на любой фазе, пока стол не пуст.
 	di := s.DefenderIndex()
 	for _, p := range s.Table {
@@ -413,21 +421,40 @@ func (s *State) SayBito(playerIdx int) error {
 	return s.resolveBito()
 }
 
-// tryAutoBito — все пары отбиты и у защитника пустая рука: бито без кнопки.
-func (s *State) tryAutoBito() {
-	if s.Phase != PhaseAttackFollow || len(s.Table) == 0 {
+// resolveDefenderEmpty — у защитника кончились карты: отбитые пары в отбой,
+// неотбитые атаки возвращаются атакующему; ход — бывшему защитнику (как после бито).
+func (s *State) resolveDefenderEmpty() {
+	if s.Status != StatusActive || len(s.Table) == 0 {
 		return
 	}
 	def := s.DefenderIndex()
 	if def < 0 || def >= len(s.Hands) || len(s.Hands[def]) > 0 {
 		return
 	}
+	atk := s.AttackerIndex
+	if atk < 0 || atk >= len(s.Hands) {
+		return
+	}
 	for _, p := range s.Table {
-		if p.Defense == nil {
-			return
+		if p.Defense != nil {
+			s.BitoPile = append(s.BitoPile, p.Attack)
+			s.BitoPile = append(s.BitoPile, *p.Defense)
+		} else {
+			s.Hands[atk] = append(s.Hands[atk], p.Attack)
 		}
 	}
-	_ = s.resolveBito()
+	SortHand(s.Hands[atk], s.Trump)
+	s.Table = nil
+	s.refill()
+	s.AttackerIndex = s.nextAliveAfter(atk)
+	s.LastWasTake = false
+	s.Phase = PhaseAttack
+	s.checkOver()
+}
+
+// HealDefenderEmpty — дожать застрявшее состояние (пустая рука + стол).
+func (s *State) HealDefenderEmpty() {
+	s.resolveDefenderEmpty()
 }
 
 // resolveBito — стол в отбой, добор, ход бывшему защитнику.

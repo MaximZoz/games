@@ -118,6 +118,106 @@ func TestAutoBitoWhenDefenderEmpty(t *testing.T) {
 	}
 }
 
+// Защитник отбил часть, рука пуста, осталась неотбитая атака —
+// бита для отбитых, неотбитая возвращается атакующему (не «взять»).
+func TestDefenderEmptyReturnsUnbeatenToAttacker(t *testing.T) {
+	king := Card{13, Spades}
+	tenH := Card{10, Hearts}
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{8, Spades}},
+			{tenH},
+		},
+		Table: []Pair{
+			{Attack: Card{9, Hearts}}, // бьём последней картой
+			{Attack: king},            // остаётся неотбитым
+		},
+		Deck: []Card{
+			{6, Hearts}, {7, Hearts}, {8, Hearts}, {12, Hearts},
+			{6, Spades}, {7, Spades}, {9, Spades}, {10, Spades},
+			{6, Clubs}, {7, Clubs},
+		},
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Defend(1, tenH, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if len(st.Table) != 0 {
+		t.Fatalf("table should be cleared, got %d pairs", len(st.Table))
+	}
+	if len(st.BitoPile) != 2 {
+		t.Fatalf("bito = %d, want 2 (9♥+10♥)", len(st.BitoPile))
+	}
+	foundKing := false
+	for _, c := range st.Hands[0] {
+		if c == king {
+			foundKing = true
+			break
+		}
+	}
+	if !foundKing {
+		t.Fatalf("king should return to attacker; hand=%v", st.Hands[0])
+	}
+	if st.AttackerIndex != 1 {
+		t.Fatalf("attacker = %d, want 1 (бывший защитник)", st.AttackerIndex)
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase = %v, want attack", st.Phase)
+	}
+	if st.LastWasTake {
+		t.Fatalf("must not be take")
+	}
+}
+
+func TestHealDefenderEmptyStuck(t *testing.T) {
+	king := Card{13, Spades}
+	defCard := Card{12, Hearts}
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{8, Spades}},
+			{}, // пустая рука, стол ещё лежит
+		},
+		Table: []Pair{
+			{Attack: Card{9, Hearts}, Defense: &defCard},
+			{Attack: king},
+		},
+		Deck: []Card{
+			{6, Hearts}, {7, Hearts}, {8, Hearts}, {10, Hearts},
+			{6, Spades}, {7, Spades}, {9, Spades}, {10, Spades},
+			{6, Clubs}, {7, Clubs},
+		},
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	st.HealDefenderEmpty()
+	if len(st.Table) != 0 {
+		t.Fatalf("table=%d", len(st.Table))
+	}
+	found := false
+	for _, c := range st.Hands[0] {
+		if c == king {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("unbeaten king not returned: %v", st.Hands[0])
+	}
+	if len(st.BitoPile) != 2 {
+		t.Fatalf("bito=%d want 2", len(st.BitoPile))
+	}
+}
+
 func TestAttackManySameRank(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},

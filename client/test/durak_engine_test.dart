@@ -129,13 +129,26 @@ void main() {
       );
     });
 
-    test('attack -> defend -> bito with clean table clears to bito pile', () {
+    test('attack -> defend last card auto-bito clears table', () {
       final game = DurakGame(
         hands: [
           [PlayingCard(Rank.six, Suit.hearts)],
           [PlayingCard(Rank.seven, Suit.hearts)],
         ],
-        deck: Deck([]),
+        deck: Deck([
+          PlayingCard(Rank.eight, Suit.clubs),
+          PlayingCard(Rank.nine, Suit.clubs),
+          PlayingCard(Rank.ten, Suit.clubs),
+          PlayingCard(Rank.jack, Suit.clubs),
+          PlayingCard(Rank.queen, Suit.clubs),
+          PlayingCard(Rank.king, Suit.clubs),
+          PlayingCard(Rank.ace, Suit.clubs),
+          PlayingCard(Rank.eight, Suit.diamonds),
+          PlayingCard(Rank.nine, Suit.diamonds),
+          PlayingCard(Rank.ten, Suit.diamonds),
+          PlayingCard(Rank.jack, Suit.diamonds),
+          PlayingCard(Rank.queen, Suit.diamonds),
+        ]),
         trump: Suit.spades,
         attackerIndex: 0,
         turn: DurakTurn.attacker,
@@ -144,16 +157,50 @@ void main() {
       expect(game.table.length, 1);
       expect(game.turn, DurakTurn.defender);
 
+      // Последняя карта защитника — сразу бита, без кнопки.
       game.defend(PlayingCard(Rank.seven, Suit.hearts), playerIndex: 1);
-      expect(game.table.first.isBeaten, isTrue);
-      expect(game.turn, DurakTurn.attackerFollowUp);
-      expect(game.canAttackerSayBito, isTrue);
-
-      game.sayBito();
       expect(game.table, isEmpty);
       expect(game.bito.length, 2);
-      // Ходит бывший защитник.
       expect(game.attackerIndex, 1);
+      expect(game.turn, DurakTurn.attacker);
+    });
+
+    test('empty hand returns unbeaten attack to attacker', () {
+      final king = PlayingCard(Rank.king, Suit.spades);
+      final ten = PlayingCard(Rank.ten, Suit.hearts);
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.eight, Suit.spades)],
+          [ten],
+        ],
+        deck: Deck([
+          PlayingCard(Rank.six, Suit.clubs),
+          PlayingCard(Rank.seven, Suit.clubs),
+          PlayingCard(Rank.eight, Suit.clubs),
+          PlayingCard(Rank.nine, Suit.clubs),
+          PlayingCard(Rank.ten, Suit.clubs),
+          PlayingCard(Rank.jack, Suit.clubs),
+          PlayingCard(Rank.queen, Suit.clubs),
+          PlayingCard(Rank.ace, Suit.clubs),
+          PlayingCard(Rank.six, Suit.diamonds),
+          PlayingCard(Rank.seven, Suit.diamonds),
+          PlayingCard(Rank.eight, Suit.diamonds),
+          PlayingCard(Rank.nine, Suit.diamonds),
+        ]),
+        trump: Suit.clubs,
+        attackerIndex: 0,
+        turn: DurakTurn.defender,
+        table: [
+          TablePair(PlayingCard(Rank.nine, Suit.hearts)),
+          TablePair(king),
+        ],
+      );
+      game.defend(ten, playerIndex: 1, pairIndex: 0);
+      expect(game.table, isEmpty);
+      expect(game.bito.length, 2);
+      expect(game.hands[0], contains(king));
+      expect(game.attackerIndex, 1);
+      expect(game.canDefenderTake, isFalse);
     });
 
     test('defend can beat any undefended pair, not only the first', () {

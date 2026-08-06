@@ -1451,12 +1451,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  bool _canTake(DurakGameView view) =>
-      !view.isOver &&
-      !_busy &&
-      view.defenderIndex == view.myIndex &&
-      view.phase == 'defend' &&
-      view.table.isNotEmpty;
+  bool _canTake(DurakGameView view) {
+    if (view.isOver ||
+        _busy ||
+        view.defenderIndex != view.myIndex ||
+        view.phase != 'defend' ||
+        view.table.isEmpty) {
+      return false;
+    }
+    // Пустая рука — сервер закрывает раунд сам (бита + возврат неотбитых).
+    if (view.myIndex >= 0 &&
+        view.myIndex < view.hands.length &&
+        view.hands[view.myIndex].count == 0) {
+      return false;
+    }
+    return true;
+  }
 
   bool _canBito(DurakGameView view) =>
       !view.isOver &&

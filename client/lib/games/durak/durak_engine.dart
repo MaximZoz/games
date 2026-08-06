@@ -185,7 +185,10 @@ class DurakGame {
     );
   }
 
-  bool get canDefenderTake => turn == DurakTurn.defender && table.isNotEmpty;
+  bool get canDefenderTake =>
+      turn == DurakTurn.defender &&
+      table.isNotEmpty &&
+      hands[defenderIndex].isNotEmpty;
 
   /// Атакующий имеет право сказать «Бито» когда все карты на столе биты.
   bool get canAttackerSayBito =>
@@ -257,16 +260,48 @@ class DurakGame {
     }
     hands[pIndex].remove(card);
     table[idx] = table[idx].withDefense(card);
+    // Рука пуста: отбитое — в биту, неотбитое — обратно атакующему.
+    if (hands[pIndex].isEmpty) {
+      _resolveDefenderEmpty();
+      return;
+    }
     // Если все побиты — ждём подкидывания или «бито».
     if (table.every((p) => p.isBeaten)) {
       turn = DurakTurn.attackerFollowUp;
     }
   }
 
+  /// У защитника кончились карты: отбитые пары в отбой, неотбитые атаки —
+  /// атакующему; ход — бывшему защитнику.
+  void _resolveDefenderEmpty() {
+    if (isOver || table.isEmpty) return;
+    if (hands[defenderIndex].isNotEmpty) return;
+    final atk = attackerIndex;
+    for (final p in table) {
+      if (p.defense != null) {
+        bito.add(p.attack);
+        bito.add(p.defense!);
+      } else {
+        hands[atk].add(p.attack);
+      }
+    }
+    _sortHand(hands[atk], trump);
+    table.clear();
+    _refillHands();
+    attackerIndex = (atk + 1) % playerCount;
+    _checkGameOver();
+    turn = DurakTurn.attacker;
+  }
+
   /// Защитник берёт всё со стола.
   void take() {
-    if (!canDefenderTake) {
+    if (turn != DurakTurn.defender || table.isEmpty) {
       throw const DurakRuleError('брать сейчас нельзя');
+    }
+    // Пустая рука — закрытие раунда, не «взять».
+    if (hands[defenderIndex].isEmpty) {
+      _resolveDefenderEmpty();
+      return;
     }
     final di = defenderIndex;
     for (final p in table) {

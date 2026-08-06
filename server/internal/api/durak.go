@@ -606,12 +606,62 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 		WriteErr(w, r, http.StatusInternalServerError, "bad state")
 		return
 	}
+	// Застрявшее: у защитника 0 карт, стол не пуст — закрыть раунд.
+	if h.healDurakDefenderEmpty(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+	}
 	// Скрываем чужие руки — оставляем длину.
 	viewer := userID.String()
 	view := durakViewFor(state, viewer, m, gameID)
 	h.enrichDurakPlayersMeta(ctx, view, state.PlayerIDs)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(view)
+}
+
+// healDurakDefenderEmpty — дожимает раунд, если защитник уже без карт, а стол ещё лежит.
+// Возвращает true, если состояние записали в Redis.
+func (h *GamesHandler) healDurakDefenderEmpty(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
+	if state == nil || state.Status != durak.StatusActive || len(state.Table) == 0 {
+		return false
+	}
+	def := state.DefenderIndex()
+	if def < 0 || def >= len(state.Hands) || len(state.Hands[def]) > 0 {
+		return false
+	}
+	state.HealDefenderEmpty()
+	encoded, err := durak.Encode(state)
+	if err != nil {
+		return false
+	}
+	fields := []any{"state", encoded}
+	if state.Status == durak.StatusOver {
+		fields = append(fields, "status", durakStatusOver)
+		if state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
+			fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
+		}
+	} else if turnT, e := strconv.Atoi(m["turn_time_sec"]); e == nil && turnT > 0 {
+		fields = append(fields,
+			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+		)
+	}
+	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	if state.Status == durak.StatusOver {
+		h.onDurakGameFinished(ctx, gameID, m, state)
+	}
+	return true
 }
 
 // enrichDurakPlayersMeta — имена/аватары/рамки игроков (как x_/o_ в крестиках).
