@@ -1216,13 +1216,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 : cards.length))
         .clamp(1, 52);
 
-    // Убрать из веера сразу; pending-слот на столе (opacity 0 под fly).
-    // Fan-overlay ещё на карте, пока меряем финальный слот.
+    // Дырка в веере (hidden), без remove — иначе collapse/expand при броске.
+    // Pending-слот на столе (opacity 0 под fly).
     setState(() {
       _activeCard = null;
       _selected.clear();
       _dragGlobal = null;
-      _removeFromHandOrder(cards, view);
+      if (_handOrder == null || _handOrder!.isEmpty) {
+        _handOrder = _apiCardsToPlaying(
+          view.hands.length > view.myIndex && view.myIndex >= 0
+              ? (view.hands[view.myIndex].cards ?? const [])
+              : const [],
+        );
+      }
       _flyingFromHand.addAll(cards);
       _optimisticAttacks.addAll(cards);
       _flyingToTable.addAll(cards);
@@ -1233,7 +1239,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         );
         _freezeFanLayout(lay.cardSize, lay.spacing, nBefore);
       }
-      _suppressFanLayoutAnim = false;
+      _suppressFanLayoutAnim = true;
     });
 
     await WidgetsBinding.instance.endOfFrame;
@@ -1329,7 +1335,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
         _flyingFromHand.removeAll(cards);
         _flyingToTable.removeAll(cards);
+        _removeFromHandOrder(cards, view);
+        _suppressFanLayoutAnim = true;
       });
+      _releaseFanLayoutSnap();
     }());
     return true;
   }
@@ -1440,6 +1449,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _prevTable = const [];
     final froms = _tableCardGlobalRects(snapshot);
     final taken = _flattenTableCards(snapshot);
+    final handBefore = _apiCardsToPlaying(
+      view.hands.length > view.myIndex && view.myIndex >= 0
+          ? (view.hands[view.myIndex].cards ?? const [])
+          : const [],
+    );
+    final beforeSet = handBefore.toSet();
+    final takenSet = taken.toSet();
     // После взятия сервер ещё добирает из колоды — без отдельной анимации колоды.
     _suppressNextDealFx = true;
     setState(() {
@@ -1448,12 +1464,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _fanAnimDuringBusy = true;
       // До ответа сервера: слоты под карты стола, чтобы после sync не вспыхнули в веере.
       if (taken.isNotEmpty) {
-        final base = _handOrder ??
-            _apiCardsToPlaying(
-              view.hands.length > view.myIndex && view.myIndex >= 0
-                  ? (view.hands[view.myIndex].cards ?? const [])
-                  : const [],
-            );
+        final base = _handOrder ?? handBefore;
         _handOrder = [...base, ...taken];
         _flyingFromHand.addAll(taken);
         _incomingFanCards.addAll(taken);
@@ -1471,7 +1482,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         await _animateTableToFan(snapshot, fromOverrides: froms);
       }
       if (!mounted) return;
-      // Карты стола уже в веере; добор из колоды — по одной с переворотом.
+      // Добор из колоды = карты руки, которых не было до take и не было на столе.
       final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
       if (v != null) {
         final trump = _suitFromApi(v.trumpSuit);
@@ -1484,10 +1495,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevBitoCount = v.bitoCount;
         _prevHandLen = hand.length;
         _prevTable = List.of(v.table);
-        final already = _handOrder?.toSet() ?? {};
         final dealt = [
           for (final c in hand)
-            if (!already.contains(c)) c,
+            if (!beforeSet.contains(c) && !takenSet.contains(c)) c,
         ];
         if (dealt.isNotEmpty && _gameUiActive) {
           _pendingDealCards.addAll(dealt);
@@ -1509,6 +1519,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _fanAnimDuringBusy = false;
           _flyingFromHand.removeAll(taken);
           _incomingFanCards.removeAll(taken);
+          _suppressNextDealFx = false;
         });
       }
     }
@@ -1813,61 +1824,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  Future<void> _animateDealToFan(int n) async {
-    if (n <= 0 || !mounted || !_gameUiActive) return;
-    // Fallback без известных карт — рубашки в центр веера.
-    final from = globalRectOf(_deckKey) ??
-        Rect.fromCenter(
-          center: MediaQuery.sizeOf(context).center(Offset.zero),
-          width: _cardSize.width,
-          height: _cardSize.height,
-        );
-    final to = cardFanApproxOrigin(
-          _fanKey.currentContext ?? context,
-          _cardSize,
-        ) ??
-        Rect.fromCenter(
-          center: Offset(
-            MediaQuery.sizeOf(context).width / 2,
-            MediaQuery.sizeOf(context).height * 0.85,
-          ),
-          width: _cardSize.width,
-          height: _cardSize.height,
-        );
-    final dummy = PlayingCard(Rank.six, Suit.spades);
-    await playCardsFlyAnimation(
-      context: context,
-      cards: List.generate(n, (_) => dummy),
-      cardSize: _handCardSize,
-      froms: List.generate(
-        n,
-        (i) => Rect.fromCenter(
-          center: from.center.translate(i * 2.0, i * 2.0),
-          width: _tableCardSize.width,
-          height: _tableCardSize.height,
-        ),
-      ),
-      tos: List.generate(
-        n,
-        (i) => Rect.fromCenter(
-          center: to.center.translate(
-            (i - n / 2) * (_handCardSize.width * 0.26),
-            -i * 2.0,
-          ),
-          width: _handCardSize.width,
-          height: _handCardSize.height,
-        ),
-      ),
-      faceDown: true,
-      duration: const Duration(milliseconds: 480),
-      stagger: const Duration(milliseconds: 85),
-      curve: Curves.easeOutCubic,
-      beginScale: _tableCardSize.width / _handCardSize.width,
-      endScale: 1.0,
-      arcLift: 16,
-    );
-  }
-
   /// Полёт в биту; tickets остаются на вызывающем — снять после обновления кучи.
   Future<List<CardFlyTicket>> _animateTableToBito(
     List<DurakTablePairApi> table, {
@@ -1942,6 +1898,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevTable = List.of(view.table);
       return;
     }
+    // Пока свой ход с FX — не трогаем prev (иначе проглотим авто-бито/добор).
+    if (_busy) return;
+
     final handLen = view.hands.length > view.myIndex && view.myIndex >= 0
         ? (view.hands[view.myIndex].cards?.length ??
             view.hands[view.myIndex].count)
@@ -1969,73 +1928,28 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _prevHandLen = handLen;
     _prevTable = List.of(view.table);
 
-    if (dealt > 0 && deckDropped > 0) {
-      if (_suppressNextDealFx || _busy) {
-        // Взятие: добор без полёта — порядок правит _take / _mergeHandAfterTake.
-        _suppressNextDealFx = false;
-      } else {
-        _fxScheduled = true;
-        final hand = _apiCardsToPlaying(
-          view.hands.length > view.myIndex && view.myIndex >= 0
-              ? (view.hands[view.myIndex].cards ?? const [])
-              : const [],
-        );
-        final prevSet = _handOrder?.toSet() ?? {};
-        final incoming = [
-          for (final c in hand)
-            if (!prevSet.contains(c)) c,
-        ];
-        if (incoming.isNotEmpty) {
-          _pendingDealCards.addAll(incoming);
-        }
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (!mounted) {
-            _pendingDealCards.clear();
-            _fxScheduled = false;
-            return;
-          }
-          if (incoming.isNotEmpty) {
-            await _animateDealCardsToFan(incoming);
-          } else {
-            await _animateDealToFan(dealt.clamp(1, 6));
-          }
-          if (mounted) {
-            final trump = _suitFromApi(view.trumpSuit);
-            _pendingDealCards.clear();
-            // Порядок уже выставлен в _animateDealCardsToFan — без snap-перерисовки.
-            final ordered = _handOrder;
-            if (ordered == null ||
-                ordered.length != hand.length ||
-                !ordered.toSet().containsAll(hand)) {
-              _sortHandInFan(hand, trump, animate: false);
-            }
-            _fxScheduled = false;
-          }
-        });
-      }
-    } else if (dealt > 0 && deckDropped == 0) {
-      if (_suppressNextDealFx || _busy) {
-        _suppressNextDealFx = false;
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          final trump = _suitFromApi(view.trumpSuit);
-          final hand = _apiCardsToPlaying(
-            view.hands.length > view.myIndex && view.myIndex >= 0
-                ? (view.hands[view.myIndex].cards ?? const [])
-                : const [],
-          );
-          _sortHandInFan(hand, trump);
-        });
-      }
-    } else if (bitoGrew &&
-        !_busy &&
-        !_hidingTable &&
-        !_suppressRemoteBitoFx) {
-      // Бито от соперника — летят в отбой, куча обновляется без мигания.
+    final hand = _apiCardsToPlaying(
+      view.hands.length > view.myIndex && view.myIndex >= 0
+          ? (view.hands[view.myIndex].cards ?? const [])
+          : const [],
+    );
+    final prevSet = _handOrder?.toSet() ?? {};
+    final incoming = [
+      for (final c in hand)
+        if (!prevSet.contains(c)) c,
+    ];
+
+    // Сначала бито (в т.ч. авто после пустой руки), потом добор — иначе
+    // дельта руки проглотит анимацию стола в отбой.
+    if (bitoGrew && !_hidingTable && !_suppressRemoteBitoFx) {
       _fxScheduled = true;
+      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
+        if (!mounted) {
+          _pendingDealCards.clear();
+          _fxScheduled = false;
+          return;
+        }
         final froms = _tableCardGlobalRects(tableSnapshot);
         final flown = _flattenTableCards(tableSnapshot).length;
         setState(() {
@@ -2059,11 +1973,54 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           setState(() {
             _hidingTable = false;
             _bitoCountFreeze = null;
-            _fxScheduled = false;
           });
+          if (incoming.isNotEmpty) {
+            await _animateDealCardsToFan(incoming);
+          }
+          _pendingDealCards.clear();
+          _fxScheduled = false;
         }
       });
-    } else if (!_busy && !_hidingTable && !_fxScheduled) {
+    } else if (dealt > 0 && deckDropped > 0) {
+      if (_suppressNextDealFx) {
+        _suppressNextDealFx = false;
+      } else {
+        _fxScheduled = true;
+        if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) {
+            _pendingDealCards.clear();
+            _fxScheduled = false;
+            return;
+          }
+          // Только реальные новые карты — без фантомного добора по дельте.
+          if (incoming.isNotEmpty) {
+            await _animateDealCardsToFan(incoming);
+          }
+          if (mounted) {
+            final trump = _suitFromApi(view.trumpSuit);
+            _pendingDealCards.clear();
+            final ordered = _handOrder;
+            if (ordered == null ||
+                ordered.length != hand.length ||
+                !ordered.toSet().containsAll(hand)) {
+              _sortHandInFan(hand, trump, animate: false);
+            }
+            _fxScheduled = false;
+          }
+        });
+      }
+    } else if (dealt > 0 && deckDropped == 0) {
+      if (_suppressNextDealFx) {
+        _suppressNextDealFx = false;
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          final trump = _suitFromApi(view.trumpSuit);
+          _sortHandInFan(hand, trump);
+        });
+      }
+    } else if (!_hidingTable && !_fxScheduled) {
       // Ход соперника: карта летит из его веера на стол / в отбой.
       _scheduleRemoteTableFx(tableSnapshot, view);
     }

@@ -42,8 +42,8 @@ func TestAttackDefendBito(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},
 		Hands: [][]Card{
-			{{6, Hearts}},
-			{{7, Hearts}},
+			{{6, Hearts}, {8, Spades}},
+			{{7, Hearts}, {9, Clubs}},
 		},
 		Trump:         Spades,
 		AttackerIndex: 0,
@@ -72,6 +72,49 @@ func TestAttackDefendBito(t *testing.T) {
 	}
 	if st.AttackerIndex != 1 {
 		t.Fatalf("next attacker = %d, want 1", st.AttackerIndex)
+	}
+}
+
+func TestAutoBitoWhenDefenderEmpty(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Hearts}, {8, Spades}},
+			{{7, Hearts}}, // единственная карта — отбил и рука пуста
+		},
+		Deck: []Card{
+			{9, Hearts}, {10, Hearts}, {11, Hearts}, {12, Hearts},
+			{9, Spades}, {10, Spades}, {11, Spades}, {12, Spades},
+			{9, Clubs}, {10, Clubs},
+		},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{6, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase after auto-bito = %v, want attack", st.Phase)
+	}
+	if len(st.Table) != 0 || len(st.BitoPile) != 2 {
+		t.Fatalf("auto-bito table/bito: table=%d bito=%d", len(st.Table), len(st.BitoPile))
+	}
+	if st.AttackerIndex != 1 {
+		t.Fatalf("next attacker = %d, want 1 (бывший защитник)", st.AttackerIndex)
+	}
+	if st.Status != StatusActive {
+		t.Fatalf("status = %v, want active", st.Status)
+	}
+	// Добор после бито: у бывшего защитника снова есть карты.
+	if len(st.Hands[1]) == 0 {
+		t.Fatalf("defender should refill after auto-bito")
 	}
 }
 

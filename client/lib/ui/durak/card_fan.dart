@@ -113,18 +113,16 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
-  /// Слоты веера: вытащенная карта исключена — веер сжимается как без неё.
-  /// [hiddenCards] (взятие) остаются дырками, чтобы соседи не прыгали.
-  List<PlayingCard> get _layoutCards {
-    final lifted = _liftedCard;
-    if (lifted == null) return widget.cards;
-    return [for (final c in widget.cards) if (c != lifted) c];
-  }
+  /// Слоты веера: вытащенная карта остаётся дыркой (не сжимаем веер).
+  /// Иначе lift → collapse, drop → expand — двойная «резинка».
+  List<PlayingCard> get _layoutCards => widget.cards;
 
   List<PlayingCard> get _fanCards => _layoutCards;
 
   bool _isHidden(PlayingCard card) =>
-      widget.hiddenCards?.contains(card) == true;
+      widget.hiddenCards?.contains(card) == true ||
+      _liftedCard == card ||
+      (_hidePeekUnderOverlay && _peekCard == card);
 
   @override
   void dispose() {
@@ -783,7 +781,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
         // Overlay оставляем, пока родитель меряет слот и стартует fly —
-        // иначе кадр без карты. _liftedCard держит веер сжатым.
+        // иначе кадр без карты. _liftedCard — дырка в веере (без сжатия).
         // Родитель обязан вернуть true сразу после старта fly (не ждать конца),
         // иначе этот overlay дублирует летящую карту.
         final scaledFrom = Rect.fromCenter(
@@ -1062,8 +1060,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     final legal = _isLegal(card);
     final hintLegal = widget.emphasizeLegal && widget.legalCards != null;
-    final hidden = _isHidden(card) ||
-        (_hidePeekUnderOverlay && _peekCard == card);
+    final hidden = _isHidden(card);
     // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
     final showHintShadow = !hidden &&
         ((active || selected) && (!hintLegal || legal));

@@ -319,6 +319,8 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	s.Table[idx].Defense = &card
 	if s.UndefendedIndex() < 0 {
 		s.Phase = PhaseAttackFollow
+		// Защитник отбил всё и карт не осталось — подкинуть нельзя, сразу бито.
+		s.tryAutoBito()
 	}
 	return nil
 }
@@ -408,6 +410,28 @@ func (s *State) SayBito(playerIdx int) error {
 	if playerIdx != s.AttackerIndex {
 		return ErrNotYourTurn
 	}
+	return s.resolveBito()
+}
+
+// tryAutoBito — все пары отбиты и у защитника пустая рука: бито без кнопки.
+func (s *State) tryAutoBito() {
+	if s.Phase != PhaseAttackFollow || len(s.Table) == 0 {
+		return
+	}
+	def := s.DefenderIndex()
+	if def < 0 || def >= len(s.Hands) || len(s.Hands[def]) > 0 {
+		return
+	}
+	for _, p := range s.Table {
+		if p.Defense == nil {
+			return
+		}
+	}
+	_ = s.resolveBito()
+}
+
+// resolveBito — стол в отбой, добор, ход бывшему защитнику.
+func (s *State) resolveBito() error {
 	if len(s.Table) == 0 {
 		return ErrCannotBito
 	}
