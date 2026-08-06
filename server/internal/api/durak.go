@@ -615,6 +615,15 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 			return
 		}
 	}
+	// Застрявшее: колода пуста, рук ни у кого нет, партия ещё «active» — ничья.
+	if h.healDurakBothEmptyDraw(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+	}
 	// Скрываем чужие руки — оставляем длину.
 	viewer := userID.String()
 	view := durakViewFor(state, viewer, m, gameID)
@@ -673,6 +682,40 @@ func durakOverRedisFields(state *durak.State) []any {
 		fields = append(fields, "draw", "1")
 	}
 	return fields
+}
+
+// healDurakBothEmptyDraw — если все живые без карт и колода пуста, фиксируем ничью.
+func (h *GamesHandler) healDurakBothEmptyDraw(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
+	if state == nil || state.Status != durak.StatusActive || len(state.Deck) > 0 || len(state.Table) > 0 {
+		return false
+	}
+	for _, hnd := range state.Hands {
+		if len(hnd) > 0 {
+			return false
+		}
+	}
+	state.HealGameOver()
+	if state.Status != durak.StatusOver {
+		return false
+	}
+	encoded, err := durak.Encode(state)
+	if err != nil {
+		return false
+	}
+	fields := append([]any{"state", encoded}, durakOverRedisFields(state)...)
+	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	if state.LoserIndex < 0 {
+		m["draw"] = "1"
+	}
+	h.onDurakGameFinished(ctx, gameID, m, state)
+	return true
 }
 
 // enrichDurakPlayersMeta — имена/аватары/рамки игроков (как x_/o_ в крестиках).
@@ -1196,11 +1239,20 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		turnDeadline = v
 	}
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
+	// Статус/ничья из state — чтобы UI не расходился с Redis hash.
+	status := m["status"]
+	draw := m["draw"] == "1"
+	if s.Status == durak.StatusOver {
+		status = durakStatusOver
+		if s.LoserIndex < 0 {
+			draw = true
+		}
+	}
 	return map[string]any{
 		"id":             gameID,
 		"game_type":      durakGameType,
-		"status":         m["status"],
-		"draw":           m["draw"] == "1",
+		"status":         status,
+		"draw":           draw,
 		"draw_offer_by":  strings.TrimSpace(m["draw_offer_by"]),
 		"forfeit":        m["forfeit"] == "1",
 		"timeout":        m["timeout"] == "1",

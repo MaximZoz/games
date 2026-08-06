@@ -418,3 +418,73 @@ func TestDefendAnyUndefendedPair(t *testing.T) {
 		t.Fatalf("pair 0 should stay undefended")
 	}
 }
+
+// Две последние атаки одного ранга — оба выходят после двух отбоев.
+func TestBothEmptyAfterDoubleDefendIsDraw(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{9, Hearts}, {9, Diamonds}},
+			{{10, Hearts}, {10, Diamonds}},
+		},
+		Deck:          nil,
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.AttackMany(0, []Card{{9, Hearts}, {9, Diamonds}}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Defend(1, Card{10, Hearts}, 0); err != nil {
+		t.Fatalf("defend1: %v", err)
+	}
+	if st.Status != StatusActive {
+		t.Fatalf("after first defend status=%v, want active", st.Status)
+	}
+	if err := st.Defend(1, Card{10, Diamonds}, 1); err != nil {
+		t.Fatalf("defend2: %v", err)
+	}
+	if st.Status != StatusOver {
+		t.Fatalf("status=%v, want over", st.Status)
+	}
+	if st.LoserIndex != -1 {
+		t.Fatalf("loser=%d, want -1", st.LoserIndex)
+	}
+}
+
+// Подкидывание последней карты после отбоя — оба пусты → ничья.
+func TestBothEmptyAfterThrowInIsDraw(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{8, Clubs}, {9, Hearts}}, // атака + подкид
+			{{9, Clubs}, {10, Hearts}},
+		},
+		Deck:          nil,
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{8, Clubs}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Defend(1, Card{9, Clubs}, -1); err != nil {
+		t.Fatalf("defend1: %v", err)
+	}
+	// Подкидываем последнюю.
+	if err := st.Attack(0, Card{9, Hearts}); err != nil {
+		t.Fatalf("throw-in: %v", err)
+	}
+	if err := st.Defend(1, Card{10, Hearts}, -1); err != nil {
+		t.Fatalf("defend2: %v", err)
+	}
+	if st.Status != StatusOver || st.LoserIndex != -1 {
+		t.Fatalf("status=%v loser=%d, want over/-1", st.Status, st.LoserIndex)
+	}
+}

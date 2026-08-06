@@ -461,6 +461,14 @@ func (s *State) HealDefenderEmpty() {
 	s.resolveDefenderEmpty()
 }
 
+// HealGameOver — дожать конец партии (пустая колода, руки разобраны).
+func (s *State) HealGameOver() {
+	if s.Status != StatusActive {
+		return
+	}
+	s.checkOver()
+}
+
 // resolveBito — стол в отбой, добор, ход бывшему защитнику.
 func (s *State) resolveBito() error {
 	if len(s.Table) == 0 {
