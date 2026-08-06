@@ -609,9 +609,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     }
     if (remain.isNotEmpty) {
-      final added = remain
-          .where((c) => !_pendingDealCards.contains(c))
-          .toList()
+      final hideNewDeals = _fxScheduled ||
+          _busy ||
+          _hidingTable ||
+          _deckCountFreeze != null ||
+          _pendingDealCards.isNotEmpty;
+      final added = remain.where((c) {
+        if (_pendingDealCards.contains(c)) return false;
+        // Добор из колоды: не вспыхивать в веере до анимации посадки.
+        if (hideNewDeals &&
+            !_incomingFanCards.contains(c) &&
+            !_flyingFromHand.contains(c)) {
+          return false;
+        }
+        return true;
+      }).toList()
         ..sort((a, b) => _compareHandCards(a, b, trump));
       out.addAll(added);
     }
@@ -1632,10 +1644,66 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       await ref
           .read(durakRepositoryProvider)
           .move(widget.gameId, type: 'bito');
-      ref.invalidate(durakGameProvider(widget.gameId));
+      // Сначала узнаём добор и прячем карты, потом invalidate — без мигания в веере.
+      DurakGameView? fresh;
       try {
-        await ref.read(durakGameProvider(widget.gameId).future);
+        fresh =
+            await ref.read(durakRepositoryProvider).getGame(widget.gameId);
       } catch (_) {}
+      if (!mounted) return;
+      if (fresh != null) {
+        final hand = _apiCardsToPlaying(
+          fresh.hands.length > fresh.myIndex && fresh.myIndex >= 0
+              ? (fresh.hands[fresh.myIndex].cards ?? const [])
+              : const [],
+        );
+        final prevSet = _handOrder?.toSet() ?? {};
+        final dealt = [
+          for (final c in hand)
+            if (!prevSet.contains(c) && !_incomingFanCards.contains(c)) c,
+        ];
+        final deckBefore = _prevDeckCount >= 0 ? _prevDeckCount : fresh.deckCount;
+        final oppDeals = _opponentDealDeltas(fresh);
+        if (dealt.isNotEmpty) {
+          _pendingDealCards.addAll(dealt);
+        }
+        if (dealt.isNotEmpty || oppDeals.isNotEmpty) {
+          _armDeckFreeze(deckBefore);
+        }
+        ref.invalidate(durakGameProvider(widget.gameId));
+        try {
+          await ref.read(durakGameProvider(widget.gameId).future);
+        } catch (_) {}
+        if (!mounted) return;
+        final refillAttacker = _prevAttackerIndex >= 0
+            ? _prevAttackerIndex
+            : fresh.attackerIndex;
+        final refillDefender = _prevDefenderIndex >= 0
+            ? _prevDefenderIndex
+            : fresh.defenderIndex;
+        _prevDeckCount = fresh.deckCount;
+        _prevBitoCount = fresh.bitoCount;
+        _prevHandLen = hand.length;
+        _prevTable = List.of(fresh.table);
+        _prevAttackerIndex = fresh.attackerIndex;
+        _prevDefenderIndex = fresh.defenderIndex;
+        _syncPrevOppHandCounts(fresh);
+        if (_gameUiActive && (dealt.isNotEmpty || oppDeals.isNotEmpty)) {
+          await _animateRefillDeals(
+            view: fresh,
+            myIncoming: dealt,
+            oppDeals: oppDeals,
+            refillAttacker: refillAttacker,
+            refillDefender: refillDefender,
+            deckCountBefore: deckBefore,
+          );
+        }
+      } else {
+        ref.invalidate(durakGameProvider(widget.gameId));
+        try {
+          await ref.read(durakGameProvider(widget.gameId).future);
+        } catch (_) {}
+      }
     } on GamesException catch (e) {
       if (mounted) {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
@@ -2087,6 +2155,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // Сразу в этом же build — иначе колода/козырь мигнут пустыми (view уже 0).
     if (willDealFromDeck || (bitoGrew && prevDeck > deck)) {
       _armDeckFreeze(prevDeck);
+    }
+    // Добор ещё не летит из колоды — не показывать карты в веере (мигание).
+    final willAnimateMyDeal = incoming.isNotEmpty &&
+        !_suppressNextDealFx &&
+        (willDealFromDeck ||
+            bitoGrew ||
+            (dealt > 0 && deckDropped > 0) ||
+            (deckDropped > 0 && oppDeals.isNotEmpty));
+    if (willAnimateMyDeal) {
+      _pendingDealCards.addAll(incoming);
     }
 
     // Соперник «Взял»: стол → его веер, затем добор из колоды.
