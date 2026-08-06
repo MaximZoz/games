@@ -688,7 +688,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       setState(() => _hoverIndex = idx);
     }
     widget.onDragPosition?.call(null);
-    _emitActiveCard(_isLegal(card) ? card : null);
+    _emitActiveCard(card);
     if (t <= 0.02) {
       unawaited(_finishPeekSettle(global));
     }
