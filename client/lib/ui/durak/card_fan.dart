@@ -74,10 +74,10 @@ class CardFan extends StatefulWidget {
   final bool fillWidth;
 
   @override
-  State<CardFan> createState() => _CardFanState();
+  State<CardFan> createState() => CardFanState();
 }
 
-class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
+class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   /// Путь пальца вверх до полного вылета (и обратно до «чуть выше»).
   static const double _extractPx = 40;
 
@@ -204,13 +204,12 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   Future<void> _animateOverlayTo(
     Rect to, {
+    required PlayingCard card,
+    required Offset fromCenter,
     bool soft = true,
     double beginScale = 1.0,
     int? ms,
   }) async {
-    final fromCenter = _liftGlobalCenter;
-    final card = _liftedCard;
-    if (fromCenter == null || card == null) return;
     final from = Rect.fromCenter(
       center: fromCenter,
       width: widget.cardSize.width * beginScale,
@@ -256,7 +255,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
                               card: card,
                               size: widget.cardSize,
                               elevated: true,
-                              highlighted: t < 0.85,
+                              highlighted: false,
                             ),
                     ),
                   ),
@@ -269,6 +268,85 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     );
     overlay.insert(entry);
     await completer.future;
+  }
+
+  /// Вложить карту в веер (взятие/добор): слот уже в [cards] (обычно hidden).
+  /// Как отпускание вытащенной карты: долет в peek → плавное опускание.
+  Future<void> foldCardIn({
+    required PlayingCard card,
+    required Rect from,
+    double beginScale = 1.0,
+    bool flipToFace = false,
+    double beginAngle = 0,
+    double endAngle = 0,
+  }) async {
+    if (!mounted || _docking) return;
+    _docking = true;
+    final gen = ++_gestureGen;
+    setState(() {
+      _peekCard = card;
+      _peekT = 1.0;
+      _hidePeekUnderOverlay = true;
+      _hoverIndex = _fanCards.indexOf(card);
+    });
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || gen != _gestureGen) {
+      _docking = false;
+      _hidePeekUnderOverlay = false;
+      return;
+    }
+
+    final spacing = _spacingFor(max(_fanCards.length, 1));
+    final fanW = _totalWFor(spacing);
+    final slot = _slotGlobalRect(card, spacing, fanW);
+    final peekRect = Rect.fromCenter(
+      center: Offset(slot.center.dx, slot.center.dy - _peekRaiseY),
+      width: widget.cardSize.width,
+      height: widget.cardSize.height,
+    );
+    final fromScale = beginScale != 1.0
+        ? beginScale
+        : (from.width / widget.cardSize.width).clamp(0.35, 1.6);
+
+    final ticket = await playCardFlyAnimation(
+      context: context,
+      card: card,
+      cardSize: widget.cardSize,
+      from: from,
+      to: peekRect,
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
+      faceDown: flipToFace,
+      flipToFace: flipToFace,
+      beginScale: fromScale,
+      endScale: 1.0,
+      beginAngle: beginAngle,
+      endAngle: endAngle,
+      arcLift: flipToFace ? 18 : 12,
+      keepAtEnd: true,
+    );
+    if (!mounted || gen != _gestureGen) {
+      ticket.dismiss();
+      _docking = false;
+      _hidePeekUnderOverlay = false;
+      return;
+    }
+
+    setState(() => _hidePeekUnderOverlay = false);
+    await WidgetsBinding.instance.endOfFrame;
+    ticket.dismiss();
+    await _animatePeekTTo(0, ms: 220);
+    if (!mounted || gen != _gestureGen) {
+      _docking = false;
+      return;
+    }
+    setState(() {
+      _peekCard = null;
+      _peekT = 0;
+      _docking = false;
+      _hidePeekUnderOverlay = false;
+      _hoverIndex = null;
+    });
   }
 
   Future<void> _animatePeekTTo(double to, {int ms = 300}) async {
@@ -350,6 +428,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     _upTravel = 0;
     final gen = _gestureGen;
     final beginScale = _liftScale;
+    final fromCenter = _liftGlobalCenter ?? global;
     final resume = keepPointer || _pointerDown;
 
     // 1) Слот снова в layout (веер раздвигается); лицо только на overlay.
@@ -381,6 +460,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     // 2) Долет overlay в приподнятый слот.
     await _animateOverlayTo(
       peekRect,
+      card: card,
+      fromCenter: fromCenter,
       soft: true,
       beginScale: beginScale,
       ms: 280,
@@ -698,9 +779,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       }
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
-        // Overlay снимаем: родитель сразу стартует fly и убирает карту из руки.
-        // _liftedCard держим до accepted — веер уже без этой карты (_layoutCards).
-        _removeOverlay();
+        // Overlay оставляем, пока родитель меряет слот и стартует fly —
+        // иначе кадр без карты. _liftedCard держит веер сжатым.
         final scaledFrom = Rect.fromCenter(
           center: from.center,
           width: widget.cardSize.width * dragScale,

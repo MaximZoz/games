@@ -77,13 +77,14 @@ Future<CardFlyTicket> playCardFlyAnimation({
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.001)
                   ..rotateY(flipT * math.pi / 2),
-                child: showBack || faceDown
+                // После половины пути — лицо (faceDown только старт рубашкой).
+                child: showBack
                     ? CardBackWidget(size: cardSize, elevated: true)
                     : PlayingCardWidget(
                         card: card,
                         size: cardSize,
                         elevated: true,
-                        highlighted: true,
+                        highlighted: false,
                       ),
               );
             } else {
