@@ -57,6 +57,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   final Set<PlayingCard> _selected = {};
   /// Карты, скрытые в веере на время полёта/ожидания сервера.
   final Set<PlayingCard> _flyingFromHand = {};
+  /// Уже сели в веер локально (взятие), пока сервер не подтвердил руку.
+  final Set<PlayingCard> _incomingFanCards = {};
   /// Добор из колоды ещё не вложен в веер — не показывать из server hand.
   final Set<PlayingCard> _pendingDealCards = {};
   /// Оптимистично «приземлившиеся» атаки (пока ждём ответ сервера).
@@ -242,10 +244,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   /// Сервер применяет timeout на GetGame — дожимаем несколько раз.
   void _onTurnTimeExpired() {
+    // Ход уже уходит на сервер — не дёргаем GetGame со старым deadline (гонка).
+    if (_busy ||
+        _optimisticAttacks.isNotEmpty ||
+        _optimisticDefends.isNotEmpty ||
+        _flyingToTable.isNotEmpty) {
+      return;
+    }
     _timeoutRetryTimer?.cancel();
     var attempt = 0;
     void doRefresh() {
       if (!mounted) return;
+      if (_busy ||
+          _optimisticAttacks.isNotEmpty ||
+          _optimisticDefends.isNotEmpty ||
+          _flyingToTable.isNotEmpty) {
+        return;
+      }
       ref.invalidate(durakGameProvider(widget.gameId));
       ref.invalidate(activeGameProvider);
     }
@@ -538,8 +553,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     for (final c in _handOrder!) {
       if (remain.remove(c)) {
         out.add(c);
-      } else if (_flyingFromHand.contains(c)) {
-        // Взятие/добор: слот уже в веере, лицо ведёт fly-overlay.
+      } else if (_flyingFromHand.contains(c) || _incomingFanCards.contains(c)) {
+        // Взятие: ещё нет на сервере — слот/лицо держим локально.
         out.add(c);
       }
     }
@@ -1012,11 +1027,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
 
     if (doDefend && defendIdx >= 0) {
-      // Сначала карта на столе под fly, потом снять overlay — без дубля.
+      // Пока fly на месте — стол не рисует защиту (flightLock). Потом handoff.
       setState(() {
         _optimisticDefends[defendIdx] = cards.first;
-        _flightLockTable = false;
-        _flightDefendIdx = null;
       });
       await WidgetsBinding.instance.endOfFrame;
       if (mounted) await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -1024,6 +1037,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         t.dismiss();
       }
       tickets = const [];
+      if (mounted) {
+        setState(() {
+          _flightLockTable = false;
+          _flightDefendIdx = null;
+        });
+      }
     }
 
     final repo = ref.read(durakRepositoryProvider);
@@ -1414,6 +1433,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _busy = false;
           _fanAnimDuringBusy = false;
           _flyingFromHand.removeAll(taken);
+          _incomingFanCards.removeAll(taken);
         });
       }
     }
@@ -1602,11 +1622,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           endAngle: angle,
           onHandoff: () {
             if (!mounted) return;
-            setState(() => _flyingFromHand.remove(card));
+            setState(() {
+              _flyingFromHand.remove(card);
+              // Держим в веере до синка сервера — иначе карта «пропадает».
+              _incomingFanCards.add(card);
+            });
           },
         );
       } else if (mounted) {
-        setState(() => _flyingFromHand.remove(card));
+        setState(() {
+          _flyingFromHand.remove(card);
+          _incomingFanCards.add(card);
+        });
       }
       if (!mounted) return;
     }
@@ -2858,7 +2885,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                 });
                               },
                               onDragPosition: (p) {
-                                _dragGlobal = p;
+                                // setState — подсветка цели отбоя следует за пальцем.
+                                if (p == null) {
+                                  if (_dragGlobal == null) return;
+                                  setState(() => _dragGlobal = null);
+                                  return;
+                                }
+                                final prev = _dragGlobal;
+                                if (prev != null &&
+                                    (prev - p).distanceSquared < 36) {
+                                  _dragGlobal = p;
+                                  return;
+                                }
+                                setState(() => _dragGlobal = p);
                               },
                               onTap: (_) {
                                 if (_selected.isNotEmpty ||
@@ -3167,17 +3206,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }) {
     final focus = _activeCard ??
         (_selected.isNotEmpty ? _selected.first : null);
-    // Подсказки при подъёме: все цели, которые бьёт карта (не только «ближайшая»).
+    // Подсказки при подъёме: одна цель — ближайшая к пальцу (лево/центр/право).
     final lifting =
         _flightLockTable || (!_busy && _activeCard != null);
     final highlightAttack = lifting && _highlightAttackSlot(view);
-    // Во время полёта — одна цель; при выборе карты — все, что она бьёт.
-    final defendTargets = (_flightLockTable && _flightDefendIdx != null)
-        ? {_flightDefendIdx!}
-        : (lifting ? _defendTargetIndexes(view, focus) : const <int>{});
-    final defendPairIndex = (_flightLockTable && _flightDefendIdx != null)
-        ? _flightDefendIdx!
-        : (lifting ? _defendTargetIndex(view, focus) : -1);
+    final int defendPairIndex;
+    if (_flightLockTable && _flightDefendIdx != null) {
+      defendPairIndex = _flightDefendIdx!;
+    } else if (lifting && focus != null) {
+      defendPairIndex = _defendTargetIndex(
+        view,
+        focus,
+        pointer: _dragGlobal,
+      );
+    } else {
+      defendPairIndex = -1;
+    }
+    final defendTargets =
+        defendPairIndex >= 0 ? {defendPairIndex} : const <int>{};
     final pendingAttacks = _pendingAttackPlaceholders(view);
     // Слот-подсказка только при подъёме; посадка идёт в плейсхолдер стола.
     final canShowAttackSlot = !view.isOver &&

@@ -791,7 +791,8 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
   @override
   void didUpdateWidget(covariant TurnTimerBorder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.turnDeadline != widget.turnDeadline) {
+    if (oldWidget.turnDeadline != widget.turnDeadline ||
+        oldWidget.active != widget.active) {
       _expiredFired = false;
       _tick();
     }
@@ -804,7 +805,11 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
   }
 
   void _tick() {
-    if (!widget.active) return;
+    if (!widget.active) {
+      // Без setState — иначе мигает весь блок соперника при смене хода.
+      if (_fraction != 1) _fraction = 1;
+      return;
+    }
     if (!_hasTimer) {
       if (_fraction != 1 && mounted) setState(() => _fraction = 1);
       return;
@@ -823,42 +828,30 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
 
   @override
   Widget build(BuildContext context) {
-    // Один и тот же padding всегда — рамка только рисуется, layout не прыгает.
+    // Всегда одно дерево + тот же padding — смена active не двигает layout.
     final padded = Padding(
       padding: EdgeInsets.all(widget.borderWidth),
       child: widget.child,
     );
-    if (!widget.active) {
-      // Та же геометрия, статичная рамка — без тиков и перекраски.
-      return CustomPaint(
+    final timed = widget.active && _hasTimer;
+    final colors = timed
+        ? TurnTimerStyle.colorsFor(hasTimer: true, fraction: _fraction)
+        : const [AppColors.accentStart, AppColors.accentEnd];
+    return RepaintBoundary(
+      child: CustomPaint(
         foregroundPainter: _ShrinkingBorderPainter(
-          fraction: 1,
-          colors: const [AppColors.accentStart, AppColors.accentEnd],
+          fraction: timed ? _fraction : 1.0,
+          colors: colors,
           strokeWidth: widget.borderWidth,
           radius: widget.radius,
-          paintTimer: false,
+          paintTimer: timed,
+          baseColors: const [
+            AppColors.accentStart,
+            AppColors.accentEnd,
+          ],
         ),
         child: padded,
-      );
-    }
-    final colors = TurnTimerStyle.colorsFor(
-      hasTimer: _hasTimer,
-      fraction: _fraction,
-    );
-    final fraction = _hasTimer ? _fraction : 1.0;
-    return CustomPaint(
-      foregroundPainter: _ShrinkingBorderPainter(
-        fraction: fraction,
-        colors: colors,
-        strokeWidth: widget.borderWidth,
-        radius: widget.radius,
-        paintTimer: true,
-        baseColors: const [
-          AppColors.accentStart,
-          AppColors.accentEnd,
-        ],
       ),
-      child: padded,
     );
   }
 }

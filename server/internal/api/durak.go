@@ -552,7 +552,10 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		fields = append(fields, "chat_id", lm)
 	}
 	if turnTimeSec > 0 {
-		fields = append(fields, "turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnTimeSec), 10))
+		fields = append(fields,
+			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnTimeSec), 10),
+			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+		)
 	}
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, gkey, fields...)
@@ -780,12 +783,15 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		WriteErr(w, r, http.StatusBadRequest, "unknown move type")
 		return
 	}
-	// Обновить турн-deadline: если ход идёт дальше — сбросим.
+	// Обновить турн-deadline + кто владеет таймером (для корректного таймаута).
 	encoded, _ := durak.Encode(state)
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
 	fields := []any{"state", encoded}
 	if turnT > 0 && state.Status == durak.StatusActive {
-		fields = append(fields, "turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10))
+		fields = append(fields,
+			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+		)
 	}
 	if state.Status == durak.StatusOver {
 		fields = append(fields, "status", durakStatusOver)
@@ -1145,7 +1151,15 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 	}
 }
 
-// applyDurakTurnTimeout — если истёк ход, игрок, чей был ход, проигрывает (форфейт).
+// durakTurnActorIdx — чей таймер хода (защитник бьёт / атакующий кладёт или «бито»).
+func durakTurnActorIdx(state *durak.State) int {
+	if state.Phase == durak.PhaseDefend {
+		return state.DefenderIndex()
+	}
+	return state.AttackerIndex
+}
+
+// applyDurakTurnTimeout — если истёк ход, проигрывает владелец deadline (не «текущая» фаза после гонки с ходом).
 func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string, m map[string]string) {
 	if m["status"] != gameStatusActive {
 		return
@@ -1158,16 +1172,27 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if time.Now().UTC().Unix() < turnDeadline {
 		return
 	}
-	state, err := durak.Decode(m["state"])
-	if err != nil {
+	// Перечитать Redis: ход на последней секунде мог уже обновить deadline/фазу.
+	fresh, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+	if err != nil || len(fresh) == 0 || fresh["status"] != gameStatusActive {
 		return
 	}
-	if state.Status != durak.StatusActive {
+	freshDL, err := strconv.ParseInt(fresh["turn_deadline"], 10, 64)
+	if err != nil || freshDL != turnDeadline {
+		// Deadline сменился успешным ходом — таймаут по старому снимку не применяем.
 		return
 	}
-	timedOutIdx := state.AttackerIndex
-	if state.Phase == durak.PhaseDefend {
-		timedOutIdx = state.DefenderIndex()
+	if time.Now().UTC().Unix() < freshDL {
+		return
+	}
+	state, err := durak.Decode(fresh["state"])
+	if err != nil || state.Status != durak.StatusActive {
+		return
+	}
+	// Владелец именно этого deadline (записан при старте/ходе); иначе — из фазы.
+	timedOutIdx := durakTurnActorIdx(state)
+	if v, e := strconv.Atoi(fresh["turn_actor_idx"]); e == nil && v >= 0 && v < len(state.PlayerIDs) {
+		timedOutIdx = v
 	}
 	if timedOutIdx < 0 || timedOutIdx >= len(state.PlayerIDs) {
 		return
@@ -1188,7 +1213,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
 
-	humans := durakHumans(m)
+	humans := durakHumans(fresh)
 	h.broadcast(humans, map[string]any{
 		"type":      "game_state",
 		"game_id":   gameID,
@@ -1196,7 +1221,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		"timeout":   true,
 		"status":    durakStatusOver,
 	})
-	h.onDurakGameFinished(ctx, gameID, m, state)
+	h.onDurakGameFinished(ctx, gameID, fresh, state)
 }
 
 // onDurakGameFinished — очистка active/observation, ставки, статистика.
