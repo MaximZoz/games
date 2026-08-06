@@ -74,7 +74,7 @@ class CardFan extends StatefulWidget {
   final bool fillWidth;
 
   @override
-  State<CardFan> createState() => CardFanState();
+  CardFanState createState() => CardFanState();
 }
 
 class CardFanState extends State<CardFan> with TickerProviderStateMixin {
