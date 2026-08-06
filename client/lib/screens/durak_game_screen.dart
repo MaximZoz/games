@@ -118,8 +118,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Карты в руке — крупные; на столе/колоде — компактнее.
   static const Size _handCardSize = Size(92, 132);
   static const Size _tableCardSize = Size(66, 94);
-  static const Size _cardSize = _handCardSize;
-
   /// Экран партии виден (не чаты / другой таб) — иначе FX не на root overlay.
   bool get _gameUiActive {
     if (!mounted) return false;
