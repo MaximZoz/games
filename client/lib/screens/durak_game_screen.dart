@@ -1267,10 +1267,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
         return;
       }
+      // Сначала слот на столе (opacity 1), кадр под fly, потом снять overlay.
       setState(() => _flyingToTable.removeAll(cards));
       await WidgetsBinding.instance.endOfFrame;
       if (mounted) {
-        await Future<void>.delayed(const Duration(milliseconds: 16));
+        await Future<void>.delayed(const Duration(milliseconds: 24));
       }
       for (final t in tickets) {
         t.dismiss();
