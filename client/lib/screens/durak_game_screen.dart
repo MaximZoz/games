@@ -609,21 +609,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     }
     if (remain.isNotEmpty) {
-      final hideNewDeals = _fxScheduled ||
-          _busy ||
-          _hidingTable ||
-          _deckCountFreeze != null ||
-          _pendingDealCards.isNotEmpty;
-      final added = remain.where((c) {
-        if (_pendingDealCards.contains(c)) return false;
-        // Добор из колоды: не вспыхивать в веере до анимации посадки.
-        if (hideNewDeals &&
-            !_incomingFanCards.contains(c) &&
-            !_flyingFromHand.contains(c)) {
-          return false;
-        }
-        return true;
-      }).toList()
+      // Только карты, явно помеченные как добор из колоды — остальное
+      // показываем сразу (иначе после хода веер может опустеть).
+      final added = remain
+          .where((c) => !_pendingDealCards.contains(c))
+          .toList()
         ..sort((a, b) => _compareHandCards(a, b, trump));
       out.addAll(added);
     }
@@ -2087,9 +2077,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _syncPrevOppHandCounts(view);
       return;
     }
-    // Пока свой ход с FX — не трогаем prev (иначе проглотим авто-бито/добор).
-    if (_busy) return;
-
     final handLen = view.hands.length > view.myIndex && view.myIndex >= 0
         ? (view.hands[view.myIndex].cards?.length ??
             view.hands[view.myIndex].count)
@@ -2102,6 +2089,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           ? (view.hands[view.myIndex].cards ?? const [])
           : const [],
     );
+    // Порядок веера обязан быть до любого FX — иначе remain/pending съедают руку.
+    if ((_handOrder == null || _handOrder!.isEmpty) &&
+        hand.isNotEmpty &&
+        _pendingDealCards.isEmpty &&
+        !_fxScheduled) {
+      _handOrder = List<PlayingCard>.of(hand);
+    }
+
+    // Пока свой ход с FX — не трогаем prev (иначе проглотим авто-бито/добор).
+    if (_busy) return;
 
     // Первый кадр — только запомнить базу (и порядок веера).
     if (_prevDeckCount < 0) {
@@ -2112,9 +2109,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevAttackerIndex = view.attackerIndex;
       _prevDefenderIndex = view.defenderIndex;
       _syncPrevOppHandCounts(view);
-      if (_handOrder == null && hand.isNotEmpty) {
-        _handOrder = List<PlayingCard>.of(hand);
-      }
       return;
     }
 
@@ -2156,19 +2150,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (willDealFromDeck || (bitoGrew && prevDeck > deck)) {
       _armDeckFreeze(prevDeck);
     }
-    // Добор ещё не летит из колоды — не показывать карты в веере (мигание).
-    final willAnimateMyDeal = incoming.isNotEmpty &&
-        !_suppressNextDealFx &&
-        (willDealFromDeck ||
-            bitoGrew ||
-            (dealt > 0 && deckDropped > 0) ||
-            (deckDropped > 0 && oppDeals.isNotEmpty));
-    if (willAnimateMyDeal) {
-      _pendingDealCards.addAll(incoming);
-    }
 
     // Соперник «Взял»: стол → его веер, затем добор из колоды.
     if (remoteTake) {
+      // Прячем добор до анимации — в этом же кадре, до отрисовки веера.
+      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
       _fxScheduled = true;
       final taker = refillDefender;
       // В дельте руки соперника — и взятые со стола, и добор; анимируем раздельно.
@@ -2221,6 +2207,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // Сначала бито (в т.ч. авто после пустой руки), потом добор — иначе
     // дельта руки проглотит анимацию стола в отбой.
     if (bitoGrew && !_hidingTable && !_suppressRemoteBitoFx) {
+      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
       _fxScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2293,6 +2280,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           });
         }
       } else {
+        if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
         _fxScheduled = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) {
@@ -2323,6 +2311,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     } else if (dealt > 0 && deckDropped == 0) {
       // Карты в руке появились без ухода колоды — не добор (сортировка/синк).
+      _pendingDealCards.clear();
       if (_suppressNextDealFx) {
         _suppressNextDealFx = false;
       } else {
@@ -2335,9 +2324,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } else if (deckDropped > 0 &&
         (incoming.isNotEmpty || oppDeals.isNotEmpty)) {
       // Колода уменьшилась — добор после биты/взятия (prev уже мог сдвинуться).
+      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
       _fxScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
+          _pendingDealCards.clear();
           _fxScheduled = false;
           return;
         }
@@ -2349,7 +2340,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           refillDefender: refillDefender,
           deckCountBefore: prevDeck,
         );
-        if (mounted) _fxScheduled = false;
+        if (mounted) {
+          _pendingDealCards.clear();
+          _fxScheduled = false;
+        }
       });
     } else if (!_hidingTable && !_fxScheduled) {
       // Ход соперника: карта летит из его веера на стол / в отбой.
@@ -2678,6 +2672,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
       return const [];
     }
+    // Первый синк руки (order ещё пуст) — не считаем всю руку «добором»,
+    // иначе _handOrder становится [] и веер пропадает.
+    if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
+      if (incoming.length >= hand.length) {
+        _handOrder = List<PlayingCard>.of(hand);
+        return const [];
+      }
+      _handOrder = [
+        for (final c in hand)
+          if (!incoming.contains(c)) c,
+      ];
+      return incoming;
+    }
     if (incoming.length > expect) {
       final keepCount = hand.length - expect;
       final keep = <PlayingCard>[];
@@ -2698,11 +2705,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
       _handOrder = keep;
       incoming = rest.length > expect ? rest.sublist(rest.length - expect) : rest;
-    } else if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
-      _handOrder = [
-        for (final c in hand)
-          if (!incoming.contains(c)) c,
-      ];
     }
     return incoming;
   }
