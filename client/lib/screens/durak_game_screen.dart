@@ -1557,6 +1557,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevAttackerIndex = v.attackerIndex;
         _prevDefenderIndex = v.defenderIndex;
         if (_gameUiActive && (dealt.isNotEmpty || oppDeals.isNotEmpty)) {
+          // До первого кадра с новым view.deckCount — козырь ещё на месте.
+          setState(() => _armDeckFreeze(deckBefore));
           await _animateRefillDeals(
             view: v,
             myIncoming: dealt,
@@ -2080,6 +2082,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     // Только реальный добор (дельта руки), не «все карты которых нет в order».
     final incoming = _incomingDealCards(hand, dealt);
+    final willDealFromDeck = deckDropped > 0 &&
+        (incoming.isNotEmpty || oppDeals.isNotEmpty || remoteTake);
+    // Сразу в этом же build — иначе колода/козырь мигнут пустыми (view уже 0).
+    if (willDealFromDeck || (bitoGrew && prevDeck > deck)) {
+      _armDeckFreeze(prevDeck);
+    }
 
     // Соперник «Взял»: стол → его веер, затем добор из колоды.
     if (remoteTake) {
@@ -2099,7 +2107,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _takeTableHold = tableSnapshot;
         _leftTableCards.clear();
         _oppDealPending[taker] = (_oppDealPending[taker] ?? 0) + takenN;
-        if (prevDeck > deck) _deckCountFreeze = prevDeck;
+        _armDeckFreeze(prevDeck);
       });
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2319,6 +2327,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return order;
   }
 
+  /// Держать колоду/козырь на экране с числа [before], пока идёт добор.
+  void _armDeckFreeze(int before) {
+    if (before <= 0) return;
+    final cur = _deckCountFreeze;
+    if (cur == null || cur < before) {
+      _deckCountFreeze = before;
+    }
+  }
+
   void _clearDeckCountFreeze() {
     if (_deckCountFreeze == null) return;
     if (mounted) {
@@ -2380,8 +2397,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
       }
       // Козырь/колода остаются видимыми, пока карты не улетят.
-      if (deckCountBefore != null && deckCountBefore > 0 && totalDeal > 0) {
-        _deckCountFreeze = deckCountBefore;
+      if (totalDeal > 0 && deckCountBefore != null) {
+        _armDeckFreeze(deckCountBefore);
       }
     });
     await WidgetsBinding.instance.endOfFrame;
