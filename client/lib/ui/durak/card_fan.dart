@@ -133,12 +133,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   }
 
   void _emitActiveCard(PlayingCard? card) {
-    final legal = card == null
-        ? null
-        : (widget.legalCards == null || widget.legalCards!.contains(card)
-            ? card
-            : null);
-    widget.onActiveChanged?.call(legal);
+    // Всегда сообщаем карту под пальцем — подсветка целей на столе по beats(),
+    // а не только по legalCards (иначе козырь «не подсвечивает» обе атаки).
+    widget.onActiveChanged?.call(card);
   }
 
   void _setHover(int? index) {
@@ -272,6 +269,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   /// Вложить карту в веер (взятие/добор): слот уже в [cards] (обычно hidden).
   /// Как отпускание вытащенной карты: долет в peek → плавное опускание.
+  /// [onHandoff] — снять hidden у родителя в момент передачи overlay→peek (без дыры).
   Future<void> foldCardIn({
     required PlayingCard card,
     required Rect from,
@@ -279,6 +277,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     bool flipToFace = false,
     double beginAngle = 0,
     double endAngle = 0,
+    VoidCallback? onHandoff,
   }) async {
     if (!mounted || _docking) return;
     _docking = true;
@@ -332,7 +331,11 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       return;
     }
 
-    setState(() => _hidePeekUnderOverlay = false);
+    // Сначала показать карту в peek и снять hidden у родителя — потом overlay.
+    onHandoff?.call();
+    if (mounted) {
+      setState(() => _hidePeekUnderOverlay = false);
+    }
     await WidgetsBinding.instance.endOfFrame;
     ticket.dismiss();
     await _animatePeekTTo(0, ms: 220);
@@ -622,7 +625,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     setState(() {
       _peekCard = card;
     });
-    _emitActiveCard(_isLegal(card) ? card : null);
+    _emitActiveCard(card);
   }
 
   void _setPeekT(double t) {
@@ -653,7 +656,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     });
     _upTravel = _extractPx;
     _panAccum = Offset.zero;
-    _emitActiveCard(_isLegal(card) ? card : null);
+    _emitActiveCard(card);
     // Сначала в точке подъёма, затем к пальцу — один непрерывный кадр.
     _liftScale = 1.0;
     _liftGlobalCenter = startCenter;
