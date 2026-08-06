@@ -85,6 +85,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
                         size: cardSize,
                         elevated: true,
                         highlighted: false,
+                        animate: false,
                       ),
               );
             } else {
@@ -94,8 +95,9 @@ Future<CardFlyTicket> playCardFlyAnimation({
                       card: card,
                       size: cardSize,
                       elevated: true,
-                      // Без смены highlighted у конца полёта — иначе «моргание» при посадке.
+                      // Без анимации тени — иначе handoff fly→стол «мигает».
                       highlighted: false,
+                      animate: false,
                     );
             }
             return Stack(

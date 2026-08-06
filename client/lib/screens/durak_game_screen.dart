@@ -1033,11 +1033,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       curve: Curves.easeInOutCubic,
       beginScale: beginScale,
       endScale: shrink,
-      beginAngle: 0.12,
-      endAngle: doDefend ? 0.08 : 0,
+      beginAngle: 0,
+      endAngle: 0,
       arcLift: 0,
       keepAtEnd: true,
     );
+
+    final repo = ref.read(durakRepositoryProvider);
+    final moveFuture = doDefend
+        ? repo.move(
+            widget.gameId,
+            type: 'defend',
+            card: cards.first,
+            pairIndex: defendIdx >= 0 ? defendIdx : null,
+          )
+        : repo.move(
+            widget.gameId,
+            type: 'transfer',
+            card: cards.first,
+          );
 
     unawaited(() async {
       final tickets = <CardFlyTicket>[await firstFly];
@@ -1055,8 +1069,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             curve: Curves.easeInOutCubic,
             beginScale: beginScale,
             endScale: shrink,
-            beginAngle: (i.isEven ? -1 : 1) * (0.12 + i * 0.03),
-            endAngle: doDefend ? 0.08 : 0,
+            beginAngle: 0,
+            endAngle: 0,
             arcLift: 0,
             keepAtEnd: true,
           ),
@@ -1074,9 +1088,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _optimisticDefends[defendIdx] = cards.first;
         });
         await WidgetsBinding.instance.endOfFrame;
-        if (mounted) {
-          await Future<void>.delayed(const Duration(milliseconds: 20));
-        }
+        if (mounted) await WidgetsBinding.instance.endOfFrame;
         for (final t in tickets) {
           t.dismiss();
         }
@@ -1086,37 +1098,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             _flightDefendIdx = null;
           });
         }
+      } else {
+        // Перевод: стол под overlay, затем снять fly.
+        setState(() {
+          _flyingToTable.removeAll(cards);
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) await WidgetsBinding.instance.endOfFrame;
+        for (final t in tickets) {
+          t.dismiss();
+        }
       }
 
-      final repo = ref.read(durakRepositoryProvider);
       try {
-        if (doDefend) {
-          await repo.move(
-            widget.gameId,
-            type: 'defend',
-            card: cards.first,
-            pairIndex: defendIdx >= 0 ? defendIdx : null,
-          );
-        } else {
-          await repo.move(
-            widget.gameId,
-            type: 'transfer',
-            card: cards.first,
-          );
-        }
+        await moveFuture;
         ref.invalidate(durakGameProvider(widget.gameId));
         try {
           await ref.read(durakGameProvider(widget.gameId).future);
         } catch (_) {}
-        if (!mounted) {
-          for (final t in tickets) {
-            t.dismiss();
-          }
-          return;
-        }
-        for (final t in tickets) {
-          t.dismiss();
-        }
+        if (!mounted) return;
         final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
         if (v != null) {
           _prevTable = List.of(v.table);
@@ -1144,15 +1144,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         });
         _releaseFanLayoutSnap();
       } on GamesException catch (e) {
-        if (!mounted) {
-          for (final t in tickets) {
-            t.dismiss();
-          }
-          return;
-        }
-        for (final t in tickets) {
-          t.dismiss();
-        }
+        if (!mounted) return;
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
         setState(() {
           _flyingFromHand.removeAll(cards);
@@ -1282,11 +1274,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       curve: Curves.easeInOutCubic,
       beginScale: beginScale,
       endScale: shrink,
-      beginAngle: 0.12,
+      beginAngle: 0,
       endAngle: 0,
       arcLift: 0,
       keepAtEnd: true,
     );
+
+    // Сервер параллельно с полётом — handoff не ждёт сеть (иначе мигание).
+    final commitFuture = _commitAttackMove(cards, clearFlying: false);
 
     unawaited(() async {
       final tickets = <CardFlyTicket>[await firstFly];
@@ -1304,7 +1299,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             curve: Curves.easeInOutCubic,
             beginScale: beginScale,
             endScale: shrink,
-            beginAngle: (i.isEven ? -1 : 1) * (0.12 + i * 0.03),
+            beginAngle: 0,
             endAngle: 0,
             arcLift: 0,
             keepAtEnd: true,
@@ -1317,21 +1312,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
         return;
       }
-      // Слот остаётся под fly до commit — без смены владельца и прыжка.
-      await _commitAttackMove(cards);
-      if (!mounted) {
-        for (final t in tickets) {
-          t.dismiss();
-        }
-        return;
-      }
+      // Стол под overlay → кадр → снять fly (без ожидания ответа сервера).
+      setState(() {
+        _flyingToTable.removeAll(cards);
+      });
       await WidgetsBinding.instance.endOfFrame;
-      if (mounted) {
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-      }
+      if (mounted) await WidgetsBinding.instance.endOfFrame;
       for (final t in tickets) {
         t.dismiss();
       }
+      await commitFuture;
+      if (!mounted) return;
+      setState(() {
+        for (final c in cards) {
+          _optimisticAttacks.remove(c);
+        }
+        _flyingFromHand.removeAll(cards);
+        _flyingToTable.removeAll(cards);
+      });
     }());
     return true;
   }
@@ -1373,7 +1371,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  Future<void> _commitAttackMove(List<PlayingCard> cards) async {
+  /// [clearFlying] — сбрасывать визуал сразу (старый путь) или оставить
+  /// caller'у handoff fly→стол без мигания.
+  Future<void> _commitAttackMove(
+    List<PlayingCard> cards, {
+    bool clearFlying = true,
+  }) async {
     final repo = ref.read(durakRepositoryProvider);
     try {
       await repo.move(widget.gameId, type: 'attack', cards: cards);
@@ -1388,7 +1391,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevDeckCount = v.deckCount;
         _prevBitoCount = v.bitoCount;
       }
-      // Сначала кадр с серверным столом + optimistic (тот же key) — без мигания.
+      if (!clearFlying) return;
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
       setState(() {
@@ -3802,6 +3805,7 @@ class _AnimatedTablePair extends StatelessWidget {
               size: cardSize,
               elevated: true,
               dropTarget: highlightAttack && defense == null,
+              animate: false,
             ),
           ),
           // Цель отбоя — отдельный ключ на позиции защиты, не на атаке.
@@ -3826,6 +3830,7 @@ class _AnimatedTablePair extends StatelessWidget {
                 size: cardSize,
                 elevated: true,
                 highlighted: false,
+                animate: false,
               ),
             ),
         ],

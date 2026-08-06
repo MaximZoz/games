@@ -15,6 +15,7 @@ class PlayingCardWidget extends StatelessWidget {
     this.dimmed = false,
     this.elevated = false,
     this.dropTarget = false,
+    this.animate = true,
   });
 
   final PlayingCard card;
@@ -25,6 +26,9 @@ class PlayingCardWidget extends StatelessWidget {
 
   /// Фиолетовая тень места, куда можно положить карту.
   final bool dropTarget;
+
+  /// Плавная смена тени (веер). На столе/в fly — выкл., иначе «мигание» при handoff.
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
@@ -37,50 +41,69 @@ class PlayingCardWidget extends StatelessWidget {
     final padV = size.height * 0.055;
     final hint = dropTarget || highlighted;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOutCubic,
-      width: size.width,
-      height: size.height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: [
-          if (hint)
-            BoxShadow(
-              color: AppColors.accentStart.withValues(alpha: dropTarget ? 0.5 : 0.38),
-              blurRadius: dropTarget ? 16 : 12,
-              spreadRadius: dropTarget ? 1.5 : 0.8,
+    final decoration = BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        if (hint)
+          BoxShadow(
+            color: AppColors.accentStart.withValues(alpha: dropTarget ? 0.5 : 0.38),
+            blurRadius: dropTarget ? 16 : 12,
+            spreadRadius: dropTarget ? 1.5 : 0.8,
+          ),
+        if (elevated)
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 14,
+            spreadRadius: 1,
+            offset: const Offset(0, 6),
+          )
+        else if (!hint)
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+      ],
+    );
+    final foreground = dimmed
+        ? BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(radius),
+          )
+        : null;
+
+    final face = ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            left: padH,
+            top: padV,
+            child: _CornerMarks(
+              rank: card.rank.label,
+              suit: card.suit.symbol,
+              color: color,
+              fontSize: corner,
             ),
-          if (elevated)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.22),
-              blurRadius: 14,
-              spreadRadius: 1,
-              offset: const Offset(0, 6),
-            )
-          else if (!hint)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+          ),
+          Center(
+            child: Text(
+              card.suit.symbol,
+              style: TextStyle(
+                color: color,
+                fontSize: size.height * 0.34,
+                fontWeight: FontWeight.w800,
+                height: 1,
+              ),
             ),
-        ],
-      ),
-      foregroundDecoration: dimmed
-          ? BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(radius),
-            )
-          : null,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned(
-              left: padH,
-              top: padV,
+          ),
+          Positioned(
+            right: padH,
+            bottom: padV,
+            child: Transform.rotate(
+              angle: 3.1415926535,
               child: _CornerMarks(
                 rank: card.rank.label,
                 suit: card.suit.symbol,
@@ -88,33 +111,28 @@ class PlayingCardWidget extends StatelessWidget {
                 fontSize: corner,
               ),
             ),
-            Center(
-              child: Text(
-                card.suit.symbol,
-                style: TextStyle(
-                  color: color,
-                  fontSize: size.height * 0.34,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-            ),
-            Positioned(
-              right: padH,
-              bottom: padV,
-              child: Transform.rotate(
-                angle: 3.1415926535,
-                child: _CornerMarks(
-                  rank: card.rank.label,
-                  suit: card.suit.symbol,
-                  color: color,
-                  fontSize: corner,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+
+    if (!animate) {
+      return Container(
+        width: size.width,
+        height: size.height,
+        decoration: decoration,
+        foregroundDecoration: foreground,
+        child: face,
+      );
+    }
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOutCubic,
+      width: size.width,
+      height: size.height,
+      decoration: decoration,
+      foregroundDecoration: foreground,
+      child: face,
     );
   }
 }
