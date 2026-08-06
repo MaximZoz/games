@@ -970,32 +970,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return true;
 
-    final attackKey = defendIdx >= 0
-        ? _tableAttackKeys.putIfAbsent(defendIdx, GlobalKey.new)
-        : _defendTargetKey;
-    final attackRect = globalRectOf(attackKey) ??
-        globalRectOf(_defendTargetKey) ??
-        globalRectOf(_tableKey) ??
-        Rect.fromCenter(
-          center: Offset(screen.width / 2, screen.height * 0.42),
-          width: _tableCardSize.width,
-          height: _tableCardSize.height,
+    // Отбой: ключ уже на позиции защиты; fallback — атака + смещение.
+    final Rect to;
+    final Size landSize;
+    if (doDefend) {
+      final defendRect = globalRectOf(_defendTargetKey);
+      if (defendRect != null) {
+        to = defendRect;
+      } else {
+        final atkKey = defendIdx >= 0
+            ? _tableAttackKeys.putIfAbsent(defendIdx, GlobalKey.new)
+            : null;
+        final atk = (atkKey != null ? globalRectOf(atkKey) : null) ??
+            globalRectOf(_tableKey) ??
+            Rect.fromCenter(
+              center: Offset(screen.width / 2, screen.height * 0.42),
+              width: _tableCardSize.width,
+              height: _tableCardSize.height,
+            );
+        to = Rect.fromLTWH(
+          atk.left + defendOffset.dx,
+          atk.top + defendOffset.dy,
+          _tableCardSize.width,
+          _tableCardSize.height,
         );
-
-    final landSize = Size(
-      doDefend ? attackRect.width : _tableCardSize.width,
-      doDefend ? attackRect.height : _tableCardSize.height,
-    );
-    final to = doDefend
-        ? Rect.fromLTWH(
-            attackRect.left + defendOffset.dx,
-            attackRect.top + defendOffset.dy,
-            landSize.width,
-            landSize.height,
-          )
-        : (globalRectOf(_pendingAttackLandKey) ??
-            globalRectOf(_attackSlotKey) ??
-            _estimateAttackLandRect(view, screen));
+      }
+      landSize = Size(to.width, to.height);
+    } else {
+      to = globalRectOf(_pendingAttackLandKey) ??
+          globalRectOf(_attackSlotKey) ??
+          _estimateAttackLandRect(view, screen);
+      landSize = Size(_tableCardSize.width, _tableCardSize.height);
+    }
 
     final shrink = landSize.width / _handCardSize.width;
     final froms = [
@@ -1330,7 +1336,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return true;
   }
 
-  /// Геометрия посадки как в [_buildTableRows]: 2 в ряд, центр.
+  /// Геометрия посадки атаки: центр именно карты атаки, не слота пары
+  /// (слот шире/выше на +10/+14 под отбой — туда сажать нельзя).
   Rect _estimateAttackLandRect(DurakGameView view, Size screen) {
     final table = globalRectOf(_tableKey);
     final center =
@@ -1344,22 +1351,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         .length;
     final n = serverVisible + _optimisticAttacks.length;
     final idx = math.max(n - 1, 0);
+    // Как в _AnimatedTablePair: padding 4+4, SizedBox = card + (10, 14).
     final pairW = _tableCardSize.width + 18;
+    final pairH = _tableCardSize.height + 14;
     const gap = 10.0;
     final col = idx % 2;
     final row = idx ~/ 2;
     final rowLen = (row * 2 + 2 <= n) ? 2 : (n - row * 2).clamp(1, 2);
     final rowWidth = rowLen * pairW + (rowLen - 1) * gap;
     final rowLeft = center.dx - rowWidth / 2;
-    final cx = rowLeft + col * (pairW + gap) + pairW / 2;
-    final pairH = _tableCardSize.height + 14;
+    final pairLeft = rowLeft + col * (pairW + gap);
     final rows = (n + 1) ~/ 2;
     final colH = rows * pairH + (rows - 1) * 10;
-    final cy = center.dy - colH / 2 + row * (pairH + 10) + pairH / 2;
-    return Rect.fromCenter(
-      center: Offset(cx, cy),
-      width: _tableCardSize.width,
-      height: _tableCardSize.height,
+    final pairTop = center.dy - colH / 2 + row * (pairH + 10);
+    // Лицо атаки — левый верх стека (после горизонтального padding).
+    return Rect.fromLTWH(
+      pairLeft + 4,
+      pairTop,
+      _tableCardSize.width,
+      _tableCardSize.height,
     );
   }
 
@@ -3349,16 +3359,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           Opacity(
             key: ValueKey('atk-${_cardId(pendingAttacks[i])}'),
             opacity: _flyingToTable.contains(pendingAttacks[i]) ? 0 : 1,
-            child: KeyedSubtree(
-              key: i == pendingAttacks.length - 1
-                  ? _pendingAttackLandKey
-                  : ValueKey('land-${_cardId(pendingAttacks[i])}'),
-              child: _AnimatedTablePair(
-                pair: DurakTablePairApi(
-                  attack: DurakApiCard.fromCard(pendingAttacks[i]),
-                ),
-                cardSize: cardSize,
+            child: _AnimatedTablePair(
+              pair: DurakTablePairApi(
+                attack: DurakApiCard.fromCard(pendingAttacks[i]),
               ),
+              cardSize: cardSize,
+              // Якорь на лице атаки (не на слоте пары +10/+14) — иначе fly
+              // садится «в отбой», а потом карта прыгает в позицию атаки.
+              attackKey: i == pendingAttacks.length - 1
+                  ? _pendingAttackLandKey
+                  : null,
             ),
           ),
       ],
@@ -3788,13 +3798,25 @@ class _AnimatedTablePair extends StatelessWidget {
           KeyedSubtree(
             key: attackKey,
             child: PlayingCardWidget(
-              key: defendTargetKey,
               card: pair.attack.toPlayingCard(),
               size: cardSize,
               elevated: true,
               dropTarget: highlightAttack && defense == null,
             ),
           ),
+          // Цель отбоя — отдельный ключ на позиции защиты, не на атаке.
+          if (defendTargetKey != null && defense == null)
+            Positioned(
+              left: 10,
+              top: 14,
+              child: KeyedSubtree(
+                key: defendTargetKey,
+                child: SizedBox(
+                  width: cardSize.width,
+                  height: cardSize.height,
+                ),
+              ),
+            ),
           if (defense != null)
             Positioned(
               left: 10,
