@@ -1157,12 +1157,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         if (!mounted) return;
         final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
         if (v != null) {
-          _prevTable = List.of(v.table);
-          _prevDeckCount = v.deckCount;
-          _prevBitoCount = v.bitoCount;
-          _prevHandLen = v.hands.length > v.myIndex && v.myIndex >= 0
-              ? (v.hands[v.myIndex].cards?.length ?? v.hands[v.myIndex].count)
-              : _prevHandLen;
+          // После биты/авто-закрытия раунда не затираем prev — добор сыграет FX.
+          _syncPrevAfterMove(v);
         }
         setState(() {
           _flyingFromHand.removeAll(cards);
@@ -1427,12 +1423,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (!mounted) return;
       final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
       if (v != null) {
-        _prevTable = List.of(v.table);
-        _prevDeckCount = v.deckCount;
-        _prevBitoCount = v.bitoCount;
-        _prevHandLen = v.hands.length > v.myIndex && v.myIndex >= 0
-            ? (v.hands[v.myIndex].cards?.length ?? v.hands[v.myIndex].count)
-            : _prevHandLen;
+        _syncPrevAfterMove(v);
       }
       if (!clearFlying) return;
       await WidgetsBinding.instance.endOfFrame;
@@ -2182,6 +2173,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         });
       }
     } else if (dealt > 0 && deckDropped == 0) {
+      // Карты в руке появились без ухода колоды — не добор (сортировка/синк).
       if (_suppressNextDealFx) {
         _suppressNextDealFx = false;
       } else {
@@ -2191,26 +2183,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _sortHandInFan(hand, trump);
         });
       }
-      if (oppDeals.isNotEmpty) {
-        _fxScheduled = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (!mounted) {
-            _fxScheduled = false;
-            return;
-          }
-          await _animateRefillDeals(
-            view: view,
-            myIncoming: const [],
-            oppDeals: oppDeals,
-            refillAttacker: refillAttacker,
-            refillDefender: refillDefender,
-            skipMyDeal: true,
-          );
-          if (mounted) _fxScheduled = false;
-        });
-      }
-    } else if (oppDeals.isNotEmpty || incoming.isNotEmpty) {
-      // Добор после хода (prev колоды уже синхронизирован) — тот же порядок.
+    } else if (deckDropped > 0 &&
+        (incoming.isNotEmpty || oppDeals.isNotEmpty)) {
+      // Колода уменьшилась — добор после биты/взятия (prev уже мог сдвинуться).
       _fxScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2394,7 +2369,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  /// Карты для анимации добора: не больше реальной дельты руки.
+  /// Синхронизировать prev после своего хода. Если раунд закрылся (бита/взятие) —
+  /// prev не трогаем: [_maybeRunTableFx] должен сыграть биту и добор из колоды.
+  void _syncPrevAfterMove(DurakGameView v) {
+    final roundEnded = _prevTable.isNotEmpty &&
+        v.table.isEmpty &&
+        ((_prevBitoCount >= 0 && v.bitoCount > _prevBitoCount) ||
+            (_prevDeckCount >= 0 && v.deckCount < _prevDeckCount));
+    if (roundEnded) return;
+    _prevTable = List.of(v.table);
+    _prevDeckCount = v.deckCount;
+    _prevBitoCount = v.bitoCount;
+    _prevHandLen = v.hands.length > v.myIndex && v.myIndex >= 0
+        ? (v.hands[v.myIndex].cards?.length ?? v.hands[v.myIndex].count)
+        : _prevHandLen;
+  }
+
+  /// Карты для анимации добора: только при реальном приросте руки [dealt].
   /// Если [_handOrder] пуст/устарел — сидируем веер «старыми», иначе он
   /// пропадает и с колоды летит вся рука.
   List<PlayingCard> _incomingDealCards(List<PlayingCard> hand, int dealt) {
@@ -2404,10 +2395,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       for (final c in hand)
         if (!prevSet.contains(c)) c,
     ];
-    // Атакующий после хода часто не обновляет _prevHandLen — смотрим order.
-    final byOrder =
-        prev != null ? (hand.length - prev.length).clamp(0, hand.length) : 0;
-    final expect = dealt > 0 ? dealt : byOrder;
+    // Без дельты руки не анимируем добор (после обычного хода колода не сдаёт).
+    final expect = dealt > 0 ? dealt : 0;
     if (expect <= 0) {
       if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
         _handOrder = List<PlayingCard>.of(hand);
