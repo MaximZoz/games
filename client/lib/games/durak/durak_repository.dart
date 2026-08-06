@@ -148,6 +148,7 @@ class DurakGameView {
     this.isForfeit = false,
     this.isTimeout = false,
     this.drawOfferBy = '',
+    this.lastWasTake = false,
   });
 
   final String id;
@@ -175,6 +176,9 @@ class DurakGameView {
   final int turnTimeSec;
   final int turnDeadline;
   final int stakeBronze;
+
+  /// Последнее действие раунда — «взять» (для FX соперника).
+  final bool lastWasTake;
 
   /// Партия завершена соглашением на ничью.
   final bool isDraw;
@@ -272,6 +276,7 @@ class DurakGameView {
       isForfeit: json['forfeit'] == true,
       isTimeout: json['timeout'] == true,
       drawOfferBy: (json['draw_offer_by'] ?? '').toString(),
+      lastWasTake: json['last_was_take'] == true,
     );
   }
 }

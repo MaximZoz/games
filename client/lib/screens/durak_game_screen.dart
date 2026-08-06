@@ -85,6 +85,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   final Set<String> _remoteFlyingCardIds = {};
   /// Заморозить визуальный счётчик биты на время полёта (без «вспышки» новых карт).
   int? _bitoCountFreeze;
+  /// Заморозить колоду/козырь на время добора (не исчезает до вылета карты).
+  int? _deckCountFreeze;
   Timer? _timeoutRetryTimer;
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
@@ -373,13 +375,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (_optimisticAttacks.contains(atk) || _flyingToTable.contains(atk)) {
       return false;
     }
-    final atkId = _cardId(atk);
-    if (_remoteFlyingCardIds.contains(atkId) &&
-        pair.defense == null &&
-        !_optimisticDefends.containsKey(i)) {
-      return false;
-    }
+    // Remote-полёт: пару оставляем в дереве (opacity 0) — якорь посадки жив.
     return true;
+  }
+
+  bool _isRemoteAttackHidden(DurakTablePairApi pair, int i) {
+    final atk = pair.attack.toPlayingCard();
+    final atkId = _cardId(atk);
+    return _remoteFlyingCardIds.contains(atkId) &&
+        pair.defense == null &&
+        !_optimisticDefends.containsKey(i);
   }
 
   /// Во время «Взять»: пара видна, пока на ней есть хотя бы одна не улетевшая карта.
@@ -1538,6 +1543,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ? (v.hands[v.myIndex].cards ?? const [])
               : const [],
         );
+        final deckBefore = _prevDeckCount >= 0 ? _prevDeckCount : v.deckCount;
         _prevDeckCount = v.deckCount;
         _prevBitoCount = v.bitoCount;
         _prevHandLen = hand.length;
@@ -1557,6 +1563,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             oppDeals: oppDeals,
             refillAttacker: refillAttacker,
             refillDefender: refillDefender,
+            deckCountBefore: deckBefore,
           );
         } else {
           _mergeHandAfterTake(hand, trump);
@@ -1843,12 +1850,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final trump = view != null
         ? _suitFromApi(view.trumpSuit)
         : Suit.spades;
-    final from = globalRectOf(_deckKey) ??
-        Rect.fromCenter(
-          center: MediaQuery.sizeOf(context).center(Offset.zero),
-          width: _tableCardSize.width,
-          height: _tableCardSize.height,
-        );
 
     final serverHand = view != null
         ? _apiCardsToPlaying(
@@ -1888,6 +1889,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         order.length.clamp(1, 52),
         MediaQuery.sizeOf(context).width,
       );
+      // Старт с текущей колоды/козыря, потом уменьшаем freeze.
+      final deckFrom = _deckDealFromRect(jitter: i * 1.5);
+      _consumeDeckFreezeSlot();
       setState(() {
         _handOrder = order;
         _pendingDealCards.remove(card);
@@ -1907,11 +1911,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       final angle = nAll <= 1 || idx < 0
           ? 0.0
           : (idx - center) * (0.4 / math.max(nAll - 1, 1));
-      final deckFrom = Rect.fromCenter(
-        center: from.center.translate(i * 1.5, i * 1.5),
-        width: _tableCardSize.width,
-        height: _tableCardSize.height,
-      );
       if (fan != null) {
         await fan.foldCardIn(
           card: card,
@@ -2052,6 +2051,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final dealt = handLen - _prevHandLen;
     final deckDropped = _prevDeckCount - deck;
     final prevBito = _prevBitoCount;
+    final prevDeck = _prevDeckCount;
     final bitoGrew = bito > prevBito && _prevTable.isNotEmpty;
     final tableSnapshot = List<DurakTablePairApi>.of(_prevTable);
     final oppDeals = _opponentDealDeltas(view);
@@ -2060,6 +2060,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevAttackerIndex >= 0 ? _prevAttackerIndex : view.attackerIndex;
     final refillDefender =
         _prevDefenderIndex >= 0 ? _prevDefenderIndex : view.defenderIndex;
+    final takenN = _flattenTableCards(tableSnapshot).length;
+    // Соперник забрал стол: бита не выросла, стол очистился, last_was_take.
+    final remoteTake = !_suppressRemoteBitoFx &&
+        !_hidingTable &&
+        tableSnapshot.isNotEmpty &&
+        view.table.isEmpty &&
+        !bitoGrew &&
+        view.lastWasTake &&
+        refillDefender != view.myIndex;
 
     _prevDeckCount = deck;
     _prevBitoCount = bito;
@@ -2071,6 +2080,57 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     // Только реальный добор (дельта руки), не «все карты которых нет в order».
     final incoming = _incomingDealCards(hand, dealt);
+
+    // Соперник «Взял»: стол → его веер, затем добор из колоды.
+    if (remoteTake) {
+      _fxScheduled = true;
+      final taker = refillDefender;
+      // В дельте руки соперника — и взятые со стола, и добор; анимируем раздельно.
+      final oppDealsDeck = <int, int>{};
+      for (final e in oppDeals.entries) {
+        if (e.key == taker) {
+          final deckOnly = (e.value - takenN).clamp(0, e.value);
+          if (deckOnly > 0) oppDealsDeck[e.key] = deckOnly;
+        } else if (e.value > 0) {
+          oppDealsDeck[e.key] = e.value;
+        }
+      }
+      setState(() {
+        _takeTableHold = tableSnapshot;
+        _leftTableCards.clear();
+        _oppDealPending[taker] = (_oppDealPending[taker] ?? 0) + takenN;
+        if (prevDeck > deck) _deckCountFreeze = prevDeck;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) {
+          _fxScheduled = false;
+          return;
+        }
+        await _animateTableToOpponentFan(tableSnapshot, taker);
+        if (!mounted) {
+          _fxScheduled = false;
+          return;
+        }
+        setState(() {
+          _takeTableHold = null;
+          _leftTableCards.clear();
+        });
+        if (incoming.isNotEmpty || oppDealsDeck.isNotEmpty) {
+          await _animateRefillDeals(
+            view: view,
+            myIncoming: incoming,
+            oppDeals: oppDealsDeck,
+            refillAttacker: refillAttacker,
+            refillDefender: refillDefender,
+            deckCountBefore: prevDeck,
+          );
+        } else {
+          _clearDeckCountFreeze();
+        }
+        if (mounted) _fxScheduled = false;
+      });
+      return;
+    }
 
     // Сначала бито (в т.ч. авто после пустой руки), потом добор — иначе
     // дельта руки проглотит анимацию стола в отбой.
@@ -2113,6 +2173,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               oppDeals: oppDeals,
               refillAttacker: refillAttacker,
               refillDefender: refillDefender,
+              deckCountBefore: prevDeck,
             );
           } else if (hand.isNotEmpty) {
             final trump = _suitFromApi(view.trumpSuit);
@@ -2140,6 +2201,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               refillAttacker: refillAttacker,
               refillDefender: refillDefender,
               skipMyDeal: true,
+              deckCountBefore: prevDeck,
             );
             if (mounted) _fxScheduled = false;
           });
@@ -2158,6 +2220,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             oppDeals: oppDeals,
             refillAttacker: refillAttacker,
             refillDefender: refillDefender,
+            deckCountBefore: prevDeck,
           );
           if (mounted) {
             final trump = _suitFromApi(view.trumpSuit);
@@ -2198,6 +2261,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           oppDeals: oppDeals,
           refillAttacker: refillAttacker,
           refillDefender: refillDefender,
+          deckCountBefore: prevDeck,
         );
         if (mounted) _fxScheduled = false;
       });
@@ -2255,6 +2319,44 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return order;
   }
 
+  void _clearDeckCountFreeze() {
+    if (_deckCountFreeze == null) return;
+    if (mounted) {
+      setState(() => _deckCountFreeze = null);
+    } else {
+      _deckCountFreeze = null;
+    }
+  }
+
+  /// Уменьшить замороженную колоду на 1 после старта полёта карты.
+  void _consumeDeckFreezeSlot() {
+    final cur = _deckCountFreeze;
+    if (cur == null) return;
+    if (!mounted) {
+      _deckCountFreeze = cur > 0 ? cur - 1 : 0;
+      return;
+    }
+    setState(() => _deckCountFreeze = cur > 0 ? cur - 1 : 0);
+  }
+
+  Rect _deckDealFromRect({double jitter = 0}) {
+    final base = globalRectOf(_deckKey) ??
+        Rect.fromCenter(
+          center: Offset(
+            MediaQuery.sizeOf(context).width * 0.12,
+            MediaQuery.sizeOf(context).height * 0.42,
+          ),
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
+        );
+    if (jitter == 0) return base;
+    return Rect.fromCenter(
+      center: base.center.translate(jitter, jitter),
+      width: _tableCardSize.width,
+      height: _tableCardSize.height,
+    );
+  }
+
   /// Добор всех игроков в порядке атаки (не «сначала я»).
   Future<void> _animateRefillDeals({
     required DurakGameView view,
@@ -2263,16 +2365,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     required int refillAttacker,
     required int refillDefender,
     bool skipMyDeal = false,
+    int? deckCountBefore,
   }) async {
     final myCards = skipMyDeal ? const <PlayingCard>[] : myIncoming;
     if ((myCards.isEmpty && oppDeals.isEmpty) || !mounted || !_gameUiActive) {
       return;
     }
 
+    final totalDeal = myCards.length +
+        oppDeals.values.fold<int>(0, (a, b) => a + b);
     setState(() {
       if (myCards.isNotEmpty) _pendingDealCards.addAll(myCards);
       for (final e in oppDeals.entries) {
         _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
+      }
+      // Козырь/колода остаются видимыми, пока карты не улетят.
+      if (deckCountBefore != null && deckCountBefore > 0 && totalDeal > 0) {
+        _deckCountFreeze = deckCountBefore;
       }
     });
     await WidgetsBinding.instance.endOfFrame;
@@ -2298,7 +2407,83 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       }
     }
-    if (mounted) _pendingDealCards.removeAll(myCards);
+    if (mounted) {
+      _pendingDealCards.removeAll(myCards);
+      _clearDeckCountFreeze();
+    }
+  }
+
+  /// Стол → веер соперника (когда он «взял»).
+  Future<void> _animateTableToOpponentFan(
+    List<DurakTablePairApi> table,
+    int oppIdx,
+  ) async {
+    if (table.isEmpty || !mounted || !_gameUiActive) return;
+    final cards = _flattenTableCardsTopFirst(table);
+    final froms = _tableCardGlobalRectsTopFirst(table);
+    final screen = MediaQuery.sizeOf(context);
+
+    for (var i = 0; i < cards.length; i++) {
+      if (!mounted || !_gameUiActive) return;
+      final card = cards[i];
+      setState(() => _leftTableCards.add(card));
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+
+      final from = i < froms.length
+          ? froms[i]
+          : Rect.fromCenter(
+              center: screen.center(Offset.zero),
+              width: _tableCardSize.width,
+              height: _tableCardSize.height,
+            );
+      final toKey = _oppFanKeys.putIfAbsent(oppIdx, GlobalKey.new);
+      final to = globalRectOf(toKey) ??
+          Rect.fromCenter(
+            center: Offset(screen.width / 2, screen.height * 0.16),
+            width: _tableCardSize.width * 0.44,
+            height: _tableCardSize.height * 0.44,
+          );
+      final endSize = Size(
+        to.width.clamp(30.0, _tableCardSize.width * 0.55),
+        to.height.clamp(44.0, _tableCardSize.height * 0.55),
+      );
+      final land = Rect.fromCenter(
+        center: to.center.translate(i * 2.0, i * 1.2),
+        width: endSize.width,
+        height: endSize.height,
+      );
+      final ticket = await playCardFlyAnimation(
+        context: context,
+        card: card,
+        cardSize: _tableCardSize,
+        from: from,
+        to: land,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeInOutCubic,
+        faceDown: false,
+        flipToFace: false,
+        beginScale: 1,
+        endScale: endSize.width / _tableCardSize.width,
+        beginAngle: 0,
+        endAngle: 0.1,
+        arcLift: 22,
+        keepAtEnd: true,
+      );
+      ticket.dismiss();
+      if (!mounted) return;
+      setState(() {
+        final left = (_oppDealPending[oppIdx] ?? 1) - 1;
+        if (left <= 0) {
+          _oppDealPending.remove(oppIdx);
+        } else {
+          _oppDealPending[oppIdx] = left;
+        }
+      });
+      if (i + 1 < cards.length) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    }
   }
 
   /// Рубашки по одной: колода → веер одного соперника ([_oppDealPending] уже учтён).
@@ -2306,15 +2491,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (n <= 0 || !mounted || !_gameUiActive) return;
     const dummy = PlayingCard(Rank.six, Suit.spades);
     final screen = MediaQuery.sizeOf(context);
-    final deckFrom = globalRectOf(_deckKey) ??
-        Rect.fromCenter(
-          center: Offset(screen.width * 0.12, screen.height * 0.42),
-          width: _tableCardSize.width,
-          height: _tableCardSize.height,
-        );
 
     for (var i = 0; i < n; i++) {
       if (!mounted || !_gameUiActive) return;
+      // Точка старта — пока колода/козырь ещё на экране (freeze).
+      final from = _deckDealFromRect(jitter: i * 1.2);
+      _consumeDeckFreezeSlot();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+
       final toKey = _oppFanKeys.putIfAbsent(idx, GlobalKey.new);
       final to = globalRectOf(toKey) ??
           Rect.fromCenter(
@@ -2330,11 +2515,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         center: to.center.translate(i * 2.0, i * 1.5),
         width: endSize.width,
         height: endSize.height,
-      );
-      final from = Rect.fromCenter(
-        center: deckFrom.center.translate(i * 1.2, i * 1.2),
-        width: _tableCardSize.width,
-        height: _tableCardSize.height,
       );
       final ticket = await playCardFlyAnimation(
         context: context,
@@ -2495,9 +2675,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     flights.removeWhere((f) => f.fromPlayer == view.myIndex);
     if (flights.isEmpty) return;
 
+    // Скрыть сразу в этом же build — до отрисовки стола (без вспышки карты).
+    for (final f in flights) {
+      _remoteFlyingCardIds.add(_cardId(f.card));
+    }
+
     _fxScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || !_gameUiActive) {
+        for (final f in flights) {
+          _remoteFlyingCardIds.remove(_cardId(f.card));
+        }
         _fxScheduled = false;
         return;
       }
@@ -2515,7 +2703,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   ) async {
     if (!mounted || !_gameUiActive) return;
     final id = _cardId(flight.card);
-    setState(() => _remoteFlyingCardIds.add(id));
+    // Id уже добавлен в _scheduleRemoteTableFx — только убедимся.
+    if (!_remoteFlyingCardIds.contains(id)) {
+      setState(() => _remoteFlyingCardIds.add(id));
+    }
 
     final fromKey = _oppFanKeys[flight.fromPlayer];
     final from = (fromKey != null ? globalRectOf(fromKey) : null) ??
@@ -3681,10 +3872,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final showAttackSlot = canShowAttackSlot && highlightAttack;
 
     // Колода слева — чуть в кадре, не под боковой панелью.
+    // Freeze: козырь не исчезает, пока доборные карты не улетели.
     final deckPeek = KeyedSubtree(
       key: _deckKey,
       child: DurakDeckPile(
-        deckCount: view.deckCount,
+        deckCount: _deckCountFreeze ?? view.deckCount,
         trumpCard: trumpCard,
         trumpSuit: _suitFromApi(view.trumpSuit),
         cardSize: cardSize,
@@ -3711,9 +3903,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               key: ValueKey(
                 'atk-${_cardId(sourceTable[i].attack.toPlayingCard())}',
               ),
-              opacity: _flyingToTable.contains(
-                    sourceTable[i].attack.toPlayingCard(),
-                  )
+              opacity: (_flyingToTable.contains(
+                        sourceTable[i].attack.toPlayingCard(),
+                      ) ||
+                      (hold == null &&
+                          _isRemoteAttackHidden(sourceTable[i], i)))
                   ? 0.0
                   : 1.0,
               child: _AnimatedTablePair(
