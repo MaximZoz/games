@@ -165,6 +165,25 @@ void main() {
       expect(game.turn, DurakTurn.attacker);
     });
 
+    test('both empty after last defend is draw', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.nine, Suit.hearts)],
+          [PlayingCard(Rank.ten, Suit.hearts)],
+        ],
+        deck: Deck([]),
+        trump: Suit.spades,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      game.attack(PlayingCard(Rank.nine, Suit.hearts), playerIndex: 0);
+      game.defend(PlayingCard(Rank.ten, Suit.hearts), playerIndex: 1);
+      expect(game.isOver, isTrue);
+      expect(game.endedInDraw, isTrue);
+      expect(game.loserIndex, isNull);
+      expect(game.table, isEmpty);
+    });
+
     test('empty hand returns unbeaten attack to attacker', () {
       final king = PlayingCard(Rank.king, Suit.spades);
       final ten = PlayingCard(Rank.ten, Suit.hearts);
@@ -252,14 +271,30 @@ void main() {
     test('bot defends with minimum higher card of same suit', () {
       final game = DurakGame(
         hands: [
-          [PlayingCard(Rank.six, Suit.hearts)],
+          [
+            PlayingCard(Rank.six, Suit.hearts),
+            PlayingCard(Rank.nine, Suit.clubs),
+          ],
           [
             PlayingCard(Rank.seven, Suit.hearts),
             PlayingCard(Rank.ace, Suit.hearts),
             PlayingCard(Rank.jack, Suit.spades), // trump
           ],
         ],
-        deck: Deck([]),
+        deck: Deck([
+          PlayingCard(Rank.eight, Suit.clubs),
+          PlayingCard(Rank.nine, Suit.diamonds),
+          PlayingCard(Rank.ten, Suit.diamonds),
+          PlayingCard(Rank.jack, Suit.diamonds),
+          PlayingCard(Rank.queen, Suit.diamonds),
+          PlayingCard(Rank.king, Suit.diamonds),
+          PlayingCard(Rank.ace, Suit.diamonds),
+          PlayingCard(Rank.eight, Suit.spades),
+          PlayingCard(Rank.nine, Suit.spades),
+          PlayingCard(Rank.ten, Suit.spades),
+          PlayingCard(Rank.queen, Suit.spades),
+          PlayingCard(Rank.king, Suit.spades),
+        ]),
         trump: Suit.spades,
         attackerIndex: 0,
         turn: DurakTurn.attacker,
@@ -267,6 +302,7 @@ void main() {
       game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
       const bot = DurakBot(index: 1);
       bot.step(game);
+      expect(game.table, isNotEmpty);
       expect(game.table.first.defense, PlayingCard(Rank.seven, Suit.hearts));
     });
   });

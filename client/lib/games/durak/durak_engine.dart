@@ -122,10 +122,13 @@ class DurakGame {
   final int maxAttacks;
   int? loserIndex;
 
+  /// Оба вышли — ничья (колода пуста, карт ни у кого нет).
+  bool endedInDraw = false;
+
   int get playerCount => hands.length;
   int get defenderIndex => (attackerIndex + 1) % playerCount;
 
-  bool get isOver => loserIndex != null;
+  bool get isOver => loserIndex != null || endedInDraw;
 
   /// Верхняя карта козыря (лежит открытой в основании колоды).
   PlayingCard? get openTrumpCard =>
@@ -268,6 +271,10 @@ class DurakGame {
     // Если все побиты — ждём подкидывания или «бито».
     if (table.every((p) => p.isBeaten)) {
       turn = DurakTurn.attackerFollowUp;
+      // Атакующий без карт — сразу бито.
+      if (hands[attackerIndex].isEmpty) {
+        sayBito();
+      }
     }
   }
 
@@ -361,7 +368,13 @@ class DurakGame {
     final withCards =
         List.generate(playerCount, (i) => i).where((i) => hands[i].isNotEmpty);
     if (withCards.length <= 1) {
-      loserIndex = withCards.isEmpty ? null : withCards.first;
+      if (withCards.isEmpty) {
+        endedInDraw = true;
+        loserIndex = null;
+      } else {
+        endedInDraw = false;
+        loserIndex = withCards.first;
+      }
     }
   }
 }

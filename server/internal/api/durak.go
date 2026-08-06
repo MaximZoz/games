@@ -640,10 +640,7 @@ func (h *GamesHandler) healDurakDefenderEmpty(ctx context.Context, gameID string
 	}
 	fields := []any{"state", encoded}
 	if state.Status == durak.StatusOver {
-		fields = append(fields, "status", durakStatusOver)
-		if state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
-			fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
-		}
+		fields = append(fields, durakOverRedisFields(state)...)
 	} else if turnT, e := strconv.Atoi(m["turn_time_sec"]); e == nil && turnT > 0 {
 		fields = append(fields,
 			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
@@ -659,9 +656,23 @@ func (h *GamesHandler) healDurakDefenderEmpty(ctx context.Context, gameID string
 		"game_type": durakGameType,
 	})
 	if state.Status == durak.StatusOver {
+		if state.LoserIndex < 0 {
+			m["draw"] = "1"
+		}
 		h.onDurakGameFinished(ctx, gameID, m, state)
 	}
 	return true
+}
+
+// durakOverRedisFields — status=over + loser или draw (оба вышли).
+func durakOverRedisFields(state *durak.State) []any {
+	fields := []any{"status", durakStatusOver}
+	if state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
+		fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
+	} else {
+		fields = append(fields, "draw", "1")
+	}
+	return fields
 }
 
 // enrichDurakPlayersMeta — имена/аватары/рамки игроков (как x_/o_ в крестиках).
@@ -861,10 +872,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		)
 	}
 	if state.Status == durak.StatusOver {
-		fields = append(fields, "status", durakStatusOver)
-		if state.LoserIndex >= 0 {
-			fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
-		}
+		fields = append(fields, durakOverRedisFields(state)...)
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
@@ -877,6 +885,9 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		"game_type": durakGameType,
 	})
 	if state.Status == durak.StatusOver {
+		if state.LoserIndex < 0 {
+			m["draw"] = "1"
+		}
 		h.onDurakGameFinished(ctx, gameID, m, state)
 	}
 
@@ -1317,8 +1328,9 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 		finishReason = "forfeit"
 	} else if m["timeout"] == "1" {
 		finishReason = "timeout"
-	} else if m["draw"] == "1" {
-		finishReason = "draw_agreement"
+	} else if m["draw"] == "1" || state.LoserIndex < 0 {
+		// Ничья по согласию или оба вышли (дурака нет).
+		finishReason = "draw"
 	}
 	h.settleDurakCoins(ctx, gameID, m, state, stakeBronze)
 	for _, uid := range humans {

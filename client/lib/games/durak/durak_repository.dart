@@ -232,9 +232,17 @@ class DurakGameView {
       players = playerIds.map((id) => DurakPlayerMeta(id: id)).toList();
     }
 
+    final status = (json['status'] ?? 'active').toString();
+    final loserIdx = (json['loser_index'] as num?)?.toInt() ?? -1;
+    final isForfeit = json['forfeit'] == true;
+    final isTimeout = json['timeout'] == true;
+    // Ничья: флаг draw или оба вышли (нет дурака).
+    final isDraw = json['draw'] == true ||
+        (status != 'active' && !isForfeit && !isTimeout && loserIdx < 0);
+
     return DurakGameView(
       id: (json['id'] ?? '').toString(),
-      status: (json['status'] ?? 'active').toString(),
+      status: status,
       lobbyId: (json['lobby_id'] ?? '').toString(),
       chatId: (json['chat_id']?.toString().trim().isEmpty ?? true)
           ? null
@@ -264,7 +272,7 @@ class DurakGameView {
               .map((e) => DurakApiCard.fromJson(e.cast<String, dynamic>()))
               .toList() ??
           const [],
-      loserIndex: (json['loser_index'] as num?)?.toInt() ?? -1,
+      loserIndex: loserIdx,
       finished: (json['finished'] as List?)
               ?.map((e) => (e as num).toInt())
               .toList() ??
@@ -272,9 +280,9 @@ class DurakGameView {
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
-      isDraw: json['draw'] == true,
-      isForfeit: json['forfeit'] == true,
-      isTimeout: json['timeout'] == true,
+      isDraw: isDraw,
+      isForfeit: isForfeit,
+      isTimeout: isTimeout,
       drawOfferBy: (json['draw_offer_by'] ?? '').toString(),
       lastWasTake: json['last_was_take'] == true,
     );

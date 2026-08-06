@@ -324,6 +324,10 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	}
 	if s.UndefendedIndex() < 0 {
 		s.Phase = PhaseAttackFollow
+		// Атакующий без карт — подкинуть нечего, сразу бито.
+		if len(s.Hands[s.AttackerIndex]) == 0 {
+			return s.resolveBito()
+		}
 	}
 	return nil
 }

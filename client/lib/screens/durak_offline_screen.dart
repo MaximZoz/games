@@ -418,6 +418,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
 
   String _turnHint() {
     if (_game.isOver) {
+      if (_game.endedInDraw) return 'Ничья — оба вышли';
       return _game.loserIndex == _mePlayer
           ? 'Вы проиграли — вы дурак'
           : 'Вы выиграли!';

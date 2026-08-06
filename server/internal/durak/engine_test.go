@@ -285,6 +285,39 @@ func TestThrowInAfterBeatenPairs(t *testing.T) {
 	}
 }
 
+// Атакующий и защитник выходят вместе (последняя карта отбита) — ничья.
+func TestBothEmptyIsDraw(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{9, Hearts}},  // последняя атака
+			{{10, Hearts}}, // последний отбой
+		},
+		Deck:          nil, // колода пуста
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{9, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Defend(1, Card{10, Hearts}, -1); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Status != StatusOver {
+		t.Fatalf("status = %v, want over", st.Status)
+	}
+	if st.LoserIndex != -1 {
+		t.Fatalf("loser = %d, want -1 (ничья)", st.LoserIndex)
+	}
+	if len(st.Table) != 0 {
+		t.Fatalf("table should be clear")
+	}
+}
+
 func TestTakeAndFinish(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},
