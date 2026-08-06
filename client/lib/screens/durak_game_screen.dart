@@ -930,8 +930,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             : serverHandLen)
         .clamp(1, 52);
 
-    // Отбой: карта остаётся слотом-дыркой в веере (hiddenCards), пока летит.
-    // Перевод: убираем из порядка — на столе как атака.
+    // Сразу убрать из веера (схлопывание уже на lift). Без «дырки» —
+    // иначе после clearLift веер снова растянется до посадки.
     setState(() {
       _activeCard = null;
       _selected.clear();
@@ -943,15 +943,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (doTransfer) {
         _optimisticAttacks.addAll(cards);
         _flyingToTable.addAll(cards);
-        _removeFromHandOrder(cards, view);
-      } else if (_handOrder == null || _handOrder!.isEmpty) {
-        // Зафиксировать полный порядок до полёта — иначе веер схлопнется.
-        _handOrder = _apiCardsToPlaying(
-          view.hands.length > view.myIndex && view.myIndex >= 0
-              ? (view.hands[view.myIndex].cards ?? const [])
-              : const [],
-        );
       }
+      _removeFromHandOrder(cards, view);
       if (_frozenFanCardSize == null) {
         final lay = _handFanVisualLayout(
           nBefore,
@@ -1214,19 +1207,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 : cards.length))
         .clamp(1, 52);
 
-    // Дырка в веере (hidden), без remove — иначе collapse/expand при броске.
+    // Сразу убрать из веера (схлопывание уже на lift при вытаскивании).
     // Pending-слот на столе (opacity 0 под fly).
     setState(() {
       _activeCard = null;
       _selected.clear();
       _dragGlobal = null;
-      if (_handOrder == null || _handOrder!.isEmpty) {
-        _handOrder = _apiCardsToPlaying(
-          view.hands.length > view.myIndex && view.myIndex >= 0
-              ? (view.hands[view.myIndex].cards ?? const [])
-              : const [],
-        );
-      }
+      _removeFromHandOrder(cards, view);
       _flyingFromHand.addAll(cards);
       _optimisticAttacks.addAll(cards);
       _flyingToTable.addAll(cards);
@@ -1333,7 +1320,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
         _flyingFromHand.removeAll(cards);
         _flyingToTable.removeAll(cards);
-        _removeFromHandOrder(cards, view);
         _suppressFanLayoutAnim = true;
       });
       _releaseFanLayoutSnap();

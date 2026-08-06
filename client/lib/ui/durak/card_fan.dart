@@ -113,15 +113,18 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
-  /// Слоты веера: вытащенная карта остаётся дыркой (не сжимаем веер).
-  /// Иначе lift → collapse, drop → expand — двойная «резинка».
-  List<PlayingCard> get _layoutCards => widget.cards;
+  /// Слоты веера: вытащенная карта сразу исключена — веер схлопывается
+  /// в момент подъёма, а не при посадке на стол.
+  List<PlayingCard> get _layoutCards {
+    final lifted = _liftedCard;
+    if (lifted == null) return widget.cards;
+    return [for (final c in widget.cards) if (c != lifted) c];
+  }
 
   List<PlayingCard> get _fanCards => _layoutCards;
 
   bool _isHidden(PlayingCard card) =>
       widget.hiddenCards?.contains(card) == true ||
-      _liftedCard == card ||
       (_hidePeekUnderOverlay && _peekCard == card);
 
   @override
@@ -781,9 +784,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
         // Overlay оставляем, пока родитель меряет слот и стартует fly —
-        // иначе кадр без карты. _liftedCard — дырка в веере (без сжатия).
-        // Родитель обязан вернуть true сразу после старта fly (не ждать конца),
-        // иначе этот overlay дублирует летящую карту.
+        // иначе кадр без карты. Веер уже сжат (_liftedCard вне layout).
+        // Родитель обязан убрать карту из hand и вернуть true до clearLift —
+        // иначе после снятия lift веер снова растянется.
         final scaledFrom = Rect.fromCenter(
           center: from.center,
           width: widget.cardSize.width * dragScale,
