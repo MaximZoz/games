@@ -112,6 +112,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   int _prevDeckCount = -1;
   int _prevBitoCount = -1;
   int _prevHandLen = -1;
+  /// Число карт у соперников на прошлом кадре (для добора из колоды).
+  final Map<int, int> _prevOppHandCounts = {};
+  /// Сколько карт ещё летит сопернику — скрыты в веере до посадки.
+  final Map<int, int> _oppDealPending = {};
   List<DurakTablePairApi> _prevTable = const [];
   bool _fxScheduled = false;
   Offset _tablePanAccum = Offset.zero;
@@ -1545,11 +1549,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           for (final c in hand)
             if (!beforeSet.contains(c) && !takenSet.contains(c)) c,
         ];
+        final oppDeals = _opponentDealDeltas(v);
+        _syncPrevOppHandCounts(v);
         if (dealt.isNotEmpty && _gameUiActive) {
           _pendingDealCards.addAll(dealt);
           await _animateDealCardsToFan(dealt);
         } else {
           _mergeHandAfterTake(hand, trump);
+        }
+        if (oppDeals.isNotEmpty && _gameUiActive) {
+          await _animateDealToOpponents(oppDeals);
         }
       }
     } on GamesException catch (e) {
@@ -2003,6 +2012,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevBitoCount = view.bitoCount;
       _prevHandLen = handLen;
       _prevTable = List.of(view.table);
+      _syncPrevOppHandCounts(view);
       return;
     }
     // Пока свой ход с FX — не трогаем prev (иначе проглотим авто-бито/добор).
@@ -2027,6 +2037,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevBitoCount = bito;
       _prevHandLen = handLen;
       _prevTable = List.of(view.table);
+      _syncPrevOppHandCounts(view);
       if (_handOrder == null && hand.isNotEmpty) {
         _handOrder = List<PlayingCard>.of(hand);
       }
@@ -2038,11 +2049,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final prevBito = _prevBitoCount;
     final bitoGrew = bito > prevBito && _prevTable.isNotEmpty;
     final tableSnapshot = List<DurakTablePairApi>.of(_prevTable);
+    final oppDeals = _opponentDealDeltas(view);
 
     _prevDeckCount = deck;
     _prevBitoCount = bito;
     _prevHandLen = handLen;
     _prevTable = List.of(view.table);
+    _syncPrevOppHandCounts(view);
 
     // Только реальный добор (дельта руки), не «все карты которых нет в order».
     final incoming = _incomingDealCards(hand, dealt);
@@ -2091,12 +2104,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             _sortHandInFan(hand, trump, animate: false);
           }
           _pendingDealCards.clear();
+          if (oppDeals.isNotEmpty) {
+            await _animateDealToOpponents(oppDeals);
+          }
           _fxScheduled = false;
         }
       });
     } else if (dealt > 0 && deckDropped > 0) {
       if (_suppressNextDealFx) {
         _suppressNextDealFx = false;
+        // Свой добор подавлен (взятие), но соперник всё равно добирает.
+        if (oppDeals.isNotEmpty) {
+          _fxScheduled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) {
+              _fxScheduled = false;
+              return;
+            }
+            await _animateDealToOpponents(oppDeals);
+            if (mounted) _fxScheduled = false;
+          });
+        }
       } else {
         _fxScheduled = true;
         if (incoming.isNotEmpty) {
@@ -2120,6 +2148,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 !ordered.toSet().containsAll(hand)) {
               _sortHandInFan(hand, trump, animate: false);
             }
+            if (oppDeals.isNotEmpty) {
+              await _animateDealToOpponents(oppDeals);
+            }
             _fxScheduled = false;
           }
         });
@@ -2134,12 +2165,146 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _sortHandInFan(hand, trump);
         });
       }
+      if (oppDeals.isNotEmpty) {
+        _fxScheduled = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) {
+            _fxScheduled = false;
+            return;
+          }
+          await _animateDealToOpponents(oppDeals);
+          if (mounted) _fxScheduled = false;
+        });
+      }
+    } else if (oppDeals.isNotEmpty) {
+      // Соперник добрал (мой prev уже синхронизирован ходом / дельта колоды 0).
+      _fxScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) {
+          _fxScheduled = false;
+          return;
+        }
+        await _animateDealToOpponents(oppDeals);
+        if (mounted) _fxScheduled = false;
+      });
     } else if (!_hidingTable && !_fxScheduled) {
       // Ход соперника: карта летит из его веера на стол / в отбой.
       if (_handOrder == null && hand.isNotEmpty) {
         _handOrder = List<PlayingCard>.of(hand);
       }
       _scheduleRemoteTableFx(tableSnapshot, view);
+    }
+  }
+
+  Map<int, int> _snapshotOppHandCounts(DurakGameView view) {
+    final m = <int, int>{};
+    for (var i = 0; i < view.hands.length; i++) {
+      if (i == view.myIndex) continue;
+      m[i] = view.hands[i].count;
+    }
+    return m;
+  }
+
+  void _syncPrevOppHandCounts(DurakGameView view) {
+    _prevOppHandCounts
+      ..clear()
+      ..addAll(_snapshotOppHandCounts(view));
+  }
+
+  /// Сколько карт каждый соперник добрал с прошлого кадра.
+  Map<int, int> _opponentDealDeltas(DurakGameView view) {
+    final next = _snapshotOppHandCounts(view);
+    final deltas = <int, int>{};
+    for (final e in next.entries) {
+      final prev = _prevOppHandCounts[e.key];
+      if (prev == null) continue;
+      final d = e.value - prev;
+      if (d > 0) deltas[e.key] = d;
+    }
+    return deltas;
+  }
+
+  /// Рубашки по одной: колода → веер соперника.
+  Future<void> _animateDealToOpponents(Map<int, int> deltas) async {
+    if (deltas.isEmpty || !mounted || !_gameUiActive) return;
+    setState(() {
+      for (final e in deltas.entries) {
+        _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
+      }
+    });
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    // Лицо не важно — летим рубашкой.
+    const dummy = PlayingCard(Rank.six, Suit.spades);
+    final screen = MediaQuery.sizeOf(context);
+    final deckFrom = globalRectOf(_deckKey) ??
+        Rect.fromCenter(
+          center: Offset(screen.width * 0.12, screen.height * 0.42),
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
+        );
+
+    // Стабильный порядок: по индексу игрока.
+    final order = deltas.keys.toList()..sort();
+    for (final idx in order) {
+      final n = deltas[idx] ?? 0;
+      for (var i = 0; i < n; i++) {
+        if (!mounted || !_gameUiActive) return;
+        final toKey = _oppFanKeys.putIfAbsent(idx, GlobalKey.new);
+        final to = globalRectOf(toKey) ??
+            Rect.fromCenter(
+              center: Offset(screen.width / 2, screen.height * 0.16),
+              width: _tableCardSize.width * 0.44,
+              height: _tableCardSize.height * 0.44,
+            );
+        final endSize = Size(
+          (to.width).clamp(30.0, _tableCardSize.width * 0.55),
+          (to.height).clamp(44.0, _tableCardSize.height * 0.55),
+        );
+        final land = Rect.fromCenter(
+          center: to.center.translate(i * 2.0, i * 1.5),
+          width: endSize.width,
+          height: endSize.height,
+        );
+        final from = Rect.fromCenter(
+          center: deckFrom.center.translate(i * 1.2, i * 1.2),
+          width: _tableCardSize.width,
+          height: _tableCardSize.height,
+        );
+        final ticket = await playCardFlyAnimation(
+          context: context,
+          card: dummy,
+          cardSize: _tableCardSize,
+          from: from,
+          to: land,
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeInOutCubic,
+          faceDown: true,
+          flipToFace: false,
+          beginScale: 1,
+          endScale: endSize.width / _tableCardSize.width,
+          beginAngle: 0.12,
+          endAngle: 0.08,
+          arcLift: 18,
+          keepAtEnd: true,
+        );
+        ticket.dismiss();
+        if (!mounted) return;
+        setState(() {
+          final left = (_oppDealPending[idx] ?? 1) - 1;
+          if (left <= 0) {
+            _oppDealPending.remove(idx);
+          } else {
+            _oppDealPending[idx] = left;
+          }
+        });
+        if (i + 1 < n) {
+          await Future<void>.delayed(const Duration(milliseconds: 55));
+        }
+      }
     }
   }
 
@@ -3321,11 +3486,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   /// Карты соперника дугой с кромкой — не сплошная линия, видно каждую.
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
-    final count = view.hands.length > idx ? view.hands[idx].count : 0;
-    if (count <= 0) return const SizedBox.shrink();
+    final serverCount = view.hands.length > idx ? view.hands[idx].count : 0;
+    final pending = _oppDealPending[idx] ?? 0;
+    // Пока карта летит из колоды — в веере ещё не показываем.
+    final count = math.max(0, serverCount - pending);
+    if (count <= 0 && pending <= 0) return const SizedBox.shrink();
     final maxW = MediaQuery.sizeOf(context).width - 48;
     // Показываем до 16 плиток; при большем числе — плотнее, без бейджа.
-    final shown = count > 16 ? 16 : count;
+    // pending>0 и count==0 — пустая зона-цель для посадки добора.
+    final shown = count <= 0 ? 1 : (count > 16 ? 16 : count);
+    final placeholderOnly = count <= 0;
     var tile = Size(
       (cardSize.width * 0.44).clamp(30.0, 52.0),
       (cardSize.height * 0.44).clamp(44.0, 76.0),
@@ -3357,37 +3527,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         key: _oppFanKeys.putIfAbsent(idx, GlobalKey.new),
         child: Center(
           child: SizedBox(
-            key: ValueKey('opp-$idx-$count'),
+            key: ValueKey('opp-$idx-$count-$pending'),
             width: totalW,
             height: fanH,
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.topCenter,
               children: [
-                for (var i = 0; i < shown; i++)
-                  Builder(
-                    builder: (_) {
-                      final t = shown <= 1
-                          ? 0.0
-                          : (i / (shown - 1)) * 2 - 1; // -1..1
-                      // Середина ниже (к столу), края выше — читаемая дуга.
-                      final y = (1 - t * t) * arcH;
-                      final angle = t * 0.22;
-                      return Positioned(
-                        left: i * step,
-                        top: y,
-                        child: Transform.rotate(
-                          angle: angle,
-                          alignment: Alignment.topCenter,
-                          child: CardBackWidget(
-                            size: tile,
-                            elevated: i == shown - 1,
-                            outlined: true,
+                if (!placeholderOnly)
+                  for (var i = 0; i < shown; i++)
+                    Builder(
+                      builder: (_) {
+                        final t = shown <= 1
+                            ? 0.0
+                            : (i / (shown - 1)) * 2 - 1; // -1..1
+                        // Середина ниже (к столу), края выше — читаемая дуга.
+                        final y = (1 - t * t) * arcH;
+                        final angle = t * 0.22;
+                        return Positioned(
+                          left: i * step,
+                          top: y,
+                          child: Transform.rotate(
+                            angle: angle,
+                            alignment: Alignment.topCenter,
+                            child: CardBackWidget(
+                              size: tile,
+                              elevated: i == shown - 1,
+                              outlined: true,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
               ],
             ),
           ),
