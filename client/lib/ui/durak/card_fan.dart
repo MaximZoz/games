@@ -97,6 +97,9 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
   /// Карта слегка приподнята в веере (фаза вытаскивания / возврата).
   PlayingCard? _peekCard;
 
+  /// Пока overlay долетает в peek — слот в веере пустой (без двойной карты).
+  bool _hidePeekUnderOverlay = false;
+
   /// 0 = в слоте, 1 = максимально приподнята (порог вылета).
   double _peekT = 0;
 
@@ -110,10 +113,14 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
-  /// Полный список слотов — скрытые карты оставляют «дырку», веер не схлопывается.
-  List<PlayingCard> get _layoutCards => widget.cards;
+  /// Слоты веера: вытащенная карта исключена — веер сжимается как без неё.
+  /// [hiddenCards] (взятие) остаются дырками, чтобы соседи не прыгали.
+  List<PlayingCard> get _layoutCards {
+    final lifted = _liftedCard;
+    if (lifted == null) return widget.cards;
+    return [for (final c in widget.cards) if (c != lifted) c];
+  }
 
-  /// Карты слотов веера (поднятая/летящая остаётся дыркой).
   List<PlayingCard> get _fanCards => _layoutCards;
 
   bool _isHidden(PlayingCard card) =>
@@ -304,6 +311,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _liftScale = 1.0;
       _peekCard = null;
       _peekT = 0;
+      _hidePeekUnderOverlay = false;
       _upTravel = 0;
       _panAccum = Offset.zero;
       _dropBusy = false;
@@ -329,7 +337,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     return rect.contains(global);
   }
 
-  /// Возврат в веер: плавно к «чуть выше», затем опускание в слот.
+  /// Возврат в веер: раздвинуть слоты → долет в peek → опускание, без мигания.
   Future<void> _foldIntoFan(
     Offset global,
     double baseSpacing,
@@ -343,14 +351,34 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final gen = _gestureGen;
     final beginScale = _liftScale;
     final resume = keepPointer || _pointerDown;
-    final slot = _slotGlobalRect(card, baseSpacing, totalW);
+
+    // 1) Слот снова в layout (веер раздвигается); лицо только на overlay.
+    setState(() {
+      _liftedCard = null;
+      _peekCard = card;
+      _peekT = 1.0;
+      _hidePeekUnderOverlay = true;
+      _liftGlobalCenter = null;
+      _liftScale = 1.0;
+      _dropBusy = false;
+    });
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || gen != _gestureGen) {
+      _docking = false;
+      _hidePeekUnderOverlay = false;
+      return;
+    }
+
+    final spacing = _spacingFor(max(_fanCards.length, 1));
+    final fanW = _totalWFor(spacing);
+    final slot = _slotGlobalRect(card, spacing, fanW);
     final peekRect = Rect.fromCenter(
       center: Offset(slot.center.dx, slot.center.dy - _peekRaiseY),
       width: widget.cardSize.width,
       height: widget.cardSize.height,
     );
 
-    // 1) Вставить «рукой» — слегка выглядывает.
+    // 2) Долет overlay в приподнятый слот.
     await _animateOverlayTo(
       peekRect,
       soft: true,
@@ -359,25 +387,21 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     );
     if (!mounted || gen != _gestureGen) {
       _docking = false;
+      _hidePeekUnderOverlay = false;
       return;
     }
 
-    // 2) Передать в peek веера и плавно утопить.
+    // 3) Overlay → peek в том же месте → плавно утопить. Одна анимация, без мигания.
     _removeOverlay();
     final idx = _fanCards.indexOf(card);
     setState(() {
-      _liftedCard = null;
-      _liftGlobalCenter = null;
-      _liftScale = 1.0;
-      _peekCard = card;
-      _peekT = 1.0;
-      _dropBusy = false;
+      _hidePeekUnderOverlay = false;
       if (idx >= 0) _hoverIndex = idx;
     });
     _emitActiveCard(_isLegal(card) ? card : null);
     widget.onDragPosition?.call(null);
 
-    await _animatePeekTTo(0, ms: 220);
+    await _animatePeekTTo(0, ms: 240);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;
@@ -389,6 +413,7 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _upTravel = 0;
       _panAccum = Offset.zero;
       _docking = false;
+      _hidePeekUnderOverlay = false;
       if (!resume) _pointerDown = false;
     });
     await Future<void>.delayed(Duration.zero);
@@ -397,7 +422,6 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (resume && _pointerDown) {
       _resumeBrowseAt(finger);
     } else {
-      // Карта снова в веере — без hover/подсказок на столе.
       _setHover(null);
       _emitActiveCard(null);
       widget.onDragPosition?.call(null);
@@ -567,15 +591,18 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (card == null) return;
     final t = (_upTravel / _extractPx).clamp(0.0, 1.0);
     _removeOverlay();
-    final idx = _fanCards.indexOf(card);
+    // Сначала вернуть в layout (веер раздвигается), потом peek.
     setState(() {
       _liftedCard = null;
       _liftGlobalCenter = null;
       _liftScale = 1.0;
       _peekCard = card;
       _peekT = t;
-      if (idx >= 0) _hoverIndex = idx;
     });
+    final idx = _fanCards.indexOf(card);
+    if (idx >= 0) {
+      setState(() => _hoverIndex = idx);
+    }
     widget.onDragPosition?.call(null);
     _emitActiveCard(_isLegal(card) ? card : null);
     if (t <= 0.02) {
@@ -671,7 +698,8 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
       }
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
-        // Снимаем overlay, но _liftedCard остаётся — дырка в веере до ответа.
+        // Overlay снимаем: родитель сразу стартует fly и убирает карту из руки.
+        // _liftedCard держим до accepted — веер уже без этой карты (_layoutCards).
         _removeOverlay();
         final scaledFrom = Rect.fromCenter(
           center: from.center,
@@ -928,17 +956,15 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
     var extraY = 0.0;
     var scale = 1.0;
     final card = cards[i];
-    final isLiftedAway = _liftedCard == card;
     final selected = _isSelected(card);
-    final peeking = _peekCard == card && !isLiftedAway;
+    final peeking = _peekCard == card;
     final active =
         (_hoverIndex == i && _liftedCard == null) || peeking;
 
     if (_hoverIndex != null &&
         !active &&
         _liftedCard == null &&
-        !peeking &&
-        !isLiftedAway) {
+        !peeking) {
       final dir = i > _hoverIndex! ? 1 : -1;
       final distance = (i - _hoverIndex!).abs();
       extraX = dir * widget.cardSize.width * (0.22 / max(distance, 1));
@@ -951,13 +977,13 @@ class _CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     final legal = _isLegal(card);
     final hintLegal = widget.emphasizeLegal && widget.legalCards != null;
-    final hidden = _isHidden(card);
+    final hidden = _isHidden(card) ||
+        (_hidePeekUnderOverlay && _peekCard == card);
     // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
-    final showHintShadow = !isLiftedAway &&
-        !hidden &&
+    final showHintShadow = !hidden &&
         ((active || selected) && (!hintLegal || legal));
 
-    Widget child = isLiftedAway || hidden
+    Widget child = hidden
         ? SizedBox(
             width: widget.cardSize.width,
             height: widget.cardSize.height,

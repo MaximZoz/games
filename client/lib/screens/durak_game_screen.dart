@@ -507,13 +507,36 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return a.rank.compareTo(b.rank);
   }
 
+  /// Карты, ушедшие из руки (атака/защита). Не путать с взятием:
+  /// при take карты в [_handOrder] + [_flyingFromHand] — слоты-дырки в веере.
+  Set<PlayingCard> get _locallyGoneFromHand {
+    final inFan = _handOrder?.toSet();
+    return {
+      ..._optimisticAttacks,
+      ..._flyingToTable,
+      for (final c in _flyingFromHand)
+        if (inFan == null || !inFan.contains(c)) c,
+    };
+  }
+
   /// Порядок веера: сохраняем локальную сортировку между синками сервера.
   List<PlayingCard> _orderedHand(List<PlayingCard> serverHand, Suit trump) {
-    if (_handOrder == null) return List<PlayingCard>.from(serverHand);
-    final remain = serverHand.toSet();
+    final gone = _locallyGoneFromHand;
+    if (_handOrder == null) {
+      return [
+        for (final c in serverHand)
+          if (!gone.contains(c)) c,
+      ];
+    }
+    final remain = serverHand.toSet()..removeAll(gone);
     final out = <PlayingCard>[];
     for (final c in _handOrder!) {
-      if (remain.remove(c)) out.add(c);
+      if (remain.remove(c)) {
+        out.add(c);
+      } else if (_flyingFromHand.contains(c)) {
+        // Взятие/добор: слот уже в веере, лицо ведёт fly-overlay.
+        out.add(c);
+      }
     }
     if (remain.isNotEmpty) {
       final added = remain.toList()
@@ -1272,6 +1295,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevDeckCount = v.deckCount;
         _prevBitoCount = v.bitoCount;
       }
+      // Сначала кадр с серверным столом + optimistic (тот же key) — без мигания.
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
       setState(() {
         for (final c in cards) {
           _optimisticAttacks.remove(c);
@@ -2713,16 +2739,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                               spacing: spacing,
                               fillWidth: fillWidth,
                               animateLayout: animateFanLayout,
-                              // Не мой ход — все карты затемнены; выбор отбоя — акцент.
-                              legalCards: !view.canAct
+                              // Нечего ходить / не мой ход — затемнить; выбор отбоя — акцент.
+                              legalCards: (!view.canAct || legal.isEmpty)
                                   ? const <PlayingCard>{}
-                                  : (legal.isEmpty ? null : legal),
-                              emphasizeLegal:
-                                  !view.canAct || fanHighlight != null,
+                                  : legal,
+                              emphasizeLegal: !view.canAct ||
+                                  legal.isEmpty ||
+                                  fanHighlight != null,
                               selectedCards: _selected,
                               hiddenCards: _flyingFromHand,
-                              enabled:
-                                  !view.isOver && !_busy && view.canAct,
+                              // Листать веер можно и когда ходить нечем (только dim).
+                              enabled: !view.isOver && !_busy && view.canAct,
                               onActiveChanged: (card) {
                                 if (_activeCard == card) return;
                                 setState(() {
@@ -3081,21 +3108,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       ),
     );
 
-    final pendingIdSet = _optimisticAttacks.map(_cardId).toSet();
+    // Единый список слотов: серверные пары + оптимистичные атаки.
+    // Стабильный key по id карты — без мигания при подтверждении сервером.
     final tableItems = <Widget>[
       if (!_hidingTable) ...[
         for (var i = 0; i < view.table.length; i++)
           if (_shouldShowTablePair(view.table[i], i))
             Opacity(
               key: ValueKey(
-                'pair-$i-${view.table[i].attack.rank}'
-                '${view.table[i].attack.suit}',
+                'atk-${_cardId(view.table[i].attack.toPlayingCard())}',
               ),
-              // Пока летит свой подкид — слот есть, лицо скрыто (видно fly).
-              opacity: (_flightLockTable &&
-                      pendingIdSet.contains(
-                        _cardId(view.table[i].attack.toPlayingCard()),
-                      ))
+              // Скрыто на всё время своего полёта (не только _flightLockTable),
+              // иначе ранний WS показывает карту под fly → мигание.
+              opacity: _flyingToTable.contains(
+                    view.table[i].attack.toPlayingCard(),
+                  )
                   ? 0.0
                   : 1.0,
               child: _AnimatedTablePair(
@@ -3108,26 +3135,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 optimisticDefense: _visibleOptimisticDefense(i),
               ),
             ),
-        // Оптимистичные атаки: скрыты только пока летит fly, иначе видны.
         for (var i = 0; i < pendingAttacks.length; i++)
-          Padding(
-            key: ValueKey('opt-atk-$i-${pendingAttacks[i]}'),
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+          Opacity(
+            key: ValueKey('atk-${_cardId(pendingAttacks[i])}'),
+            opacity: _flyingToTable.contains(pendingAttacks[i]) ? 0 : 1,
             child: KeyedSubtree(
-              // Цель полёта — последний плейсхолдер (следующий подкид).
               key: i == pendingAttacks.length - 1
                   ? _pendingAttackLandKey
-                  : ValueKey('opt-land-$i-${pendingAttacks[i]}'),
-              child: Opacity(
-                opacity: _flyingToTable.contains(pendingAttacks[i]) ? 0 : 1,
-                child: SizedBox(
-                  width: cardSize.width + 10,
-                  height: cardSize.height + 14,
-                  child: PlayingCardWidget(
-                    card: pendingAttacks[i],
-                    size: cardSize,
-                  ),
+                  : ValueKey('land-${_cardId(pendingAttacks[i])}'),
+              child: _AnimatedTablePair(
+                pair: DurakTablePairApi(
+                  attack: DurakApiCard.fromCard(pendingAttacks[i]),
                 ),
+                cardSize: cardSize,
               ),
             ),
           ),

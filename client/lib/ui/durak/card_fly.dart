@@ -93,7 +93,8 @@ Future<CardFlyTicket> playCardFlyAnimation({
                       card: card,
                       size: cardSize,
                       elevated: true,
-                      highlighted: t < 0.92,
+                      // Без смены highlighted у конца полёта — иначе «моргание» при посадке.
+                      highlighted: false,
                     );
             }
             return Stack(
