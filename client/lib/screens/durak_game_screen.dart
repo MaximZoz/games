@@ -1423,6 +1423,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevTable = List.of(v.table);
         _prevDeckCount = v.deckCount;
         _prevBitoCount = v.bitoCount;
+        _prevHandLen = v.hands.length > v.myIndex && v.myIndex >= 0
+            ? (v.hands[v.myIndex].cards?.length ?? v.hands[v.myIndex].count)
+            : _prevHandLen;
       }
       if (!clearFlying) return;
       await WidgetsBinding.instance.endOfFrame;
@@ -1837,18 +1840,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           height: _tableCardSize.height,
         );
 
+    final serverHand = view != null
+        ? _apiCardsToPlaying(
+            view.hands.length > view.myIndex && view.myIndex >= 0
+                ? (view.hands[view.myIndex].cards ?? const [])
+                : const [],
+          )
+        : const <PlayingCard>[];
     var order = List<PlayingCard>.from(
       _handOrder ??
-          (view != null
-              ? _apiCardsToPlaying(
-                  view.hands.length > view.myIndex && view.myIndex >= 0
-                      ? (view.hands[view.myIndex].cards ?? const [])
-                      : const [],
-                ).where((c) => !cards.contains(c))
-              : const <PlayingCard>[]),
+          [for (final c in serverHand) if (!cards.contains(c)) c],
     );
     // Убрать ещё не добранные из порядка — добавим по одной.
     order = [for (final c in order) if (!cards.contains(c)) c];
+    // Защита: не опустошать веер, если добираем меньше, чем уже есть в руке.
+    if (order.isEmpty && serverHand.length > cards.length) {
+      order = [
+        for (final c in serverHand)
+          if (!cards.contains(c)) c,
+      ];
+      _handOrder = List<PlayingCard>.of(order);
+    }
 
     final manageBusy = !_busy;
     setState(() {
@@ -2003,12 +2015,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final deck = view.deckCount;
     final bito = view.bitoCount;
 
-    // Первый кадр — только запомнить базу.
+    final hand = _apiCardsToPlaying(
+      view.hands.length > view.myIndex && view.myIndex >= 0
+          ? (view.hands[view.myIndex].cards ?? const [])
+          : const [],
+    );
+
+    // Первый кадр — только запомнить базу (и порядок веера).
     if (_prevDeckCount < 0) {
       _prevDeckCount = deck;
       _prevBitoCount = bito;
       _prevHandLen = handLen;
       _prevTable = List.of(view.table);
+      if (_handOrder == null && hand.isNotEmpty) {
+        _handOrder = List<PlayingCard>.of(hand);
+      }
       return;
     }
 
@@ -2023,22 +2044,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _prevHandLen = handLen;
     _prevTable = List.of(view.table);
 
-    final hand = _apiCardsToPlaying(
-      view.hands.length > view.myIndex && view.myIndex >= 0
-          ? (view.hands[view.myIndex].cards ?? const [])
-          : const [],
-    );
-    final prevSet = _handOrder?.toSet() ?? {};
-    final incoming = [
-      for (final c in hand)
-        if (!prevSet.contains(c)) c,
-    ];
+    // Только реальный добор (дельта руки), не «все карты которых нет в order».
+    final incoming = _incomingDealCards(hand, dealt);
 
     // Сначала бито (в т.ч. авто после пустой руки), потом добор — иначе
     // дельта руки проглотит анимацию стола в отбой.
     if (bitoGrew && !_hidingTable && !_suppressRemoteBitoFx) {
       _fxScheduled = true;
-      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      if (incoming.isNotEmpty) {
+        setState(() => _pendingDealCards.addAll(incoming));
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
           _pendingDealCards.clear();
@@ -2071,6 +2086,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           });
           if (incoming.isNotEmpty) {
             await _animateDealCardsToFan(incoming);
+          } else if (hand.isNotEmpty) {
+            final trump = _suitFromApi(view.trumpSuit);
+            _sortHandInFan(hand, trump, animate: false);
           }
           _pendingDealCards.clear();
           _fxScheduled = false;
@@ -2081,14 +2099,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _suppressNextDealFx = false;
       } else {
         _fxScheduled = true;
-        if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+        if (incoming.isNotEmpty) {
+          setState(() => _pendingDealCards.addAll(incoming));
+        }
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) {
             _pendingDealCards.clear();
             _fxScheduled = false;
             return;
           }
-          // Только реальные новые карты — без фантомного добора по дельте.
           if (incoming.isNotEmpty) {
             await _animateDealCardsToFan(incoming);
           }
@@ -2117,8 +2136,60 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     } else if (!_hidingTable && !_fxScheduled) {
       // Ход соперника: карта летит из его веера на стол / в отбой.
+      if (_handOrder == null && hand.isNotEmpty) {
+        _handOrder = List<PlayingCard>.of(hand);
+      }
       _scheduleRemoteTableFx(tableSnapshot, view);
     }
+  }
+
+  /// Карты для анимации добора: не больше реальной дельты руки.
+  /// Если [_handOrder] пуст/устарел — сидируем веер «старыми», иначе он
+  /// пропадает и с колоды летит вся рука.
+  List<PlayingCard> _incomingDealCards(List<PlayingCard> hand, int dealt) {
+    final prev = _handOrder;
+    final prevSet = prev?.toSet() ?? {};
+    var incoming = [
+      for (final c in hand)
+        if (!prevSet.contains(c)) c,
+    ];
+    // Атакующий после хода часто не обновляет _prevHandLen — смотрим order.
+    final byOrder =
+        prev != null ? (hand.length - prev.length).clamp(0, hand.length) : 0;
+    final expect = dealt > 0 ? dealt : byOrder;
+    if (expect <= 0) {
+      if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
+        _handOrder = List<PlayingCard>.of(hand);
+      }
+      return const [];
+    }
+    if (incoming.length > expect) {
+      final keepCount = hand.length - expect;
+      final keep = <PlayingCard>[];
+      final rest = <PlayingCard>[];
+      for (final c in hand) {
+        if (prevSet.contains(c) && keep.length < keepCount) {
+          keep.add(c);
+        } else {
+          rest.add(c);
+        }
+      }
+      if (keep.length < keepCount) {
+        for (final c in rest.toList()) {
+          if (keep.length >= keepCount) break;
+          keep.add(c);
+          rest.remove(c);
+        }
+      }
+      _handOrder = keep;
+      incoming = rest.length > expect ? rest.sublist(rest.length - expect) : rest;
+    } else if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
+      _handOrder = [
+        for (final c in hand)
+          if (!incoming.contains(c)) c,
+      ];
+    }
+    return incoming;
   }
 
   void _scheduleRemoteTableFx(
