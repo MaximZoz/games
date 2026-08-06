@@ -784,6 +784,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       if (drop != null && canPlay) {
         // Overlay оставляем, пока родитель меряет слот и стартует fly —
         // иначе кадр без карты. _liftedCard держит веер сжатым.
+        // Родитель обязан вернуть true сразу после старта fly (не ждать конца),
+        // иначе этот overlay дублирует летящую карту.
         final scaledFrom = Rect.fromCenter(
           center: from.center,
           width: widget.cardSize.width * dragScale,

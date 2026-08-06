@@ -623,6 +623,13 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
       _updateRemaining();
       _startTimer();
     }
+    if (oldWidget.isMyTurn && !widget.isMyTurn) {
+      // Ход ушёл — не дожимаем чужой таймаут этим виджетом.
+      _expiredFired = true;
+    } else if (!oldWidget.isMyTurn && widget.isMyTurn) {
+      _expiredFired = false;
+      _updateRemaining();
+    }
     _syncBlink();
   }
 
@@ -649,7 +656,8 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _updateRemaining();
       _syncBlink();
-      if (_remaining <= 0 && !_expiredFired) {
+      // Только свой ход: чужой/скрытый виджет не должен штрафовать соперника.
+      if (_remaining <= 0 && !_expiredFired && widget.isMyTurn) {
         _expiredFired = true;
         widget.onExpired();
       }

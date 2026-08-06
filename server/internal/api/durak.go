@@ -712,13 +712,6 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		WriteErr(w, r, http.StatusBadRequest, "wrong game type or state")
 		return
 	}
-	// Дожать протухший ход до принятия нового.
-	h.applyDurakTurnTimeout(ctx, gameID, m)
-	m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-	if m["status"] != gameStatusActive {
-		WriteErr(w, r, http.StatusBadRequest, "wrong game type or state")
-		return
-	}
 	state, err := durak.Decode(m["state"])
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "bad state")
@@ -733,6 +726,30 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
 		return
+	}
+	// Таймаут не срывает ход владельца таймера (взятие/карта на последней секунде).
+	// Чужой ход / GetGame по-прежнему дожимают протухший deadline.
+	actor := durakTurnActorIdx(state)
+	if v, e := strconv.Atoi(m["turn_actor_idx"]); e == nil && v >= 0 && v < len(state.PlayerIDs) {
+		actor = v
+	}
+	if idx != actor {
+		h.applyDurakTurnTimeout(ctx, gameID, m)
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		if m["status"] != gameStatusActive {
+			WriteErr(w, r, http.StatusBadRequest, "wrong game type or state")
+			return
+		}
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+		idx = state.PlayerIndex(userID.String())
+		if idx < 0 {
+			WriteErr(w, r, http.StatusForbidden, "not a player")
+			return
+		}
 	}
 	switch body.Type {
 	case "attack":
