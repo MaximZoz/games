@@ -793,7 +793,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (tableRect == null || total <= 0) return null;
     const cols = _tableCols;
     final pairW = _tableCardSize.width + 18;
-    final pairH = _tableCardSize.height + 14;
+    final pairH = _tablePairHeight(_tableCardSize);
     const gap = 10.0;
     final col = index % cols;
     final row = index ~/ cols;
@@ -803,8 +803,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         : (total - row * cols).clamp(1, cols);
     final rowWidth = rowLen * pairW + (rowLen - 1) * gap;
     final rowLeft = tableRect.center.dx - rowWidth / 2;
-    final colH = rows * pairH + (rows - 1) * gap;
-    final top = tableRect.center.dy - colH / 2 + row * (pairH + gap);
+    final rowStep = _tableRowStep(_tableCardSize, rows);
+    final colH = _tableStackHeight(_tableCardSize, rows);
+    final top = tableRect.center.dy - colH / 2 + row * rowStep;
     return Offset(
       rowLeft + col * (pairW + gap) + pairW / 2,
       top + pairH / 2,
@@ -1490,9 +1491,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         .length;
     final n = serverVisible + _optimisticAttacks.length;
     final idx = math.max(n - 1, 0);
-    // Как в _AnimatedTablePair: padding 4+4, SizedBox = card + (10, 14).
+    // Как в _AnimatedTablePair / _buildTableRows.
     final pairW = _tableCardSize.width + 18;
-    final pairH = _tableCardSize.height + 14;
     const gap = 10.0;
     const cols = _tableCols;
     final col = idx % cols;
@@ -1504,8 +1504,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final rowLeft = center.dx - rowWidth / 2;
     final pairLeft = rowLeft + col * (pairW + gap);
     final rows = (n + cols - 1) ~/ cols;
-    final colH = rows * pairH + (rows - 1) * 10;
-    final pairTop = center.dy - colH / 2 + row * (pairH + 10);
+    final rowStep = _tableRowStep(_tableCardSize, rows);
+    final colH = _tableStackHeight(_tableCardSize, rows);
+    final pairTop = center.dy - colH / 2 + row * rowStep;
     // Лицо атаки — левый верх стека (после горизонтального padding).
     return Rect.fromLTWH(
       pairLeft + 4,
@@ -4627,7 +4628,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
+  /// Высота слота пары на столе (как в [_AnimatedTablePair]).
+  double _tablePairHeight(Size cardSize) => cardSize.height + 20;
+
+  /// Шаг между рядами: при 3+ рядах — только угол ранга/масти заднего ряда.
+  double _tableRowStep(Size cardSize, int rowCount) {
+    final pairH = _tablePairHeight(cardSize);
+    if (rowCount >= 3) {
+      // Уголок карты ≈ 28% высоты + небольшой запас под «J♦».
+      return cardSize.height * 0.30;
+    }
+    return pairH + 10;
+  }
+
+  double _tableStackHeight(Size cardSize, int rowCount) {
+    if (rowCount <= 0) return 0;
+    final pairH = _tablePairHeight(cardSize);
+    return pairH + _tableRowStep(cardSize, rowCount) * (rowCount - 1);
+  }
+
   /// До 2 пар в ряд; если не влезает — пары наезжают друг на друга.
+  /// При 3+ рядах — передние ряды наезжают на задние: виден только угол карты.
   Widget _buildTableRows({
     required List<Widget> items,
     required Size cardSize,
@@ -4654,22 +4675,47 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           .clamp(-(pairW * 0.55), baseGap);
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var r = 0; r < rows.length; r++) ...[
-          if (r > 0) SizedBox(height: gap.abs() < 4 ? 8 : 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < rows[r].length; i++) ...[
-                if (i > 0) SizedBox(width: gap),
-                rows[r][i],
-              ],
+    Widget rowAt(int r) => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < rows[r].length; i++) ...[
+              if (i > 0) SizedBox(width: gap),
+              rows[r][i],
             ],
-          ),
+          ],
+        );
+
+    // 1–2 ряда — обычная колонка с зазором.
+    if (rows.length < 3) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var r = 0; r < rows.length; r++) ...[
+            if (r > 0) const SizedBox(height: 10),
+            rowAt(r),
+          ],
         ],
-      ],
+      );
+    }
+
+    // 3+ ряда: передний ряд закрывает «рубашку» заднего, оставляя угол.
+    final rowStep = _tableRowStep(cardSize, rows.length);
+    final totalH = _tableStackHeight(cardSize, rows.length);
+    return SizedBox(
+      height: totalH,
+      width: double.infinity,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (var r = 0; r < rows.length; r++)
+            Positioned(
+              top: r * rowStep,
+              left: 0,
+              right: 0,
+              child: rowAt(r),
+            ),
+        ],
+      ),
     );
   }
 
