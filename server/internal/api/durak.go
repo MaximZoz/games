@@ -900,6 +900,12 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			WriteErr(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+	case "done":
+		// Атакующий закончил подкид вдогонку после «Беру».
+		if err := state.Done(idx); err != nil {
+			WriteErr(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
 	default:
 		WriteErr(w, r, http.StatusBadRequest, "unknown move type")
 		return
@@ -1282,7 +1288,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 	}
 }
 
-// durakTurnActorIdx — чей таймер хода (защитник бьёт / атакующий кладёт или «бито»).
+// durakTurnActorIdx — чей таймер хода (защитник бьёт / атакующий кладёт, «бито» или «готово»).
 func durakTurnActorIdx(state *durak.State) int {
 	if state.Phase == durak.PhaseDefend {
 		return state.DefenderIndex()
@@ -1326,6 +1332,40 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		timedOutIdx = v
 	}
 	if timedOutIdx < 0 || timedOutIdx >= len(state.PlayerIDs) {
+		return
+	}
+	// Вдогонку: по таймауту атакующего просто завершаем взятие, без сдачи.
+	if state.Phase == durak.PhaseTakeFollow {
+		if err := state.Done(timedOutIdx); err != nil {
+			_ = state.Done(state.AttackerIndex)
+		}
+		encoded, err := durak.Encode(state)
+		if err != nil {
+			return
+		}
+		fields := []any{"state", encoded}
+		if state.Status == durak.StatusOver {
+			fields = append(fields, durakOverRedisFields(state)...)
+		} else if turnT, e := strconv.Atoi(fresh["turn_time_sec"]); e == nil && turnT > 0 {
+			fields = append(fields,
+				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+				"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+			)
+		}
+		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+		h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+		humans := durakHumans(fresh)
+		h.broadcast(humans, map[string]any{
+			"type":      "game_state",
+			"game_id":   gameID,
+			"game_type": durakGameType,
+		})
+		if state.Status == durak.StatusOver {
+			if state.LoserIndex < 0 {
+				fresh["draw"] = "1"
+			}
+			h.onDurakGameFinished(ctx, gameID, fresh, state)
+		}
 		return
 	}
 	state.Forfeit(timedOutIdx)

@@ -81,9 +81,11 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
       if (!mounted) return;
       final acted = _bot.step(_game);
       if (!acted) {
-        // Например: бот-атакующий не может ничего подкинуть — говорим «бито».
+        // Например: бот-атакующий не может ничего подкинуть — говорим «бито»/«готово».
         if (_game.canAttackerSayBito) {
           _game.sayBito();
+        } else if (_game.canAttackerConfirmTake) {
+          _game.confirmTake();
         }
       }
       setState(() {});
@@ -165,6 +167,14 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   void _onBito() {
     try {
       _game.sayBito();
+      setState(() {});
+      _scheduleBot();
+    } on DurakRuleError catch (_) {}
+  }
+
+  void _onConfirmTake() {
+    try {
+      _game.confirmTake();
       setState(() {});
       _scheduleBot();
     } on DurakRuleError catch (_) {}
@@ -386,12 +396,16 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
         _game.turn == DurakTurn.attackerFollowUp &&
         _game.attackerIndex == _mePlayer &&
         _game.canAttackerSayBito;
-    if (!canTake && !canBito) return const SizedBox(height: 40);
-    final take = canTake;
+    final canDone = !_game.isOver &&
+        _game.attackerIndex == _mePlayer &&
+        _game.canAttackerConfirmTake;
+    if (!canTake && !canBito && !canDone) return const SizedBox(height: 40);
+    final label = canTake ? 'Взять' : (canDone ? 'Готово' : 'Бито');
+    final onPressed = canTake ? _onTake : (canDone ? _onConfirmTake : _onBito);
     return SizedBox(
       height: 40,
       child: FilledButton.icon(
-        onPressed: take ? _onTake : _onBito,
+        onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accentStart,
           shape: RoundedRectangleBorder(
@@ -401,12 +415,12 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
           visualDensity: VisualDensity.compact,
         ),
         icon: Icon(
-          take ? Icons.file_download_rounded : Icons.check_rounded,
+          canTake ? Icons.file_download_rounded : Icons.check_rounded,
           color: Colors.white,
           size: 20,
         ),
         label: Text(
-          take ? 'Взять' : 'Бито',
+          label,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,
@@ -427,6 +441,11 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
       return _game.defenderIndex == _mePlayer
           ? 'Отбивайтесь'
           : 'Соперник отбивается';
+    }
+    if (_game.turn == DurakTurn.takeFollowUp) {
+      return _game.attackerIndex == _mePlayer
+          ? 'Подкиньте вдогонку или нажмите «Готово»'
+          : 'Соперник может подкинуть вдогонку';
     }
     if (_game.turn == DurakTurn.attackerFollowUp) {
       return _game.attackerIndex == _mePlayer

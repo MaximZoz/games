@@ -5,6 +5,7 @@ enum DurakTurn {
   attacker, // атакующий кладёт первую карту атаки или подкидывает
   defender, // защитник бьёт очередную атаку
   attackerFollowUp, // атакующий может подкинуть или сказать «Бито»
+  takeFollowUp, // защитник берёт; атакующий может подкинуть вдогонку
 }
 
 /// Пара «атака / защита» на столе. [defense] = null — карта ещё не бита.
@@ -160,8 +161,8 @@ class DurakGame {
     if (playerIndex != attackerIndex) return false;
     if (!hands[playerIndex].contains(card)) return false;
     if (table.length >= maxAttacksThisRound) return false;
-    // Пока защитник бьёт — только подкид рангов со стола.
-    if (turn == DurakTurn.defender) {
+    // Пока защитник бьёт или берёт — только подкид рангов со стола.
+    if (turn == DurakTurn.defender || turn == DurakTurn.takeFollowUp) {
       if (table.isEmpty) return false;
       return tableRanks.contains(card.rank.value);
     }
@@ -199,6 +200,10 @@ class DurakGame {
       table.isNotEmpty &&
       table.every((p) => p.isBeaten);
 
+  /// Атакующий подтверждает конец подкида вдогонку.
+  bool get canAttackerConfirmTake =>
+      turn == DurakTurn.takeFollowUp && table.isNotEmpty;
+
   /// Положить атаку/подкидывание [card].
   void attack(PlayingCard card, {int? playerIndex}) {
     attackMany([card], playerIndex: playerIndex);
@@ -211,13 +216,15 @@ class DurakGame {
     if (cards.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
-    // Подкид разрешён и пока защитник бьёт (классический подкидной).
+    // Подкид: во время защиты, после отбоя или вдогонку после «Беру».
     if (turn != DurakTurn.attacker &&
         turn != DurakTurn.attackerFollowUp &&
-        turn != DurakTurn.defender) {
+        turn != DurakTurn.defender &&
+        turn != DurakTurn.takeFollowUp) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
-    if (turn == DurakTurn.defender && table.isEmpty) {
+    if ((turn == DurakTurn.defender || turn == DurakTurn.takeFollowUp) &&
+        table.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
     if (table.length + cards.length > maxAttacksThisRound) {
@@ -244,7 +251,9 @@ class DurakGame {
       hands[pIndex].remove(c);
       table.add(TablePair(c));
     }
-    turn = DurakTurn.defender;
+    if (turn != DurakTurn.takeFollowUp) {
+      turn = DurakTurn.defender;
+    }
   }
 
   /// Бить пару [pairIndex] картой [card]. Если индекс не задан — первая, которую
@@ -300,7 +309,7 @@ class DurakGame {
     turn = DurakTurn.attacker;
   }
 
-  /// Защитник берёт всё со стола.
+  /// Защитник объявляет «Беру» — атакующий может подкинуть вдогонку.
   void take() {
     if (turn != DurakTurn.defender || table.isEmpty) {
       throw const DurakRuleError('брать сейчас нельзя');
@@ -310,6 +319,25 @@ class DurakGame {
       _resolveDefenderEmpty();
       return;
     }
+    turn = DurakTurn.takeFollowUp;
+    // Нечего подкинуть — сразу забираем.
+    if (!_hasThrowIn(attackerIndex)) {
+      confirmTake();
+    }
+  }
+
+  bool _hasThrowIn(int playerIndex) {
+    if (table.isEmpty) return false;
+    if (table.length >= maxAttacksThisRound) return false;
+    final ranks = tableRanks;
+    return hands[playerIndex].any((c) => ranks.contains(c.rank.value));
+  }
+
+  /// Атакующий закончил подкид вдогонку — защитник забирает стол.
+  void confirmTake() {
+    if (turn != DurakTurn.takeFollowUp || table.isEmpty) {
+      throw const DurakRuleError('подтвердить взятие сейчас нельзя');
+    }
     final di = defenderIndex;
     for (final p in table) {
       hands[di].add(p.attack);
@@ -317,13 +345,10 @@ class DurakGame {
     }
     table.clear();
     _sortHand(hands[di], trump);
-    // Добор + смена ролей: атакующий остаётся, защитник пропускает ход.
     _refillHands();
-    // Атакующий берёт первым, потом остальные, но при take защитник теряет ход,
-    // и следующим атакующим становится игрок ПОСЛЕ пропустившего.
-    attackerIndex = (defenderIndex + 1) % playerCount;
+    attackerIndex = (di + 1) % playerCount;
     _checkGameOver();
-    turn = isOver ? DurakTurn.attacker : DurakTurn.attacker;
+    turn = DurakTurn.attacker;
   }
 
   /// Атакующий говорит «Бито».

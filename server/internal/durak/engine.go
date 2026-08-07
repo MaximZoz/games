@@ -31,6 +31,7 @@ const (
 	PhaseAttack       TurnPhase = "attack"        // атакующий кладёт первую карту
 	PhaseDefend       TurnPhase = "defend"        // защитник бьёт
 	PhaseAttackFollow TurnPhase = "attack_follow" // атакующий подкидывает или «Бито»
+	PhaseTakeFollow   TurnPhase = "take_follow"   // защитник берёт; атакующий может подкинуть вдогонку
 )
 
 // Status — статус партии.
@@ -208,6 +209,7 @@ var (
 	ErrCannotTake     = errors.New("cannot take")
 	ErrCannotBito     = errors.New("cannot bito")
 	ErrCannotTransfer = errors.New("cannot transfer")
+	ErrCannotDone     = errors.New("cannot confirm take")
 )
 
 // PlayerIndex — индекс игрока по userID.
@@ -239,11 +241,12 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if playerIdx != s.AttackerIndex {
 		return ErrNotYourTurn
 	}
-	// Подкид разрешён и во время защиты (пока защитник бьёт) — классический подкидной.
-	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow && s.Phase != PhaseDefend {
+	// Подкид: во время защиты, после отбоя, или вдогонку после «Беру».
+	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow &&
+		s.Phase != PhaseDefend && s.Phase != PhaseTakeFollow {
 		return ErrNotYourTurn
 	}
-	if s.Phase == PhaseDefend && len(s.Table) == 0 {
+	if (s.Phase == PhaseDefend || s.Phase == PhaseTakeFollow) && len(s.Table) == 0 {
 		return ErrBadAttack
 	}
 	if len(s.Table)+len(cards) > s.MaxAttacksThisRound() {
@@ -283,7 +286,10 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
 	}
-	s.Phase = PhaseDefend
+	// Вдогонку после «Беру» — фаза не меняется; иначе снова ждём отбой.
+	if s.Phase != PhaseTakeFollow {
+		s.Phase = PhaseDefend
+	}
 	return nil
 }
 
@@ -374,7 +380,8 @@ func (s *State) Transfer(playerIdx int, card Card) error {
 	return nil
 }
 
-// Take — защитник забирает карты со стола.
+// Take — защитник объявляет «Беру»: атакующий может подкинуть вдогонку,
+// затем подтверждает (Done) — карты уходят защитнику.
 func (s *State) Take(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -385,12 +392,42 @@ func (s *State) Take(playerIdx int) error {
 	if len(s.Table) == 0 {
 		return ErrCannotTake
 	}
+	if s.Phase == PhaseTakeFollow {
+		return ErrCannotTake
+	}
 	// Рука пуста: это не «взять», а закрытие раунда (бита + возврат неотбитых).
 	if len(s.Hands[playerIdx]) == 0 {
 		s.resolveDefenderEmpty()
 		return nil
 	}
-	// В подкидном разрешаем «взять» на любой фазе, пока стол не пуст.
+	// В подкидном разрешаем «взять» на любой фазе защиты/атаки, пока стол не пуст.
+	s.Phase = PhaseTakeFollow
+	// Нечего подкинуть — сразу забираем.
+	if len(s.LegalAttackCards(s.AttackerIndex)) == 0 {
+		return s.resolveTake()
+	}
+	return nil
+}
+
+// Done — атакующий закончил подкид вдогонку; защитник забирает стол.
+func (s *State) Done(playerIdx int) error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if s.Phase != PhaseTakeFollow {
+		return ErrCannotDone
+	}
+	if playerIdx != s.AttackerIndex {
+		return ErrNotYourTurn
+	}
+	return s.resolveTake()
+}
+
+// resolveTake — стол в руку защитнику, добор, ход следующему после защитника.
+func (s *State) resolveTake() error {
+	if len(s.Table) == 0 {
+		return ErrCannotTake
+	}
 	di := s.DefenderIndex()
 	for _, p := range s.Table {
 		s.Hands[di] = append(s.Hands[di], p.Attack)
@@ -400,9 +437,7 @@ func (s *State) Take(playerIdx int) error {
 	}
 	SortHand(s.Hands[di], s.Trump)
 	s.Table = nil
-	// Добор карт: атакующий, подкидывающие, защитник — по 6.
 	s.refill()
-	// Защитник пропускает ход: атакующим становится ПОСЛЕ него.
 	skipped := di
 	s.AttackerIndex = s.nextAliveAfter(skipped)
 	s.LastWasTake = true
@@ -579,7 +614,8 @@ func (s *State) LegalAttackCards(idx int) []Card {
 	if s.Status != StatusActive || idx != s.AttackerIndex {
 		return nil
 	}
-	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow && s.Phase != PhaseDefend {
+	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow &&
+		s.Phase != PhaseDefend && s.Phase != PhaseTakeFollow {
 		return nil
 	}
 	if len(s.Table) >= s.MaxAttacksThisRound() {
@@ -587,7 +623,7 @@ func (s *State) LegalAttackCards(idx int) []Card {
 	}
 	out := []Card{}
 	if len(s.Table) == 0 {
-		if s.Phase == PhaseDefend {
+		if s.Phase == PhaseDefend || s.Phase == PhaseTakeFollow {
 			return nil
 		}
 		out = append(out, s.Hands[idx]...)
@@ -605,6 +641,9 @@ func (s *State) LegalAttackCards(idx int) []Card {
 // LegalDefendCards — карты, которыми можно отбить хотя бы одну неотбитую атаку.
 func (s *State) LegalDefendCards(idx int) []Card {
 	if s.Status != StatusActive {
+		return nil
+	}
+	if s.Phase == PhaseTakeFollow {
 		return nil
 	}
 	if idx != s.DefenderIndex() {

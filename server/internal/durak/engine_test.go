@@ -347,6 +347,58 @@ func TestTakeAndFinish(t *testing.T) {
 	}
 }
 
+// После «Беру» атакующий может подкинуть вдогонку, затем Done.
+func TestThrowInAfterTake(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{9, Hearts}, {9, Diamonds}, {10, Clubs}},
+			{{6, Spades}, {7, Clubs}, {8, Clubs}},
+		},
+		Deck:          nil,
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{9, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	if err := st.Take(1); err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if st.Phase != PhaseTakeFollow {
+		t.Fatalf("phase=%v, want take_follow", st.Phase)
+	}
+	if err := st.Attack(0, Card{9, Diamonds}); err != nil {
+		t.Fatalf("throw-in after take: %v", err)
+	}
+	if st.Phase != PhaseTakeFollow {
+		t.Fatalf("phase after throw-in=%v, want take_follow", st.Phase)
+	}
+	if len(st.Table) != 2 {
+		t.Fatalf("table=%d, want 2", len(st.Table))
+	}
+	if err := st.Done(0); err != nil {
+		t.Fatalf("done: %v", err)
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase after done=%v, want attack", st.Phase)
+	}
+	if len(st.Table) != 0 {
+		t.Fatalf("table should be clear")
+	}
+	// Защитник забрал 2 девятки + свою руку.
+	if len(st.Hands[1]) < 5 {
+		t.Fatalf("defender hand=%v, want ≥5", st.Hands[1])
+	}
+	if !st.LastWasTake {
+		t.Fatalf("LastWasTake should be set")
+	}
+}
+
 func TestTransferInPerevodnoi(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},

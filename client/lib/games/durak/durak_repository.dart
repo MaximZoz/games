@@ -194,10 +194,11 @@ class DurakGameView {
 
   bool get isOver => status != 'active';
 
-  /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт).
+  /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).
   bool get isMyTurn {
     if (isOver) return false;
     if (phase == 'defend') return defenderIndex == myIndex;
+    // take_follow / attack / attack_follow — атакующий.
     return attackerIndex == myIndex;
   }
 
@@ -207,6 +208,7 @@ class DurakGameView {
     if (phase == 'defend') {
       return defenderIndex == myIndex || attackerIndex == myIndex;
     }
+    if (phase == 'take_follow') return attackerIndex == myIndex;
     return attackerIndex == myIndex;
   }
 

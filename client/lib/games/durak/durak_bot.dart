@@ -32,7 +32,8 @@ class DurakBot {
       game.attack(card, playerIndex: index);
       return true;
     }
-    if (game.turn == DurakTurn.attackerFollowUp) {
+    if (game.turn == DurakTurn.attackerFollowUp ||
+        game.turn == DurakTurn.takeFollowUp) {
       // Подкидывать: только если у нас есть некозырь с рангом на столе.
       final ranks = game.tableRanks;
       final hand = List<PlayingCard>.from(game.hands[index]);
@@ -45,6 +46,7 @@ class DurakBot {
       final maxToss = game.maxAttacksThisRound - game.table.length;
       if (maxToss <= 0) {
         if (game.canAttackerSayBito) game.sayBito();
+        if (game.canAttackerConfirmTake) game.confirmTake();
         return true;
       }
       for (final c in hand) {
@@ -57,6 +59,10 @@ class DurakBot {
       }
       if (game.canAttackerSayBito) {
         game.sayBito();
+        return true;
+      }
+      if (game.canAttackerConfirmTake) {
+        game.confirmTake();
         return true;
       }
     }
