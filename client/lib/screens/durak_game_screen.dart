@@ -3590,17 +3590,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ? _frozenFanCardSize!.height
         : fanProbe.cardSize.height;
     final nFan = handForFan.length;
-    // Не поднимаем веер при росте руки — только сжимаем шаг/размер карт.
-    // seatLift < 0 — чуть уводим под низ зоны (как при малой руке).
-    final seatLift = nFan <= 3
-        ? -fanCardH * 0.33
-        : nFan <= 6
-            ? -fanCardH * 0.22
-            : nFan <= 9
-                ? -fanCardH * 0.12
-                : -fanCardH * 0.06;
+    // Непрерывный tuck (без ступеней 3/6/9) — иначе рывок при смене числа карт.
+    // seatLift < 0 — чуть уводим под низ зоны.
+    final seatT = nFan <= 1 ? 0.0 : ((nFan - 1) / 11).clamp(0.0, 1.0);
+    final seatLift = -fanCardH * (0.33 * (1 - seatT) + 0.06 * seatT);
     // CardFan ≈ 1.7h + peek; зона без искусственного подъёма.
     final fanZoneH = fanCardH * 2.05 + 16;
+    // Кнопка чуть выше видимых карт веера.
+    final actionBtnBottom = -seatLift + fanCardH + 10;
 
     final showTimer = !view.isOver &&
         view.isMyTurn &&
@@ -3663,134 +3660,187 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   view,
                   tableSize,
                   trumpCard,
+                  showTimer: showTimer,
                 ),
               ),
-              // Место под веер; кнопки — оверлеем, без сдвига layout.
-              // left/right -8 — на всю ширину окна, включая зону крестика.
-              SizedBox(
-                height: fanZoneH,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      // Небольшой отступ слева — крайняя карта читается.
-                      left: 2,
-                      right: -4,
-                      // Поднять над низом — низ карт не прячется под меню shell.
-                      bottom: seatLift,
-                      child: LayoutBuilder(
-                        builder: (context, c) {
-                          final fitted = _handFanVisualLayout(
-                            handForFan.length,
-                            c.maxWidth,
-                          );
-                          final cardSize = useFrozenFanSize
-                              ? _frozenFanCardSize!
-                              : fitted.cardSize;
-                          final spacing = fitted.spacing;
-                          final fillWidth = fitted.fillWidth;
-                          return Align(
-                            alignment: fillWidth
-                                ? Alignment.bottomLeft
-                                : Alignment.bottomCenter,
-                            child: CardFan(
-                              key: _fanKey,
-                              cards: handForFan,
-                              cardSize: cardSize,
-                              spacing: spacing,
-                              fillWidth: fillWidth,
-                              animateLayout: animateFanLayout,
-                              // Всегда подсвечиваем, чем бить/подкинуть; иначе всё dim.
-                              legalCards: (!view.canAct || legal.isEmpty)
-                                  ? const <PlayingCard>{}
-                                  : legal,
-                              emphasizeLegal: true,
-                              selectedCards: _selected,
-                              hiddenCards: _flyingFromHand,
-                              // Листать веер можно и когда ходить нечем (только dim).
-                              enabled: !view.isOver && !_busy && view.canAct,
-                              onActiveChanged: (card) {
-                                if (_activeCard == card) return;
-                                setState(() {
-                                  _activeCard = card;
-                                  if (card == null) _dragGlobal = null;
-                                });
-                              },
-                              onHoldingChanged: (holding) {
-                                if (_holdingFanCard == holding) return;
-                                setState(() => _holdingFanCard = holding);
-                              },
-                              onDragPosition: (p) {
-                                // setState — подсветка цели отбоя следует за пальцем.
-                                if (p == null) {
-                                  if (_dragGlobal == null) return;
-                                  setState(() => _dragGlobal = null);
-                                  return;
-                                }
-                                final prev = _dragGlobal;
-                                // Чуть сдвинули — всё равно обновляем цель отбоя.
-                                if (prev != null &&
-                                    (prev - p).distanceSquared < 4) {
-                                  _dragGlobal = p;
-                                  return;
-                                }
-                                setState(() => _dragGlobal = p);
-                              },
-                              onTap: (_) {
-                                if (_selected.isNotEmpty ||
-                                    _activeCard != null ||
-                                    _dragGlobal != null) {
-                                  _clearHandSelection();
-                                }
-                              },
-                              onLongPress: (card) =>
-                                  _toggleSelect(view, card),
-                              onReturnToFan: _onCardReturnedToFan,
-                              onDrop: (card, global, from) =>
-                                  _onCardDrop(view, card, global, from),
+              // Высота зоны, tuck и размер карт — плавно, без рывка экрана.
+              TweenAnimationBuilder<double>(
+                tween: Tween(end: fanZoneH),
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                builder: (context, zoneH, _) {
+                  return TweenAnimationBuilder<double>(
+                    tween: Tween(end: seatLift),
+                    duration: const Duration(milliseconds: 320),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, animLift, _) {
+                      return SizedBox(
+                        height: zoneH,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned(
+                              left: 2,
+                              right: -4,
+                              bottom: animLift,
+                              child: LayoutBuilder(
+                                builder: (context, c) {
+                                  final fitted = _handFanVisualLayout(
+                                    handForFan.length,
+                                    c.maxWidth,
+                                  );
+                                  final cardSize = useFrozenFanSize
+                                      ? _frozenFanCardSize!
+                                      : fitted.cardSize;
+                                  final spacing = fitted.spacing;
+                                  final fillWidth = fitted.fillWidth;
+                                  final aspect = cardSize.width > 0
+                                      ? cardSize.height / cardSize.width
+                                      : 1.4;
+                                  return Align(
+                                    alignment: fillWidth
+                                        ? Alignment.bottomLeft
+                                        : Alignment.bottomCenter,
+                                    child: TweenAnimationBuilder<double>(
+                                      tween: Tween(end: cardSize.width),
+                                      duration: const Duration(
+                                        milliseconds: 320,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      builder: (context, animW, _) {
+                                        return TweenAnimationBuilder<double>(
+                                          tween: Tween(end: spacing),
+                                          duration: const Duration(
+                                            milliseconds: 320,
+                                          ),
+                                          curve: Curves.easeOutCubic,
+                                          builder: (context, animSp, _) {
+                                            final animH = animW * aspect;
+                                            return CardFan(
+                                              key: _fanKey,
+                                              cards: handForFan,
+                                              cardSize: Size(animW, animH),
+                                              spacing: animSp,
+                                              fillWidth: fillWidth,
+                                              animateLayout:
+                                                  animateFanLayout,
+                                          legalCards: (!view.canAct ||
+                                                  legal.isEmpty)
+                                              ? const <PlayingCard>{}
+                                              : legal,
+                                          emphasizeLegal: true,
+                                          selectedCards: _selected,
+                                          hiddenCards: _flyingFromHand,
+                                          enabled: !view.isOver &&
+                                              !_busy &&
+                                              view.canAct,
+                                          onActiveChanged: (card) {
+                                            if (_activeCard == card) {
+                                              return;
+                                            }
+                                            setState(() {
+                                              _activeCard = card;
+                                              if (card == null) {
+                                                _dragGlobal = null;
+                                              }
+                                            });
+                                          },
+                                          onHoldingChanged: (holding) {
+                                            if (_holdingFanCard ==
+                                                holding) {
+                                              return;
+                                            }
+                                            setState(() =>
+                                                _holdingFanCard = holding);
+                                          },
+                                          onDragPosition: (p) {
+                                            if (p == null) {
+                                              if (_dragGlobal == null) {
+                                                return;
+                                              }
+                                              setState(() =>
+                                                  _dragGlobal = null);
+                                              return;
+                                            }
+                                            final prev = _dragGlobal;
+                                            if (prev != null &&
+                                                (prev - p)
+                                                        .distanceSquared <
+                                                    4) {
+                                              _dragGlobal = p;
+                                              return;
+                                            }
+                                            setState(
+                                                () => _dragGlobal = p);
+                                          },
+                                          onTap: (_) {
+                                            if (_selected.isNotEmpty ||
+                                                _activeCard != null ||
+                                                _dragGlobal != null) {
+                                              _clearHandSelection();
+                                            }
+                                          },
+                                          onLongPress: (card) =>
+                                              _toggleSelect(view, card),
+                                          onReturnToFan:
+                                              _onCardReturnedToFan,
+                                          onDrop: (card, global, from) =>
+                                              _onCardDrop(
+                                            view,
+                                            card,
+                                            global,
+                                            from,
+                                          ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ],
           ),
-          // Таймер своего хода — справа, на уровне шапки соперника.
-          if (showTimer)
-            Positioned(
-              right: 2,
-              top: 2,
-              child: _buildMyTurnTimerChip(view),
-            ),
-          // Слот кнопки всегда зарезервирован — смена хода не двигает экран.
-          // Скрыта при вытаскивании и пока карта летит на стол.
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: fanZoneH - 72,
-            child: SizedBox(
-              height: 52,
-              child: Center(
-                child: (showTake || showBito || showDone) &&
-                        !_holdingFanCard &&
-                        !_cardFlightActive
-                    ? _PulsingActionButton(
-                        label: showTake
-                            ? 'Взять'
-                            : (showDone ? 'Готово' : 'Бито'),
-                        icon: showTake
-                            ? Icons.south_rounded
-                            : Icons.check_rounded,
-                        onPressed: showTake
-                            ? _take
-                            : (showDone ? _confirmTakeDone : _bito),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ),
+          // Кнопка чуть выше веера; позиция плавно следует за размером карт.
+          TweenAnimationBuilder<double>(
+            tween: Tween(end: actionBtnBottom),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+            builder: (context, btnBottom, _) {
+              return Positioned(
+                left: 0,
+                right: 0,
+                bottom: btnBottom,
+                child: SizedBox(
+                  height: 52,
+                  child: Center(
+                    child: (showTake || showBito || showDone) &&
+                            !_holdingFanCard &&
+                            !_cardFlightActive
+                        ? _PulsingActionButton(
+                            label: showTake
+                                ? 'Взять'
+                                : (showDone ? 'Готово' : 'Бито'),
+                            icon: showTake
+                                ? Icons.south_rounded
+                                : Icons.check_rounded,
+                            onPressed: showTake
+                                ? _take
+                                : (showDone ? _confirmTakeDone : _bito),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -4122,8 +4172,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Widget _buildBoard(
     DurakGameView view,
     Size cardSize,
-    PlayingCard trumpCard,
-  ) {
+    PlayingCard trumpCard, {
+    bool showTimer = false,
+  }) {
     final focus = _activeCard ??
         (_selected.isNotEmpty ? _selected.first : null);
     // Подсказки при подъёме: одна цель — ближайшая к пальцу (лево/центр/право).
@@ -4330,13 +4381,34 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   ),
                 ),
               ),
-            // Колода: видимый козырь в кадре, рубашка чуть за краем.
+            // Колода слева; таймер своего хода — над колодой с козырем.
+            // Слот таймера всегда зарезервирован — колода не прыгает при смене хода.
             Positioned(
               left: 2,
-              top: deckTop,
-              child: deckPeek,
+              top: (deckTop - 40).clamp(0.0, deckTop),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 34,
+                    child: IgnorePointer(
+                      ignoring: !showTimer,
+                      child: Opacity(
+                        opacity: showTimer ? 1 : 0,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _buildMyTurnTimerChip(view),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  deckPeek,
+                ],
+              ),
             ),
-            // Бита справа, на уровне колоды (таймер — отдельно, у шапки).
+            // Бита справа, на уровне колоды.
             Positioned(
               right: 2,
               top: deckTop,
