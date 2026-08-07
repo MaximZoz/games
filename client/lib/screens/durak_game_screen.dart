@@ -1860,6 +1860,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     List<Rect>? fromOverrides,
     List<PlayingCard>? cardsOverride,
     void Function(PlayingCard card)? onCardLaunch,
+    Duration flyDuration = const Duration(milliseconds: 160),
+    int settleMs = 90,
   }) async {
     if (table.isEmpty || !mounted || !_gameUiActive) return;
     final cards = cardsOverride ?? _flattenTableCards(table);
@@ -1930,6 +1932,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           beginScale: beginScale,
           beginAngle: 0,
           endAngle: angle,
+          flyDuration: flyDuration,
+          settleMs: settleMs,
           onHandoff: () {
             if (!mounted) return;
             setState(() {
