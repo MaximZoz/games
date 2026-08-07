@@ -47,6 +47,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _handlingAuthError = false;
   bool _retryScheduled = false;
   PlayingCard? _activeCard;
+  /// Карта вытащена из веера (peek/drag) — прячем кнопку «Взять»/«Бито».
+  bool _holdingFanCard = false;
   /// Только для выбора цели отбоя в момент drop — без setState на каждый move.
   Offset? _dragGlobal;
   /// Заморозка размера карт веера после хода (spacing всегда на всю ширину).
@@ -131,6 +133,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Карты в руке — крупные; на столе/колоде — компактнее.
   static const Size _handCardSize = Size(92, 132);
   static const Size _tableCardSize = Size(66, 94);
+  /// Пар на столе в одном ряду (дальше — следующий ряд).
+  static const int _tableCols = 2;
   /// Экран партии виден (не чаты / другой таб) — иначе FX не на root overlay.
   bool get _gameUiActive {
     if (!mounted) return false;
@@ -716,7 +720,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Предпочтительная цель полёта — ближайшая к пальцу/карте неотбитая атака
-  /// (в т.ч. во 2–3 ряду при раскладке 3 в ряд).
+  /// (в т.ч. во 2–3 ряду при раскладке 2 в ряд).
   int _defendTargetIndex(
     DurakGameView view,
     PlayingCard? card, {
@@ -744,11 +748,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return best;
   }
 
-  /// Оценка центра пары на столе (3 в ряд), если GlobalKey ещё без rect.
+  /// Оценка центра пары на столе (2 в ряд), если GlobalKey ещё без rect.
   Offset? _estimatePairCenter(int index, int total) {
     final tableRect = globalRectOf(_tableKey);
     if (tableRect == null || total <= 0) return null;
-    const cols = 3;
+    final cols = _tableCols;
     final pairW = _tableCardSize.width + 18;
     final pairH = _tableCardSize.height + 14;
     const gap = 10.0;
@@ -1448,7 +1452,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final pairW = _tableCardSize.width + 18;
     final pairH = _tableCardSize.height + 14;
     const gap = 10.0;
-    const cols = 3;
+    final cols = _tableCols;
     final col = idx % cols;
     final row = idx ~/ cols;
     final rowLen = (row * cols + cols <= n)
@@ -1746,8 +1750,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       final atk = keyRect ??
           Rect.fromCenter(
             center: Offset(
-              center.dx + (i % 3 - 1) * pairW * 0.55,
-              center.dy + (i ~/ 3 - 0.3) * (_tableCardSize.height * 0.55),
+              center.dx + (i % _tableCols - (_tableCols - 1) / 2) * pairW * 0.85,
+              center.dy + (i ~/ _tableCols - 0.3) * (_tableCardSize.height * 0.62),
             ),
             width: _tableCardSize.width,
             height: _tableCardSize.height,
@@ -1781,8 +1785,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       final atk = keyRect ??
           Rect.fromCenter(
             center: Offset(
-              center.dx + (i % 3 - 1) * pairW * 0.55,
-              center.dy + (i ~/ 3 - 0.3) * (_tableCardSize.height * 0.55),
+              center.dx + (i % _tableCols - (_tableCols - 1) / 2) * pairW * 0.85,
+              center.dy + (i ~/ _tableCols - 0.3) * (_tableCardSize.height * 0.62),
             ),
             width: _tableCardSize.width,
             height: _tableCardSize.height,
@@ -2900,11 +2904,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final tableCenter = tableRect?.center ??
         Offset(screen.width / 2, screen.height * 0.42);
     final pairW = _tableCardSize.width + 18;
-    final col = flight.pairIndex % 3;
-    final row = flight.pairIndex ~/ 3;
+    final col = flight.pairIndex % _tableCols;
+    final row = flight.pairIndex ~/ _tableCols;
     final pairCenter = Offset(
-      tableCenter.dx + (col - 1) * pairW * 0.55,
-      tableCenter.dy + (row - 0.3) * (_tableCardSize.height * 0.55),
+      tableCenter.dx + (col - (_tableCols - 1) / 2) * pairW * 0.85,
+      tableCenter.dy + (row - 0.3) * (_tableCardSize.height * 0.62),
     );
     final attackRect = globalRectOf(
           _tableAttackKeys.putIfAbsent(flight.pairIndex, GlobalKey.new),
@@ -3690,6 +3694,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                   if (card == null) _dragGlobal = null;
                                 });
                               },
+                              onHoldingChanged: (holding) {
+                                if (_holdingFanCard == holding) return;
+                                setState(() => _holdingFanCard = holding);
+                              },
                               onDragPosition: (p) {
                                 // setState — подсветка цели отбоя следует за пальцем.
                                 if (p == null) {
@@ -3729,14 +3737,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ],
           ),
           // Слот кнопки всегда зарезервирован — смена хода не двигает экран.
+          // Ниже к вееру; скрыта, пока карта вытащена из веера.
           Positioned(
             left: 0,
             right: 0,
-            bottom: fanZoneH - 10,
+            bottom: fanZoneH - 36,
             child: SizedBox(
               height: 52,
               child: Center(
-                child: (showTake || showBito || showDone)
+                child: (showTake || showBito || showDone) && !_holdingFanCard
                     ? _PulsingActionButton(
                         label: showTake
                             ? 'Взять'
@@ -4288,7 +4297,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// До 3 пар в ряд; если не влезает — пары наезжают друг на друга.
+  /// До 2 пар в ряд; если не влезает — пары наезжают друг на друга.
   Widget _buildTableRows({
     required List<Widget> items,
     required Size cardSize,
@@ -4298,7 +4307,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final n = items.length;
     final pairW = cardSize.width + 18;
     const baseGap = 10.0;
-    const cols = 3;
+    final cols = _tableCols;
 
     final rows = <List<Widget>>[
       for (var i = 0; i < n; i += cols)

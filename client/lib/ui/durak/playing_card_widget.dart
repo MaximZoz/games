@@ -3,7 +3,9 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Отрисовка одной игральной карты.
-/// Углы через [Stack] + [ClipRRect] — без overflow перевёрнутых рангов снизу.
+///
+/// Лицо без [Column]/[FittedBox]: размеры шрифтов от [size], иначе на web
+/// метрики ♠/♥ дают layout-overflow (жёлтые полосы).
 ///
 /// Рамок нет: подсказка — только фиолетовая тень ([highlighted] / [dropTarget]).
 class PlayingCardWidget extends StatelessWidget {
@@ -36,10 +38,6 @@ class PlayingCardWidget extends StatelessWidget {
         ? const Color(0xFFD84A4A)
         : const Color(0xFF1B1B24);
     final radius = size.width * 0.15;
-    final cornerBoxW = size.width * 0.30;
-    final cornerBoxH = size.height * 0.30;
-    final padH = size.width * 0.08;
-    final padV = size.height * 0.045;
     final hint = dropTarget || highlighted;
 
     final decoration = BoxDecoration(
@@ -77,30 +75,33 @@ class PlayingCardWidget extends StatelessWidget {
     final face = ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       clipBehavior: Clip.hardEdge,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            left: padH,
-            top: padV,
-            width: cornerBoxW,
-            height: cornerBoxH,
-            child: _CornerMarks(
-              rank: card.rank.label,
-              suit: card.suit.symbol,
-              color: color,
+      child: SizedBox(
+        width: size.width,
+        height: size.height,
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Positioned(
+              left: size.width * 0.07,
+              top: size.height * 0.04,
+              child: _CornerMarks(
+                rank: card.rank.label,
+                suit: card.suit.symbol,
+                color: color,
+                cardSize: size,
+              ),
             ),
-          ),
-          Center(
-            child: SizedBox(
-              width: size.width * 0.52,
-              height: size.height * 0.40,
+            // Positioned.fill + FittedBox: символ масти не раздувает Stack.
+            Positioned(
+              left: size.width * 0.22,
+              right: size.width * 0.22,
+              top: size.height * 0.28,
+              bottom: size.height * 0.28,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: Text(
                   card.suit.symbol,
                   textAlign: TextAlign.center,
-                  overflow: TextOverflow.clip,
                   style: TextStyle(
                     color: color,
                     fontSize: 64,
@@ -115,33 +116,34 @@ class PlayingCardWidget extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          Positioned(
-            right: padH,
-            bottom: padV,
-            width: cornerBoxW,
-            height: cornerBoxH,
-            child: Transform.rotate(
-              angle: 3.1415926535,
-              child: _CornerMarks(
-                rank: card.rank.label,
-                suit: card.suit.symbol,
-                color: color,
+            Positioned(
+              right: size.width * 0.07,
+              bottom: size.height * 0.04,
+              child: Transform.rotate(
+                angle: 3.1415926535,
+                child: _CornerMarks(
+                  rank: card.rank.label,
+                  suit: card.suit.symbol,
+                  color: color,
+                  cardSize: size,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 
     if (!animate) {
-      return Container(
+      return SizedBox(
         width: size.width,
         height: size.height,
-        clipBehavior: Clip.none,
-        decoration: decoration,
-        foregroundDecoration: foreground,
-        child: face,
+        child: DecoratedBox(
+          decoration: decoration,
+          child: foreground == null
+              ? face
+              : DecoratedBox(decoration: foreground, child: face),
+        ),
       );
     }
     return AnimatedContainer(
@@ -149,7 +151,6 @@ class PlayingCardWidget extends StatelessWidget {
       curve: Curves.easeOutCubic,
       width: size.width,
       height: size.height,
-      clipBehavior: Clip.none,
       decoration: decoration,
       foregroundDecoration: foreground,
       child: face,
@@ -162,53 +163,49 @@ class _CornerMarks extends StatelessWidget {
     required this.rank,
     required this.suit,
     required this.color,
+    required this.cardSize,
   });
 
   final String rank;
   final String suit;
   final Color color;
+  final Size cardSize;
 
   @override
   Widget build(BuildContext context) {
-    // FittedBox в жёстком Positioned-боксе — без overflow на любом размере карты.
-    return FittedBox(
-      fit: BoxFit.contain,
-      alignment: Alignment.topCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
+    // Без жёсткой высоты: ♠/♥ на web дают большой intrinsic height,
+    // и Column в tight-боксе рисует жёлтые полосы. Клип — у лица карты.
+    final rankFs = cardSize.height * 0.135;
+    final suitFs = cardSize.height * 0.115;
+    return Text.rich(
+      TextSpan(
         children: [
-          Text(
-            rank,
-            overflow: TextOverflow.clip,
+          TextSpan(
+            text: '$rank\n',
             style: TextStyle(
               color: color,
-              fontSize: 24,
+              fontSize: rankFs,
               fontWeight: FontWeight.w800,
-              height: 1,
+              height: 1.05,
               leadingDistribution: TextLeadingDistribution.even,
-            ),
-            textHeightBehavior: const TextHeightBehavior(
-              applyHeightToFirstAscent: false,
-              applyHeightToLastDescent: false,
             ),
           ),
-          Text(
-            suit,
-            overflow: TextOverflow.clip,
+          TextSpan(
+            text: suit,
             style: TextStyle(
               color: color,
-              fontSize: 22,
+              fontSize: suitFs,
               fontWeight: FontWeight.w700,
-              height: 1,
+              height: 1.05,
               leadingDistribution: TextLeadingDistribution.even,
-            ),
-            textHeightBehavior: const TextHeightBehavior(
-              applyHeightToFirstAscent: false,
-              applyHeightToLastDescent: false,
             ),
           ),
         ],
+      ),
+      textAlign: TextAlign.center,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
       ),
     );
   }
@@ -232,55 +229,52 @@ class CardBackWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(size.width * 0.15);
-    final iconBox = size.shortestSide * 0.46;
-    return Container(
+    final iconSize = size.shortestSide * 0.42;
+    return SizedBox(
       width: size.width,
       height: size.height,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.accentStart,
-            AppColors.accentEnd,
-          ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.accentStart,
+              AppColors.accentEnd,
+            ],
+          ),
+          borderRadius: radius,
+          border: outlined
+              ? Border.all(
+                  color: Colors.white.withValues(alpha: 0.42),
+                  width: 1.2,
+                )
+              : null,
+          boxShadow: elevated
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.24),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ]
+              : outlined
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.14),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                  : const [],
         ),
-        borderRadius: radius,
-        border: outlined
-            ? Border.all(
-                color: Colors.white.withValues(alpha: 0.42),
-                width: 1.2,
-              )
-            : null,
-        boxShadow: elevated
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.24),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ]
-            : outlined
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.14),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : const [],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Center(
-        child: SizedBox(
-          width: iconBox,
-          height: iconBox,
-          child: FittedBox(
-            fit: BoxFit.contain,
+        child: ClipRRect(
+          borderRadius: radius,
+          child: Center(
             child: Icon(
               Icons.style_rounded,
               color: Colors.white.withValues(alpha: 0.55),
-              size: 48,
+              size: iconSize,
             ),
           ),
         ),
@@ -385,6 +379,7 @@ class DurakTrumpSuitBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = suit.isRed ? const Color(0xFFD84A4A) : const Color(0xFF1B1B24);
+    final glyph = size * 0.55;
     return Container(
       width: size,
       height: size,
@@ -405,20 +400,18 @@ class DurakTrumpSuitBadge extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: SizedBox(
-        width: size * 0.7,
-        height: size * 0.7,
-        child: FittedBox(
-          fit: BoxFit.contain,
-          child: Text(
-            suit.symbol,
-            style: TextStyle(
-              color: color,
-              fontSize: 48,
-              fontWeight: FontWeight.w800,
-              height: 1,
-            ),
-          ),
+      child: Text(
+        suit.symbol,
+        style: TextStyle(
+          color: color,
+          fontSize: glyph,
+          fontWeight: FontWeight.w800,
+          height: 1,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+        textHeightBehavior: const TextHeightBehavior(
+          applyHeightToFirstAscent: false,
+          applyHeightToLastDescent: false,
         ),
       ),
     );

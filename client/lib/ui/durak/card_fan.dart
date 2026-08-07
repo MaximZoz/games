@@ -28,6 +28,7 @@ class CardFan extends StatefulWidget {
     this.onReturnToFan,
     this.onActiveChanged,
     this.onDragPosition,
+    this.onHoldingChanged,
     this.faceDown = false,
     this.invertFan = false,
     this.arc,
@@ -60,6 +61,9 @@ class CardFan extends StatefulWidget {
 
   final ValueChanged<PlayingCard?>? onActiveChanged;
   final ValueChanged<Offset?>? onDragPosition;
+
+  /// Карта вытащена из веера (peek/drag) — скрыть кнопку действия на столе.
+  final ValueChanged<bool>? onHoldingChanged;
   final bool faceDown;
 
   /// Веер «от» соперника: ось сверху, дуга в его сторону.
@@ -93,6 +97,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   PlayingCard? _liftedCard;
   Offset? _liftGlobalCenter;
   double _liftScale = 1.0;
+  bool _holdingNotified = false;
 
   /// Карта слегка приподнята в веере (фаза вытаскивания / возврата).
   PlayingCard? _peekCard;
@@ -130,6 +135,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   @override
   void dispose() {
     _removeOverlay();
+    if (_holdingNotified) widget.onHoldingChanged?.call(false);
     super.dispose();
   }
 
@@ -137,6 +143,16 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     // Всегда сообщаем карту под пальцем — подсветка целей на столе по beats(),
     // а не только по legalCards (иначе козырь «не подсвечивает» обе атаки).
     widget.onActiveChanged?.call(card);
+  }
+
+  void _setHolding(bool holding) {
+    if (_holdingNotified == holding) return;
+    _holdingNotified = holding;
+    widget.onHoldingChanged?.call(holding);
+  }
+
+  void _syncHolding() {
+    _setHolding(_peekCard != null || _liftedCard != null);
   }
 
   void _setHover(int? index) {
@@ -359,6 +375,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _hidePeekUnderOverlay = false;
       _hoverIndex = null;
     });
+    _syncHolding();
   }
 
   Future<void> _animatePeekTTo(double to, {int ms = 300}) async {
@@ -411,6 +428,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     });
     if (!keepHover) widget.onActiveChanged?.call(null);
     widget.onDragPosition?.call(null);
+    _setHolding(false);
   }
 
   bool _globalOverFan(Offset global) {
@@ -509,6 +527,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _hidePeekUnderOverlay = false;
       if (!resume) _pointerDown = false;
     });
+    _syncHolding();
     await Future<void>.delayed(Duration.zero);
     if (!mounted || gen != _gestureGen) return;
     final finger = _lastPointerGlobal ?? global;
@@ -635,6 +654,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _peekCard = card;
     });
     _emitActiveCard(card);
+    _setHolding(true);
   }
 
   void _setPeekT(double t) {
@@ -666,6 +686,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     _upTravel = _extractPx;
     _panAccum = Offset.zero;
     _emitActiveCard(card);
+    _setHolding(true);
     // Сначала в точке подъёма, затем к пальцу — один непрерывный кадр.
     _liftScale = 1.0;
     _liftGlobalCenter = startCenter;
@@ -725,6 +746,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _docking = false;
       if (!resume) _pointerDown = false;
     });
+    _syncHolding();
     // Кадр после сортировки руки — слоты уже на новых местах.
     await Future<void>.delayed(Duration.zero);
     if (!mounted || gen != _gestureGen) return;
@@ -882,6 +904,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
                           _peekCard = null;
                           _peekT = 0;
                         });
+                        _syncHolding();
                       }
                       final box = context.findRenderObject() as RenderBox?;
                       if (box == null) return;
