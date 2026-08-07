@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/durak/card.dart';
@@ -27,7 +26,68 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final exceptions = tester.takeException();
-    expect(exceptions, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('PlayingCardWidget under Transform.scale (fan drag) has no overflow',
+      (tester) async {
+    const card = PlayingCard(Rank.queen, Suit.spades);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Transform.scale(
+              scale: 1.09,
+              child: const PlayingCardWidget(
+                card: card,
+                size: Size(92, 132),
+                elevated: true,
+                highlighted: true,
+                animate: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('PlayingCardWidget size change has no overflow', (tester) async {
+    const card = PlayingCard(Rank.queen, Suit.spades);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: PlayingCardWidget(
+              card: card,
+              size: Size(66, 94),
+              animate: true,
+              elevated: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: PlayingCardWidget(
+              card: card,
+              size: Size(92, 132),
+              animate: true,
+              elevated: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

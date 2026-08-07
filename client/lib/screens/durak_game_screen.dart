@@ -431,7 +431,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         def == null || _leftTableCards.contains(def.toPlayingCard());
     if (atkGone && !defGone) {
       // Атака уже улетела — показываем защиту как «лежащую» атаку на месте.
-      return DurakTablePairApi(attack: def!, defense: null);
+      return DurakTablePairApi(attack: def, defense: null);
     }
     if (!atkGone && defGone) {
       return DurakTablePairApi(attack: pair.attack, defense: null);

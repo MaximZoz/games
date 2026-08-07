@@ -4,8 +4,9 @@ import 'package:multigames_client/ui/app_theme.dart';
 
 /// Отрисовка одной игральной карты.
 ///
-/// Лицо без [Column]/[FittedBox]: размеры шрифтов от [size], иначе на web
-/// метрики ♠/♥ дают layout-overflow (жёлтые полосы).
+/// Глифы только через [FittedBox] (child с unbounded constraints) — иначе
+/// метрики ♠/♥ на web дают layout-overflow (жёлтые полосы), особенно при
+/// [Transform.scale] во время вытаскивания из веера.
 ///
 /// Рамок нет: подсказка — только фиолетовая тень ([highlighted] / [dropTarget]).
 class PlayingCardWidget extends StatelessWidget {
@@ -80,23 +81,24 @@ class PlayingCardWidget extends StatelessWidget {
         height: size.height,
         child: Stack(
           clipBehavior: Clip.hardEdge,
+          fit: StackFit.expand,
           children: [
             Positioned(
-              left: size.width * 0.07,
-              top: size.height * 0.04,
+              left: size.width * 0.06,
+              top: size.height * 0.035,
+              width: size.width * 0.32,
+              height: size.height * 0.28,
               child: _CornerMarks(
                 rank: card.rank.label,
                 suit: card.suit.symbol,
                 color: color,
-                cardSize: size,
               ),
             ),
-            // Positioned.fill + FittedBox: символ масти не раздувает Stack.
             Positioned(
-              left: size.width * 0.22,
-              right: size.width * 0.22,
-              top: size.height * 0.28,
-              bottom: size.height * 0.28,
+              left: size.width * 0.18,
+              right: size.width * 0.18,
+              top: size.height * 0.26,
+              bottom: size.height * 0.26,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: Text(
@@ -104,7 +106,7 @@ class PlayingCardWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: color,
-                    fontSize: 64,
+                    fontSize: 72,
                     fontWeight: FontWeight.w800,
                     height: 1,
                     leadingDistribution: TextLeadingDistribution.even,
@@ -117,15 +119,16 @@ class PlayingCardWidget extends StatelessWidget {
               ),
             ),
             Positioned(
-              right: size.width * 0.07,
-              bottom: size.height * 0.04,
+              right: size.width * 0.06,
+              bottom: size.height * 0.035,
+              width: size.width * 0.32,
+              height: size.height * 0.28,
               child: Transform.rotate(
                 angle: 3.1415926535,
                 child: _CornerMarks(
                   rank: card.rank.label,
                   suit: card.suit.symbol,
                   color: color,
-                  cardSize: size,
                 ),
               ),
             ),
@@ -134,26 +137,26 @@ class PlayingCardWidget extends StatelessWidget {
       ),
     );
 
-    if (!animate) {
-      return SizedBox(
-        width: size.width,
-        height: size.height,
-        child: DecoratedBox(
-          decoration: decoration,
-          child: foreground == null
-              ? face
-              : DecoratedBox(decoration: foreground, child: face),
-        ),
-      );
-    }
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 140),
-      curve: Curves.easeOutCubic,
+    // Размер снаружи — сразу (не AnimatedContainer width/height).
+    final body = animate
+        ? AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOutCubic,
+            decoration: decoration,
+            foregroundDecoration: foreground,
+            child: face,
+          )
+        : DecoratedBox(
+            decoration: decoration,
+            child: foreground == null
+                ? face
+                : DecoratedBox(decoration: foreground, child: face),
+          );
+
+    return SizedBox(
       width: size.width,
       height: size.height,
-      decoration: decoration,
-      foregroundDecoration: foreground,
-      child: face,
+      child: body,
     );
   }
 }
@@ -163,49 +166,52 @@ class _CornerMarks extends StatelessWidget {
     required this.rank,
     required this.suit,
     required this.color,
-    required this.cardSize,
   });
 
   final String rank;
   final String suit;
   final Color color;
-  final Size cardSize;
 
   @override
   Widget build(BuildContext context) {
-    // Без жёсткой высоты: ♠/♥ на web дают большой intrinsic height,
-    // и Column в tight-боксе рисует жёлтые полосы. Клип — у лица карты.
-    final rankFs = cardSize.height * 0.135;
-    final suitFs = cardSize.height * 0.115;
-    return Text.rich(
-      TextSpan(
+    // FittedBox + unbounded child — нет overflow даже для ♠/♥ на web.
+    return FittedBox(
+      fit: BoxFit.contain,
+      alignment: Alignment.topCenter,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          TextSpan(
-            text: '$rank\n',
+          Text(
+            rank,
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: color,
-              fontSize: rankFs,
+              fontSize: 28,
               fontWeight: FontWeight.w800,
-              height: 1.05,
+              height: 1,
               leadingDistribution: TextLeadingDistribution.even,
             ),
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: false,
+              applyHeightToLastDescent: false,
+            ),
           ),
-          TextSpan(
-            text: suit,
+          Text(
+            suit,
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: color,
-              fontSize: suitFs,
+              fontSize: 26,
               fontWeight: FontWeight.w700,
-              height: 1.05,
+              height: 1,
               leadingDistribution: TextLeadingDistribution.even,
+            ),
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: false,
+              applyHeightToLastDescent: false,
             ),
           ),
         ],
-      ),
-      textAlign: TextAlign.center,
-      textHeightBehavior: const TextHeightBehavior(
-        applyHeightToFirstAscent: false,
-        applyHeightToLastDescent: false,
       ),
     );
   }
@@ -379,7 +385,6 @@ class DurakTrumpSuitBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = suit.isRed ? const Color(0xFFD84A4A) : const Color(0xFF1B1B24);
-    final glyph = size * 0.55;
     return Container(
       width: size,
       height: size,
@@ -400,18 +405,24 @@ class DurakTrumpSuitBadge extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: Text(
-        suit.symbol,
-        style: TextStyle(
-          color: color,
-          fontSize: glyph,
-          fontWeight: FontWeight.w800,
-          height: 1,
-          leadingDistribution: TextLeadingDistribution.even,
-        ),
-        textHeightBehavior: const TextHeightBehavior(
-          applyHeightToFirstAscent: false,
-          applyHeightToLastDescent: false,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Padding(
+          padding: EdgeInsets.all(size * 0.18),
+          child: Text(
+            suit.symbol,
+            style: TextStyle(
+              color: color,
+              fontSize: 48,
+              fontWeight: FontWeight.w800,
+              height: 1,
+              leadingDistribution: TextLeadingDistribution.even,
+            ),
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: false,
+              applyHeightToLastDescent: false,
+            ),
+          ),
         ),
       ),
     );
