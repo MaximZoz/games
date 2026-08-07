@@ -268,6 +268,37 @@ void main() {
       expect(game.loserIndex, 1);
     });
 
+    test('take follow-up: can throw in then confirm', () {
+      final game = DurakGame(
+        hands: [
+          [
+            PlayingCard(Rank.nine, Suit.hearts),
+            PlayingCard(Rank.nine, Suit.diamonds),
+            PlayingCard(Rank.ten, Suit.clubs),
+          ],
+          [
+            PlayingCard(Rank.six, Suit.spades),
+            PlayingCard(Rank.seven, Suit.clubs),
+          ],
+        ],
+        deck: Deck([]),
+        trump: Suit.spades,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      game.attack(PlayingCard(Rank.nine, Suit.hearts), playerIndex: 0);
+      game.take();
+      expect(game.turn, DurakTurn.takeFollowUp);
+      expect(game.canAttackWith(PlayingCard(Rank.nine, Suit.diamonds), 0), isTrue);
+      game.attack(PlayingCard(Rank.nine, Suit.diamonds), playerIndex: 0);
+      expect(game.table.length, 2);
+      expect(game.turn, DurakTurn.takeFollowUp);
+      game.confirmTake();
+      expect(game.table, isEmpty);
+      expect(game.hands[1].length, greaterThanOrEqualTo(4));
+      expect(game.turn, DurakTurn.attacker);
+    });
+
     test('bot defends with minimum higher card of same suit', () {
       final game = DurakGame(
         hands: [
