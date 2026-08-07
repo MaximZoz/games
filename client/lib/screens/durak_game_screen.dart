@@ -1166,6 +1166,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         if (v != null) {
           // После биты/авто-закрытия раунда не затираем prev — добор сыграет FX.
           _syncPrevAfterMove(v);
+          _syncHandOrderFromServer(v);
         }
         setState(() {
           _flyingFromHand.removeAll(cards);
@@ -1212,13 +1213,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   /// Убрать карты из локального порядка веера (создаёт порядок, если его ещё нет).
   void _removeFromHandOrder(List<PlayingCard> cards, DurakGameView view) {
-    final base = _handOrder ??
-        _apiCardsToPlaying(
-          view.hands.length > view.myIndex && view.myIndex >= 0
-              ? (view.hands[view.myIndex].cards ?? const [])
-              : const [],
-        );
+    var base = _handOrder;
+    if (base == null || base.isEmpty) {
+      base = _apiCardsToPlaying(
+        view.hands.length > view.myIndex && view.myIndex >= 0
+            ? (view.hands[view.myIndex].cards ?? const [])
+            : const [],
+      );
+    }
+    // Не затирать order пустым списком — иначе следующий добор анимирует всю руку.
+    if (base.isEmpty) return;
     _handOrder = base.where((c) => !cards.contains(c)).toList();
+  }
+
+  /// После своего хода: order = актуальная рука сервера (без добора).
+  void _syncHandOrderFromServer(DurakGameView v) {
+    final hand = _apiCardsToPlaying(
+      v.hands.length > v.myIndex && v.myIndex >= 0
+          ? (v.hands[v.myIndex].cards ?? const [])
+          : const [],
+    );
+    if (hand.isEmpty) return;
+    final handSet = hand.toSet();
+    final prev = _handOrder;
+    if (prev == null || prev.isEmpty) {
+      _handOrder = List<PlayingCard>.of(hand);
+      return;
+    }
+    final next = <PlayingCard>[for (final c in prev) if (handSet.contains(c)) c];
+    for (final c in hand) {
+      if (!next.contains(c)) next.add(c);
+    }
+    _handOrder = next;
   }
 
   /// Подкид/атака без `_busy`: одна карта, веер сразу свободен, посадка без мигания.
@@ -1431,6 +1457,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
       if (v != null) {
         _syncPrevAfterMove(v);
+        _syncHandOrderFromServer(v);
       }
       if (!clearFlying) return;
       await WidgetsBinding.instance.endOfFrame;
@@ -1550,10 +1577,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevBitoCount = v.bitoCount;
         _prevHandLen = hand.length;
         _prevTable = List.of(v.table);
+        // Добор из колоды: новые карты, которых не было до take и не со стола.
         final dealt = [
           for (final c in hand)
             if (!beforeSet.contains(c) && !takenSet.contains(c)) c,
         ];
+        // Веер уже держит taken; order = (старые − ничего) ∪ taken, без добора.
+        final keep = [
+          for (final c in hand) if (!dealt.contains(c)) c,
+        ];
+        if (keep.isNotEmpty) {
+          final prev = _handOrder ?? keep;
+          final keepSet = keep.toSet();
+          final ordered = <PlayingCard>[
+            for (final c in prev) if (keepSet.contains(c)) c,
+          ];
+          for (final c in keep) {
+            if (!ordered.contains(c)) ordered.add(c);
+          }
+          _handOrder = ordered;
+        }
         final oppDeals = _opponentDealDeltas(v);
         _syncPrevOppHandCounts(v);
         _prevAttackerIndex = v.attackerIndex;
@@ -1647,11 +1690,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ? (fresh.hands[fresh.myIndex].cards ?? const [])
               : const [],
         );
-        final prevSet = _handOrder?.toSet() ?? {};
-        final dealt = [
-          for (final c in hand)
-            if (!prevSet.contains(c) && !_incomingFanCards.contains(c)) c,
-        ];
+        // Дельта по длине руки — не «все карты, которых нет в order».
+        final prevLen = _prevHandLen >= 0
+            ? _prevHandLen
+            : (_handOrder?.length ?? 0);
+        final dealtN = (hand.length - prevLen).clamp(0, hand.length);
+        final dealt = _incomingDealCards(hand, dealtN);
         final deckBefore = _prevDeckCount >= 0 ? _prevDeckCount : fresh.deckCount;
         final oppDeals = _opponentDealDeltas(fresh);
         if (dealt.isNotEmpty) {
@@ -1918,23 +1962,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 : const [],
           )
         : const <PlayingCard>[];
-    var order = List<PlayingCard>.from(
-      _handOrder ??
-          [for (final c in serverHand) if (!cards.contains(c)) c],
-    );
-    // Убрать ещё не добранные из порядка — добавим по одной.
-    order = [for (final c in order) if (!cards.contains(c)) c];
-    // Защита: не опустошать веер, если добираем меньше, чем уже есть в руке.
-    if (order.isEmpty && serverHand.length > cards.length) {
-      order = [
-        for (final c in serverHand)
-          if (!cards.contains(c)) c,
-      ];
-      _handOrder = List<PlayingCard>.of(order);
+    final dealSet = cards.toSet();
+    // Карты, которые уже должны быть в веере — никогда не убираем перед добором.
+    final keepFromServer = [
+      for (final c in serverHand)
+        if (!dealSet.contains(c)) c,
+    ];
+    var order = <PlayingCard>[
+      for (final c in (_handOrder ?? keepFromServer))
+        if (!dealSet.contains(c) && keepFromServer.contains(c)) c,
+    ];
+    for (final c in keepFromServer) {
+      if (!order.contains(c)) order.add(c);
     }
+    // Сразу зафиксировать веер без добираемых — иначе кадр с пустой рукой.
+    _handOrder = List<PlayingCard>.of(order);
+    _pendingDealCards.addAll(dealSet);
 
     final manageBusy = !_busy;
     setState(() {
+      _handOrder = order;
       _fanAnimDuringBusy = true;
       _suppressFanLayoutAnim = false;
       if (manageBusy) _busy = true;
@@ -2654,58 +2701,61 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         : _prevHandLen;
   }
 
-  /// Карты для анимации добора: только при реальном приросте руки [dealt].
-  /// Если [_handOrder] пуст/устарел — сидируем веер «старыми», иначе он
-  /// пропадает и с колоды летит вся рука.
+  /// Карты для анимации добора: строго не больше [dealt] (дельта длины руки).
+  /// Остальные карты сразу остаются в [_handOrder], чтобы веер не опустел
+  /// и с колоды не летела вся рука.
   List<PlayingCard> _incomingDealCards(List<PlayingCard> hand, int dealt) {
-    final prev = _handOrder;
-    final prevSet = prev?.toSet() ?? {};
-    var incoming = [
-      for (final c in hand)
-        if (!prevSet.contains(c)) c,
-    ];
-    // Без дельты руки не анимируем добор (после обычного хода колода не сдаёт).
     final expect = dealt > 0 ? dealt : 0;
+    if (hand.isEmpty) return const [];
     if (expect <= 0) {
-      if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
+      if (_handOrder == null || _handOrder!.isEmpty) {
         _handOrder = List<PlayingCard>.of(hand);
       }
       return const [];
     }
-    // Первый синк руки (order ещё пуст) — не считаем всю руку «добором»,
-    // иначе _handOrder становится [] и веер пропадает.
-    if ((prev == null || prev.isEmpty) && hand.isNotEmpty) {
-      if (incoming.length >= hand.length) {
+    // Добор «всей руки» при пустом/нулевом prev — это первый синк, не анимация.
+    if (expect >= hand.length &&
+        (_handOrder == null ||
+            _handOrder!.isEmpty ||
+            _prevHandLen <= 0)) {
+      _handOrder = List<PlayingCard>.of(hand);
+      return const [];
+    }
+    return _splitHandForDeal(hand, expect);
+  }
+
+  /// Разделить руку на «уже в веере» и «добрать из колоды» (ровно [expect]).
+  List<PlayingCard> _splitHandForDeal(List<PlayingCard> hand, int expect) {
+    final n = expect.clamp(0, hand.length);
+    if (n <= 0) {
+      if (_handOrder == null || _handOrder!.isEmpty) {
         _handOrder = List<PlayingCard>.of(hand);
-        return const [];
       }
-      _handOrder = [
-        for (final c in hand)
-          if (!incoming.contains(c)) c,
-      ];
-      return incoming;
+      return const [];
     }
-    if (incoming.length > expect) {
-      final keepCount = hand.length - expect;
-      final keep = <PlayingCard>[];
-      final rest = <PlayingCard>[];
-      for (final c in hand) {
-        if (prevSet.contains(c) && keep.length < keepCount) {
-          keep.add(c);
-        } else {
-          rest.add(c);
-        }
+    final keepCount = hand.length - n;
+    final prevSet = _handOrder?.toSet() ?? {};
+    final keep = <PlayingCard>[];
+    final rest = <PlayingCard>[];
+    for (final c in hand) {
+      if (prevSet.contains(c) && keep.length < keepCount) {
+        keep.add(c);
+      } else {
+        rest.add(c);
       }
-      if (keep.length < keepCount) {
-        for (final c in rest.toList()) {
-          if (keep.length >= keepCount) break;
-          keep.add(c);
-          rest.remove(c);
-        }
-      }
-      _handOrder = keep;
-      incoming = rest.length > expect ? rest.sublist(rest.length - expect) : rest;
     }
+    // Не хватает «старых» в order (пустой/устаревший) — оставляем в веере
+    // keepCount карт, с колоды анимируем только n.
+    while (keep.length < keepCount && rest.isNotEmpty) {
+      keep.add(rest.removeAt(0));
+    }
+    final incoming =
+        rest.length > n ? rest.sublist(rest.length - n) : List.of(rest);
+    // Лишнее из rest (если вдруг) — тоже в веер, не на анимацию.
+    for (final c in rest) {
+      if (!incoming.contains(c) && !keep.contains(c)) keep.add(c);
+    }
+    _handOrder = keep;
     return incoming;
   }
 
