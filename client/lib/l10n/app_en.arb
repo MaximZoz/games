@@ -65,6 +65,7 @@
   },
   "appUpdateTitle": "Update available",
   "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateWhatsNew": "What's new",
   "appUpdateOk": "Update",
   "appUpdateLaterBanner": "We'll update the app after this game",
   "loginTitle": "Sign in",

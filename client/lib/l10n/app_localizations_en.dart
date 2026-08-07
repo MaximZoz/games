@@ -136,6 +136,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
 
   @override
+  String get appUpdateWhatsNew => 'What\'s new';
+
+  @override
   String get appUpdateOk => 'Update';
 
   @override

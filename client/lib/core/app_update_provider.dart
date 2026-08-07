@@ -13,6 +13,7 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 class AppUpdateState {
   const AppUpdateState({
     this.latestBuild,
+    this.whatsNew = '',
     this.updateAvailable = false,
     this.deferredUntilGameEnd = false,
     this.dialogShown = false,
@@ -20,6 +21,10 @@ class AppUpdateState {
   });
 
   final String? latestBuild;
+
+  /// Текст «что нового» с сервера (WHAT_NEW.md).
+  final String whatsNew;
+
   final bool updateAvailable;
 
   /// Есть обновление, но пользователь в активной партии — только баннер.
@@ -33,6 +38,7 @@ class AppUpdateState {
 
   AppUpdateState copyWith({
     String? latestBuild,
+    String? whatsNew,
     bool? updateAvailable,
     bool? deferredUntilGameEnd,
     bool? dialogShown,
@@ -40,6 +46,7 @@ class AppUpdateState {
   }) {
     return AppUpdateState(
       latestBuild: latestBuild ?? this.latestBuild,
+      whatsNew: whatsNew ?? this.whatsNew,
       updateAvailable: updateAvailable ?? this.updateAvailable,
       deferredUntilGameEnd: deferredUntilGameEnd ?? this.deferredUntilGameEnd,
       dialogShown: dialogShown ?? this.dialogShown,
@@ -69,14 +76,20 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     await check();
   }
 
-  /// Сравнить с сервером / WS payload. [fromWs] — событие realtime.
-  Future<void> check({String? latestBuild, bool fromWs = false}) async {
+  /// Сравнить с сервером / WS payload.
+  Future<void> check({
+    String? latestBuild,
+    String? whatsNew,
+  }) async {
     if (_checking && latestBuild == null) return;
     _checking = true;
     try {
       var remote = latestBuild?.trim();
-      if (remote == null || remote.isEmpty) {
-        remote = await _fetchLatestBuild();
+      var notes = whatsNew?.trim() ?? '';
+      if (remote == null || remote.isEmpty || notes.isEmpty) {
+        final info = await _fetchVersionInfo();
+        remote ??= info?.buildId;
+        if (notes.isEmpty) notes = info?.whatsNew ?? '';
       }
       if (remote == null || remote.isEmpty) return;
 
@@ -86,7 +99,11 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
         if (state.updateAvailable || state.deferredUntilGameEnd) {
           state = const AppUpdateState();
         } else {
-          state = state.copyWith(latestBuild: remote, updateAvailable: false);
+          state = state.copyWith(
+            latestBuild: remote,
+            whatsNew: notes,
+            updateAvailable: false,
+          );
         }
         return;
       }
@@ -94,6 +111,7 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       final inGame = _isInActiveGame();
       state = state.copyWith(
         latestBuild: remote,
+        whatsNew: notes,
         updateAvailable: true,
         deferredUntilGameEnd: inGame,
         // Новый build_id — снова можно показать баннер.
@@ -146,7 +164,7 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     return false;
   }
 
-  Future<String?> _fetchLatestBuild() async {
+  Future<({String buildId, String whatsNew})?> _fetchVersionInfo() async {
     try {
       final res = await http
           .get(Uri.parse('$apiBaseUrl/api/version'))
@@ -155,7 +173,12 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       final body = jsonDecode(res.body);
       if (body is! Map) return null;
       final latest = body['latest_build'] ?? body['build_id'];
-      if (latest is String && latest.trim().isNotEmpty) return latest.trim();
+      if (latest is! String || latest.trim().isEmpty) return null;
+      final notes = body['whats_new'];
+      return (
+        buildId: latest.trim(),
+        whatsNew: notes is String ? notes.trim() : '',
+      );
     } catch (_) {}
     return null;
   }

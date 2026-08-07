@@ -65,6 +65,7 @@
   },
   "appUpdateTitle": "Доступно обновление",
   "appUpdateBody": "Вышла новая версия приложения. Обновитесь, чтобы продолжить.",
+  "appUpdateWhatsNew": "Что нового",
   "appUpdateOk": "Обновить",
   "appUpdateLaterBanner": "После партии обновим приложение",
   "loginTitle": "Вход",

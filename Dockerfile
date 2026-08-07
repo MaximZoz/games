@@ -33,6 +33,8 @@ RUN go mod download
 # Исходники и статика
 WORKDIR /app
 COPY server/ ./server/
+# Текст «что нового» для диалога обновления клиента
+COPY WHAT_NEW.md ./server/cmd/server/whats_new.md
 # Подставляем собранный Flutter web в каталог для embed
 COPY --from=flutter_build /app/build/web ./server/cmd/server/web/
 

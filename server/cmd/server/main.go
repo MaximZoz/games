@@ -32,6 +32,9 @@ import (
 //go:embed web
 var webFS embed.FS
 
+//go:embed whats_new.md
+var whatsNewFile string
+
 const serverMessage = "go start"
 
 // buildID — короткий git sha (или иной id), прошивается при деплое:
@@ -49,6 +52,37 @@ func effectiveBuildID() string {
 	return strings.TrimSpace(buildID)
 }
 
+// effectiveWhatsNew — текст для диалога обновления (WHAT_NEW.md / WHAT_NEW env).
+func effectiveWhatsNew() string {
+	if v := strings.TrimSpace(os.Getenv("WHAT_NEW")); v != "" {
+		return v
+	}
+	return formatWhatsNew(whatsNewFile)
+}
+
+func formatWhatsNew(raw string) string {
+	lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
+	out := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trim := strings.TrimSpace(line)
+		// Заголовок файла не показываем в диалоге.
+		if trim == "" || strings.HasPrefix(trim, "#") {
+			continue
+		}
+		out = append(out, strings.TrimRight(line, " \t"))
+	}
+	return strings.TrimSpace(strings.Join(out, "\n"))
+}
+
+func versionPayload() map[string]string {
+	id := effectiveBuildID()
+	return map[string]string{
+		"build_id":     id,
+		"latest_build": id,
+		"whats_new":    effectiveWhatsNew(),
+	}
+}
+
 func handleVersion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == http.MethodOptions {
@@ -59,13 +93,9 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, i18n.T(i18n.LangFromRequest(r), "Method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
-	id := effectiveBuildID()
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
-	_ = json.NewEncoder(w).Encode(map[string]string{
-		"build_id":     id,
-		"latest_build": id,
-	})
+	_ = json.NewEncoder(w).Encode(versionPayload())
 }
 
 func getEnv(key, defaultVal string) string {
@@ -547,10 +577,12 @@ func main() {
 	// После деплоя уведомляем онлайн-клиентов (с небольшой задержкой на подъём WS).
 	go func() {
 		time.Sleep(3 * time.Second)
+		v := versionPayload()
 		payload := map[string]any{
 			"type":         "client_update_available",
-			"build_id":     effectiveBuildID(),
-			"latest_build": effectiveBuildID(),
+			"build_id":     v["build_id"],
+			"latest_build": v["latest_build"],
+			"whats_new":    v["whats_new"],
 		}
 		gamesBroadcaster.PublishAll(payload)
 	}()

@@ -301,9 +301,14 @@ class AppShell extends ConsumerWidget {
             unawaited(ref.read(appUpdateProvider.notifier).check());
           }
           if (type == 'client_update_available') {
-            final latest = (event['latest_build'] ?? event['build_id'])?.toString();
+            final latest =
+                (event['latest_build'] ?? event['build_id'])?.toString();
+            final notes = event['whats_new']?.toString();
             unawaited(
-              ref.read(appUpdateProvider.notifier).check(latestBuild: latest),
+              ref.read(appUpdateProvider.notifier).check(
+                    latestBuild: latest,
+                    whatsNew: notes,
+                  ),
             );
           }
           if (type == 'game_started' || type == 'lobby_updated') {
@@ -938,6 +943,7 @@ class AppShell extends ConsumerWidget {
 
 Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
   final l10n = context.l10n;
+  final whatsNew = ref.read(appUpdateProvider).whatsNew.trim();
   final go = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
@@ -949,7 +955,37 @@ Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
           l10n.appUpdateTitle,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        content: Text(l10n.appUpdateBody),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360, maxHeight: 360),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.appUpdateBody),
+                if (whatsNew.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    l10n.appUpdateWhatsNew,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    whatsNew,
+                    style: TextStyle(
+                      color: AppColors.textSecondary.withValues(alpha: 0.95),
+                      height: 1.35,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),

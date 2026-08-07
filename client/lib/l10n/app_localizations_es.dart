@@ -136,6 +136,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appUpdateBody => 'Вышла новая версия приложения. Обновитесь, чтобы продолжить.';
 
   @override
+  String get appUpdateWhatsNew => 'Что нового';
+
+  @override
   String get appUpdateOk => 'Обновить';
 
   @override

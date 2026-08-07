@@ -395,6 +395,12 @@ abstract class AppLocalizations {
   /// **'Вышла новая версия приложения. Обновитесь, чтобы продолжить.'**
   String get appUpdateBody;
 
+  /// No description provided for @appUpdateWhatsNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что нового'**
+  String get appUpdateWhatsNew;
+
   /// No description provided for @appUpdateOk.
   ///
   /// In ru, this message translates to:
