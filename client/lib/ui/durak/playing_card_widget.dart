@@ -4,9 +4,9 @@ import 'package:multigames_client/ui/app_theme.dart';
 
 /// Отрисовка одной игральной карты.
 ///
-/// Глифы только через [FittedBox] (child с unbounded constraints) — иначе
-/// метрики ♠/♥ на web дают layout-overflow (жёлтые полосы), особенно при
-/// [Transform.scale] во время вытаскивания из веера.
+/// Лицо рисуется [CustomPainter] + [TextPainter] (не через [Text]/[Column]):
+/// на Flutter Web глифы ♠/♥ дают layout-overflow (жёлтые полосы), особенно
+/// при [Transform.scale] / [AnimatedScale] при вытаскивании из веера.
 ///
 /// Рамок нет: подсказка — только фиолетовая тень ([highlighted] / [dropTarget]).
 class PlayingCardWidget extends StatelessWidget {
@@ -73,66 +73,21 @@ class PlayingCardWidget extends StatelessWidget {
           )
         : null;
 
-    final face = ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      clipBehavior: Clip.hardEdge,
-      child: SizedBox(
-        width: size.width,
-        height: size.height,
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          fit: StackFit.expand,
-          children: [
-            Positioned(
-              left: size.width * 0.06,
-              top: size.height * 0.035,
-              width: size.width * 0.32,
-              height: size.height * 0.28,
-              child: _CornerMarks(
-                rank: card.rank.label,
-                suit: card.suit.symbol,
-                color: color,
-              ),
-            ),
-            Positioned(
-              left: size.width * 0.18,
-              right: size.width * 0.18,
-              top: size.height * 0.26,
-              bottom: size.height * 0.26,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Text(
-                  card.suit.symbol,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 72,
-                    fontWeight: FontWeight.w800,
-                    height: 1,
-                    leadingDistribution: TextLeadingDistribution.even,
-                  ),
-                  textHeightBehavior: const TextHeightBehavior(
-                    applyHeightToFirstAscent: false,
-                    applyHeightToLastDescent: false,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              right: size.width * 0.06,
-              bottom: size.height * 0.035,
-              width: size.width * 0.32,
-              height: size.height * 0.28,
-              child: Transform.rotate(
-                angle: 3.1415926535,
-                child: _CornerMarks(
-                  rank: card.rank.label,
-                  suit: card.suit.symbol,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
+    // MediaQuery textScaler не должен раздувать глифы на web/a11y.
+    final face = MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.noScaling,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        clipBehavior: Clip.hardEdge,
+        child: CustomPaint(
+          size: size,
+          painter: _PlayingCardFacePainter(
+            rank: card.rank.label,
+            suit: card.suit.symbol,
+            color: color,
+          ),
         ),
       ),
     );
@@ -161,8 +116,9 @@ class PlayingCardWidget extends StatelessWidget {
   }
 }
 
-class _CornerMarks extends StatelessWidget {
-  const _CornerMarks({
+/// Рисует ранг/масть в заданных rect без RenderFlex/RenderParagraph overflow.
+class _PlayingCardFacePainter extends CustomPainter {
+  _PlayingCardFacePainter({
     required this.rank,
     required this.suit,
     required this.color,
@@ -173,47 +129,125 @@ class _CornerMarks extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
-    // FittedBox + unbounded child — нет overflow даже для ♠/♥ на web.
-    return FittedBox(
-      fit: BoxFit.contain,
-      alignment: Alignment.topCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            rank,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              height: 1,
-              leadingDistribution: TextLeadingDistribution.even,
-            ),
-            textHeightBehavior: const TextHeightBehavior(
-              applyHeightToFirstAscent: false,
-              applyHeightToLastDescent: false,
-            ),
-          ),
-          Text(
-            suit,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              height: 1,
-              leadingDistribution: TextLeadingDistribution.even,
-            ),
-            textHeightBehavior: const TextHeightBehavior(
-              applyHeightToFirstAscent: false,
-              applyHeightToLastDescent: false,
-            ),
-          ),
-        ],
-      ),
+  void paint(Canvas canvas, Size size) {
+    final cornerW = size.width * 0.32;
+    final cornerH = size.height * 0.28;
+    final padX = size.width * 0.06;
+    final padY = size.height * 0.035;
+
+    _paintCorner(canvas, Rect.fromLTWH(padX, padY, cornerW, cornerH));
+
+    final center = Rect.fromLTRB(
+      size.width * 0.18,
+      size.height * 0.26,
+      size.width * 0.82,
+      size.height * 0.74,
     );
+    _paintFittedText(
+      canvas,
+      center,
+      suit,
+      fontSize: size.height * 0.42,
+      weight: FontWeight.w800,
+    );
+
+    canvas.save();
+    final br = Rect.fromLTWH(
+      size.width - padX - cornerW,
+      size.height - padY - cornerH,
+      cornerW,
+      cornerH,
+    );
+    canvas.translate(br.center.dx, br.center.dy);
+    canvas.rotate(3.1415926535);
+    canvas.translate(-br.center.dx, -br.center.dy);
+    _paintCorner(canvas, br);
+    canvas.restore();
+  }
+
+  void _paintCorner(Canvas canvas, Rect box) {
+    final rankBox = Rect.fromLTWH(
+      box.left,
+      box.top,
+      box.width,
+      box.height * 0.52,
+    );
+    final suitBox = Rect.fromLTWH(
+      box.left,
+      box.top + box.height * 0.48,
+      box.width,
+      box.height * 0.52,
+    );
+    _paintFittedText(
+      canvas,
+      rankBox,
+      rank,
+      fontSize: box.height * 0.48,
+      weight: FontWeight.w800,
+    );
+    _paintFittedText(
+      canvas,
+      suitBox,
+      suit,
+      fontSize: box.height * 0.44,
+      weight: FontWeight.w700,
+    );
+  }
+
+  void _paintFittedText(
+    Canvas canvas,
+    Rect box,
+    String text, {
+    required double fontSize,
+    required FontWeight weight,
+  }) {
+    if (box.width <= 0 || box.height <= 0 || text.isEmpty) return;
+
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: weight,
+          height: 1,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
+      ),
+    )..layout();
+
+    final tw = tp.width;
+    final th = tp.height;
+    if (tw <= 0 || th <= 0) return;
+
+    // Запас 4% — метрики web-шрифтов иногда чуть больше layout-box.
+    final sx = (box.width * 0.96) / tw;
+    final sy = (box.height * 0.96) / th;
+    final scale = sx < sy ? sx : sy;
+    if (scale <= 0) return;
+
+    final dx = box.left + (box.width - tw * scale) / 2;
+    final dy = box.top + (box.height - th * scale) / 2;
+
+    canvas.save();
+    canvas.clipRect(box);
+    canvas.translate(dx, dy);
+    canvas.scale(scale);
+    tp.paint(canvas, Offset.zero);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _PlayingCardFacePainter oldDelegate) {
+    return oldDelegate.rank != rank ||
+        oldDelegate.suit != suit ||
+        oldDelegate.color != color;
   }
 }
 
@@ -405,26 +439,57 @@ class DurakTrumpSuitBadge extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: Padding(
-          padding: EdgeInsets.all(size * 0.18),
-          child: Text(
-            suit.symbol,
-            style: TextStyle(
-              color: color,
-              fontSize: 48,
-              fontWeight: FontWeight.w800,
-              height: 1,
-              leadingDistribution: TextLeadingDistribution.even,
-            ),
-            textHeightBehavior: const TextHeightBehavior(
-              applyHeightToFirstAscent: false,
-              applyHeightToLastDescent: false,
-            ),
-          ),
-        ),
+      child: CustomPaint(
+        size: Size.square(size * 0.64),
+        painter: _SuitGlyphPainter(symbol: suit.symbol, color: color),
       ),
     );
+  }
+}
+
+class _SuitGlyphPainter extends CustomPainter {
+  _SuitGlyphPainter({required this.symbol, required this.color});
+
+  final String symbol;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: symbol,
+        style: TextStyle(
+          color: color,
+          fontSize: size.shortestSide,
+          fontWeight: FontWeight.w800,
+          height: 1,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
+      ),
+    )..layout();
+    final tw = tp.width;
+    final th = tp.height;
+    if (tw <= 0 || th <= 0) return;
+    final scale = (size.shortestSide * 0.92) / (tw > th ? tw : th);
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
+    canvas.translate(
+      (size.width - tw * scale) / 2,
+      (size.height - th * scale) / 2,
+    );
+    canvas.scale(scale);
+    tp.paint(canvas, Offset.zero);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _SuitGlyphPainter oldDelegate) {
+    return oldDelegate.symbol != symbol || oldDelegate.color != color;
   }
 }
