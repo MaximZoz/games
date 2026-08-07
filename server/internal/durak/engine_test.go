@@ -255,8 +255,43 @@ func TestAttackManySameRank(t *testing.T) {
 	}
 }
 
+// Неотбитые на столе учитываются: рука 5 + 2 неотбитых → подкид ещё не больше 3.
+func TestThrowInLimitedByDefenderHandMinusUndefended(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{9, Diamonds}, {9, Clubs}, {9, Spades}, {10, Clubs}, {6, Spades}},
+			{{6, Hearts}, {7, Hearts}, {8, Hearts}, {11, Hearts}, {12, Hearts}}, // 5
+		},
+		Trump:         Diamonds,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		Table: []Pair{
+			{Attack: Card{9, Hearts}},
+			{Attack: Card{10, Hearts}},
+		},
+	}
+	if got := st.MaxAttacksThisRound(); got != 5 {
+		t.Fatalf("MaxAttacksThisRound=%d, want 5 (beaten0+hand5)", got)
+	}
+	// 3 подкида — ок (стол станет 5).
+	if err := st.AttackMany(0, []Card{{9, Diamonds}, {9, Clubs}, {9, Spades}}); err != nil {
+		t.Fatalf("throw-in 3: %v", err)
+	}
+	if len(st.Table) != 5 {
+		t.Fatalf("table=%d, want 5", len(st.Table))
+	}
+	// 4-й подкид — нельзя (защитник не сможет отбить).
+	if err := st.AttackMany(0, []Card{{10, Clubs}}); err == nil {
+		t.Fatalf("expected ErrBadAttack for 4th throw-in")
+	}
+}
+
 // После нескольких отбитых пар подкид того же ранга всё ещё должен быть
-// возможен, пока не упёрлись в MaxAttacks (а не в «только размер руки»).
+// возможен: отбитые + рука, пока не упёрлись в MaxAttacks.
 func TestThrowInAfterBeatenPairs(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},

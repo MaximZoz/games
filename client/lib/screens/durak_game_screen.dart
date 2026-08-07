@@ -526,15 +526,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Сколько ещё атак/подкидов можно положить (учитывает оптимистичные).
+  ///
+  /// Не больше, чем защитник сможет отбить: рука − неотбитые на столе.
+  /// Пример: рука 5, неотбитых 2 → подкид ещё 3.
   int _attackRoom(DurakGameView view) {
     final def = view.defenderIndex;
     final defCount = (def >= 0 && def < view.hands.length)
         ? view.hands[def].count
         : 6;
-    final lim = defCount + view.table.length;
-    final capped = lim < 1 ? 1 : lim;
+    var beaten = 0;
+    for (var i = 0; i < view.table.length; i++) {
+      final p = view.table[i];
+      if (p.defense != null || _optimisticDefends.containsKey(i)) {
+        beaten++;
+      }
+    }
+    // Макс. пар = отбитые + карты в руке защитника (как на сервере).
+    var maxPairs = beaten + defCount;
+    if (maxPairs < 1) maxPairs = 1;
     const maxAttacks = 6;
-    final maxPairs = maxAttacks < capped ? maxAttacks : capped;
+    if (maxAttacks < maxPairs) maxPairs = maxAttacks;
     final pending = _pendingAttackPlaceholders(view).length;
     return (maxPairs - view.table.length - pending).clamp(0, 52);
   }
@@ -4169,11 +4180,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final leftReserve = cardSize.width * 0.95;
-        final rightReserve = cardSize.width * 0.95;
+        // Реальная ширина колоды (козырь + стопка) и биты+таймер — стол строго между ними.
+        final deckW =
+            cardSize.width * 0.55 + cardSize.height * 0.82;
+        final leftReserve = deckW + 14;
+        final rightReserve = math.max(90.0, cardSize.width * 0.70) + 12;
         final tableMaxW =
             (constraints.maxWidth - leftReserve - rightReserve)
-                .clamp(140.0, constraints.maxWidth * 0.68);
+                .clamp(100.0, constraints.maxWidth);
         // Якоря Positioned — Align не двигает колоду/биту при смене хода.
         final deckTop = constraints.maxHeight * 0.28;
         final bitoTop = constraints.maxHeight * 0.18;
@@ -4224,7 +4238,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 },
               ),
             ),
-            Positioned.fill(
+            // Стол только в коридоре между колодой и битой — без наездов.
+            Positioned(
+              left: leftReserve,
+              right: rightReserve,
+              top: 0,
+              bottom: 0,
               child: Center(
                 child: KeyedSubtree(
                   key: _tableKey,
@@ -4240,18 +4259,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
             ),
             if (showAttackSlot)
-              Center(
-                child: Transform.translate(
-                  offset: Offset(
-                    view.table.length * cardSize.width * 0.22,
-                    8,
-                  ),
-                  child: KeyedSubtree(
-                    key: _attackSlotKey,
-                    child: IgnorePointer(
-                      child: DurakDropSlot(
-                        size: cardSize,
-                        active: true,
+              Positioned(
+                left: leftReserve,
+                right: rightReserve,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Transform.translate(
+                    offset: Offset(
+                      view.table.length * cardSize.width * 0.22,
+                      8,
+                    ),
+                    child: KeyedSubtree(
+                      key: _attackSlotKey,
+                      child: IgnorePointer(
+                        child: DurakDropSlot(
+                          size: cardSize,
+                          active: true,
+                        ),
                       ),
                     ),
                   ),
