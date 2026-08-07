@@ -447,8 +447,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return opt;
   }
 
-  /// Веер: при росте руки сжимаем размер и шаг; ширину экрана заполняем
-  /// только при небольшом числе карт (иначе веер «вспухает» дугой вверх).
+  /// Веер: всегда на всю [maxWidth]; при росте руки сжимаем размер карт
+  /// (шаг пересчитывается так, чтобы веер снова растянулся от края до края).
   ({Size cardSize, double spacing}) _fitHandFan(int n, double maxWidth) {
     if (n <= 0) return (cardSize: _handCardSize, spacing: 0);
     var size = _handCardSize;
@@ -472,40 +472,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     const fanPad = 4.0;
     final usable = (maxWidth - fanPad).clamp(72.0, maxWidth);
 
-    /// Целевой шаг (доля ширины карты): чем больше карт — тем плотнее.
-    double targetSpacing(Size s) {
+    /// Минимальный шаг (доля ширины карты), чтобы полоска оставалась читаемой.
+    double minSpacing(Size s) {
       if (n <= 1) return 0;
       final w = s.width;
-      if (n > 28) return w * 0.06;
-      if (n > 22) return w * 0.08;
-      if (n > 18) return w * 0.10;
-      if (n > 14) return w * 0.14;
-      if (n > 11) return w * 0.18;
-      if (n > 9) return w * 0.22;
-      if (n > 7) return w * 0.30;
-      if (n > 5) return w * 0.40;
-      return w * 0.52;
+      if (n > 28) return w * 0.05;
+      if (n > 22) return w * 0.06;
+      if (n > 18) return w * 0.08;
+      if (n > 14) return w * 0.10;
+      if (n > 11) return w * 0.12;
+      if (n > 9) return w * 0.16;
+      if (n > 7) return w * 0.22;
+      if (n > 5) return w * 0.32;
+      return w * 0.42;
     }
 
-    var spacing = targetSpacing(size);
     for (var step = 0; step < 28; step++) {
-      final need = size.width + spacing * (n - 1);
+      final need = size.width + minSpacing(size) * (n - 1);
       if (need <= usable || size.width <= 18) break;
       final scale = (usable / need).clamp(0.28, 0.96);
       size = Size(size.width * scale, size.height * scale);
-      spacing = targetSpacing(size);
     }
 
-    // Мало карт — растянуть на ширину; много — оставить плотный шаг (не раздувать).
-    if (n <= 7 && n > 1) {
-      final fill = (usable - size.width) / (n - 1);
-      final hi = size.width * 0.96;
-      spacing = fill.clamp(spacing, hi > spacing ? hi : spacing);
-    }
+    // Всегда растягиваем шаг на всю доступную ширину.
+    if (n <= 1) return (cardSize: size, spacing: 0);
+    final lo = minSpacing(size);
+    final hi = size.width * 0.96;
+    final fill = (usable - size.width) / (n - 1);
+    final spacing = fill.clamp(lo, hi > lo ? hi : lo);
     return (cardSize: size, spacing: spacing);
   }
 
-  /// Мало карт — на всю ширину; много — компактный веер по центру.
+  /// 2+ карты — всегда от края до края; одна — по центру.
   ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
     int n,
     double maxWidth,
@@ -517,12 +515,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
     }
     final fitted = _fitHandFan(n, maxWidth);
-    // До 7 карт — от края до края; дальше только сжатие, без «подъёма» дуги.
-    final fillWidth = n <= 7;
     return (
       cardSize: fitted.cardSize,
       spacing: fitted.spacing,
-      fillWidth: fillWidth,
+      fillWidth: true,
     );
   }
 
@@ -3968,29 +3964,32 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       (cardSize.width * tileScale).clamp(22.0, 52.0),
       (cardSize.height * tileScale).clamp(32.0, 76.0),
     );
-    // Чем больше карт — тем меньше шаг (сжатие, не растягивание).
-    var stepFrac = shown > 16
-        ? 0.22
-        : shown > 12
-            ? 0.28
-            : shown > 9
-                ? 0.34
-                : shown > 6
-                    ? 0.42
-                    : shown > 4
-                        ? 0.52
-                        : 0.66;
-    var step = tile.width * stepFrac;
+    // Минимальный шаг (читаемая кромка); затем всегда растягиваем на maxW.
+    double minStepFrac() {
+      if (shown > 16) return 0.18;
+      if (shown > 12) return 0.22;
+      if (shown > 9) return 0.28;
+      if (shown > 6) return 0.36;
+      if (shown > 4) return 0.46;
+      return 0.58;
+    }
+
+    var step = tile.width * minStepFrac();
     var totalW = tile.width + step * math.max(shown - 1, 0);
-    if (totalW > maxW && shown > 1) {
-      step = ((maxW - tile.width) / (shown - 1)).clamp(10.0, step);
-      totalW = tile.width + step * (shown - 1);
-      if (totalW > maxW) {
-        final s = (maxW / totalW).clamp(0.45, 1.0);
+    if (shown > 1) {
+      // Сжимаем плитки, пока минимальный шаг влезает в ширину экрана.
+      for (var i = 0; i < 20 && totalW > maxW && tile.width > 18; i++) {
+        final s = (maxW / totalW).clamp(0.45, 0.96);
         tile = Size(tile.width * s, tile.height * s);
-        step *= s;
+        step = tile.width * minStepFrac();
         totalW = tile.width + step * (shown - 1);
       }
+      // Растянуть шаг на всю ширину (как свой веер).
+      final fill = (maxW - tile.width) / (shown - 1);
+      final lo = tile.width * minStepFrac();
+      final hi = tile.width * 0.92;
+      step = fill.clamp(lo, hi > lo ? hi : lo);
+      totalW = tile.width + step * (shown - 1);
     }
     // Плотная рука — более плоская дуга, без «подъёма» середины.
     final arcH = tile.height * (shown > 12

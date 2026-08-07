@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Логика сжатия веера (зеркало _fitHandFan / целевого шага).
+/// Логика веера: сжатие карт + растягивание на всю ширину.
 ({Size cardSize, double spacing}) fitHandFan({
   required int n,
   required double maxWidth,
@@ -28,39 +28,37 @@ import 'package:flutter_test/flutter_test.dart';
   const fanPad = 4.0;
   final usable = (maxWidth - fanPad).clamp(72.0, maxWidth);
 
-  double targetSpacing(Size s) {
+  double minSpacing(Size s) {
     if (n <= 1) return 0;
     final w = s.width;
-    if (n > 28) return w * 0.06;
-    if (n > 22) return w * 0.08;
-    if (n > 18) return w * 0.10;
-    if (n > 14) return w * 0.14;
-    if (n > 11) return w * 0.18;
-    if (n > 9) return w * 0.22;
-    if (n > 7) return w * 0.30;
-    if (n > 5) return w * 0.40;
-    return w * 0.52;
+    if (n > 28) return w * 0.05;
+    if (n > 22) return w * 0.06;
+    if (n > 18) return w * 0.08;
+    if (n > 14) return w * 0.10;
+    if (n > 11) return w * 0.12;
+    if (n > 9) return w * 0.16;
+    if (n > 7) return w * 0.22;
+    if (n > 5) return w * 0.32;
+    return w * 0.42;
   }
 
-  var spacing = targetSpacing(size);
   for (var step = 0; step < 28; step++) {
-    final need = size.width + spacing * (n - 1);
+    final need = size.width + minSpacing(size) * (n - 1);
     if (need <= usable || size.width <= 18) break;
     final scale = (usable / need).clamp(0.28, 0.96);
     size = Size(size.width * scale, size.height * scale);
-    spacing = targetSpacing(size);
   }
 
-  if (n <= 7 && n > 1) {
-    final fill = (usable - size.width) / (n - 1);
-    final hi = size.width * 0.96;
-    spacing = fill.clamp(spacing, hi > spacing ? hi : spacing);
-  }
+  if (n <= 1) return (cardSize: size, spacing: 0);
+  final lo = minSpacing(size);
+  final hi = size.width * 0.96;
+  final fill = (usable - size.width) / (n - 1);
+  final spacing = fill.clamp(lo, hi > lo ? hi : lo);
   return (cardSize: size, spacing: spacing);
 }
 
 void main() {
-  test('12 cards: denser than 6, fits width, cards smaller', () {
+  test('12 cards: smaller cards, denser overlap, still full width', () {
     const maxW = 390.0;
     final six = fitHandFan(n: 6, maxWidth: maxW);
     final twelve = fitHandFan(n: 12, maxWidth: maxW);
@@ -71,25 +69,25 @@ void main() {
       lessThan(six.spacing / six.cardSize.width),
     );
 
-    final span12 =
-        twelve.cardSize.width + twelve.spacing * 11;
+    final span12 = twelve.cardSize.width + twelve.spacing * 11;
+    expect(span12, greaterThan(maxW * 0.90));
     expect(span12, lessThanOrEqualTo(maxW));
   });
 
-  test('many cards keep compressing, never exceed width', () {
+  test('many cards fill width and stay within bounds', () {
     const maxW = 360.0;
-    for (final n in [10, 12, 16, 20, 24]) {
+    for (final n in [8, 10, 12, 16, 20, 24]) {
       final lay = fitHandFan(n: n, maxWidth: maxW);
       final span = lay.cardSize.width + lay.spacing * (n - 1);
-      expect(span, lessThanOrEqualTo(maxW + 0.5), reason: 'n=$n');
-      expect(lay.spacing, lessThan(lay.cardSize.width * 0.35), reason: 'n=$n');
+      expect(span, greaterThan(maxW * 0.88), reason: 'n=$n fill');
+      expect(span, lessThanOrEqualTo(maxW + 0.5), reason: 'n=$n bound');
     }
   });
 
-  test('few cards still stretch toward full width', () {
+  test('few cards stretch toward full width', () {
     const maxW = 390.0;
     final four = fitHandFan(n: 4, maxWidth: maxW);
     final span = four.cardSize.width + four.spacing * 3;
-    expect(span, greaterThan(maxW * 0.85));
+    expect(span, greaterThan(maxW * 0.90));
   });
 }
