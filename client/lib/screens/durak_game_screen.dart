@@ -1100,8 +1100,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       cardSize: _handCardSize,
       from: froms.first,
       to: tos.first,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
       beginScale: beginScale,
       endScale: shrink,
       beginAngle: 0,
@@ -1127,7 +1127,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     unawaited(() async {
       final tickets = <CardFlyTicket>[await firstFly];
       for (var i = 1; i < cards.length; i++) {
-        await Future<void>.delayed(Duration(milliseconds: 40 * i));
+        await Future<void>.delayed(Duration(milliseconds: 28 * i));
         if (!mounted) break;
         tickets.add(
           await playCardFlyAnimation(
@@ -1136,8 +1136,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             cardSize: _handCardSize,
             from: froms[i],
             to: tos[i],
-            duration: const Duration(milliseconds: 420),
-            curve: Curves.easeInOutCubic,
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
             beginScale: beginScale,
             endScale: shrink,
             beginAngle: 0,
@@ -1363,8 +1363,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       cardSize: _handCardSize,
       from: froms.first,
       to: tos.first,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
       beginScale: beginScale,
       endScale: shrink,
       beginAngle: 0,
@@ -1379,7 +1379,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     unawaited(() async {
       final tickets = <CardFlyTicket>[await firstFly];
       for (var i = 1; i < cards.length; i++) {
-        await Future<void>.delayed(Duration(milliseconds: 35 * i));
+        await Future<void>.delayed(Duration(milliseconds: 28 * i));
         if (!mounted) break;
         tickets.add(
           await playCardFlyAnimation(
@@ -1388,8 +1388,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             cardSize: _handCardSize,
             from: froms[i],
             to: tos[i],
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOutCubic,
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
             beginScale: beginScale,
             endScale: shrink,
             beginAngle: 0,
@@ -2045,9 +2045,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       tos: tos,
       beginAngles: beginAngles,
       endAngles: endAngles,
-      duration: const Duration(milliseconds: 560),
-      stagger: const Duration(milliseconds: 55),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 380),
+      stagger: const Duration(milliseconds: 32),
+      curve: Curves.easeOutCubic,
       beginScale: 1.0,
       endScale: 0.88,
       arcLift: 12,
@@ -2624,8 +2624,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         cardSize: _tableCardSize,
         from: from,
         to: land,
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeInOutCubic,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
         faceDown: false,
         flipToFace: false,
         beginScale: 1,
@@ -2646,7 +2646,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       });
       if (i + 1 < cards.length) {
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await Future<void>.delayed(const Duration(milliseconds: 32));
       }
     }
   }
@@ -2687,8 +2687,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         cardSize: _tableCardSize,
         from: from,
         to: land,
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeInOutCubic,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
         faceDown: true,
         flipToFace: false,
         beginScale: 1,
@@ -2709,7 +2709,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       });
       if (i + 1 < n) {
-        await Future<void>.delayed(const Duration(milliseconds: 55));
+        await Future<void>.delayed(const Duration(milliseconds: 32));
       }
     }
   }
@@ -2944,9 +2944,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       tos: [to],
       // Рубашка → лицо (faceDown включает flipToFace в playCardsFlyAnimation).
       faceDown: true,
-      duration: const Duration(milliseconds: 520),
+      duration: const Duration(milliseconds: 340),
       stagger: Duration.zero,
-      curve: Curves.easeInOutCubic,
+      curve: Curves.easeOutCubic,
       beginScale: 1.0,
       endScale: _tableCardSize.width / small.width,
       beginAngles: const [0.22],
@@ -4441,7 +4441,7 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
   }
 

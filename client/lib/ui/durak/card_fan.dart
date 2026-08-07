@@ -170,8 +170,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
         final center = _liftGlobalCenter;
         if (card == null || center == null) return const SizedBox.shrink();
         final scale = _liftScale;
-        final w = widget.cardSize.width * scale;
-        final h = widget.cardSize.height * scale;
+        final w = widget.cardSize.width;
+        final h = widget.cardSize.height;
         return IgnorePointer(
           child: Stack(
             children: [
@@ -180,16 +180,20 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
                 top: center.dy - h / 2,
                 width: w,
                 height: h,
-                child: FittedBox(
-                  fit: BoxFit.fill,
-                  child: widget.faceDown
-                      ? CardBackWidget(size: widget.cardSize, elevated: true)
-                      : PlayingCardWidget(
-                          card: card,
-                          size: widget.cardSize,
-                          elevated: true,
-                          highlighted: true,
-                        ),
+                child: RepaintBoundary(
+                  child: Transform.scale(
+                    scale: scale,
+                    filterQuality: FilterQuality.low,
+                    child: widget.faceDown
+                        ? CardBackWidget(size: widget.cardSize, elevated: true)
+                        : PlayingCardWidget(
+                            card: card,
+                            size: widget.cardSize,
+                            elevated: true,
+                            highlighted: true,
+                            animate: false,
+                          ),
+                  ),
                 ),
               ),
             ],
@@ -218,25 +222,25 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (overlay == null) return;
     final completer = Completer<void>();
     late OverlayEntry entry;
-    final duration = Duration(milliseconds: ms ?? (soft ? 300 : 240));
+    final duration = Duration(milliseconds: ms ?? (soft ? 260 : 200));
     entry = OverlayEntry(
       builder: (ctx) {
         return IgnorePointer(
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: duration,
-            curve: soft ? Curves.easeInOutCubic : Curves.easeOutCubic,
+            curve: Curves.easeOutCubic,
             onEnd: () {
               entry.remove();
               if (!completer.isCompleted) completer.complete();
             },
-            builder: (context, t, _) {
+            builder: (context, t, child) {
               final scale = beginScale + (1.0 - beginScale) * t;
-              final w = widget.cardSize.width * scale;
-              final h = widget.cardSize.height * scale;
+              final w = widget.cardSize.width;
+              final h = widget.cardSize.height;
               final cx = from.center.dx + (to.center.dx - from.center.dx) * t;
               final cy = from.center.dy + (to.center.dy - from.center.dy) * t;
-              final lift = soft ? -14.0 * sin(pi * t) : 0.0;
+              final lift = soft ? -12.0 * sin(pi * t) : 0.0;
               return Stack(
                 children: [
                   Positioned(
@@ -244,22 +248,26 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
                     top: cy - h / 2 + lift,
                     width: w,
                     height: h,
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: widget.faceDown
-                          ? CardBackWidget(
-                              size: widget.cardSize, elevated: true)
-                          : PlayingCardWidget(
-                              card: card,
-                              size: widget.cardSize,
-                              elevated: true,
-                              highlighted: false,
-                            ),
+                    child: RepaintBoundary(
+                      child: Transform.scale(
+                        scale: scale,
+                        filterQuality: FilterQuality.low,
+                        child: child,
+                      ),
                     ),
                   ),
                 ],
               );
             },
+            child: widget.faceDown
+                ? CardBackWidget(size: widget.cardSize, elevated: true)
+                : PlayingCardWidget(
+                    card: card,
+                    size: widget.cardSize,
+                    elevated: true,
+                    highlighted: false,
+                    animate: false,
+                  ),
           ),
         );
       },
@@ -314,15 +322,15 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       cardSize: widget.cardSize,
       from: from,
       to: peekRect,
-      duration: const Duration(milliseconds: 380),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
       faceDown: flipToFace,
       flipToFace: flipToFace,
       beginScale: fromScale,
       endScale: 1.0,
       beginAngle: beginAngle,
       endAngle: endAngle,
-      arcLift: flipToFace ? 18 : 12,
+      arcLift: flipToFace ? 14 : 10,
       keepAtEnd: true,
     );
     if (!mounted || gen != _gestureGen) {
@@ -339,7 +347,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     }
     await WidgetsBinding.instance.endOfFrame;
     ticket.dismiss();
-    await _animatePeekTTo(0, ms: 220);
+    await _animatePeekTTo(0, ms: 180);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;
@@ -363,9 +371,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       vsync: this,
       duration: Duration(milliseconds: ms),
     );
-    final anim = Tween<double>(begin: from, end: to).animate(
-      CurvedAnimation(parent: ctrl, curve: Curves.easeInOutCubic),
-    );
+    final curved = CurvedAnimation(parent: ctrl, curve: Curves.easeOutCubic);
+    final anim = Tween<double>(begin: from, end: to).animate(curved);
     final completer = Completer<void>();
     void tick() {
       if (!mounted) return;
@@ -376,6 +383,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     ctrl.addStatusListener((s) {
       if (s == AnimationStatus.completed || s == AnimationStatus.dismissed) {
         anim.removeListener(tick);
+        curved.dispose();
         ctrl.dispose();
         if (!completer.isCompleted) completer.complete();
       }
@@ -486,7 +494,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     _emitActiveCard(_isLegal(card) ? card : null);
     widget.onDragPosition?.call(null);
 
-    await _animatePeekTTo(0, ms: 240);
+    await _animatePeekTTo(0, ms: 180);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;
@@ -703,7 +711,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final gen = _gestureGen;
     // Палец ещё на экране — после въезда продолжаем листание тем же касанием.
     final resume = _pointerDown;
-    await _animatePeekTTo(0, ms: 220);
+    await _animatePeekTTo(0, ms: 180);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;
@@ -1097,14 +1105,14 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     // Peek — без duration; перестановка после сортировки — плавная.
     final animMs =
-        peeking || !widget.animateLayout ? 0 : 380;
+        peeking || !widget.animateLayout ? 0 : 280;
     final left = _cardLeft(i, n, baseSpacing, totalW) + extraX;
     final top = widget.invertFan ? extraY + edgeLift : null;
     final bottom = widget.invertFan ? null : extraY + edgeLift;
     final scaled = AnimatedScale(
       scale: scale,
-      duration: Duration(milliseconds: peeking || !widget.animateLayout ? 0 : 280),
-      curve: Curves.easeInOutCubic,
+      duration: Duration(milliseconds: peeking || !widget.animateLayout ? 0 : 220),
+      curve: Curves.easeOutCubic,
       child: Transform.rotate(
         angle: angle,
         alignment:
@@ -1126,7 +1134,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     return AnimatedPositioned(
       key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
       duration: Duration(milliseconds: animMs),
-      curve: Curves.easeInOutCubic,
+      curve: Curves.easeOutCubic,
       left: left,
       top: top,
       bottom: bottom,

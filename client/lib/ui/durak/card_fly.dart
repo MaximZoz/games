@@ -1,35 +1,39 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Билет на полёт: после [done] при [keepAtEnd] карта остаётся, пока не [dismiss].
 class CardFlyTicket {
-  CardFlyTicket._(this._entry);
+  CardFlyTicket._(this._entry, this._controller, this._curved);
   final OverlayEntry? _entry;
+  final AnimationController? _controller;
+  final CurvedAnimation? _curved;
   bool _dismissed = false;
 
   void dismiss() {
     if (_dismissed) return;
     _dismissed = true;
     _entry?.remove();
+    _curved?.dispose();
+    _controller?.dispose();
   }
 }
 
 /// Плавный полёт карты из [from] в [to] поверх всего UI.
-/// [flipToFace] — переворот рубашка→лицо к концу полёта (добор в руку).
-/// [beginScale]/[endScale] — размер относительно [cardSize].
-/// [arcLift] — высота дуги (0 = прямая траектория без подскока).
+/// Масштаб/поворот — через [Transform] (без пересчёта layout каждый кадр).
 Future<CardFlyTicket> playCardFlyAnimation({
   required BuildContext context,
   required PlayingCard card,
   required Size cardSize,
   required Rect from,
   required Rect to,
-  Duration duration = const Duration(milliseconds: 420),
-  Curve curve = Curves.easeInOutCubic,
+  Duration duration = const Duration(milliseconds: 340),
+  Curve curve = Curves.easeOutCubic,
   bool faceDown = false,
   bool flipToFace = false,
   double beginAngle = 0,
@@ -41,87 +45,139 @@ Future<CardFlyTicket> playCardFlyAnimation({
 }) async {
   // Не играть поверх чатов/других вкладок shell.
   if (!context.mounted || !TickerMode.of(context)) {
-    return CardFlyTicket._(null);
+    return CardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
-  if (overlay == null) return CardFlyTicket._(null);
+  if (overlay == null) return CardFlyTicket._(null, null, null);
 
   final completer = Completer<void>();
+  final controller = AnimationController(vsync: _FlyTicker(), duration: duration);
+  final anim = CurvedAnimation(parent: controller, curve: curve);
+
   late final OverlayEntry entry;
   entry = OverlayEntry(
     builder: (ctx) {
       return IgnorePointer(
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: duration,
-          curve: curve,
-          onEnd: () {
-            if (!keepAtEnd) entry.remove();
-            if (!completer.isCompleted) completer.complete();
-          },
-          builder: (context, t, _) {
-            final scale = beginScale + (endScale - beginScale) * t;
-            final w = cardSize.width * scale;
-            final h = cardSize.height * scale;
-            final cx = from.center.dx + (to.center.dx - from.center.dx) * t;
-            final cy = from.center.dy + (to.center.dy - from.center.dy) * t;
-            final angle = beginAngle + (endAngle - beginAngle) * t;
+        child: AnimatedBuilder(
+          animation: anim,
+          builder: (context, child) {
+            final t = anim.value;
+            final scale = lerpDouble(beginScale, endScale, t)!;
+            final cx = lerpDouble(from.center.dx, to.center.dx, t)!;
+            final cy = lerpDouble(from.center.dy, to.center.dy, t)!;
+            final angle = lerpDouble(beginAngle, endAngle, t)!;
             final midLift =
                 arcLift == 0 ? 0.0 : -arcLift * math.sin(math.pi * t);
-            Widget face;
-            if (flipToFace) {
-              final flipT = t < 0.5 ? t * 2 : (1 - t) * 2;
-              final showBack = t < 0.5;
-              face = Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(flipT * math.pi / 2),
-                // После половины пути — лицо (faceDown только старт рубашкой).
-                child: showBack
-                    ? CardBackWidget(size: cardSize, elevated: true)
-                    : PlayingCardWidget(
-                        card: card,
-                        size: cardSize,
-                        elevated: true,
-                        highlighted: false,
-                        animate: false,
-                      ),
-              );
-            } else {
-              face = faceDown
-                  ? CardBackWidget(size: cardSize, elevated: true)
-                  : PlayingCardWidget(
-                      card: card,
-                      size: cardSize,
-                      elevated: true,
-                      // Без анимации тени — иначе handoff fly→стол «мигает».
-                      highlighted: false,
-                      animate: false,
-                    );
-            }
             return Stack(
               children: [
                 Positioned(
-                  left: cx - w / 2,
-                  top: cy - h / 2 + midLift,
-                  width: w,
-                  height: h,
-                  child: Transform.rotate(
-                    angle: angle,
-                    child: FittedBox(fit: BoxFit.fill, child: face),
+                  left: cx - cardSize.width / 2,
+                  top: cy - cardSize.height / 2 + midLift,
+                  width: cardSize.width,
+                  height: cardSize.height,
+                  child: RepaintBoundary(
+                    child: Transform.rotate(
+                      angle: angle,
+                      child: Transform.scale(
+                        scale: scale,
+                        filterQuality: FilterQuality.low,
+                        child: child,
+                      ),
+                    ),
                   ),
                 ),
               ],
             );
           },
+          child: _FlyFace(
+            card: card,
+            cardSize: cardSize,
+            faceDown: faceDown,
+            flipToFace: flipToFace,
+            animation: anim,
+          ),
         ),
       );
     },
   );
+
   overlay.insert(entry);
+  try {
+    await controller.forward();
+  } catch (_) {
+    // ignore dispose races
+  }
+  if (!keepAtEnd) {
+    entry.remove();
+    anim.dispose();
+    controller.dispose();
+    if (!completer.isCompleted) completer.complete();
+    return CardFlyTicket._(null, null, null);
+  }
+  if (!completer.isCompleted) completer.complete();
   await completer.future;
-  return CardFlyTicket._(keepAtEnd ? entry : null);
+  return CardFlyTicket._(entry, controller, anim);
+}
+
+/// Лицо/рубашка; при [flipToFace] переворот зависит от прогресса анимации.
+class _FlyFace extends StatelessWidget {
+  const _FlyFace({
+    required this.card,
+    required this.cardSize,
+    required this.faceDown,
+    required this.flipToFace,
+    required this.animation,
+  });
+
+  final PlayingCard card;
+  final Size cardSize;
+  final bool faceDown;
+  final bool flipToFace;
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!flipToFace) {
+      return faceDown
+          ? CardBackWidget(size: cardSize, elevated: true)
+          : PlayingCardWidget(
+              card: card,
+              size: cardSize,
+              elevated: true,
+              highlighted: false,
+              animate: false,
+            );
+    }
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final t = animation.value;
+        final flipT = t < 0.5 ? t * 2 : (1 - t) * 2;
+        final showBack = t < 0.5;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.001)
+            ..rotateY(flipT * math.pi / 2),
+          child: showBack
+              ? CardBackWidget(size: cardSize, elevated: true)
+              : PlayingCardWidget(
+                  card: card,
+                  size: cardSize,
+                  elevated: true,
+                  highlighted: false,
+                  animate: false,
+                ),
+        );
+      },
+    );
+  }
+}
+
+/// Лёгкий TickerProvider без State — для overlay-анимаций вне дерева виджетов.
+class _FlyTicker extends TickerProvider {
+  @override
+  Ticker createTicker(TickerCallback onTick) => Ticker(onTick);
 }
 
 /// Несколько карт летят с небольшим сдвигом по времени.
@@ -131,9 +187,9 @@ Future<void> playCardsFlyAnimation({
   required Size cardSize,
   required List<Rect> froms,
   required List<Rect> tos,
-  Duration duration = const Duration(milliseconds: 420),
-  Duration stagger = const Duration(milliseconds: 45),
-  Curve curve = Curves.easeInOutCubic,
+  Duration duration = const Duration(milliseconds: 340),
+  Duration stagger = const Duration(milliseconds: 36),
+  Curve curve = Curves.easeOutCubic,
   bool faceDown = false,
   List<double>? beginAngles,
   List<double>? endAngles,
