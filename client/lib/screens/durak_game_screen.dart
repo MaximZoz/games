@@ -3751,11 +3751,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ],
           ),
           // Слот кнопки всегда зарезервирован — смена хода не двигает экран.
-          // Ниже к вееру; скрыта, пока карта вытащена из веера.
+          // Ближе к вееру; скрыта, пока карта вытащена из веера.
           Positioned(
             left: 0,
             right: 0,
-            bottom: fanZoneH - 36,
+            bottom: fanZoneH - 72,
             child: SizedBox(
               height: 52,
               child: Center(
@@ -4190,7 +4190,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 .clamp(100.0, constraints.maxWidth);
         // Якоря Positioned — Align не двигает колоду/биту при смене хода.
         final deckTop = constraints.maxHeight * 0.28;
-        final bitoTop = constraints.maxHeight * 0.18;
+        // Таймер чуть выше — ближе к шапке соперника.
+        final bitoTop = constraints.maxHeight * 0.08;
         return Stack(
           clipBehavior: Clip.none,
           children: [
