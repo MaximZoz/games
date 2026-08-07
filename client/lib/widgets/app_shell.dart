@@ -242,9 +242,6 @@ class AppShell extends ConsumerWidget {
       if (!next.updateAvailable) return;
       if (next.deferredUntilGameEnd) return;
       if (next.dialogShown) return;
-      if (prev?.dialogShown == true && prev?.latestBuild == next.latestBuild) {
-        return;
-      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!context.mounted) return;
         final cur = ref.read(appUpdateProvider);
@@ -258,9 +255,8 @@ class AppShell extends ConsumerWidget {
       });
     });
     // Первая проверка при появлении shell (и для гостя на /login).
-    if (!isOffline) {
-      unawaited(ref.read(appUpdateProvider.notifier).ensureInitialCheck());
-    }
+    // Всегда пробуем — даже в «офлайне» после возврата сети поймает poll.
+    unawaited(ref.read(appUpdateProvider.notifier).ensureInitialCheck());
 
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
     if (isAuthorized && !isOffline) {

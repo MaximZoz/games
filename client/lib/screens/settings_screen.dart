@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/app_update_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
@@ -23,6 +24,7 @@ class SettingsScreen extends ConsumerWidget {
     final webPushEnabled = ref.watch(webPushEnabledProvider);
     final pushCategories = ref.watch(webPushCategoriesProvider);
     final localeChoice = ref.watch(appLocaleProvider);
+    final appUpdate = ref.watch(appUpdateProvider);
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
@@ -253,6 +255,33 @@ class SettingsScreen extends ConsumerWidget {
                           letterSpacing: 0.2,
                         ),
                   ),
+                  if (appUpdate.updateAvailable) ...[
+                    const SizedBox(height: 12),
+                    Center(
+                      child: FilledButton.icon(
+                        onPressed: () =>
+                            ref.read(appUpdateProvider.notifier).applyUpdate(),
+                        icon: const Icon(Icons.system_update_alt_rounded, size: 18),
+                        label: Text(l10n.appUpdateOk),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.accentStart,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    if (appUpdate.whatsNew.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        appUpdate.whatsNew,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary.withValues(alpha: 0.8),
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),

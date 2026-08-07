@@ -61,17 +61,34 @@ final appUpdateProvider =
 });
 
 class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
-  AppUpdateNotifier(this._ref) : super(const AppUpdateState());
+  AppUpdateNotifier(this._ref) : super(const AppUpdateState()) {
+    // Периодическая сверка — если первый запрос упал/закэшировался.
+    _poll = Timer.periodic(const Duration(seconds: 45), (_) {
+      unawaited(check());
+    });
+  }
 
   final Ref _ref;
   bool _checking = false;
   bool _didInitialCheck = false;
+  Timer? _poll;
 
   String get localBuildId => appBuildId;
 
+  @override
+  void dispose() {
+    _poll?.cancel();
+    _poll = null;
+    super.dispose();
+  }
+
   /// Один раз при старте shell (гость или авторизованный).
   Future<void> ensureInitialCheck() async {
-    if (_didInitialCheck) return;
+    if (_didInitialCheck) {
+      // Повторно дергаем, если обновление ещё не поймали.
+      if (!state.updateAvailable) await check();
+      return;
+    }
     _didInitialCheck = true;
     await check();
   }
@@ -109,13 +126,15 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       }
 
       final inGame = _isInActiveGame();
-      state = state.copyWith(
+      final newRemote = remote != state.latestBuild;
+      state = AppUpdateState(
         latestBuild: remote,
         whatsNew: notes,
         updateAvailable: true,
         deferredUntilGameEnd: inGame,
-        // Новый build_id — снова можно показать баннер.
-        bannerDismissed: false,
+        // Новый build на сервере — снова показать диалог.
+        dialogShown: newRemote ? false : state.dialogShown,
+        bannerDismissed: newRemote ? false : state.bannerDismissed,
       );
     } finally {
       _checking = false;
@@ -142,12 +161,11 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
   }
 
   void dismissBanner() {
-    // Скрыть баннер до конца партии; диалог покажем когда партия закончится.
     state = state.copyWith(bannerDismissed: true);
   }
 
   Future<void> applyUpdate() async {
-    reloadApp();
+    await reloadApp();
   }
 
   bool _isInActiveGame() {
@@ -155,7 +173,6 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     if (hasBlockingActiveMatch(active)) return true;
     final pinned = _ref.read(blockingGamePinProvider);
     if (pinned != null && pinned.gameId.trim().isNotEmpty) return true;
-    // Путь игры — на случай лага GetActive.
     try {
       final path = _ref.read(currentRoutePathProvider);
       if (path.contains('/games/tictactoe/game/')) return true;
@@ -167,9 +184,13 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
 
   Future<({String buildId, String whatsNew})?> _fetchVersionInfo() async {
     try {
-      final res = await http
-          .get(Uri.parse('$apiBaseUrl/api/version'))
-          .timeout(const Duration(seconds: 6));
+      // cache-bust: иначе SW/прокси может отдать старый JSON.
+      final uri = Uri.parse('$apiBaseUrl/api/version').replace(
+        queryParameters: {
+          't': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      );
+      final res = await http.get(uri).timeout(const Duration(seconds: 6));
       if (res.statusCode != 200) return null;
       final body = jsonDecode(res.body);
       if (body is! Map) return null;

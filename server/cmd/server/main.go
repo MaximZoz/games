@@ -209,8 +209,17 @@ func spaHandler(webRoot fs.FS) http.Handler {
 			contentType = "font/woff2"
 		}
 		w.Header().Set("Content-Type", contentType)
-		// Service worker / bootstrap: без долгого кэша, иначе iOS держит мёртвый SW.
-		if fsPath == "push-sw.js" || fsPath == "flutter_bootstrap.js" || fsPath == "manifest.json" {
+		// Entry / SW: без долгого кэша — иначе вкладка месяцами держит старый main.dart.js
+		// и не видит ни новый UI, ни диалог «есть обновление».
+		switch fsPath {
+		case "index.html",
+			"flutter.js",
+			"flutter_bootstrap.js",
+			"main.dart.js",
+			"flutter_service_worker.js",
+			"push-sw.js",
+			"manifest.json",
+			"version.json":
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 		if fsPath == "push-sw.js" {

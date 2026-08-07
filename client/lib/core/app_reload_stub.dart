@@ -1,2 +1,2 @@
 /// Перезагрузка приложения (не-web — no-op).
-void reloadApp() {}
+Future<void> reloadApp() async {}
