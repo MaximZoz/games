@@ -55,6 +55,19 @@
   "settingsPushFriends": "Друзья",
   "settingsPushGames": "Игры",
   "settingsPushRewards": "Награды",
+  "settingsAppVersion": "Версия {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateTitle": "Доступно обновление",
+  "appUpdateBody": "Вышла новая версия приложения. Обновитесь, чтобы продолжить.",
+  "appUpdateWhatsNew": "Что нового",
+  "appUpdateOk": "Обновить",
+  "appUpdateLaterBanner": "После партии обновим приложение",
   "loginTitle": "Вход",
   "loginSubtitle": "Введите email или логин и пароль",
   "loginEmailLabel": "Email или логин",

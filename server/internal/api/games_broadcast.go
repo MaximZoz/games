@@ -13,7 +13,7 @@ const gamesBroadcastChannel = "games:broadcast"
 
 // gamesBroadcastMsg is the message format for Redis Pub/Sub.
 type gamesBroadcastMsg struct {
-	UserIDs []string       `json:"user_ids"`
+	UserIDs []string       `json:"user_ids,omitempty"`
 	All     bool           `json:"all,omitempty"`
 	Payload map[string]any `json:"payload"`
 }
@@ -47,21 +47,31 @@ func (b *GamesBroadcaster) Publish(userIDs []uuid.UUID, payload any) {
 	}
 }
 
-// PublishAll — всем онлайн-клиентам на всех инстансах (список лобби и т.п.).
+// PublishAll рассылает payload всем онлайн-клиентам на всех инстансах.
+// Без Redis — только локальный Hub.
 func (b *GamesBroadcaster) PublishAll(payload any) {
-	if b == nil || b.Rdb == nil {
+	if b == nil {
 		return
 	}
 	payloadMap, ok := payload.(map[string]any)
 	if !ok {
 		return
 	}
-	raw, err := json.Marshal(gamesBroadcastMsg{All: true, Payload: payloadMap})
-	if err != nil {
+	if b.Rdb != nil {
+		raw, err := json.Marshal(gamesBroadcastMsg{All: true, Payload: payloadMap})
+		if err != nil {
+			return
+		}
+		if err := b.Rdb.Publish(context.Background(), gamesBroadcastChannel, raw).Err(); err != nil {
+			log.Printf("games broadcast publish all: %v", err)
+			if b.Hub != nil {
+				b.Hub.PublishToAll(payloadMap)
+			}
+		}
 		return
 	}
-	if err := b.Rdb.Publish(context.Background(), gamesBroadcastChannel, raw).Err(); err != nil {
-		log.Printf("games broadcast publish all: %v", err)
+	if b.Hub != nil {
+		b.Hub.PublishToAll(payloadMap)
 	}
 }
 

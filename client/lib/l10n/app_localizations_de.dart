@@ -125,6 +125,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPushRewards => 'Belohnungen';
 
   @override
+  String settingsAppVersion(String version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Доступно обновление';
+
+  @override
+  String get appUpdateBody => 'Вышла новая версия приложения. Обновитесь, чтобы продолжить.';
+
+  @override
+  String get appUpdateWhatsNew => 'Что нового';
+
+  @override
+  String get appUpdateOk => 'Обновить';
+
+  @override
+  String get appUpdateLaterBanner => 'После партии обновим приложение';
+
+  @override
   String get loginTitle => 'Anmelden';
 
   @override

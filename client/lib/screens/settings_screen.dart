@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
@@ -242,6 +243,16 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 28),
+                  Text(
+                    l10n.settingsAppVersion(appBuildId),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary.withValues(alpha: 0.72),
+                          fontSize: 12,
+                          letterSpacing: 0.2,
+                        ),
+                  ),
                 ],
               ),
             ),

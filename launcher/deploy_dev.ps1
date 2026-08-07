@@ -84,14 +84,17 @@ if ($env:UPDATE_SECRETS -eq "1") {
     Write-Host "Секреты не трогаю (JWT остаётся). Для обновления: `$env:UPDATE_SECRETS='1'; $PSCommandPath"
 }
 
+$buildId = (git -C $RootDir rev-parse --short HEAD).Trim()
+Write-Host "BUILD_ID=$buildId"
+
 Write-Host "Запускаю деплой DEV..."
 Push-Location $RootDir
 try {
     # --depot=false: обход частых deadline_exceeded у Depot builder.
-    & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --depot=false --yes
+    & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --depot=false --yes --build-arg "BUILD_ID=$buildId"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Повтор деплоя без --depot=false..."
-        & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --yes
+        & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --yes --build-arg "BUILD_ID=$buildId"
     }
 } finally {
     Pop-Location
