@@ -71,6 +71,7 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
   final Ref _ref;
   bool _checking = false;
   bool _didInitialCheck = false;
+  DateTime? _lastHttpFetchAt;
   Timer? _poll;
 
   String get localBuildId => appBuildId;
@@ -83,12 +84,9 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
   }
 
   /// Один раз при старте shell (гость или авторизованный).
+  /// Повторные вызовы из build не ходят в сеть — для этого poll / WS.
   Future<void> ensureInitialCheck() async {
-    if (_didInitialCheck) {
-      // Повторно дергаем, если обновление ещё не поймали.
-      if (!state.updateAvailable) await check();
-      return;
-    }
+    if (_didInitialCheck) return;
     _didInitialCheck = true;
     await check();
   }
@@ -115,10 +113,13 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       if (remote == local) {
         if (state.updateAvailable || state.deferredUntilGameEnd) {
           state = const AppUpdateState();
-        } else {
+        } else if (state.latestBuild != remote ||
+            (notes.isNotEmpty && state.whatsNew != notes)) {
+          // Не трогаем state, если уже актуально — иначе shell пересобирается
+          // и снова дергает check (спам /api/version).
           state = state.copyWith(
             latestBuild: remote,
-            whatsNew: notes,
+            whatsNew: notes.isNotEmpty ? notes : state.whatsNew,
             updateAvailable: false,
           );
         }
@@ -127,9 +128,15 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
 
       final inGame = _isInActiveGame();
       final newRemote = remote != state.latestBuild;
+      if (!newRemote &&
+          state.updateAvailable &&
+          state.deferredUntilGameEnd == inGame &&
+          (notes.isEmpty || state.whatsNew == notes)) {
+        return;
+      }
       state = AppUpdateState(
         latestBuild: remote,
-        whatsNew: notes,
+        whatsNew: notes.isNotEmpty ? notes : state.whatsNew,
         updateAvailable: true,
         deferredUntilGameEnd: inGame,
         // Новый build на сервере — снова показать диалог.
@@ -183,11 +190,17 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
   }
 
   Future<({String buildId, String whatsNew})?> _fetchVersionInfo() async {
+    final now = DateTime.now();
+    // Не чаще раза в 15 с — защита от петли rebuild / частых WS reconnect.
+    if (_lastHttpFetchAt != null &&
+        now.difference(_lastHttpFetchAt!) < const Duration(seconds: 15)) {
+      return null;
+    }
     try {
       // cache-bust: иначе SW/прокси может отдать старый JSON.
       final uri = Uri.parse('$apiBaseUrl/api/version').replace(
         queryParameters: {
-          't': DateTime.now().millisecondsSinceEpoch.toString(),
+          't': now.millisecondsSinceEpoch.toString(),
         },
       );
       final res = await http.get(uri).timeout(const Duration(seconds: 6));
@@ -197,6 +210,7 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       final latest = body['latest_build'] ?? body['build_id'];
       if (latest is! String || latest.trim().isEmpty) return null;
       final notes = body['whats_new'];
+      _lastHttpFetchAt = now;
       return (
         buildId: latest.trim(),
         whatsNew: notes is String ? notes.trim() : '',

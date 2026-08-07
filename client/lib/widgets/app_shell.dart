@@ -7,6 +7,7 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -44,6 +45,9 @@ bool _activeGameUsable(ActiveGameItem? active) {
   }
   return false;
 }
+
+/// Одноразовый bootstrap в shell (listen без fireImmediately в этой версии Riverpod).
+bool _shellDidBootstrapSession = false;
 
 String? _gameIdFromPath(String path) => gameIdFromGamePath(path);
 
@@ -266,6 +270,7 @@ class AppShell extends ConsumerWidget {
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
       // iOS PWA: после рестарта/смены SW заново привязываем Web Push.
+      // Язык → сервер только при логине / смене локали (не из каждого build).
       ref.listen(authStateProvider, (prev, next) {
         if (next.valueOrNull != null && prev?.valueOrNull == null) {
           unawaited(
@@ -273,11 +278,15 @@ class AppShell extends ConsumerWidget {
           );
           unawaited(syncPreferredLanguageToServer(ref));
         }
+        if (next.valueOrNull == null) {
+          _shellDidBootstrapSession = false;
+        }
       });
-      // Язык интерфейса → сервер (для иконки автоперевода в чатах).
-      if (authState.valueOrNull != null) {
+      ref.listen<Locale?>(appLocaleProvider, (prev, next) {
+        if (ref.read(authStateProvider).valueOrNull == null) return;
+        if (prev == next) return;
         unawaited(syncPreferredLanguageToServer(ref));
-      }
+      });
       ref.listen<bool>(webPushEnabledProvider, (prev, next) {
         if (next == true && prev != true) {
           unawaited(
@@ -285,8 +294,10 @@ class AppShell extends ConsumerWidget {
           );
         }
       });
-      // Уже залогинен при первом кадре shell — тоже rebind.
-      if (authState.valueOrNull != null) {
+      // Уже залогинен при первом заходе в shell — один раз, не на каждый rebuild.
+      if (!_shellDidBootstrapSession && authState.valueOrNull != null) {
+        _shellDidBootstrapSession = true;
+        unawaited(syncPreferredLanguageToServer(ref));
         unawaited(
           ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
         );
