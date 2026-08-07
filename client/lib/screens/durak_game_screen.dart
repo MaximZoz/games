@@ -803,9 +803,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         : (total - row * cols).clamp(1, cols);
     final rowWidth = rowLen * pairW + (rowLen - 1) * gap;
     final rowLeft = tableRect.center.dx - rowWidth / 2;
-    final rowStep = _tableRowStep(_tableCardSize, rows);
     final colH = _tableStackHeight(_tableCardSize, rows);
-    final top = tableRect.center.dy - colH / 2 + row * rowStep;
+    final top = tableRect.center.dy -
+        colH / 2 +
+        _tableRowTop(_tableCardSize, row, rows);
     return Offset(
       rowLeft + col * (pairW + gap) + pairW / 2,
       top + pairH / 2,
@@ -1504,9 +1505,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final rowLeft = center.dx - rowWidth / 2;
     final pairLeft = rowLeft + col * (pairW + gap);
     final rows = (n + cols - 1) ~/ cols;
-    final rowStep = _tableRowStep(_tableCardSize, rows);
     final colH = _tableStackHeight(_tableCardSize, rows);
-    final pairTop = center.dy - colH / 2 + row * rowStep;
+    final pairTop = center.dy -
+        colH / 2 +
+        _tableRowTop(_tableCardSize, row, rows);
     // Лицо атаки — левый верх стека (после горизонтального padding).
     return Rect.fromLTWH(
       pairLeft + 4,
@@ -4631,20 +4633,28 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Высота слота пары на столе (как в [_AnimatedTablePair]).
   double _tablePairHeight(Size cardSize) => cardSize.height + 20;
 
-  /// Шаг между рядами: при 3+ рядах — только угол ранга/масти заднего ряда.
-  double _tableRowStep(Size cardSize, int rowCount) {
-    final pairH = _tablePairHeight(cardSize);
-    if (rowCount >= 3) {
-      // Уголок карты ≈ 28% высоты + небольшой запас под «J♦».
-      return cardSize.height * 0.30;
-    }
-    return pairH + 10;
+  /// Обычный вертикальный шаг между рядами (без наезда).
+  double _tableNormalRowStep(Size cardSize) => _tablePairHeight(cardSize) + 10;
+
+  /// При 3+ рядах: 2-й ряд слегка наезжает на 1-й (виден ранг+масть);
+  /// 3-й и дальше — обычный зазор, без наложения на предыдущий.
+  double _tableCompactPeek(Size cardSize) => cardSize.height * 0.40;
+
+  /// Y-координата верха ряда [row] (0-based) при [rowCount] рядах.
+  double _tableRowTop(Size cardSize, int row, int rowCount) {
+    if (row <= 0) return 0;
+    final normal = _tableNormalRowStep(cardSize);
+    if (rowCount < 3) return row * normal;
+    // Ряд 1 (второй): чуть ниже, чтобы читалась масть у первого ряда.
+    if (row == 1) return _tableCompactPeek(cardSize);
+    // Ряд 2+ (третий…): как обычно относительно предыдущего полного ряда.
+    return _tableCompactPeek(cardSize) + (row - 1) * normal;
   }
 
   double _tableStackHeight(Size cardSize, int rowCount) {
     if (rowCount <= 0) return 0;
-    final pairH = _tablePairHeight(cardSize);
-    return pairH + _tableRowStep(cardSize, rowCount) * (rowCount - 1);
+    return _tableRowTop(cardSize, rowCount - 1, rowCount) +
+        _tablePairHeight(cardSize);
   }
 
   /// До 2 пар в ряд; если не влезает — пары наезжают друг на друга.
@@ -4698,8 +4708,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       );
     }
 
-    // 3+ ряда: передний ряд закрывает «рубашку» заднего, оставляя угол.
-    final rowStep = _tableRowStep(cardSize, rows.length);
+    // 3+ ряда: 2-й наезжает на 1-й (виден ранг+масть); 3-й — обычный зазор.
     final totalH = _tableStackHeight(cardSize, rows.length);
     return SizedBox(
       height: totalH,
@@ -4709,7 +4718,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         children: [
           for (var r = 0; r < rows.length; r++)
             Positioned(
-              top: r * rowStep,
+              top: _tableRowTop(cardSize, r, rows.length),
               left: 0,
               right: 0,
               child: rowAt(r),
