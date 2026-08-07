@@ -7,10 +7,12 @@ int attackRoom({
   required int tableLen,
   int pending = 0,
   int maxAttacks = 6,
+  bool firstRound = false,
 }) {
   var maxPairs = beaten + defenderHand;
   if (maxPairs < 1) maxPairs = 1;
   if (maxAttacks < maxPairs) maxPairs = maxAttacks;
+  if (firstRound && maxPairs > 5) maxPairs = 5;
   final room = maxPairs - tableLen - pending;
   return room < 0 ? 0 : room;
 }
@@ -41,6 +43,17 @@ void main() {
     expect(
       attackRoom(defenderHand: 10, beaten: 0, tableLen: 0, maxAttacks: 6),
       6,
+    );
+  });
+
+  test('first round caps at 5 including first attack', () {
+    expect(
+      attackRoom(defenderHand: 6, beaten: 0, tableLen: 0, firstRound: true),
+      5,
+    );
+    expect(
+      attackRoom(defenderHand: 6, beaten: 0, tableLen: 5, firstRound: true),
+      0,
     );
   });
 }

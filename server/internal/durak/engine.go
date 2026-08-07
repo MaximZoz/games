@@ -75,6 +75,8 @@ type State struct {
 	Passed map[int]bool `json:"passed,omitempty"`
 	// Помечает: последнее действие — take (для UI и разгона следующих ходов).
 	LastWasTake bool `json:"last_was_take,omitempty"`
+	// Первый отбой партии: на стол не больше 5 карт (включая первую атаку).
+	FirstRound bool `json:"first_round,omitempty"`
 }
 
 // DefenderIndex — следующий защитник по кругу.
@@ -155,6 +157,7 @@ func New(playerIDs []string, deckSize int, mode Mode, seed int64) (*State, error
 		HandSize:      handSize,
 		MaxAttacks:    6,
 		Status:        StatusActive,
+		FirstRound:    true,
 	}, nil
 }
 
@@ -184,6 +187,7 @@ func (s *State) UndefendedIndex() int {
 // Лимит = уже отбитые пары + карты в руке защитника:
 // каждой карте в руке — не больше одной атаки (включая те, что ещё надо отбить).
 // Пример: рука 5, на столе 2 неотбитых → всего не больше 5 пар → подкид ещё 3.
+// В первом отбое партии — не больше 5 карт (включая первую атаку).
 func (s *State) MaxAttacksThisRound() int {
 	def := s.DefenderIndex()
 	if def < 0 || def >= len(s.Hands) {
@@ -201,9 +205,16 @@ func (s *State) MaxAttacksThisRound() int {
 		lim = 1
 	}
 	if s.MaxAttacks > 0 && s.MaxAttacks < lim {
-		return s.MaxAttacks
+		lim = s.MaxAttacks
+	}
+	if s.FirstRound && lim > 5 {
+		lim = 5
 	}
 	return lim
+}
+
+func (s *State) clearFirstRound() {
+	s.FirstRound = false
 }
 
 // ---- Ошибки правил ----
@@ -450,6 +461,7 @@ func (s *State) resolveTake() error {
 	s.AttackerIndex = s.nextAliveAfter(skipped)
 	s.LastWasTake = true
 	s.Phase = PhaseAttack
+	s.clearFirstRound()
 	s.checkOver()
 	return nil
 }
@@ -496,6 +508,7 @@ func (s *State) resolveDefenderEmpty() {
 	s.AttackerIndex = s.nextAliveAfter(atk)
 	s.LastWasTake = false
 	s.Phase = PhaseAttack
+	s.clearFirstRound()
 	s.checkOver()
 }
 
@@ -534,6 +547,7 @@ func (s *State) resolveBito() error {
 	s.AttackerIndex = s.nextAliveAfter(s.AttackerIndex)
 	s.LastWasTake = false
 	s.Phase = PhaseAttack
+	s.clearFirstRound()
 	s.checkOver()
 	return nil
 }

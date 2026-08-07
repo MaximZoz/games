@@ -92,6 +92,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   int? _bitoCountFreeze;
   /// Заморозить колоду/козырь на время добора (не исчезает до вылета карты).
   int? _deckCountFreeze;
+  /// false — козырь ещё не вытащили под колоду (анимация стартовой раздачи).
+  bool _trumpFaceVisible = true;
   Timer? _timeoutRetryTimer;
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
@@ -165,6 +167,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
       _balanceGainPlayed = false;
+      _prevDeckCount = -1;
+      _prevBitoCount = -1;
+      _prevHandLen = -1;
+      _prevTable = const [];
+      _prevAttackerIndex = -1;
+      _prevDefenderIndex = -1;
+      _prevOppHandCounts.clear();
+      _oppDealPending.clear();
+      _pendingDealCards.clear();
+      _handOrder = null;
+      _trumpFaceVisible = true;
+      _deckCountFreeze = null;
+      _fxScheduled = false;
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
@@ -506,7 +521,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return (cardSize: size, spacing: spacing);
   }
 
-  /// 2+ карты — всегда от края до края; одна — по центру.
+  /// 4+ карты — от края до края; ≤3 — по центру (как одна карта).
   ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
     int n,
     double maxWidth,
@@ -514,8 +529,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (n <= 0) {
       return (cardSize: _handCardSize, spacing: 0, fillWidth: true);
     }
-    if (n == 1) {
-      return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
+    if (n <= 3) {
+      final spacing = n <= 1 ? 0.0 : _handCardSize.width * 0.62;
+      return (
+        cardSize: _handCardSize,
+        spacing: spacing,
+        fillWidth: false,
+      );
     }
     final fitted = _fitHandFan(n, maxWidth);
     return (
@@ -546,6 +566,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (maxPairs < 1) maxPairs = 1;
     const maxAttacks = 6;
     if (maxAttacks < maxPairs) maxPairs = maxAttacks;
+    // Первый отбой — не больше 5 карт на столе (включая первую атаку).
+    if (view.firstRound && maxPairs > 5) maxPairs = 5;
     final pending = _pendingAttackPlaceholders(view).length;
     return (maxPairs - view.table.length - pending).clamp(0, 52);
   }
@@ -1951,12 +1973,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       for (final c in serverHand)
         if (!dealSet.contains(c)) c,
     ];
+    // Не тянуть в веер карты, которые ещё летят (_pendingDealCards) —
+    // иначе при стартовой раздаче вспыхнет вся рука сразу.
+    final stillFlying = {..._pendingDealCards, ...dealSet};
     var order = <PlayingCard>[
-      for (final c in (_handOrder ?? keepFromServer))
+      for (final c in (_handOrder ?? const <PlayingCard>[]))
         if (!dealSet.contains(c) && keepFromServer.contains(c)) c,
     ];
     for (final c in keepFromServer) {
-      if (!order.contains(c)) order.add(c);
+      if (!order.contains(c) && !stillFlying.contains(c)) order.add(c);
     }
     // Сразу зафиксировать веер без добираемых — иначе кадр с пустой рукой.
     _handOrder = List<PlayingCard>.of(order);
@@ -2119,19 +2144,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           ? (view.hands[view.myIndex].cards ?? const [])
           : const [],
     );
-    // Порядок веера обязан быть до любого FX — иначе remain/pending съедают руку.
-    if ((_handOrder == null || _handOrder!.isEmpty) &&
-        hand.isNotEmpty &&
-        _pendingDealCards.isEmpty &&
-        !_fxScheduled) {
-      _handOrder = List<PlayingCard>.of(hand);
-    }
 
     // Пока свой ход с FX — не трогаем prev (иначе проглотим авто-бито/добор).
     if (_busy) return;
 
-    // Первый кадр — только запомнить базу (и порядок веера).
+    // Первый кадр: стартовая раздача или просто запомнить базу.
     if (_prevDeckCount < 0) {
+      if (_shouldAnimateOpeningDeal(view, handLen)) {
+        _scheduleOpeningDeal(view, hand);
+        return;
+      }
+      // Порядок веера обязан быть до любого FX — иначе remain/pending съедают руку.
+      if ((_handOrder == null || _handOrder!.isEmpty) &&
+          hand.isNotEmpty &&
+          _pendingDealCards.isEmpty) {
+        _handOrder = List<PlayingCard>.of(hand);
+      }
       _prevDeckCount = deck;
       _prevBitoCount = bito;
       _prevHandLen = handLen;
@@ -2140,6 +2168,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevDefenderIndex = view.defenderIndex;
       _syncPrevOppHandCounts(view);
       return;
+    }
+
+    // Порядок веера обязан быть до любого FX — иначе remain/pending съедают руку.
+    if ((_handOrder == null || _handOrder!.isEmpty) &&
+        hand.isNotEmpty &&
+        _pendingDealCards.isEmpty &&
+        !_fxScheduled) {
+      _handOrder = List<PlayingCard>.of(hand);
     }
 
     final dealt = handLen - _prevHandLen;
@@ -2553,6 +2589,155 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       width: _tableCardSize.width,
       height: _tableCardSize.height,
     );
+  }
+
+  /// Свежая партия: руки полные, стол пуст, колода после раздачи — крутим FX.
+  bool _shouldAnimateOpeningDeal(DurakGameView view, int myHandLen) {
+    if (view.isOver || view.table.isNotEmpty || view.bitoCount > 0) {
+      return false;
+    }
+    if (view.myIndex < 0 || myHandLen <= 0) return false;
+    final n = view.hands.length;
+    if (n < 2) return false;
+    const handSize = 6;
+    if (myHandLen != handSize) return false;
+    for (var i = 0; i < n; i++) {
+      if (view.hands[i].count != handSize) return false;
+    }
+    final expectedDeck = view.deckSize - n * handSize;
+    return view.deckCount == expectedDeck && expectedDeck >= 0;
+  }
+
+  void _scheduleOpeningDeal(DurakGameView view, List<PlayingCard> myHand) {
+    if (_fxScheduled) return;
+    _fxScheduled = true;
+    final n = view.hands.length;
+    const handSize = 6;
+    setState(() {
+      _busy = true;
+      _fanAnimDuringBusy = true;
+      _suppressFanLayoutAnim = true;
+      _handOrder = <PlayingCard>[];
+      _pendingDealCards
+        ..clear()
+        ..addAll(myHand);
+      _oppDealPending.clear();
+      for (var i = 0; i < n; i++) {
+        if (i != view.myIndex) _oppDealPending[i] = handSize;
+      }
+      _deckCountFreeze = view.deckSize;
+      _trumpFaceVisible = false;
+      // База — финальное состояние сервера, чтобы не перезапустить FX.
+      _prevDeckCount = view.deckCount;
+      _prevBitoCount = view.bitoCount;
+      _prevHandLen = myHand.length;
+      _prevTable = List.of(view.table);
+      _prevAttackerIndex = view.attackerIndex;
+      _prevDefenderIndex = view.defenderIndex;
+      _syncPrevOppHandCounts(view);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        _fxScheduled = false;
+        return;
+      }
+      try {
+        await _animateOpeningDeal(view, myHand);
+      } finally {
+        if (mounted) {
+          setState(() {
+            _busy = false;
+            _fanAnimDuringBusy = false;
+            _suppressFanLayoutAnim = false;
+            _trumpFaceVisible = true;
+            _pendingDealCards.clear();
+            _oppDealPending.clear();
+            _deckCountFreeze = null;
+            if (_handOrder == null || _handOrder!.isEmpty) {
+              _handOrder = List<PlayingCard>.of(myHand);
+            }
+          });
+        }
+        _fxScheduled = false;
+      }
+    });
+  }
+
+  /// Раздача по одной: с соперника по часовой, затем козырь под колоду.
+  Future<void> _animateOpeningDeal(
+    DurakGameView view,
+    List<PlayingCard> myHand,
+  ) async {
+    if (!mounted || !_gameUiActive) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    final n = view.hands.length;
+    const handSize = 6;
+    // По часовой начиная с соперника слева от меня (myIndex+1).
+    final seatOrder = List<int>.generate(n, (i) => (view.myIndex + 1 + i) % n);
+    final myCards = List<PlayingCard>.of(myHand);
+    var myIdx = 0;
+
+    for (var round = 0; round < handSize; round++) {
+      for (final seat in seatOrder) {
+        if (!mounted || !_gameUiActive) return;
+        if (seat == view.myIndex) {
+          if (myIdx >= myCards.length) continue;
+          await _animateDealCardsToFan([myCards[myIdx]]);
+          myIdx++;
+        } else {
+          await _animateDealToOpponent(seat, 1);
+        }
+        if (!mounted) return;
+        await Future<void>.delayed(const Duration(milliseconds: 28));
+      }
+    }
+
+    if (!mounted || !_gameUiActive) return;
+    await _animateTrumpReveal(view);
+  }
+
+  /// Вытащить козырь из колоды и положить под стопку (поворот лицом).
+  Future<void> _animateTrumpReveal(DurakGameView view) async {
+    if (!mounted || !_gameUiActive) return;
+    final trump = view.trumpCard.toPlayingCard();
+    final from = _deckDealFromRect();
+    // Куда ляжет в DurakDeckPile: чуть правее стопки, горизонтально.
+    final to = Rect.fromCenter(
+      center: Offset(
+        from.left + _tableCardSize.width * 0.72,
+        from.center.dy,
+      ),
+      width: _tableCardSize.width,
+      height: _tableCardSize.height,
+    );
+    final ticket = await playCardFlyAnimation(
+      context: context,
+      card: trump,
+      cardSize: _tableCardSize,
+      from: from,
+      to: to,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      faceDown: true,
+      flipToFace: true,
+      beginScale: 1,
+      endScale: 1,
+      beginAngle: 0.05,
+      endAngle: -math.pi / 2,
+      arcLift: 28,
+      keepAtEnd: true,
+    );
+    if (!mounted) {
+      ticket.dismiss();
+      return;
+    }
+    setState(() => _trumpFaceVisible = true);
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    ticket.dismiss();
   }
 
   /// Добор всех игроков в порядке атаки (не «сначала я»).
@@ -4056,14 +4241,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Карты соперника дугой с кромкой — не сплошная линия, видно каждую.
-  /// При росте руки сжимаем размер плиток и шаг (как у своего веера).
+  /// Ширина веера не больше трети экрана; при росте руки сжимаем плитки/шаг.
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final serverCount = view.hands.length > idx ? view.hands[idx].count : 0;
     final pending = _oppDealPending[idx] ?? 0;
     // Пока карта летит из колоды — в веере ещё не показываем.
     final count = math.max(0, serverCount - pending);
     if (count <= 0 && pending <= 0) return const SizedBox.shrink();
-    final maxW = MediaQuery.sizeOf(context).width - 48;
+    final maxW = MediaQuery.sizeOf(context).width / 3;
     // Показываем до 20 плиток; дальше — ещё плотнее.
     // pending>0 и count==0 — пустая зона-цель для посадки добора.
     final shown = count <= 0 ? 1 : (count > 20 ? 20 : count);
@@ -4082,7 +4267,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       (cardSize.width * tileScale).clamp(22.0, 52.0),
       (cardSize.height * tileScale).clamp(32.0, 76.0),
     );
-    // Минимальный шаг (читаемая кромка); затем всегда растягиваем на maxW.
+    // Минимальный шаг (читаемая кромка); шире ⅓ экрана — сжимаем, не растягиваем.
     double minStepFrac() {
       if (shown > 16) return 0.18;
       if (shown > 12) return 0.22;
@@ -4094,20 +4279,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     var step = tile.width * minStepFrac();
     var totalW = tile.width + step * math.max(shown - 1, 0);
-    if (shown > 1) {
-      // Сжимаем плитки, пока минимальный шаг влезает в ширину экрана.
-      for (var i = 0; i < 20 && totalW > maxW && tile.width > 18; i++) {
-        final s = (maxW / totalW).clamp(0.45, 0.96);
+    if (shown > 1 && totalW > maxW) {
+      for (var i = 0; i < 24 && totalW > maxW && tile.width > 14; i++) {
+        final s = (maxW / totalW).clamp(0.40, 0.96);
         tile = Size(tile.width * s, tile.height * s);
         step = tile.width * minStepFrac();
         totalW = tile.width + step * (shown - 1);
       }
-      // Растянуть шаг на всю ширину (как свой веер).
-      final fill = (maxW - tile.width) / (shown - 1);
-      final lo = tile.width * minStepFrac();
-      final hi = tile.width * 0.92;
-      step = fill.clamp(lo, hi > lo ? hi : lo);
-      totalW = tile.width + step * (shown - 1);
+      if (totalW > maxW) {
+        step = ((maxW - tile.width) / (shown - 1)).clamp(4.0, step);
+        totalW = tile.width + step * (shown - 1);
+      }
     }
     // Плотная рука — более плоская дуга, без «подъёма» середины.
     final arcH = tile.height * (shown > 12
@@ -4217,6 +4399,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         trumpCard: trumpCard,
         trumpSuit: _suitFromApi(view.trumpSuit),
         cardSize: cardSize,
+        showTrumpFace: _trumpFaceVisible,
       ),
     );
 

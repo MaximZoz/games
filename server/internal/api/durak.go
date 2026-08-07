@@ -1277,6 +1277,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"defender_index": s.DefenderIndex(),
 		"phase":          string(s.Phase),
 		"last_was_take":  s.LastWasTake,
+		"first_round":    s.FirstRound,
 		"my_index":       myIdx,
 		"legal_attack":   legalAttack,
 		"legal_defend":   legalDefend,

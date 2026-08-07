@@ -255,6 +255,56 @@ func TestAttackManySameRank(t *testing.T) {
 	}
 }
 
+// Первый отбой: всего не больше 5 карт на столе (включая первую атаку).
+func TestFirstRoundMaxFiveAttacks(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Clubs}, {6, Spades}, {6, Diamonds}, {9, Clubs}, {10, Clubs}, {11, Clubs}},
+			{{6, Hearts}, {7, Hearts}, {8, Hearts}, {9, Hearts}, {10, Hearts}, {11, Hearts}},
+		},
+		Trump:         Hearts,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		FirstRound:    true,
+	}
+	if got := st.MaxAttacksThisRound(); got != 5 {
+		t.Fatalf("MaxAttacksThisRound=%d, want 5 on first round", got)
+	}
+	// Пустой стол: три шестёрки разом — ок.
+	if err := st.AttackMany(0, []Card{{6, Clubs}, {6, Spades}, {6, Diamonds}}); err != nil {
+		t.Fatalf("3 sixes: %v", err)
+	}
+	// Добить стол до 5 неотбитых того же ранга нельзя без защиты — имитируем лимит напрямую.
+	st.Table = []Pair{
+		{Attack: Card{9, Hearts}},
+		{Attack: Card{9, Diamonds}},
+		{Attack: Card{9, Clubs}},
+		{Attack: Card{9, Spades}},
+		{Attack: Card{10, Hearts}},
+	}
+	st.Phase = PhaseDefend
+	st.Hands[0] = []Card{{10, Clubs}, {11, Clubs}}
+	if got := st.MaxAttacksThisRound(); got != 5 {
+		t.Fatalf("with 5 on table MaxAttacksThisRound=%d, want 5", got)
+	}
+	if err := st.AttackMany(0, []Card{{10, Clubs}}); err == nil {
+		t.Fatalf("expected ErrBadAttack for 6th card on first round")
+	}
+	// После первого отбоя лимит 5 снимается.
+	st.Table = nil
+	st.Phase = PhaseAttack
+	st.clearFirstRound()
+	st.Hands[0] = []Card{{6, Spades}, {7, Spades}, {8, Spades}, {9, Spades}, {10, Spades}, {11, Spades}}
+	st.Hands[1] = []Card{{6, Diamonds}, {7, Diamonds}, {8, Diamonds}, {9, Diamonds}, {10, Diamonds}, {11, Diamonds}}
+	if got := st.MaxAttacksThisRound(); got != 6 {
+		t.Fatalf("after first round MaxAttacksThisRound=%d, want 6", got)
+	}
+}
+
 // Неотбитые на столе учитываются: рука 5 + 2 неотбитых → подкид ещё не больше 3.
 func TestThrowInLimitedByDefenderHandMinusUndefended(t *testing.T) {
 	st := &State{

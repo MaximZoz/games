@@ -16,6 +16,7 @@ class DurakDeckPile extends StatelessWidget {
     required this.trumpCard,
     required this.cardSize,
     this.trumpSuit,
+    this.showTrumpFace = true,
   });
 
   final int deckCount;
@@ -25,14 +26,19 @@ class DurakDeckPile extends StatelessWidget {
   /// Явная масть козыря (если колода пуста и карта уже ушла в руку).
   final Suit? trumpSuit;
 
+  /// false — пока идёт раздача, козырь ещё не вытащили под колоду.
+  final bool showTrumpFace;
+
   Suit get _suit => trumpSuit ?? trumpCard.suit;
 
   @override
   Widget build(BuildContext context) {
     // Половина рубашки за краем — колода не «длинная».
     final hide = cardSize.width * 0.48;
-    final stackN = deckCount <= 1 ? 0 : math.min(deckCount, 5);
-    final showTrumpFace = deckCount >= 1;
+    final stackN = deckCount <= 1
+        ? 0
+        : math.min(deckCount, showTrumpFace ? 5 : 6);
+    final showTrump = showTrumpFace && deckCount >= 1;
     final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
     final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
@@ -45,7 +51,7 @@ class DurakDeckPile extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          if (showTrumpFace)
+          if (showTrump)
             Positioned(
               left: cardSize.width * 0.22,
               top: (h - cardSize.width) / 2,
@@ -58,7 +64,7 @@ class DurakDeckPile extends StatelessWidget {
                 ),
               ),
             )
-          else
+          else if (deckCount <= 0)
             Positioned(
               left: cardSize.width * 0.12,
               top: (h - badgeSize) / 2,

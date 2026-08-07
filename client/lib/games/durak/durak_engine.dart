@@ -53,7 +53,8 @@ class DurakGame {
     List<TablePair>? table,
     List<PlayingCard>? bito,
     int? maxAttacks,
-    int? loserIndex,
+    this.loserIndex,
+    this.firstRound = false,
   })  : table = table ?? <TablePair>[],
         bito = bito ?? <PlayingCard>[],
         maxAttacks = maxAttacks ?? 6;
@@ -99,6 +100,7 @@ class DurakGame {
       trump: trump,
       attackerIndex: starter,
       turn: DurakTurn.attacker,
+      firstRound: true,
     );
   }
 
@@ -122,6 +124,9 @@ class DurakGame {
   final List<PlayingCard> bito;
   final int maxAttacks;
   int? loserIndex;
+
+  /// Первый отбой: не больше 5 карт на столе.
+  bool firstRound;
 
   /// Оба вышли — ничья (колода пуста, карт ни у кого нет).
   bool endedInDraw = false;
@@ -149,10 +154,13 @@ class DurakGame {
       table.where((p) => p.defense == null).length;
 
   int get maxAttacksThisRound {
-    // Как на сервере: рука защитника + уже лежащие атаки.
-    final lim = hands[defenderIndex].length + table.length;
-    final capped = lim < 1 ? 1 : lim;
-    return maxAttacks > 0 && maxAttacks < capped ? maxAttacks : capped;
+    // Как на сервере: отбитые пары + карты в руке защитника.
+    final beaten = table.where((p) => p.isBeaten).length;
+    var lim = beaten + hands[defenderIndex].length;
+    if (lim < 1) lim = 1;
+    if (maxAttacks > 0 && maxAttacks < lim) lim = maxAttacks;
+    if (firstRound && lim > 5) lim = 5;
+    return lim;
   }
 
   /// Можно ли [card] использовать как первую атаку (или подкидывание).
@@ -305,6 +313,7 @@ class DurakGame {
     table.clear();
     _refillHands();
     attackerIndex = (atk + 1) % playerCount;
+    firstRound = false;
     _checkGameOver();
     turn = DurakTurn.attacker;
   }
@@ -347,6 +356,7 @@ class DurakGame {
     _sortHand(hands[di], trump);
     _refillHands();
     attackerIndex = (di + 1) % playerCount;
+    firstRound = false;
     _checkGameOver();
     turn = DurakTurn.attacker;
   }
@@ -363,6 +373,7 @@ class DurakGame {
     table.clear();
     _refillHands();
     attackerIndex = defenderIndex; // ход переходит к бывшему защитнику
+    firstRound = false;
     _checkGameOver();
     turn = isOver ? DurakTurn.attacker : DurakTurn.attacker;
   }
