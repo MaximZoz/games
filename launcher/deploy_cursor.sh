@@ -62,7 +62,11 @@ done
 
 "$FLY_BIN" secrets set "${secret_args[@]}" --app "$FLY_APP_NAME"
 
+BUILD_ID="$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
+echo "BUILD_ID=$BUILD_ID"
+
 echo "Запускаю деплой..."
-"$FLY_BIN" deploy --app "$FLY_APP_NAME" --remote-only --yes
+"$FLY_BIN" deploy --app "$FLY_APP_NAME" --remote-only --yes \
+  --build-arg "BUILD_ID=$BUILD_ID"
 
 echo "Деплой завершен: https://$FLY_APP_NAME.fly.dev"

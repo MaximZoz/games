@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/app_update_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -226,6 +227,35 @@ class AppShell extends ConsumerWidget {
       ref.watch(collectionIncomeProvider);
       ref.watch(dailyRewardStatusProvider);
     }
+    // Версия приложения: сверка с /api/version и WS client_update_available.
+    ref.watch(appUpdateProvider);
+    ref.listen(activeGameProvider, (_, __) {
+      ref.read(appUpdateProvider.notifier).onActiveGameChanged();
+    });
+    ref.listen<AppUpdateState>(appUpdateProvider, (prev, next) {
+      if (!next.updateAvailable) return;
+      if (next.deferredUntilGameEnd) return;
+      if (next.dialogShown) return;
+      if (prev?.dialogShown == true && prev?.latestBuild == next.latestBuild) {
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        final cur = ref.read(appUpdateProvider);
+        if (!cur.updateAvailable ||
+            cur.deferredUntilGameEnd ||
+            cur.dialogShown) {
+          return;
+        }
+        ref.read(appUpdateProvider.notifier).markDialogShown();
+        unawaited(_showAppUpdateDialog(context, ref));
+      });
+    });
+    // Первая проверка при появлении shell (и для гостя на /login).
+    if (!isOffline) {
+      unawaited(ref.read(appUpdateProvider.notifier).ensureInitialCheck());
+    }
+
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
     if (isAuthorized && !isOffline) {
       ref.watch(realtimeEventsProvider);
@@ -266,6 +296,15 @@ class AppShell extends ConsumerWidget {
             // Вход с другого устройства — выходим на этом.
             unawaited(ref.read(authStateProvider.notifier).logout());
             return;
+          }
+          if (type == 'realtime_connected') {
+            unawaited(ref.read(appUpdateProvider.notifier).check());
+          }
+          if (type == 'client_update_available') {
+            final latest = (event['latest_build'] ?? event['build_id'])?.toString();
+            unawaited(
+              ref.read(appUpdateProvider.notifier).check(latestBuild: latest),
+            );
           }
           if (type == 'game_started' || type == 'lobby_updated') {
             final router = GoRouter.of(context);
@@ -857,6 +896,11 @@ class AppShell extends ConsumerWidget {
           )
         : null;
 
+    final updateState = ref.watch(appUpdateProvider);
+    final showUpdateBanner = updateState.updateAvailable &&
+        updateState.deferredUntilGameEnd &&
+        !updateState.bannerDismissed;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -876,7 +920,110 @@ class AppShell extends ConsumerWidget {
             bottomNavigationBar: bottomNav,
           ),
         ),
+        if (showUpdateBanner)
+          Positioned(
+            left: 12,
+            right: 12,
+            top: topInset + kToolbarHeight + 6,
+            child: _AppUpdateBanner(
+              onUpdate: () => ref.read(appUpdateProvider.notifier).applyUpdate(),
+              onDismiss: () =>
+                  ref.read(appUpdateProvider.notifier).dismissBanner(),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
+  final l10n = context.l10n;
+  final go = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) {
+      return AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          l10n.appUpdateTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: Text(l10n.appUpdateBody),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.appUpdateOk),
+          ),
+        ],
+      );
+    },
+  );
+  if (go == true) {
+    await ref.read(appUpdateProvider.notifier).applyUpdate();
+  }
+}
+
+class _AppUpdateBanner extends StatelessWidget {
+  const _AppUpdateBanner({
+    required this.onUpdate,
+    required this.onDismiss,
+  });
+
+  final VoidCallback onUpdate;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Material(
+      color: Colors.transparent,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          child: Row(
+            children: [
+              Icon(Icons.system_update_alt_rounded,
+                  size: 20, color: AppColors.accentStart),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.appUpdateLaterBanner,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onUpdate,
+                child: Text(l10n.appUpdateOk),
+              ),
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                onPressed: onDismiss,
+                icon: const Icon(Icons.close_rounded, size: 18),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -125,6 +125,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPushRewards => 'Rewards';
 
   @override
+  String settingsAppVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Update available';
+
+  @override
+  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+
+  @override
+  String get appUpdateOk => 'Update';
+
+  @override
+  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+
+  @override
   String get loginTitle => 'Sign in';
 
   @override

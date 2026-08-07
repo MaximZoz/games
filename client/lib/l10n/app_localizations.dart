@@ -377,6 +377,36 @@ abstract class AppLocalizations {
   /// **'Награды'**
   String get settingsPushRewards;
 
+  /// No description provided for @settingsAppVersion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия {version}'**
+  String settingsAppVersion(String version);
+
+  /// No description provided for @appUpdateTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступно обновление'**
+  String get appUpdateTitle;
+
+  /// No description provided for @appUpdateBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вышла новая версия приложения. Обновитесь, чтобы продолжить.'**
+  String get appUpdateBody;
+
+  /// No description provided for @appUpdateOk.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить'**
+  String get appUpdateOk;
+
+  /// No description provided for @appUpdateLaterBanner.
+  ///
+  /// In ru, this message translates to:
+  /// **'После партии обновим приложение'**
+  String get appUpdateLaterBanner;
+
   /// No description provided for @loginTitle.
   ///
   /// In ru, this message translates to:

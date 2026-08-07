@@ -125,6 +125,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsPushRewards => 'Ödüller';
 
   @override
+  String settingsAppVersion(String version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Доступно обновление';
+
+  @override
+  String get appUpdateBody => 'Вышла новая версия приложения. Обновитесь, чтобы продолжить.';
+
+  @override
+  String get appUpdateOk => 'Обновить';
+
+  @override
+  String get appUpdateLaterBanner => 'После партии обновим приложение';
+
+  @override
   String get loginTitle => 'Giriş yap';
 
   @override

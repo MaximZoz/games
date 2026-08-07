@@ -112,6 +112,39 @@ func (h *RealtimeHub) DisconnectUser(userID uuid.UUID, payload any) {
 	}
 }
 
+// PublishToAll доставляет payload всем локально подключённым клиентам.
+func (h *RealtimeHub) PublishToAll(payload any) {
+	if h == nil {
+		return
+	}
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+
+	type delivery struct {
+		userID uuid.UUID
+		client *realtimeClient
+	}
+	deliveries := make([]delivery, 0, 32)
+	h.mu.RLock()
+	for userID, conns := range h.clients {
+		for _, client := range conns {
+			deliveries = append(deliveries, delivery{userID: userID, client: client})
+		}
+	}
+	h.mu.RUnlock()
+
+	for _, target := range deliveries {
+		if target.client == nil {
+			continue
+		}
+		if err := target.client.writeText(raw); err != nil {
+			log.Printf("realtime publish all to %s: %v", target.userID, err)
+		}
+	}
+}
+
 func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 	if h == nil || len(userIDs) == 0 {
 		return

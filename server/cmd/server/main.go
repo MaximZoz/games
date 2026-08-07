@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -32,6 +33,40 @@ import (
 var webFS embed.FS
 
 const serverMessage = "go start"
+
+// buildID — короткий git sha (или иной id), прошивается при деплое:
+// go build -ldflags="-X main.buildID=abc1234"
+// Либо переменная окружения BUILD_ID перекрывает значение.
+var buildID = "dev"
+
+func effectiveBuildID() string {
+	if v := strings.TrimSpace(os.Getenv("BUILD_ID")); v != "" {
+		return v
+	}
+	if strings.TrimSpace(buildID) == "" {
+		return "dev"
+	}
+	return strings.TrimSpace(buildID)
+}
+
+func handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, i18n.T(i18n.LangFromRequest(r), "Method not allowed"), http.StatusMethodNotAllowed)
+		return
+	}
+	id := effectiveBuildID()
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"build_id":     id,
+		"latest_build": id,
+	})
+}
 
 func getEnv(key, defaultVal string) string {
 	if v := os.Getenv(key); v != "" {
@@ -388,6 +423,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/start", handleStart)
+	mux.HandleFunc("/api/version", handleVersion)
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
@@ -497,7 +533,9 @@ func main() {
 		port = ":" + port
 	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
+	log.Printf("build_id=%s", effectiveBuildID())
 	log.Printf("GET /api/start -> %q", serverMessage)
+	log.Printf("GET /api/version -> build_id")
 	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/verify-email, POST /api/auth/resend-verification, POST /api/auth/forgot-password, POST /api/auth/reset-password, GET /api/me (Bearer)")
 	log.Printf("OAuth: GET /api/auth/oauth/providers, GET /api/auth/oauth/{google|apple|yandex|vk}/start, /callback")
 	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
@@ -505,6 +543,18 @@ func main() {
 	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/delivered, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
 	log.Printf("Presence API: GET /api/presence?user_ids=... (Bearer)")
 	log.Printf("Games API: POST /api/games/tictactoe/lobby, GET /api/games/tictactoe/lobbies, POST /api/games/tictactoe/lobby/:id/invite|join|leave, GET /api/games/tictactoe/game/:id, POST /api/games/tictactoe/game/:id/move (Bearer, Redis required)")
+
+	// После деплоя уведомляем онлайн-клиентов (с небольшой задержкой на подъём WS).
+	go func() {
+		time.Sleep(3 * time.Second)
+		payload := map[string]any{
+			"type":         "client_update_available",
+			"build_id":     effectiveBuildID(),
+			"latest_build": effectiveBuildID(),
+		}
+		gamesBroadcaster.PublishAll(payload)
+	}()
+
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)
 	}

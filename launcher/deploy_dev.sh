@@ -89,13 +89,18 @@ done
 
 "$FLY_BIN" secrets set "${secret_args[@]}" --app "$FLY_APP_NAME"
 
+BUILD_ID="$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
+echo "BUILD_ID=$BUILD_ID"
+
 echo "Запускаю деплой DEV..."
 (
   cd "$ROOT_DIR"
   # --depot=false: обход частых deadline_exceeded у Depot builder на тяжёлой сборке Flutter+Go.
-  if ! "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --depot=false --yes; then
+  if ! "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --depot=false --yes \
+      --build-arg "BUILD_ID=$BUILD_ID"; then
     echo "Повтор деплоя без --depot=false..."
-    "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --yes
+    "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --yes \
+      --build-arg "BUILD_ID=$BUILD_ID"
   fi
 )
 
