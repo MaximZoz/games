@@ -303,6 +303,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     double beginAngle = 0,
     double endAngle = 0,
     VoidCallback? onHandoff,
+    Duration flyDuration = const Duration(milliseconds: 320),
+    int settleMs = 180,
   }) async {
     if (!mounted || _docking) return;
     _docking = true;
@@ -338,7 +340,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       cardSize: widget.cardSize,
       from: from,
       to: peekRect,
-      duration: const Duration(milliseconds: 320),
+      duration: flyDuration,
       curve: Curves.easeOutCubic,
       faceDown: flipToFace,
       flipToFace: flipToFace,
@@ -363,7 +365,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     }
     await WidgetsBinding.instance.endOfFrame;
     ticket.dismiss();
-    await _animatePeekTTo(0, ms: 180);
+    await _animatePeekTTo(0, ms: settleMs);
     if (!mounted || gen != _gestureGen) {
       _docking = false;
       return;

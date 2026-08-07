@@ -1953,7 +1953,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Добор из колоды: по одной, переворот, fold в веер.
-  Future<void> _animateDealCardsToFan(List<PlayingCard> cards) async {
+  Future<void> _animateDealCardsToFan(
+    List<PlayingCard> cards, {
+    Duration flyDuration = const Duration(milliseconds: 320),
+    int settleMs = 180,
+  }) async {
     if (cards.isEmpty || !mounted || !_gameUiActive) return;
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     final trump = view != null
@@ -2034,6 +2038,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           flipToFace: true,
           beginAngle: 0.2,
           endAngle: angle,
+          flyDuration: flyDuration,
+          settleMs: settleMs,
           onHandoff: () {
             if (!mounted) return;
             setState(() => _flyingFromHand.remove(card));
@@ -2681,18 +2687,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final myCards = List<PlayingCard>.of(myHand);
     var myIdx = 0;
 
+    // Стартовая раздача — в ~2× быстрее обычного добора.
+    const fly = Duration(milliseconds: 160);
+    const settle = 90;
+    const gap = Duration(milliseconds: 14);
+
     for (var round = 0; round < handSize; round++) {
       for (final seat in seatOrder) {
         if (!mounted || !_gameUiActive) return;
         if (seat == view.myIndex) {
           if (myIdx >= myCards.length) continue;
-          await _animateDealCardsToFan([myCards[myIdx]]);
+          await _animateDealCardsToFan(
+            [myCards[myIdx]],
+            flyDuration: fly,
+            settleMs: settle,
+          );
           myIdx++;
         } else {
-          await _animateDealToOpponent(seat, 1);
+          await _animateDealToOpponent(seat, 1, flyDuration: fly);
         }
         if (!mounted) return;
-        await Future<void>.delayed(const Duration(milliseconds: 28));
+        await Future<void>.delayed(gap);
       }
     }
 
@@ -2720,7 +2735,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       cardSize: _tableCardSize,
       from: from,
       to: to,
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 210),
       curve: Curves.easeOutCubic,
       faceDown: true,
       flipToFace: true,
@@ -2736,7 +2751,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return;
     }
     setState(() => _trumpFaceVisible = true);
-    await Future<void>.delayed(const Duration(milliseconds: 40));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
     ticket.dismiss();
   }
 
@@ -2870,7 +2885,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Рубашки по одной: колода → веер одного соперника ([_oppDealPending] уже учтён).
-  Future<void> _animateDealToOpponent(int idx, int n) async {
+  Future<void> _animateDealToOpponent(
+    int idx,
+    int n, {
+    Duration flyDuration = const Duration(milliseconds: 300),
+    Duration stagger = const Duration(milliseconds: 32),
+  }) async {
     if (n <= 0 || !mounted || !_gameUiActive) return;
     const dummy = PlayingCard(Rank.six, Suit.spades);
     final screen = MediaQuery.sizeOf(context);
@@ -2905,7 +2925,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         cardSize: _tableCardSize,
         from: from,
         to: land,
-        duration: const Duration(milliseconds: 300),
+        duration: flyDuration,
         curve: Curves.easeOutCubic,
         faceDown: true,
         flipToFace: false,
@@ -2927,7 +2947,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       });
       if (i + 1 < n) {
-        await Future<void>.delayed(const Duration(milliseconds: 32));
+        await Future<void>.delayed(stagger);
       }
     }
   }
