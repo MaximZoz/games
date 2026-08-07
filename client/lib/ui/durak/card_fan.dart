@@ -563,25 +563,36 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (widget.spacing != null) return widget.spacing!;
     if (n <= 1) return 0;
     final w = widget.cardSize.width;
-    if (n > 28) return w * 0.09;
-    if (n > 22) return w * 0.11;
-    if (n > 16) return w * 0.14;
-    if (n > 12) return w * 0.18;
-    if (n > 9) return w * 0.24;
-    if (n > 7) return w * 0.32;
-    if (n > 5) return w * 0.42;
+    // Плотнее при росте руки — без раздувания веера.
+    if (n > 28) return w * 0.06;
+    if (n > 22) return w * 0.08;
+    if (n > 18) return w * 0.10;
+    if (n > 14) return w * 0.14;
+    if (n > 11) return w * 0.18;
+    if (n > 9) return w * 0.22;
+    if (n > 7) return w * 0.30;
+    if (n > 5) return w * 0.40;
     return w * 0.52;
   }
 
   double _arcFor(int n) {
     if (widget.arc != null) return widget.arc!;
     if (n <= 1) return 0;
-    // Как раньше: заметная дуга, не плоская линия.
-    if (n > 20) return 0.85;
-    if (n > 14) return 0.68;
-    if (n > 10) return 0.52;
-    if (n > 6) return 0.4;
+    // Много карт — почти плоско; мало — чуть заметная дуга.
+    if (n > 16) return 0.16;
+    if (n > 12) return 0.20;
+    if (n > 9) return 0.26;
+    if (n > 6) return 0.32;
     return 0.28;
+  }
+
+  /// Коэффициент параболы краёв: при плотной руке не поднимаем середину.
+  double _curveK(int n) {
+    if (n > 16) return 0.003;
+    if (n > 12) return 0.0045;
+    if (n > 9) return 0.0065;
+    if (n > 6) return 0.009;
+    return 0.012;
   }
 
   bool _isLegal(PlayingCard card) =>
@@ -635,9 +646,12 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final center = (n - 1) / 2;
     final curveY = widget.arc == 0
         ? 0.0
-        : (i - center) * (i - center) * widget.cardSize.height * 0.012;
+        : (i - center) * (i - center) * widget.cardSize.height * _curveK(n);
     final left = _cardLeft(i, n, baseSpacing, totalW);
-    final top = box.size.height - widget.cardSize.height - curveY;
+    // Как в _positioned: края ниже (edgeLift = -curveY), середина выше.
+    final top = widget.invertFan
+        ? curveY
+        : box.size.height - widget.cardSize.height + curveY;
     final origin = box.localToGlobal(Offset(left, top));
     return Rect.fromLTWH(
       origin.dx,
@@ -1064,10 +1078,10 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final angle = n == 1 || arc == 0
         ? 0.0
         : (i - center) * (arc / max(n - 1, 1));
-    // arc == 0 — ровный ряд (соперник); иначе парабола краёв как раньше.
+    // arc == 0 — ровный ряд; иначе лёгкая парабола (слабее при многих картах).
     final curveY = arc == 0
         ? 0.0
-        : (i - center) * (i - center) * widget.cardSize.height * 0.012;
+        : (i - center) * (i - center) * widget.cardSize.height * _curveK(n);
 
     var extraX = 0.0;
     var extraY = 0.0;

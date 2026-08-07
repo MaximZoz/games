@@ -447,59 +447,65 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return opt;
   }
 
-  /// Веер: дуга + шаг на всю [maxWidth] (включая зону слева под крестиком).
+  /// Веер: при росте руки сжимаем размер и шаг; ширину экрана заполняем
+  /// только при небольшом числе карт (иначе веер «вспухает» дугой вверх).
   ({Size cardSize, double spacing}) _fitHandFan(int n, double maxWidth) {
     if (n <= 0) return (cardSize: _handCardSize, spacing: 0);
     var size = _handCardSize;
-    // Чем больше карт — тем сильнее сжимаем (можно до «полосок»).
-    if (n > 30) {
-      size = Size(_handCardSize.width * 0.42, _handCardSize.height * 0.42);
-    } else if (n > 24) {
-      size = Size(_handCardSize.width * 0.50, _handCardSize.height * 0.50);
-    } else if (n > 20) {
-      size = Size(_handCardSize.width * 0.58, _handCardSize.height * 0.58);
-    } else if (n > 16) {
-      size = Size(_handCardSize.width * 0.68, _handCardSize.height * 0.68);
-    } else if (n > 12) {
-      size = Size(_handCardSize.width * 0.78, _handCardSize.height * 0.78);
-    } else if (n > 10) {
-      size = Size(_handCardSize.width * 0.86, _handCardSize.height * 0.86);
+    // Раньше и сильнее уменьшаем карты — 10–12 уже заметно плотнее.
+    if (n > 28) {
+      size = Size(_handCardSize.width * 0.40, _handCardSize.height * 0.40);
+    } else if (n > 22) {
+      size = Size(_handCardSize.width * 0.48, _handCardSize.height * 0.48);
+    } else if (n > 18) {
+      size = Size(_handCardSize.width * 0.56, _handCardSize.height * 0.56);
+    } else if (n > 14) {
+      size = Size(_handCardSize.width * 0.66, _handCardSize.height * 0.66);
+    } else if (n > 11) {
+      size = Size(_handCardSize.width * 0.74, _handCardSize.height * 0.74);
+    } else if (n > 9) {
+      size = Size(_handCardSize.width * 0.82, _handCardSize.height * 0.82);
+    } else if (n > 7) {
+      size = Size(_handCardSize.width * 0.90, _handCardSize.height * 0.90);
     }
 
-    // fillWidth: width = card + spacing*(n-1), без боковых полей.
     const fanPad = 4.0;
     final usable = (maxWidth - fanPad).clamp(72.0, maxWidth);
 
-    double minSpacing(Size s) {
+    /// Целевой шаг (доля ширины карты): чем больше карт — тем плотнее.
+    double targetSpacing(Size s) {
       if (n <= 1) return 0;
       final w = s.width;
-      if (n > 30) return w * 0.035;
-      if (n > 24) return w * 0.045;
-      if (n > 20) return w * 0.06;
-      if (n > 16) return w * 0.08;
-      if (n > 12) return w * 0.12;
-      if (n > 10) return w * 0.16;
-      if (n > 7) return w * 0.26;
-      if (n > 5) return w * 0.36;
-      return w * 0.48;
+      if (n > 28) return w * 0.06;
+      if (n > 22) return w * 0.08;
+      if (n > 18) return w * 0.10;
+      if (n > 14) return w * 0.14;
+      if (n > 11) return w * 0.18;
+      if (n > 9) return w * 0.22;
+      if (n > 7) return w * 0.30;
+      if (n > 5) return w * 0.40;
+      return w * 0.52;
     }
 
-    for (var step = 0; step < 24; step++) {
-      final need = size.width + minSpacing(size) * (n - 1);
+    var spacing = targetSpacing(size);
+    for (var step = 0; step < 28; step++) {
+      final need = size.width + spacing * (n - 1);
       if (need <= usable || size.width <= 18) break;
       final scale = (usable / need).clamp(0.28, 0.96);
       size = Size(size.width * scale, size.height * scale);
+      spacing = targetSpacing(size);
     }
 
-    // Растягиваем шаг до краёв доступной ширины.
-    final lo = minSpacing(size);
-    final hi = size.width * 0.96;
-    final fill = n <= 1 ? 0.0 : (usable - size.width) / (n - 1);
-    final spacing = n <= 1 ? 0.0 : fill.clamp(lo, hi > lo ? hi : lo);
+    // Мало карт — растянуть на ширину; много — оставить плотный шаг (не раздувать).
+    if (n <= 7 && n > 1) {
+      final fill = (usable - size.width) / (n - 1);
+      final hi = size.width * 0.96;
+      spacing = fill.clamp(spacing, hi > spacing ? hi : spacing);
+    }
     return (cardSize: size, spacing: spacing);
   }
 
-  /// Всегда на всю ширину: мало карт — широко, много — сильнее сжаты.
+  /// Мало карт — на всю ширину; много — компактный веер по центру.
   ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
     int n,
     double maxWidth,
@@ -507,15 +513,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (n <= 0) {
       return (cardSize: _handCardSize, spacing: 0, fillWidth: true);
     }
-    // Одна карта — по центру; 2+ — растянуть от края до края.
     if (n == 1) {
       return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
     }
     final fitted = _fitHandFan(n, maxWidth);
+    // До 7 карт — от края до края; дальше только сжатие, без «подъёма» дуги.
+    final fillWidth = n <= 7;
     return (
       cardSize: fitted.cardSize,
       spacing: fitted.spacing,
-      fillWidth: true,
+      fillWidth: fillWidth,
     );
   }
 
@@ -3560,24 +3567,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ? _frozenFanCardSize!.height
         : fanProbe.cardSize.height;
     final nFan = handForFan.length;
-    // Мало карт — опускаем (~1/3 скрыта снизу); много — поднимаем весь веер в кадр.
-    // seatLift > 0 — подъём; < 0 — уход под нижний край зоны.
+    // Не поднимаем веер при росте руки — только сжимаем шаг/размер карт.
+    // seatLift < 0 — чуть уводим под низ зоны (как при малой руке).
     final seatLift = nFan <= 3
         ? -fanCardH * 0.33
         : nFan <= 6
             ? -fanCardH * 0.22
             : nFan <= 9
-                ? -fanCardH * 0.06
-                : nFan <= 12
-                    ? fanCardH * 0.14
-                    : nFan <= 16
-                        ? fanCardH * 0.32
-                        : nFan <= 22
-                            ? fanCardH * 0.48
-                            : fanCardH * 0.60;
-    final raise = seatLift > 0 ? seatLift : 0.0;
-    // CardFan ≈ 1.7h + peek; при подъёме зона выше, при tuck — overflow вниз.
-    final fanZoneH = fanCardH * 2.05 + raise + 16;
+                ? -fanCardH * 0.12
+                : -fanCardH * 0.06;
+    // CardFan ≈ 1.7h + peek; зона без искусственного подъёма.
+    final fanZoneH = fanCardH * 2.05 + 16;
 
     final showTimer = !view.isOver &&
         view.isMyTurn &&
@@ -3942,6 +3942,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Карты соперника дугой с кромкой — не сплошная линия, видно каждую.
+  /// При росте руки сжимаем размер плиток и шаг (как у своего веера).
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final serverCount = view.hands.length > idx ? view.hands[idx].count : 0;
     final pending = _oppDealPending[idx] ?? 0;
@@ -3949,34 +3950,56 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final count = math.max(0, serverCount - pending);
     if (count <= 0 && pending <= 0) return const SizedBox.shrink();
     final maxW = MediaQuery.sizeOf(context).width - 48;
-    // Показываем до 16 плиток; при большем числе — плотнее, без бейджа.
+    // Показываем до 20 плиток; дальше — ещё плотнее.
     // pending>0 и count==0 — пустая зона-цель для посадки добора.
-    final shown = count <= 0 ? 1 : (count > 16 ? 16 : count);
+    final shown = count <= 0 ? 1 : (count > 20 ? 20 : count);
     final placeholderOnly = count <= 0;
+    var tileScale = 0.44;
+    if (shown > 16) {
+      tileScale = 0.30;
+    } else if (shown > 12) {
+      tileScale = 0.34;
+    } else if (shown > 9) {
+      tileScale = 0.38;
+    } else if (shown > 6) {
+      tileScale = 0.41;
+    }
     var tile = Size(
-      (cardSize.width * 0.44).clamp(30.0, 52.0),
-      (cardSize.height * 0.44).clamp(44.0, 76.0),
+      (cardSize.width * tileScale).clamp(22.0, 52.0),
+      (cardSize.height * tileScale).clamp(32.0, 76.0),
     );
-    // Минимальная видимая полоска — карты не сливаются.
-    var step = tile.width * (shown > 12
-        ? 0.42
-        : shown > 8
-            ? 0.50
-            : shown > 4
-                ? 0.58
-                : 0.70);
+    // Чем больше карт — тем меньше шаг (сжатие, не растягивание).
+    var stepFrac = shown > 16
+        ? 0.22
+        : shown > 12
+            ? 0.28
+            : shown > 9
+                ? 0.34
+                : shown > 6
+                    ? 0.42
+                    : shown > 4
+                        ? 0.52
+                        : 0.66;
+    var step = tile.width * stepFrac;
     var totalW = tile.width + step * math.max(shown - 1, 0);
     if (totalW > maxW && shown > 1) {
-      step = ((maxW - tile.width) / (shown - 1)).clamp(15.0, step);
+      step = ((maxW - tile.width) / (shown - 1)).clamp(10.0, step);
       totalW = tile.width + step * (shown - 1);
       if (totalW > maxW) {
-        final s = (maxW / totalW).clamp(0.55, 1.0);
+        final s = (maxW / totalW).clamp(0.45, 1.0);
         tile = Size(tile.width * s, tile.height * s);
         step *= s;
         totalW = tile.width + step * (shown - 1);
       }
     }
-    final arcH = tile.height * 0.28;
+    // Плотная рука — более плоская дуга, без «подъёма» середины.
+    final arcH = tile.height * (shown > 12
+        ? 0.10
+        : shown > 8
+            ? 0.16
+            : shown > 4
+                ? 0.22
+                : 0.28);
     final fanH = tile.height + arcH + 6;
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 2),
@@ -4000,7 +4023,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                             : (i / (shown - 1)) * 2 - 1; // -1..1
                         // Середина ниже (к столу), края выше — читаемая дуга.
                         final y = (1 - t * t) * arcH;
-                        final angle = t * 0.22;
+                        final angleMax = shown > 12
+                            ? 0.12
+                            : shown > 8
+                                ? 0.16
+                                : 0.22;
+                        final angle = t * angleMax;
                         return Positioned(
                           left: i * step,
                           top: y,
