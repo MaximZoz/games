@@ -1539,9 +1539,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
+  /// Карта в полёте (атака/отбой) — не показывать «Бито»/«Взять».
+  bool get _cardFlightActive =>
+      _flyingFromHand.isNotEmpty ||
+      _flyingToTable.isNotEmpty ||
+      _flightLockTable;
+
   bool _canTake(DurakGameView view) {
     if (view.isOver ||
         _busy ||
+        _cardFlightActive ||
         view.defenderIndex != view.myIndex ||
         view.phase != 'defend' ||
         view.table.isEmpty) {
@@ -1559,6 +1566,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _canBito(DurakGameView view) =>
       !view.isOver &&
       !_busy &&
+      !_cardFlightActive &&
       view.attackerIndex == view.myIndex &&
       view.phase == 'attack_follow' &&
       view.table.isNotEmpty &&
@@ -1568,6 +1576,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _canDone(DurakGameView view) =>
       !view.isOver &&
       !_busy &&
+      !_cardFlightActive &&
       view.attackerIndex == view.myIndex &&
       view.phase == 'take_follow' &&
       view.table.isNotEmpty;
@@ -3654,7 +3663,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   view,
                   tableSize,
                   trumpCard,
-                  showTimer: showTimer,
                 ),
               ),
               // Место под веер; кнопки — оверлеем, без сдвига layout.
@@ -3750,8 +3758,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
             ],
           ),
+          // Таймер своего хода — справа, на уровне шапки соперника.
+          if (showTimer)
+            Positioned(
+              right: 2,
+              top: 2,
+              child: _buildMyTurnTimerChip(view),
+            ),
           // Слот кнопки всегда зарезервирован — смена хода не двигает экран.
-          // Ближе к вееру; скрыта, пока карта вытащена из веера.
+          // Скрыта при вытаскивании и пока карта летит на стол.
           Positioned(
             left: 0,
             right: 0,
@@ -3759,7 +3774,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             child: SizedBox(
               height: 52,
               child: Center(
-                child: (showTake || showBito || showDone) && !_holdingFanCard
+                child: (showTake || showBito || showDone) &&
+                        !_holdingFanCard &&
+                        !_cardFlightActive
                     ? _PulsingActionButton(
                         label: showTake
                             ? 'Взять'
@@ -3776,6 +3793,39 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMyTurnTimerChip(DurakGameView view) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceUnified.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: SizedBox(
+          width: 70,
+          height: 28,
+          child: Center(
+            child: GameTurnCountdown(
+              key: ValueKey('turn-clock-${view.turnDeadline}'),
+              turnDeadline: view.turnDeadline,
+              turnTimeSec: view.turnTimeSec,
+              isMyTurn: view.isMyTurn,
+              onExpired: _onTurnTimeExpired,
+              labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -4072,9 +4122,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Widget _buildBoard(
     DurakGameView view,
     Size cardSize,
-    PlayingCard trumpCard, {
-    bool showTimer = false,
-  }) {
+    PlayingCard trumpCard,
+  ) {
     final focus = _activeCard ??
         (_selected.isNotEmpty ? _selected.first : null);
     // Подсказки при подъёме: одна цель — ближайшая к пальцу (лево/центр/право).
@@ -4190,8 +4239,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 .clamp(100.0, constraints.maxWidth);
         // Якоря Positioned — Align не двигает колоду/биту при смене хода.
         final deckTop = constraints.maxHeight * 0.28;
-        // Таймер чуть выше — ближе к шапке соперника.
-        final bitoTop = constraints.maxHeight * 0.08;
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -4289,67 +4336,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               top: deckTop,
               child: deckPeek,
             ),
-            // Таймер над битой — слот всегда занят (Opacity), смена хода без прыжка.
+            // Бита справа, на уровне колоды (таймер — отдельно, у шапки).
             Positioned(
               right: 2,
-              top: bitoTop,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SizedBox(
-                    height: 42,
-                    width: 86,
-                    // Одно и то же дерево на свой/чужой ход — без прыжка layout.
-                    child: (view.turnTimeSec > 0 && view.turnDeadline > 0)
-                        ? IgnorePointer(
-                            ignoring: !showTimer,
-                            child: Opacity(
-                              opacity: showTimer ? 1 : 0,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surfaceUnified
-                                        .withValues(alpha: 0.92),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 5,
-                                    ),
-                                    child: Center(
-                                      child: GameTurnCountdown(
-                                        key: ValueKey(
-                                          'turn-clock-${view.turnDeadline}',
-                                        ),
-                                        turnDeadline: view.turnDeadline,
-                                        turnTimeSec: view.turnTimeSec,
-                                        isMyTurn: view.isMyTurn,
-                                        onExpired: _onTurnTimeExpired,
-                                        labelBuilder: (s) =>
-                                            context.l10n.gameSecondsLeft(s),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                  RepaintBoundary(child: bitoPeek),
-                ],
-              ),
+              top: deckTop,
+              child: RepaintBoundary(child: bitoPeek),
             ),
           ],
         );
