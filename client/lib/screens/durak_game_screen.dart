@@ -30,6 +30,9 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
+/// Отбой: лёгкий поворот вправо (~13°), чтобы был виден угол атаки.
+const double _kDefendLandAngle = 0.22;
+
 class DurakGameScreen extends ConsumerStatefulWidget {
   const DurakGameScreen({super.key, required this.gameId});
   final String gameId;
@@ -1099,6 +1102,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ),
     ];
 
+    // Отбой: в полёте крутим до _defendLandAngle — на столе уже повёрнута.
+    final landAngle = doDefend ? _kDefendLandAngle : 0.0;
+
     // Как атака: стартуем fly и сразу return true — иначе оверлей веера
     // дублирует карту на всём полёте (onDrop ждёт завершения).
     final firstFly = playCardFlyAnimation(
@@ -1112,7 +1118,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       beginScale: beginScale,
       endScale: shrink,
       beginAngle: 0,
-      endAngle: 0,
+      endAngle: landAngle,
       arcLift: 0,
       keepAtEnd: true,
     );
@@ -1148,7 +1154,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             beginScale: beginScale,
             endScale: shrink,
             beginAngle: 0,
-            endAngle: 0,
+            endAngle: landAngle,
             arcLift: 0,
             keepAtEnd: true,
           ),
@@ -2937,6 +2943,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     List<CardFlyTicket> tickets = const [];
     final small = Size(_tableCardSize.width * 0.55, _tableCardSize.height * 0.55);
+    final landAngle = flight.isDefense ? _kDefendLandAngle : 0.0;
     await playCardsFlyAnimation(
       context: context,
       cards: [flight.card],
@@ -2957,7 +2964,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       beginScale: 1.0,
       endScale: _tableCardSize.width / small.width,
       beginAngles: const [0.22],
-      endAngles: const [0.0],
+      endAngles: [landAngle],
       arcLift: 28,
       keepAtEnd: true,
       onTickets: (t) => tickets = t,
@@ -4582,9 +4589,10 @@ class _AnimatedTablePair extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final defense = pair.defense?.toPlayingCard() ?? optimisticDefense;
+    // Запас под повёрнутый отбой (иначе углы режутся соседними парами).
     final pairChild = SizedBox(
-      width: cardSize.width + 10,
-      height: cardSize.height + 14,
+      width: cardSize.width + 18,
+      height: cardSize.height + 20,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -4615,12 +4623,15 @@ class _AnimatedTablePair extends StatelessWidget {
             Positioned(
               left: 10,
               top: 14,
-              child: PlayingCardWidget(
-                card: defense,
-                size: cardSize,
-                elevated: true,
-                highlighted: false,
-                animate: false,
+              child: Transform.rotate(
+                angle: _kDefendLandAngle,
+                child: PlayingCardWidget(
+                  card: defense,
+                  size: cardSize,
+                  elevated: true,
+                  highlighted: false,
+                  animate: false,
+                ),
               ),
             ),
         ],
