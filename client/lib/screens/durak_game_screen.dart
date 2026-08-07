@@ -752,7 +752,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Offset? _estimatePairCenter(int index, int total) {
     final tableRect = globalRectOf(_tableKey);
     if (tableRect == null || total <= 0) return null;
-    final cols = _tableCols;
+    const cols = _tableCols;
     final pairW = _tableCardSize.width + 18;
     final pairH = _tableCardSize.height + 14;
     const gap = 10.0;
@@ -1452,7 +1452,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final pairW = _tableCardSize.width + 18;
     final pairH = _tableCardSize.height + 14;
     const gap = 10.0;
-    final cols = _tableCols;
+    const cols = _tableCols;
     final col = idx % cols;
     final row = idx ~/ cols;
     final rowLen = (row * cols + cols <= n)
@@ -4307,7 +4307,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final n = items.length;
     final pairW = cardSize.width + 18;
     const baseGap = 10.0;
-    final cols = _tableCols;
+    const cols = _tableCols;
 
     final rows = <List<Widget>>[
       for (var i = 0; i < n; i += cols)
