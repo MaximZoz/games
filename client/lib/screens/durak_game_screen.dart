@@ -4142,8 +4142,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // seatLift < 0 — чуть уводим под низ зоны.
     final seatT = nFan <= 1 ? 0.0 : ((nFan - 1) / 11).clamp(0.0, 1.0);
     final seatLift = -fanCardH * (0.33 * (1 - seatT) + 0.06 * seatT);
-    // CardFan ≈ 1.7h + peek; зона без искусственного подъёма.
-    final fanZoneH = fanCardH * 2.05 + 16;
+    // Высота зоны веера всегда по максимальным картам — иначе при сбросе
+    // в биту зона сжимается, стол растёт и колода/бита «прыгают».
+    final fanZoneH = _handCardSize.height * 2.05 + 16;
     // Кнопка чуть выше видимых карт веера.
     final actionBtnBottom = -seatLift + fanCardH + 10;
 
@@ -4691,7 +4692,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               onExpired: theirTurn ? _onTurnTimeExpired : null,
               child: body,
             ),
-            if (!finished) _opponentFan(view, idx, tableSize),
+            // Слот веера всегда — выход/добор не двигает стол и биту.
+            Opacity(
+              opacity: finished ? 0 : 1,
+              child: _opponentFan(view, idx, tableSize),
+            ),
           ],
         );
       },
@@ -4889,6 +4894,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
+  /// Фиксированная высота слота веера соперника (макс. плитка + макс. дуга).
+  /// Добор/сброс/выход не меняют высоту — стол и бита не прыгают.
+  double _opponentFanReserveHeight(Size cardSize) {
+    final tileH = (cardSize.height * 0.44).clamp(32.0, 76.0);
+    final arcH = tileH * 0.28;
+    return tileH + arcH + 6;
+  }
+
   /// Карты соперника дугой с кромкой — не сплошная линия, видно каждую.
   /// Ширина веера не больше трети экрана; при росте руки сжимаем плитки/шаг.
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
@@ -4896,11 +4909,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final pending = _oppDealPending[idx] ?? 0;
     // Пока карта летит из колоды — в веере ещё не показываем.
     final count = math.max(0, serverCount - pending);
-    if (count <= 0 && pending <= 0) return const SizedBox.shrink();
+    final reserveH = _opponentFanReserveHeight(cardSize);
     final maxW = MediaQuery.sizeOf(context).width / 3;
     // Показываем до 20 плиток; дальше — ещё плотнее.
     // pending>0 и count==0 — пустая зона-цель для посадки добора.
-    final shown = count <= 0 ? 1 : (count > 20 ? 20 : count);
+    final shown = count <= 0 ? 0 : (count > 20 ? 20 : count);
     final placeholderOnly = count <= 0;
     var tileScale = 0.44;
     if (shown > 16) {
@@ -4926,8 +4939,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return 0.58;
     }
 
-    var step = tile.width * minStepFrac();
-    var totalW = tile.width + step * math.max(shown - 1, 0);
+    var step = shown <= 1 ? 0.0 : tile.width * minStepFrac();
+    var totalW = shown <= 0
+        ? 1.0
+        : tile.width + step * math.max(shown - 1, 0);
     if (shown > 1 && totalW > maxW) {
       for (var i = 0; i < 24 && totalW > maxW && tile.width > 14; i++) {
         final s = (maxW / totalW).clamp(0.40, 0.96);
@@ -4941,60 +4956,68 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     }
     // Плотная рука — более плоская дуга, без «подъёма» середины.
-    final arcH = tile.height * (shown > 12
-        ? 0.10
-        : shown > 8
-            ? 0.16
-            : shown > 4
-                ? 0.22
-                : 0.28);
-    final fanH = tile.height + arcH + 6;
+    final arcH = shown <= 0
+        ? 0.0
+        : tile.height *
+            (shown > 12
+                ? 0.10
+                : shown > 8
+                    ? 0.16
+                    : shown > 4
+                        ? 0.22
+                        : 0.28);
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 2),
       child: KeyedSubtree(
         key: _oppFanKeys.putIfAbsent(idx, GlobalKey.new),
-        child: Center(
-          child: SizedBox(
-            key: ValueKey('opp-$idx-$count-$pending'),
-            width: totalW,
-            height: fanH,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.topCenter,
-              children: [
-                if (!placeholderOnly)
-                  for (var i = 0; i < shown; i++)
-                    Builder(
-                      builder: (_) {
-                        final t = shown <= 1
-                            ? 0.0
-                            : (i / (shown - 1)) * 2 - 1; // -1..1
-                        // Середина ниже (к столу), края выше — читаемая дуга.
-                        final y = (1 - t * t) * arcH;
-                        final angleMax = shown > 12
-                            ? 0.12
-                            : shown > 8
-                                ? 0.16
-                                : 0.22;
-                        final angle = t * angleMax;
-                        return Positioned(
-                          left: i * step,
-                          top: y,
-                          child: Transform.rotate(
-                            angle: angle,
-                            alignment: Alignment.topCenter,
-                            child: CardBackWidget(
-                              size: tile,
-                              elevated: i == shown - 1,
-                              outlined: true,
-                            ),
+        child: SizedBox(
+          width: double.infinity,
+          height: reserveH,
+          child: placeholderOnly
+              ? const SizedBox.expand()
+              : Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    key: ValueKey('opp-$idx-$count-$pending'),
+                    width: totalW,
+                    height: reserveH,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.topCenter,
+                      children: [
+                        for (var i = 0; i < shown; i++)
+                          Builder(
+                            builder: (_) {
+                              final t = shown <= 1
+                                  ? 0.0
+                                  : (i / (shown - 1)) * 2 - 1; // -1..1
+                              // Середина ниже (к столу), края выше — читаемая дуга.
+                              final y = (1 - t * t) * arcH;
+                              final angleMax = shown > 12
+                                  ? 0.12
+                                  : shown > 8
+                                      ? 0.16
+                                      : 0.22;
+                              final angle = t * angleMax;
+                              return Positioned(
+                                left: i * step,
+                                top: y,
+                                child: Transform.rotate(
+                                  angle: angle,
+                                  alignment: Alignment.topCenter,
+                                  child: CardBackWidget(
+                                    size: tile,
+                                    elevated: i == shown - 1,
+                                    outlined: true,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                      ],
                     ),
-              ],
-            ),
-          ),
+                  ),
+                ),
         ),
       ),
     );
@@ -5053,6 +5076,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _highlightTransferSlot(view);
     final showTableDropSlot =
         (canShowAttackSlot && highlightAttack) || showTransferSlot;
+
+    // Слот над колодой под таймер своего хода; такой же пустой — над битой,
+    // чтобы колода и бита всегда на одной линии (появление таймера ничего не двигает).
+    const pileTimerSlotH = 48.0;
+    const pileTimerGap = 6.0;
 
     // Колода слева — чуть в кадре, не под боковой панелью.
     // Freeze: козырь не исчезает, пока доборные карты не улетели.
@@ -5154,8 +5182,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         final tableMaxW =
             (constraints.maxWidth - leftReserve - rightReserve)
                 .clamp(100.0, constraints.maxWidth);
-        // Якоря Positioned — Align не двигает колоду/биту при смене хода.
-        final deckTop = constraints.maxHeight * 0.28;
+        // Якорь от верха стола — НЕ от maxHeight: иначе при смене высоты
+        // Expanded (веер/статус/рука) колода и бита «прыгают».
+        const pileTop = 4.0;
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -5223,17 +5252,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               ),
             ),
-            // Колода слева; таймер своего хода — над колодой с козырем.
-            // Слот таймера всегда зарезервирован — колода не прыгает при смене хода.
+            // Колода слева; таймер своего хода — в фиксированном слоте над ней.
             Positioned(
               left: 2,
-              top: (deckTop - 40).clamp(0.0, deckTop),
+              top: pileTop,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 34,
+                    height: pileTimerSlotH,
+                    width: 96,
                     child: IgnorePointer(
                       ignoring: !showTimer,
                       child: Opacity(
@@ -5245,16 +5274,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: pileTimerGap),
                   deckPeek,
                 ],
               ),
             ),
-            // Бита справа, на уровне колоды.
+            // Бита справа — тот же вертикальный каркас, что у колоды.
             Positioned(
               right: 2,
-              top: deckTop,
-              child: RepaintBoundary(child: bitoPeek),
+              top: pileTop,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const SizedBox(height: pileTimerSlotH, width: 1),
+                  const SizedBox(height: pileTimerGap),
+                  RepaintBoundary(child: bitoPeek),
+                ],
+              ),
             ),
           ],
         );

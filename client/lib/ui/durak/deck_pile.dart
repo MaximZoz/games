@@ -43,11 +43,12 @@ class DurakDeckPile extends StatelessWidget {
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
     final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
 
-    // Запас снизу под круглый бейдж счётчика.
+    // Запас снизу под бейдж всегда — иначе при опустошении колоды
+    // высота кучи меняется и визуально «прыгает» относительно биты.
     final countBadge = math.max(20.0, cardSize.width * 0.30);
     return SizedBox(
       width: layoutW,
-      height: h + (deckCount > 0 ? countBadge * 0.55 : 0),
+      height: h + countBadge * 0.55,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
