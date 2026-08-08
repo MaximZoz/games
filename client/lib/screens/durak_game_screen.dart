@@ -1670,33 +1670,32 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return true;
   }
 
+  bool _isCurrentThrower(DurakGameView view) {
+    if (view.throwerIndex >= 0) return view.throwerIndex == view.myIndex;
+    if (view.turnActorIdx >= 0) return view.turnActorIdx == view.myIndex;
+    return view.attackerIndex == view.myIndex;
+  }
+
   bool _canBito(DurakGameView view) =>
       !view.isOver &&
       !_busy &&
       !_cardFlightActive &&
-      view.attackerIndex == view.myIndex &&
+      _isCurrentThrower(view) &&
       view.phase == 'attack_follow' &&
       view.table.isNotEmpty &&
       view.table.every((p) => p.defense != null);
 
-  /// Атакующий подтверждает конец подкида вдогонку после «Беру».
+  /// Текущий подкидывающий подтверждает конец подкида вдогонку после «Беру».
   bool _canDone(DurakGameView view) =>
       !view.isOver &&
       !_busy &&
       !_cardFlightActive &&
-      view.attackerIndex == view.myIndex &&
+      _isCurrentThrower(view) &&
       view.phase == 'take_follow' &&
       view.table.isNotEmpty;
 
-  /// Пас подкида (3–4 игрока, не главный атакующий).
-  bool _canPass(DurakGameView view) =>
-      !view.isOver &&
-      !_busy &&
-      !_cardFlightActive &&
-      view.canThrowIn &&
-      view.attackerIndex != view.myIndex &&
-      (view.phase == 'attack_follow' || view.phase == 'take_follow') &&
-      view.table.isNotEmpty;
+  /// Пас = то же «Бито»/«Готово» для текущего в очереди (сервер advance).
+  bool _canPass(DurakGameView view) => false;
 
   /// Объявить «Беру» — стол остаётся, соперник может подкинуть вдогонку.
   Future<void> _take() async {
@@ -2799,8 +2798,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     final n = view.hands.length;
     const handSize = 6;
-    // По часовой начиная с соперника слева от меня (myIndex+1).
-    final seatOrder = List<int>.generate(n, (i) => (view.myIndex + 1 + i) % n);
+    // По часовой начиная с игрока «над колодой» (слева от меня = myIndex-1).
+    final start = (view.myIndex - 1 + n) % n;
+    final seatOrder = List<int>.generate(n, (i) => (start + i) % n);
     final myCards = List<PlayingCard>.of(myHand);
     var myIdx = 0;
 
@@ -4329,11 +4329,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final isBot = oppId.startsWith('bot:');
     final meta = view.playerMeta(oppId);
     final finished = view.finished.contains(idx);
-    final theirTurn = !view.isOver &&
+    final actor = view.turnActorIdx >= 0 ? view.turnActorIdx : view.attackerIndex;
+    final theirTurn = !view.isOver && !finished && actor == idx;
+    final isDefender = !view.isOver &&
         !finished &&
-        view.turnActorIdx == idx &&
-        view.turnTimeSec > 0 &&
-        view.turnDeadline > 0;
+        view.defenderIndex == idx &&
+        view.table.isNotEmpty;
+    final roleLabel = theirTurn
+        ? (view.phase == 'defend' && isDefender
+            ? 'Бьёт'
+            : (view.phase == 'attack_follow' || view.phase == 'take_follow'
+                ? 'Подкид'
+                : 'Ход'))
+        : (isDefender ? 'Отбивается' : null);
 
     return Consumer(
       builder: (context, ref, _) {
@@ -4366,72 +4374,90 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           }
         }
 
-        final chip = TurnTimerBorder(
-          key: ValueKey('seat-timer-$idx-${view.turnDeadline}'),
-          active: theirTurn,
-          turnDeadline: view.turnDeadline,
-          turnTimeSec: view.turnTimeSec,
-          borderWidth: 2.5,
-          radius: 18,
-          onExpired: _onTurnTimeExpired,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: isBot
-                  ? null
-                  : () => unawaited(showUserProfileDialog(
-                        context: context,
-                        ref: ref,
-                        userId: oppId,
-                        displayName: name,
-                        avatarKind: avatarKind,
-                        avatarValue: avatarValue,
-                        frameCode: frameCode,
-                        frameColor: frameColor,
-                        messageFrom: 'games',
-                        messageReturnPath:
-                            '/games/durak/game/${widget.gameId}',
-                      )),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Opacity(
-                      opacity: finished ? 0.45 : 1,
-                      child: GamePlayerAvatar(
-                        displayName: name,
-                        avatarKind: avatarKind,
-                        avatarValue: avatarValue,
-                        frameCode: frameCode,
-                        frameColor: frameColor,
-                        compact: true,
+        final body = Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: isBot
+                ? null
+                : () => unawaited(showUserProfileDialog(
+                      context: context,
+                      ref: ref,
+                      userId: oppId,
+                      displayName: name,
+                      avatarKind: avatarKind,
+                      avatarValue: avatarValue,
+                      frameCode: frameCode,
+                      frameColor: frameColor,
+                      messageFrom: 'games',
+                      messageReturnPath:
+                          '/games/durak/game/${widget.gameId}',
+                    )),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Opacity(
+                    opacity: finished ? 0.45 : 1,
+                    child: GamePlayerAvatar(
+                      displayName: name,
+                      avatarKind: avatarKind,
+                      avatarValue: avatarValue,
+                      frameCode: frameCode,
+                      frameColor: frameColor,
+                      compact: true,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 96),
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        decoration:
+                            finished ? TextDecoration.lineThrough : null,
                       ),
                     ),
+                  ),
+                  if (roleLabel != null) ...[
                     const SizedBox(height: 2),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 96),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          decoration:
-                              finished ? TextDecoration.lineThrough : null,
-                        ),
+                    Text(
+                      roleLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: theirTurn
+                            ? AppColors.accentStart
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
         );
+
+        // Рамка/таймер только у того, чей ход — остальные без обводки.
+        final chip = theirTurn
+            ? TurnTimerBorder(
+                key: ValueKey('seat-timer-$idx-${view.turnDeadline}'),
+                active: true,
+                turnDeadline: view.turnDeadline,
+                turnTimeSec: view.turnTimeSec,
+                borderWidth: 3,
+                radius: 18,
+                onExpired: _onTurnTimeExpired,
+                child: body,
+              )
+            : body;
 
         return Column(
           mainAxisSize: MainAxisSize.min,

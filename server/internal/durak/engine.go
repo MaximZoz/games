@@ -71,7 +71,9 @@ type State struct {
 	// Кто уже вышел (руки пусты и колода пуста).
 	FinishedIndices []int `json:"finished_indices,omitempty"`
 
-	// Кто «пасует» подкидывать — сброс после успешной защиты / take.
+	// Кто сейчас может подкидывать / жать «Бито» (очередь по часовой).
+	ThrowerIndex int `json:"thrower_index"`
+	// Кто уже пасанул в этой очереди подкида.
 	Passed map[int]bool `json:"passed,omitempty"`
 	// Помечает: последнее действие — take (для UI и разгона следующих ходов).
 	LastWasTake bool `json:"last_was_take,omitempty"`
@@ -129,6 +131,11 @@ func (s *State) clearPassed() {
 	s.Passed = nil
 }
 
+func (s *State) resetThrowerToAttacker() {
+	s.ThrowerIndex = s.AttackerIndex
+	s.clearPassed()
+}
+
 // canThrowInSeat — место имеет право подкидывать (не защитник; при 4 живых — только соседи защитника).
 func (s *State) canThrowInSeat(idx int) bool {
 	if idx < 0 || idx >= len(s.Hands) || !s.isAlive(idx) {
@@ -151,7 +158,35 @@ func (s *State) canThrowInSeat(idx int) bool {
 	return true
 }
 
-// CanThrowIn — можно ли сейчас класть атаку/подкид (с учётом фазы и «пас»).
+// nextThrowerAfter — следующий по часовой среди имеющих право подкидывать (ещё не пасанул).
+func (s *State) nextThrowerAfter(idx int) int {
+	n := len(s.Hands)
+	for i := 1; i <= n; i++ {
+		j := (idx + i) % n
+		if !s.canThrowInSeat(j) {
+			continue
+		}
+		if s.Passed != nil && s.Passed[j] {
+			continue
+		}
+		return j
+	}
+	return -1
+}
+
+// beginThrowerQueue — очередь подкида с атакующего (attack_follow / take_follow).
+func (s *State) beginThrowerQueue() {
+	s.clearPassed()
+	s.ThrowerIndex = s.AttackerIndex
+	if s.canThrowInSeat(s.ThrowerIndex) {
+		return
+	}
+	if next := s.nextThrowerAfter(s.ThrowerIndex); next >= 0 {
+		s.ThrowerIndex = next
+	}
+}
+
+// CanThrowIn — можно ли сейчас класть атаку/подкид (очередь + соседи при 4).
 func (s *State) CanThrowIn(idx int) bool {
 	if s.Status != StatusActive {
 		return false
@@ -163,13 +198,18 @@ func (s *State) CanThrowIn(idx int) bool {
 	if !s.canThrowInSeat(idx) {
 		return false
 	}
-	if s.Phase != PhaseDefend && s.Phase != PhaseAttackFollow && s.Phase != PhaseTakeFollow {
-		return false
-	}
 	if s.Passed != nil && s.Passed[idx] {
 		return false
 	}
-	return true
+	switch s.Phase {
+	case PhaseDefend:
+		// Пока защитник бьёт — подкидывает только атакующий (первый в очереди).
+		return idx == s.AttackerIndex
+	case PhaseAttackFollow, PhaseTakeFollow:
+		return idx == s.ThrowerIndex
+	default:
+		return false
+	}
 }
 
 func (s *State) allEligibleThrowersPassed() bool {
@@ -180,13 +220,26 @@ func (s *State) allEligibleThrowersPassed() bool {
 		if s.Passed != nil && s.Passed[i] {
 			continue
 		}
-		// Нет легальных карт — считаем «пасом».
-		if len(s.legalThrowInCards(i)) == 0 {
-			continue
-		}
 		return false
 	}
 	return true
+}
+
+// advanceThrowerOrFinish — «Бито»/пас текущего: следующий по часовой или конец раунда.
+func (s *State) advanceThrowerOrFinish() error {
+	if s.Passed == nil {
+		s.Passed = map[int]bool{}
+	}
+	s.Passed[s.ThrowerIndex] = true
+	next := s.nextThrowerAfter(s.ThrowerIndex)
+	if next < 0 {
+		if s.Phase == PhaseTakeFollow {
+			return s.resolveTake()
+		}
+		return s.resolveBito()
+	}
+	s.ThrowerIndex = next
+	return nil
 }
 
 // New — создать новую партию.
@@ -236,6 +289,7 @@ func New(playerIDs []string, deckSize int, mode Mode, seed int64) (*State, error
 		Trump:         trumpCard.Suit,
 		TrumpCard:     trumpCard,
 		AttackerIndex: starter,
+		ThrowerIndex:  starter,
 		Phase:         PhaseAttack,
 		Mode:          mode,
 		DeckSize:      deckSize,
@@ -392,10 +446,13 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
 	}
-	s.clearPassed()
-	// Вдогонку после «Беру» — фаза не меняется; иначе снова ждём отбой.
+	// После подкида снова бьёт защитник; очередь подкида с атакующего.
 	if s.Phase != PhaseTakeFollow {
 		s.Phase = PhaseDefend
+		s.resetThrowerToAttacker()
+	} else {
+		// Вдогонку: после подкида очередь остаётся на текущем thrower.
+		s.clearPassed()
 	}
 	return nil
 }
@@ -437,9 +494,9 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	}
 	if s.UndefendedIndex() < 0 {
 		s.Phase = PhaseAttackFollow
-		s.clearPassed()
-		// Никто не может подкинуть — сразу бито.
-		if s.allEligibleThrowersPassed() {
+		s.beginThrowerQueue()
+		// Некому жать «Бито»/подкинуть — сразу бито.
+		if !s.canThrowInSeat(s.ThrowerIndex) && s.nextThrowerAfter(s.ThrowerIndex) < 0 {
 			return s.resolveBito()
 		}
 	}
@@ -507,35 +564,24 @@ func (s *State) Transfer(playerIdx int, card Card) error {
 	s.removeFromHand(playerIdx, card)
 	s.Table = append(s.Table, Pair{Attack: card})
 	s.AttackerIndex = def
-	s.clearPassed()
+	s.resetThrowerToAttacker()
 	// defender стал = next, phase = defend
 	s.Phase = PhaseDefend
 	return nil
 }
 
-// Pass — отказ подкидывать в этой фазе (attack_follow / take_follow).
-// Когда все имеющие право пасанули — бито или взятие.
+// Pass — отказ подкидывать: ход следующему по часовой, иначе бито/взятие.
 func (s *State) Pass(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
 	}
-	if s.Phase != PhaseAttackFollow && s.Phase != PhaseTakeFollow {
-		return ErrCannotPass
-	}
-	if !s.canThrowInSeat(playerIdx) {
-		return ErrNotYourTurn
-	}
-	if s.Passed == nil {
-		s.Passed = map[int]bool{}
-	}
-	s.Passed[playerIdx] = true
-	if !s.allEligibleThrowersPassed() {
-		return nil
+	if s.Phase == PhaseAttackFollow {
+		return s.SayBito(playerIdx)
 	}
 	if s.Phase == PhaseTakeFollow {
-		return s.resolveTake()
+		return s.Done(playerIdx)
 	}
-	return s.resolveBito()
+	return ErrCannotPass
 }
 
 // Take — защитник объявляет «Беру»: атакующий может подкинуть вдогонку,
@@ -560,15 +606,15 @@ func (s *State) Take(playerIdx int) error {
 	}
 	// В подкидном разрешаем «взять» на любой фазе защиты/атаки, пока стол не пуст.
 	s.Phase = PhaseTakeFollow
-	s.clearPassed()
-	// Нечего подкинуть — сразу забираем.
-	if s.allEligibleThrowersPassed() {
+	s.beginThrowerQueue()
+	// Некому подкинуть — сразу забираем.
+	if !s.canThrowInSeat(s.ThrowerIndex) && s.nextThrowerAfter(s.ThrowerIndex) < 0 {
 		return s.resolveTake()
 	}
 	return nil
 }
 
-// Done — закончил подкид вдогонку (атакующий или пас всех); защитник забирает стол.
+// Done — текущий подкидывающий закончил вдогонку → следующий или взятие.
 func (s *State) Done(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -576,11 +622,10 @@ func (s *State) Done(playerIdx int) error {
 	if s.Phase != PhaseTakeFollow {
 		return ErrCannotDone
 	}
-	if playerIdx == s.AttackerIndex {
-		return s.resolveTake()
+	if playerIdx != s.ThrowerIndex {
+		return ErrNotYourTurn
 	}
-	// Остальные подкидывающие — через Pass.
-	return s.Pass(playerIdx)
+	return s.advanceThrowerOrFinish()
 }
 
 // resolveTake — стол в руку защитнику, добор, ход следующему после защитника.
@@ -601,6 +646,7 @@ func (s *State) resolveTake() error {
 	s.refill()
 	skipped := di
 	s.AttackerIndex = s.nextAliveAfter(skipped)
+	s.ThrowerIndex = s.AttackerIndex
 	s.LastWasTake = true
 	s.Phase = PhaseAttack
 	s.clearFirstRound()
@@ -608,7 +654,7 @@ func (s *State) resolveTake() error {
 	return nil
 }
 
-// SayBito — атакующий говорит «Бито» (или пас всех подкидывающих).
+// SayBito — текущий подкидывающий: «Бито» → ход следующему по часовой, иначе бита.
 func (s *State) SayBito(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -616,10 +662,15 @@ func (s *State) SayBito(playerIdx int) error {
 	if s.Phase != PhaseAttackFollow {
 		return ErrCannotBito
 	}
-	if playerIdx == s.AttackerIndex {
-		return s.resolveBito()
+	if playerIdx != s.ThrowerIndex {
+		return ErrNotYourTurn
 	}
-	return s.Pass(playerIdx)
+	for _, p := range s.Table {
+		if p.Defense == nil {
+			return ErrCannotBito
+		}
+	}
+	return s.advanceThrowerOrFinish()
 }
 
 // resolveDefenderEmpty — у защитника кончились карты: отбитые пары в отбой,
@@ -649,6 +700,7 @@ func (s *State) resolveDefenderEmpty() {
 	s.clearPassed()
 	s.refill()
 	s.AttackerIndex = s.nextAliveAfter(atk)
+	s.ThrowerIndex = s.AttackerIndex
 	s.LastWasTake = false
 	s.Phase = PhaseAttack
 	s.clearFirstRound()
@@ -689,6 +741,7 @@ func (s *State) resolveBito() error {
 	s.refill()
 	// Ход переходит к бывшему защитнику.
 	s.AttackerIndex = s.nextAliveAfter(s.AttackerIndex)
+	s.ThrowerIndex = s.AttackerIndex
 	s.LastWasTake = false
 	s.Phase = PhaseAttack
 	s.clearFirstRound()
@@ -878,6 +931,10 @@ func Decode(raw string) (*State, error) {
 	}
 	if s.Passed == nil {
 		s.Passed = map[int]bool{}
+	}
+	// Старые сейвы без thrower_index → атакующий.
+	if s.ThrowerIndex < 0 || s.ThrowerIndex >= len(s.PlayerIDs) {
+		s.ThrowerIndex = s.AttackerIndex
 	}
 	return &s, nil
 }

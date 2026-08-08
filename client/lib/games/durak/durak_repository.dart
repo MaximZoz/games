@@ -146,6 +146,7 @@ class DurakGameView {
     required this.stakeBronze,
     this.legalTransfer = const [],
     this.canThrowIn = false,
+    this.throwerIndex = -1,
     this.turnActorIdx = -1,
     this.isDraw = false,
     this.isForfeit = false,
@@ -179,8 +180,11 @@ class DurakGameView {
   /// Карты для перевода (переводной); пусто, если у следующего мало карт.
   final List<DurakApiCard> legalTransfer;
 
-  /// Можно подкинуть сейчас (3–4 игрока; при 4 — только соседи защитника).
+  /// Можно подкинуть сейчас (очередь thrower; при 4 — только соседи).
   final bool canThrowIn;
+
+  /// Кто сейчас в очереди подкида / «Бито».
+  final int throwerIndex;
 
   /// Чей таймер хода (рамка на аватаре).
   final int turnActorIdx;
@@ -298,6 +302,7 @@ class DurakGameView {
               .toList() ??
           const [],
       canThrowIn: json['can_throw_in'] == true,
+      throwerIndex: (json['thrower_index'] as num?)?.toInt() ?? -1,
       turnActorIdx: (json['turn_actor_idx'] as num?)?.toInt() ?? -1,
       loserIndex: loserIdx,
       finished: (json['finished'] as List?)

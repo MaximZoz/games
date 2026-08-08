@@ -1290,6 +1290,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"legal_defend":    legalDefend,
 		"legal_transfer":  legalTransfer,
 		"can_throw_in":    s.CanThrowIn(myIdx),
+		"thrower_index":   s.ThrowerIndex,
 		"turn_actor_idx":  durakTurnActorIdx(s),
 		"loser_index":     s.LoserIndex,
 		"finished":        s.FinishedIndices,
@@ -1299,12 +1300,19 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 	}
 }
 
-// durakTurnActorIdx — чей таймер хода (защитник бьёт / атакующий кладёт, «бито» или «готово»).
+// durakTurnActorIdx — чей таймер хода (защитник / атакующий / текущий подкидывающий).
 func durakTurnActorIdx(state *durak.State) int {
-	if state.Phase == durak.PhaseDefend {
+	switch state.Phase {
+	case durak.PhaseDefend:
 		return state.DefenderIndex()
+	case durak.PhaseAttackFollow, durak.PhaseTakeFollow:
+		if state.ThrowerIndex >= 0 && state.ThrowerIndex < len(state.PlayerIDs) {
+			return state.ThrowerIndex
+		}
+		return state.AttackerIndex
+	default:
+		return state.AttackerIndex
 	}
-	return state.AttackerIndex
 }
 
 // applyDurakTurnTimeout — если истёк ход, проигрывает владелец deadline (не «текущая» фаза после гонки с ходом).

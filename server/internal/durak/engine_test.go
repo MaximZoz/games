@@ -61,9 +61,14 @@ func TestAttackDefendBito(t *testing.T) {
 	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
-	// Подкинуть нечем (8♠ ≠ ранг 6) — сразу бито.
+	if st.Phase != PhaseAttackFollow {
+		t.Fatalf("phase after defend = %v", st.Phase)
+	}
+	if err := st.SayBito(0); err != nil {
+		t.Fatalf("bito: %v", err)
+	}
 	if len(st.Table) != 0 || len(st.BitoPile) != 2 {
-		t.Fatalf("auto-bito state: table=%v bito=%v phase=%v", st.Table, st.BitoPile, st.Phase)
+		t.Fatalf("bito state: table=%v bito=%v", st.Table, st.BitoPile)
 	}
 	if st.AttackerIndex != 1 {
 		t.Fatalf("next attacker = %d, want 1", st.AttackerIndex)
@@ -653,26 +658,47 @@ func TestBothEmptyAfterThrowInIsDraw(t *testing.T) {
 	}
 }
 
-// При 3 игроках подкидывать может любой не-защитник.
+// При 3 игроках во время отбоя подкидывает только атакующий; третий — после «Бито».
 func TestThrowInThreePlayers(t *testing.T) {
+	def7 := Card{9, Spades}
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
 		Hands: [][]Card{
-			{{7, Hearts}},                      // attacker
+			{{7, Hearts}, {8, Hearts}},         // attacker
 			{{9, Spades}, {10, Clubs}},         // defender
-			{{7, Diamonds}, {8, Clubs}},        // third — подкид
+			{{7, Diamonds}, {8, Clubs}},        // third
 		},
 		Table:         []Pair{{Attack: Card{7, Clubs}}},
 		Trump:         Spades,
 		AttackerIndex: 0,
+		ThrowerIndex:  0,
 		Phase:         PhaseDefend,
 		Mode:          ModePodkidnoi,
 		HandSize:      6,
 		MaxAttacks:    6,
 		Status:        StatusActive,
 	}
+	if st.CanThrowIn(2) {
+		t.Fatal("player 2 must not throw during defend")
+	}
+	if !st.CanThrowIn(0) {
+		t.Fatal("attacker should throw during defend")
+	}
+	if err := st.Defend(1, def7, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Phase != PhaseAttackFollow {
+		t.Fatalf("phase=%s", st.Phase)
+	}
+	// Атакующий жмёт «Бито» → ход третьему.
+	if err := st.SayBito(0); err != nil {
+		t.Fatalf("bito attacker: %v", err)
+	}
+	if st.ThrowerIndex != 2 {
+		t.Fatalf("thrower=%d want 2", st.ThrowerIndex)
+	}
 	if !st.CanThrowIn(2) {
-		t.Fatal("player 2 should throw in")
+		t.Fatal("player 2 should throw after attacker bito")
 	}
 	if err := st.Attack(2, Card{7, Diamonds}); err != nil {
 		t.Fatalf("throw-in: %v", err)
@@ -682,9 +708,10 @@ func TestThrowInThreePlayers(t *testing.T) {
 	}
 }
 
-// При 4 игроках подкид только у соседей защитника (слева/справа).
+// При 4 игроках подкид только у соседей; очередь: атакующий, потом правый после «Бито».
 func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 	// seats: 0 attacker (left of def), 1 defender, 2 right, 3 opposite
+	defCard := Card{10, Clubs} // бьёт 7♣ той же мастью
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c", "d"},
 		Hands: [][]Card{
@@ -696,6 +723,7 @@ func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 		Table:         []Pair{{Attack: Card{7, Clubs}}},
 		Trump:         Hearts,
 		AttackerIndex: 0,
+		ThrowerIndex:  0,
 		Phase:         PhaseDefend,
 		Mode:          ModePodkidnoi,
 		HandSize:      6,
@@ -706,13 +734,22 @@ func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 		t.Fatalf("defender=%d", st.DefenderIndex())
 	}
 	if !st.CanThrowIn(0) {
-		t.Fatal("attacker (left) should throw in")
+		t.Fatal("attacker (left) should throw in during defend")
 	}
-	if !st.CanThrowIn(2) {
-		t.Fatal("right neighbor should throw in")
+	if st.CanThrowIn(2) {
+		t.Fatal("right neighbor waits for attacker bito")
 	}
 	if st.CanThrowIn(3) {
 		t.Fatal("opposite must not throw in")
+	}
+	if err := st.Defend(1, defCard, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if err := st.SayBito(0); err != nil {
+		t.Fatalf("bito: %v", err)
+	}
+	if st.ThrowerIndex != 2 {
+		t.Fatalf("thrower=%d want 2", st.ThrowerIndex)
 	}
 	if err := st.Attack(3, Card{7, Spades}); err == nil {
 		t.Fatal("expected ErrNotYourTurn for opposite")
@@ -722,35 +759,35 @@ func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 	}
 }
 
-// Пас всех подкидывающих → бито.
+// Очередь «Бито» по часовой → бита.
 func TestPassAllResolvesBito(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
 		Hands: [][]Card{
-			{{6, Hearts}},  // может подкинуть, но пасует
+			{{6, Hearts}}, // может подкинуть, но жмёт бито
 			{{10, Clubs}},
-			{{6, Diamonds}}, // тоже может — пасует вторым
+			{{6, Diamonds}},
 		},
 		Table: []Pair{
 			{Attack: Card{6, Clubs}, Defense: &Card{Rank: 7, Suit: Clubs}},
 		},
 		Trump:         Spades,
 		AttackerIndex: 0,
+		ThrowerIndex:  0,
 		Phase:         PhaseAttackFollow,
 		Mode:          ModePodkidnoi,
 		HandSize:      6,
 		MaxAttacks:    6,
 		Status:        StatusActive,
 	}
-	if err := st.Pass(0); err != nil {
-		t.Fatalf("pass attacker: %v", err)
+	if err := st.SayBito(0); err != nil {
+		t.Fatalf("bito attacker: %v", err)
 	}
-	// ещё не все
-	if st.Phase != PhaseAttackFollow {
-		t.Fatalf("phase=%s after one pass", st.Phase)
+	if st.Phase != PhaseAttackFollow || st.ThrowerIndex != 2 {
+		t.Fatalf("phase=%s thrower=%d after first bito", st.Phase, st.ThrowerIndex)
 	}
-	if err := st.Pass(2); err != nil {
-		t.Fatalf("pass third: %v", err)
+	if err := st.SayBito(2); err != nil {
+		t.Fatalf("bito third: %v", err)
 	}
 	if len(st.Table) != 0 {
 		t.Fatalf("table should be cleared after bito, got %d", len(st.Table))
