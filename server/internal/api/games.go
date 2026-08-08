@@ -2709,8 +2709,12 @@ func (h *GamesHandler) CancelInvite(w http.ResponseWriter, r *http.Request, lobb
 }
 
 // applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.
+// Только крестики-нолики — дурак ходит через applyDurakTurnTimeout.
 func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[string]string) bool {
 	if m["status"] != gameStatusActive {
+		return false
+	}
+	if m["game_type"] == durakGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -2718,8 +2722,9 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		return false
 	}
 	deadline, err := strconv.ParseInt(dl, 10, 64)
+	// 0 / отрицательный — «нет лимита» (напр. пауза bito_reveal в других играх).
 	// При now == deadline время уже вышло (клиент показывает 0 с).
-	if err != nil || time.Now().UTC().Unix() < deadline {
+	if err != nil || deadline <= 0 || time.Now().UTC().Unix() < deadline {
 		return false
 	}
 	turn := m["turn"]
@@ -4059,12 +4064,15 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 	if err == nil && gameID != "" {
 		key := "game:" + gameID
 		m, err := h.Rdb.HGetAll(ctx, key).Result()
-		if err == nil && len(m) > 0 {
+		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
 			// Протухший ход применяем и здесь — иначе «Игры» показывает
 			// чужой/старый ход, пока кто-то не откроет GetGame.
-			if m["status"] == gameStatusActive && h.applyGameTimeout(ctx, key, m) {
-				m, _ = h.Rdb.HGetAll(ctx, key).Result()
+			if m["game_type"] == durakGameType {
+				h.applyDurakTurnTimeout(ctx, gameID, m)
+			} else if h.applyGameTimeout(ctx, key, m) {
+				// applied
 			}
+			m, _ = h.Rdb.HGetAll(ctx, key).Result()
 		}
 		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
 			if m["game_type"] == durakGameType {

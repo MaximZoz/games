@@ -1518,6 +1518,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		return
 	}
 	turnDeadline, err := strconv.ParseInt(m["turn_deadline"], 10, 64)
+	// 0 = нет лимита / пауза bito_reveal — не считаем просрочкой.
 	if err != nil || turnDeadline <= 0 {
 		return
 	}
@@ -1542,14 +1543,31 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if err != nil || state.Status != durak.StatusActive {
 		return
 	}
-	// Владелец именно этого deadline (записан при старте/ходе); иначе — из фазы.
-	timedOutIdx := durakTurnActorIdx(state)
-	if v, e := strconv.Atoi(fresh["turn_actor_idx"]); e == nil && v >= 0 && v < len(state.PlayerIDs) {
-		timedOutIdx = v
-	}
-	if timedOutIdx < 0 || timedOutIdx >= len(state.PlayerIDs) {
+	// Пауза показа стола — только отбой, без сдачи по таймеру.
+	if state.Phase == durak.PhaseBitoReveal {
+		_ = h.healDurakBitoReveal(ctx, gameID, fresh, state)
 		return
 	}
+	phaseActor := durakTurnActorIdx(state)
+	if phaseActor < 0 || phaseActor >= len(state.PlayerIDs) || !state.IsAlive(phaseActor) {
+		return
+	}
+	redisActor := -1
+	if v, e := strconv.Atoi(fresh["turn_actor_idx"]); e == nil {
+		redisActor = v
+	}
+	// Залипший deadline прошлого хода (actor не совпадает с фазой) — не сдаём,
+	// а подтягиваем таймер под текущего игрока.
+	if redisActor >= 0 && redisActor != phaseActor {
+		if turnT, e := strconv.Atoi(fresh["turn_time_sec"]); e == nil && turnT > 0 {
+			h.Rdb.HSet(ctx, "game:"+gameID,
+				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+				"turn_actor_idx", strconv.Itoa(phaseActor),
+			)
+		}
+		return
+	}
+	timedOutIdx := phaseActor
 	// Пачка подкида («Все») или вдогонка после «Беру»: по таймауту — Done, без сдачи.
 	if state.Phase == durak.PhaseTakeFollow || state.Phase == durak.PhaseThrowIn {
 		if err := state.Done(timedOutIdx); err != nil {
