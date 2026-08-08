@@ -1322,7 +1322,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"defender_index": s.DefenderIndex(),
 		"phase":          string(s.Phase),
 		"last_was_take":  s.LastWasTake,
-		"first_round":    s.FirstRound,
+		"first_round":    s.Status == durak.StatusActive && !s.RoundEnded && len(s.BitoPile) == 0 && !s.LastWasTake,
 		"my_index":       myIdx,
 		"legal_attack":    legalAttack,
 		"legal_defend":    legalDefend,
@@ -1340,17 +1340,27 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 }
 
 // durakTurnActorIdx — чей таймер хода (защитник / атакующий / текущий подкидывающий).
+// Вышедших «в ноль» и сдавшихся пропускаем — иначе таймер залипает на победителе.
 func durakTurnActorIdx(state *durak.State) int {
-	switch state.Phase {
-	case durak.PhaseDefend:
-		return state.DefenderIndex()
-	case durak.PhaseThrowIn, durak.PhaseAttackFollow, durak.PhaseTakeFollow:
-		if state.ThrowerIndex >= 0 && state.ThrowerIndex < len(state.PlayerIDs) {
-			return state.ThrowerIndex
+	pick := func(idx int) int {
+		if idx >= 0 && idx < len(state.PlayerIDs) && state.IsAlive(idx) {
+			return idx
+		}
+		if idx >= 0 {
+			return state.NextAliveAfter(idx)
 		}
 		return state.AttackerIndex
+	}
+	switch state.Phase {
+	case durak.PhaseDefend:
+		return pick(state.DefenderIndex())
+	case durak.PhaseThrowIn, durak.PhaseAttackFollow, durak.PhaseTakeFollow:
+		if state.ThrowerIndex >= 0 && state.ThrowerIndex < len(state.PlayerIDs) {
+			return pick(state.ThrowerIndex)
+		}
+		return pick(state.AttackerIndex)
 	default:
-		return state.AttackerIndex
+		return pick(state.AttackerIndex)
 	}
 }
 

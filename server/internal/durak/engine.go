@@ -83,6 +83,8 @@ type State struct {
 	// Первый отбой партии: на стол не больше 5 карт (включая первую атаку).
 	// Без omitempty — иначе false/отсутствие поля путает клиент и лимит 5.
 	FirstRound bool `json:"first_round"`
+	// RoundEnded — уже был бито/взятие/закрытие раунда (надёжнее флага FirstRound).
+	RoundEnded bool `json:"round_ended,omitempty"`
 }
 
 // DefenderIndex — следующий защитник по кругу.
@@ -100,6 +102,12 @@ func (s *State) nextAliveAfter(idx int) int {
 	}
 	return idx
 }
+
+// NextAliveAfter — следующий живой игрок по кругу (экспорт для API).
+func (s *State) NextAliveAfter(idx int) int { return s.nextAliveAfter(idx) }
+
+// IsAlive — не вышел «в ноль» и не сдался.
+func (s *State) IsAlive(idx int) bool { return s.isAlive(idx) }
 
 func (s *State) prevAliveBefore(idx int) int {
 	n := len(s.Hands)
@@ -386,6 +394,18 @@ func (s *State) UndefendedIndex() int {
 // firstRoundAttackCap — жёсткий потолок атак в первом отбое.
 const firstRoundAttackCap = 5
 
+// isFirstRoundActive — первый отбой: ещё не закрывали раунд (бито/взятие/пусто).
+// RoundEnded / бита / take — надёжные сигналы; FirstRound мог потеряться в JSON.
+func (s *State) isFirstRoundActive() bool {
+	if s == nil || s.Status != StatusActive {
+		return false
+	}
+	if s.RoundEnded || len(s.BitoPile) > 0 || s.LastWasTake {
+		return false
+	}
+	return true
+}
+
 // MaxAttacksThisRound — сколько всего пар можно положить на стол.
 // Лимит = уже отбитые пары + карты в руке защитника:
 // каждой карте в руке — не больше одной атаки (включая те, что ещё надо отбить).
@@ -413,7 +433,7 @@ func (s *State) MaxAttacksThisRound() int {
 			lim = byHand
 		}
 	}
-	if s.FirstRound && lim > firstRoundAttackCap {
+	if s.isFirstRoundActive() && lim > firstRoundAttackCap {
 		lim = firstRoundAttackCap
 	}
 	return lim
@@ -421,6 +441,7 @@ func (s *State) MaxAttacksThisRound() int {
 
 func (s *State) clearFirstRound() {
 	s.FirstRound = false
+	s.RoundEnded = true
 }
 
 // ---- Ошибки правил ----
@@ -481,8 +502,8 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if len(s.Table)+len(cards) > s.MaxAttacksThisRound() {
 		return ErrBadAttack
 	}
-	// Жёсткий потолок первого отбоя (даже если FirstRound потерялся в расчёте руки).
-	if s.FirstRound && len(s.Table)+len(cards) > firstRoundAttackCap {
+	// Жёсткий потолок первого отбоя (по бите/take, не только по флагу).
+	if s.isFirstRoundActive() && len(s.Table)+len(cards) > firstRoundAttackCap {
 		return ErrBadAttack
 	}
 	// Все карты должны быть в руке (без повторов сверх наличия).
@@ -605,7 +626,7 @@ func (s *State) transferAttackCap() int {
 	if cap <= 0 {
 		cap = 6
 	}
-	if s.FirstRound && cap > firstRoundAttackCap {
+	if s.isFirstRoundActive() && cap > firstRoundAttackCap {
 		cap = firstRoundAttackCap
 	}
 	return cap
@@ -774,7 +795,8 @@ func (s *State) SayBito(playerIdx int) error {
 }
 
 // resolveDefenderEmpty — у защитника кончились карты: отбитые пары в отбой,
-// неотбитые атаки возвращаются атакующему; ход — бывшему защитнику (как после бито).
+// неотбитые атаки возвращаются атакующему; ход — бывшему защитнику (как после бито),
+// а если он уже вышел «в ноль» — следующему живому.
 func (s *State) resolveDefenderEmpty() {
 	if s.Status != StatusActive || len(s.Table) == 0 {
 		return
@@ -799,12 +821,21 @@ func (s *State) resolveDefenderEmpty() {
 	s.Table = nil
 	s.clearPassed()
 	s.refill()
-	s.AttackerIndex = s.nextAliveAfter(atk)
-	s.ThrowerIndex = s.AttackerIndex
 	s.LastWasTake = false
 	s.Phase = PhaseAttack
 	s.clearFirstRound()
+	// Сначала зафиксировать выходы «в ноль», потом выбрать атакующего среди живых
+	// (иначе таймер остаётся на вышедшем защитнике).
 	s.checkOver()
+	if s.Status != StatusActive {
+		return
+	}
+	if s.isAlive(def) {
+		s.AttackerIndex = def
+	} else {
+		s.AttackerIndex = s.nextAliveAfter(def)
+	}
+	s.ThrowerIndex = s.AttackerIndex
 }
 
 // HealDefenderEmpty — дожать застрявшее состояние (пустая рука + стол).
@@ -820,7 +851,8 @@ func (s *State) HealGameOver() {
 	s.checkOver()
 }
 
-// resolveBito — стол в отбой, добор, ход бывшему защитнику.
+// resolveBito — стол в отбой, добор, ход бывшему защитнику
+// (или следующему живому, если защитник вышел «в ноль»).
 func (s *State) resolveBito() error {
 	if len(s.Table) == 0 {
 		return ErrCannotBito
@@ -830,6 +862,8 @@ func (s *State) resolveBito() error {
 			return ErrCannotBito
 		}
 	}
+	atk := s.AttackerIndex
+	def := s.DefenderIndex()
 	for _, p := range s.Table {
 		s.BitoPile = append(s.BitoPile, p.Attack)
 		if p.Defense != nil {
@@ -839,13 +873,22 @@ func (s *State) resolveBito() error {
 	s.Table = nil
 	s.clearPassed()
 	s.refill()
-	// Ход переходит к бывшему защитнику.
-	s.AttackerIndex = s.nextAliveAfter(s.AttackerIndex)
-	s.ThrowerIndex = s.AttackerIndex
 	s.LastWasTake = false
 	s.Phase = PhaseAttack
 	s.clearFirstRound()
+	// Сначала выходы «в ноль», потом атакующий среди живых.
 	s.checkOver()
+	if s.Status != StatusActive {
+		return nil
+	}
+	if def >= 0 && s.isAlive(def) {
+		s.AttackerIndex = def
+	} else if def >= 0 {
+		s.AttackerIndex = s.nextAliveAfter(def)
+	} else {
+		s.AttackerIndex = s.nextAliveAfter(atk)
+	}
+	s.ThrowerIndex = s.AttackerIndex
 	return nil
 }
 
@@ -1064,7 +1107,7 @@ func (s *State) legalThrowInCards(idx int) []Card {
 		return nil
 	}
 	// Жёсткий потолок первого отбоя (UI не предлагает 6-ю).
-	if s.FirstRound && len(s.Table) >= firstRoundAttackCap {
+	if s.isFirstRoundActive() && len(s.Table) >= firstRoundAttackCap {
 		return nil
 	}
 	ranks := s.TableRanks()
@@ -1167,10 +1210,14 @@ func Decode(raw string) (*State, error) {
 	if s.ThrowerIndex < 0 || s.ThrowerIndex >= len(s.PlayerIDs) {
 		s.ThrowerIndex = s.AttackerIndex
 	}
-	// Если ещё не было биты/взятия — это первый отбой (лимит 5), даже когда
-	// в старом JSON поле first_round потерялось (omitempty / false).
-	if s.Status == StatusActive && len(s.BitoPile) == 0 && !s.LastWasTake {
+	// Старые сейвы: бита/take ⇒ раунд уже был; иначе при активной партии — первый отбой.
+	if len(s.BitoPile) > 0 || s.LastWasTake {
+		s.RoundEnded = true
+		s.FirstRound = false
+	} else if s.Status == StatusActive && !s.RoundEnded {
 		s.FirstRound = true
+	} else {
+		s.FirstRound = s.isFirstRoundActive()
 	}
 	return &s, nil
 }

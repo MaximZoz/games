@@ -154,13 +154,16 @@ class DurakGame {
   int get undefendedCount =>
       table.where((p) => p.defense == null).length;
 
+  bool get isFirstRoundActive =>
+      !isOver && bito.isEmpty && firstRound;
+
   int get maxAttacksThisRound {
     // Как на сервере: отбитые пары + карты в руке защитника.
     final beaten = table.where((p) => p.isBeaten).length;
     var lim = beaten + hands[defenderIndex].length;
     if (lim < 1) lim = 1;
     if (maxAttacks > 0 && maxAttacks < lim) lim = maxAttacks;
-    if (firstRound && lim > 5) lim = 5;
+    if (isFirstRoundActive && lim > 5) lim = 5;
     return lim;
   }
 

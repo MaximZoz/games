@@ -241,10 +241,14 @@ class DurakGameView {
     return out;
   }
 
+  bool get iAmFinished => myIndex >= 0 && finished.contains(myIndex);
+
   /// Место текущего игрока (1-е, 2-е, …) или 0, если дурак/сдался/не в списке.
+  /// Доступно и после выхода «в ноль», пока партия ещё идёт у остальных.
   int get myPlace {
-    if (!isOver || isDraw || iAmEliminated) return 0;
+    if (isDraw || iAmEliminated) return 0;
     if (myIndex < 0 || myIndex == loserIndex) return 0;
+    if (!isOver && !iAmFinished) return 0;
     final order = winnerPlaceOrder;
     final idx = order.indexOf(myIndex);
     return idx < 0 ? 0 : idx + 1;
@@ -252,7 +256,7 @@ class DurakGameView {
 
   /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).
   bool get isMyTurn {
-    if (isOver || iAmEliminated) return false;
+    if (isOver || iAmEliminated || iAmFinished) return false;
     if (turnActorIdx >= 0) return turnActorIdx == myIndex;
     if (phase == 'defend') return defenderIndex == myIndex;
     return attackerIndex == myIndex;
@@ -260,7 +264,7 @@ class DurakGameView {
 
   /// Можно ли трогать веер: защита, атака или подкид (в т.ч. сосед при 3–4).
   bool get canAct {
-    if (isOver || iAmEliminated) return false;
+    if (isOver || iAmEliminated || iAmFinished) return false;
     if (defenderIndex == myIndex && phase == 'defend') return true;
     if (canThrowIn || legalAttack.isNotEmpty) return true;
     if (phase == 'defend') {

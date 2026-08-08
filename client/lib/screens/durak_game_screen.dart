@@ -568,8 +568,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (maxPairs < 1) maxPairs = 1;
     const maxAttacks = 6;
     if (maxAttacks < maxPairs) maxPairs = maxAttacks;
-    // Первый отбой — не больше 5 карт на столе (включая первую атаку).
-    if (view.firstRound && maxPairs > 5) maxPairs = 5;
+    // Первый отбой — не больше 5 карт на столе (бита пуста / флаг с сервера).
+    final firstRound = view.firstRound ||
+        (view.bitoCount == 0 && !view.lastWasTake && !view.isOver);
+    if (firstRound && maxPairs > 5) maxPairs = 5;
     final pending = _pendingAttackPlaceholders(view).length;
     return (maxPairs - view.table.length - pending).clamp(0, 52);
   }
@@ -767,7 +769,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (view.table.any((p) => p.defense != null)) return false;
     if (_optimisticDefends.isNotEmpty) return false;
     var cap = 6;
-    if (view.firstRound && cap > 5) cap = 5;
+    final firstRound = view.firstRound ||
+        (view.bitoCount == 0 && !view.lastWasTake && !view.isOver);
+    if (firstRound && cap > 5) cap = 5;
     if (view.table.length + 1 > cap) return false;
     final next = _nextAliveAfter(view, view.defenderIndex);
     if (next < 0 || next >= view.hands.length) return false;
@@ -1385,21 +1389,37 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// После своего хода: order = актуальная рука сервера (без добора).
+  /// Карты из [_pendingDealCards] не подмешиваем — они долетят анимацией.
   void _syncHandOrderFromServer(DurakGameView v) {
     final hand = _apiCardsToPlaying(
       v.hands.length > v.myIndex && v.myIndex >= 0
           ? (v.hands[v.myIndex].cards ?? const [])
           : const [],
     );
-    if (hand.isEmpty) return;
-    final handSet = hand.toSet();
-    final prev = _handOrder;
-    if (prev == null || prev.isEmpty) {
-      _handOrder = List<PlayingCard>.of(hand);
+    if (hand.isEmpty) {
+      if (_pendingDealCards.isEmpty) _handOrder = [];
       return;
     }
-    final next = <PlayingCard>[for (final c in prev) if (handSet.contains(c)) c];
+    final handSet = hand.toSet();
+    final prev = _handOrder;
+    final pending = _pendingDealCards;
+    if (prev == null || prev.isEmpty) {
+      // Не класть в веер то, что ещё должно лететь с колоды.
+      _handOrder = [
+        for (final c in hand)
+          if (!pending.contains(c)) c,
+      ];
+      if (_handOrder!.isEmpty && pending.isEmpty) {
+        _handOrder = List<PlayingCard>.of(hand);
+      }
+      return;
+    }
+    final next = <PlayingCard>[
+      for (final c in prev)
+        if (handSet.contains(c)) c,
+    ];
     for (final c in hand) {
+      if (pending.contains(c)) continue;
       if (!next.contains(c)) next.add(c);
     }
     _handOrder = next;
@@ -2900,7 +2920,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     ticket.dismiss();
   }
 
-  /// Добор всех игроков в порядке атаки (не «сначала я»).
+  /// Добор: анимируем только свои карты с колоды (чужие руки не показываем).
   Future<void> _animateRefillDeals({
     required DurakGameView view,
     required List<PlayingCard> myIncoming,
@@ -2911,44 +2931,53 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     int? deckCountBefore,
   }) async {
     final myCards = skipMyDeal ? const <PlayingCard>[] : myIncoming;
-    if ((myCards.isEmpty && oppDeals.isEmpty) || !mounted || !_gameUiActive) {
+    final oppTotal = oppDeals.values.fold<int>(0, (a, b) => a + b);
+    if ((myCards.isEmpty && oppTotal == 0) || !mounted || !_gameUiActive) {
       return;
     }
 
-    final totalDeal = myCards.length +
-        oppDeals.values.fold<int>(0, (a, b) => a + b);
     setState(() {
       if (myCards.isNotEmpty) _pendingDealCards.addAll(myCards);
-      for (final e in oppDeals.entries) {
-        _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
-      }
-      // Козырь/колода остаются видимыми, пока карты не улетят.
-      if (totalDeal > 0 && deckCountBefore != null) {
+      if (deckCountBefore != null) {
         _armDeckFreeze(deckCountBefore);
       }
     });
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
 
+    // Чужие слоты колоды снимаем без полёта (в порядке добора сервера).
     final order = _refillDealOrder(
       attacker: refillAttacker,
       defender: refillDefender,
       playerCount: view.hands.length,
     );
+    var beforeMe = 0;
+    var afterMe = 0;
+    var seenMe = false;
     for (final idx in order) {
-      if (!mounted || !_gameUiActive) return;
       if (idx == view.myIndex) {
-        if (myCards.isNotEmpty) {
-          await _animateDealCardsToFan(myCards);
-        }
-      } else {
-        final n = oppDeals[idx] ?? 0;
-        if (n > 0) {
-          await _animateDealToOpponent(idx, n);
-        }
+        seenMe = true;
+        continue;
       }
+      final n = oppDeals[idx] ?? 0;
+      if (n <= 0) continue;
+      if (!seenMe) {
+        beforeMe += n;
+      } else {
+        afterMe += n;
+      }
+    }
+    for (var i = 0; i < beforeMe; i++) {
+      _consumeDeckFreezeSlot();
+    }
+
+    if (myCards.isNotEmpty) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || !_gameUiActive) return;
+      await _animateDealCardsToFan(myCards);
+    }
+    for (var i = 0; i < afterMe; i++) {
+      _consumeDeckFreezeSlot();
     }
     if (mounted) {
       _pendingDealCards.removeAll(myCards);
@@ -4027,34 +4056,37 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       )
                     : _multiOpponentsArea(view, tableSize),
               ),
-              if (view.isOver) ...[
+              if (view.isOver || view.iAmFinished) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: GameStatusWithReward(
                     statusText: _turnHint(view),
-                    showReward: _showRewardChip(view),
+                    showReward: view.isOver && _showRewardChip(view),
                     rewardBronze: _rewardBronze(view),
                     rewardKey: _winRewardKey,
                     fontSize: MediaQuery.sizeOf(context).width < 420 ? 15 : null,
                   ),
                 ),
-                const SizedBox(height: 10),
-                GameRematchSection(
-                  rematchLobbyId: _rematchLobbyId,
-                  rematchDeclined: _rematchDeclined,
-                  iDeclinedRematch: _iDeclinedRematch,
-                  isRematching: _isRematching,
-                  isAcceptingRematch: _isAcceptingRematch,
-                  isFindingGame: _isFindingGame,
-                  peerIds: _peerIds(view),
-                  invites: ref.watch(gameInvitesProvider),
-                  onRematch: _rematch,
-                  onAccept: _acceptRematch,
-                  onDecline: _declineRematch,
-                  onCancelWait: _cancelRematchWait,
-                  onFindGame: _findGame,
-                  compact: true,
-                ),
+                if (view.isOver) ...[
+                  const SizedBox(height: 10),
+                  GameRematchSection(
+                    rematchLobbyId: _rematchLobbyId,
+                    rematchDeclined: _rematchDeclined,
+                    iDeclinedRematch: _iDeclinedRematch,
+                    isRematching: _isRematching,
+                    isAcceptingRematch: _isAcceptingRematch,
+                    isFindingGame: _isFindingGame,
+                    peerIds: _peerIds(view),
+                    invites: ref.watch(gameInvitesProvider),
+                    onRematch: _rematch,
+                    onAccept: _acceptRematch,
+                    onDecline: _declineRematch,
+                    onCancelWait: _cancelRematchWait,
+                    onFindGame: _findGame,
+                    compact: true,
+                  ),
+                ] else
+                  const SizedBox(height: 10),
               ],
               Expanded(
                 child: _buildBoard(
@@ -5236,6 +5268,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   String _turnHint(DurakGameView view) {
     if (!view.isOver && view.iAmEliminated) {
       return 'Вы выбыли';
+    }
+    // Вышел «в ноль», пока остальные ещё играют — место сразу.
+    if (!view.isOver && view.iAmFinished) {
+      final place = view.myPlace;
+      if (place == 1) return context.l10n.gameYouWon;
+      if (place > 1) return 'Вы заняли $place-е место';
+      return 'Вы вышли';
     }
     if (view.isOver) {
       if (view.isDraw) return context.l10n.gameDraw;

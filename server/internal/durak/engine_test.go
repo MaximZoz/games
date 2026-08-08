@@ -286,6 +286,86 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	}
 }
 
+// Первый отбой без флага FirstRound (потерянный JSON) — всё равно лимит 5.
+func TestFirstRoundCapWithoutFlag(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{6, Clubs}, {6, Spades}, {9, Clubs}, {10, Clubs}, {11, Clubs}, {12, Clubs}},
+			{{7, Hearts}, {8, Hearts}, {9, Hearts}, {10, Hearts}, {11, Hearts}, {12, Hearts}},
+			{{6, Diamonds}, {7, Diamonds}, {8, Diamonds}, {9, Diamonds}, {10, Diamonds}, {11, Diamonds}},
+		},
+		Trump:         Hearts,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		FirstRound:    false, // флаг потерян
+		Mode:          ModePerevodnoi,
+		Table: []Pair{
+			{Attack: Card{9, Spades}},
+			{Attack: Card{9, Diamonds}},
+			{Attack: Card{10, Spades}},
+			{Attack: Card{10, Diamonds}},
+			{Attack: Card{11, Spades}},
+		},
+	}
+	if !st.isFirstRoundActive() {
+		t.Fatal("want isFirstRoundActive with empty bito")
+	}
+	if got := st.MaxAttacksThisRound(); got != 5 {
+		t.Fatalf("MaxAttacksThisRound=%d want 5", got)
+	}
+	if err := st.AttackMany(0, []Card{{11, Clubs}}); err == nil {
+		t.Fatal("expected ErrBadAttack for 6th card without FirstRound flag")
+	}
+}
+
+// Защитник вышел «в ноль» при пустой колоде — ход не на нём, он в finished.
+func TestDefenderEmptyPassesTurnWhenFinished(t *testing.T) {
+	ace := Card{14, Hearts}
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{9, Clubs}, {10, Clubs}},
+			{ace}, // последняя карта защитника
+			{{8, Spades}, {9, Spades}, {10, Spades}},
+		},
+		Deck:          nil, // колода пуста — выход считается
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		Table: []Pair{
+			{Attack: Card{7, Hearts}},
+		},
+		FirstRound: false,
+	}
+	st.BitoPile = []Card{{6, Clubs}} // не первый отбой
+	if err := st.Defend(1, ace, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Status != StatusActive {
+		t.Fatalf("status=%v want active (ещё двое играют)", st.Status)
+	}
+	if len(st.FinishedIndices) == 0 || st.FinishedIndices[0] != 1 {
+		t.Fatalf("finished=%v want [1]", st.FinishedIndices)
+	}
+	if st.AttackerIndex == 1 {
+		t.Fatal("attacker must not stay on finished defender")
+	}
+	if !st.isAlive(st.AttackerIndex) {
+		t.Fatalf("attacker=%d must be alive", st.AttackerIndex)
+	}
+	// Бывший защитник вышел → ход следующему после него (c = 2), либо a если nextAliveAfter(1)=2.
+	if st.AttackerIndex != 2 {
+		t.Fatalf("attacker=%d want 2 (next after finished defender)", st.AttackerIndex)
+	}
+}
+
 // Decode восстанавливает first_round, если биты ещё не было.
 func TestDecodeHealsFirstRound(t *testing.T) {
 	raw := `{"player_ids":["a","b"],` +
@@ -450,6 +530,7 @@ func TestFirstRoundMaxFiveAttacks(t *testing.T) {
 	st.Table = nil
 	st.Phase = PhaseAttack
 	st.clearFirstRound()
+	st.BitoPile = []Card{{6, Hearts}} // раунд закрыт
 	st.Hands[0] = []Card{{6, Spades}, {7, Spades}, {8, Spades}, {9, Spades}, {10, Spades}, {11, Spades}}
 	st.Hands[1] = []Card{{6, Diamonds}, {7, Diamonds}, {8, Diamonds}, {9, Diamonds}, {10, Diamonds}, {11, Diamonds}}
 	if got := st.MaxAttacksThisRound(); got != 6 {
