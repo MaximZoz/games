@@ -117,10 +117,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get durakHintOpponentDefends => 'Đối thủ đang chắn';
 
   @override
-  String get durakHintThrowInFirst => 'Đánh thêm bài hoặc «Tất cả» (tối đa 5 ở lần chắn đầu)';
+  String get durakHintThrowInFirst => 'Đánh thêm bài (tối đa 5 ở lượt đầu)';
 
   @override
-  String get durakHintThrowIn => 'Đánh thêm bài hoặc nhấn «Tất cả»';
+  String get durakHintThrowIn => 'Đánh thêm bài hoặc chờ chắn';
 
   @override
   String get durakHintOpponentThrows => 'Đối thủ đang đánh thêm';

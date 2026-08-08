@@ -117,10 +117,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get durakHintOpponentDefends => 'Суперник відбивається';
 
   @override
-  String get durakHintThrowInFirst => 'Підкиньте карти або «Усі» (макс. 5 у першому відбої)';
+  String get durakHintThrowInFirst => 'Підкиньте карти (макс. 5 у першому відбої)';
 
   @override
-  String get durakHintThrowIn => 'Підкиньте карти або натисніть «Усі»';
+  String get durakHintThrowIn => 'Підкиньте карти або чекайте відбою';
 
   @override
   String get durakHintOpponentThrows => 'Суперник підкидає';

@@ -117,10 +117,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get durakHintOpponentDefends => 'الخصم يدافع';
 
   @override
-  String get durakHintThrowInFirst => 'ألقِ أوراقًا أو «الكل» (حد أقصى 5 في أول دفاع)';
+  String get durakHintThrowInFirst => 'أضف أوراقًا (بحد أقصى 5 في أول تغطية)';
 
   @override
-  String get durakHintThrowIn => 'ألقِ أوراقًا أو اضغط «الكل»';
+  String get durakHintThrowIn => 'أضف أوراقًا أو انتظر الدفاع';
 
   @override
   String get durakHintOpponentThrows => 'الخصم يضيف';

@@ -117,10 +117,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get durakHintOpponentDefends => 'היריב מתגונן';
 
   @override
-  String get durakHintThrowInFirst => 'זרוק קלפים או «הכל» (עד 5 בביט הראשון)';
+  String get durakHintThrowInFirst => 'הוסיפו קלפים (עד 5 בסיבוב הראשון)';
 
   @override
-  String get durakHintThrowIn => 'זרוק קלפים או לחץ «הכל»';
+  String get durakHintThrowIn => 'הוסיפו קלפים או חכו להגנה';
 
   @override
   String get durakHintOpponentThrows => 'היריב זורק';

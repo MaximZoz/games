@@ -117,10 +117,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String get durakHintOpponentDefends => 'Қарсылас қорғануда';
 
   @override
-  String get durakHintThrowInFirst => 'Карталар тастаңыз немесе «Барлығы» (бірінші ұрыста макс. 5)';
+  String get durakHintThrowInFirst => 'Карта тастаңыз (бірінші соққыда макс. 5)';
 
   @override
-  String get durakHintThrowIn => 'Карталар тастаңыз немесе «Барлығы» басыңыз';
+  String get durakHintThrowIn => 'Карта тастаңыз немесе қорғанысты күтіңіз';
 
   @override
   String get durakHintOpponentThrows => 'Қарсылас тастайды';
