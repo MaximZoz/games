@@ -7,6 +7,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -1625,6 +1626,13 @@ class GamesRepository {
   }
 
   Future<GameStateItem> getGame(String gameId) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.view;
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId'),
@@ -1664,6 +1672,14 @@ class GamesRepository {
   }
 
   Future<void> forfeitGame(String gameId) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      await session.forfeit();
+      return;
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/forfeit'),
@@ -1734,6 +1750,13 @@ class GamesRepository {
   }
 
   Future<GameStateItem> makeMove(String gameId, int cell) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.makeMove(cell);
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/move'),

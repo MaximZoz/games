@@ -7,6 +7,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException, LobbyPlayer;
 
@@ -670,6 +671,13 @@ class DurakRepository {
   }
 
   Future<DurakGameView> getGame(String gameId) async {
+    if (OfflineDurakRegistry.instance.isOffline(gameId)) {
+      final session = OfflineDurakRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.view;
+    }
     final r = await _sendAuth((token) => ApiClient.get(
           Uri.parse('$apiBaseUrl/api/games/durak/game/$gameId'),
           headers: {'Authorization': 'Bearer $token'},
@@ -686,6 +694,19 @@ class DurakRepository {
     List<PlayingCard>? cards,
     int? pairIndex,
   }) async {
+    if (OfflineDurakRegistry.instance.isOffline(gameId)) {
+      final session = OfflineDurakRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      await session.applyMove(
+        type: type,
+        card: card,
+        cards: cards,
+        pairIndex: pairIndex,
+      );
+      return;
+    }
     final body = <String, dynamic>{'type': type};
     if (cards != null && cards.isNotEmpty) {
       body['cards'] =
@@ -727,6 +748,14 @@ class DurakRepository {
   }
 
   Future<void> forfeit(String gameId) async {
+    if (OfflineDurakRegistry.instance.isOffline(gameId)) {
+      final session = OfflineDurakRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      await session.forfeit();
+      return;
+    }
     final r = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/durak/game/$gameId/forfeit'),
           headers: {'Authorization': 'Bearer $token'},
@@ -736,6 +765,14 @@ class DurakRepository {
   }
 
   Future<String> rematch(String gameId) async {
+    if (OfflineDurakRegistry.instance.isOffline(gameId)) {
+      final session = OfflineDurakRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      session.restart();
+      return '';
+    }
     final r = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/durak/rematch'),
           headers: {

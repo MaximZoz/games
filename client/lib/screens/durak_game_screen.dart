@@ -10,6 +10,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
@@ -197,11 +198,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
+  bool get _isOffline =>
+      OfflineDurakRegistry.instance.isOffline(widget.gameId);
+
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (_isOffline) return;
       pinBlockingGame(ref, widget.gameId, gameType: 'durak');
       final prev = ref.read(activeGameProvider).valueOrNull;
       if (prev?.gameId != widget.gameId) {
@@ -210,6 +215,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             );
       }
     });
+    if (_isOffline) return;
     _realtimeSubscription = ref.listenManual<AsyncValue<Map<String, dynamic>>>(
       realtimeEventsProvider,
       (_, next) {
@@ -3545,6 +3551,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   void _maybeSettleGame(DurakGameView view) {
+    // Офлайн: без observation/монет с сервера — только UI-статус.
+    if (_isOffline) {
+      _prevGameStatus = view.status;
+      return;
+    }
     // Mid-game: вышел «в ноль» — сразу observation, монеты, салют (не ждать конца).
     if (!view.isOver && view.iAmFinished && !view.iAmEliminated) {
       if (_midFinishedHandled) {
@@ -3611,6 +3622,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _rematch() async {
     setState(() => _isRematching = true);
     try {
+      if (_isOffline) {
+        final session = OfflineDurakRegistry.instance.get(widget.gameId);
+        if (session != null) {
+          // Сброс FX-базы для стартовой раздачи заново.
+          _prevDeckCount = -1;
+          _prevBitoCount = -1;
+          _prevHandLen = -1;
+          _prevTable = const [];
+          _prevAttackerIndex = -1;
+          _prevDefenderIndex = -1;
+          _prevOppHandCounts.clear();
+          _handOrder = null;
+          _trumpFaceVisible = true;
+          _fxScheduled = false;
+          _prevGameStatus = null;
+          _balanceGainPlayed = false;
+          _midFinishedHandled = false;
+          session.restart();
+          ref.invalidate(durakGameProvider(widget.gameId));
+          if (mounted) setState(() => _isRematching = false);
+          return;
+        }
+      }
       final lobbyId =
           await ref.read(durakRepositoryProvider).rematch(widget.gameId);
       if (!mounted) return;
@@ -4103,22 +4137,33 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
                 if (view.isOver) ...[
                   const SizedBox(height: 10),
-                  GameRematchSection(
-                    rematchLobbyId: _rematchLobbyId,
-                    rematchDeclined: _rematchDeclined,
-                    iDeclinedRematch: _iDeclinedRematch,
-                    isRematching: _isRematching,
-                    isAcceptingRematch: _isAcceptingRematch,
-                    isFindingGame: _isFindingGame,
-                    peerIds: _peerIds(view),
-                    invites: ref.watch(gameInvitesProvider),
-                    onRematch: _rematch,
-                    onAccept: _acceptRematch,
-                    onDecline: _declineRematch,
-                    onCancelWait: _cancelRematchWait,
-                    onFindGame: _findGame,
-                    compact: true,
-                  ),
+                  if (_isOffline)
+                    FilledButton.icon(
+                      onPressed: _isRematching ? null : _rematch,
+                      icon: const Icon(Icons.replay_rounded, size: 18),
+                      label: Text(context.l10n.offlinePlayAgain),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accentStart,
+                        foregroundColor: Colors.white,
+                      ),
+                    )
+                  else
+                    GameRematchSection(
+                      rematchLobbyId: _rematchLobbyId,
+                      rematchDeclined: _rematchDeclined,
+                      iDeclinedRematch: _iDeclinedRematch,
+                      isRematching: _isRematching,
+                      isAcceptingRematch: _isAcceptingRematch,
+                      isFindingGame: _isFindingGame,
+                      peerIds: _peerIds(view),
+                      invites: ref.watch(gameInvitesProvider),
+                      onRematch: _rematch,
+                      onAccept: _acceptRematch,
+                      onDecline: _declineRematch,
+                      onCancelWait: _cancelRematchWait,
+                      onFindGame: _findGame,
+                      compact: true,
+                    ),
                 ] else
                   const SizedBox(height: 10),
               ],

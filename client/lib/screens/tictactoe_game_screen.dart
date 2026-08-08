@@ -11,6 +11,7 @@ import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -132,6 +133,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     // Riverpod падает в тестах и может дать неконсистентный UI.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // Офлайн с ботами — не пиним и не синкаем active с сервером.
+      if (OfflineTttRegistry.instance.isOffline(widget.gameId)) return;
       final prevActive = ref.read(activeGameProvider).valueOrNull;
       final meId = ref.read(authStateProvider).valueOrNull?.id;
       final knownGame = ref.read(gameStateOverrideProvider(widget.gameId)) ??
@@ -802,22 +805,34 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ),
                     if (isOver) ...[
                       SizedBox(height: verticalSpacing * 0.8),
-                      _RematchSection(
-                        rematchLobbyId: _rematchLobbyId,
-                        rematchDeclined: _rematchDeclined,
-                        iDeclinedRematch: _iDeclinedRematch,
-                        isRematching: _isRematching,
-                        isAcceptingRematch: _isAcceptingRematch,
-                        isFindingGame: _isFindingGame,
-                        peerIds: peerIds,
-                        invites: ref.watch(gameInvitesProvider),
-                        onRematch: () => _rematch(context),
-                        onAccept: _acceptRematch,
-                        onDecline: _declineRematch,
-                        onCancelWait: _cancelRematchWait,
-                        onFindGame: () => _findGame(context),
-                        compact: true,
-                      ),
+                      if (OfflineTttRegistry.instance.isOffline(widget.gameId))
+                        FilledButton.icon(
+                          onPressed:
+                              _isRematching ? null : () => _rematch(context),
+                          icon: const Icon(Icons.replay_rounded, size: 18),
+                          label: Text(context.l10n.offlinePlayAgain),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.accentStart,
+                            foregroundColor: Colors.white,
+                          ),
+                        )
+                      else
+                        _RematchSection(
+                          rematchLobbyId: _rematchLobbyId,
+                          rematchDeclined: _rematchDeclined,
+                          iDeclinedRematch: _iDeclinedRematch,
+                          isRematching: _isRematching,
+                          isAcceptingRematch: _isAcceptingRematch,
+                          isFindingGame: _isFindingGame,
+                          peerIds: peerIds,
+                          invites: ref.watch(gameInvitesProvider),
+                          onRematch: () => _rematch(context),
+                          onAccept: _acceptRematch,
+                          onDecline: _declineRematch,
+                          onCancelWait: _cancelRematchWait,
+                          onFindGame: () => _findGame(context),
+                          compact: true,
+                        ),
                     ],
                   ],
                 );
@@ -1104,6 +1119,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Future<void> _rematch(BuildContext context) async {
     setState(() => _isRematching = true);
     try {
+      if (OfflineTttRegistry.instance.isOffline(widget.gameId)) {
+        final session = OfflineTttRegistry.instance.get(widget.gameId);
+        if (session != null) {
+          await session.restart();
+          if (!mounted) return;
+          _prevGameStatus = null;
+          _balanceGainPlayed = false;
+          ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+              null;
+          ref.invalidate(gameStateProvider(widget.gameId));
+          setState(() => _isRematching = false);
+          return;
+        }
+      }
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.rematch(widget.gameId);
       if (!mounted) return;
@@ -1587,9 +1616,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isMakingMove = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
+      final offline = OfflineTttRegistry.instance.isOffline(widget.gameId);
       final response = await repo.makeMove(widget.gameId, cell);
       if (!mounted) return;
-      final isBotGame =
+      final isBotGame = offline ||
           response.playerUserIds.any((id) => id.startsWith('bot:'));
       // Для бота: сразу блокируем invalidate, чтобы realtime/другие события не сбросили ход
       if (isBotGame) {
@@ -1602,6 +1632,29 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
           response;
       setState(() {}); // Принудительный ребилд, чтобы ход отрисовался сразу
+      if (offline) {
+        // Дождаться всех ботов и показать актуальный снимок.
+        final session = OfflineTttRegistry.instance.get(widget.gameId);
+        if (session != null) {
+          for (var i = 0; i < 12; i++) {
+            await Future<void>.delayed(OfflineTttSession.botDelay);
+            if (!mounted) return;
+            if (session.engine.isHumanTurn || session.engine.isFinished) {
+              break;
+            }
+          }
+          if (!mounted) return;
+          ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
+              session.view;
+        }
+        _waitingForBotMove = false;
+        ref
+            .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
+            .state = false;
+        ref.invalidate(gameStateProvider(widget.gameId));
+        setState(() {});
+        return;
+      }
       if (response.status != 'active') {
         ref.invalidate(gameStateProvider(widget.gameId));
         ref.invalidate(activeGameProvider);

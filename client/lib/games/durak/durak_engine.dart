@@ -11,6 +11,8 @@ enum DurakTurn {
   throwIn, // пачка подкида до «Все»
   attackerFollowUp, // очередь подкида после полного отбоя / «Бито»
   takeFollowUp, // защитник берёт; очередь подкида вдогонку
+  bitoReveal, // пауза показа стола перед уходом в биту (как online)
+  takeReveal, // пауза показа стола перед взятием (как online)
 }
 
 /// Пара «атака / защита» на столе. [defense] = null — карта ещё не бита.
@@ -237,6 +239,9 @@ class DurakGame {
 
   bool canThrowIn(int idx) {
     if (isOver) return false;
+    if (turn == DurakTurn.bitoReveal || turn == DurakTurn.takeReveal) {
+      return false;
+    }
     if (table.isEmpty) {
       return idx == attackerIndex &&
           (turn == DurakTurn.attacker || turn == DurakTurn.attackerFollowUp);
@@ -251,6 +256,8 @@ class DurakGame {
       case DurakTurn.takeFollowUp:
         return idx == throwerIndex && legalThrowInCards(idx).isNotEmpty;
       case DurakTurn.attacker:
+      case DurakTurn.bitoReveal:
+      case DurakTurn.takeReveal:
         return false;
     }
   }
@@ -501,7 +508,7 @@ class DurakGame {
     passed.add(pIndex);
     final next = _nextThrowerAfter(pIndex);
     if (next < 0) {
-      _resolveTake();
+      turn = DurakTurn.takeReveal;
       return;
     }
     throwerIndex = next;
@@ -538,7 +545,7 @@ class DurakGame {
     passed.add(pIndex);
     final next = _nextThrowerAfter(pIndex);
     if (next < 0) {
-      _resolveBito();
+      turn = DurakTurn.bitoReveal;
       return;
     }
     throwerIndex = next;
@@ -560,6 +567,18 @@ class DurakGame {
     attackerIndex = isAlive(def) ? def : nextAliveAfter(def);
     throwerIndex = attackerIndex;
     turn = DurakTurn.attacker;
+  }
+
+  /// Завершить паузу показа стола (бито / взятие) — как online reveal.
+  void completeReveal() {
+    if (turn == DurakTurn.bitoReveal) {
+      _resolveBito();
+      return;
+    }
+    if (turn == DurakTurn.takeReveal) {
+      _resolveTake();
+      return;
+    }
   }
 
   int _nextThrowerAfter(int idx) {
@@ -587,18 +606,18 @@ class DurakGame {
       final next = _nextThrowerAfter(throwerIndex);
       if (next < 0) {
         if (turn == DurakTurn.takeFollowUp) {
-          _resolveTake();
+          turn = DurakTurn.takeReveal;
         } else {
-          _resolveBito();
+          turn = DurakTurn.bitoReveal;
         }
         return;
       }
       throwerIndex = next;
     }
     if (turn == DurakTurn.takeFollowUp) {
-      _resolveTake();
+      turn = DurakTurn.takeReveal;
     } else if (turn == DurakTurn.attackerFollowUp) {
-      _resolveBito();
+      turn = DurakTurn.bitoReveal;
     }
   }
 

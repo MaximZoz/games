@@ -9,6 +9,7 @@ import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
 final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
@@ -298,6 +299,24 @@ final lobbyDetailProvider =
 final gameStateProvider =
     FutureProvider.autoDispose.family<GameStateItem, String>(
   (ref, gameId) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      var alive = true;
+      void onChanged() {
+        Future.microtask(() {
+          if (alive) ref.invalidateSelf();
+        });
+      }
+      session.addListener(onChanged);
+      ref.onDispose(() {
+        alive = false;
+        session.removeListener(onChanged);
+      });
+      return session.view;
+    }
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getGame(gameId);
   },

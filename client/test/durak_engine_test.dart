@@ -263,6 +263,9 @@ void main() {
       game.attack(PlayingCard(Rank.jack, Suit.hearts), playerIndex: 0);
       expect(game.canDefenderTake, isTrue);
       game.take();
+      // Нечего подкинуть вдогонку → пауза take_reveal, затем забор стола.
+      expect(game.turn, DurakTurn.takeReveal);
+      game.completeReveal();
       expect(game.hands[1].length, 2);
       // Не осталось карт у атакующего → он победил, защитник — дурак.
       expect(game.loserIndex, 1);
@@ -298,6 +301,9 @@ void main() {
       expect(game.table.length, 2);
       expect(game.turn, DurakTurn.takeFollowUp);
       game.confirmTake(playerIndex: 0);
+      expect(game.turn, DurakTurn.takeReveal);
+      expect(game.table, isNotEmpty);
+      game.completeReveal();
       expect(game.table, isEmpty);
       expect(game.hands[1].length, greaterThanOrEqualTo(4));
       expect(game.turn, DurakTurn.attacker);
@@ -372,7 +378,10 @@ void main() {
       }
       const bot = DurakBot(index: 1);
       bot.step(game);
-      // Нечего подкинуть → авто-бито (как очередь thrower на сервере).
+      // Нечего подкинуть → bito_reveal, затем стол в биту.
+      if (game.turn == DurakTurn.bitoReveal) {
+        game.completeReveal();
+      }
       expect(game.table, isEmpty);
       expect(game.bito, contains(PlayingCard(Rank.seven, Suit.hearts)));
       expect(game.bito, contains(PlayingCard(Rank.six, Suit.hearts)));

@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Офлайн: тот же UI и анимации, что в онлайне, с ботами
 - Карточки лобби/инвайтов без appear-анимации при скролле
 - Фикс скролла карточек игр и локализация офлайна
 - Офлайн: Дурак и крестики как в онлайне, с ботами
@@ -27,9 +28,9 @@
 - Дурак: «Забрал» после беру и авто-бито без подкида
 - Дурак: анимация биты только после реального отбоя
 - Дурак: рассадка соперников по часовой для всех зрителей
-- Дурак: убрать лишнюю проверку null у overlay сдачи
 
 ## en
+- Offline: same UI/animations as online — Durak and tic-tac-toe, all modes
 - Localized “What’s new” in the update dialog
 - Per-game settings and stakes; translations; empty lobby
 - Durak: spectating no longer opens tic-tac-toe; lobby/invites; icon

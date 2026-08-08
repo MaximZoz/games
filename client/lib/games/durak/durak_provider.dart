@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
 
@@ -27,6 +28,27 @@ bool _isTransientGamesError(Object e) {
 /// Кэш view конкретной партии, с обновлением по WS `game_state`.
 final durakGameProvider = FutureProvider.autoDispose
     .family<DurakGameView, String>((ref, gameId) async {
+  // Офлайн: локальная сессия + боты, тот же DurakGameView.
+  if (OfflineDurakRegistry.instance.isOffline(gameId)) {
+    final session = OfflineDurakRegistry.instance.get(gameId);
+    if (session == null) {
+      throw GamesException(404, 'offline game not found');
+    }
+    var alive = true;
+    void onChanged() {
+      Future.microtask(() {
+        if (alive) ref.invalidateSelf();
+      });
+    }
+    session.addListener(onChanged);
+    ref.onDispose(() {
+      alive = false;
+      session.removeListener(onChanged);
+    });
+    session.ensureStarted();
+    return session.view;
+  }
+
   final repo = ref.watch(durakRepositoryProvider);
   final sub = ref.listen<AsyncValue<Map<String, dynamic>>>(
     realtimeEventsProvider,
