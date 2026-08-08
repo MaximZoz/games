@@ -521,13 +521,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return (cardSize: size, spacing: spacing);
   }
 
-  /// 4+ карты — от края до края; ≤3 — по центру (как одна карта).
+  /// Веер всегда по центру; при многих картах сжимаем размер/шаг под ширину.
   ({Size cardSize, double spacing, bool fillWidth}) _handFanVisualLayout(
     int n,
     double maxWidth,
   ) {
     if (n <= 0) {
-      return (cardSize: _handCardSize, spacing: 0, fillWidth: true);
+      return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
     }
     if (n <= 3) {
       final spacing = n <= 1 ? 0.0 : _handCardSize.width * 0.62;
@@ -541,7 +541,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return (
       cardSize: fitted.cardSize,
       spacing: fitted.spacing,
-      fillWidth: true,
+      fillWidth: false,
     );
   }
 
@@ -4940,6 +4940,8 @@ class _AnimatedTablePair extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final defense = pair.defense?.toPlayingCard() ?? optimisticDefense;
+    // Отбитая пара — затемнение как нелегальные карты в веере.
+    final beaten = defense != null;
     // Запас под повёрнутый отбой (иначе углы режутся соседними парами).
     final pairChild = SizedBox(
       width: cardSize.width + 18,
@@ -4953,12 +4955,13 @@ class _AnimatedTablePair extends StatelessWidget {
               card: pair.attack.toPlayingCard(),
               size: cardSize,
               elevated: true,
-              dropTarget: highlightAttack && defense == null,
+              dropTarget: highlightAttack && !beaten,
+              dimmed: beaten,
               animate: false,
             ),
           ),
           // Цель отбоя — отдельный ключ на позиции защиты, не на атаке.
-          if (defendTargetKey != null && defense == null)
+          if (defendTargetKey != null && !beaten)
             Positioned(
               left: 10,
               top: 14,
@@ -4981,6 +4984,7 @@ class _AnimatedTablePair extends StatelessWidget {
                   size: cardSize,
                   elevated: true,
                   highlighted: false,
+                  dimmed: true,
                   animate: false,
                 ),
               ),
