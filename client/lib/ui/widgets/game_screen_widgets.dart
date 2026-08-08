@@ -1365,6 +1365,33 @@ Future<bool> confirmGameActionDialog({
   return ok == true;
 }
 
+/// Крестик / свайп «назад» на экране партии — общая логика для всех игр.
+///
+/// - Партия окончена или [canLeaveFreely] (выбыли) → сразу [onLeaveFinished].
+/// - Партия активна → диалог «выйдете = проиграете», затем [onForfeitAndLeave]
+///   (forfeit + переход в `/games`).
+Future<void> handleGameScreenClose({
+  required BuildContext context,
+  required bool isActive,
+  bool canLeaveFreely = false,
+  required Future<void> Function() onLeaveFinished,
+  required Future<void> Function() onForfeitAndLeave,
+}) async {
+  if (!isActive || canLeaveFreely) {
+    await onLeaveFinished();
+    return;
+  }
+  final leave = await confirmGameActionDialog(
+    context: context,
+    title: context.l10n.gameExitTitle,
+    message: context.l10n.gameExitConfirm,
+    cancelLabel: context.l10n.gameStay,
+    confirmLabel: context.l10n.gameLeave,
+  );
+  if (!leave || !context.mounted) return;
+  await onForfeitAndLeave();
+}
+
 /// Начисление выигрыша с анимацией баланса — общий сценарий для всех игр.
 ///
 /// [creditBronze] — сколько реально придёт на баланс (банк),

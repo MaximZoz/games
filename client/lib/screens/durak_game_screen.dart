@@ -3212,21 +3212,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  /// Сдача — остаёмся на экране итога (как в крестиках). Закрытие — выход.
-  Future<void> _confirmLeave() async {
+  /// Флажок «сдаться» — остаёмся на экране итога (как в крестиках).
+  Future<void> _confirmSurrender() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
-    if (view?.isOver ?? false) {
-      _handleClose();
-      return;
-    }
-    final leave = await confirmGameActionDialog(
+    if (view == null || view.isOver) return;
+    final ok = await confirmGameActionDialog(
       context: context,
       title: context.l10n.gameSurrenderTitle,
       message: context.l10n.gameSurrenderConfirm,
       cancelLabel: context.l10n.gameStay,
       confirmLabel: context.l10n.gameSurrender,
     );
-    if (!leave || !mounted) return;
+    if (!ok || !mounted) return;
     // Не выходим: после forfeit покажем итог + «Повторить» / «Другой соперник».
     unawaited(() async {
       try {
@@ -3239,6 +3236,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }());
   }
 
+  /// Крестик / свайп — общая логика с крестиками-ноликами: диалог → сдача → /games.
+  Future<void> _onClosePressed() async {
+    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    await handleGameScreenClose(
+      context: context,
+      isActive: view != null && !view.isOver,
+      onLeaveFinished: () async {
+        if (!mounted) return;
+        _navigateToGames();
+      },
+      onForfeitAndLeave: () async {
+        if (!mounted) return;
+        try {
+          clearBlockingGamePin(ref, ifGameId: widget.gameId);
+          await ref.read(durakRepositoryProvider).forfeit(widget.gameId);
+        } catch (_) {}
+        if (!mounted) return;
+        _navigateToGames();
+        unawaited(ref.read(activeGameProvider.notifier).refresh());
+      },
+    );
+  }
+
   void _clearSessionForFinishedGame() {
     clearBlockingGamePin(ref, ifGameId: widget.gameId);
     final prev = ref.read(activeGameProvider).valueOrNull;
@@ -3247,7 +3267,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  void _handleClose() {
+  void _navigateToGames() {
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
     _rematchRespondedIds.clear();
@@ -3618,7 +3638,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // Нижняя зона (веер) исключена — свайп по картам не вызывает выход.
     final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
     return SwipeBackScope(
-        onBack: _confirmLeave,
+        onBack: _onClosePressed,
         opaqueEdge: false,
         edgeWidth: 16,
         triggerDistance: 44,
@@ -3635,7 +3655,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               icon: const Icon(Icons.close_rounded),
-              onPressed: _busy ? null : _confirmLeave,
+              onPressed: _busy ? null : _onClosePressed,
             ),
             title: const Text('Дурак'),
             actions: view == null
@@ -3643,7 +3663,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 : buildGameAppBarActions(
                     context: context,
                     onSurrender:
-                        showSurrender && isMulti ? _confirmLeave : null,
+                        showSurrender && isMulti ? _confirmSurrender : null,
                     surrenderTooltip: context.l10n.gameSurrender,
                     onOfferDraw: null,
                     onShowRules: () => _showRules(view),
@@ -3720,7 +3740,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     canDraw: view.playerIds.length == 2,
                     iOfferedDraw: _iOfferedDraw(view),
                     opponentOfferedDraw: _opponentOfferedDraw(view),
-                    onSurrender: _confirmLeave,
+                    onSurrender: _confirmSurrender,
                     onDraw: () {
                       if (_opponentOfferedDraw(view)) {
                         unawaited(_acceptDraw());

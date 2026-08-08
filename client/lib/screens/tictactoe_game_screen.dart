@@ -1370,93 +1370,76 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final mark = game?.markForUser(me);
     final eliminated =
         mark != null && game != null && game.isEliminated(mark);
-    // Выбывший / партия окончена — без предупреждения «проиграете».
-    if (isOver || eliminated) {
-      final rematchLobbyId = _rematchLobbyId;
-      _rematchLobbyId = null;
-      _rematchRespondedIds.clear();
-      if (eliminated && !isOver) {
-        // Партия ещё идёт — observation до закрытия.
-        clearBlockingGamePin(ref, ifGameId: widget.gameId);
-        final prev = ref.read(activeGameProvider).valueOrNull;
-        ref.read(activeGameProvider.notifier).setObservationLocal(
-              ObservationItem(
-                gameId: widget.gameId,
-                lobbyId: prev?.lobbyId,
-              ),
-            );
-        if (prev?.gameId == widget.gameId) {
-          ref.read(activeGameProvider.notifier).clearLocal();
-        }
-      } else {
-        _clearSessionForFinishedGame();
-      }
-      context.go('/games');
-      if (rematchLobbyId != null) {
-        unawaited(
-          ref
-              .read(gamesRepositoryProvider)
-              .leaveLobby(rematchLobbyId)
-              .catchError((_) {}),
-        );
-      }
-      return;
-    }
-    showDialog<bool>(
+    unawaited(handleGameScreenClose(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gameExitTitle),
-        content: Text(
-          context.l10n.gameExitConfirm,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.l10n.gameStay),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
-            child: Text(context.l10n.gameLeave),
-          ),
-        ],
-      ),
-    ).then((exit) async {
-      if (exit != true || !mounted) return;
-      final gameId = widget.gameId;
-      // Сначала forfeit — иначе у остальных партия «зависает» без WS.
-      try {
-        await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
-      } catch (_) {}
-      if (!mounted) return;
-      clearBlockingGamePin(ref, ifGameId: gameId);
-      final game = ref.read(gameStateOverrideProvider(gameId)) ??
-          ref.read(gameStateProvider(gameId)).valueOrNull;
-      final multi = (game?.maxPlayers ?? 0) > 2 ||
-          (game?.playerUserIds.length ?? 0) > 2;
-      if (multi && game?.status == 'active') {
-        // Multi: observation, пока партия не закончится.
-        final prev = ref.read(activeGameProvider).valueOrNull;
-        ref.read(activeGameProvider.notifier).setObservationLocal(
-              ObservationItem(
-                gameId: gameId,
-                lobbyId: prev?.lobbyId,
-              ),
-            );
-        if (prev?.gameId == gameId) {
-          ref.read(activeGameProvider.notifier).clearLocal();
+      isActive: !isOver,
+      canLeaveFreely: eliminated,
+      onLeaveFinished: () async {
+        if (!mounted) return;
+        final rematchLobbyId = _rematchLobbyId;
+        _rematchLobbyId = null;
+        _rematchRespondedIds.clear();
+        if (eliminated && !isOver) {
+          // Партия ещё идёт — observation до закрытия.
+          clearBlockingGamePin(ref, ifGameId: widget.gameId);
+          final prev = ref.read(activeGameProvider).valueOrNull;
+          ref.read(activeGameProvider.notifier).setObservationLocal(
+                ObservationItem(
+                  gameId: widget.gameId,
+                  lobbyId: prev?.lobbyId,
+                ),
+              );
+          if (prev?.gameId == widget.gameId) {
+            ref.read(activeGameProvider.notifier).clearLocal();
+          }
+        } else {
+          _clearSessionForFinishedGame();
         }
-      } else {
-        ref.read(activeGameProvider.notifier).clearLocal();
-        ref
-            .read(activeGameProvider.notifier)
-            .clearObservationLocal(ifGameId: gameId);
-      }
-      context.go('/games');
-      unawaited(ref.read(activeGameProvider.notifier).refresh());
-    });
+        context.go('/games');
+        if (rematchLobbyId != null) {
+          unawaited(
+            ref
+                .read(gamesRepositoryProvider)
+                .leaveLobby(rematchLobbyId)
+                .catchError((_) {}),
+          );
+        }
+      },
+      onForfeitAndLeave: () async {
+        if (!mounted) return;
+        final gameId = widget.gameId;
+        // Сначала forfeit — иначе у остальных партия «зависает» без WS.
+        try {
+          await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
+        } catch (_) {}
+        if (!mounted) return;
+        clearBlockingGamePin(ref, ifGameId: gameId);
+        final g = ref.read(gameStateOverrideProvider(gameId)) ??
+            ref.read(gameStateProvider(gameId)).valueOrNull;
+        final multi = (g?.maxPlayers ?? 0) > 2 ||
+            (g?.playerUserIds.length ?? 0) > 2;
+        if (multi && g?.status == 'active') {
+          // Multi: observation, пока партия не закончится.
+          final prev = ref.read(activeGameProvider).valueOrNull;
+          ref.read(activeGameProvider.notifier).setObservationLocal(
+                ObservationItem(
+                  gameId: gameId,
+                  lobbyId: prev?.lobbyId,
+                ),
+              );
+          if (prev?.gameId == gameId) {
+            ref.read(activeGameProvider.notifier).clearLocal();
+          }
+        } else {
+          ref.read(activeGameProvider.notifier).clearLocal();
+          ref
+              .read(activeGameProvider.notifier)
+              .clearObservationLocal(ifGameId: gameId);
+        }
+        context.go('/games');
+        unawaited(ref.read(activeGameProvider.notifier).refresh());
+      },
+    ));
   }
 
   void _showOpponentInfo(
