@@ -112,6 +112,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _balanceGainPlayed = false;
   /// Mid-game выход «в ноль»: observation + салют/монеты — один раз.
   bool _midFinishedHandled = false;
+  /// Салют уже запущен — не размонтировать при чужих ходах (стол снова не пуст).
+  bool _confettiArmed = false;
+  /// Зафиксированный итог mid-finish: не менять текст при сдаче остальных.
+  bool? _lockedMidDraw;
+  int? _lockedMidPlace;
   final GlobalKey _winRewardKey = GlobalKey();
   final GlobalKey<CardFanState> _fanKey = GlobalKey<CardFanState>();
   final GlobalKey _defendTargetKey = GlobalKey();
@@ -173,6 +178,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevGameStatus = null;
       _balanceGainPlayed = false;
       _midFinishedHandled = false;
+      _confettiArmed = false;
+      _lockedMidDraw = null;
+      _lockedMidPlace = null;
       _prevDeckCount = -1;
       _prevBitoCount = -1;
       _prevHandLen = -1;
@@ -3594,9 +3602,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
+  /// Зафиксировать mid-finish итог один раз (после take/bito, стол пуст).
+  void _lockMidFinishOutcome(DurakGameView view) {
+    if (_midFinishedHandled) return;
+    final place = view.myPlace;
+    final sharedFirst = view.tiedLeaders >= 2 &&
+        place > 0 &&
+        place <= view.tiedLeaders;
+    _lockedMidDraw = sharedFirst || view.isDraw;
+    _lockedMidPlace = sharedFirst ? 1 : (place <= 0 ? 1 : place);
+    if (_lockedMidDraw != true && _lockedMidPlace == 1) {
+      _confettiArmed = true;
+    }
+    _midFinishedHandled = true;
+  }
+
   void _maybeSettleGame(DurakGameView view) {
     // Офлайн: без observation/монет с сервера — только UI-статус.
     if (_isOffline) {
+      // Тот же mid-finish lock, чтобы офлайн не мигал «победой» каждый раз,
+      // когда стол снова пуст между ходами ботов.
+      if (!view.isOver &&
+          view.iAmFinished &&
+          !view.iAmEliminated &&
+          view.table.isEmpty &&
+          !view.isTableReveal) {
+        _lockMidFinishOutcome(view);
+      } else if (view.isOver &&
+          !_confettiArmed &&
+          !view.isDraw &&
+          view.myPlace == 1) {
+        _confettiArmed = true;
+      }
       _prevGameStatus = view.status;
       return;
     }
@@ -3605,12 +3642,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (!view.isOver &&
         view.iAmFinished &&
         !view.iAmEliminated &&
-        view.table.isEmpty) {
+        view.table.isEmpty &&
+        !view.isTableReveal) {
       if (_midFinishedHandled) {
         _prevGameStatus = view.status;
         return;
       }
-      _midFinishedHandled = true;
+      _lockMidFinishOutcome(view);
       final credit = _rewardBronze(view);
       final displayReward = credit > 0 ? credit : 0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3637,6 +3675,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (_prevGameStatus == 'active' || _prevGameStatus == null) {
       _rematchPollTimer?.cancel();
       _prevGameStatus = view.status;
+      // Если mid-finish уже был — не перезапускаем салют на финальной сдаче.
+      if (!_confettiArmed &&
+          !view.isDraw &&
+          view.myPlace == 1 &&
+          !_midFinishedHandled) {
+        _confettiArmed = true;
+      }
       for (final peerId in _peerIds(view)) {
         ref.read(gameInvitesProvider.notifier).removeByCreatorId(peerId);
       }
@@ -3687,6 +3732,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _prevGameStatus = null;
           _balanceGainPlayed = false;
           _midFinishedHandled = false;
+          _confettiArmed = false;
+          _lockedMidDraw = null;
+          _lockedMidPlace = null;
           session.restart();
           ref.invalidate(durakGameProvider(widget.gameId));
           if (mounted) setState(() => _isRematching = false);
@@ -4070,13 +4118,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     },
                   ),
                 ),
-                // Призовое место (в т.ч. 2-е после чужого таймаута) — не только «не дурак».
-                // Не конфетти, пока последние карты ещё на столе (возможен отбой → ничья).
-                if (view != null &&
-                    (_iWon(view) &&
-                        (view.isOver ||
-                            (view.iAmFinished && view.table.isEmpty))))
-                  const Positioned.fill(child: GameConfettiOverlay()),
+                // Салют один раз: после arm не снимаем виджет, даже если у
+                // наблюдателя на столе снова карты (иначе анимация рестартит).
+                if (_confettiArmed)
+                  Positioned.fill(
+                    child: GameConfettiOverlay(
+                      key: ValueKey('durak-confetti-${widget.gameId}'),
+                    ),
+                  ),
                 // Групповой чат — отдельно под крестиком.
                 if (showGroupChat && view != null)
                   Positioned(
@@ -4234,9 +4283,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
               // Пауза «Беру»/«Бито» — в слоте кнопки действия (ниже), не здесь:
               // иначе статус в колонке двигает стол и веер.
-              // Mid-finish UI только при пустом столе (не во время отбоя последних карт).
+              // После mid-finish баннер остаётся на экране (не мигает, когда
+              // у оставшихся снова карты на столе).
               if (view.isOver ||
-                  (view.iAmFinished && view.table.isEmpty)) ...[
+                  _midFinishedHandled ||
+                  (view.iAmFinished &&
+                      view.table.isEmpty &&
+                      !view.isTableReveal)) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: GameStatusWithReward(
@@ -5445,7 +5498,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Втроём/вчетвером флаг forfeit/timeout мог остаться от раннего выбывшего;
   /// «Соперник сдался» показываем, если игра изначально 1×1 либо конец —
   /// сдача/таймаут последнего соперника (он же loser и в eliminated).
+  /// Если уже показали mid-finish победу/ничью — не переключаем текст.
   bool _isDecisiveOpponentExitWin(DurakGameView view) {
+    if (_midFinishedHandled) return false;
     if (view.myPlace != 1 || view.isDraw) return false;
     if (!view.isForfeit && !view.isTimeout) return false;
     if (view.playerIds.length <= 2) return true;
@@ -5455,11 +5510,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   bool _showRewardChip(DurakGameView view) {
     if (view.stakeBronze <= 0) return false;
-    // Mid-game после выхода «в ноль» или итог партии.
-    if (!view.isOver && !(view.iAmFinished && view.table.isEmpty)) {
+    // Mid-game после выхода «в ноль» (в т.ч. пока наблюдаем чужой стол) или итог.
+    if (!view.isOver && !_midFinishedHandled &&
+        !(view.iAmFinished && view.table.isEmpty && !view.isTableReveal)) {
       return false;
     }
     return _rewardBronze(view) > 0;
+  }
+
+  /// Текст mid-finish, зафиксированный при первом take/bito.
+  String? _lockedMidFinishHint(AppLocalizations l10n) {
+    if (!_midFinishedHandled || _lockedMidPlace == null) return null;
+    if (_lockedMidDraw == true) return l10n.gameDraw;
+    if (_lockedMidPlace == 1) return l10n.gameYouWon;
+    return l10n.gameYouPlaced(_lockedMidPlace!);
   }
 
   int _rewardBronze(DurakGameView view) {
@@ -5516,15 +5580,33 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (!view.isOver && view.iAmEliminated) {
       return l10n.gameYouEliminated;
     }
+    // Уже зафиксировали итог при take/bito — один раз, без «Соперник сдался».
+    final locked = _lockedMidFinishHint(l10n);
+    if (locked != null) return locked;
     // Вышел «в ноль», пока остальные ещё играют — победа/место только
     // когда стол пуст (не во время чужого отбоя ваших последних карт).
-    if (!view.isOver && view.iAmFinished && view.table.isEmpty) {
+    if (!view.isOver &&
+        view.iAmFinished &&
+        view.table.isEmpty &&
+        !view.isTableReveal) {
       final place = view.myPlace;
+      // Общий выход одной волной — делим 1 место.
+      if (view.tiedLeaders >= 2 &&
+          place > 0 &&
+          place <= view.tiedLeaders) {
+        return l10n.gameDraw;
+      }
       if (place <= 1) return l10n.gameYouWon;
       return l10n.gameYouPlaced(place);
     }
     if (view.isOver) {
       if (view.isDraw) return l10n.gameDraw;
+      // Ничья лидеров по tied_leaders (игра уже over).
+      if (view.tiedLeaders >= 2 &&
+          view.myPlace > 0 &&
+          view.myPlace <= view.tiedLeaders) {
+        return l10n.gameDraw;
+      }
       final place = view.myPlace;
       final winnerName = _winnerName(view);
       // 1-е место: «соперник сдался/время» только в реальном 1×1
