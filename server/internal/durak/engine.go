@@ -71,8 +71,9 @@ type State struct {
 	HandSize      int       `json:"hand_size"`
 	MaxAttacks    int       `json:"max_attacks"`
 
-	Status     Status `json:"status"`
-	LoserIndex int    `json:"loser_index,omitempty"` // «дурак»
+	Status Status `json:"status"`
+	// LoserIndex — «дурак»; -1 пока партия идёт (0 — валидный индекс игрока).
+	LoserIndex int `json:"loser_index"`
 	// Кто уже вышел успешно (рука пуста, колода пуста) — претендует на банк.
 	FinishedIndices []int `json:"finished_indices,omitempty"`
 	// Кто сдался / выбыл — наблюдатель, долю банка не получает.
@@ -399,6 +400,7 @@ func New(playerIDs []string, deckSize int, mode Mode, seed int64) (*State, error
 		HandSize:      handSize,
 		MaxAttacks:    6,
 		Status:        StatusActive,
+		LoserIndex:    -1,
 		FirstRound:    true,
 	}, nil
 }
@@ -1263,6 +1265,10 @@ func Decode(raw string) (*State, error) {
 	}
 	if s.HandSize <= 0 {
 		s.HandSize = 6
+	}
+	// Пока партия идёт — дурака ещё нет (0 в JSON раньше путали с игроком [0]).
+	if s.Status == StatusActive {
+		s.LoserIndex = -1
 	}
 	// Старые сейвы без thrower_index → атакующий.
 	if s.ThrowerIndex < 0 || s.ThrowerIndex >= len(s.PlayerIDs) {

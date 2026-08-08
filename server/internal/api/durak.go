@@ -1465,7 +1465,12 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"can_throw_in":    s.CanThrowIn(myIdx),
 		"thrower_index":   s.ThrowerIndex,
 		"turn_actor_idx":  durakTurnActorIdx(s),
-		"loser_index":     s.LoserIndex,
+		"loser_index": func() int {
+			if s.Status != durak.StatusOver {
+				return -1
+			}
+			return s.LoserIndex
+		}(),
 		"finished":        s.FinishedIndices,
 		"eliminated":      s.EliminatedIndices,
 		"turn_time_sec":   turnT,

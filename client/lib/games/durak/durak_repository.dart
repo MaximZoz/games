@@ -244,11 +244,16 @@ class DurakGameView {
   bool get iAmFinished => myIndex >= 0 && finished.contains(myIndex);
 
   /// Место текущего игрока (1-е, 2-е, …) или 0, если дурак/сдался/не в списке.
-  /// Доступно и после выхода «в ноль», пока партия ещё идёт у остальных.
+  /// После выхода «в ноль» — сразу по порядку finished, не дожидаясь конца партии.
   int get myPlace {
-    if (isDraw || iAmEliminated) return 0;
-    if (myIndex < 0 || myIndex == loserIndex) return 0;
-    if (!isOver && !iAmFinished) return 0;
+    if (iAmEliminated || myIndex < 0) return 0;
+    // Пока партия идёт: место = порядок выхода «в ноль».
+    if (!isOver && iAmFinished) {
+      final fi = finished.indexOf(myIndex);
+      return fi < 0 ? 0 : fi + 1;
+    }
+    if (!isOver || isDraw) return 0;
+    if (myIndex == loserIndex) return 0;
     final order = winnerPlaceOrder;
     final idx = order.indexOf(myIndex);
     return idx < 0 ? 0 : idx + 1;

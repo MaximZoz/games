@@ -3412,10 +3412,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _onClosePressed() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     final eliminated = view?.iAmEliminated == true;
+    final finishedOut = view?.iAmFinished == true;
     await handleGameScreenClose(
       context: context,
-      isActive: view != null && !view.isOver && !eliminated,
-      canLeaveFreely: eliminated,
+      isActive: view != null && !view.isOver && !eliminated && !finishedOut,
+      canLeaveFreely: eliminated || finishedOut,
       onLeaveFinished: () async {
         if (!mounted) return;
         _navigateToGames();
@@ -3799,8 +3800,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final gameAsync = ref.watch(durakGameProvider(widget.gameId));
     final view = gameAsync.valueOrNull;
     if (view != null) _maybeSettleGame(view);
-    final showSurrender =
-        view != null && !view.isOver && !view.iAmEliminated;
+    final showSurrender = view != null &&
+        !view.isOver &&
+        !view.iAmEliminated &&
+        !view.iAmFinished;
     final isMulti = (view?.playerIds.length ?? 0) > 2;
     final topPad = MediaQuery.paddingOf(context).top;
     final groupChatId = (view?.chatId ?? '').trim();
@@ -4055,7 +4058,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       )
                     : _multiOpponentsArea(view, tableSize),
               ),
-              if (view.isOver || view.iAmFinished) ...[
+              if (view.isOver || view.iAmFinished || view.isBitoReveal) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: GameStatusWithReward(
@@ -5268,12 +5271,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (!view.isOver && view.iAmEliminated) {
       return 'Вы выбыли';
     }
-    // Вышел «в ноль», пока остальные ещё играют — место сразу.
+    // Вышел «в ноль», пока остальные ещё играют — сразу победа / место.
     if (!view.isOver && view.iAmFinished) {
       final place = view.myPlace;
-      if (place == 1) return context.l10n.gameYouWon;
-      if (place > 1) return 'Вы заняли $place-е место';
-      return 'Вы вышли';
+      if (place <= 1) return context.l10n.gameYouWon;
+      return 'Вы заняли $place-е место';
     }
     if (view.isOver) {
       if (view.isDraw) return context.l10n.gameDraw;

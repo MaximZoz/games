@@ -295,6 +295,29 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	}
 }
 
+// Пока партия active — loser_index = -1 (0 не должен считаться «дураком»).
+func TestNewLoserIndexUnset(t *testing.T) {
+	st, err := New([]string{"a", "b", "c"}, 36, ModePodkidnoi, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.LoserIndex != -1 {
+		t.Fatalf("LoserIndex=%d want -1", st.LoserIndex)
+	}
+	raw, err := Encode(st)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Симулируем старый сейв без поля / с нулём.
+	st2, err := Decode(`{"player_ids":["a","b"],"hands":[[],[]],"status":"active","loser_index":0,"phase":"attack","hand_size":6,"max_attacks":6,"attacker_index":0}`)
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+	if st2.LoserIndex != -1 {
+		t.Fatalf("Decode active LoserIndex=%d want -1 (was %q)", st2.LoserIndex, raw)
+	}
+}
+
 // Втроём добор должен дать карты всем, включая «среднего» между атакующим и защитником.
 func TestRefillThreePlayersAllGetCards(t *testing.T) {
 	st := &State{
