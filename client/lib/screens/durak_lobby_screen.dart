@@ -163,8 +163,14 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
   }
 
   Future<void> _copyLink(String lobbyId) async {
-    final link = buildInviteLink(lobbyId, gameType: 'durak');
+    // Абсолютный URL + pendingInvitePaste — как в крестиках: чип «Вставить» в чате.
+    final link = buildInviteLobbyShareUrl(
+      lobbyId: lobbyId,
+      baseUri: Uri.base,
+      gameType: 'durak',
+    );
     await Clipboard.setData(ClipboardData(text: link));
+    ref.read(pendingInvitePasteProvider.notifier).state = link;
     if (!mounted) return;
     setState(() => _linkCopied = true);
     _linkTimer?.cancel();

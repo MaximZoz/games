@@ -24,9 +24,11 @@ import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
@@ -3733,14 +3735,54 @@ class _ChatInviteCard extends ConsumerWidget {
     )) {
       return;
     }
+    final gameType =
+        link.gameType == 'durak' ? 'durak' : 'tictactoe';
     try {
+      if (gameType == 'durak') {
+        final result =
+            await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (result.joined &&
+            result.gameId != null &&
+            result.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: result.gameId,
+                  gameType: 'durak',
+                ),
+              );
+          pinBlockingGame(ref, result.gameId!, gameType: 'durak');
+          context.go('/games/durak/game/${result.gameId}');
+          return;
+        }
+        if (result.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'durak',
+                ),
+              );
+          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+          context.go('/games/durak/lobby/$lobbyId?mode=invite');
+          return;
+        }
+        context.go(link.appPathFromMessage(messageId));
+        return;
+      }
       final result =
           await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
       if (!context.mounted) return;
       ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
       if (result.joined && result.waitingMore) {
         ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'tictactoe',
+              ),
             );
         ref.invalidate(lobbyDetailProvider(lobbyId));
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
@@ -3845,11 +3887,16 @@ class _ChatInviteCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.grid_3x3_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
+                      child: link.gameType == 'durak'
+                          ? const DurakGameIcon(
+                              size: 26,
+                              color: Colors.white,
+                            )
+                          : const Icon(
+                              Icons.grid_3x3_rounded,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -3867,7 +3914,9 @@ class _ChatInviteCard extends ConsumerWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            l10n.gamesTicTacToe,
+                            link.gameType == 'durak'
+                                ? l10n.gamesDurak
+                                : l10n.gamesTicTacToe,
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 13,
